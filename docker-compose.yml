@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # ActaLog API server
+  actalog-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: actalog-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=info
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - DB_DRIVER=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=actalog
+      - DB_PASSWORD=actalog_secure_password
+      - DB_NAME=actalog
+      - DB_SSLMODE=disable
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
+      - JWT_EXPIRATION=24h
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - actalog-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: actalog-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=actalog
+      - POSTGRES_PASSWORD=actalog_secure_password
+      - POSTGRES_DB=actalog
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - actalog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U actalog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: actalog-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+    networks:
+      - actalog-network
+
+networks:
+  actalog-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
