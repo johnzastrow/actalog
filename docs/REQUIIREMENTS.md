@@ -1,6 +1,10 @@
-# Actionlog Requirements
 
-This document outlines the system requirements for running Actionlog, a fitness tracker app focused on logging Crossfit workouts and history for weights and reps for particular movements or named weightlifting lifts. This will be a web-based application that will mostly be used from mobile phones, though it will need to be accessible from desktop browsers as well. It will be hosted on a small servers (Windows or Linux) with a database backend.
+
+# Actalog Requirements
+
+Design just a mobile-first app called ActaLog with just the core mobile app structure and features needed to log workouts per the requirements below. Focus on the essential components and user flows without going into extensive detail. Do not develop a marketing website or additional features beyond the core functionality needed for logging workouts.
+
+This document outlines the system requirements for running Actalog, a fitness tracker app focused on logging Crossfit workouts and history for weights and reps for particular movements or named weightlifting lifts. This will be a web-based application that will mostly be used from mobile phones, though it will need to be accessible from desktop browsers as well. It will be hosted on a small servers (Windows or Linux) with a database backend.
 
 For optimal performance and user experience, the following requirements should be met:
 The application should be lightweight and responsive, ensuring quick load times and smooth navigation on mobile devices. The user interface should be intuitive, allowing users to easily log their workouts and view their progress over time.
@@ -59,4 +63,35 @@ It will be multi-user, allowing individuals to create accounts and securely log 
 - Backup and Recovery: Implement regular backup procedures and recovery mechanisms to protect user data.
 - Scalability: Design the application to handle an increasing number of users and data without significant performance degradation.
 - Accessibility: Ensure the application is accessible to users with disabilities by following web accessibility standards (e.g., WCAG).
+
+## UI Components: 
+- Navigation Bar: Global navigation for product sections; includes links to Dashboard, Performance, Workouts, Profile, and Settings.
+- Dashboard: Overview page with timeline of recent activity, and quick access to logging today's workout. 
+- Performance Page: Visual charts and graphs showing progress over time for the selected named workout or weight movement. The details for the selected movement should include a list with dates and details such as times and reps. Also a line chart with date along the X axis and weight or time for the Y axis. The list should show a star for the PRs for that movement in history.
+- Workout Logging Page: Form to log a new workout, including fields for date (default to today), workout type (named WOD or custom), movements (select from common list or enter custom), weights, reps, and notes. Include a submit button to save the workout, reset button to clear the form, and a cancel button to return to the previous page without saving. also include a next button to add another movement to the same workout log.
+- Profile Page: User profile management with fields for name, email, profile picture upload, and password change.
+- Settings Page: Application settings including notification preferences, data export/import options, and account deletion.
+- Help Page: FAQs, troubleshooting tips, and contact information for support.
+- About Page: Information about the application, its purpose, and the development team.
+- Terms of Service Page: Legal agreements and terms governing the use of the application.
+- Privacy Policy Page: Information on data collection, usage, and user rights.
+- Cookie Policy Page: Information on the use of cookies and tracking technologies.
+- Accessibility Statement Page: Commitment to ensuring digital accessibility for users with disabilities.
+- User Guide Page: Comprehensive documentation for users on how to use the application effectively.
+- API Documentation Page: Technical documentation for developers on how to integrate with the application's API.
+- Changelog Page: Record of changes, updates, and improvements made to the application over time.
+- 
+
+Visual Style: 
+- Theme: Light theme with optional dark mode
+- Primary color: #2c3657ff
+- Secondary color: #597a6aff
+- Accent color: #5a4e68ff
+- Error/Alert: Red #DF3F40
+- Spacing: Consistent 20px outer padding, 16px gutter spacing between items
+- Borders: 1px solid light gray #E3E6EA on cards and input fields; slightly rounded corners (6px radius)
+- Typography: Sans-serif, medium font weight (500) for headings, regular (400) for body, base size 16px
+- Icons/images: Simple, filled vector icons for navigation and actions; illustrative flat images used occasionally for empty states
 -
+
+
