@@ -17,16 +17,70 @@ coverage.*
 *.coverprofile
 profile.cov
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+vendor/
 
 # Go workspace file
 go.work
 go.work.sum
 
-# env file
+# Build output
+bin/
+dist/
+build/
+
+# Environment variables
 .env
+.env.local
+.env.*.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Uploads and temporary files
+uploads/
+tmp/
+temp/
+
+# Frontend
+node_modules/
+.npm
+.yarn
+.pnpm-debug.log
+web/dist/
+web/.nuxt/
+web/.output/
+web/.cache/
+
+# OS files
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+# Test cache
+.cache/
+.pytest_cache/
+__pycache__/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Docker
+docker-compose.override.yml

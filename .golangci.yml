@@ -1,0 +1,71 @@
+# golangci-lint configuration for ActaLog
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Vet examines Go source code
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Go static analysis
+    - unused        # Check for unused code
+    - gofmt         # Check formatting
+    - goimports     # Check import formatting
+    - misspell      # Check for misspelled English words
+    - goconst       # Find repeated strings that could be constants
+    - gocyclo       # Check cyclomatic complexity
+    - revive        # Fast linter
+    - gosec         # Security checker
+    - exportloopref # Check for pointers to enclosing loop variables
+    - sqlclosecheck # Check sql.Rows and sql.Stmt are closed
+    - noctx         # Find http requests without context
+    - bodyclose     # Check HTTP response bodies are closed
+    - unconvert     # Remove unnecessary type conversions
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+
+  govet:
+    check-shadowing: true
+
+  gosec:
+    excludes:
+      - G404  # Allow math/rand for non-crypto use cases
+
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+      - name: unexported-return
+        severity: warning
+        disabled: false
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - gosec
+
+    # Exclude some staticcheck messages
+    - linters:
+        - staticcheck
+      text: "SA1019:"  # Ignore deprecation warnings for now
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
