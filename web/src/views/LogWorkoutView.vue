@@ -1,168 +1,319 @@
 <template>
-  <v-container>
+  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto; padding-bottom: 100px">
     <!-- Header -->
-    <v-row>
-      <v-col cols="12">
-        <v-app-bar color="primary" density="compact" flat>
-          <v-btn icon="mdi-arrow-left" @click="$router.back()" />
-          <v-toolbar-title>Log Workout</v-toolbar-title>
-          <v-btn icon="mdi-dots-vertical" />
-        </v-app-bar>
-      </v-col>
-    </v-row>
+    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
+      <v-btn icon="mdi-arrow-left" color="white" @click="$router.back()" />
+      <v-toolbar-title class="text-white font-weight-bold">Log Workout</v-toolbar-title>
+      <v-btn icon="mdi-dots-vertical" color="white" />
+    </v-app-bar>
 
-    <v-row class="mt-2">
-      <v-col cols="12">
-        <!-- Error Alert -->
-        <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
-          {{ error }}
-        </v-alert>
+    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 80px">
+      <!-- Error Alert -->
+      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
+        {{ error }}
+      </v-alert>
 
-        <v-card elevation="2" rounded="lg">
-          <v-card-text class="pa-6">
-            <v-form>
-              <!-- Workout Date -->
-              <v-text-field
-                v-model="workoutDate"
-                label="Workout Date"
-                type="date"
-                prepend-inner-icon="mdi-calendar"
-                variant="outlined"
-              />
+      <v-form>
+        <!-- Workout Date -->
+        <div class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Workout Date
+          </label>
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+            <v-text-field
+              v-model="workoutDate"
+              type="date"
+              append-inner-icon="mdi-calendar"
+              variant="plain"
+              density="compact"
+              hide-details
+              style="color: #1a1a1a; font-weight: 500"
+            />
+          </v-card>
+        </div>
 
-              <!-- Workout Type -->
-              <div class="my-4">
-                <label class="text-body-2 text-medium-emphasis mb-2 d-block">
-                  Workout Type
-                </label>
-                <v-btn-toggle
-                  v-model="workoutType"
-                  color="primary"
-                  variant="outlined"
-                  divided
-                  mandatory
-                >
-                  <v-btn value="named" prepend-icon="mdi-format-list-bulleted">
-                    Named WOD
-                  </v-btn>
-                  <v-btn value="custom" prepend-icon="mdi-pencil">
-                    Custom
-                  </v-btn>
-                </v-btn-toggle>
-              </div>
-
-              <!-- Select Movement -->
-              <v-select
-                v-model="selectedMovement"
-                label="Select Movement"
-                :items="movements"
-                item-title="title"
-                item-value="value"
-                :loading="loading"
-                prepend-inner-icon="mdi-dumbbell"
-                variant="outlined"
-                class="mt-4"
-              />
-
+        <!-- Workout Type -->
+        <div class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Workout Type
+          </label>
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+            <v-btn-toggle
+              v-model="workoutType"
+              mandatory
+              divided
+              density="comfortable"
+              style="width: 100%"
+            >
               <v-btn
-                variant="outlined"
-                color="accent"
-                block
-                class="mt-2"
-                prepend-icon="mdi-plus"
+                value="named"
+                style="flex: 1; text-transform: none; font-weight: 600"
+                :style="
+                  workoutType === 'named'
+                    ? 'border: 2px solid #00bcd4; color: #00bcd4'
+                    : 'border: 2px solid transparent; color: #666'
+                "
+                rounded="lg"
+                prepend-icon="mdi-format-list-bulleted"
               >
-                Add Custom Movement
+                Named WOD
               </v-btn>
+              <v-btn
+                value="custom"
+                style="flex: 1; text-transform: none; font-weight: 600"
+                :style="
+                  workoutType === 'custom'
+                    ? 'border: 2px solid #00bcd4; color: #00bcd4'
+                    : 'border: 2px solid transparent; color: #666'
+                "
+                rounded="lg"
+                prepend-icon="mdi-pencil"
+              >
+                Custom
+              </v-btn>
+            </v-btn-toggle>
+          </v-card>
+        </div>
 
-              <!-- Movement Details -->
-              <v-row class="mt-4">
-                <v-col cols="6">
-                  <v-text-field
-                    v-model="weight"
-                    label="Weight (lbs)"
-                    type="number"
-                    prepend-inner-icon="mdi-weight"
-                    variant="outlined"
-                  />
-                </v-col>
-                <v-col cols="6">
-                  <v-text-field
-                    v-model="sets"
-                    label="Sets"
-                    type="number"
-                    prepend-inner-icon="mdi-format-list-numbered"
-                    variant="outlined"
-                  />
-                </v-col>
-              </v-row>
+        <!-- Select Movement -->
+        <div class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Select Movement
+          </label>
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+            <v-autocomplete
+              v-model="selectedMovement"
+              :items="movements"
+              item-title="title"
+              item-value="value"
+              :loading="loading"
+              placeholder="Type to search movements..."
+              variant="plain"
+              density="compact"
+              hide-details
+              clearable
+              auto-select-first
+              style="color: #1a1a1a; font-weight: 500"
+            >
+              <template #prepend-inner>
+                <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+              </template>
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" density="compact">
+                  <template #prepend>
+                    <v-icon
+                      :color="item.raw.type === 'weightlifting' ? '#00bcd4' : '#666'"
+                      size="small"
+                    >
+                      mdi-dumbbell
+                    </v-icon>
+                  </template>
+                  <v-list-item-title class="text-caption">
+                    {{ item.raw.title }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle class="text-caption">
+                    {{ item.raw.type }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+          </v-card>
+        </div>
 
-              <v-row>
-                <v-col cols="6">
-                  <v-text-field
-                    v-model="reps"
-                    label="Reps"
-                    type="number"
-                    prepend-inner-icon="mdi-numeric"
-                    variant="outlined"
-                  />
-                </v-col>
-                <v-col cols="6">
-                  <v-btn-toggle
-                    v-model="movementType"
-                    color="accent"
-                    variant="outlined"
-                    divided
-                    mandatory
-                  >
-                    <v-btn value="rx">Rx</v-btn>
-                    <v-btn value="scaled">Scaled</v-btn>
-                  </v-btn-toggle>
-                </v-col>
-              </v-row>
+        <!-- Add Custom Movement Button -->
+        <v-btn
+          variant="outlined"
+          color="#00bcd4"
+          block
+          class="mb-3"
+          prepend-icon="mdi-plus"
+          size="small"
+          style="
+            border: 2px dashed #00bcd4;
+            text-transform: none;
+            font-weight: 600;
+            color: #00bcd4;
+          "
+          rounded="lg"
+        >
+          Add Custom Movement
+        </v-btn>
 
-              <!-- Notes -->
-              <v-textarea
-                v-model="notes"
-                label="Notes (Optional)"
-                placeholder="How did it feel? Any observations..."
-                variant="outlined"
-                rows="3"
-                class="mt-4"
+        <!-- Movement Details Grid -->
+        <v-row dense class="mb-1">
+          <!-- Weight -->
+          <v-col cols="6">
+            <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+              Weight (lbs)
+            </label>
+            <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+              <v-text-field
+                v-model="weight"
+                type="number"
+                placeholder="0"
+                variant="plain"
+                density="compact"
+                hide-details
+                append-inner-icon="mdi-weight-lifter"
+                class="text-h6 text-center font-weight-medium"
+                style="color: #1a1a1a"
               />
+            </v-card>
+          </v-col>
 
-              <!-- Action Buttons -->
-              <v-row class="mt-4">
-                <v-col cols="12">
-                  <v-btn
-                    color="primary"
-                    size="large"
-                    block
-                    :loading="saving"
-                    :disabled="!selectedMovement"
-                    @click="saveWorkout"
-                  >
-                    <v-icon start>mdi-content-save</v-icon>
-                    Save Workout
-                  </v-btn>
-                </v-col>
-                <v-col cols="6">
-                  <v-btn variant="outlined" size="large" block @click="resetForm">
-                    <v-icon start>mdi-refresh</v-icon>
-                    Reset
-                  </v-btn>
-                </v-col>
-                <v-col cols="6">
-                  <v-btn variant="outlined" size="large" block @click="$router.back()">
-                    <v-icon start>mdi-close</v-icon>
-                    Cancel
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+          <!-- Sets -->
+          <v-col cols="6">
+            <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+              Sets
+            </label>
+            <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+              <v-text-field
+                v-model="sets"
+                type="number"
+                placeholder="0"
+                variant="plain"
+                density="compact"
+                hide-details
+                append-inner-icon="mdi-layers-triple"
+                class="text-h6 text-center font-weight-medium"
+                style="color: #1a1a1a"
+              />
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <v-row dense class="mb-3">
+          <!-- Reps -->
+          <v-col cols="6">
+            <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+              Reps
+            </label>
+            <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+              <v-text-field
+                v-model="reps"
+                type="number"
+                placeholder="0"
+                variant="plain"
+                density="compact"
+                hide-details
+                append-inner-icon="mdi-numeric"
+                class="text-h6 text-center font-weight-medium"
+                style="color: #1a1a1a"
+              />
+            </v-card>
+          </v-col>
+
+          <!-- Type (Rx/Scaled) -->
+          <v-col cols="6">
+            <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+              Type
+            </label>
+            <v-card elevation="0" rounded="lg" class="pa-1" style="background: white">
+              <v-btn-toggle
+                v-model="movementType"
+                mandatory
+                density="compact"
+                style="width: 100%"
+              >
+                <v-btn
+                  value="rx"
+                  size="small"
+                  style="flex: 1; text-transform: none; font-weight: 600"
+                  :style="
+                    movementType === 'rx'
+                      ? 'background: #00bcd4; color: white'
+                      : 'color: #1a1a1a'
+                  "
+                  rounded="lg"
+                >
+                  Rx
+                </v-btn>
+                <v-btn
+                  value="scaled"
+                  size="small"
+                  style="flex: 1; text-transform: none; font-weight: 600"
+                  :style="
+                    movementType === 'scaled'
+                      ? 'background: #00bcd4; color: white'
+                      : 'color: #1a1a1a'
+                  "
+                  rounded="lg"
+                >
+                  Scaled
+                </v-btn>
+              </v-btn-toggle>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Notes -->
+        <div class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Notes (Optional)
+          </label>
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+            <v-textarea
+              v-model="notes"
+              placeholder="How did it feel? Any observations..."
+              variant="plain"
+              rows="2"
+              hide-details
+              auto-grow
+              style="color: #1a1a1a"
+            />
+          </v-card>
+        </div>
+
+        <!-- Save Button -->
+        <v-btn
+          color="#00bcd4"
+          size="large"
+          block
+          :loading="saving"
+          :disabled="!selectedMovement"
+          @click="saveWorkout"
+          rounded="lg"
+          elevation="2"
+          class="text-none font-weight-bold mb-2"
+          style="background: #00bcd4; color: white"
+        >
+          <v-icon start>mdi-content-save</v-icon>
+          Save Workout
+        </v-btn>
+      </v-form>
+    </v-container>
+
+    <!-- Bottom Navigation -->
+    <v-bottom-navigation
+      grow
+      style="position: fixed; bottom: 0; background: white"
+      elevation="8"
+    >
+      <v-btn value="dashboard" to="/dashboard">
+        <v-icon>mdi-view-dashboard</v-icon>
+        <span style="font-size: 10px">Dashboard</span>
+      </v-btn>
+      <v-btn value="performance" to="/performance">
+        <v-icon>mdi-chart-line</v-icon>
+        <span style="font-size: 10px">Performance</span>
+      </v-btn>
+      <v-btn
+        value="log"
+        style="position: relative; bottom: 20px"
+      >
+        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0,0,0,0.2)">
+          <v-icon color="white" size="32">mdi-plus</v-icon>
+        </v-avatar>
+      </v-btn>
+      <v-btn value="workouts" to="/workouts">
+        <v-icon>mdi-dumbbell</v-icon>
+        <span style="font-size: 10px">Workouts</span>
+      </v-btn>
+      <v-btn value="profile" to="/profile">
+        <v-icon>mdi-account</v-icon>
+        <span style="font-size: 10px">Profile</span>
+      </v-btn>
+    </v-bottom-navigation>
   </v-container>
 </template>
 

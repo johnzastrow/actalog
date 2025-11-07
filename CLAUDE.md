@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ActaLog is a mobile-first CrossFit workout tracker built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend (Vuetify 3). The project follows Clean Architecture principles with strict separation between domain, service, repository, and handler layers.
 
-**Current Version:** 0.1.0-alpha
+**Current Version:** 0.2.0-beta
 
 ## Essential Commands
 
@@ -289,6 +289,151 @@ Key documentation in `docs/`:
 - `REQUIIREMENTS.md` - Project requirements and user stories
 - `TODO.md` - Planned features and improvements
 - `CHANGELOG.md` - Version history and changes
+
+## Implemented Features (v0.2.0-beta)
+
+### Workout Management
+
+**Location:** `internal/repository/workout_repository.go`, `internal/service/workout_service.go`, `internal/handler/workout_handler.go`
+
+Complete workout CRUD functionality:
+- **Create Workout:** `POST /api/workouts` - Create new workout with movements
+- **List Workouts:** `GET /api/workouts` - Fetch user's workouts with movement details
+- **Get Workout:** `GET /api/workouts/{id}` - Fetch single workout by ID
+- **Update Workout:** `PUT /api/workouts/{id}` - Modify existing workout
+- **Delete Workout:** `DELETE /api/workouts/{id}` - Remove workout
+
+**Key Implementation Details:**
+- Workouts are user-scoped (users can only access their own workouts)
+- Service layer enforces authorization checks
+- Movement details are eager-loaded for display (movement names, not just IDs)
+- Supports nullable fields (notes, workout_name, total_time)
+- Handles workout_movements as a sub-collection
+
+**Frontend Integration:**
+- `web/src/views/LogWorkoutView.vue` - Workout creation form with autocomplete
+- `web/src/views/WorkoutsView.vue` - List view with movement details
+- `web/src/views/DashboardView.vue` - Recent workouts and statistics
+
+### Movement Management
+
+**Location:** `internal/repository/movement_repository.go`
+
+31 standard CrossFit movements are automatically seeded on first run:
+- Weightlifting: Back Squat, Deadlift, Bench Press, Clean, Snatch, etc.
+- Gymnastics: Pull-ups, Muscle-ups, Handstand Push-ups, Toes-to-Bar, etc.
+- Cardio: Running, Rowing, Air Bike, Jump Rope, etc.
+
+**API Endpoints:**
+- `GET /api/movements` - List all available movements
+- `GET /api/movements/search?q=squat` - Search movements by name
+
+**Seeding Logic:** See `internal/repository/database.go` function `seedStandardMovements()`
+
+### Dashboard & Statistics
+
+**Location:** `web/src/views/DashboardView.vue`
+
+Real-time workout statistics:
+- Total workouts count (lifetime)
+- Monthly workouts count (current month)
+- Recent 5 workouts with movement details
+- Quick action button to log new workout
+
+**Data Flow:**
+1. Component calls `GET /api/workouts` on mount
+2. Processes response to calculate stats in frontend
+3. Displays formatted workout cards with date and movements
+
+### Authentication & Authorization
+
+**Location:** `pkg/middleware/auth.go`
+
+JWT middleware protects all workout endpoints:
+- Extracts token from `Authorization: Bearer <token>` header
+- Validates JWT signature and expiration
+- Adds user context (ID, email, role) to request
+- Returns 401 for missing/invalid tokens
+
+**Protected Routes (in main.go):**
+```go
+r.Group(func(r chi.Router) {
+    r.Use(middleware.Auth(cfg.JWT.SecretKey))
+    r.Post("/workouts", workoutHandler.CreateWorkout)
+    r.Get("/workouts", workoutHandler.ListWorkouts)
+    r.Get("/workouts/{id}", workoutHandler.GetWorkout)
+    // ... other protected routes
+})
+```
+
+### UI Design System
+
+**Color Palette:**
+- Primary Accent: `#00bcd4` (cyan/turquoise)
+- Header Background: `#2c3e50` (dark navy)
+- Page Background: `#f5f7fa` (light gray)
+- Text Primary: `#1a1a1a` (very dark gray)
+- Text Secondary: `#666` (medium gray)
+- Action Button: `#ffc107` (amber)
+
+**Layout Pattern:**
+- Fixed header (v-app-bar) at top with z-index: 10
+- Scrollable content area with `margin-top: 56px, margin-bottom: 70px`
+- Fixed bottom navigation with elevation: 8
+- Content uses `overflow-y: auto` for scrolling
+
+**Common Components:**
+- Bottom navigation replicated across all main views
+- Autocomplete search with magnify icon for movement selection
+- Card-based layout with `elevation="0"` and `rounded="lg"`
+- Consistent spacing (mb-3 for sections, pa-3 for padding)
+
+### Autocomplete Search Implementation
+
+**Location:** `web/src/views/LogWorkoutView.vue`, `web/src/views/PerformanceView.vue`
+
+Searchable movement selection using Vuetify v-autocomplete:
+```vue
+<v-autocomplete
+  v-model="selectedMovement"
+  :items="movements"
+  item-title="title"
+  item-value="value"
+  :loading="loading"
+  placeholder="Type to search movements..."
+  clearable
+  auto-select-first
+>
+  <template #prepend-inner>
+    <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+  </template>
+  <template #item="{ props, item }">
+    <!-- Custom item template with icon and type -->
+  </template>
+</v-autocomplete>
+```
+
+**Features:**
+- Type-ahead search filtering
+- Custom item templates showing movement type
+- Icon differentiation (cyan for weightlifting, gray for others)
+- Auto-select first match
+- Clearable selection
+
+### Known Fixes Applied
+
+**Makefile Cache Issue:**
+- Added `@mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp` to `run` and `dev` targets
+- Prevents "stat .cache/tmp: no such file or directory" error
+
+**SQLite Driver Name:**
+- Changed default `DB_DRIVER` from `"sqlite"` to `"sqlite3"` in `configs/config.go:66`
+- Matches the imported driver name from `github.com/mattn/go-sqlite3`
+
+**Scrolling Issues:**
+- Added `overflow-y: auto` to container styles
+- Proper margins to account for fixed header (56px) and bottom nav (70px)
+- Reduced spacing (mb-4 → mb-3) for tighter mobile layout
 
 ## Project-Specific Notes
 
