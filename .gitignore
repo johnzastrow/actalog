@@ -28,6 +28,7 @@ go.work.sum
 bin/
 dist/
 build/
+.cache/
 
 # Environment variables
 .env
