@@ -53,6 +53,62 @@ npm run dev
 
 Frontend will be available at http://localhost:3000
 
+## Windows Users
+
+### Option 1: Use the Build Script (Recommended)
+
+Windows users can use the provided `build.bat` script instead of Make:
+
+```cmd
+# Build the application
+build.bat build
+
+# Run the application
+build.bat run
+
+# Run tests
+build.bat test
+
+# Format code
+build.bat fmt
+
+# Clean build artifacts
+build.bat clean
+
+# Show help
+build.bat help
+```
+
+### Option 2: Use Make with Git Bash or WSL
+
+If you have Git Bash or WSL installed, you can use the Makefile commands as shown in the backend setup.
+
+### Common Windows Issue: Access Denied
+
+If you encounter an error like:
+```
+go: creating work dir: mkdir C:\WINDOWS\go-build...: Access is denied.
+```
+
+This is because Go tries to create its build cache in the Windows system directory. The Makefile and build.bat script automatically fix this by using the project's `.cache/` directory instead.
+
+If using `go` commands directly, set these environment variables first:
+
+```cmd
+set GOCACHE=%CD%\.cache\go-build
+set GOMODCACHE=%CD%\.cache\go-mod
+set GOTMPDIR=%CD%\.cache\tmp
+go build -o bin\actalog.exe cmd\actalog\main.go
+```
+
+Or in PowerShell:
+```powershell
+$env:GOCACHE="$PWD\.cache\go-build"
+$env:GOMODCACHE="$PWD\.cache\go-mod"
+$env:GOTMPDIR="$PWD\.cache\tmp"
+go build -o bin\actalog.exe cmd\actalog\main.go
+```
+
 ## Docker Setup (Alternative)
 
 ```bash

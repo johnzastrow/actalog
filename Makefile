@@ -6,6 +6,17 @@ BINARY=bin/$(APP_NAME)
 MAIN_PATH=cmd/$(APP_NAME)/main.go
 DOCKER_COMPOSE=docker-compose
 
+# Go build cache directories (Windows-friendly, keeps everything in project)
+PROJECT_DIR=$(shell pwd)
+CACHE_DIR=$(PROJECT_DIR)/.cache
+GO_BUILD_CACHE=$(CACHE_DIR)/go-build
+GO_MOD_CACHE=$(CACHE_DIR)/go-mod
+
+# Export Go environment variables to use project directory
+export GOCACHE=$(GO_BUILD_CACHE)
+export GOMODCACHE=$(GO_MOD_CACHE)
+export GOTMPDIR=$(CACHE_DIR)/tmp
+
 # Default target
 help: ## Show this help message
 	@echo "ActaLog - Makefile Commands"
@@ -14,7 +25,7 @@ help: ## Show this help message
 
 build: ## Build the application binary
 	@echo "Building $(APP_NAME)..."
-	@mkdir -p bin
+	@mkdir -p bin $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp
 	@go build -o $(BINARY) $(MAIN_PATH)
 	@echo "Build complete: $(BINARY)"
 
@@ -65,6 +76,7 @@ fmt: ## Format code
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	@rm -rf bin/
+	@rm -rf .cache/
 	@rm -f coverage.out coverage.html
 	@rm -f *.db *.sqlite *.sqlite3
 	@echo "Clean complete"
