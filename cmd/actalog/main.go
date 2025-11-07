@@ -11,7 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/configs"
+	"github.com/johnzastrow/actalog/internal/handler"
+	"github.com/johnzastrow/actalog/internal/repository"
+	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/version"
 )
 
@@ -31,43 +36,70 @@ func main() {
 	log.Printf("Log Level: %s", cfg.App.LogLevel)
 	log.Printf("Database Driver: %s", cfg.Database.Driver)
 	log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
+	log.Printf("Allow Registration: %t", cfg.App.AllowRegistration)
 
-	// TODO: Initialize database connection
-	// TODO: Initialize repositories
-	// TODO: Initialize services
-	// TODO: Initialize HTTP handlers and router
-	// TODO: Set up middleware (CORS, auth, logging)
-	// TODO: Set up OpenTelemetry observability
+	// Initialize database
+	db, err := repository.InitDatabase(cfg.Database.Driver, cfg.Database.Database)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+	log.Println("Database initialized successfully")
 
-	// Create a basic HTTP server for now
-	mux := http.NewServeMux()
+	// Initialize repositories
+	userRepo := repository.NewSQLiteUserRepository(db)
+
+	// Initialize services
+	userService := service.NewUserService(
+		userRepo,
+		cfg.JWT.SecretKey,
+		cfg.JWT.ExpirationTime,
+		cfg.App.AllowRegistration,
+	)
+
+	// Initialize handlers
+	authHandler := handler.NewAuthHandler(userService)
+
+	// Set up router
+	r := chi.NewRouter()
+
+	// Middleware
+	r.Use(middleware.Logger)
+	r.Use(middleware.CORS(cfg.App.CORSOrigins))
 
 	// Health check endpoint
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"healthy","version":"%s"}`, version.Version())
 	})
 
 	// Version endpoint
-	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"version":"%s","app":"%s"}`, version.Version(), cfg.App.Name)
 	})
 
 	// Root endpoint
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"message":"Welcome to ActaLog API","version":"%s"}`, version.Version())
+	})
+
+	// API routes
+	r.Route("/api", func(r chi.Router) {
+		// Auth routes
+		r.Post("/auth/register", authHandler.Register)
+		r.Post("/auth/login", authHandler.Login)
 	})
 
 	// Configure HTTP server
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      r,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 		IdleTimeout:  cfg.Server.IdleTimeout,
