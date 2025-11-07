@@ -51,6 +51,9 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
+	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
+	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
+	movementRepo := repository.NewSQLiteMovementRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(
@@ -59,9 +62,15 @@ func main() {
 		cfg.JWT.ExpirationTime,
 		cfg.App.AllowRegistration,
 	)
+	workoutService := service.NewWorkoutService(
+		workoutRepo,
+		workoutMovementRepo,
+		movementRepo,
+	)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
+	workoutHandler := handler.NewWorkoutHandler(workoutService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -93,9 +102,24 @@ func main() {
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
-		// Auth routes
+		// Auth routes (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
+
+		// Protected routes (require authentication)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(cfg.JWT.SecretKey))
+
+			// Workout routes
+			r.Post("/workouts", workoutHandler.CreateWorkout)
+			r.Get("/workouts", workoutHandler.ListWorkouts)
+			r.Get("/workouts/{id}", workoutHandler.GetWorkout)
+			r.Put("/workouts/{id}", workoutHandler.UpdateWorkout)
+			r.Delete("/workouts/{id}", workoutHandler.DeleteWorkout)
+
+			// Movement routes
+			r.Get("/movements", workoutHandler.ListMovements)
+		})
 	})
 
 	// Configure HTTP server

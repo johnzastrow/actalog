@@ -31,9 +31,11 @@ build: ## Build the application binary
 
 run: ## Run the application
 	@echo "Running $(APP_NAME)..."
+	@mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp
 	@go run $(MAIN_PATH)
 
 dev: ## Run in development mode with auto-reload (requires air)
+	@mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp
 	@if command -v air > /dev/null; then \
 		air; \
 	else \
