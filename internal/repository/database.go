@@ -1,0 +1,106 @@
+package repository
+
+import (
+	"database/sql"
+	"fmt"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+// InitDatabase initializes the database connection and creates tables
+func InitDatabase(driver, dsn string) (*sql.DB, error) {
+	db, err := sql.Open(driver, dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Create tables
+	if err := createTables(db); err != nil {
+		return nil, fmt.Errorf("failed to create tables: %w", err)
+	}
+
+	return db, nil
+}
+
+// createTables creates all necessary database tables
+func createTables(db *sql.DB) error {
+	schema := `
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		name TEXT NOT NULL,
+		profile_image TEXT,
+		role TEXT NOT NULL DEFAULT 'user',
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		last_login_at DATETIME
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+	CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+	CREATE TABLE IF NOT EXISTS workouts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		workout_date DATE NOT NULL,
+		workout_type TEXT NOT NULL,
+		workout_name TEXT,
+		notes TEXT,
+		total_time INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON workouts(user_id);
+	CREATE INDEX IF NOT EXISTS idx_workouts_workout_date ON workouts(workout_date);
+	CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(user_id, workout_date DESC);
+
+	CREATE TABLE IF NOT EXISTS movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		description TEXT,
+		type TEXT NOT NULL,
+		is_standard INTEGER NOT NULL DEFAULT 0,
+		created_by INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_movements_name ON movements(name);
+	CREATE INDEX IF NOT EXISTS idx_movements_type ON movements(type);
+	CREATE INDEX IF NOT EXISTS idx_movements_standard ON movements(is_standard);
+
+	CREATE TABLE IF NOT EXISTS workout_movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workout_id INTEGER NOT NULL,
+		movement_id INTEGER NOT NULL,
+		weight REAL,
+		sets INTEGER,
+		reps INTEGER,
+		time INTEGER,
+		distance REAL,
+		is_rx INTEGER NOT NULL DEFAULT 0,
+		notes TEXT,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_wm_workout_id ON workout_movements(workout_id);
+	CREATE INDEX IF NOT EXISTS idx_wm_movement_id ON workout_movements(movement_id);
+	CREATE INDEX IF NOT EXISTS idx_wm_workout_order ON workout_movements(workout_id, order_index);
+	`
+
+	_, err := db.Exec(schema)
+	return err
+}
