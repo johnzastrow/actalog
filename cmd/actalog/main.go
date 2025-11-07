@@ -18,6 +18,9 @@ import (
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/version"
+
+	// Database drivers
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
