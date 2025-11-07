@@ -45,10 +45,11 @@ type JWTConfig struct {
 
 // AppConfig holds application-specific configuration
 type AppConfig struct {
-	Name        string
-	Environment string // development, staging, production
-	LogLevel    string // debug, info, warn, error
-	CORSOrigins []string
+	Name              string
+	Environment       string   // development, staging, production
+	LogLevel          string   // debug, info, warn, error
+	CORSOrigins       []string
+	AllowRegistration bool // Allow new user registration after first user
 }
 
 // Load loads configuration from environment variables with sensible defaults
@@ -76,10 +77,11 @@ func Load() (*Config, error) {
 			Issuer:         getEnv("JWT_ISSUER", "actalog"),
 		},
 		App: AppConfig{
-			Name:        "ActaLog",
-			Environment: getEnv("APP_ENV", "development"),
-			LogLevel:    getEnv("LOG_LEVEL", "info"),
-			CORSOrigins: getEnvSlice("CORS_ORIGINS", []string{"http://localhost:8080", "http://localhost:3000"}),
+			Name:              "ActaLog",
+			Environment:       getEnv("APP_ENV", "development"),
+			LogLevel:          getEnv("LOG_LEVEL", "info"),
+			CORSOrigins:       getEnvSlice("CORS_ORIGINS", []string{"http://localhost:8080", "http://localhost:3000"}),
+			AllowRegistration: getEnvBool("ALLOW_REGISTRATION", true), // Allow by default in development
 		},
 	}
 
@@ -122,6 +124,13 @@ func getEnvSlice(key string, defaultValue []string) []string {
 	if value := os.Getenv(key); value != "" {
 		// Simple comma-separated parsing
 		return []string{value}
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		return value == "true" || value == "1" || value == "yes"
 	}
 	return defaultValue
 }
