@@ -1,6 +1,6 @@
 # Setup Guide
 
-Quick setup instructions for ActaLog development.
+Quick setup instructions for ActaLog development. ActaLog is a Progressive Web App (PWA) with offline capabilities.
 
 ## Prerequisites
 
@@ -9,6 +9,7 @@ Quick setup instructions for ActaLog development.
 - npm or yarn
 - (Optional) Docker & Docker Compose
 - (Optional) Make
+- Modern browser (Chrome, Firefox, Safari, or Edge) for PWA features
 
 ## Quick Setup
 
@@ -38,20 +39,26 @@ make run
 
 Backend will be available at http://localhost:8080
 
-### 3. Frontend Setup
+### 3. Frontend Setup (PWA)
 
 ```bash
 # Navigate to web directory
 cd web
 
-# Install dependencies
+# Install dependencies (includes PWA plugin)
 npm install
 
-# Start development server
+# Start development server (PWA features enabled)
 npm run dev
 ```
 
 Frontend will be available at http://localhost:3000
+
+**PWA Development Mode**:
+- Service Worker is enabled in development (via `devOptions.enabled: true`)
+- Manifest and offline features available at localhost
+- No HTTPS required for localhost testing
+- Check DevTools → Application → Service Workers to verify PWA status
 
 ## Windows Users
 
@@ -108,6 +115,95 @@ $env:GOMODCACHE="$PWD\.cache\go-mod"
 $env:GOTMPDIR="$PWD\.cache\tmp"
 go build -o bin\actalog.exe cmd\actalog\main.go
 ```
+
+## PWA Development
+
+### Testing PWA Features Locally
+
+PWA features work on `http://localhost` without SSL:
+
+1. **Service Worker Status**:
+   - Open DevTools → Application → Service Workers
+   - Verify service worker is registered
+   - Check "Update on reload" for development
+
+2. **Manifest Status**:
+   - Open DevTools → Application → Manifest
+   - Verify all fields are populated
+   - Check icon availability
+
+3. **Offline Testing**:
+   - Open DevTools → Network
+   - Check "Offline" to simulate no connection
+   - Navigate the app to test offline functionality
+
+4. **Cache Inspection**:
+   - Open DevTools → Application → Cache Storage
+   - View cached resources
+   - Clear cache to test fresh install
+
+### Generating PWA Icons
+
+Icons are required for the app to install properly. Generate them from the logo:
+
+```bash
+# Option 1: Use online tool (easiest)
+# Visit https://www.pwabuilder.com/imageGenerator
+# Upload design/logo.png or design/logo.svg
+# Download and extract to web/public/icons/
+
+# Option 2: Use ImageMagick (if installed)
+cd web/public/icons
+# See icons/README.md for complete commands
+convert ../../../design/logo.svg -resize 192x192 icon-192x192.png
+convert ../../../design/logo.svg -resize 512x512 icon-512x512.png
+# ... (see full list in web/public/icons/README.md)
+```
+
+### Testing on Mobile Devices
+
+**Option 1: Same Network** (no SSL needed)
+```bash
+# Get your local IP address
+# Windows: ipconfig
+# Linux/Mac: ifconfig or ip addr
+
+# Access from mobile: http://YOUR_IP:3000
+# Example: http://192.168.1.100:3000
+```
+
+**Option 2: Port Forwarding** (Android only)
+```bash
+# Connect Android device via USB
+# Enable USB debugging
+# Chrome DevTools → Remote Devices → Port Forwarding
+# Forward localhost:3000 to device
+```
+
+**Option 3: ngrok** (requires HTTPS for full PWA testing)
+```bash
+# Install ngrok: https://ngrok.com/
+npx ngrok http 3000
+# Use the https URL provided
+```
+
+### PWA Update Testing
+
+Test the update flow:
+
+1. Make changes to the app code
+2. Rebuild: `npm run build`
+3. The service worker will detect new version
+4. User sees update prompt (configured in `main.js`)
+
+### Lighthouse PWA Audit
+
+Run Lighthouse to verify PWA compliance:
+
+1. Open Chrome DevTools → Lighthouse
+2. Select "Progressive Web App" category
+3. Run audit
+4. Target score: 90+
 
 ## Docker Setup (Alternative)
 
