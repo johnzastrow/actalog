@@ -224,7 +224,6 @@ func (r *SQLiteMovementRepository) ListByUser(userID int64) ([]*domain.Movement,
 	}
 
 	return movements, rows.Err()
-	return r.queryMovementsWithParam(query, userID)
 }
 
 // Update updates a movement
