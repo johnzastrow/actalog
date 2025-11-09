@@ -10,7 +10,10 @@ ActaLog uses a relational database to store user data, workouts, WODs, strength 
 
 ## Schema Version
 
-Current schema version: **0.3.0**
+**Current Implemented Version:** 0.1.0
+**Planned Version:** 0.3.0 (documented below, not yet migrated)
+
+> **Note:** This document describes the planned v0.3.0 schema design. The currently implemented schema in the codebase is v0.1.0 (basic tables without WODs, PRs, email verification, etc.). Migration from v0.1.0 to v0.3.0 is planned but not yet implemented.
 
 ## Entity Relationship Diagram
 
@@ -442,7 +445,9 @@ Common strength movements pre-loaded:
 
 Database migrations will be managed using a migration tool (e.g., golang-migrate). Each migration will be versioned and tracked.
 
-### Migration from v0.2.0 to v0.3.0
+### Planned Migration from v0.1.0 to v0.3.0
+
+**Status:** Not yet implemented. This is the planned migration when v0.3.0 is ready to be implemented.
 
 Key changes:
 1. Add `birthday` column to `users` table
@@ -488,6 +493,6 @@ Key changes:
 
 ## Version History
 
-- **v0.3.0**: Updated schema to match logical data model requirements
-- **v0.2.0**: PWA implementation
-- **v0.1.0**: Initial schema design
+- **v0.3.0**: Planned schema redesign to match logical data model requirements (documented, not yet implemented)
+- **v0.2.0-beta**: Multi-database support, workout logging backend (current application version)
+- **v0.1.0**: Initial schema design (current database schema)
