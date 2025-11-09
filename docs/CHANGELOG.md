@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Multi-Database Support
+- **Multi-database support**: SQLite, PostgreSQL, and MySQL/MariaDB
+- **Database migration system** with version tracking and rollback support
+- Database-agnostic DSN builder
+- Driver-specific schema generation (SQLite, PostgreSQL, MySQL)
+- Comprehensive DATABASE_SUPPORT.md documentation
+- Support for database-agnostic migrations with driver parameter
+
+### Added - Workout Logging (Backend Complete)
+- **Workout logging functionality** with complete CRUD operations
+- **Movement database** with 82 standard CrossFit movements (auto-seeded)
+- **Progress tracking** by movement for PR analysis
+- API endpoints for workout management:
+  - POST /api/workouts - Create workout with movements
+  - GET /api/workouts - List workouts with pagination and date filtering
+  - GET /api/workouts/{id} - Get workout details
+  - PUT /api/workouts/{id} - Update workout
+  - DELETE /api/workouts/{id} - Delete workout (cascade deletes movements)
+  - GET /api/progress/movements/{movement_id} - Track performance history
+- Movement management API endpoints:
+  - GET /api/movements - List standard movements
+  - GET /api/movements/search - Search movements by name
+  - GET /api/movements/{id} - Get movement details
+  - POST /api/movements - Create custom movement
+
 ### Added - Design Refinements v0.3.0
 **Refined design decisions documented** through user consultation:
 
@@ -105,6 +130,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed user-specific fields from workouts table (user_id, workout_date, workout_type)
 - Updated ERD to reflect many-to-many relationships properly
 
+### Changed - Multi-Database Support
+- Updated migration system to accept driver parameter for database-agnostic migrations
+- Improved table existence checking across all database types
+- Enhanced schema creation with database-specific SQL dialects
+
 ### Migration Required
 - Database migration from v0.2.0 to v0.3.0 needed
 - See DATABASE_SCHEMA.md for migration steps
@@ -139,12 +169,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `birthday` field to User profile
 
 ### Planned
-- Implement database migration scripts
-- Update backend for new schema
+- Implement database migration scripts for v0.3.0 schema
+- Update backend domain models for new schema
 - Seed data for standard WODs and movements
-- Workout logging functionality (updated for new schema)
-- Progress tracking with charts and graphs
-- Data import/export (CSV/JSON)
+- Connect frontend to workout logging APIs
+- Workout templates and named WOD database
+- Charts and graphs for progress visualization
 - Push notifications for workout reminders
 - Web Share API integration
 - Implement all 33 screens defined in screen inventory:
@@ -153,114 +183,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Management screens for Workout Templates (List, Create, Edit with CRUD operations)
   - Import/Export data screens
   - Settings Menu flyout implementation
-
-## [0.2.0] - 2025-11-08
-
-### Added - PWA Implementation
-
-**Progressive Web App Features**:
-- 🎯 Full PWA support with installable app capability
-- 📱 Works on iOS, Android, and desktop browsers
-- ⚡ Service worker with Workbox for offline functionality
-- 💾 IndexedDB for offline data storage and synchronization
-- 🔄 Background sync for pending workout operations
-- 🚀 Automatic updates with user notification
-- 📦 Precaching of static assets for instant loading
-- 🎨 Web app manifest with ActaLog branding
-
-**PWA Infrastructure**:
-- Added `vite-plugin-pwa` version 0.20.5
-- Added `workbox-window` version 7.3.0 for service worker management
-- Configured service worker with intelligent caching strategies:
-  - CacheFirst for fonts and static assets
-  - NetworkFirst for API data with 5-minute fallback
-  - Precaching for all build artifacts
-- PWA development mode enabled in vite.config.js
-
-**Offline Functionality**:
-- Created `offlineStorage.js` utility for IndexedDB operations
-- Object stores for workouts, movements, and pending sync queue
-- Automatic sync when connection is restored
-- Network status detection and handling
-- Queue system for offline workout creation
-
-**Configuration**:
-- Web app manifest with:
-  - Name: "ActaLog - CrossFit Workout Tracker"
-  - Theme color: #2c3657 (primary brand color)
-  - Background color: #ffffff
-  - Standalone display mode
-  - Portrait orientation
-  - 8 icon sizes (72px to 512px)
-- Service worker registration in main.js
-- Update notification system for new versions
-
-**Documentation**:
-- Created comprehensive DEPLOYMENT.md with:
-  - HTTPS setup requirements and SSL certificate guide
-  - Traditional server deployment steps
-  - Docker deployment option
-  - Nginx reverse proxy configuration for PWA
-  - PWA-specific deployment checklist
-  - Troubleshooting guide
-- Updated REQUIREMENTS.md with PWA capabilities
-- Updated ARCHITECTURE.md with PWA architecture diagrams
-- Updated SETUP.md with PWA development and testing instructions
-- Created web/public/icons/README.md with icon generation guide
-
-**Developer Experience**:
-- PWA testing enabled in development mode (works on localhost)
-- Service worker updates on reload during development
-- DevTools integration for PWA debugging
-- Lighthouse PWA audit support
-
-### Changed
-- Updated package.json version to 0.2.0
-- Enhanced vite.config.js with complete PWA configuration
-- Modified main.js to register service worker
-
-### Technical Details
-
-**Caching Strategies**:
-- Google Fonts: 1-year cache (CacheFirst)
-- CDN assets: 1-year cache (CacheFirst)
-- API responses: 5-minute cache with network priority (NetworkFirst)
-- Static assets: Precached and updated on deployment
-
-**Browser Support**:
-- Chrome/Edge: Full support (Desktop & Mobile)
-- Safari: Full support iOS 11.3+
-- Firefox: Full support (Desktop & Android)
-- Samsung Internet: Full support
-- Opera: Full support
-
-**Performance**:
-- Offline-first architecture for instant loading
-- Background sync for seamless data synchronization
-- Code splitting and lazy loading ready
-- Optimized asset caching
-
-### Security
-- HTTPS required in production for PWA features
-- Service worker scope limited to application
-- Same-origin policy enforced
-- Secure service worker update mechanism
-
-### Notes for Deployment
-- ⚠️ **HTTPS is required** for PWA features to work in production
-- 📦 Generate PWA icons before deployment (see web/public/icons/README.md)
-- 🔍 Run Lighthouse PWA audit (target score: 90+)
-- ✅ Test offline functionality after deployment
-- 📱 Verify "Add to Home Screen" works on mobile devices
-
-## [0.1.0-alpha] - 2025-11-07
-
-### Added
-- Initial project structure with Clean Architecture
-- Go backend with Chi router
-- Vue.js 3 frontend with Vuetify 3
-- User registration and login system
-- JWT-based authentication
 - First-user-as-admin logic
 - Configurable registration control (ALLOW_REGISTRATION)
 - SQLite database with auto-initialization
