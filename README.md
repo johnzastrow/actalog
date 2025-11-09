@@ -184,6 +184,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Architecture](docs/ARCHITECTURE.md) - System architecture and design patterns
 - [Database Schema](docs/DATABASE_SCHEMA.md) - Database structure and ERD
 - [Database Support](docs/DATABASE_SUPPORT.md) - Multi-database setup (SQLite, PostgreSQL, MySQL/MariaDB)
+- [Logging Guide](docs/LOGGING.md) - Logging configuration and best practices
 - [Requirements](docs/REQUIIREMENTS.md) - Project requirements and user stories
 - [AI Instructions](docs/AI_INSTRUCTIONS.md) - Development guidelines
 

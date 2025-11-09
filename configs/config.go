@@ -14,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	App      AppConfig
+	Logging  LoggingConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -52,6 +53,15 @@ type AppConfig struct {
 	AllowRegistration bool // Allow new user registration after first user
 }
 
+// LoggingConfig holds logging configuration
+type LoggingConfig struct {
+	Level      string // debug, info, warn, error
+	EnableFile bool   // Enable file logging
+	FilePath   string // Path to log file
+	MaxSizeMB  int    // Max file size in MB before rotation
+	MaxBackups int    // Number of old log files to keep
+}
+
 // Load loads configuration from environment variables with sensible defaults
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -82,6 +92,13 @@ func Load() (*Config, error) {
 			LogLevel:          getEnv("LOG_LEVEL", "info"),
 			CORSOrigins:       getEnvSlice("CORS_ORIGINS", []string{"http://localhost:8080", "http://localhost:3000"}),
 			AllowRegistration: getEnvBool("ALLOW_REGISTRATION", true), // Allow by default in development
+		},
+		Logging: LoggingConfig{
+			Level:      getEnv("LOG_LEVEL", "info"),
+			EnableFile: getEnvBool("LOG_FILE_ENABLED", false),
+			FilePath:   getEnv("LOG_FILE_PATH", ""),    // Empty = auto-detect (./logs/actalog.log)
+			MaxSizeMB:  getEnvInt("LOG_MAX_SIZE_MB", 100), // 100MB default
+			MaxBackups: getEnvInt("LOG_MAX_BACKUPS", 3),   // Keep 3 old files
 		},
 	}
 
