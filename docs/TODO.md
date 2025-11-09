@@ -1,5 +1,38 @@
 # TODO
 
+## Database Schema Migration (v0.3.0) - HIGH PRIORITY
+
+### Schema Changes Required
+- [ ] Create database migration from v0.2.0 to v0.3.0
+- [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, etc.)
+- [ ] Rename `movements` table to `strength_movements`
+- [ ] Add `movement_type` column to `strength_movements`
+- [ ] Modify `workouts` table (remove user_id, workout_date, workout_type, workout_name, total_time)
+- [ ] Create `user_workouts` junction table
+- [ ] Rename `workout_movements` to `workout_strength`
+- [ ] Create `workout_wods` junction table
+- [ ] Create `user_settings` table
+- [ ] Create `audit_logs` table
+- [ ] Add `updated_by` columns to all relevant tables
+- [ ] Migrate existing data to new schema structure
+- [ ] Test migration on development database
+- [ ] Create rollback migration script
+
+### Backend Updates for New Schema
+- [ ] Update domain models for new entities (WOD, Strength, UserWorkout, etc.)
+- [ ] Create repository interfaces and implementations for new entities
+- [ ] Update service layer to work with new schema
+- [ ] Update API handlers for new data structure
+- [ ] Add validation for WOD attributes (source, type, regime, score_type)
+- [ ] Implement audit logging functionality
+- [ ] Create user settings management endpoints
+
+### Seed Data
+- [ ] Create seed data for standard CrossFit WODs (Fran, Grace, Helen, Diane, Karen, Murph, DT, etc.)
+- [ ] Create seed data for standard strength movements
+- [ ] Categorize movements by type (weightlifting, cardio, gymnastics)
+- [ ] Add descriptions and URLs for standard WODs
+
 ## PWA Features (v0.2.0)
 
 ### Completed ✅
@@ -33,13 +66,18 @@
 - [ ] Add profile picture upload
 - [ ] Add user profile editing
 
-### Workout Logging
-- [ ] Implement workout creation API endpoints
-- [ ] Add movement creation/editing for custom movements
-- [ ] Implement workout history retrieval endpoints
-- [ ] Add workout editing and deletion
+### Workout Logging (Updated for v0.3.0 Schema)
+- [ ] Implement workout template creation API endpoints
+- [ ] Implement user_workout logging endpoints (link user to workout on specific date)
+- [ ] Add WOD creation/editing for custom WODs
+- [ ] Add strength movement creation/editing for custom movements
+- [ ] Implement workout_wod association endpoints
+- [ ] Implement workout_strength association endpoints with weight/sets/reps
+- [ ] Implement workout history retrieval (via user_workouts)
+- [ ] Add workout template editing and deletion
 - [ ] Add workout search and filtering
-- [ ] Implement PR (Personal Record) tracking
+- [ ] Implement PR (Personal Record) tracking across user_workouts
+- [ ] Add scoring for WODs (time, rounds+reps, max weight)
 
 ### Movement Database
 - [ ] Seed database with standard CrossFit movements

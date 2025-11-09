@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added - Database Schema v0.3.0
+- **Major schema redesign** based on logical data model requirements
+- New `wods` table for predefined CrossFit workouts with comprehensive attributes:
+  - Source (CrossFit, Other Coach, Self-recorded)
+  - Type (Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created)
+  - Regime (EMOM, AMRAP, Fastest Time, etc.)
+  - Score Type (Time, Rounds+Reps, Max Weight)
+  - Description, URL, and notes fields
+- New `user_workouts` junction table linking users to workout instances on specific dates
+- New `workout_wods` junction table linking workouts to WODs with scoring
+- New `user_settings` table for user preferences (theme, notifications, export format)
+- New `audit_logs` table for audit trail and accountability
+- Added `updated_by` tracking to all entities for audit purposes
+
+### Changed - Database Schema v0.3.0
+- **Workouts** are now reusable templates (not user-specific instances)
+- Renamed `movements` table to `strength_movements`
+- Added `movement_type` to strength_movements (weightlifting, cardio, gymnastics)
+- Renamed `workout_movements` to `workout_strength`
+- Removed user-specific fields from workouts table (user_id, workout_date, workout_type)
+- Updated ERD to reflect many-to-many relationships properly
+
+### Migration Required
+- Database migration from v0.2.0 to v0.3.0 needed
+- See DATABASE_SCHEMA.md for migration steps
+- Backend domain models need updates
+- API endpoints need refactoring for new structure
+
+### UI Updates - Dashboard Redesign
 - New Dashboard UI matching design specifications
 - Calendar component showing monthly workout activity
 - Recent workouts cards with grouped display
@@ -15,8 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified bottom navigation across all authenticated views
 - Avatar support for user profile icon
 - Workout badge for Personal Records (PRs)
-
-### Changed
 - Complete Dashboard redesign with calendar view
 - Moved header and bottom navigation to App.vue for consistency
 - Updated color scheme to match brand guidelines
@@ -24,8 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced bottom navigation with better iconography
 
 ### Planned
-- Workout logging functionality
-- Movement database with standard CrossFit movements
+- Implement database migration scripts
+- Update backend for new schema
+- Seed data for standard WODs and movements
+- Workout logging functionality (updated for new schema)
 - Progress tracking with charts and graphs
 - Data import/export (CSV/JSON)
 - Push notifications for workout reminders
@@ -234,5 +262,5 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.2.0
-**Last Updated:** 2025-11-08
+**Current Version:** 0.3.0-dev (schema updated, migration pending)
+**Last Updated:** 2025-11-09

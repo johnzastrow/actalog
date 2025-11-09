@@ -135,18 +135,147 @@ actalog/
 - No external dependencies
 - The heart of the application
 
-**Example**:
+**Core Entities** (Schema v0.3.0):
+
 ```go
+// User represents a system user
 type User struct {
-    ID    int64
-    Email string
-    Name  string
+    ID            int64
+    Email         string
+    PasswordHash  string
+    Name          string
+    ProfileImage  string
+    Role          string
+    CreatedAt     time.Time
+    UpdatedAt     time.Time
+    UpdatedBy     *int64
+    LastLoginAt   *time.Time
 }
 
+// WOD represents a predefined CrossFit workout
+type WOD struct {
+    ID          int64
+    Name        string
+    Source      string // CrossFit, Other Coach, Self-recorded
+    Type        string // Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created
+    Regime      string // EMOM, AMRAP, Fastest Time, etc.
+    ScoreType   string // Time, Rounds+Reps, Max Weight
+    Description string
+    URL         string
+    Notes       string
+    CreatedBy   *int64
+    CreatedAt   time.Time
+    UpdatedAt   time.Time
+    UpdatedBy   *int64
+}
+
+// StrengthMovement represents an exercise/movement
+type StrengthMovement struct {
+    ID           int64
+    Name         string
+    MovementType string // weightlifting, cardio, gymnastics
+    Description  string
+    CreatedBy    *int64
+    CreatedAt    time.Time
+    UpdatedAt    time.Time
+    UpdatedBy    *int64
+}
+
+// Workout represents a workout template (reusable)
+type Workout struct {
+    ID        int64
+    Name      string
+    Notes     string
+    CreatedAt time.Time
+    UpdatedAt time.Time
+    UpdatedBy *int64
+}
+
+// UserWorkout links a user to a workout on a specific date
+type UserWorkout struct {
+    ID          int64
+    UserID      int64
+    WorkoutID   int64
+    WorkoutDate time.Time
+    Notes       string
+    CreatedAt   time.Time
+    UpdatedAt   time.Time
+}
+
+// WorkoutWOD links a workout to a WOD with scoring
+type WorkoutWOD struct {
+    ID         int64
+    WorkoutID  int64
+    WODID      int64
+    ScoreValue string
+    OrderIndex int
+    CreatedAt  time.Time
+    UpdatedAt  time.Time
+}
+
+// WorkoutStrength links a workout to a strength movement with details
+type WorkoutStrength struct {
+    ID         int64
+    WorkoutID  int64
+    StrengthID int64
+    Weight     *float64
+    Sets       *int
+    Reps       *int
+    Notes      string
+    OrderIndex int
+    CreatedAt  time.Time
+    UpdatedAt  time.Time
+}
+
+// UserSetting stores user preferences
+type UserSetting struct {
+    ID                      int64
+    UserID                  int64
+    NotificationPreferences string
+    DataExportFormat        string
+    Theme                   string
+    CreatedAt               time.Time
+    UpdatedAt               time.Time
+}
+
+// AuditLog records significant actions
+type AuditLog struct {
+    ID        int64
+    UserID    *int64
+    Action    string
+    Details   string
+    Timestamp time.Time
+}
+
+// Repository Interfaces
 type UserRepository interface {
     Create(user *User) error
     GetByID(id int64) (*User, error)
+    GetByEmail(email string) (*User, error)
+    Update(user *User) error
 }
+
+type WODRepository interface {
+    Create(wod *WOD) error
+    GetByID(id int64) (*WOD, error)
+    GetByName(name string) (*WOD, error)
+    List(filters map[string]interface{}) ([]*WOD, error)
+    Update(wod *WOD) error
+}
+
+type StrengthMovementRepository interface {
+    Create(movement *StrengthMovement) error
+    GetByID(id int64) (*StrengthMovement, error)
+    ListByType(movementType string) ([]*StrengthMovement, error)
+}
+
+type UserWorkoutRepository interface {
+    Create(userWorkout *UserWorkout) error
+    GetByUserAndDate(userID int64, date time.Time) ([]*UserWorkout, error)
+    GetByDateRange(userID int64, start, end time.Time) ([]*UserWorkout, error)
+}
+
+// ... and more repository interfaces
 ```
 
 ### 2. Repository Layer (`internal/repository/`)
@@ -626,5 +755,28 @@ graph LR
 
 ## Version History
 
+- **v0.3.0-dev**: Database schema redesign, domain model updates (schema v0.3.0)
 - **v0.2.0**: PWA implementation with offline support
 - **v0.1.0-alpha**: Initial architecture and project setup
+
+## Notes on Schema v0.3.0
+
+The database schema was significantly redesigned to better represent the logical data model:
+
+**Key Architectural Changes:**
+1. **Workouts as Templates**: Workouts are now reusable templates rather than user-specific instances
+2. **WOD Entity**: New first-class entity for CrossFit WODs with comprehensive metadata
+3. **Junction Tables**: Proper many-to-many relationships via junction tables (user_workouts, workout_wods, workout_strength)
+4. **Audit Trail**: Built-in audit logging for accountability and troubleshooting
+5. **User Settings**: Separate table for user preferences
+
+**Impact on Application Layers:**
+- **Domain Layer**: New entities (WOD, StrengthMovement, UserWorkout, etc.) require new repository interfaces
+- **Service Layer**: Business logic must handle template-based workouts and user instances separately
+- **API Layer**: Endpoints need refactoring to support new workflow (create template → log user workout)
+- **Frontend**: UI must distinguish between workout templates and user workout logs
+
+**Migration Strategy:**
+- Database migrations will transform existing data from v0.2.0 schema to v0.3.0
+- Existing user workouts will be converted to the new template + user_workout structure
+- Standard WODs and movements will be seeded during migration
