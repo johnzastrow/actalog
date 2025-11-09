@@ -47,7 +47,38 @@ You are an expert in Go, microservices architecture, and clean backend developme
 
 ## Rules
 
-1. Use mermaid diagrams throughout the documentation
+1. Use mermaid diagrams throughout the documentation. Ask me which of the following mermaid themes to use
+Microsoft Theme
+
+```mermaid
+%%{init: 
+{
+  "theme": "default",
+  "themeVariables": {
+    "nodeBorder" : "#004990",
+    "mainBkg" : "#c9d7e4",
+    "actorBkg" : "#01A6F0",
+    "signalColor" : "#F34F1C",
+    "textColor" : "#747474",
+    "loopTextColor" : "#C7C7C7",
+    "labelTextColor" : "#C7C7C7",
+    "labelBoxBorderColor" : "#7FBC00",
+    "labelBoxBkgColor" : "#7FBC00",
+    "noteBkgColor" : "#FFBA01",
+    "noteBorderColor": "#FFBA01",
+    "fontFamily": "Inter",
+    "fontSize": "13px"
+ }
+}
+}%%
+``` 
+
+Forest Dark theme
+
+```mermaid
+%%{init: {'theme': 'forest', 'themeVariables': {'darkMode': true}, "flowchart" : { "curve" : "basis" } } }%%
+```
+
 2. Only include information that explains the project and how to get started quickly in the README. Put other instructions in dedicated and relevant .md files in the docs/ directory. Reference these supplemental files in the README
 3. Always write and perform unit tests and store them in `tests/`
 4. Always apply appropriate linters, checkers, and formatters to code after you implement a batch of changes.

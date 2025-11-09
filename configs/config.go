@@ -27,7 +27,7 @@ type ServerConfig struct {
 
 // DatabaseConfig holds database connection configuration
 type DatabaseConfig struct {
-	Driver   string // sqlite, postgres, mysql
+	Driver   string // sqlite3, postgres, mysql
 	Host     string
 	Port     int
 	User     string

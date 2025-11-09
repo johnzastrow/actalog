@@ -1,97 +1,75 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-6">Dashboard</h1>
-      </v-col>
+  <v-container fluid class="pa-3" style="background-color: #f5f7fa; min-height: calc(100vh - 64px)">
+    <!-- Calendar Section -->
+    <workout-calendar
+      :workout-dates="workoutDates"
+      @day-selected="onDaySelected"
+      class="mb-3"
+    />
 
-      <!-- Quick Action -->
-      <v-col cols="12">
-        <v-card elevation="2" rounded="lg">
-          <v-card-text class="pa-6">
-            <h2 class="text-h6 mb-4">Quick Actions</h2>
-            <v-btn
-              color="primary"
-              size="large"
-              prepend-icon="mdi-plus"
-              to="/workouts/log"
-            >
-              Log Today's Workout
-            </v-btn>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- Recent Activity -->
-      <v-col cols="12" md="8">
-        <v-card elevation="2" rounded="lg">
-          <v-card-title>Recent Workouts</v-card-title>
-          <v-card-text>
-            <v-list>
-              <v-list-item
-                v-for="n in 5"
-                :key="n"
-                subtitle="No workouts logged yet"
-              >
-                <template #prepend>
-                  <v-icon>mdi-dumbbell</v-icon>
-                </template>
-                <v-list-item-title>Workout Placeholder {{ n }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- Stats Summary -->
-      <v-col cols="12" md="4">
-        <v-card elevation="2" rounded="lg" class="mb-4">
-          <v-card-text class="text-center pa-6">
-            <div class="text-h3 text-primary">0</div>
-            <div class="text-body-1 text-medium-emphasis">Total Workouts</div>
-          </v-card-text>
-        </v-card>
-
-        <v-card elevation="2" rounded="lg">
-          <v-card-text class="text-center pa-6">
-            <div class="text-h3 text-secondary">0</div>
-            <div class="text-body-1 text-medium-emphasis">This Month</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Bottom Navigation -->
-    <v-bottom-navigation v-model="activeTab" grow>
-      <v-btn value="dashboard" to="/dashboard">
-        <v-icon>mdi-view-dashboard</v-icon>
-        <span>Dashboard</span>
-      </v-btn>
-
-      <v-btn value="performance" to="/performance">
-        <v-icon>mdi-chart-line</v-icon>
-        <span>Performance</span>
-      </v-btn>
-
-      <v-btn value="log" to="/workouts/log" color="gold">
-        <v-icon size="large">mdi-plus</v-icon>
-      </v-btn>
-
-      <v-btn value="workouts" to="/workouts">
-        <v-icon>mdi-dumbbell</v-icon>
-        <span>Workouts</span>
-      </v-btn>
-
-      <v-btn value="profile" to="/profile">
-        <v-icon>mdi-account</v-icon>
-        <span>Profile</span>
-      </v-btn>
-    </v-bottom-navigation>
+    <!-- Recent Workouts Cards -->
+    <recent-workouts-cards
+      :workouts="last7DaysWorkouts"
+      :loading="loading"
+    />
   </v-container>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from '@/utils/axios'
+import WorkoutCalendar from '@/components/WorkoutCalendar.vue'
+import RecentWorkoutsCards from '@/components/RecentWorkoutsCards.vue'
 
-const activeTab = ref('dashboard')
+const loading = ref(false)
+const workouts = ref([])
+
+// Get all workout dates for calendar
+const workoutDates = computed(() => {
+  return workouts.value.map(w => w.workout_date)
+})
+
+// Get workouts from last 7 days
+const last7DaysWorkouts = computed(() => {
+  const now = new Date()
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+  return workouts.value
+    .filter(workout => {
+      const workoutDate = new Date(workout.workout_date)
+      return workoutDate >= sevenDaysAgo && workoutDate <= now
+    })
+    .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
+})
+
+// Fetch all workouts
+async function fetchWorkouts() {
+  loading.value = true
+  try {
+    const response = await axios.get('/api/workouts')
+    workouts.value = response.data.workouts || []
+  } catch (err) {
+    console.error('Failed to fetch workouts:', err)
+    // Fallback to empty array
+    workouts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Handle day selected from calendar
+function onDaySelected(date) {
+  console.log('Selected date:', date)
+  // Could navigate to workouts view filtered by this date
+  // or show a dialog with workouts for this day
+}
+
+// Load data on mount
+onMounted(() => {
+  fetchWorkouts()
+})
 </script>
+
+<style scoped>
+/* Dashboard specific styles */
+</style>
