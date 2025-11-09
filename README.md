@@ -10,17 +10,34 @@
 
 ActaLog is a fitness tracker app focused on logging CrossFit workouts and tracking history for weights, reps, and named weightlifting lifts. Built with a Go backend and Vue.js/Vuetify frontend, it provides a clean, mobile-first interface for tracking your fitness journey.
 
-**Version:** 0.1.0-alpha
+**Version:** 0.2.0-beta
 
 ## Features
 
-- 🏋️ **Workout Logging**: Track named WODs and custom workouts
-- 📊 **Progress Tracking**: Visual charts and graphs showing improvement over time
-- 📱 **Mobile-First**: Optimized for mobile with responsive desktop support
-- 👤 **Multi-User**: Secure authentication and personal workout data
-- 📤 **Data Export/Import**: CSV and JSON support
-- 🎨 **Clean Design**: Material Design UI with Vuetify
-- 🔒 **Secure**: JWT authentication, bcrypt password hashing
+### Current Features (v0.2.0-beta)
+
+- ✅ **User Authentication**: Secure registration and login with JWT tokens
+- ✅ **Workout Logging**: Track workouts with movements, weights, sets, and reps
+- ✅ **Movement Database**: 31 pre-seeded standard CrossFit movements
+- ✅ **Searchable Movements**: Autocomplete search for quick movement selection
+- ✅ **Workout History**: View all logged workouts with movement details
+- ✅ **Dashboard**: Real-time statistics showing total and monthly workout counts
+- ✅ **Recent Activity**: Quick view of your last 5 workouts
+- ✅ **Mobile-First Design**: Responsive UI optimized for mobile devices
+- ✅ **Modern UI**: Clean design with cyan accents and dark navy headers
+- ✅ **Rx/Scaled Tracking**: Mark movements as Rx or Scaled
+- ✅ **Workout Notes**: Add personal notes to each workout
+- ✅ **Secure API**: Protected endpoints with JWT authentication
+- 🔒 **Security**: bcrypt password hashing, parameterized SQL queries
+
+### Coming Soon
+
+- 📊 **Performance Charts**: Visual progress tracking for movements over time
+- ✏️ **Edit Workouts**: Modify existing workout entries
+- 🗑️ **Delete Workouts**: Remove workouts with confirmation
+- ➕ **Custom Movements**: Add your own movements from the UI
+- 🔍 **Workout Filtering**: Search and filter by date, movement, or type
+- 📤 **Data Export**: Download your workout data (CSV, JSON)
 
 ## Technology Stack
 
@@ -224,12 +241,28 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ## Roadmap
 
-- [ ] User authentication and registration
-- [ ] Workout logging functionality
-- [ ] Movement database with standard CrossFit movements
-- [ ] Progress tracking with charts
-- [ ] Data import/export
+### Completed (v0.2.0-beta)
+- [x] User authentication and registration
+- [x] Workout logging functionality
+- [x] Movement database with 31 standard CrossFit movements
+- [x] Workout history viewing
+- [x] Dashboard with statistics
+- [x] Mobile-responsive design
+- [x] Searchable movement selection
+
+### In Progress
+- [ ] Performance tracking with charts
+- [ ] Edit/delete workout functionality
+- [ ] Custom movement creation
+- [ ] Workout filtering and search
+
+### Planned
+- [ ] Data import/export (CSV, JSON)
+- [ ] Personal records (PR) tracking
+- [ ] Workout templates for common WODs
+- [ ] Timed workouts (AMRAP, EMOM, For Time)
 - [ ] PWA support for offline access
+- [ ] Dark mode
 - [ ] Mobile apps (iOS/Android)
 - [ ] Social features and leaderboards
 
