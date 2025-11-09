@@ -25,6 +25,10 @@ func (r *SQLiteWorkoutRepository) Create(workout *domain.Workout) error {
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
+	now := time.Now()
+	workout.CreatedAt = now
+	workout.UpdatedAt = now
+
 	result, err := r.db.Exec(
 		query,
 		workout.UserID,
@@ -59,6 +63,9 @@ func (r *SQLiteWorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
 	`
 
 	workout := &domain.Workout{}
+	var workoutName sql.NullString
+	var notes sql.NullString
+	var totalTime sql.NullInt64
 	var totalTime sql.NullInt64
 	var workoutName sql.NullString
 	var notes sql.NullString
@@ -96,6 +103,7 @@ func (r *SQLiteWorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
 	return workout, nil
 }
 
+// GetByUserID retrieves workouts for a specific user with pagination
 // GetByUserID retrieves workouts for a user with pagination
 func (r *SQLiteWorkoutRepository) GetByUserID(userID int64, limit, offset int) ([]*domain.Workout, error) {
 	query := `
@@ -116,6 +124,9 @@ func (r *SQLiteWorkoutRepository) GetByUserID(userID int64, limit, offset int) (
 	var workouts []*domain.Workout
 	for rows.Next() {
 		workout := &domain.Workout{}
+		var workoutName sql.NullString
+		var notes sql.NullString
+		var totalTime sql.NullInt64
 		var totalTime sql.NullInt64
 		var workoutName sql.NullString
 		var notes sql.NullString
@@ -159,6 +170,7 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 		       created_at, updated_at
 		FROM workouts
 		WHERE user_id = ? AND workout_date >= ? AND workout_date <= ?
+		ORDER BY workout_date DESC, created_at DESC
 		ORDER BY workout_date DESC
 	`
 
@@ -171,6 +183,9 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 	var workouts []*domain.Workout
 	for rows.Next() {
 		workout := &domain.Workout{}
+		var workoutName sql.NullString
+		var notes sql.NullString
+		var totalTime sql.NullInt64
 		var totalTime sql.NullInt64
 		var workoutName sql.NullString
 		var notes sql.NullString
@@ -211,6 +226,7 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 func (r *SQLiteWorkoutRepository) Update(workout *domain.Workout) error {
 	query := `
 		UPDATE workouts
+		SET workout_date = ?, workout_type = ?, workout_name = ?, notes = ?, total_time = ?, updated_at = ?
 		SET workout_date = ?, workout_type = ?, workout_name = ?, notes = ?,
 		    total_time = ?, updated_at = ?
 		WHERE id = ?

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
@@ -23,6 +24,10 @@ func (r *SQLiteWorkoutMovementRepository) Create(wm *domain.WorkoutMovement) err
 		INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, notes, order_index, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
+
+	now := time.Now()
+	wm.CreatedAt = now
+	wm.UpdatedAt = now
 
 	result, err := r.db.Exec(
 		query,
@@ -62,6 +67,11 @@ func (r *SQLiteWorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMove
 	`
 
 	wm := &domain.WorkoutMovement{}
+	var weight sql.NullFloat64
+	var sets sql.NullInt64
+	var reps sql.NullInt64
+	var timeVal sql.NullInt64
+	var distance sql.NullFloat64
 	var weight, distance sql.NullFloat64
 	var sets, reps, time sql.NullInt64
 	var notes sql.NullString
@@ -73,6 +83,7 @@ func (r *SQLiteWorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMove
 		&weight,
 		&sets,
 		&reps,
+		&timeVal,
 		&time,
 		&distance,
 		&wm.IsRx,
@@ -100,6 +111,8 @@ func (r *SQLiteWorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMove
 		r := int(reps.Int64)
 		wm.Reps = &r
 	}
+	if timeVal.Valid {
+		t := int(timeVal.Int64)
 	if time.Valid {
 		t := int(time.Int64)
 		wm.Time = &t
@@ -114,6 +127,16 @@ func (r *SQLiteWorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMove
 	return wm, nil
 }
 
+// GetByWorkoutID retrieves all workout movements for a specific workout
+func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutMovement, error) {
+	query := `
+		SELECT wm.id, wm.workout_id, wm.movement_id, wm.weight, wm.sets, wm.reps, wm.time, wm.distance,
+		       wm.is_rx, wm.notes, wm.order_index, wm.created_at, wm.updated_at,
+		       m.id, m.name, m.description, m.type, m.is_standard, m.created_by, m.created_at, m.updated_at
+		FROM workout_movements wm
+		JOIN movements m ON wm.movement_id = m.id
+		WHERE wm.workout_id = ?
+		ORDER BY wm.order_index
 // GetByWorkoutID retrieves all movements for a workout
 func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutMovement, error) {
 	query := `
@@ -130,6 +153,18 @@ func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*do
 	}
 	defer rows.Close()
 
+	var workoutMovements []*domain.WorkoutMovement
+	for rows.Next() {
+		wm := &domain.WorkoutMovement{}
+		movement := &domain.Movement{}
+		var weight sql.NullFloat64
+		var sets sql.NullInt64
+		var reps sql.NullInt64
+		var timeVal sql.NullInt64
+		var distance sql.NullFloat64
+		var wmNotes sql.NullString
+		var movementDesc sql.NullString
+		var movementCreatedBy sql.NullInt64
 	var movements []*domain.WorkoutMovement
 	for rows.Next() {
 		wm := &domain.WorkoutMovement{}
@@ -144,6 +179,21 @@ func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*do
 			&weight,
 			&sets,
 			&reps,
+			&timeVal,
+			&distance,
+			&wm.IsRx,
+			&wmNotes,
+			&wm.OrderIndex,
+			&wm.CreatedAt,
+			&wm.UpdatedAt,
+			&movement.ID,
+			&movement.Name,
+			&movementDesc,
+			&movement.Type,
+			&movement.IsStandard,
+			&movementCreatedBy,
+			&movement.CreatedAt,
+			&movement.UpdatedAt,
 			&time,
 			&distance,
 			&wm.IsRx,
@@ -167,6 +217,8 @@ func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*do
 			r := int(reps.Int64)
 			wm.Reps = &r
 		}
+		if timeVal.Valid {
+			t := int(timeVal.Int64)
 		if time.Valid {
 			t := int(time.Int64)
 			wm.Time = &t
@@ -174,6 +226,24 @@ func (r *SQLiteWorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*do
 		if distance.Valid {
 			wm.Distance = &distance.Float64
 		}
+		if wmNotes.Valid {
+			wm.Notes = wmNotes.String
+		}
+		if movementDesc.Valid {
+			movement.Description = movementDesc.String
+		}
+		if movementCreatedBy.Valid {
+			movement.CreatedBy = &movementCreatedBy.Int64
+		}
+
+		wm.Movement = movement
+		workoutMovements = append(workoutMovements, wm)
+	}
+
+	return workoutMovements, rows.Err()
+}
+
+// GetByUserIDAndMovementID retrieves workout movements for a user and specific movement (for PR tracking)
 		if notes.Valid {
 			wm.Notes = notes.String
 		}
@@ -190,6 +260,9 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 		SELECT wm.id, wm.workout_id, wm.movement_id, wm.weight, wm.sets, wm.reps, wm.time, wm.distance,
 		       wm.is_rx, wm.notes, wm.order_index, wm.created_at, wm.updated_at
 		FROM workout_movements wm
+		JOIN workouts w ON wm.workout_id = w.id
+		WHERE w.user_id = ? AND wm.movement_id = ?
+		ORDER BY w.workout_date DESC, wm.created_at DESC
 		INNER JOIN workouts w ON wm.workout_id = w.id
 		WHERE w.user_id = ? AND wm.movement_id = ?
 		ORDER BY w.workout_date DESC
@@ -202,6 +275,14 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 	}
 	defer rows.Close()
 
+	var workoutMovements []*domain.WorkoutMovement
+	for rows.Next() {
+		wm := &domain.WorkoutMovement{}
+		var weight sql.NullFloat64
+		var sets sql.NullInt64
+		var reps sql.NullInt64
+		var timeVal sql.NullInt64
+		var distance sql.NullFloat64
 	var movements []*domain.WorkoutMovement
 	for rows.Next() {
 		wm := &domain.WorkoutMovement{}
@@ -216,6 +297,7 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 			&weight,
 			&sets,
 			&reps,
+			&timeVal,
 			&time,
 			&distance,
 			&wm.IsRx,
@@ -239,6 +321,8 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 			r := int(reps.Int64)
 			wm.Reps = &r
 		}
+		if timeVal.Valid {
+			t := int(timeVal.Int64)
 		if time.Valid {
 			t := int(time.Int64)
 			wm.Time = &t
@@ -250,6 +334,10 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 			wm.Notes = notes.String
 		}
 
+		workoutMovements = append(workoutMovements, wm)
+	}
+
+	return workoutMovements, rows.Err()
 		movements = append(movements, wm)
 	}
 
@@ -260,6 +348,12 @@ func (r *SQLiteWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movem
 func (r *SQLiteWorkoutMovementRepository) Update(wm *domain.WorkoutMovement) error {
 	query := `
 		UPDATE workout_movements
+		SET movement_id = ?, weight = ?, sets = ?, reps = ?, time = ?, distance = ?, is_rx = ?, notes = ?, order_index = ?, updated_at = ?
+		WHERE id = ?
+	`
+
+	wm.UpdatedAt = time.Now()
+
 		SET movement_id = ?, weight = ?, sets = ?, reps = ?, time = ?, distance = ?,
 		    is_rx = ?, notes = ?, order_index = ?, updated_at = ?
 		WHERE id = ?
@@ -290,6 +384,7 @@ func (r *SQLiteWorkoutMovementRepository) Delete(id int64) error {
 	return err
 }
 
+// DeleteByWorkoutID deletes all workout movements for a specific workout
 // DeleteByWorkoutID deletes all movements for a workout
 func (r *SQLiteWorkoutMovementRepository) DeleteByWorkoutID(workoutID int64) error {
 	query := `DELETE FROM workout_movements WHERE workout_id = ?`

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
@@ -23,6 +24,10 @@ func (r *SQLiteMovementRepository) Create(movement *domain.Movement) error {
 		INSERT INTO movements (name, description, type, is_standard, created_by, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
+
+	now := time.Now()
+	movement.CreatedAt = now
+	movement.UpdatedAt = now
 
 	result, err := r.db.Exec(
 		query,
@@ -63,6 +68,7 @@ func (r *SQLiteMovementRepository) GetByID(id int64) (*domain.Movement, error) {
 	err := r.db.QueryRow(query, id).Scan(
 		&movement.ID,
 		&movement.Name,
+		&movement.Description,
 		&description,
 		&movement.Type,
 		&movement.IsStandard,
@@ -104,6 +110,7 @@ func (r *SQLiteMovementRepository) GetByName(name string) (*domain.Movement, err
 	err := r.db.QueryRow(query, name).Scan(
 		&movement.ID,
 		&movement.Name,
+		&movement.Description,
 		&description,
 		&movement.Type,
 		&movement.IsStandard,
@@ -139,6 +146,42 @@ func (r *SQLiteMovementRepository) ListStandard() ([]*domain.Movement, error) {
 		ORDER BY name
 	`
 
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movements []*domain.Movement
+	for rows.Next() {
+		movement := &domain.Movement{}
+		var createdBy sql.NullInt64
+
+		err := rows.Scan(
+			&movement.ID,
+			&movement.Name,
+			&movement.Description,
+			&movement.Type,
+			&movement.IsStandard,
+			&createdBy,
+			&movement.CreatedAt,
+			&movement.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if createdBy.Valid {
+			movement.CreatedBy = &createdBy.Int64
+		}
+
+		movements = append(movements, movement)
+	}
+
+	return movements, rows.Err()
+}
+
+// ListByUser retrieves movements created by a specific user
 	return r.queryMovements(query)
 }
 
@@ -152,6 +195,39 @@ func (r *SQLiteMovementRepository) ListByUser(userID int64) ([]*domain.Movement,
 		ORDER BY name
 	`
 
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movements []*domain.Movement
+	for rows.Next() {
+		movement := &domain.Movement{}
+		var createdBy sql.NullInt64
+
+		err := rows.Scan(
+			&movement.ID,
+			&movement.Name,
+			&movement.Description,
+			&movement.Type,
+			&movement.IsStandard,
+			&createdBy,
+			&movement.CreatedAt,
+			&movement.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if createdBy.Valid {
+			movement.CreatedBy = &createdBy.Int64
+		}
+
+		movements = append(movements, movement)
+	}
+
+	return movements, rows.Err()
 	return r.queryMovementsWithParam(query, userID)
 }
 
@@ -162,6 +238,8 @@ func (r *SQLiteMovementRepository) Update(movement *domain.Movement) error {
 		SET name = ?, description = ?, type = ?, updated_at = ?
 		WHERE id = ?
 	`
+
+	movement.UpdatedAt = time.Now()
 
 	_, err := r.db.Exec(
 		query,
@@ -193,6 +271,7 @@ func (r *SQLiteMovementRepository) Search(query string, limit int) ([]*domain.Mo
 		LIMIT ?
 	`
 
+	rows, err := r.db.Query(sqlQuery, "%"+query+"%", limit)
 	return r.queryMovementsWithParams(sqlQuery, "%"+query+"%", limit)
 }
 
@@ -215,6 +294,9 @@ func (r *SQLiteMovementRepository) queryMovementsWithParam(query string, arg int
 	}
 	defer rows.Close()
 
+	var movements []*domain.Movement
+	for rows.Next() {
+		movement := &domain.Movement{}
 	return r.scanMovements(rows)
 }
 
@@ -238,6 +320,7 @@ func (r *SQLiteMovementRepository) scanMovements(rows *sql.Rows) ([]*domain.Move
 		err := rows.Scan(
 			&movement.ID,
 			&movement.Name,
+			&movement.Description,
 			&description,
 			&movement.Type,
 			&movement.IsStandard,
