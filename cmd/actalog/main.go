@@ -51,6 +51,7 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
+	movementRepo := repository.NewSQLiteMovementRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(
@@ -62,6 +63,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
+	movementHandler := handler.NewMovementHandler(movementRepo)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -96,6 +98,12 @@ func main() {
 		// Auth routes
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
+
+		// Movement routes
+		r.Get("/movements", movementHandler.ListStandard)
+		r.Get("/movements/search", movementHandler.Search)
+		r.Get("/movements/{id}", movementHandler.GetByID)
+		r.Post("/movements", movementHandler.Create)
 	})
 
 	// Configure HTTP server

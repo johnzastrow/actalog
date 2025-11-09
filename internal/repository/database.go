@@ -7,7 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// InitDatabase initializes the database connection and creates tables
+// InitDatabase initializes the database connection and runs migrations
 func InitDatabase(driver, dsn string) (*sql.DB, error) {
 	db, err := sql.Open(driver, dsn)
 	if err != nil {
@@ -19,12 +19,38 @@ func InitDatabase(driver, dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Create tables
-	if err := createTables(db); err != nil {
-		return nil, fmt.Errorf("failed to create tables: %w", err)
+	// For new databases, create initial tables (v0.1.0 schema)
+	// This ensures the database is initialized before running migrations
+	if err := createInitialTablesIfNotExist(db); err != nil {
+		return nil, fmt.Errorf("failed to create initial tables: %w", err)
+	}
+
+	// Run migrations to bring schema up to latest version
+	fmt.Println("Running database migrations...")
+	if err := RunMigrations(db); err != nil {
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	// Seed standard movements (if not already seeded)
+	if err := seedStandardMovements(db); err != nil {
+		return nil, fmt.Errorf("failed to seed standard movements: %w", err)
 	}
 
 	return db, nil
+}
+
+// createInitialTablesIfNotExist creates the initial v0.1.0 schema if tables don't exist
+func createInitialTablesIfNotExist(db *sql.DB) error {
+	// Check if users table exists
+	var tableName string
+	err := db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").Scan(&tableName)
+	if err == nil {
+		// Tables already exist, skip initialization
+		return nil
+	}
+
+	fmt.Println("Initializing new database with v0.1.0 schema...")
+	return createTables(db)
 }
 
 // createTables creates all necessary database tables
