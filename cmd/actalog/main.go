@@ -20,7 +20,9 @@ import (
 	"github.com/johnzastrow/actalog/pkg/version"
 
 	// Database drivers
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"  // MySQL/MariaDB
+	_ "github.com/lib/pq"                // PostgreSQL
+	_ "github.com/mattn/go-sqlite3"     // SQLite
 )
 
 func main() {
@@ -41,8 +43,19 @@ func main() {
 	log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Allow Registration: %t", cfg.App.AllowRegistration)
 
+	// Build database connection string
+	dsn := repository.BuildDSN(
+		cfg.Database.Driver,
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Database,
+		cfg.Database.SSLMode,
+	)
+
 	// Initialize database
-	db, err := repository.InitDatabase(cfg.Database.Driver, cfg.Database.Database)
+	db, err := repository.InitDatabase(cfg.Database.Driver, dsn)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
