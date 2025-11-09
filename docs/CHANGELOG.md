@@ -7,11 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Multi-database support**: SQLite, PostgreSQL, and MySQL/MariaDB
+- **Database migration system** with version tracking and rollback support
+- **Workout logging functionality** with complete CRUD operations
+- **Movement database** with 82 standard CrossFit movements (auto-seeded)
+- **Progress tracking** by movement for PR analysis
+- Database-agnostic DSN builder
+- Driver-specific schema generation (SQLite, PostgreSQL, MySQL)
+- API endpoints for workout management:
+  - POST /api/workouts - Create workout with movements
+  - GET /api/workouts - List workouts with pagination and date filtering
+  - GET /api/workouts/{id} - Get workout details
+  - PUT /api/workouts/{id} - Update workout
+  - DELETE /api/workouts/{id} - Delete workout (cascade deletes movements)
+  - GET /api/progress/movements/{movement_id} - Track performance history
+- Movement management API endpoints:
+  - GET /api/movements - List standard movements
+  - GET /api/movements/search - Search movements by name
+  - GET /api/movements/{id} - Get movement details
+  - POST /api/movements - Create custom movement
+- Comprehensive DATABASE_SUPPORT.md documentation
+
+### Changed
+- Updated migration system to accept driver parameter for database-agnostic migrations
+- Improved table existence checking across all database types
+- Enhanced schema creation with database-specific SQL dialects
+
 ### Planned
-- Workout logging functionality
-- Movement database with standard CrossFit movements
-- Progress tracking with charts and graphs
 - Data import/export (CSV/JSON)
+- PR (Personal Record) tracking with automatic detection
+- Workout templates and named WOD database
+- Charts and graphs for progress visualization
 
 ## [0.1.0-alpha] - 2025-11-07
 
