@@ -1,9 +1,11 @@
 # TODO
 
-## Database Schema Migration (v0.3.0) - HIGH PRIORITY
+## Database Schema Migration (Planned for v0.3.0) - HIGH PRIORITY
+
+**Status:** Not yet started. v0.3.0 schema is documented but not implemented.
 
 ### Schema Changes Required
-- [ ] Create database migration from v0.2.0 to v0.3.0
+- [ ] Create database migration from v0.1.0 to v0.3.0
 - [ ] Add `birthday` column to `users` table
 - [ ] Add `email_verified` and `email_verified_at` columns to `users` table
 - [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, is_standard, etc.)
@@ -38,7 +40,9 @@
 - [ ] Categorize movements by type (weightlifting, cardio, gymnastics)
 - [ ] Add descriptions and URLs for standard WODs
 
-## Design Refinements (v0.3.0) - HIGH PRIORITY
+## Design Refinements (Planned for v0.3.0) - HIGH PRIORITY
+
+**Status:** Documented but not yet implemented.
 
 ### Email Verification System
 - [ ] Implement email verification token generation
@@ -129,7 +133,7 @@
 - [ ] Add profile picture upload
 - [ ] Add user profile editing with birthday field
 
-### Workout Logging (Updated for v0.3.0 Schema)
+### Workout Logging (Planned for v0.3.0 Schema - Not Yet Implemented)
 - [ ] Implement workout template creation API endpoints
 - [ ] Implement user_workout logging endpoints (link user to workout on specific date)
 - [ ] Add WOD creation/editing for custom WODs

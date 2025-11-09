@@ -32,8 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GET /api/movements/{id} - Get movement details
   - POST /api/movements - Create custom movement
 
-### Added - Design Refinements v0.3.0
-**Refined design decisions documented** through user consultation:
+### Added - Design Refinements (Planned for v0.3.0)
+**Refined design decisions documented** through user consultation (not yet implemented):
 
 **Email Verification System:**
 - Optional email verification with feature unlock approach
@@ -108,8 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - First user becomes admin automatically
 - No coach or gym owner roles in initial version
 
-### Added - Database Schema v0.3.0
-- **Major schema redesign** based on logical data model requirements
+### Added - Database Schema Design (Planned for v0.3.0)
+- **Major schema redesign** based on logical data model requirements (documented but not yet implemented)
 - New `wods` table for predefined CrossFit workouts with comprehensive attributes:
   - Source (CrossFit, Other Coach, Self-recorded)
   - Type (Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created)
@@ -122,7 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `audit_logs` table for audit trail and accountability
 - Added `updated_by` tracking to all entities for audit purposes
 
-### Changed - Database Schema v0.3.0
+### Changed - Database Schema Design (Planned for v0.3.0)
 - **Workouts** are now reusable templates (not user-specific instances)
 - Renamed `movements` table to `strength_movements`
 - Added `movement_type` to strength_movements (weightlifting, cardio, gymnastics)
@@ -135,11 +135,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved table existence checking across all database types
 - Enhanced schema creation with database-specific SQL dialects
 
-### Migration Required
-- Database migration from v0.2.0 to v0.3.0 needed
-- See DATABASE_SCHEMA.md for migration steps
-- Backend domain models need updates
-- API endpoints need refactoring for new structure
+### Migration Required (Future Work)
+- Database migration from v0.1.0 to v0.3.0 will be needed when implementing v0.3.0
+- See DATABASE_SCHEMA.md for planned migration steps
+- Backend domain models will need updates
+- API endpoints will need refactoring for new structure
 
 ### UI Updates - Dashboard Redesign
 - New Dashboard UI matching design specifications
@@ -279,5 +279,6 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.3.0-dev (schema updated, migration pending)
+**Current Version:** 0.2.0-beta
+**Schema Version:** 0.1.0 (v0.3.0 schema designed, migration not yet implemented)
 **Last Updated:** 2025-11-09
