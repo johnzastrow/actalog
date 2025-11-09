@@ -55,8 +55,11 @@ erDiagram
         string email UK
         string password_hash
         string name
+        date birthday
         string profile_image
         string role
+        boolean email_verified
+        timestamp email_verified_at
         timestamp created_at
         timestamp updated_at
         int64 updated_by
@@ -82,6 +85,7 @@ erDiagram
         text description
         string url
         text notes
+        boolean is_standard
         int64 created_by FK
         timestamp created_at
         timestamp updated_at
@@ -93,6 +97,7 @@ erDiagram
         string name UK
         string movement_type
         text description
+        boolean is_standard
         int64 created_by FK
         timestamp created_at
         timestamp updated_at
@@ -114,6 +119,8 @@ erDiagram
         int64 workout_id FK
         int64 wod_id FK
         string score_value
+        string division
+        boolean is_pr
         int order_index
         timestamp created_at
         timestamp updated_at
@@ -126,6 +133,7 @@ erDiagram
         float weight
         int sets
         int reps
+        boolean is_pr
         text notes
         int order_index
         timestamp created_at
@@ -178,8 +186,11 @@ Stores user account information and authentication credentials.
 | email | VARCHAR(255) | UNIQUE, NOT NULL | User email (login identifier) |
 | password_hash | VARCHAR(255) | NOT NULL | Bcrypt hashed password |
 | name | VARCHAR(255) | NOT NULL | User display name |
+| birthday | DATE | NULL | User's birth date |
 | profile_image | VARCHAR(512) | NULL | URL to profile picture |
 | role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | User role (user, admin) |
+| email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | Email verification status |
+| email_verified_at | TIMESTAMP | NULL | When email was verified |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Account creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
 | updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
@@ -225,7 +236,8 @@ Stores WOD (Workout of the Day) definitions - predefined CrossFit workouts.
 | description | TEXT | NULL | WOD description/instructions |
 | url | VARCHAR(512) | NULL | URL for video or online reference |
 | notes | TEXT | NULL | Additional notes |
-| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom WOD |
+| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-defined WODs, FALSE for user-created |
+| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom WOD (NULL for standard) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
 | updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
@@ -251,7 +263,8 @@ Stores strength movement definitions (weightlifting, cardio, gymnastics exercise
 | name | VARCHAR(255) | UNIQUE, NOT NULL | Movement name (e.g., "Back Squat") |
 | movement_type | VARCHAR(50) | NOT NULL | Type: weightlifting, cardio, gymnastics |
 | description | TEXT | NULL | Movement description/instructions |
-| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom movement |
+| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-defined movements, FALSE for user-created |
+| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom movement (NULL for standard) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
 | updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
@@ -301,6 +314,8 @@ Junction table linking workouts to WODs with scoring.
 | workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id |
 | wod_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to wods.id |
 | score_value | VARCHAR(50) | NULL | Score (time, rounds+reps, or weight) |
+| division | VARCHAR(20) | NULL | Leaderboard division: rx, scaled, beginner |
+| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (auto-detected or manual) |
 | order_index | INT | NOT NULL, DEFAULT 0 | Order in workout sequence |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
@@ -327,6 +342,7 @@ Junction table linking workouts to strength movements with performance details.
 | weight | DECIMAL(10,2) | NULL | Weight used (lbs or kg) |
 | sets | INT | NULL | Number of sets |
 | reps | INT | NULL | Reps per set or total reps |
+| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (auto-detected or manual) |
 | notes | TEXT | NULL | Movement-specific notes |
 | order_index | INT | NOT NULL, DEFAULT 0 | Order in workout sequence |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
@@ -429,16 +445,20 @@ Database migrations will be managed using a migration tool (e.g., golang-migrate
 ### Migration from v0.2.0 to v0.3.0
 
 Key changes:
-1. Rename `movements` table to `strength_movements`
-2. Add `movement_type` column to `strength_movements`
-3. Create new `wods` table with all attributes
-4. Modify `workouts` table (remove `user_id`, `workout_date`, `workout_type`, `workout_name`, `total_time`)
-5. Create `user_workouts` junction table
-6. Rename `workout_movements` to `workout_strength`
-7. Create `workout_wods` junction table
-8. Create `user_settings` table
-9. Create `audit_logs` table
-10. Add `updated_by` columns to relevant tables
+1. Add `birthday` column to `users` table
+2. Add `email_verified` and `email_verified_at` columns to `users` table
+3. Rename `movements` table to `strength_movements`
+4. Add `movement_type` column to `strength_movements`
+5. Add `is_standard` column to `strength_movements`
+6. Create new `wods` table with all attributes including `is_standard`
+7. Modify `workouts` table (remove `user_id`, `workout_date`, `workout_type`, `workout_name`, `total_time`)
+8. Create `user_workouts` junction table
+9. Rename `workout_movements` to `workout_strength`
+10. Add `is_pr` column to `workout_strength`
+11. Create `workout_wods` junction table with `division` and `is_pr` columns
+12. Create `user_settings` table
+13. Create `audit_logs` table
+14. Add `updated_by` columns to relevant tables
 
 ## Security Considerations
 

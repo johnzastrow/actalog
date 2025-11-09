@@ -144,6 +144,7 @@ type User struct {
     Email         string
     PasswordHash  string
     Name          string
+    Birthday      *time.Time
     ProfileImage  string
     Role          string
     CreatedAt     time.Time
