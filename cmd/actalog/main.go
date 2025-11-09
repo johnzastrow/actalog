@@ -16,6 +16,7 @@ import (
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/version"
 
@@ -36,12 +37,30 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	// Initialize logger
+	appLogger, err := logger.New(logger.Config{
+		Level:      cfg.Logging.Level,
+		EnableFile: cfg.Logging.EnableFile,
+		FilePath:   cfg.Logging.FilePath,
+		MaxSizeMB:  cfg.Logging.MaxSizeMB,
+		MaxBackups: cfg.Logging.MaxBackups,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer appLogger.Close()
+
 	// Log configuration (without sensitive data)
-	log.Printf("Environment: %s", cfg.App.Environment)
-	log.Printf("Log Level: %s", cfg.App.LogLevel)
-	log.Printf("Database Driver: %s", cfg.Database.Driver)
-	log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
-	log.Printf("Allow Registration: %t", cfg.App.AllowRegistration)
+	appLogger.Info("Environment: %s", cfg.App.Environment)
+	appLogger.Info("Log Level: %s", cfg.Logging.Level)
+	if cfg.Logging.EnableFile {
+		appLogger.Info("File logging: enabled")
+	} else {
+		appLogger.Info("File logging: disabled (stdout only)")
+	}
+	appLogger.Info("Database Driver: %s", cfg.Database.Driver)
+	appLogger.Info("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
+	appLogger.Info("Allow Registration: %t", cfg.App.AllowRegistration)
 
 	// Build database connection string
 	dsn := repository.BuildDSN(
@@ -57,10 +76,10 @@ func main() {
 	// Initialize database
 	db, err := repository.InitDatabase(cfg.Database.Driver, dsn)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		appLogger.Fatal("Failed to initialize database: %v", err)
 	}
 	defer db.Close()
-	log.Println("Database initialized successfully")
+	appLogger.Info("Database initialized successfully")
 
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
@@ -85,7 +104,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.Logger)
+	r.Use(middleware.RequestLogger(appLogger))
 	r.Use(middleware.CORS(cfg.App.CORSOrigins))
 
 	// Health check endpoint
@@ -151,9 +170,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Server listening on %s", addr)
+		appLogger.Info("Server listening on %s", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to start: %v", err)
+			appLogger.Fatal("Server failed to start: %v", err)
 		}
 	}()
 
@@ -162,15 +181,15 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	appLogger.Info("Shutting down server...")
 
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		appLogger.Error("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server exited")
+	appLogger.Info("Server exited")
 }
