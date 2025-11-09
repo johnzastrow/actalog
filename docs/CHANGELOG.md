@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Design Refinements v0.3.0
+**Refined design decisions documented** through user consultation:
+
+**Email Verification System:**
+- Optional email verification with feature unlock approach
+- Users can immediately use core features without verification
+- Email verification unlocks leaderboard participation and data export
+- Verification email sent on registration with resend capability
+- Added `email_verified` and `email_verified_at` fields to users table
+
+**Personal Records (PR) Tracking:**
+- Auto-detection system for PRs:
+  - Highest weight for strength movements (per user, per movement)
+  - Fastest time for time-based WODs (per user, per WOD)
+  - Most rounds+reps for AMRAP WODs (per user, per WOD)
+- Manual PR flag/unflag capability for user corrections
+- PR badges displayed on workout cards in dashboard and history
+- PR indicators (⭐) shown in movement history lists
+- Added `is_pr` field to `workout_wods` and `workout_strength` tables
+
+**Leaderboard System with Scaled Divisions:**
+- Three-division leaderboard system:
+  - **Rx (As Prescribed)**: Workout performed exactly as specified
+  - **Scaled**: Modified workout (lighter weight, fewer reps, substitute movements)
+  - **Beginner**: Simplified version for newer athletes
+- Users self-select division when logging WOD scores
+- Separate leaderboards for each division to ensure fair comparisons
+- Global leaderboards for standard benchmark WODs
+- Email verification required for leaderboard participation
+- Added `division` field to `workout_wods` table
+
+**Hybrid Workout Template System:**
+- Users can use pre-defined WODs and admin-created templates
+- Users can create and save their own custom workout templates
+- "Save as Template" option when logging workouts
+- Template management UI for create, edit, delete operations
+- Both standard and custom content searchable and filterable
+
+**Hybrid Movement/WOD Libraries:**
+- Pre-defined library of standard CrossFit movements and WODs
+- Users can add custom movements and WODs
+- `is_standard` flag distinguishes pre-defined vs. user-created content
+- Standard content cannot be edited by regular users
+- Added `is_standard` field to `wods` and `strength_movements` tables
+
+**Workout Scheduling:**
+- Users can schedule workouts for future dates
+- Calendar view distinguishes scheduled vs. completed workouts
+- "Complete Scheduled Workout" flow for pre-planned training
+- No push notifications initially (infrastructure ready for future)
+
+**Performance Analytics:**
+- Weight progression charts for strength movements
+- Workout frequency heatmap showing consistency and streaks
+- WOD leaderboards with division filters
+- Focus on three primary visualizations
+
+**Import/Export Enhancements:**
+- Support for three formats: CSV, JSON, and Markdown
+- CSV for spreadsheet compatibility and data analysis
+- JSON for complete structured backup/restore
+- Markdown for formatted workout reports
+- Date range selection for partial exports
+- Data type selection (Workouts, WODs, Movements, Profile)
+
+**Data Sync Strategy:**
+- "Last write wins" conflict resolution for offline sync
+- Most recent timestamp takes precedence
+- Suitable for single-user workout logging scenarios
+- Sync status indicator for pending operations
+
+**User Roles:**
+- Simple two-tier system: regular users and admins
+- First user becomes admin automatically
+- No coach or gym owner roles in initial version
+
 ### Added - Database Schema v0.3.0
 - **Major schema redesign** based on logical data model requirements
 - New `wods` table for predefined CrossFit workouts with comprehensive attributes:
@@ -49,6 +125,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved mobile-first responsive design
 - Enhanced bottom navigation with better iconography
 
+### Documentation
+- **Reorganized app navigation structure** - Settings Menu as central hub
+- Added comprehensive "Screens & Navigation Flow" section to REQUIREMENTS.md
+  - **33 core screens** defined with routes, purposes, and components
+  - Settings Menu flyout accessed from user avatar
+  - Management screens for WODs, Strength Movements, and Workout Templates with full CRUD operations
+  - Import/Export data screens
+  - App Preferences screen
+  - Navigation flow diagrams
+  - Screen interaction patterns
+  - PWA-specific screens (install prompt, offline indicator)
+- Added `birthday` field to User profile
+
 ### Planned
 - Implement database migration scripts
 - Update backend for new schema
@@ -58,6 +147,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Data import/export (CSV/JSON)
 - Push notifications for workout reminders
 - Web Share API integration
+- Implement all 33 screens defined in screen inventory:
+  - Management screens for WODs (List, Create, Edit with CRUD operations)
+  - Management screens for Strength Movements (List, Create, Edit with CRUD operations)
+  - Management screens for Workout Templates (List, Create, Edit with CRUD operations)
+  - Import/Export data screens
+  - Settings Menu flyout implementation
 
 ## [0.2.0] - 2025-11-08
 

@@ -100,7 +100,103 @@ It will be multi-user, allowing individuals to create accounts and securely log 
 - **Install Prompt**: Custom install promotion for better UX.
 - **Lighthouse Score**: Target score of 90+ for PWA audit.
 
-## UI Components: 
+## Design Decisions
+
+The following design decisions define the core functionality and user experience of ActaLog:
+
+### 1. Workout Template System
+**Decision**: Hybrid Approach
+- Users can use pre-defined WODs and admin-created workout templates
+- Users can also create and save their own custom workout templates
+- This provides flexibility while maintaining a curated library of standard CrossFit workouts
+
+### 2. Personal Records (PR) Tracking
+**Decision**: Auto-Detection with Manual Override
+- System automatically detects PRs by comparing workout history (weight lifted, time, rounds+reps)
+- Users can manually flag or unflag workouts as PRs for accuracy
+- PR badges appear on workout cards in history and dashboard
+- Movement detail screens show PR history with star indicators (⭐)
+
+### 3. Social & Sharing Features
+**Decision**: Public Leaderboards with Scaled Divisions
+- **Leaderboard Structure**:
+  - Separate leaderboards for Rx (as prescribed), Scaled (modified), and Beginner divisions
+  - Users self-select their division when logging WOD scores
+  - Global leaderboards for each standard WOD (benchmark, hero, girl workouts)
+- **Privacy**: Email verification required to appear on leaderboards
+- **No friend system initially**: Focus on global community competition
+- **Future consideration**: Web Share API for social media sharing
+
+### 4. Data Import/Export Formats
+**Decision**: CSV, JSON, and Markdown Support
+- **CSV**: For spreadsheet compatibility and data analysis in Excel/Google Sheets
+- **JSON**: Complete structured data backup for full restore capability
+- **Markdown**: For formatted workout reports and notes
+- Date range selection for partial exports
+- Import with data preview before confirmation
+
+### 5. User Roles & Permissions
+**Decision**: Simple Two-Tier System
+- **Regular Users**: Can create workouts, log exercises, manage their own data
+- **Admins**: Can manage all user accounts, create/edit standard WODs and movements, access audit logs
+- **First user becomes admin** automatically
+- No coach or gym owner roles initially (future consideration for multi-gym support)
+
+### 6. Workout Scheduling
+**Decision**: Future Planning Support
+- Users can schedule workouts on future dates using the calendar
+- No push notifications initially (PWA notification infrastructure in place for future)
+- No dedicated rest day tracking (users simply don't log workouts on rest days)
+- Calendar view shows scheduled vs. completed workouts with different visual indicators
+
+### 7. Strength Movement Library
+**Decision**: Hybrid Predefined + Custom Library
+- App includes predefined library of standard CrossFit movements (back squat, deadlift, clean & jerk, etc.)
+- Users can create custom movements for specialized exercises
+- Both standard and custom movements searchable and filterable by type (weightlifting, cardio, gymnastics)
+- Admin can add to standard library; users cannot edit standard movements
+
+### 8. Offline Data Sync Conflict Resolution
+**Decision**: Last Write Wins by Timestamp
+- When offline data conflicts with server during sync, most recent timestamp takes precedence
+- Suitable for single-user workout logging (rarely conflicts)
+- Sync status indicator shows pending operations
+- Future enhancement: conflict detection UI for edge cases
+
+### 9. Performance Analytics & Metrics
+**Decision**: Three Primary Visualizations
+- **Weight Progression Charts**: Line graphs showing strength gains over time for specific movements (e.g., back squat 1RM)
+- **Workout Frequency Heatmap**: Calendar heatmap showing workout consistency and streaks
+- **WOD Leaderboards**: Global rankings for benchmark WODs with division filters
+- Not initially: Volume tracking (total weight × reps), though data model supports future addition
+
+### 10. Email Verification
+**Decision**: Optional Verification with Feature Unlock
+- Users can immediately use core features (logging workouts, tracking progress) without email verification
+- Email verification unlocks:
+  - Public leaderboard participation
+  - Data export functionality
+  - Future: Workout sharing and social features
+- Verification email sent on registration, can be resent from profile
+- Balances security with user experience
+
+### 11. Workout Notes & Documentation
+**Decision**: Per-Workout Notes with Markdown
+- Each logged workout can have notes field (how it felt, modifications made, injuries, etc.)
+- Notes support markdown formatting for rich text (bold, lists, links)
+- Rendered as formatted text in workout detail view
+- Not initially: Movement-specific notes, photo/video attachments, voice notes (future consideration)
+
+### 12. Leaderboard Divisions & Scoring
+**Decision**: Three-Division System
+- **Rx (As Prescribed)**: Workout performed exactly as specified (weight, reps, movements)
+- **Scaled**: Workout modified (lighter weight, fewer reps, substitute movements)
+- **Beginner**: Simplified version for newer athletes
+- Users self-report division when logging WOD
+- Separate leaderboards prevent unfair comparisons
+- Future: Admin verification for top leaderboard entries
+
+## UI Components:
 - Navigation Bar: Global navigation for product sections; includes links to Dashboard, Performance, Workouts, Profile, and Settings.
 - Dashboard: Overview page with timeline of recent activity, and quick access to logging today's workout. 
 - Large text fields should render markdown for formatting.
@@ -119,7 +215,7 @@ It will be multi-user, allowing individuals to create accounts and securely log 
 - Changelog Page: Record of changes, updates, and improvements made to the application over time.
 - 
 
-Visual Style: 
+Visual Style:
 - Theme: Light theme with optional dark mode
 - Primary color: #2c3657ff
 - Secondary color: #597a6aff
@@ -129,7 +225,574 @@ Visual Style:
 - Borders: 1px solid light gray #E3E6EA on cards and input fields; slightly rounded corners (6px radius)
 - Typography: Sans-serif, medium font weight (500) for headings, regular (400) for body, base size 16px
 - Icons/images: Simple, filled vector icons for navigation and actions; illustrative flat images used occasionally for empty states
--
+
+## Screens & Navigation Flow
+
+### Authentication Screens (Public)
+
+#### 1. Login Screen
+- **Route**: `/login`
+- **Purpose**: User authentication
+- **Components**:
+  - Email input field
+  - Password input field
+  - "Remember Me" checkbox
+  - Login button
+  - "Forgot Password?" link
+  - "Create Account" link to Register screen
+- **Navigation**:
+  - Success → Dashboard
+  - Create Account → Register Screen
+  - Forgot Password → Password Reset Screen (future)
+
+#### 2. Register Screen
+- **Route**: `/register`
+- **Purpose**: New user account creation
+- **Components**:
+  - Name input field
+  - Email input field
+  - Password input field
+  - Confirm Password input field
+  - Terms & Conditions checkbox
+  - Register button
+  - "Already have an account?" link to Login
+- **Navigation**:
+  - Success → Dashboard (auto-login)
+  - Login link → Login Screen
+
+### Main Application Screens (Authenticated)
+
+#### 3. Dashboard
+- **Route**: `/dashboard`
+- **Purpose**: Overview of recent activity and quick actions
+- **Components** (as per design/dashboard.png):
+  - Top app bar with logo and current date
+  - Monthly calendar view showing workout days (colored circles)
+  - "Workouts in last 7 Days" cards section
+  - Bottom navigation bar
+- **Navigation**:
+  - Calendar date click → Filter workouts by date or show day detail
+  - Workout card click → Workout Detail Screen
+  - Bottom nav → Performance, Log Workout, Workouts, Profile
+
+#### 4. Log Workout Screen
+- **Route**: `/workouts/log`
+- **Purpose**: Create new workout or log existing workout template
+- **Components**:
+  - Date picker (default: today)
+  - Workout template selector or "Create New" option
+  - **If creating template:**
+    - Workout name input
+    - Add WOD section (search/select from library or create custom)
+    - Add Strength Movement section (search/select from library)
+    - For each movement: weight, sets, reps inputs
+    - Order/sequence controls
+  - **If logging existing template:**
+    - Show template structure (read-only)
+    - For each WOD: score input field (time, rounds+reps, or weight based on score_type)
+    - For each strength movement: weight, sets, reps inputs
+  - Notes field (markdown supported)
+  - Save button
+  - Cancel button
+- **Navigation**:
+  - Save → Dashboard or Workouts Screen
+  - Cancel → Previous screen
+  - Add WOD → WOD Library Screen (modal/overlay)
+  - Add Movement → Movement Library Screen (modal/overlay)
+
+#### 5. Workouts Screen (History)
+- **Route**: `/workouts`
+- **Purpose**: View all logged workouts with filtering and search
+- **Components**:
+  - Search bar
+  - Filter controls (date range, workout type, WOD name)
+  - Sort options (date, name, type)
+  - Workout list/cards grouped by date
+  - PR badges on personal record workouts
+  - "Log Workout" FAB button
+- **Navigation**:
+  - Workout card click → Workout Detail Screen
+  - FAB button → Log Workout Screen
+  - Bottom nav → Dashboard, Performance, Profile
+
+#### 6. Workout Detail Screen
+- **Route**: `/workouts/:id`
+- **Purpose**: View details of a specific logged workout
+- **Components**:
+  - Workout date and name
+  - WODs performed with scores
+  - Strength movements with weight/sets/reps
+  - Notes (rendered as markdown)
+  - Edit button
+  - Delete button
+  - Share button (future - Web Share API)
+- **Navigation**:
+  - Back → Workouts Screen
+  - Edit → Edit Workout Screen (similar to Log Workout)
+  - Delete → Confirmation dialog → Workouts Screen
+
+#### 7. Performance/Progress Screen
+- **Route**: `/performance`
+- **Purpose**: Visualize progress over time for specific movements or WODs
+- **Components**:
+  - Movement/WOD selector dropdown
+  - Date range selector
+  - Line chart (X: date, Y: weight or time)
+  - Data table with dates, values, and PR indicators (⭐)
+  - Filter by movement type (weightlifting, cardio, gymnastics)
+  - Export data button
+- **Navigation**:
+  - Movement click → Filter chart for that movement
+  - Bottom nav → Dashboard, Workouts, Profile
+
+#### 8. WOD Library Screen
+- **Route**: `/wods`
+- **Purpose**: Browse and search standard and custom WODs
+- **Components**:
+  - Search bar
+  - Filter by type (Benchmark, Hero, Girl, Games, Custom)
+  - Filter by source (CrossFit, Other Coach, Self-recorded)
+  - WOD cards showing name, type, and description preview
+  - "Create Custom WOD" button
+- **Navigation**:
+  - WOD card click → WOD Detail Screen
+  - Create button → Create WOD Screen
+  - Select WOD (when opened as modal from Log Workout) → Returns to Log Workout with WOD added
+
+#### 9. WOD Detail Screen
+- **Route**: `/wods/:id`
+- **Purpose**: View full WOD information
+- **Components**:
+  - WOD name and type badges
+  - Source and regime
+  - Score type
+  - Full description (markdown)
+  - Video URL (if available)
+  - Notes
+  - "Use This WOD" button
+  - Edit button (if custom WOD created by user)
+  - Delete button (if custom WOD)
+- **Navigation**:
+  - Back → WOD Library
+  - Use This → Log Workout Screen with WOD pre-selected
+  - Edit → Edit WOD Screen (if custom)
+
+#### 10. Create/Edit WOD Screen
+- **Route**: `/wods/create` or `/wods/:id/edit`
+- **Purpose**: Create custom WOD or edit user-created WOD
+- **Components**:
+  - Name input
+  - Source dropdown (CrossFit, Other Coach, Self-recorded)
+  - Type dropdown (Benchmark, Hero, Girl, etc.)
+  - Regime dropdown (EMOM, AMRAP, Fastest Time, etc.)
+  - Score Type dropdown (Time, Rounds+Reps, Max Weight)
+  - Description textarea (markdown supported)
+  - URL input (optional video/reference)
+  - Notes textarea
+  - Save button
+  - Cancel button
+- **Navigation**:
+  - Save → WOD Detail Screen or WOD Library
+  - Cancel → Previous screen
+
+#### 11. Movement Library Screen
+- **Route**: `/movements`
+- **Purpose**: Browse standard and custom strength movements
+- **Components**:
+  - Search bar
+  - Filter by type (weightlifting, cardio, gymnastics)
+  - Movement list/cards
+  - "Create Custom Movement" button
+- **Navigation**:
+  - Movement click → Movement Detail Screen
+  - Create button → Create Movement Screen
+  - Select movement (when opened as modal) → Returns to Log Workout with movement added
+
+#### 12. Movement Detail Screen
+- **Route**: `/movements/:id`
+- **Purpose**: View movement information and personal history
+- **Components**:
+  - Movement name and type
+  - Description
+  - Personal best (PR)
+  - History of this movement in workouts
+  - Progress chart
+  - "Use This Movement" button
+  - Edit button (if custom)
+- **Navigation**:
+  - Back → Movement Library
+  - Use This → Log Workout Screen
+  - Edit → Edit Movement Screen (if custom)
+
+#### 13. Create/Edit Movement Screen
+- **Route**: `/movements/create` or `/movements/:id/edit`
+- **Purpose**: Create custom movement
+- **Components**:
+  - Name input
+  - Type dropdown (weightlifting, cardio, gymnastics)
+  - Description textarea
+  - Save button
+  - Cancel button
+- **Navigation**:
+  - Save → Movement Detail or Movement Library
+  - Cancel → Previous screen
+
+#### 14. Settings Menu Screen (Flyout/Main Menu)
+- **Route**: `/settings`
+- **Purpose**: Main settings menu with links to all management screens
+- **Access**: User Avatar icon in bottom navigation
+- **Components** (List/Menu):
+  - **Profile** → Profile Screen
+  - **My WODs** → WOD Management Screen
+  - **My Strength Movements** → Strength Management Screen
+  - **My Workout Templates** → Workout Templates Screen
+  - **Import Data** → Import Screen
+  - **Export Data** → Export Screen
+  - **App Preferences** → App Preferences Screen
+  - **Help** → Help Screen
+  - **About** → About Screen
+  - **Logout** button
+- **Navigation**:
+  - Each menu item → Respective screen
+  - Logout → Login Screen
+  - Close/Back → Previous screen
+
+#### 15. Profile Screen
+- **Route**: `/settings/profile`
+- **Purpose**: View and edit user profile
+- **Components**:
+  - Profile picture with upload button
+  - Name input (editable)
+  - Email (display only)
+  - Birthday input (date picker)
+  - Member since date (read-only)
+  - Total workouts count (read-only)
+  - Personal records count (read-only)
+  - "Change Password" button
+  - "Save Changes" button
+  - "Cancel" button
+- **Navigation**:
+  - Change Password → Change Password Screen
+  - Save → Settings Menu
+  - Cancel → Settings Menu
+  - Back → Settings Menu
+
+#### 16. Change Password Screen
+- **Route**: `/settings/profile/change-password`
+- **Purpose**: Update user password
+- **Components**:
+  - Current password input
+  - New password input
+  - Confirm new password input
+  - "Update Password" button
+  - "Cancel" button
+- **Navigation**:
+  - Update → Profile Screen (with success message)
+  - Cancel → Profile Screen
+
+#### 17. WOD Management Screen
+- **Route**: `/settings/wods`
+- **Purpose**: Manage user's custom WODs
+- **Components**:
+  - Search bar
+  - Filter by type (All, My Custom, Standard)
+  - WOD list/cards showing:
+    - Name, type, source
+    - Edit icon (only for user's custom WODs)
+    - Delete icon (only for user's custom WODs)
+  - "Create New WOD" FAB button
+- **Navigation**:
+  - WOD card click → WOD Detail Screen (view only for standard, edit for custom)
+  - Edit icon → Edit WOD Screen
+  - Delete icon → Confirmation dialog → Delete → Refresh list
+  - Create button → Create WOD Screen
+  - Back → Settings Menu
+
+#### 18. Create WOD Screen
+- **Route**: `/settings/wods/create`
+- **Purpose**: Create custom WOD
+- **Components**:
+  - Name input (required)
+  - Source dropdown (CrossFit, Other Coach, Self-recorded)
+  - Type dropdown (Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created)
+  - Regime dropdown (EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills)
+  - Score Type dropdown (Time, Rounds+Reps, Max Weight)
+  - Description textarea (markdown supported)
+  - URL input (optional video/reference)
+  - Notes textarea
+  - "Save WOD" button
+  - "Cancel" button
+- **Navigation**:
+  - Save → WOD Management Screen (with success message)
+  - Cancel → WOD Management Screen
+
+#### 19. Edit WOD Screen
+- **Route**: `/settings/wods/:id/edit`
+- **Purpose**: Edit user's custom WOD
+- **Components**: Same as Create WOD Screen with pre-filled values
+- **Navigation**:
+  - Save → WOD Management Screen (with success message)
+  - Cancel → WOD Management Screen
+  - Delete → Confirmation dialog → WOD Management Screen
+
+#### 20. Strength Management Screen
+- **Route**: `/settings/movements`
+- **Purpose**: Manage user's custom strength movements
+- **Components**:
+  - Search bar
+  - Filter by type (All, Weightlifting, Cardio, Gymnastics, My Custom, Standard)
+  - Movement list/cards showing:
+    - Name, type
+    - Edit icon (only for user's custom movements)
+    - Delete icon (only for user's custom movements)
+  - "Create New Movement" FAB button
+- **Navigation**:
+  - Movement card click → Movement Detail Screen
+  - Edit icon → Edit Movement Screen
+  - Delete icon → Confirmation dialog → Delete → Refresh list
+  - Create button → Create Movement Screen
+  - Back → Settings Menu
+
+#### 21. Create Movement Screen
+- **Route**: `/settings/movements/create`
+- **Purpose**: Create custom strength movement
+- **Components**:
+  - Name input (required)
+  - Type dropdown (Weightlifting, Cardio, Gymnastics)
+  - Description textarea
+  - "Save Movement" button
+  - "Cancel" button
+- **Navigation**:
+  - Save → Strength Management Screen (with success message)
+  - Cancel → Strength Management Screen
+
+#### 22. Edit Movement Screen
+- **Route**: `/settings/movements/:id/edit`
+- **Purpose**: Edit user's custom movement
+- **Components**: Same as Create Movement Screen with pre-filled values
+- **Navigation**:
+  - Save → Strength Management Screen (with success message)
+  - Cancel → Strength Management Screen
+  - Delete → Confirmation dialog → Strength Management Screen
+
+#### 23. Workout Templates Screen
+- **Route**: `/settings/workouts`
+- **Purpose**: Manage saved workout templates
+- **Components**:
+  - Search bar
+  - Filter controls
+  - Template list/cards showing:
+    - Template name
+    - WODs and movements included
+    - Times used count
+    - Edit icon
+    - Delete icon
+  - "Create New Template" FAB button
+- **Navigation**:
+  - Template card click → Template Detail Screen
+  - Edit icon → Edit Template Screen
+  - Delete icon → Confirmation dialog → Delete → Refresh list
+  - Create button → Create Template Screen
+  - Back → Settings Menu
+
+#### 24. Create Workout Template Screen
+- **Route**: `/settings/workouts/create`
+- **Purpose**: Create reusable workout template
+- **Components**:
+  - Template name input
+  - "Add WOD" button → WOD Library (modal)
+  - "Add Strength Movement" button → Movement Library (modal)
+  - Order/sequence drag controls
+  - List of added WODs and movements
+  - Remove buttons for each item
+  - Notes textarea
+  - "Save Template" button
+  - "Cancel" button
+- **Navigation**:
+  - Save → Workout Templates Screen
+  - Cancel → Workout Templates Screen
+  - Add WOD → WOD Library Modal → Select → Return
+  - Add Movement → Movement Library Modal → Select → Return
+
+#### 25. Edit Workout Template Screen
+- **Route**: `/settings/workouts/:id/edit`
+- **Purpose**: Edit existing workout template
+- **Components**: Same as Create Workout Template Screen with pre-filled values
+- **Navigation**:
+  - Save → Workout Templates Screen
+  - Cancel → Workout Templates Screen
+  - Delete → Confirmation dialog → Workout Templates Screen
+
+#### 26. Import Data Screen
+- **Route**: `/settings/import`
+- **Purpose**: Import workout data from files
+- **Components**:
+  - File upload dropzone
+  - Supported formats info (CSV, JSON)
+  - Preview imported data table
+  - "Import" button
+  - "Cancel" button
+  - Import history list
+- **Navigation**:
+  - Import → Processing → Success message → Settings Menu
+  - Cancel → Settings Menu
+  - Back → Settings Menu
+
+#### 27. Export Data Screen
+- **Route**: `/settings/export`
+- **Purpose**: Export user data
+- **Components**:
+  - Export format selector (CSV, JSON)
+  - Date range selector
+  - Data type checkboxes (Workouts, WODs, Movements, Profile)
+  - "Export" button
+  - "Cancel" button
+  - Export history list with download links
+- **Navigation**:
+  - Export → Generate file → Download
+  - Cancel → Settings Menu
+  - Back → Settings Menu
+
+#### 28. App Preferences Screen
+- **Route**: `/settings/preferences`
+- **Purpose**: Application settings and preferences
+- **Components**:
+  - **Appearance Section:**
+    - Theme toggle (light/dark)
+  - **Units Section:**
+    - Weight unit (lbs/kg)
+    - Distance unit (miles/km)
+  - **Notifications Section:**
+    - Push notification toggle
+    - Workout reminder toggle and time
+  - **Account Section:**
+    - Delete account button (with confirmation)
+  - **About Section:**
+    - Version number
+    - Privacy Policy link
+    - Terms of Service link
+- **Navigation**:
+  - Back → Settings Menu
+  - Privacy Policy → Privacy Policy Screen
+  - Terms → Terms of Service Screen
+
+### Admin Screens (Admin Role Only)
+
+#### 29. Admin Dashboard
+- **Route**: `/admin`
+- **Purpose**: Admin overview and management
+- **Components**:
+  - User statistics
+  - System health
+  - Recent activity
+  - Quick links to management screens
+- **Navigation**:
+  - User Management → Admin Users Screen
+  - System Logs → Audit Logs Screen
+
+#### 30. Admin Users Screen
+- **Route**: `/admin/users`
+- **Purpose**: User management
+- **Components**:
+  - User search and filter
+  - User list with roles
+  - Edit/delete actions
+  - Export user data
+- **Navigation**:
+  - Edit user → Edit User Screen
+  - Back → Admin Dashboard
+
+### Informational Screens
+
+#### 31. Help/FAQ Screen
+- **Route**: `/help`
+- **Purpose**: User assistance
+- **Components**:
+  - FAQ accordion
+  - Search bar
+  - Contact support button
+  - User guide link
+
+#### 32. Privacy Policy Screen
+- **Route**: `/privacy`
+- **Purpose**: Privacy policy
+- **Components**:
+  - Privacy policy text
+  - Last updated date
+
+#### 33. Terms of Service Screen
+- **Route**: `/terms`
+- **Purpose**: Terms of service
+- **Components**:
+  - Terms text
+  - Last updated date
+
+### Navigation Flow Diagram
+
+```
+Login/Register
+    ↓
+Dashboard (Hub)
+    ├→ Log Workout → WOD Library (modal)
+    │               → Movement Library (modal)
+    │               → Save → Dashboard
+    │
+    ├→ Workouts → Workout Detail → Edit/Delete
+    │
+    ├→ Performance → Movement Detail → Use in Workout
+    │
+    └→ Settings Menu (Flyout)
+        ├→ Profile → Change Password
+        ├→ My WODs → Create/Edit/Delete WOD
+        ├→ My Strength Movements → Create/Edit/Delete Movement
+        ├→ My Workout Templates → Create/Edit/Delete Template
+        ├→ Import Data
+        ├→ Export Data
+        ├→ App Preferences
+        ├→ Help
+        ├→ About
+        └→ Logout → Login
+
+Admin: Settings Menu → Admin Dashboard → User Management
+                                       → Audit Logs
+```
+
+### Bottom Navigation (Always Visible When Authenticated)
+
+1. **Dashboard** - Home icon
+2. **Performance** - Chart icon
+3. **Log Workout** - Large center FAB with plus icon
+4. **Workouts** - Dumbbell icon
+5. **Settings** - Avatar or account icon (opens Settings Menu flyout)
+
+### Screen Count Summary
+
+- **Authentication**: 2 screens (Login, Register)
+- **Main App**: 26 screens (Dashboard through App Preferences)
+  - Core: 7 screens (Dashboard, Log Workout, Workouts, Workout Detail, Performance, Movement Library, Movement Detail)
+  - Settings Hub: 1 screen (Settings Menu)
+  - Profile Management: 2 screens (Profile, Change Password)
+  - WOD Management: 3 screens (WOD List, Create, Edit)
+  - Strength Management: 3 screens (Movement List, Create, Edit)
+  - Workout Templates: 3 screens (Template List, Create, Edit)
+  - Data Management: 2 screens (Import, Export)
+  - App Settings: 1 screen (Preferences)
+  - Legacy Screens: 4 screens (WOD Library, WOD Detail, Create/Edit WOD from library, Create/Edit Movement from library)
+- **Admin**: 2 screens
+- **Informational**: 3 screens (Help, Privacy, Terms)
+- **Total**: 33 core screens
+
+### PWA-Specific Screens
+
+#### Install Prompt (Progressive Enhancement)
+- Custom install prompt UI when PWA installability criteria met
+- Shows on first visit or after user engagement
+- "Install App" and "Not Now" buttons
+
+#### Offline Indicator
+- Toast/banner notification when app goes offline
+- Shows cached data availability
+- Sync status indicator for pending workouts
 
 
 ## Logical Data Model

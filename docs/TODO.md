@@ -4,13 +4,16 @@
 
 ### Schema Changes Required
 - [ ] Create database migration from v0.2.0 to v0.3.0
-- [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, etc.)
+- [ ] Add `birthday` column to `users` table
+- [ ] Add `email_verified` and `email_verified_at` columns to `users` table
+- [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, is_standard, etc.)
 - [ ] Rename `movements` table to `strength_movements`
-- [ ] Add `movement_type` column to `strength_movements`
+- [ ] Add `movement_type` and `is_standard` columns to `strength_movements`
 - [ ] Modify `workouts` table (remove user_id, workout_date, workout_type, workout_name, total_time)
 - [ ] Create `user_workouts` junction table
 - [ ] Rename `workout_movements` to `workout_strength`
-- [ ] Create `workout_wods` junction table
+- [ ] Add `is_pr` column to `workout_strength`
+- [ ] Create `workout_wods` junction table with `division` and `is_pr` columns
 - [ ] Create `user_settings` table
 - [ ] Create `audit_logs` table
 - [ ] Add `updated_by` columns to all relevant tables
@@ -29,9 +32,69 @@
 
 ### Seed Data
 - [ ] Create seed data for standard CrossFit WODs (Fran, Grace, Helen, Diane, Karen, Murph, DT, etc.)
+- [ ] Mark standard WODs with `is_standard = TRUE`
 - [ ] Create seed data for standard strength movements
+- [ ] Mark standard movements with `is_standard = TRUE`
 - [ ] Categorize movements by type (weightlifting, cardio, gymnastics)
 - [ ] Add descriptions and URLs for standard WODs
+
+## Design Refinements (v0.3.0) - HIGH PRIORITY
+
+### Email Verification System
+- [ ] Implement email verification token generation
+- [ ] Create email verification endpoint (/api/verify-email)
+- [ ] Send verification email on user registration
+- [ ] Add "Resend verification email" functionality
+- [ ] Update login to check verification status
+- [ ] Lock leaderboard participation until verified
+- [ ] Lock data export until verified
+- [ ] Add verification status indicator in UI
+
+### Personal Records (PR) Tracking
+- [ ] Implement auto-detection algorithm for PRs:
+  - [ ] Highest weight for strength movements (per user per movement)
+  - [ ] Fastest time for time-based WODs (per user per WOD)
+  - [ ] Most rounds+reps for AMRAP WODs (per user per WOD)
+- [ ] Add manual PR flag/unflag endpoints
+- [ ] Display PR badges on workout cards in dashboard
+- [ ] Show PR indicators (⭐) in movement history
+- [ ] Add PR filter to workout history view
+- [ ] Update PR status when new workout logged
+
+### Leaderboard System - Scaled Divisions
+- [ ] Create `leaderboard_entries` table (optional - could query from workout_wods)
+- [ ] Implement leaderboard query for each standard WOD
+- [ ] Separate leaderboards by division (rx, scaled, beginner)
+- [ ] Add division selector when logging WOD scores
+- [ ] Display leaderboards on WOD detail screens
+- [ ] Implement leaderboard ranking algorithm
+- [ ] Add user's rank display on their workouts
+- [ ] Filter leaderboards by date range (optional)
+- [ ] Admin verification for top entries (future)
+
+### Hybrid Template System
+- [ ] Allow users to create custom workout templates
+- [ ] Allow users to reuse existing templates when logging
+- [ ] Display both standard and custom templates in selectors
+- [ ] Add "Save as Template" option when logging workout
+- [ ] Implement template management UI (create, edit, delete)
+- [ ] Track template usage count
+- [ ] Filter templates by custom vs. standard
+
+### Workout Scheduling
+- [ ] Add scheduled workout indicator in user_workouts
+- [ ] Allow users to schedule workouts for future dates
+- [ ] Display scheduled vs. completed workouts differently on calendar
+- [ ] Add "Complete Scheduled Workout" flow
+- [ ] Prevent scheduling in the past (validation)
+
+### Import/Export Enhancements
+- [ ] Implement Markdown export for workout reports
+- [ ] Format Markdown with workout details, scores, notes
+- [ ] Ensure CSV export includes all new fields (division, PR flags, birthday)
+- [ ] Ensure JSON export includes complete data structure
+- [ ] Add date range selector for exports
+- [ ] Add data type checkboxes (Workouts, WODs, Movements, Profile)
 
 ## PWA Features (v0.2.0)
 
@@ -61,10 +124,10 @@
 
 ### Authentication & User Management
 - [ ] Implement password reset functionality
-- [ ] Add email verification for new users
+- [ ] Add email verification for new users (see Design Refinements section)
 - [ ] Implement "Remember Me" functionality
 - [ ] Add profile picture upload
-- [ ] Add user profile editing
+- [ ] Add user profile editing with birthday field
 
 ### Workout Logging (Updated for v0.3.0 Schema)
 - [ ] Implement workout template creation API endpoints
@@ -138,11 +201,11 @@
 - [x] Implement code splitting preparation - v0.2.0
 
 ### Social Features
-- [ ] Add workout sharing
-- [ ] Add leaderboards
-- [ ] Add workout comments
-- [ ] Add friend system
-- [ ] Add workout templates
+- [ ] Add workout sharing (Web Share API)
+- [x] Add leaderboards (moved to HIGH PRIORITY - Design Refinements)
+- [ ] Add workout comments (future)
+- [ ] Add friend system (future - not in current scope)
+- [x] Add workout templates (moved to HIGH PRIORITY - Hybrid Template System)
 
 ### Notifications
 - [ ] Implement email notifications
@@ -204,5 +267,5 @@
 
 ---
 
-**Last Updated:** 2025-11-08
-**Version:** 0.2.0
+**Last Updated:** 2025-11-09
+**Version:** 0.3.0-dev (design refinements documented)
