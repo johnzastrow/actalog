@@ -28,28 +28,66 @@ var migrations = []Migration{
 		},
 	},
 	// Future migrations will be added here
-	// Example:
-	// {
-	//     Version:     "0.2.0",
-	//     Description: "Add email_verified column to users",
-	//     Up: func(db *sql.DB, driver string) error {
-	//         var query string
-	//         switch driver {
-	//         case "sqlite3":
-	//             query = "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0"
-	//         case "postgres":
-	//             query = "ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE"
-	//         case "mysql":
-	//             query = "ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE"
-	//         }
-	//         _, err := db.Exec(query)
-	//         return err
-	//     },
-	//     Down: func(db *sql.DB, driver string) error {
-	//         _, err := db.Exec("ALTER TABLE users DROP COLUMN email_verified")
-	//         return err
-	//     },
-	// },
+	{
+		Version:     "0.2.0",
+		Description: "Add password reset fields to users table",
+		Up: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN reset_token TEXT",
+					"ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME",
+				}
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255)",
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMP",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)",
+					"ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN directly in older versions
+				return fmt.Errorf("rollback not supported for SQLite")
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE users DROP COLUMN IF EXISTS reset_token",
+					"ALTER TABLE users DROP COLUMN IF EXISTS reset_token_expires_at",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE users DROP COLUMN reset_token",
+					"ALTER TABLE users DROP COLUMN reset_token_expires_at",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations
