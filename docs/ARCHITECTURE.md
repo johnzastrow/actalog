@@ -135,7 +135,7 @@ actalog/
 - No external dependencies
 - The heart of the application
 
-**Core Entities** (Schema v0.3.0):
+**Core Entities** (Showing planned v0.3.0 schema - not yet implemented):
 
 ```go
 // User represents a system user
@@ -756,13 +756,15 @@ graph LR
 
 ## Version History
 
-- **v0.3.0-dev**: Database schema redesign, domain model updates (schema v0.3.0)
-- **v0.2.0**: PWA implementation with offline support
-- **v0.1.0-alpha**: Initial architecture and project setup
+- **v0.3.0**: Planned database schema redesign (documented but not yet implemented)
+- **v0.2.0-beta**: Multi-database support, workout logging backend (current version)
+- **v0.1.0**: Initial schema and architecture implementation (current schema)
 
-## Notes on Schema v0.3.0
+## Notes on Planned v0.3.0 Schema
 
-The database schema was significantly redesigned to better represent the logical data model:
+**Status:** Documented design, not yet implemented in codebase.
+
+The database schema redesign is documented to better represent the logical data model:
 
 **Key Architectural Changes:**
 1. **Workouts as Templates**: Workouts are now reusable templates rather than user-specific instances
@@ -777,7 +779,7 @@ The database schema was significantly redesigned to better represent the logical
 - **API Layer**: Endpoints need refactoring to support new workflow (create template → log user workout)
 - **Frontend**: UI must distinguish between workout templates and user workout logs
 
-**Migration Strategy:**
-- Database migrations will transform existing data from v0.2.0 schema to v0.3.0
+**Migration Strategy (When Implemented):**
+- Database migrations will transform existing data from v0.1.0 schema to v0.3.0
 - Existing user workouts will be converted to the new template + user_workout structure
 - Standard WODs and movements will be seeded during migration
