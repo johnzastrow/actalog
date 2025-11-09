@@ -66,9 +66,6 @@ func (r *SQLiteWorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
 	var workoutName sql.NullString
 	var notes sql.NullString
 	var totalTime sql.NullInt64
-	var totalTime sql.NullInt64
-	var workoutName sql.NullString
-	var notes sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
 		&workout.ID,
@@ -127,9 +124,6 @@ func (r *SQLiteWorkoutRepository) GetByUserID(userID int64, limit, offset int) (
 		var workoutName sql.NullString
 		var notes sql.NullString
 		var totalTime sql.NullInt64
-		var totalTime sql.NullInt64
-		var workoutName sql.NullString
-		var notes sql.NullString
 
 		err := rows.Scan(
 			&workout.ID,
@@ -171,7 +165,6 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 		FROM workouts
 		WHERE user_id = ? AND workout_date >= ? AND workout_date <= ?
 		ORDER BY workout_date DESC, created_at DESC
-		ORDER BY workout_date DESC
 	`
 
 	rows, err := r.db.Query(query, userID, startDate, endDate)
@@ -186,9 +179,6 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 		var workoutName sql.NullString
 		var notes sql.NullString
 		var totalTime sql.NullInt64
-		var totalTime sql.NullInt64
-		var workoutName sql.NullString
-		var notes sql.NullString
 
 		err := rows.Scan(
 			&workout.ID,
@@ -226,7 +216,6 @@ func (r *SQLiteWorkoutRepository) GetByUserIDAndDateRange(userID int64, startDat
 func (r *SQLiteWorkoutRepository) Update(workout *domain.Workout) error {
 	query := `
 		UPDATE workouts
-		SET workout_date = ?, workout_type = ?, workout_name = ?, notes = ?, total_time = ?, updated_at = ?
 		SET workout_date = ?, workout_type = ?, workout_name = ?, notes = ?,
 		    total_time = ?, updated_at = ?
 		WHERE id = ?
