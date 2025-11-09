@@ -181,10 +181,6 @@ func (r *SQLiteMovementRepository) ListStandard() ([]*domain.Movement, error) {
 	return movements, rows.Err()
 }
 
-// ListByUser retrieves movements created by a specific user
-	return r.queryMovements(query)
-}
-
 // ListByUser retrieves movements created by a user
 func (r *SQLiteMovementRepository) ListByUser(userID int64) ([]*domain.Movement, error) {
 	query := `
@@ -228,7 +224,6 @@ func (r *SQLiteMovementRepository) ListByUser(userID int64) ([]*domain.Movement,
 	}
 
 	return movements, rows.Err()
-	return r.queryMovementsWithParam(query, userID)
 }
 
 // Update updates a movement
@@ -271,7 +266,6 @@ func (r *SQLiteMovementRepository) Search(query string, limit int) ([]*domain.Mo
 		LIMIT ?
 	`
 
-	rows, err := r.db.Query(sqlQuery, "%"+query+"%", limit)
 	return r.queryMovementsWithParams(sqlQuery, "%"+query+"%", limit)
 }
 
@@ -294,9 +288,6 @@ func (r *SQLiteMovementRepository) queryMovementsWithParam(query string, arg int
 	}
 	defer rows.Close()
 
-	var movements []*domain.Movement
-	for rows.Next() {
-		movement := &domain.Movement{}
 	return r.scanMovements(rows)
 }
 

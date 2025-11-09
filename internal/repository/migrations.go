@@ -10,8 +10,8 @@ import (
 type Migration struct {
 	Version     string
 	Description string
-	Up          func(*sql.DB) error
-	Down        func(*sql.DB) error
+	Up          func(*sql.DB, string) error // Takes db and driver
+	Down        func(*sql.DB, string) error // Takes db and driver
 }
 
 // migrations holds all database migrations in order
@@ -19,11 +19,11 @@ var migrations = []Migration{
 	{
 		Version:     "0.1.0",
 		Description: "Initial schema with users, workouts, movements, workout_movements",
-		Up: func(db *sql.DB) error {
+		Up: func(db *sql.DB, driver string) error {
 			// This migration is handled by createInitialTablesIfNotExist
 			return nil
 		},
-		Down: func(db *sql.DB) error {
+		Down: func(db *sql.DB, driver string) error {
 			return fmt.Errorf("cannot rollback initial migration")
 		},
 	},
@@ -32,11 +32,20 @@ var migrations = []Migration{
 	// {
 	//     Version:     "0.2.0",
 	//     Description: "Add email_verified column to users",
-	//     Up: func(db *sql.DB) error {
-	//         _, err := db.Exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+	//     Up: func(db *sql.DB, driver string) error {
+	//         var query string
+	//         switch driver {
+	//         case "sqlite3":
+	//             query = "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0"
+	//         case "postgres":
+	//             query = "ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE"
+	//         case "mysql":
+	//             query = "ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE"
+	//         }
+	//         _, err := db.Exec(query)
 	//         return err
 	//     },
-	//     Down: func(db *sql.DB) error {
+	//     Down: func(db *sql.DB, driver string) error {
 	//         _, err := db.Exec("ALTER TABLE users DROP COLUMN email_verified")
 	//         return err
 	//     },
@@ -44,14 +53,14 @@ var migrations = []Migration{
 }
 
 // RunMigrations runs all pending migrations
-func RunMigrations(db *sql.DB) error {
+func RunMigrations(db *sql.DB, driver string) error {
 	// Create migrations table if it doesn't exist
-	if err := createMigrationsTable(db); err != nil {
+	if err := createMigrationsTable(db, driver); err != nil {
 		return err
 	}
 
 	// Get applied migrations
-	appliedMigrations, err := getAppliedMigrations(db)
+	appliedMigrations, err := getAppliedMigrations(db, driver)
 	if err != nil {
 		return err
 	}
@@ -65,12 +74,12 @@ func RunMigrations(db *sql.DB) error {
 		fmt.Printf("Applying migration %s: %s\n", migration.Version, migration.Description)
 
 		// Run the migration
-		if err := migration.Up(db); err != nil {
+		if err := migration.Up(db, driver); err != nil {
 			return fmt.Errorf("failed to apply migration %s: %w", migration.Version, err)
 		}
 
 		// Record the migration
-		if err := recordMigration(db, migration.Version, migration.Description); err != nil {
+		if err := recordMigration(db, driver, migration.Version, migration.Description); err != nil {
 			return fmt.Errorf("failed to record migration %s: %w", migration.Version, err)
 		}
 
@@ -80,22 +89,48 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// createMigrationsTable creates the schema_migrations table
-func createMigrationsTable(db *sql.DB) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS schema_migrations (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		version TEXT UNIQUE NOT NULL,
-		description TEXT NOT NULL,
-		applied_at DATETIME NOT NULL
-	);
-	`
+// createMigrationsTable creates the schema_migrations table with database-specific syntax
+func createMigrationsTable(db *sql.DB, driver string) error {
+	var query string
+
+	switch driver {
+	case "sqlite3":
+		query = `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			version TEXT UNIQUE NOT NULL,
+			description TEXT NOT NULL,
+			applied_at DATETIME NOT NULL
+		)`
+
+	case "postgres":
+		query = `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			id BIGSERIAL PRIMARY KEY,
+			version VARCHAR(50) UNIQUE NOT NULL,
+			description TEXT NOT NULL,
+			applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)`
+
+	case "mysql":
+		query = `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			id BIGINT AUTO_INCREMENT PRIMARY KEY,
+			version VARCHAR(50) UNIQUE NOT NULL,
+			description TEXT NOT NULL,
+			applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
 	_, err := db.Exec(query)
 	return err
 }
 
 // getAppliedMigrations returns a list of applied migration versions
-func getAppliedMigrations(db *sql.DB) (map[string]bool, error) {
+func getAppliedMigrations(db *sql.DB, driver string) (map[string]bool, error) {
 	query := `SELECT version FROM schema_migrations ORDER BY applied_at`
 	rows, err := db.Query(query)
 	if err != nil {
@@ -120,15 +155,28 @@ func isApplied(version string, appliedMigrations map[string]bool) bool {
 	return appliedMigrations[version]
 }
 
-// recordMigration records a migration as applied
-func recordMigration(db *sql.DB, version, description string) error {
-	query := `INSERT INTO schema_migrations (version, description, applied_at) VALUES (?, ?, ?)`
-	_, err := db.Exec(query, version, description, time.Now())
-	return err
+// recordMigration records a migration as applied with database-specific syntax
+func recordMigration(db *sql.DB, driver, version, description string) error {
+	var query string
+
+	switch driver {
+	case "sqlite3", "mysql":
+		query = `INSERT INTO schema_migrations (version, description, applied_at) VALUES (?, ?, ?)`
+		_, err := db.Exec(query, version, description, time.Now())
+		return err
+
+	case "postgres":
+		query = `INSERT INTO schema_migrations (version, description, applied_at) VALUES ($1, $2, $3)`
+		_, err := db.Exec(query, version, description, time.Now())
+		return err
+
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
 }
 
 // RollbackMigration rolls back the last applied migration
-func RollbackMigration(db *sql.DB) error {
+func RollbackMigration(db *sql.DB, driver string) error {
 	// Get the last applied migration
 	var version, description string
 	query := `SELECT version, description FROM schema_migrations ORDER BY applied_at DESC LIMIT 1`
@@ -156,12 +204,22 @@ func RollbackMigration(db *sql.DB) error {
 	fmt.Printf("Rolling back migration %s: %s\n", version, description)
 
 	// Run the down migration
-	if err := targetMigration.Down(db); err != nil {
+	if err := targetMigration.Down(db, driver); err != nil {
 		return fmt.Errorf("failed to rollback migration %s: %w", version, err)
 	}
 
-	// Remove the migration record
-	_, err = db.Exec("DELETE FROM schema_migrations WHERE version = ?", version)
+	// Remove the migration record with database-specific parameter syntax
+	var deleteQuery string
+	switch driver {
+	case "sqlite3", "mysql":
+		deleteQuery = "DELETE FROM schema_migrations WHERE version = ?"
+	case "postgres":
+		deleteQuery = "DELETE FROM schema_migrations WHERE version = $1"
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err = db.Exec(deleteQuery, version)
 	if err != nil {
 		return fmt.Errorf("failed to remove migration record: %w", err)
 	}

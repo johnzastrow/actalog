@@ -262,6 +262,8 @@ npm run lint
 
 ## Database Setup
 
+ActaLog supports three database systems: SQLite, PostgreSQL, and MySQL/MariaDB. See [DATABASE_SUPPORT.md](DATABASE_SUPPORT.md) for detailed multi-database configuration.
+
 ### SQLite (Default for Development)
 
 No setup required. Database file will be created automatically at `actalog.db`.
@@ -284,6 +286,26 @@ No setup required. Database file will be created automatically at `actalog.db`.
    DB_PASSWORD=your_password
    DB_NAME=actalog
    DB_SSLMODE=disable
+   ```
+
+### MySQL/MariaDB (Production)
+
+1. Install MySQL or MariaDB
+2. Create database:
+   ```sql
+   CREATE DATABASE actalog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'actalog'@'localhost' IDENTIFIED BY 'your_password';
+   GRANT ALL PRIVILEGES ON actalog.* TO 'actalog'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+3. Update `.env`:
+   ```env
+   DB_DRIVER=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=actalog
+   DB_PASSWORD=your_password
+   DB_NAME=actalog
    ```
 
 ### Running Migrations

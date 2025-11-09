@@ -20,7 +20,9 @@ import (
 	"github.com/johnzastrow/actalog/pkg/version"
 
 	// Database drivers
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"  // MySQL/MariaDB
+	_ "github.com/lib/pq"                // PostgreSQL
+	_ "github.com/mattn/go-sqlite3"     // SQLite
 )
 
 func main() {
@@ -41,8 +43,19 @@ func main() {
 	log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Allow Registration: %t", cfg.App.AllowRegistration)
 
+	// Build database connection string
+	dsn := repository.BuildDSN(
+		cfg.Database.Driver,
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Database,
+		cfg.Database.SSLMode,
+	)
+
 	// Initialize database
-	db, err := repository.InitDatabase(cfg.Database.Driver, cfg.Database.Database)
+	db, err := repository.InitDatabase(cfg.Database.Driver, dsn)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -54,9 +67,6 @@ func main() {
 	movementRepo := repository.NewSQLiteMovementRepository(db)
 	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
 	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
-	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
-	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
-	movementRepo := repository.NewSQLiteMovementRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(
@@ -65,17 +75,11 @@ func main() {
 		cfg.JWT.ExpirationTime,
 		cfg.App.AllowRegistration,
 	)
-	workoutService := service.NewWorkoutService(
-		workoutRepo,
-		workoutMovementRepo,
-		movementRepo,
-	)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
 	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo)
-	workoutHandler := handler.NewWorkoutHandler(workoutService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -111,34 +115,27 @@ func main() {
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
 
-		// Movement routes
+		// Movement routes (public for browsing)
 		r.Get("/movements", movementHandler.ListStandard)
 		r.Get("/movements/search", movementHandler.Search)
 		r.Get("/movements/{id}", movementHandler.GetByID)
-		r.Post("/movements", movementHandler.Create)
 
-		// Workout routes
-		r.Post("/workouts", workoutHandler.Create)
-		r.Get("/workouts", workoutHandler.ListByUser)
-		r.Get("/workouts/{id}", workoutHandler.GetByID)
-		r.Put("/workouts/{id}", workoutHandler.Update)
-		r.Delete("/workouts/{id}", workoutHandler.Delete)
-
-		// Progress tracking
-		r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)
 		// Protected routes (require authentication)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWT.SecretKey))
 
-			// Workout routes
-			r.Post("/workouts", workoutHandler.CreateWorkout)
-			r.Get("/workouts", workoutHandler.ListWorkouts)
-			r.Get("/workouts/{id}", workoutHandler.GetWorkout)
-			r.Put("/workouts/{id}", workoutHandler.UpdateWorkout)
-			r.Delete("/workouts/{id}", workoutHandler.DeleteWorkout)
+			// Movement management (authenticated)
+			r.Post("/movements", movementHandler.Create)
 
-			// Movement routes
-			r.Get("/movements", workoutHandler.ListMovements)
+			// Workout routes (authenticated)
+			r.Post("/workouts", workoutHandler.Create)
+			r.Get("/workouts", workoutHandler.ListByUser)
+			r.Get("/workouts/{id}", workoutHandler.GetByID)
+			r.Put("/workouts/{id}", workoutHandler.Update)
+			r.Delete("/workouts/{id}", workoutHandler.Delete)
+
+			// Progress tracking (authenticated)
+			r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)
 		})
 	})
 
