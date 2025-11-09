@@ -52,6 +52,8 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
 	movementRepo := repository.NewSQLiteMovementRepository(db)
+	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
+	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(
@@ -64,6 +66,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
+	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -104,6 +107,16 @@ func main() {
 		r.Get("/movements/search", movementHandler.Search)
 		r.Get("/movements/{id}", movementHandler.GetByID)
 		r.Post("/movements", movementHandler.Create)
+
+		// Workout routes
+		r.Post("/workouts", workoutHandler.Create)
+		r.Get("/workouts", workoutHandler.ListByUser)
+		r.Get("/workouts/{id}", workoutHandler.GetByID)
+		r.Put("/workouts/{id}", workoutHandler.Update)
+		r.Delete("/workouts/{id}", workoutHandler.Delete)
+
+		// Progress tracking
+		r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)
 	})
 
 	// Configure HTTP server

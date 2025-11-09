@@ -63,7 +63,7 @@ func Load() (*Config, error) {
 			IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
-			Driver:   getEnv("DB_DRIVER", "sqlite"),
+			Driver:   getEnv("DB_DRIVER", "sqlite3"),
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnvInt("DB_PORT", 5432),
 			User:     getEnv("DB_USER", "actalog"),
