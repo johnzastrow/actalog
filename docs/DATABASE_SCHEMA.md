@@ -15,6 +15,29 @@ Current schema version: **0.2.0**
 ## Entity Relationship Diagram
 
 ```mermaid
+%%{init: 
+{
+  "theme": "default",
+  "themeVariables": {
+    "nodeBorder" : "#004990",
+    "mainBkg" : "#c9d7e4",
+    "actorBkg" : "#01A6F0",
+    "signalColor" : "#F34F1C",
+    "textColor" : "#747474",
+    "loopTextColor" : "#C7C7C7",
+    "labelTextColor" : "#C7C7C7",
+    "labelBoxBorderColor" : "#7FBC00",
+    "labelBoxBkgColor" : "#7FBC00",
+    "noteBkgColor" : "#FFBA01",
+    "noteBorderColor": "#FFBA01",
+    "fontFamily": "Inter",
+    "fontSize": "13px"
+ }
+}
+}%%
+
+
+
 erDiagram
     USERS ||--o{ WORKOUTS : creates
     USERS ||--o{ MOVEMENTS : creates
