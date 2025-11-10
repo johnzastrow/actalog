@@ -255,6 +255,24 @@
 
 ## Technical Debt
 
+### Database & Performance
+- [ ] **Migrate from lib/pq to pgx for PostgreSQL support** - HIGH PRIORITY
+  - Current: Using `github.com/lib/pq` (maintenance mode, no new features)
+  - Target: Migrate to `github.com/jackc/pgx/v5` (actively maintained, better performance)
+  - Benefits:
+    - Better connection pooling
+    - Native support for PostgreSQL types
+    - Improved performance (binary protocol)
+    - Better prepared statement caching
+    - Active maintenance and security updates
+  - Migration Steps:
+    1. Add pgx/v5 dependency: `go get github.com/jackc/pgx/v5`
+    2. Update database connection string format
+    3. Replace `database/sql` + `lib/pq` with `pgx.Pool`
+    4. Update repository implementations for pgx-specific APIs
+    5. Test all database operations
+    6. Update connection pooling configuration
+    7. Performance benchmark before/after
 - [ ] Add comprehensive error handling
 - [ ] Improve logging with structured logging
 - [ ] Add request rate limiting
