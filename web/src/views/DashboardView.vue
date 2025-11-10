@@ -1,5 +1,32 @@
 <template>
   <v-container fluid class="pa-3" style="background-color: #f5f7fa; min-height: calc(100vh - 64px)">
+    <!-- Email Verification Alert -->
+    <v-alert
+      v-if="authStore.user && !authStore.user.email_verified"
+      type="warning"
+      prominent
+      closable
+      class="mb-3"
+    >
+      <v-row align="center">
+        <v-col class="grow">
+          <div class="text-h6">Email Verification Required</div>
+          <div class="text-body-2">
+            Please verify your email address to access all features. Check your inbox for the verification link.
+          </div>
+        </v-col>
+        <v-col class="shrink">
+          <v-btn
+            color="warning"
+            variant="elevated"
+            @click="$router.push('/resend-verification')"
+          >
+            Resend Email
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-alert>
+
     <!-- Calendar Section -->
     <workout-calendar
       :workout-dates="workoutDates"
@@ -18,9 +45,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import { useAuthStore } from '@/stores/auth'
 import WorkoutCalendar from '@/components/WorkoutCalendar.vue'
 import RecentWorkoutsCards from '@/components/RecentWorkoutsCards.vue'
 
+const authStore = useAuthStore()
 const loading = ref(false)
 const workouts = ref([])
 
