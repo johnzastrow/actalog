@@ -16,6 +16,7 @@ import (
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/email"
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/version"
@@ -87,12 +88,40 @@ func main() {
 	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
 	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
 
+	// Initialize email service
+	var emailService *email.Service
+	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
+		emailService = email.NewService(email.Config{
+			SMTPHost:     cfg.Email.SMTPHost,
+			SMTPPort:     cfg.Email.SMTPPort,
+			SMTPUser:     cfg.Email.SMTPUser,
+			SMTPPassword: cfg.Email.SMTPPassword,
+			FromAddress:  cfg.Email.FromAddress,
+			FromName:     cfg.Email.FromName,
+		})
+		appLogger.Info("Email service: enabled (SMTP: %s:%d)", cfg.Email.SMTPHost, cfg.Email.SMTPPort)
+	} else {
+		appLogger.Info("Email service: disabled (password reset emails will not be sent)")
+	}
+
+	// Determine app URL for password reset links
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		if cfg.App.Environment == "production" {
+			appURL = "https://actalog.example.com" // Replace with your production URL
+		} else {
+			appURL = fmt.Sprintf("http://localhost:%d", cfg.Server.Port)
+		}
+	}
+
 	// Initialize services
 	userService := service.NewUserService(
 		userRepo,
 		cfg.JWT.SecretKey,
 		cfg.JWT.ExpirationTime,
 		cfg.App.AllowRegistration,
+		emailService,
+		appURL,
 	)
 
 	// Initialize handlers
@@ -133,6 +162,8 @@ func main() {
 		// Auth routes (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
+		r.Post("/auth/forgot-password", authHandler.ForgotPassword)
+		r.Post("/auth/reset-password", authHandler.ResetPassword)
 
 		// Movement routes (public for browsing)
 		r.Get("/movements", movementHandler.ListStandard)

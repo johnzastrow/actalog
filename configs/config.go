@@ -15,6 +15,7 @@ type Config struct {
 	JWT      JWTConfig
 	App      AppConfig
 	Logging  LoggingConfig
+	Email    EmailConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -62,6 +63,17 @@ type LoggingConfig struct {
 	MaxBackups int    // Number of old log files to keep
 }
 
+// EmailConfig holds email/SMTP configuration
+type EmailConfig struct {
+	SMTPHost     string // SMTP server host
+	SMTPPort     int    // SMTP server port (587 for STARTTLS, 465 for TLS, 25 for plain)
+	SMTPUser     string // SMTP username
+	SMTPPassword string // SMTP password
+	FromAddress  string // From email address
+	FromName     string // From name
+	Enabled      bool   // Enable email sending
+}
+
 // Load loads configuration from environment variables with sensible defaults
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -99,6 +111,15 @@ func Load() (*Config, error) {
 			FilePath:   getEnv("LOG_FILE_PATH", ""),    // Empty = auto-detect (./logs/actalog.log)
 			MaxSizeMB:  getEnvInt("LOG_MAX_SIZE_MB", 100), // 100MB default
 			MaxBackups: getEnvInt("LOG_MAX_BACKUPS", 3),   // Keep 3 old files
+		},
+		Email: EmailConfig{
+			SMTPHost:     getEnv("SMTP_HOST", ""),
+			SMTPPort:     getEnvInt("SMTP_PORT", 587), // Default to STARTTLS port
+			SMTPUser:     getEnv("SMTP_USER", ""),
+			SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+			FromAddress:  getEnv("EMAIL_FROM", ""),
+			FromName:     getEnv("EMAIL_FROM_NAME", "ActaLog"),
+			Enabled:      getEnvBool("EMAIL_ENABLED", false), // Disabled by default
 		},
 	}
 
