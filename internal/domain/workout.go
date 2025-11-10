@@ -4,37 +4,61 @@ import (
 	"time"
 )
 
-// WorkoutType represents the type of workout
-type WorkoutType string
-
-const (
-	WorkoutTypeNamedWOD WorkoutType = "named_wod"
-	WorkoutTypeCustom   WorkoutType = "custom"
-)
-
-// Workout represents a logged workout session
+// Workout represents a reusable workout template
+// Templates can be used by multiple users multiple times
+// User-specific workout instances are tracked in UserWorkout
 type Workout struct {
-	ID          int64       `json:"id" db:"id"`
-	UserID      int64       `json:"user_id" db:"user_id"`
-	WorkoutDate time.Time   `json:"workout_date" db:"workout_date"`
-	WorkoutType WorkoutType `json:"workout_type" db:"workout_type"`
-	WorkoutName string      `json:"workout_name,omitempty" db:"workout_name"` // For named WODs
-	Notes       string      `json:"notes,omitempty" db:"notes"`
-	TotalTime   *int        `json:"total_time,omitempty" db:"total_time"` // in seconds, for time-based workouts
-	CreatedAt   time.Time   `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at" db:"updated_at"`
+	ID          int64      `json:"id" db:"id"`
+	Name        string     `json:"name" db:"name"`                       // Template name (e.g., "Monday Strength", "Hero WOD")
+	Notes       *string    `json:"notes,omitempty" db:"notes"`           // General template notes/description
+	CreatedBy   *int64     `json:"created_by,omitempty" db:"created_by"` // User who created (NULL for standard templates)
+	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 
-	// Related data (not stored directly in workout table)
-	Movements []*WorkoutMovement `json:"movements,omitempty" db:"-"`
+	// Related data (not stored directly in workout table, loaded via joins)
+	Movements []*WorkoutMovement       `json:"movements,omitempty" db:"-"` // Strength movements in this template
+	WODs      []*WorkoutWODWithDetails `json:"wods,omitempty" db:"-"`      // WODs in this template
 }
 
-// WorkoutRepository defines the interface for workout data access
+// WorkoutWithUsageStats includes usage statistics for a template
+type WorkoutWithUsageStats struct {
+	Workout
+	TimesUsed   int       `json:"times_used"`    // How many times this template has been logged
+	LastUsedAt  *time.Time `json:"last_used_at,omitempty"` // When it was last logged
+}
+
+// WorkoutRepository defines the interface for workout template data access
 type WorkoutRepository interface {
+	// Create creates a new workout template
 	Create(workout *Workout) error
+
+	// GetByID retrieves a workout template by ID
 	GetByID(id int64) (*Workout, error)
-	GetByUserID(userID int64, limit, offset int) ([]*Workout, error)
-	GetByUserIDAndDateRange(userID int64, startDate, endDate time.Time) ([]*Workout, error)
+
+	// GetByIDWithDetails retrieves a workout with movements and WODs
+	GetByIDWithDetails(id int64) (*Workout, error)
+
+	// List retrieves all workout templates with optional filtering
+	List(filters map[string]interface{}, limit, offset int) ([]*Workout, error)
+
+	// ListByUser retrieves all workout templates created by a specific user
+	ListByUser(userID int64, limit, offset int) ([]*Workout, error)
+
+	// ListStandard retrieves all standard (system) workout templates
+	ListStandard(limit, offset int) ([]*Workout, error)
+
+	// Update updates an existing workout template
 	Update(workout *Workout) error
+
+	// Delete deletes a workout template
 	Delete(id int64) error
-	Count(userID int64) (int64, error)
+
+	// Search searches workout templates by name
+	Search(query string, limit int) ([]*Workout, error)
+
+	// Count counts total workout templates (optionally filtered by user)
+	Count(userID *int64) (int64, error)
+
+	// GetUsageStats gets usage statistics for a template
+	GetUsageStats(workoutID int64) (*WorkoutWithUsageStats, error)
 }
