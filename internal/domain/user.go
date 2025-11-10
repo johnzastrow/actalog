@@ -12,6 +12,7 @@ type User struct {
 	PasswordHash                string     `json:"-" db:"password_hash"` // Never serialize password
 	Name                        string     `json:"name" db:"name"`
 	ProfileImage                *string    `json:"profile_image,omitempty" db:"profile_image"`
+	Birthday                    *time.Time `json:"birthday,omitempty" db:"birthday"`
 	Role                        string     `json:"role" db:"role"` // user, admin
 	EmailVerified               bool       `json:"email_verified" db:"email_verified"`
 	EmailVerifiedAt             *time.Time `json:"email_verified_at,omitempty" db:"email_verified_at"`
