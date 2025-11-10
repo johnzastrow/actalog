@@ -54,19 +54,29 @@
                 <span class="text-body-2 font-weight-bold" style="color: #1a1a1a">
                   {{ workout.workout_name || 'Custom Workout' }}
                 </span>
-                <v-icon
-                  v-if="workout.is_pr"
+                <v-chip
+                  v-if="hasPR(workout)"
                   color="#ffc107"
-                  size="small"
+                  size="x-small"
                   class="ml-2"
+                  style="height: 18px; font-size: 10px"
                 >
-                  mdi-star
-                </v-icon>
+                  <v-icon size="x-small" class="mr-1">mdi-trophy</v-icon>
+                  PR
+                </v-chip>
               </div>
 
-              <!-- Movement Details -->
+              <!-- Movement Details with PR indicators -->
               <div v-if="workout.movements && workout.movements.length > 0" class="text-caption" style="color: #666">
-                {{ formatMovements(workout.movements) }}
+                <div v-for="(movement, index) in workout.movements.slice(0, 3)" :key="index" class="d-flex align-center">
+                  <v-icon v-if="movement.is_pr" color="#ffc107" size="x-small" class="mr-1">mdi-trophy</v-icon>
+                  <span>{{ movement.movement?.name || 'Movement' }}</span>
+                  <span v-if="movement.weight" class="ml-1">- {{ movement.weight }}lb</span>
+                  <span v-if="movement.reps" class="ml-1">x{{ movement.reps }}</span>
+                </div>
+                <div v-if="workout.movements.length > 3" class="text-caption mt-1" style="color: #999">
+                  +{{ workout.movements.length - 3 }} more
+                </div>
               </div>
 
               <!-- Time if available -->
@@ -145,15 +155,8 @@ function formatRelativeDate(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function formatMovements(movements) {
-  if (!movements || movements.length === 0) return ''
-
-  // Show first 2 movements
-  const first = movements.slice(0, 2).map(m => m.name).join(', ')
-  if (movements.length > 2) {
-    return `${first}, +${movements.length - 2} more`
-  }
-  return first
+function hasPR(workout) {
+  return workout.movements?.some(m => m.is_pr) || false
 }
 
 function formatTime(seconds) {

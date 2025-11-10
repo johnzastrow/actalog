@@ -92,7 +92,7 @@
               <div
                 v-for="(movement, idx) in workout.movements"
                 :key="movement.id"
-                class="mt-1 text-caption"
+                class="mt-1 text-caption d-flex align-center"
                 style="color: #333"
               >
                 <v-icon size="x-small" color="#00bcd4">mdi-chevron-right</v-icon>
@@ -110,6 +110,16 @@
                   style="color: white; height: 16px"
                 >
                   Rx
+                </v-chip>
+                <v-chip
+                  v-if="movement.is_pr"
+                  size="x-small"
+                  color="#ffc107"
+                  class="ml-1"
+                  style="color: white; height: 16px"
+                >
+                  <v-icon size="x-small" class="mr-1">mdi-trophy</v-icon>
+                  PR
                 </v-chip>
               </div>
             </div>
