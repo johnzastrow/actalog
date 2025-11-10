@@ -48,7 +48,7 @@ type ErrorResponse struct {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		if err == service.ErrInvalidCredentials {
 			respondError(w, http.StatusUnauthorized, "Invalid email or password")
 		} else {
-			respondError(w, http.StatusInternalServerError, "Failed to login")
+			respondErrorWithDetail(w, http.StatusInternalServerError, "Failed to login", err.Error())
 		}
 		return
 	}
@@ -203,4 +203,8 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 
 func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, ErrorResponse{Message: message})
+}
+
+func respondErrorWithDetail(w http.ResponseWriter, status int, message string, detail string) {
+	respondJSON(w, status, ErrorResponse{Message: message, Error: detail})
 }
