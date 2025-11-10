@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ActaLog is a mobile-first CrossFit workout tracker built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend (Vuetify 3). The project follows Clean Architecture principles with strict separation between domain, service, repository, and handler layers.
 
-**Current Version:** 0.3.0-beta
+**Current Version:** 0.3.1-beta
 
 ## Essential Commands
 
@@ -411,6 +411,81 @@ Complete password reset flow with email delivery:
 - `web/src/views/LoginView.vue` - "Forgot password?" link between sign-in and register
 - Router guards prevent access to reset flows when already authenticated
 - Success/error messaging with user-friendly feedback
+
+### Email Verification System (v0.3.1-beta)
+
+**Location:** `internal/repository/email_verification_repository.go`, `internal/service/user_service.go`, `internal/handler/auth_handler.go`, `web/src/views/VerifyEmailView.vue`, `web/src/views/ResendVerificationView.vue`
+
+Complete email verification flow with automated email delivery:
+- **Verify Email:** `GET /api/auth/verify-email?token=...` - Validate token and mark email as verified
+- **Resend Verification:** `POST /api/auth/resend-verification` - Send new verification email
+- **Frontend Routes:** `/verify-email?token=...` and `/resend-verification`
+
+**Key Implementation Details:**
+- Database migration v0.3.1 adds `email_verified` and `email_verified_at` columns to users table
+- Creates `email_verification_tokens` table with token, user_id, expires_at, used_at
+- Secure token generation using crypto/rand (32 bytes, hex-encoded)
+- Token expiration (24 hours for email verification)
+- SMTP email delivery with styled HTML templates
+- Single-use tokens (marked as used after successful verification)
+- Verification email sent automatically on user registration
+- Authorization: users can only resend verification for their own email
+
+**Email Service:**
+- SMTP configuration via environment variables (EMAIL_FROM, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)
+- HTML email templates with inline styles for cross-client compatibility
+- Verification link format: `https://domain.com/verify-email?token={token}`
+- SendVerificationEmail() method constructs and sends styled HTML emails
+
+**Repository Layer:**
+- `CreateVerificationToken()` - Generates and stores verification token
+- `GetVerificationToken()` - Retrieves token with validation (expiration, used status)
+- `MarkTokenAsUsed()` - Marks token as used after successful verification
+- `UpdateEmailVerified()` - Sets email_verified=true and email_verified_at timestamp
+
+**Service Layer:**
+- `SendVerificationEmail()` - Creates token and sends verification email
+- `VerifyEmailWithToken()` - Validates token and updates user email_verified status
+- `ResendVerificationEmail()` - Creates new token and resends verification email
+- Authorization checks ensure users can only verify their own emails
+
+**Frontend Integration:**
+- `web/src/views/VerifyEmailView.vue` - Email verification page with token validation
+  - Automatic verification on page load using query parameter token
+  - Three states: Loading, Success, Error
+  - Updates auth store user object on successful verification
+  - Handles expired, invalid, and already-used tokens with appropriate error messages
+- `web/src/views/ResendVerificationView.vue` - Resend verification email page
+  - Email input form to request new verification email
+  - Success confirmation displaying the email address
+  - Error handling for 404 (user not found) and 400 (already verified)
+- `web/src/views/RegisterView.vue` - Updated to show verification success message
+  - No longer auto-redirects to dashboard after registration
+  - Displays sent email address and 24-hour expiration notice
+  - Link to resend verification if email not received
+- `web/src/views/DashboardView.vue` - Verification status banner
+  - Warning alert for users with unverified emails
+  - Prominent "Resend Email" button
+  - Closable alert for better UX
+- Router guards allow `/verify-email` access for both authenticated and unauthenticated users
+
+**Domain Models:**
+```go
+type User struct {
+  // ... existing fields
+  EmailVerified   bool       `json:"email_verified" db:"email_verified"`
+  EmailVerifiedAt *time.Time `json:"email_verified_at,omitempty" db:"email_verified_at"`
+}
+
+type EmailVerificationToken struct {
+  ID        int64      `json:"id" db:"id"`
+  UserID    int64      `json:"user_id" db:"user_id"`
+  Token     string     `json:"token" db:"token"`
+  ExpiresAt time.Time  `json:"expires_at" db:"expires_at"`
+  UsedAt    *time.Time `json:"used_at,omitempty" db:"used_at"`
+  CreatedAt time.Time  `json:"created_at" db:"created_at"`
+}
+```
 
 ### Workout Management (v0.2.0-beta)
 

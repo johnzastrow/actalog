@@ -10,13 +10,14 @@
 
 ActaLog is a fitness tracker app focused on logging CrossFit workouts and tracking history for weights, reps, and named weightlifting lifts. Built with a Go backend and Vue.js/Vuetify frontend, it provides a clean, mobile-first interface for tracking your fitness journey.
 
-**Version:** 0.3.0-beta
+**Version:** 0.3.1-beta
 
 ## Features
 
-### Current Features (v0.3.0-beta)
+### Current Features (v0.3.1-beta)
 
 - ✅ **User Authentication**: Secure registration and login with JWT tokens
+- ✅ **Email Verification**: Verify email addresses with secure tokens and automated emails
 - ✅ **Password Reset**: Complete forgot password flow with email delivery
 - ✅ **Workout Logging**: Track workouts with movements, weights, sets, and reps
 - ✅ **Movement Database**: 31 pre-seeded standard CrossFit movements
@@ -41,7 +42,6 @@ ActaLog is a fitness tracker app focused on logging CrossFit workouts and tracki
 - ➕ **Custom Movements**: Add your own movements from the UI
 - 🔍 **Workout Filtering**: Search and filter by date, movement, or type
 - 📤 **Data Export**: Download your workout data (CSV, JSON)
-- ✉️ **Email Verification**: Verify email addresses for enhanced security
 
 ## Technology Stack
 
@@ -247,8 +247,9 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ## Roadmap
 
-### Completed (v0.3.0-beta)
+### Completed (v0.3.1-beta)
 - [x] User authentication and registration
+- [x] Email verification system
 - [x] Password reset functionality (forgot password flow)
 - [x] Workout logging functionality
 - [x] Movement database with 31 standard CrossFit movements
@@ -260,7 +261,6 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 - [x] PR history page with all-time records
 
 ### In Progress
-- [ ] Email verification system
 - [ ] Performance tracking with charts
 - [ ] Edit/delete workout functionality
 - [ ] Custom movement creation
