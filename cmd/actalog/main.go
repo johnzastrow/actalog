@@ -98,6 +98,9 @@ func main() {
 	// Initialize email service
 	var emailService *email.Service
 	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
+		// Create a standard logger that writes to our custom logger
+		stdLogger := log.New(appLogger.Writer(), "", 0)
+
 		emailService = email.NewService(email.Config{
 			SMTPHost:     cfg.Email.SMTPHost,
 			SMTPPort:     cfg.Email.SMTPPort,
@@ -105,7 +108,7 @@ func main() {
 			SMTPPassword: cfg.Email.SMTPPassword,
 			FromAddress:  cfg.Email.FromAddress,
 			FromName:     cfg.Email.FromName,
-		})
+		}, stdLogger)
 		appLogger.Info("Email service: enabled (SMTP: %s:%d)", cfg.Email.SMTPHost, cfg.Email.SMTPPort)
 	} else {
 		appLogger.Info("Email service: disabled (password reset emails will not be sent)")
@@ -177,6 +180,8 @@ func main() {
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/forgot-password", authHandler.ForgotPassword)
 		r.Post("/auth/reset-password", authHandler.ResetPassword)
+		r.Get("/auth/verify-email", authHandler.VerifyEmail)
+		r.Post("/auth/resend-verification", authHandler.ResendVerification)
 
 		// Movement routes (public for browsing)
 		r.Get("/movements", movementHandler.ListStandard)

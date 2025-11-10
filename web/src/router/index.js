@@ -33,6 +33,12 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: () => import('@/views/VerifyEmailView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/DashboardView.vue'),
@@ -89,9 +95,13 @@ router.beforeEach((to, from, next) => {
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
-  } else if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'reset-password') && authStore.isAuthenticated) {
-    // If already authenticated, redirect password reset flows to dashboard
-    next('/dashboard')
+  } else if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'reset-password' || to.name === 'verify-email') && authStore.isAuthenticated) {
+    // If already authenticated, redirect auth flows to dashboard (except verify-email can be accessed)
+    if (to.name === 'verify-email') {
+      next()
+    } else {
+      next('/dashboard')
+    }
   } else {
     next()
   }

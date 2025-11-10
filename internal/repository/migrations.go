@@ -143,6 +143,76 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.3.1",
+		Description: "Add email verification fields to users table",
+		Up: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0",
+					"ALTER TABLE users ADD COLUMN email_verified_at DATETIME",
+					"ALTER TABLE users ADD COLUMN verification_token TEXT",
+					"ALTER TABLE users ADD COLUMN verification_token_expires_at DATETIME",
+				}
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE",
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP",
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255)",
+					"ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires_at TIMESTAMP",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE",
+					"ALTER TABLE users ADD COLUMN email_verified_at DATETIME",
+					"ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)",
+					"ALTER TABLE users ADD COLUMN verification_token_expires_at DATETIME",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN directly in older versions
+				return fmt.Errorf("rollback not supported for SQLite")
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE users DROP COLUMN IF EXISTS email_verified",
+					"ALTER TABLE users DROP COLUMN IF EXISTS email_verified_at",
+					"ALTER TABLE users DROP COLUMN IF EXISTS verification_token",
+					"ALTER TABLE users DROP COLUMN IF EXISTS verification_token_expires_at",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE users DROP COLUMN email_verified",
+					"ALTER TABLE users DROP COLUMN email_verified_at",
+					"ALTER TABLE users DROP COLUMN verification_token",
+					"ALTER TABLE users DROP COLUMN verification_token_expires_at",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

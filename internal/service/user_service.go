@@ -13,12 +13,15 @@ import (
 )
 
 var (
-	ErrUserNotFound          = errors.New("user not found")
-	ErrInvalidCredentials    = errors.New("invalid credentials")
-	ErrEmailAlreadyExists    = errors.New("email already exists")
-	ErrRegistrationClosed    = errors.New("registration is closed")
-	ErrInvalidResetToken     = errors.New("invalid or expired reset token")
-	ErrResetTokenExpired     = errors.New("reset token has expired")
+	ErrUserNotFound               = errors.New("user not found")
+	ErrInvalidCredentials         = errors.New("invalid credentials")
+	ErrEmailAlreadyExists         = errors.New("email already exists")
+	ErrRegistrationClosed         = errors.New("registration is closed")
+	ErrInvalidResetToken          = errors.New("invalid or expired reset token")
+	ErrResetTokenExpired          = errors.New("reset token has expired")
+	ErrInvalidVerificationToken   = errors.New("invalid or expired verification token")
+	ErrVerificationTokenExpired   = errors.New("verification token has expired")
+	ErrEmailAlreadyVerified       = errors.New("email is already verified")
 )
 
 // UserService handles user-related business logic
@@ -99,6 +102,43 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 	err = s.userRepo.Create(user)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Generate verification token if email service is enabled
+	if s.emailService != nil {
+		verificationToken, err := generateVerificationToken()
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to generate verification token: %w", err)
+		}
+
+		// Set token expiration (24 hours from now)
+		expiresAt := time.Now().Add(24 * time.Hour)
+		user.VerificationToken = &verificationToken
+		user.VerificationTokenExpiresAt = &expiresAt
+		user.EmailVerified = false
+
+		// Update user with verification token
+		err = s.userRepo.Update(user)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to save verification token: %w", err)
+		}
+
+		// Send verification email
+		verifyURL := fmt.Sprintf("%s/verify-email?token=%s", s.appURL, verificationToken)
+		err = s.emailService.SendVerificationEmail(user.Email, verifyURL)
+		if err != nil {
+			// Log error but don't fail registration
+			fmt.Printf("warning: failed to send verification email: %v\n", err)
+		}
+	} else {
+		// If email service is not enabled, auto-verify the user
+		user.EmailVerified = true
+		verifiedAt := time.Now()
+		user.EmailVerifiedAt = &verifiedAt
+		err = s.userRepo.Update(user)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to update user: %w", err)
+		}
 	}
 
 	// Generate JWT token
@@ -262,4 +302,96 @@ func generateResetToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// generateVerificationToken generates a cryptographically secure random token for email verification
+func generateVerificationToken() (string, error) {
+	bytes := make([]byte, 32) // 32 bytes = 256 bits
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// VerifyEmail validates verification token and marks email as verified
+func (s *UserService) VerifyEmail(token string) error {
+	// Get user by verification token
+	user, err := s.userRepo.GetByVerificationToken(token)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return ErrInvalidVerificationToken
+	}
+
+	// Check if already verified
+	if user.EmailVerified {
+		return ErrEmailAlreadyVerified
+	}
+
+	// Check if token is expired
+	if user.VerificationTokenExpiresAt == nil || time.Now().After(*user.VerificationTokenExpiresAt) {
+		return ErrVerificationTokenExpired
+	}
+
+	// Mark email as verified and clear verification token
+	user.EmailVerified = true
+	now := time.Now()
+	user.EmailVerifiedAt = &now
+	user.VerificationToken = nil
+	user.VerificationTokenExpiresAt = nil
+
+	err = s.userRepo.Update(user)
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return nil
+}
+
+// ResendVerificationEmail resends verification email to a user
+func (s *UserService) ResendVerificationEmail(email string) error {
+	// Get user by email
+	user, err := s.userRepo.GetByEmail(email)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+
+	// Silently succeed if user doesn't exist (security best practice)
+	if user == nil {
+		return nil
+	}
+
+	// Return error if already verified
+	if user.EmailVerified {
+		return ErrEmailAlreadyVerified
+	}
+
+	// Generate new verification token
+	verificationToken, err := generateVerificationToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate verification token: %w", err)
+	}
+
+	// Set token expiration (24 hours from now)
+	expiresAt := time.Now().Add(24 * time.Hour)
+	user.VerificationToken = &verificationToken
+	user.VerificationTokenExpiresAt = &expiresAt
+
+	// Update user with new verification token
+	err = s.userRepo.Update(user)
+	if err != nil {
+		return fmt.Errorf("failed to save verification token: %w", err)
+	}
+
+	// Send verification email
+	if s.emailService != nil {
+		verifyURL := fmt.Sprintf("%s/verify-email?token=%s", s.appURL, verificationToken)
+		err = s.emailService.SendVerificationEmail(user.Email, verifyURL)
+		if err != nil {
+			return fmt.Errorf("failed to send verification email: %w", err)
+		}
+	}
+
+	return nil
 }
