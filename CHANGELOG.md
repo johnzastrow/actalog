@@ -5,6 +5,45 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0-beta] - 2025-11-10
+
+### Added
+- **Personal Records (PR) Tracking System**
+  - Automatic PR detection when logging workouts (weight-based comparison)
+  - Manual PR flag toggle via API endpoint
+  - Database migration v0.3.0 adding `is_pr` column to workout_movements
+  - Multi-database support (SQLite, PostgreSQL, MySQL) for PR field
+  - New domain models: `PersonalRecord` struct and `IsPR` field in `WorkoutMovement`
+  - Repository methods: `GetPersonalRecords()`, `GetMaxWeightForMovement()`, `GetPRMovements()`
+  - Service layer methods: `DetectAndFlagPRs()`, `GetPersonalRecords()`, `TogglePRFlag()`
+  - API endpoints: `GET /api/workouts/prs`, `GET /api/workouts/pr-movements`, `POST /api/workouts/movements/:id/toggle-pr`
+  - Gold trophy badges (mdi-trophy) on workout cards containing PRs
+  - Individual PR indicators next to movements in workout lists
+  - Dedicated PR History page at `/prs` route showing recent PRs and all-time records
+  - Visual distinction with gold/amber color scheme (#ffc107) for PR indicators
+
+- **Password Reset Frontend (Part 3/3)**
+  - Forgot Password view with email submission form
+  - Reset Password view with token validation and new password form
+  - Router configuration for `/forgot-password` and `/reset-password/:token` routes
+  - "Forgot password?" link added to Login view
+  - Integration with backend password reset API endpoints
+  - Success/error messaging for user feedback
+
+### Changed
+- Integrated PR detection into workout creation workflow
+- Updated RecentWorkoutsCards component to display PR badges
+- Updated WorkoutsView to show PR indicators on individual movements
+- Enhanced router with authentication guards for password reset routes
+- Version bumped to 0.3.0-beta across all version files
+
+### Technical
+- PR auto-detection algorithm: compares current weight against previous max for each movement
+- Authorization checks on PR flag toggle to ensure workout ownership
+- Backward-compatible database migration with DEFAULT values
+- Clean Architecture maintained: domain → repository → service → handler layers
+- All PR queries include proper user scoping for security
+
 ## [0.2.0-beta] - 2025-11-06
 
 ### Added
