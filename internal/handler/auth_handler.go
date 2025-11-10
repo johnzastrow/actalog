@@ -109,6 +109,90 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ForgotPasswordRequest represents a forgot password request
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+// ResetPasswordRequest represents a reset password request
+type ResetPasswordRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
+}
+
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
+// ForgotPassword handles forgot password requests
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate email
+	if req.Email == "" {
+		respondError(w, http.StatusBadRequest, "Email is required")
+		return
+	}
+
+	// Request password reset (always succeeds for security)
+	err := h.userService.RequestPasswordReset(req.Email)
+	if err != nil {
+		// Log error but don't reveal to user
+		// In production, this should use proper logging
+		respondError(w, http.StatusInternalServerError, "Failed to process request")
+		return
+	}
+
+	// Always return success (don't reveal if email exists)
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "If your email is registered, you will receive a password reset link shortly",
+	})
+}
+
+// ResetPassword handles password reset requests
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req ResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate input
+	if req.Token == "" || req.NewPassword == "" {
+		respondError(w, http.StatusBadRequest, "Token and new password are required")
+		return
+	}
+
+	// Validate password strength (minimum 8 characters)
+	if len(req.NewPassword) < 8 {
+		respondError(w, http.StatusBadRequest, "Password must be at least 8 characters long")
+		return
+	}
+
+	// Reset password
+	err := h.userService.ResetPassword(req.Token, req.NewPassword)
+	if err != nil {
+		switch err {
+		case service.ErrInvalidResetToken:
+			respondError(w, http.StatusBadRequest, "Invalid reset token")
+		case service.ErrResetTokenExpired:
+			respondError(w, http.StatusBadRequest, "Reset token has expired. Please request a new one")
+		default:
+			respondError(w, http.StatusInternalServerError, "Failed to reset password")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "Password has been reset successfully. You can now login with your new password",
+	})
+}
+
 // Helper functions
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
