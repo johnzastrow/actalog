@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
 // WorkoutHandler handles workout-related endpoints
@@ -74,9 +75,12 @@ type WorkoutResponse struct {
 
 // Create creates a new workout with movements
 func (h *WorkoutHandler) Create(w http.ResponseWriter, r *http.Request) {
-	// TODO: Extract user ID from JWT token in context
-	// For now, using a placeholder - this will be replaced with actual auth middleware
-	userID := int64(1)
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	var req CreateWorkoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -190,8 +194,12 @@ func (h *WorkoutHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // ListByUser retrieves workouts for a specific user
 func (h *WorkoutHandler) ListByUser(w http.ResponseWriter, r *http.Request) {
-	// TODO: Extract user ID from JWT token in context
-	userID := int64(1) // Placeholder
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	// Parse pagination parameters
 	limitStr := r.URL.Query().Get("limit")
@@ -361,8 +369,12 @@ func (h *WorkoutHandler) GetProgressByMovement(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// TODO: Extract user ID from JWT token in context
-	userID := int64(1) // Placeholder
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	// Parse limit
 	limitStr := r.URL.Query().Get("limit")
@@ -388,8 +400,12 @@ func (h *WorkoutHandler) GetProgressByMovement(w http.ResponseWriter, r *http.Re
 
 // GetPersonalRecords retrieves all personal records for a user
 func (h *WorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
-	// TODO: Extract user ID from JWT token in context
-	userID := int64(1) // Placeholder
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	records, err := h.workoutService.GetPersonalRecords(userID)
 	if err != nil {
@@ -404,8 +420,12 @@ func (h *WorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Reque
 
 // GetPRMovements retrieves recent PR-flagged movements for a user
 func (h *WorkoutHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) {
-	// TODO: Extract user ID from JWT token in context
-	userID := int64(1) // Placeholder
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	// Parse limit
 	limitStr := r.URL.Query().Get("limit")
@@ -429,8 +449,12 @@ func (h *WorkoutHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) 
 
 // TogglePRFlag manually toggles the PR flag on a workout movement
 func (h *WorkoutHandler) TogglePRFlag(w http.ResponseWriter, r *http.Request) {
-	// TODO: Extract user ID from JWT token in context
-	userID := int64(1) // Placeholder
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	movementIDStr := chi.URLParam(r, "id")
 	movementID, err := strconv.ParseInt(movementIDStr, 10, 64)
