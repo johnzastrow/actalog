@@ -6,18 +6,46 @@ This directory contains app icons for the Progressive Web App (PWA) installation
 
 The following icon sizes are required for optimal PWA support across all devices:
 
-- 72x72 (Android)
-- 96x96 (Android)
-- 128x128 (Android, Chrome Web Store)
-- 144x144 (Windows)
-- 152x152 (iOS)
-- 192x192 (Android, standard)
-- 384x384 (Android)
-- 512x512 (Android, splash screens)
+- 72x72 (Android Chrome)
+- 96x96 (Android Chrome)
+- 128x128 (Android Chrome, Chrome Web Store)
+- 144x144 (Microsoft)
+- 152x152 (iOS Safari)
+- 192x192 (Android Chrome - minimum required)
+- 384x384 (Android Chrome)
+- 512x512 (Android Chrome - recommended for splash screens)
+
+Plus special icons:
+- **apple-touch-icon.png** (180x180) - iOS home screen
+- **favicon.ico** (32x32) - Browser tab icon
 
 ## Generating Icons
 
-### Option 1: Using Online Tools (Easiest)
+### Automated Script (Recommended)
+
+We've created an automated icon generation script that creates all required sizes from the source SVG:
+
+```bash
+# From the web directory
+cd web
+
+# Run the icon generator
+node scripts/generate-icons.js
+```
+
+This script will:
+- Generate all 8 PNG icon sizes (72px - 512px)
+- Create apple-touch-icon.png for iOS
+- Create favicon.ico for browsers
+- Create additional favicon sizes
+- Use the ActaLog logo from `design/logo.svg`
+- Apply the correct theme color background (#00bcd4)
+
+**Prerequisites**: The sharp package must be installed (automatically included in devDependencies).
+
+### Manual Methods (Alternative)
+
+#### Option 1: Using Online Tools
 
 1. **PWA Asset Generator**: https://www.pwabuilder.com/imageGenerator
    - Upload your source logo (design/logo.png or logo.svg)
@@ -29,7 +57,7 @@ The following icon sizes are required for optimal PWA support across all devices
    - Configure iOS, Android, and Windows settings
    - Generate and download icons
 
-### Option 2: Using ImageMagick (Command Line)
+#### Option 2: Using ImageMagick (Command Line)
 
 ```bash
 # Navigate to project root
@@ -44,58 +72,91 @@ convert design/logo.svg -resize 152x152 web/public/icons/icon-152x152.png
 convert design/logo.svg -resize 192x192 web/public/icons/icon-192x192.png
 convert design/logo.svg -resize 384x384 web/public/icons/icon-384x384.png
 convert design/logo.svg -resize 512x512 web/public/icons/icon-512x512.png
-```
 
-### Option 3: Using Sharp (Node.js)
-
-Install sharp:
-```bash
-npm install -g sharp-cli
-```
-
-Generate icons:
-```bash
-sharp -i design/logo.png -o web/public/icons/icon-72x72.png resize 72 72
-sharp -i design/logo.png -o web/public/icons/icon-96x96.png resize 96 96
-sharp -i design/logo.png -o web/public/icons/icon-128x128.png resize 128 128
-sharp -i design/logo.png -o web/public/icons/icon-144x144.png resize 144 144
-sharp -i design/logo.png -o web/public/icons/icon-152x152.png resize 152 152
-sharp -i design/logo.png -o web/public/icons/icon-192x192.png resize 192 192
-sharp -i design/logo.png -o web/public/icons/icon-384x384.png resize 384 384
-sharp -i design/logo.png -o web/public/icons/icon-512x512.png resize 512 512
-```
-
-## iOS-Specific Icons
-
-For better iOS support, also create:
-
-```bash
-# Apple touch icon (recommended 180x180)
+# Apple touch icon
 convert design/logo.svg -resize 180x180 web/public/apple-touch-icon.png
-```
 
-## Favicon
-
-Create a standard favicon:
-```bash
+# Favicon
 convert design/logo.svg -resize 32x32 web/public/favicon.ico
 ```
 
 ## Design Guidelines
 
-- **Background**: Icons should have a background color (use ActaLog theme: #2c3657 or #00bcd4)
-- **Padding**: Add 10-15% padding around the logo for better appearance
-- **Transparency**: PNG format supports transparency for non-square logos
-- **Maskable**: Icons should work with Android's maskable icon feature (safe zone in center 80%)
+- **Background**: Icons use ActaLog's theme color (#00bcd4)
+- **Safe Zone**: Keep important content within center 80% for maskable icons
+- **Format**: PNG format with proper transparency
+- **Source**: Always generate from `design/logo.svg` for consistency
+
+## Manifest Configuration
+
+Icons are configured in `vite.config.js` under the VitePWA plugin's manifest section. The configuration includes:
+
+- Multiple icon sizes for different devices
+- Proper purpose declarations (any/maskable)
+- Correct MIME types
 
 ## Verification
 
 After generating icons, verify they appear correctly:
 
-1. **Development**: Run `npm run dev` and check browser DevTools → Application → Manifest
-2. **Production**: Build with `npm run build` and test the PWA install prompt
-3. **Lighthouse**: Run Lighthouse audit to verify all icons are present
+1. **Development**:
+   ```bash
+   npm run dev
+   ```
+   Check: DevTools → Application → Manifest
+
+2. **Production Build**:
+   ```bash
+   npm run build
+   ```
+   Verify all icons are copied to `dist/` directory
+
+3. **Lighthouse Audit**:
+   - Open DevTools → Lighthouse
+   - Run PWA audit
+   - Target score: 90+
+
+4. **Visual Check**:
+   ```bash
+   ls -lh web/public/icons/
+   ls -lh web/public/apple-touch-icon.png web/public/favicon.ico
+   ```
 
 ## Current Status
 
-⚠️ **Icons need to be generated** - This directory should contain 8 icon files before deployment.
+✅ **Icons Generated** - All required icons have been created and are ready for deployment.
+
+Generated icons:
+- icon-72x72.png
+- icon-96x96.png
+- icon-128x128.png
+- icon-144x144.png
+- icon-152x152.png
+- icon-192x192.png
+- icon-384x384.png
+- icon-512x512.png
+- apple-touch-icon.png (180x180)
+- favicon.ico (32x32)
+- Additional favicon sizes (16x16, 32x32, 48x48)
+
+## Troubleshooting
+
+**If icons don't appear after building:**
+1. Clear browser cache
+2. Rebuild the project: `npm run build`
+3. Verify manifest.webmanifest in dist/ includes all icon paths
+4. Check browser console for 404 errors
+
+**If sharp installation fails:**
+```bash
+cd web
+npm cache clean --force
+npm install --save-dev sharp
+```
+
+**Regenerate icons after logo changes:**
+```bash
+cd web
+node scripts/generate-icons.js
+npm run build
+```

@@ -69,6 +69,33 @@ npm run lint:fix
 
 # Format code with Prettier
 npm run format
+
+# Clean up and rebuild dependencies (troubleshooting)
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+```
+
+**Frontend Troubleshooting:**
+
+If you encounter build issues or dependency problems:
+
+```bash
+cd web
+
+# Option 1: Quick reinstall
+npm install
+
+# Option 2: Clear cache and reinstall
+npm cache clean --force && npm install
+
+# Option 3: Complete cleanup (for corrupted dependencies)
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+
+# Verify build works
+npm run dev
 ```
 
 ### Docker Operations
@@ -142,7 +169,34 @@ The application supports three database drivers controlled via `DB_DRIVER` in `.
 
 - `sqlite3` - Default for development, file-based (DB_NAME=actalog.db)
 - `postgres` - Recommended for production
-- `mysql` - Supported alternative
+- `mysql` - Supported alternative (MySQL or MariaDB)
+
+**How to Switch Databases:**
+
+1. Edit `.env` and change `DB_DRIVER`:
+   ```env
+   # For SQLite (development)
+   DB_DRIVER=sqlite3
+   DB_NAME=actalog.db
+
+   # For PostgreSQL (production)
+   DB_DRIVER=postgres
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USER=actalog
+   DB_PASSWORD=your_password
+   DB_NAME=actalog
+
+   # For MySQL/MariaDB (production)
+   DB_DRIVER=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=actalog
+   DB_PASSWORD=your_password
+   DB_NAME=actalog
+   ```
+
+2. Restart the application - it will automatically connect to the new database and run migrations
 
 **Important:** When using SQLite, the driver name in Go code must be `"sqlite3"` (not `"sqlite"`).
 

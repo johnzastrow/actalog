@@ -264,6 +264,30 @@ npm run lint
 
 ActaLog supports three database systems: SQLite, PostgreSQL, and MySQL/MariaDB. See [DATABASE_SUPPORT.md](DATABASE_SUPPORT.md) for detailed multi-database configuration.
 
+### How to Tell the App Which Database to Use
+
+The application uses the **`DB_DRIVER` environment variable** in your `.env` file to determine which database system to connect to.
+
+**Quick Setup:**
+1. Copy the example configuration:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and set `DB_DRIVER` to one of:
+   - `sqlite3` - File-based database (default for development)
+   - `postgres` - PostgreSQL (recommended for production)
+   - `mysql` - MySQL or MariaDB (production alternative)
+
+3. Configure the corresponding database connection settings (see examples below)
+
+4. Run the application:
+   ```bash
+   make run
+   ```
+
+The app will automatically connect to the configured database and run migrations on startup.
+
 ### SQLite (Default for Development)
 
 No setup required. Database file will be created automatically at `actalog.db`.
@@ -368,13 +392,34 @@ go mod tidy
 
 ### Frontend Build Issues
 
-```bash
-# Clear npm cache
-npm cache clean --force
+If you encounter npm or build issues, try these steps in order:
 
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
+**Option 1: Quick reinstall (safest)**
+```bash
+cd web
 npm install
+```
+
+**Option 2: Clean cache and reinstall**
+```bash
+cd web
+npm cache clean --force
+npm install
+```
+
+**Option 3: Complete cleanup (for corrupted dependencies)**
+```bash
+cd web
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+```
+
+**After cleanup, verify the build:**
+```bash
+npm run dev    # Test development server
+# or
+npm run build  # Test production build
 ```
 
 ### Database Connection Issues
