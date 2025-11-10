@@ -40,9 +40,10 @@ type DatabaseConfig struct {
 
 // JWTConfig holds JWT authentication configuration
 type JWTConfig struct {
-	SecretKey      string
-	ExpirationTime time.Duration
-	Issuer         string
+	SecretKey            string
+	ExpirationTime       time.Duration
+	RefreshTokenDuration time.Duration
+	Issuer               string
 }
 
 // AppConfig holds application-specific configuration
@@ -94,9 +95,10 @@ func Load() (*Config, error) {
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
-			SecretKey:      getEnv("JWT_SECRET", ""), // Must be set in production
-			ExpirationTime: getEnvDuration("JWT_EXPIRATION", 24*time.Hour),
-			Issuer:         getEnv("JWT_ISSUER", "actalog"),
+			SecretKey:            getEnv("JWT_SECRET", ""), // Must be set in production
+			ExpirationTime:       getEnvDuration("JWT_EXPIRATION", 24*time.Hour),
+			RefreshTokenDuration: getEnvDuration("JWT_REFRESH_DURATION", 30*24*time.Hour), // 30 days
+			Issuer:               getEnv("JWT_ISSUER", "actalog"),
 		},
 		App: AppConfig{
 			Name:              "ActaLog",

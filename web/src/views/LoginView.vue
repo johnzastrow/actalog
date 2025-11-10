@@ -31,6 +31,14 @@
                 class="mt-4"
               />
 
+              <v-checkbox
+                v-model="rememberMe"
+                label="Remember me for 30 days"
+                color="primary"
+                hide-details
+                class="mt-2"
+              />
+
               <v-btn
                 type="submit"
                 color="primary"
@@ -71,6 +79,7 @@ const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
+const rememberMe = ref(false)
 const loading = ref(false)
 const errors = ref({})
 
@@ -78,7 +87,7 @@ const handleLogin = async () => {
   errors.value = {}
   loading.value = true
 
-  const success = await authStore.login(email.value, password.value)
+  const success = await authStore.login(email.value, password.value, rememberMe.value)
 
   if (success) {
     router.push('/dashboard')
