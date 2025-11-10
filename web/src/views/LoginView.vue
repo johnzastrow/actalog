@@ -42,6 +42,12 @@
                 Sign In
               </v-btn>
 
+              <div class="text-center mt-3">
+                <router-link to="/forgot-password" class="text-decoration-none text-body-2">
+                  Forgot password?
+                </router-link>
+              </div>
+
               <div class="text-center mt-4">
                 <router-link to="/register" class="text-decoration-none">
                   Don't have an account? Sign up
