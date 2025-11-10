@@ -282,6 +282,46 @@ var migrations = []Migration{
 			return err
 		},
 	},
+	{
+		Version:     "0.3.3",
+		Description: "Add birthday field to users table for profile editing",
+		Up: func(db *sql.DB, driver string) error {
+			var query string
+			switch driver {
+			case "sqlite3":
+				query = "ALTER TABLE users ADD COLUMN birthday DATE"
+			case "postgres":
+				query = "ALTER TABLE users ADD COLUMN birthday DATE"
+			case "mysql":
+				query = "ALTER TABLE users ADD COLUMN birthday DATE"
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			_, err := db.Exec(query)
+			if err != nil {
+				return fmt.Errorf("failed to add birthday column: %w", err)
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			var query string
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN directly, would need table recreation
+				return fmt.Errorf("SQLite does not support dropping columns")
+			case "postgres":
+				query = "ALTER TABLE users DROP COLUMN birthday"
+			case "mysql":
+				query = "ALTER TABLE users DROP COLUMN birthday"
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			_, err := db.Exec(query)
+			return err
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

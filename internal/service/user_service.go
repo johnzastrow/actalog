@@ -502,6 +502,66 @@ func (s *UserService) GetUserRefreshTokens(userID int64) ([]*domain.RefreshToken
 	return tokens, nil
 }
 
+// UpdateProfile updates user profile information
+func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *time.Time) (*domain.User, error) {
+	// Get current user
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
+	// Check if email is being changed
+	if email != "" && email != user.Email {
+		// Check if new email already exists
+		existingUser, err := s.userRepo.GetByEmail(email)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check email: %w", err)
+		}
+		if existingUser != nil && existingUser.ID != userID {
+			return nil, ErrEmailAlreadyExists
+		}
+
+		// Update email and mark as unverified
+		user.Email = email
+		user.EmailVerified = false
+		user.EmailVerifiedAt = nil
+
+		// Send new verification email
+		if s.emailService != nil {
+			err = s.ResendVerificationEmail(email)
+			if err != nil {
+				// Log error but don't fail the update
+				fmt.Printf("Warning: failed to send verification email: %v\n", err)
+			}
+		}
+	}
+
+	// Update name if provided
+	if name != "" {
+		user.Name = name
+	}
+
+	// Update birthday if provided
+	user.Birthday = birthday
+
+	// Update timestamp
+	user.UpdatedAt = time.Now()
+
+	// Save changes
+	err = s.userRepo.Update(user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// Don't return password hash
+	user.PasswordHash = ""
+
+	return user, nil
+}
+
 // generateRefreshToken generates a cryptographically secure random token
 func generateRefreshToken() (string, error) {
 	bytes := make([]byte, 32) // 32 bytes = 256 bits

@@ -145,6 +145,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
+	userHandler := handler.NewUserHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
 	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo, workoutService)
 
@@ -199,6 +200,10 @@ func main() {
 
 			// Movement management (authenticated)
 			r.Post("/movements", movementHandler.Create)
+
+			// User profile routes (authenticated)
+			r.Get("/users/profile", userHandler.GetProfile)
+			r.Put("/users/profile", userHandler.UpdateProfile)
 
 			// Workout routes (authenticated)
 			r.Post("/workouts", workoutHandler.Create)
