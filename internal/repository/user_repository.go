@@ -191,13 +191,80 @@ func (r *SQLiteUserRepository) GetByResetToken(token string) (*domain.User, erro
 	return user, nil
 }
 
+// GetByVerificationToken retrieves a user by verification token
+func (r *SQLiteUserRepository) GetByVerificationToken(token string) (*domain.User, error) {
+	query := `
+		SELECT id, email, password_hash, name, profile_image, role,
+		       email_verified, email_verified_at, verification_token, verification_token_expires_at,
+		       created_at, updated_at, last_login_at, reset_token, reset_token_expires_at
+		FROM users
+		WHERE verification_token = ?
+	`
+
+	user := &domain.User{}
+	var emailVerifiedAt sql.NullTime
+	var verificationToken sql.NullString
+	var verificationTokenExpiresAt sql.NullTime
+	var lastLoginAt sql.NullTime
+	var resetToken sql.NullString
+	var resetTokenExpiresAt sql.NullTime
+
+	err := r.db.QueryRow(query, token).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Name,
+		&user.ProfileImage,
+		&user.Role,
+		&user.EmailVerified,
+		&emailVerifiedAt,
+		&verificationToken,
+		&verificationTokenExpiresAt,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&lastLoginAt,
+		&resetToken,
+		&resetTokenExpiresAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if emailVerifiedAt.Valid {
+		user.EmailVerifiedAt = &emailVerifiedAt.Time
+	}
+	if verificationToken.Valid {
+		user.VerificationToken = &verificationToken.String
+	}
+	if verificationTokenExpiresAt.Valid {
+		user.VerificationTokenExpiresAt = &verificationTokenExpiresAt.Time
+	}
+	if lastLoginAt.Valid {
+		user.LastLoginAt = &lastLoginAt.Time
+	}
+	if resetToken.Valid {
+		user.ResetToken = &resetToken.String
+	}
+	if resetTokenExpiresAt.Valid {
+		user.ResetTokenExpiresAt = &resetTokenExpiresAt.Time
+	}
+
+	return user, nil
+}
+
 // Update updates a user
 func (r *SQLiteUserRepository) Update(user *domain.User) error {
 	query := `
 		UPDATE users
 		SET email = ?, name = ?, profile_image = ?, role = ?,
 		    updated_at = ?, last_login_at = ?, password_hash = ?,
-		    reset_token = ?, reset_token_expires_at = ?
+		    reset_token = ?, reset_token_expires_at = ?,
+		    email_verified = ?, email_verified_at = ?,
+		    verification_token = ?, verification_token_expires_at = ?
 		WHERE id = ?
 	`
 
@@ -216,6 +283,21 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 		resetTokenExpiresAt = *user.ResetTokenExpiresAt
 	}
 
+	var emailVerifiedAt interface{}
+	if user.EmailVerifiedAt != nil {
+		emailVerifiedAt = *user.EmailVerifiedAt
+	}
+
+	var verificationToken interface{}
+	if user.VerificationToken != nil {
+		verificationToken = *user.VerificationToken
+	}
+
+	var verificationTokenExpiresAt interface{}
+	if user.VerificationTokenExpiresAt != nil {
+		verificationTokenExpiresAt = *user.VerificationTokenExpiresAt
+	}
+
 	user.UpdatedAt = time.Now()
 
 	_, err := r.db.Exec(
@@ -229,6 +311,10 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 		user.PasswordHash,
 		resetToken,
 		resetTokenExpiresAt,
+		user.EmailVerified,
+		emailVerifiedAt,
+		verificationToken,
+		verificationTokenExpiresAt,
 		user.ID,
 	)
 

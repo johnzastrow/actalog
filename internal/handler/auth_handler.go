@@ -48,7 +48,7 @@ type ErrorResponse struct {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		if err == service.ErrInvalidCredentials {
 			respondError(w, http.StatusUnauthorized, "Invalid email or password")
 		} else {
-			respondError(w, http.StatusInternalServerError, "Failed to login")
+			respondErrorWithDetail(w, http.StatusInternalServerError, "Failed to login", err.Error())
 		}
 		return
 	}
@@ -193,6 +193,77 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// VerifyEmailRequest represents an email verification request
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
+// VerifyEmail handles email verification requests
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	// Get token from query parameter
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		respondError(w, http.StatusBadRequest, "Verification token is required")
+		return
+	}
+
+	// Verify email
+	err := h.userService.VerifyEmail(token)
+	if err != nil {
+		switch err {
+		case service.ErrInvalidVerificationToken:
+			respondError(w, http.StatusBadRequest, "Invalid verification token")
+		case service.ErrVerificationTokenExpired:
+			respondError(w, http.StatusBadRequest, "Verification token has expired. Please request a new one")
+		case service.ErrEmailAlreadyVerified:
+			respondError(w, http.StatusBadRequest, "Email is already verified")
+		default:
+			respondError(w, http.StatusInternalServerError, "Failed to verify email")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "Email verified successfully. You can now login",
+	})
+}
+
+// ResendVerificationRequest represents a resend verification email request
+type ResendVerificationRequest struct {
+	Email string `json:"email"`
+}
+
+// ResendVerification handles resend verification email requests
+func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request) {
+	var req ResendVerificationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate email
+	if req.Email == "" {
+		respondError(w, http.StatusBadRequest, "Email is required")
+		return
+	}
+
+	// Resend verification email
+	err := h.userService.ResendVerificationEmail(req.Email)
+	if err != nil {
+		if err == service.ErrEmailAlreadyVerified {
+			respondError(w, http.StatusBadRequest, "Email is already verified")
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to resend verification email")
+		return
+	}
+
+	// Always return success (don't reveal if email exists)
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "If your email is registered and not yet verified, you will receive a verification link shortly",
+	})
+}
+
 // Helper functions
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -203,4 +274,8 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 
 func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, ErrorResponse{Message: message})
+}
+
+func respondErrorWithDetail(w http.ResponseWriter, status int, message string, detail string) {
+	respondJSON(w, status, ErrorResponse{Message: message, Error: detail})
 }

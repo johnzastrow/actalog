@@ -8,70 +8,71 @@
             indeterminate
             color="#00bcd4"
             size="64"
-            class="mb-4"
-          />
-          <h3 class="text-h5">Verifying your email...</h3>
-          <p class="text-body-2 text-medium-emphasis mt-2">
-            Please wait while we verify your email address.
-          </p>
+          ></v-progress-circular>
+          <p class="mt-4 text-h6">Verifying your email...</p>
         </div>
 
         <!-- Success State -->
-        <div v-else-if="success" class="text-center py-4">
-          <v-icon color="success" size="80" class="mb-4">mdi-check-circle</v-icon>
-          <h2 class="text-h4 mb-3" style="color: #2c3e50;">Email Verified!</h2>
-          <p class="text-body-1 mb-4">
-            Your email address has been successfully verified.
-          </p>
-          <p class="text-body-2 text-medium-emphasis mb-6">
-            You can now access all features of ActaLog.
+        <div v-else-if="success" class="text-center py-8">
+          <v-icon size="80" color="success" class="mb-4">mdi-check-circle</v-icon>
+          <h2 class="text-h4 mb-3" style="color: #1a1a1a;">Email Verified!</h2>
+          <p class="text-body-1 mb-6" style="color: #666;">
+            Your email has been successfully verified. You can now access all features of ActaLog.
           </p>
           <v-btn
-            color="primary"
+            color="#ffc107"
             size="large"
-            block
-            @click="router.push('/dashboard')"
+            rounded
+            @click="goToLogin"
+            class="text-none font-weight-bold"
+            style="color: #1a1a1a;"
           >
-            Go to Dashboard
+            Go to Login
           </v-btn>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="text-center py-4">
-          <v-icon color="error" size="80" class="mb-4">mdi-alert-circle</v-icon>
-          <h2 class="text-h4 mb-3" style="color: #2c3e50;">Verification Failed</h2>
-          <v-alert type="error" class="mb-4 text-left">
+        <div v-else-if="error" class="text-center py-8">
+          <v-icon size="80" color="error" class="mb-4">mdi-alert-circle</v-icon>
+          <h2 class="text-h4 mb-3" style="color: #1a1a1a;">Verification Failed</h2>
+          <p class="text-body-1 mb-6" style="color: #666;">
             {{ errorMessage }}
-          </v-alert>
-          <div class="text-body-2 text-medium-emphasis mb-6">
-            <p v-if="errorType === 'expired'">
-              Your verification link has expired. Please request a new verification email.
-            </p>
-            <p v-else-if="errorType === 'invalid'">
-              This verification link is invalid or has already been used.
-            </p>
-            <p v-else>
-              There was a problem verifying your email address.
-            </p>
+          </p>
+
+          <!-- Show resend option if token expired -->
+          <div v-if="showResend">
+            <v-text-field
+              v-model="email"
+              label="Email Address"
+              type="email"
+              variant="outlined"
+              prepend-inner-icon="mdi-email"
+              class="mb-4"
+              :disabled="resending"
+            ></v-text-field>
+            <v-btn
+              color="#00bcd4"
+              size="large"
+              rounded
+              @click="resendVerification"
+              :loading="resending"
+              :disabled="!email || resending"
+              class="text-none font-weight-bold mb-3"
+              block
+            >
+              Resend Verification Email
+            </v-btn>
           </div>
+
           <v-btn
-            color="primary"
             variant="outlined"
+            color="#00bcd4"
             size="large"
-            block
-            @click="router.push('/resend-verification')"
-            class="mb-3"
+            rounded
+            @click="goToLogin"
+            class="text-none font-weight-bold"
           >
-            Resend Verification Email
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="text"
-            size="large"
-            block
-            @click="router.push('/login')"
-          >
-            Go to Login
+            Back to Login
           </v-btn>
         </div>
       </v-card>
@@ -83,75 +84,85 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 
 const loading = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
-const errorType = ref('')
+const showResend = ref(false)
+const email = ref('')
+const resending = ref(false)
 
-async function verifyEmail() {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
+onMounted(async () => {
   const token = route.query.token
 
   if (!token) {
     error.value = true
-    errorMessage.value = 'No verification token provided'
-    errorType.value = 'invalid'
+    errorMessage.value = 'Invalid verification link. Please check your email and try again.'
     loading.value = false
     return
   }
 
   try {
-    const response = await axios.get(`/api/auth/verify-email?token=${token}`)
+    const response = await axios.get(`${API_URL}/api/auth/verify-email`, {
+      params: { token }
+    })
 
     if (response.status === 200) {
       success.value = true
-
-      // Update user in auth store if logged in
-      if (authStore.user) {
-        authStore.user.email_verified = true
-        localStorage.setItem('user', JSON.stringify(authStore.user))
-      }
     }
   } catch (err) {
     error.value = true
 
-    if (err.response?.status === 400) {
-      if (err.response.data.error?.includes('expired')) {
-        errorType.value = 'expired'
-        errorMessage.value = 'Your verification link has expired'
-      } else if (err.response.data.error?.includes('invalid') || err.response.data.error?.includes('not found')) {
-        errorType.value = 'invalid'
-        errorMessage.value = 'Invalid verification link'
-      } else {
-        errorType.value = 'unknown'
-        errorMessage.value = err.response.data.error || 'Verification failed'
+    if (err.response?.data?.message) {
+      errorMessage.value = err.response.data.message
+
+      // Show resend option if token expired
+      if (errorMessage.value.includes('expired')) {
+        showResend.value = true
       }
     } else {
-      errorType.value = 'unknown'
-      errorMessage.value = 'An error occurred during verification. Please try again.'
+      errorMessage.value = 'An error occurred while verifying your email. Please try again later.'
     }
   } finally {
     loading.value = false
   }
+})
+
+const resendVerification = async () => {
+  if (!email.value) return
+
+  resending.value = true
+  try {
+    await axios.post(`${API_URL}/api/auth/resend-verification`, {
+      email: email.value
+    })
+
+    alert('Verification email sent! Please check your inbox.')
+    showResend.value = false
+  } catch (err) {
+    if (err.response?.data?.message) {
+      alert(err.response.data.message)
+    } else {
+      alert('Failed to resend verification email. Please try again.')
+    }
+  } finally {
+    resending.value = false
+  }
 }
 
-onMounted(() => {
-  verifyEmail()
-})
+const goToLogin = () => {
+  router.push('/login')
+}
 </script>
 
 <style scoped>
-.v-container {
-  background-color: #f5f7fa;
-}
-
 .v-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
 }
 </style>
