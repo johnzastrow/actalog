@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 	"github.com/johnzastrow/actalog/configs"
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
@@ -31,6 +32,12 @@ func main() {
 	// Print version information
 	fmt.Println(version.String())
 	fmt.Println("Starting ActaLog server...")
+
+	// Load .env file (ignore error if file doesn't exist)
+	// In production, you should use actual environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading it, using environment variables or defaults")
+	}
 
 	// Load configuration
 	cfg, err := configs.Load()
