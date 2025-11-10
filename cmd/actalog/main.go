@@ -131,10 +131,16 @@ func main() {
 		appURL,
 	)
 
+	workoutService := service.NewWorkoutService(
+		workoutRepo,
+		workoutMovementRepo,
+		movementRepo,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
-	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo)
+	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo, workoutService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -190,6 +196,11 @@ func main() {
 			r.Get("/workouts/{id}", workoutHandler.GetByID)
 			r.Put("/workouts/{id}", workoutHandler.Update)
 			r.Delete("/workouts/{id}", workoutHandler.Delete)
+
+			// PR tracking routes (authenticated)
+			r.Get("/workouts/prs", workoutHandler.GetPersonalRecords)
+			r.Get("/workouts/pr-movements", workoutHandler.GetPRMovements)
+			r.Post("/workouts/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
 
 			// Progress tracking (authenticated)
 			r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)

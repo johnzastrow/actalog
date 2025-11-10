@@ -8,19 +8,22 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/service"
 )
 
 // WorkoutHandler handles workout-related endpoints
 type WorkoutHandler struct {
 	workoutRepo         domain.WorkoutRepository
 	workoutMovementRepo domain.WorkoutMovementRepository
+	workoutService      *service.WorkoutService
 }
 
 // NewWorkoutHandler creates a new workout handler
-func NewWorkoutHandler(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository) *WorkoutHandler {
+func NewWorkoutHandler(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository, workoutService *service.WorkoutService) *WorkoutHandler {
 	return &WorkoutHandler{
 		workoutRepo:         workoutRepo,
 		workoutMovementRepo: workoutMovementRepo,
+		workoutService:      workoutService,
 	}
 }
 
@@ -381,4 +384,70 @@ func (h *WorkoutHandler) GetProgressByMovement(w http.ResponseWriter, r *http.Re
 		"movement_id": movementID,
 		"history":     workoutMovements,
 	})
+}
+
+// GetPersonalRecords retrieves all personal records for a user
+func (h *WorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
+	// TODO: Extract user ID from JWT token in context
+	userID := int64(1) // Placeholder
+
+	records, err := h.workoutService.GetPersonalRecords(userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve personal records")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"records": records,
+	})
+}
+
+// GetPRMovements retrieves recent PR-flagged movements for a user
+func (h *WorkoutHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) {
+	// TODO: Extract user ID from JWT token in context
+	userID := int64(1) // Placeholder
+
+	// Parse limit
+	limitStr := r.URL.Query().Get("limit")
+	limit := 10 // default
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	movements, err := h.workoutService.GetPRMovements(userID, limit)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve PR movements")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"pr_movements": movements,
+	})
+}
+
+// TogglePRFlag manually toggles the PR flag on a workout movement
+func (h *WorkoutHandler) TogglePRFlag(w http.ResponseWriter, r *http.Request) {
+	// TODO: Extract user ID from JWT token in context
+	userID := int64(1) // Placeholder
+
+	movementIDStr := chi.URLParam(r, "id")
+	movementID, err := strconv.ParseInt(movementIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid movement ID")
+		return
+	}
+
+	err = h.workoutService.TogglePRFlag(movementID, userID)
+	if err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "Unauthorized")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to toggle PR flag")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "PR flag toggled successfully"})
 }
