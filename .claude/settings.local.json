@@ -10,7 +10,8 @@
       "Bash(lsof:*)",
       "Bash(xargs kill -9)",
       "Bash(curl:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(go test:*)"
     ],
     "deny": [],
     "ask": []
