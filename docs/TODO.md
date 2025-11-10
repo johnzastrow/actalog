@@ -1,11 +1,15 @@
 # TODO
 
-## Database Schema Migration (Planned for v0.3.0) - HIGH PRIORITY
+## Database Schema Migration (Planned for v0.4.0) - HIGH PRIORITY
 
-**Status:** Not yet started. v0.3.0 schema is documented but not implemented.
+**Status:** Partially implemented. v0.3.0 completed PR tracking. Full v0.4.0 schema is documented but not yet implemented.
 
-### Schema Changes Required
-- [ ] Create database migration from v0.1.0 to v0.3.0
+### Completed (v0.3.0-beta)
+- [x] Add `is_pr` column to `workout_movements` table (migration v0.3.0 completed 2025-11-10)
+- [x] Multi-database support for `is_pr` field (SQLite, PostgreSQL, MySQL)
+
+### Schema Changes Required (v0.4.0)
+- [ ] Create database migration from v0.3.0 to v0.4.0
 - [ ] Add `birthday` column to `users` table
 - [ ] Add `email_verified` and `email_verified_at` columns to `users` table
 - [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, is_standard, etc.)
@@ -14,7 +18,6 @@
 - [ ] Modify `workouts` table (remove user_id, workout_date, workout_type, workout_name, total_time)
 - [ ] Create `user_workouts` junction table
 - [ ] Rename `workout_movements` to `workout_strength`
-- [ ] Add `is_pr` column to `workout_strength`
 - [ ] Create `workout_wods` junction table with `division` and `is_pr` columns
 - [ ] Create `user_settings` table
 - [ ] Create `audit_logs` table
@@ -55,15 +58,21 @@
 - [ ] Add verification status indicator in UI
 
 ### Personal Records (PR) Tracking
-- [ ] Implement auto-detection algorithm for PRs:
-  - [ ] Highest weight for strength movements (per user per movement)
-  - [ ] Fastest time for time-based WODs (per user per WOD)
-  - [ ] Most rounds+reps for AMRAP WODs (per user per WOD)
-- [ ] Add manual PR flag/unflag endpoints
-- [ ] Display PR badges on workout cards in dashboard
-- [ ] Show PR indicators (⭐) in movement history
-- [ ] Add PR filter to workout history view
-- [ ] Update PR status when new workout logged
+
+**Status:** ✅ **Completed in v0.3.0-beta** (2025-11-10)
+
+- [x] Implement auto-detection algorithm for PRs:
+  - [x] Highest weight for strength movements (per user per movement)
+  - [ ] Fastest time for time-based WODs (per user per WOD) - Future enhancement
+  - [ ] Most rounds+reps for AMRAP WODs (per user per WOD) - Future enhancement
+- [x] Add manual PR flag/unflag endpoints (`POST /api/workouts/movements/:id/toggle-pr`)
+- [x] Display PR badges on workout cards in dashboard (gold trophy icons)
+- [x] Show PR indicators (🏆) in movement history
+- [x] Add PR history view at `/prs` route showing recent PRs and all-time records
+- [x] Update PR status when new workout logged (integrated into CreateWorkout workflow)
+- [x] API endpoints: `GET /api/workouts/prs`, `GET /api/workouts/pr-movements`
+- [x] Repository methods: `GetPersonalRecords()`, `GetMaxWeightForMovement()`, `GetPRMovements()`
+- [x] Service layer: `DetectAndFlagPRs()`, authorization checks, PR aggregation
 
 ### Leaderboard System - Scaled Divisions
 - [ ] Create `leaderboard_entries` table (optional - could query from workout_wods)
@@ -127,8 +136,8 @@
 ## High Priority
 
 ### Authentication & User Management
-- [ ] Implement password reset functionality
-- [ ] Add email verification for new users (see Design Refinements section)
+- [x] Implement password reset functionality ✅ **Completed in v0.3.0-beta** (Parts 1-3: DB, backend, frontend)
+- [ ] Add email verification for new users (see Design Refinements section) - **NEXT PRIORITY**
 - [ ] Implement "Remember Me" functionality
 - [ ] Add profile picture upload
 - [ ] Add user profile editing with birthday field
@@ -271,5 +280,5 @@
 
 ---
 
-**Last Updated:** 2025-11-09
-**Version:** 0.3.0-dev (design refinements documented)
+**Last Updated:** 2025-11-10
+**Version:** 0.3.0-beta (PR tracking implemented, password reset complete)
