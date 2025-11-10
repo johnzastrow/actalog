@@ -88,6 +88,61 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.3.0",
+		Description: "Add PR (Personal Record) tracking to workout_movements",
+		Up: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				queries = []string{
+					"ALTER TABLE workout_movements ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0",
+				}
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE workout_movements ADD COLUMN IF NOT EXISTS is_pr BOOLEAN NOT NULL DEFAULT FALSE",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE workout_movements ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT FALSE",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN directly in older versions
+				return fmt.Errorf("rollback not supported for SQLite")
+			case "postgres":
+				queries = []string{
+					"ALTER TABLE workout_movements DROP COLUMN IF EXISTS is_pr",
+				}
+			case "mysql":
+				queries = []string{
+					"ALTER TABLE workout_movements DROP COLUMN is_pr",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

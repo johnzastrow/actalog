@@ -37,6 +37,7 @@ type WorkoutMovement struct {
 	Time       *int      `json:"time,omitempty" db:"time"`         // in seconds
 	Distance   *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
 	IsRx       bool      `json:"is_rx" db:"is_rx"`                 // Prescribed weight/standard
+	IsPR       bool      `json:"is_pr" db:"is_pr"`                 // Personal record flag
 	Notes      string    `json:"notes,omitempty" db:"notes"`
 	OrderIndex int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
@@ -58,6 +59,17 @@ type MovementRepository interface {
 	Search(query string, limit int) ([]*Movement, error)
 }
 
+// PersonalRecord represents a user's personal record for a movement
+type PersonalRecord struct {
+	MovementID   int64     `json:"movement_id"`
+	MovementName string    `json:"movement_name"`
+	MaxWeight    *float64  `json:"max_weight,omitempty"`
+	MaxReps      *int      `json:"max_reps,omitempty"`
+	BestTime     *int      `json:"best_time,omitempty"` // Fastest time in seconds
+	WorkoutID    int64     `json:"workout_id"`
+	WorkoutDate  time.Time `json:"workout_date"`
+}
+
 // WorkoutMovementRepository defines the interface for workout movement data access
 type WorkoutMovementRepository interface {
 	Create(wm *WorkoutMovement) error
@@ -67,4 +79,8 @@ type WorkoutMovementRepository interface {
 	Update(wm *WorkoutMovement) error
 	Delete(id int64) error
 	DeleteByWorkoutID(workoutID int64) error
+	// PR tracking methods
+	GetPersonalRecords(userID int64) ([]*PersonalRecord, error)
+	GetMaxWeightForMovement(userID, movementID int64) (*float64, error)
+	GetPRMovements(userID int64, limit int) ([]*WorkoutMovement, error)
 }
