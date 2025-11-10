@@ -11,7 +11,7 @@ type User struct {
 	Email                string     `json:"email" db:"email"`
 	PasswordHash         string     `json:"-" db:"password_hash"` // Never serialize password
 	Name                 string     `json:"name" db:"name"`
-	ProfileImage         string     `json:"profile_image,omitempty" db:"profile_image"`
+	ProfileImage         *string    `json:"profile_image,omitempty" db:"profile_image"`
 	Role                 string     `json:"role" db:"role"` // user, admin
 	ResetToken           *string    `json:"-" db:"reset_token"` // Never serialize reset token
 	ResetTokenExpiresAt  *time.Time `json:"-" db:"reset_token_expires_at"`
