@@ -1,6 +1,6 @@
 # Database Schema
 
-ActaLog uses a relational database to store user data, workouts, WODs, strength movements, and workout history.
+ActaLog uses a relational database to store user data, workouts, movements, and workout history.
 
 ## Supported Databases
 
@@ -10,48 +10,20 @@ ActaLog uses a relational database to store user data, workouts, WODs, strength 
 
 ## Schema Version
 
-**Current Implemented Version:** 0.1.0
-**Planned Version:** 0.3.0 (documented below, not yet migrated)
-
-> **Note:** This document describes the planned v0.3.0 schema design. The currently implemented schema in the codebase is v0.1.0 (basic tables without WODs, PRs, email verification, etc.). Migration from v0.1.0 to v0.3.0 is planned but not yet implemented.
+**Current Version:** 0.3.3-beta
 
 ## Entity Relationship Diagram
 
 ```mermaid
-%%{init:
-{
-  "theme": "default",
-  "themeVariables": {
-    "nodeBorder" : "#004990",
-    "mainBkg" : "#c9d7e4",
-    "actorBkg" : "#01A6F0",
-    "signalColor" : "#F34F1C",
-    "textColor" : "#747474",
-    "loopTextColor" : "#C7C7C7",
-    "labelTextColor" : "#C7C7C7",
-    "labelBoxBorderColor" : "#7FBC00",
-    "labelBoxBkgColor" : "#7FBC00",
-    "noteBkgColor" : "#FFBA01",
-    "noteBorderColor": "#FFBA01",
-    "fontFamily": "Inter",
-    "fontSize": "13px"
- }
-}
-}%%
-
 erDiagram
-    USERS ||--o{ USER_WORKOUTS : logs
-    USERS ||--o{ WODS : creates
-    USERS ||--o{ STRENGTH_MOVEMENTS : creates
-    USERS ||--o{ USER_SETTINGS : has
-    USERS ||--o{ AUDIT_LOGS : performs
+    USERS ||--o{ WORKOUTS : logs
+    USERS ||--o{ MOVEMENTS : creates
+    USERS ||--o{ REFRESH_TOKENS : has
+    USERS ||--o{ PASSWORD_RESETS : requests
+    USERS ||--o{ EMAIL_VERIFICATION_TOKENS : has
 
-    WORKOUTS ||--o{ USER_WORKOUTS : used_in
-    WORKOUTS ||--o{ WORKOUT_WODS : contains
-    WORKOUTS ||--o{ WORKOUT_STRENGTH : contains
-
-    WODS ||--o{ WORKOUT_WODS : included_in
-    STRENGTH_MOVEMENTS ||--o{ WORKOUT_STRENGTH : performed_in
+    WORKOUTS ||--o{ WORKOUT_MOVEMENTS : contains
+    MOVEMENTS ||--o{ WORKOUT_MOVEMENTS : included_in
 
     USERS {
         int64 id PK
@@ -63,79 +35,48 @@ erDiagram
         string role
         boolean email_verified
         timestamp email_verified_at
+        string verification_token
+        timestamp verification_token_expires_at
+        string reset_token
+        timestamp reset_token_expires_at
         timestamp created_at
         timestamp updated_at
-        int64 updated_by
         timestamp last_login_at
     }
 
     WORKOUTS {
         int64 id PK
-        string name
-        text notes
-        timestamp created_at
-        timestamp updated_at
-        int64 updated_by
-    }
-
-    WODS {
-        int64 id PK
-        string name UK
-        string source
-        string type
-        string regime
-        string score_type
-        text description
-        string url
-        text notes
-        boolean is_standard
-        int64 created_by FK
-        timestamp created_at
-        timestamp updated_at
-        int64 updated_by
-    }
-
-    STRENGTH_MOVEMENTS {
-        int64 id PK
-        string name UK
-        string movement_type
-        text description
-        boolean is_standard
-        int64 created_by FK
-        timestamp created_at
-        timestamp updated_at
-        int64 updated_by
-    }
-
-    USER_WORKOUTS {
-        int64 id PK
         int64 user_id FK
-        int64 workout_id FK
         date workout_date
+        string workout_type
+        string workout_name
         text notes
+        int total_time
         timestamp created_at
         timestamp updated_at
     }
 
-    WORKOUT_WODS {
+    MOVEMENTS {
         int64 id PK
-        int64 workout_id FK
-        int64 wod_id FK
-        string score_value
-        string division
-        boolean is_pr
-        int order_index
+        string name UK
+        text description
+        string type
+        boolean is_standard
+        int64 created_by FK
         timestamp created_at
         timestamp updated_at
     }
 
-    WORKOUT_STRENGTH {
+    WORKOUT_MOVEMENTS {
         int64 id PK
         int64 workout_id FK
-        int64 strength_id FK
+        int64 movement_id FK
         float weight
         int sets
         int reps
+        int time
+        float distance
+        boolean is_rx
         boolean is_pr
         text notes
         int order_index
@@ -143,60 +84,72 @@ erDiagram
         timestamp updated_at
     }
 
-    USER_SETTINGS {
+    REFRESH_TOKENS {
         int64 id PK
         int64 user_id FK
-        text notification_preferences
-        string data_export_format
-        string theme
+        string token UK
+        timestamp expires_at
         timestamp created_at
-        timestamp updated_at
+        timestamp revoked_at
+        text device_info
     }
 
-    AUDIT_LOGS {
+    PASSWORD_RESETS {
         int64 id PK
         int64 user_id FK
-        string action
-        text details
-        timestamp timestamp
+        string token UK
+        timestamp expires_at
+        timestamp used_at
+        timestamp created_at
+    }
+
+    EMAIL_VERIFICATION_TOKENS {
+        int64 id PK
+        int64 user_id FK
+        string token UK
+        timestamp expires_at
+        timestamp used_at
+        timestamp created_at
     }
 ```
 
 ## Logical Data Model
 
-The ActaLog data model is organized around the following key concept:
+The ActaLog data model follows a straightforward structure:
 
-**Workout = Warmup + WOD(s) + Strength Movement(s)**
+**Workout Instance = User-specific workout logged on a date**
 
 ### Key Principles
 
-1. **Workouts** are reusable templates/definitions (not user-specific)
-2. **UserWorkouts** link users to workouts they've logged on specific dates
-3. **WODs** are predefined CrossFit workouts (Benchmark, Hero, Girl, etc.)
-4. **Strength Movements** are exercises (weightlifting, cardio, gymnastics)
-5. Each workout can contain multiple WODs and/or strength movements
-6. Users can log the same workout template multiple times on different dates
+1. **Workouts** are user-specific instances logged on specific dates
+2. **Movements** are exercise definitions (weightlifting, cardio, gymnastics)
+3. **Workout Movements** link workouts to movements with performance data (weight, sets, reps, etc.)
+4. Users can create custom movements in addition to standard pre-seeded movements
+5. Personal Records (PRs) are tracked per movement for each user
 
 ## Table Definitions
 
 ### users
 
-Stores user account information and authentication credentials.
+Stores user account information, authentication credentials, and profile data.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique user identifier |
 | email | VARCHAR(255) | UNIQUE, NOT NULL | User email (login identifier) |
-| password_hash | VARCHAR(255) | NOT NULL | Bcrypt hashed password |
+| password_hash | VARCHAR(255) | NOT NULL | Bcrypt hashed password (cost ≥12) |
 | name | VARCHAR(255) | NOT NULL | User display name |
-| birthday | DATE | NULL | User's birth date |
-| profile_image | VARCHAR(512) | NULL | URL to profile picture |
+| birthday | DATE | NULL | User's birth date (added v0.3.3) |
+| profile_image | TEXT | NULL | URL to profile picture |
 | role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | User role (user, admin) |
-| email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | Email verification status |
-| email_verified_at | TIMESTAMP | NULL | When email was verified |
+| email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | Email verification status (added v0.3.1) |
+| email_verified_at | TIMESTAMP | NULL | When email was verified (added v0.3.1) |
+| verification_token | VARCHAR(255) | NULL | Email verification token (added v0.3.1) |
+| verification_token_expires_at | TIMESTAMP | NULL | Verification token expiration (added v0.3.1) |
+| reset_token | VARCHAR(255) | NULL | Password reset token (added v0.2.0) |
+| reset_token_expires_at | TIMESTAMP | NULL | Reset token expiration (added v0.2.0) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Account creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-| updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
 | last_login_at | TIMESTAMP | NULL | Last successful login |
 
 **Indexes:**
@@ -204,148 +157,84 @@ Stores user account information and authentication credentials.
 - UNIQUE INDEX idx_users_email (email)
 - INDEX idx_users_role (role)
 
+**Security Notes:**
+- Passwords hashed with bcrypt (cost factor 12)
+- First registered user automatically receives admin role
+- JWT tokens used for authentication (stored client-side only)
+
 ### workouts
 
-Stores workout templates/definitions (reusable across users and dates).
+Stores user-specific workout instances logged on specific dates.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout identifier |
-| name | VARCHAR(255) | NULL | Workout template name |
-| notes | TEXT | NULL | General workout template notes |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| workout_date | DATE | NOT NULL | Date workout was performed |
+| workout_type | VARCHAR(50) | NOT NULL | Type: strength, metcon, cardio, mixed |
+| workout_name | VARCHAR(255) | NULL | Optional workout name/title |
+| notes | TEXT | NULL | User's notes for this workout |
+| total_time | INT | NULL | Total workout duration (seconds) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-| updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
 
 **Indexes:**
 - PRIMARY KEY (id)
-- INDEX idx_workouts_name (name)
+- INDEX idx_workouts_user_id (user_id)
+- INDEX idx_workouts_workout_date (workout_date)
+- INDEX idx_workouts_user_date (user_id, workout_date DESC)
 
 **Foreign Keys:**
-- FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
-### wods
+**Design Note:**
+- Each workout is a unique instance owned by a user
+- Users can log multiple workouts per day
+- Workouts are not templates - they represent actual performed workouts
 
-Stores WOD (Workout of the Day) definitions - predefined CrossFit workouts.
+### movements
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique WOD identifier |
-| name | VARCHAR(255) | UNIQUE, NOT NULL | WOD name (e.g., "Fran", "Murph") |
-| source | VARCHAR(100) | NULL | Source: CrossFit, Other Coach, Self-recorded |
-| type | VARCHAR(50) | NULL | Type: Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created |
-| regime | VARCHAR(50) | NULL | Regime: EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills |
-| score_type | VARCHAR(50) | NULL | Score Type: Time (HH:MM:SS), Rounds and Reps, Max Weight |
-| description | TEXT | NULL | WOD description/instructions |
-| url | VARCHAR(512) | NULL | URL for video or online reference |
-| notes | TEXT | NULL | Additional notes |
-| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-defined WODs, FALSE for user-created |
-| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom WOD (NULL for standard) |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-| updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
-
-**Indexes:**
-- PRIMARY KEY (id)
-- UNIQUE INDEX idx_wods_name (name)
-- INDEX idx_wods_type (type)
-- INDEX idx_wods_source (source)
-- INDEX idx_wods_created_by (created_by)
-
-**Foreign Keys:**
-- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-- FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
-
-### strength_movements
-
-Stores strength movement definitions (weightlifting, cardio, gymnastics exercises).
+Stores movement/exercise definitions (both standard and user-created).
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique movement identifier |
 | name | VARCHAR(255) | UNIQUE, NOT NULL | Movement name (e.g., "Back Squat") |
-| movement_type | VARCHAR(50) | NOT NULL | Type: weightlifting, cardio, gymnastics |
 | description | TEXT | NULL | Movement description/instructions |
-| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-defined movements, FALSE for user-created |
+| type | VARCHAR(50) | NOT NULL | Type: weightlifting, cardio, gymnastics, bodyweight |
+| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-seeded movements, FALSE for user-created |
 | created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom movement (NULL for standard) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-| updated_by | BIGINT | NULL, FOREIGN KEY | User who made last update |
 
 **Indexes:**
 - PRIMARY KEY (id)
-- UNIQUE INDEX idx_strength_name (name)
-- INDEX idx_strength_type (movement_type)
-- INDEX idx_strength_created_by (created_by)
+- UNIQUE INDEX idx_movements_name (name)
+- INDEX idx_movements_type (type)
+- INDEX idx_movements_standard (is_standard)
 
 **Foreign Keys:**
 - FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-- FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 
-### user_workouts
+**Standard Movements:**
+The application pre-seeds 31 standard CrossFit movements on first run (see Standard Movements section below).
 
-Links users to workouts they've logged on specific dates.
+### workout_movements
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id |
-| workout_date | DATE | NOT NULL | Date workout was performed |
-| notes | TEXT | NULL | User's notes for this specific workout instance |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-
-**Indexes:**
-- PRIMARY KEY (id)
-- INDEX idx_user_workouts_user_id (user_id)
-- INDEX idx_user_workouts_date (workout_date)
-- INDEX idx_user_workouts_user_date (user_id, workout_date DESC)
-- UNIQUE INDEX idx_user_workouts_unique (user_id, workout_id, workout_date)
-
-**Foreign Keys:**
-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-- FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
-
-### workout_wods
-
-Junction table linking workouts to WODs with scoring.
+Junction table linking workouts to movements with performance details.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
 | workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id |
-| wod_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to wods.id |
-| score_value | VARCHAR(50) | NULL | Score (time, rounds+reps, or weight) |
-| division | VARCHAR(20) | NULL | Leaderboard division: rx, scaled, beginner |
-| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (auto-detected or manual) |
-| order_index | INT | NOT NULL, DEFAULT 0 | Order in workout sequence |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-
-**Indexes:**
-- PRIMARY KEY (id)
-- INDEX idx_workout_wods_workout_id (workout_id)
-- INDEX idx_workout_wods_wod_id (wod_id)
-- INDEX idx_workout_wods_order (workout_id, order_index)
-
-**Foreign Keys:**
-- FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
-- FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
-
-### workout_strength
-
-Junction table linking workouts to strength movements with performance details.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
-| workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id |
-| strength_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to strength_movements.id |
+| movement_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to movements.id |
 | weight | DECIMAL(10,2) | NULL | Weight used (lbs or kg) |
 | sets | INT | NULL | Number of sets |
 | reps | INT | NULL | Reps per set or total reps |
-| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (auto-detected or manual) |
+| time | INT | NULL | Time for movement (seconds) |
+| distance | DECIMAL(10,2) | NULL | Distance (meters, miles, etc.) |
+| is_rx | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE if performed as prescribed |
+| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (added v0.3.0) |
 | notes | TEXT | NULL | Movement-specific notes |
 | order_index | INT | NOT NULL, DEFAULT 0 | Order in workout sequence |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
@@ -353,146 +242,286 @@ Junction table linking workouts to strength movements with performance details.
 
 **Indexes:**
 - PRIMARY KEY (id)
-- INDEX idx_workout_strength_workout_id (workout_id)
-- INDEX idx_workout_strength_strength_id (strength_id)
-- INDEX idx_workout_strength_order (workout_id, order_index)
+- INDEX idx_wm_workout_id (workout_id)
+- INDEX idx_wm_movement_id (movement_id)
+- INDEX idx_wm_workout_order (workout_id, order_index)
 
 **Foreign Keys:**
 - FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
-- FOREIGN KEY (strength_id) REFERENCES strength_movements(id) ON DELETE RESTRICT
+- FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
 
-### user_settings
+**PR Auto-Detection:**
+When a workout is created, the system automatically compares weight for each movement against the user's historical max and sets `is_pr=TRUE` if it's a new personal record. Users can also manually toggle the PR flag.
 
-Stores user preferences and settings.
+### refresh_tokens
+
+Stores refresh tokens for "Remember Me" functionality (added v0.3.2).
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique setting identifier |
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique token identifier |
 | user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| notification_preferences | TEXT | NULL | JSON or serialized notification preferences |
-| data_export_format | VARCHAR(20) | DEFAULT 'JSON' | Preferred export format (CSV, JSON) |
-| theme | VARCHAR(20) | DEFAULT 'light' | UI theme preference (light, dark) |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+| token | VARCHAR(255) | UNIQUE, NOT NULL | Cryptographically secure token |
+| expires_at | TIMESTAMP | NOT NULL | Token expiration time |
+| created_at | TIMESTAMP | NOT NULL | Token creation time |
+| revoked_at | TIMESTAMP | NULL | When token was revoked (logout) |
+| device_info | TEXT | NULL | Device/browser information |
 
 **Indexes:**
 - PRIMARY KEY (id)
-- UNIQUE INDEX idx_user_settings_user_id (user_id)
+- UNIQUE INDEX idx_refresh_tokens_token (token)
+- INDEX idx_refresh_tokens_user_id (user_id)
+- INDEX idx_refresh_tokens_expires (expires_at)
 
 **Foreign Keys:**
 - FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
-### audit_logs
+**Security Notes:**
+- Tokens are 32-byte cryptographically secure random strings
+- Tokens expire after 30 days
+- Users can have multiple active tokens (different devices)
+- Tokens are revoked on logout
 
-Stores audit trail of significant user actions.
+### password_resets
+
+Stores password reset tokens (separate repository implementation).
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique log identifier |
-| user_id | BIGINT | NULL, FOREIGN KEY | Reference to users.id (NULL for system actions) |
-| action | VARCHAR(100) | NOT NULL | Action performed (e.g., "LOGIN", "CREATE_WORKOUT") |
-| details | TEXT | NULL | Additional action details (JSON format) |
-| timestamp | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | When action occurred |
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique reset identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| token | VARCHAR(255) | UNIQUE, NOT NULL | Password reset token |
+| expires_at | TIMESTAMP | NOT NULL | Token expiration (1 hour) |
+| used_at | TIMESTAMP | NULL | When token was used |
+| created_at | TIMESTAMP | NOT NULL | Token creation time |
 
 **Indexes:**
 - PRIMARY KEY (id)
-- INDEX idx_audit_logs_user_id (user_id)
-- INDEX idx_audit_logs_action (action)
-- INDEX idx_audit_logs_timestamp (timestamp DESC)
+- UNIQUE INDEX idx_password_resets_token (token)
+- INDEX idx_password_resets_user_id (user_id)
 
 **Foreign Keys:**
-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
-## Standard WODs
+**Security:**
+- Tokens are single-use only
+- Tokens expire after 1 hour
+- Email delivery via SMTP (configurable)
 
-The application comes pre-loaded with common CrossFit WODs. Examples include:
+### email_verification_tokens
 
-### Benchmark WODs (Girls)
-- **Fran**: 21-15-9 Thrusters (95 lbs), Pull-ups
-- **Grace**: 30 Clean and Jerks for time (135 lbs)
-- **Helen**: 3 rounds - 400m run, 21 KB swings (53 lbs), 12 pull-ups
-- **Diane**: 21-15-9 Deadlifts (225 lbs), HSPU
-- **Karen**: 150 Wall Balls for time (20 lbs, 10 ft)
+Stores email verification tokens (separate repository implementation).
 
-### Hero WODs
-- **Murph**: 1 mile run, 100 pull-ups, 200 push-ups, 300 air squats, 1 mile run
-- **DT**: 5 rounds - 12 deadlifts, 9 hang power cleans, 6 push jerks (155 lbs)
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique verification identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| token | VARCHAR(255) | UNIQUE, NOT NULL | Email verification token |
+| expires_at | TIMESTAMP | NOT NULL | Token expiration (24 hours) |
+| used_at | TIMESTAMP | NULL | When token was used |
+| created_at | TIMESTAMP | NOT NULL | Token creation time |
 
-### Standard Strength Movements
+**Indexes:**
+- PRIMARY KEY (id)
+- UNIQUE INDEX idx_email_verification_tokens_token (token)
+- INDEX idx_email_verification_tokens_user_id (user_id)
 
-Common strength movements pre-loaded:
+**Foreign Keys:**
+- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
-**Weightlifting:**
-- Back Squat, Front Squat, Overhead Squat
-- Deadlift, Sumo Deadlift
-- Clean, Power Clean, Hang Clean
-- Snatch, Power Snatch
-- Clean and Jerk, Thruster
-- Push Press, Push Jerk, Split Jerk
+**Behavior:**
+- Sent automatically on user registration
+- Sent on email address change
+- Tokens expire after 24 hours
+- Single-use tokens
 
-**Gymnastics:**
-- Pull-up, Chest-to-Bar Pull-up, Muscle-up
-- Handstand Push-up, Dip
-- Toes-to-Bar, Knees-to-Elbow
+## Standard Movements
 
-**Bodyweight:**
-- Push-up, Sit-up, Air Squat, Burpee, Box Jump
+The application pre-seeds 31 standard CrossFit movements on initialization:
 
-**Cardio:**
-- Row, Run, Bike, Ski Erg
+### Weightlifting (11 movements)
+- Back Squat
+- Front Squat
+- Overhead Squat
+- Deadlift
+- Sumo Deadlift
+- Clean
+- Power Clean
+- Snatch
+- Power Snatch
+- Clean and Jerk
+- Thruster
 
-## Migration Strategy
+### Gymnastics (8 movements)
+- Pull-up
+- Chest-to-Bar Pull-up
+- Bar Muscle-up
+- Ring Muscle-up
+- Handstand Push-up
+- Strict Handstand Push-up
+- Toes-to-Bar
+- Knees-to-Elbow
 
-Database migrations will be managed using a migration tool (e.g., golang-migrate). Each migration will be versioned and tracked.
+### Bodyweight (6 movements)
+- Push-up
+- Sit-up
+- Air Squat
+- Burpee
+- Box Jump
+- Wall Ball
 
-### Planned Migration from v0.1.0 to v0.3.0
+### Cardio (6 movements)
+- Rowing
+- Running
+- Assault Bike
+- Ski Erg
+- Jump Rope
+- Swimming
 
-**Status:** Not yet implemented. This is the planned migration when v0.3.0 is ready to be implemented.
+**Note:** Users can also create custom movements via the movements API.
 
-Key changes:
-1. Add `birthday` column to `users` table
-2. Add `email_verified` and `email_verified_at` columns to `users` table
-3. Rename `movements` table to `strength_movements`
-4. Add `movement_type` column to `strength_movements`
-5. Add `is_standard` column to `strength_movements`
-6. Create new `wods` table with all attributes including `is_standard`
-7. Modify `workouts` table (remove `user_id`, `workout_date`, `workout_type`, `workout_name`, `total_time`)
-8. Create `user_workouts` junction table
-9. Rename `workout_movements` to `workout_strength`
-10. Add `is_pr` column to `workout_strength`
-11. Create `workout_wods` junction table with `division` and `is_pr` columns
-12. Create `user_settings` table
-13. Create `audit_logs` table
-14. Add `updated_by` columns to relevant tables
+## Migration History
+
+Database migrations are managed through `internal/repository/migrations.go` and tracked in the `schema_migrations` table.
+
+### v0.1.0 - Initial Schema
+**Description:** Base schema with users, workouts, movements, workout_movements tables
+
+**Tables Created:**
+- users (basic auth fields)
+- workouts (user-specific instances)
+- movements (exercise definitions)
+- workout_movements (junction table)
+
+### v0.2.0 - Password Reset
+**Description:** Add password reset token fields to users table
+
+**Changes:**
+- Added `reset_token` (VARCHAR/TEXT)
+- Added `reset_token_expires_at` (TIMESTAMP)
+
+**Features Enabled:** Password reset via email
+
+### v0.3.0 - Personal Records
+**Description:** Add PR tracking to workout_movements
+
+**Changes:**
+- Added `is_pr` (BOOLEAN) to workout_movements table
+
+**Features Enabled:**
+- Automatic PR detection on workout creation
+- Manual PR flag toggling
+- PR history views
+
+### v0.3.1 - Email Verification
+**Description:** Add email verification fields to users table
+
+**Changes:**
+- Added `email_verified` (BOOLEAN, DEFAULT FALSE)
+- Added `email_verified_at` (TIMESTAMP)
+- Added `verification_token` (VARCHAR/TEXT)
+- Added `verification_token_expires_at` (TIMESTAMP)
+
+**Features Enabled:**
+- Email verification on registration
+- Re-verification on email change
+- Verification status tracking
+
+### v0.3.2 - Remember Me
+**Description:** Add refresh_tokens table for persistent sessions
+
+**Changes:**
+- Created `refresh_tokens` table with:
+  - id, user_id, token, expires_at, created_at, revoked_at, device_info
+
+**Features Enabled:**
+- Remember Me checkbox on login
+- 30-day persistent sessions
+- Multi-device session management
+- Token revocation on logout
+
+### v0.3.3 - User Profiles
+**Description:** Add birthday field to users table for profile editing
+
+**Changes:**
+- Added `birthday` (DATE) to users table
+
+**Features Enabled:**
+- User profile editing (name, email, birthday)
+- Profile information display
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login (with optional Remember Me)
+- `POST /api/auth/logout` - User logout (revokes refresh token)
+- `POST /api/auth/refresh` - Refresh JWT using refresh token
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
+- `GET /api/auth/verify-email?token=...` - Verify email address
+- `POST /api/auth/resend-verification` - Resend verification email
+
+### Users
+- `GET /api/users/profile` - Get current user profile
+- `PUT /api/users/profile` - Update user profile (name, email, birthday)
+
+### Movements
+- `GET /api/movements` - List all movements
+- `GET /api/movements/search?q=...` - Search movements by name
+- `POST /api/movements` - Create custom movement (authenticated)
+
+### Workouts
+- `POST /api/workouts` - Create new workout
+- `GET /api/workouts` - List user's workouts
+- `GET /api/workouts/{id}` - Get single workout
+- `PUT /api/workouts/{id}` - Update workout
+- `DELETE /api/workouts/{id}` - Delete workout
+- `GET /api/workouts/prs` - Get personal records (aggregated by movement)
+- `GET /api/workouts/pr-movements?limit=5` - Get recent PR-flagged movements
+- `POST /api/workouts/movements/{id}/toggle-pr` - Toggle PR flag
 
 ## Security Considerations
 
-1. **Password Storage**: All passwords are hashed using bcrypt with appropriate cost factor (minimum 12)
-2. **SQL Injection**: All queries use parameterized statements
-3. **Cascading Deletes**: User workouts and related data are deleted when a user is deleted
-4. **Data Validation**: Input validation at application layer before database insertion
-5. **Connection Security**: TLS/SSL required for production database connections
-6. **Audit Trail**: Significant actions logged in audit_logs table
-7. **Soft Deletes**: Consider implementing soft deletes for critical data
-
-## Backup and Recovery
-
-1. **Automated Backups**: Daily automated backups for production databases
-2. **Point-in-Time Recovery**: Transaction logs retained for 7 days
-3. **Backup Testing**: Monthly backup restoration tests
-4. **Data Export**: Users can export their data in CSV/JSON formats
-5. **Audit Trail Preservation**: Audit logs backed up separately for compliance
+1. **Password Storage:** Bcrypt hashing with cost factor ≥12
+2. **SQL Injection:** All queries use parameterized statements (sqlx)
+3. **Authentication:** JWT tokens with configurable expiration
+4. **Refresh Tokens:** Secure random generation, single-use on revocation
+5. **Email Tokens:** 32-byte cryptographically secure tokens
+6. **Authorization:** Users can only access their own workouts and data
+7. **CORS:** Configurable allowed origins via environment variable
+8. **Cascading Deletes:** User data properly deleted on account deletion
 
 ## Performance Optimization
 
-1. **Indexes**: Proper indexes on foreign keys and frequently queried columns
-2. **Composite Indexes**: Multi-column indexes for common query patterns (e.g., user_id + workout_date)
-3. **Query Optimization**: Avoid N+1 queries with proper JOINs
-4. **Partitioning**: Consider date-based partitioning for audit_logs and user_workouts
-5. **Caching**: Application-level caching for standard WODs and movements
+1. **Indexes:** Proper indexes on foreign keys and query patterns
+2. **Composite Indexes:** Multi-column indexes for user_id + workout_date queries
+3. **Eager Loading:** Movement details loaded with workouts to avoid N+1 queries
+4. **Connection Pooling:** Database connection pool managed by database/sql
+5. **Prepared Statements:** Reusable prepared statements for common queries
+
+## Backup and Recovery
+
+1. **SQLite Development:** Database file (`actalog.db`) can be backed up directly
+2. **PostgreSQL Production:** Use pg_dump for regular backups
+3. **Migration Tracking:** schema_migrations table preserves migration history
+4. **Data Export:** Users can export their workout data (planned feature)
+
+## Future Enhancements
+
+Potential future schema additions (not yet implemented):
+
+- **workout_templates** table for pre-defined benchmark WODs (Fran, Murph, etc.)
+- **user_settings** table for preferences (theme, units, notifications)
+- **social features** (followers, activity feed, leaderboards)
+- **audit_logs** table for security and compliance tracking
+- **workout_comments** for notes and reflections over time
 
 ## Version History
 
-- **v0.3.0**: Planned schema redesign to match logical data model requirements (documented, not yet implemented)
-- **v0.2.0-beta**: Multi-database support, workout logging backend (current application version)
-- **v0.1.0**: Initial schema design (current database schema)
+- **v0.3.3-beta** (Current): User profile editing with birthday field
+- **v0.3.2-beta**: Remember Me functionality with refresh tokens
+- **v0.3.1-beta**: Email verification system
+- **v0.3.0-beta**: Personal Records (PR) tracking
+- **v0.2.0-beta**: Password reset functionality
+- **v0.1.0**: Initial schema design
