@@ -213,6 +213,75 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.3.2",
+		Description: "Add refresh_tokens table for Remember Me functionality",
+		Up: func(db *sql.DB, driver string) error {
+			var queries []string
+			switch driver {
+			case "sqlite3":
+				queries = []string{
+					`CREATE TABLE IF NOT EXISTS refresh_tokens (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						token TEXT UNIQUE NOT NULL,
+						expires_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL,
+						revoked_at DATETIME,
+						device_info TEXT,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+					)`,
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)",
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)",
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at)",
+				}
+			case "postgres":
+				queries = []string{
+					`CREATE TABLE IF NOT EXISTS refresh_tokens (
+						id SERIAL PRIMARY KEY,
+						user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						token VARCHAR(255) UNIQUE NOT NULL,
+						expires_at TIMESTAMP NOT NULL,
+						created_at TIMESTAMP NOT NULL,
+						revoked_at TIMESTAMP,
+						device_info TEXT
+					)`,
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)",
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)",
+					"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at)",
+				}
+			case "mysql":
+				queries = []string{
+					`CREATE TABLE IF NOT EXISTS refresh_tokens (
+						id INT AUTO_INCREMENT PRIMARY KEY,
+						user_id INT NOT NULL,
+						token VARCHAR(255) UNIQUE NOT NULL,
+						expires_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL,
+						revoked_at DATETIME,
+						device_info TEXT,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+					)`,
+					"CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id)",
+					"CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token)",
+					"CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at)",
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query '%s': %w", query, err)
+				}
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			_, err := db.Exec("DROP TABLE IF EXISTS refresh_tokens")
+			return err
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

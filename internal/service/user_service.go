@@ -13,43 +13,50 @@ import (
 )
 
 var (
-	ErrUserNotFound               = errors.New("user not found")
-	ErrInvalidCredentials         = errors.New("invalid credentials")
-	ErrEmailAlreadyExists         = errors.New("email already exists")
-	ErrRegistrationClosed         = errors.New("registration is closed")
-	ErrInvalidResetToken          = errors.New("invalid or expired reset token")
-	ErrResetTokenExpired          = errors.New("reset token has expired")
-	ErrInvalidVerificationToken   = errors.New("invalid or expired verification token")
-	ErrVerificationTokenExpired   = errors.New("verification token has expired")
-	ErrEmailAlreadyVerified       = errors.New("email is already verified")
+	ErrUserNotFound             = errors.New("user not found")
+	ErrInvalidCredentials       = errors.New("invalid credentials")
+	ErrEmailAlreadyExists       = errors.New("email already exists")
+	ErrRegistrationClosed       = errors.New("registration is closed")
+	ErrInvalidResetToken        = errors.New("invalid or expired reset token")
+	ErrResetTokenExpired        = errors.New("reset token has expired")
+	ErrInvalidVerificationToken = errors.New("invalid or expired verification token")
+	ErrVerificationTokenExpired = errors.New("verification token has expired")
+	ErrEmailAlreadyVerified     = errors.New("email is already verified")
+	ErrInvalidRefreshToken      = errors.New("invalid or expired refresh token")
 )
 
 // UserService handles user-related business logic
 type UserService struct {
-	userRepo          domain.UserRepository
-	jwtSecret         string
-	jwtExpiration     time.Duration
-	allowRegistration bool
-	emailService      *email.Service
-	appURL            string // Base URL for password reset links
+	userRepo             domain.UserRepository
+	refreshTokenRepo     domain.RefreshTokenRepository
+	jwtSecret            string
+	jwtExpiration        time.Duration
+	refreshTokenDuration time.Duration
+	allowRegistration    bool
+	emailService         *email.Service
+	appURL               string // Base URL for password reset links
 }
 
 // NewUserService creates a new user service
 func NewUserService(
 	userRepo domain.UserRepository,
+	refreshTokenRepo domain.RefreshTokenRepository,
 	jwtSecret string,
 	jwtExpiration time.Duration,
+	refreshTokenDuration time.Duration,
 	allowRegistration bool,
 	emailService *email.Service,
 	appURL string,
 ) *UserService {
 	return &UserService{
-		userRepo:          userRepo,
-		jwtSecret:         jwtSecret,
-		jwtExpiration:     jwtExpiration,
-		allowRegistration: allowRegistration,
-		emailService:      emailService,
-		appURL:            appURL,
+		userRepo:             userRepo,
+		refreshTokenRepo:     refreshTokenRepo,
+		jwtSecret:            jwtSecret,
+		jwtExpiration:        jwtExpiration,
+		refreshTokenDuration: refreshTokenDuration,
+		allowRegistration:    allowRegistration,
+		emailService:         emailService,
+		appURL:               appURL,
 	}
 }
 
@@ -394,4 +401,112 @@ func (s *UserService) ResendVerificationEmail(email string) error {
 	}
 
 	return nil
+}
+
+// CreateRefreshToken creates a new refresh token for a user
+func (s *UserService) CreateRefreshToken(userID int64, deviceInfo string) (string, error) {
+	// Generate secure random token
+	tokenStr, err := generateRefreshToken()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Create refresh token record
+	refreshToken := &domain.RefreshToken{
+		UserID:     userID,
+		Token:      tokenStr,
+		ExpiresAt:  time.Now().Add(s.refreshTokenDuration),
+		CreatedAt:  time.Now(),
+		DeviceInfo: deviceInfo,
+	}
+
+	err = s.refreshTokenRepo.Create(refreshToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
+	return tokenStr, nil
+}
+
+// RefreshAccessToken validates refresh token and generates new access token
+func (s *UserService) RefreshAccessToken(refreshTokenStr string) (*domain.User, string, error) {
+	// Get refresh token from database
+	refreshToken, err := s.refreshTokenRepo.GetByToken(refreshTokenStr)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get refresh token: %w", err)
+	}
+	if refreshToken == nil {
+		return nil, "", ErrInvalidRefreshToken
+	}
+
+	// Get user
+	user, err := s.userRepo.GetByID(refreshToken.UserID)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, "", ErrUserNotFound
+	}
+
+	// Generate new JWT access token
+	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecret, s.jwtExpiration)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate JWT: %w", err)
+	}
+
+	// Update last login
+	now := time.Now()
+	user.LastLoginAt = &now
+	err = s.userRepo.Update(user)
+	if err != nil {
+		// Non-critical error, log but don't fail
+		fmt.Printf("Warning: failed to update last login: %v\n", err)
+	}
+
+	return user, token, nil
+}
+
+// RevokeRefreshToken revokes a specific refresh token
+func (s *UserService) RevokeRefreshToken(tokenStr string) error {
+	refreshToken, err := s.refreshTokenRepo.GetByToken(tokenStr)
+	if err != nil {
+		return fmt.Errorf("failed to get refresh token: %w", err)
+	}
+	if refreshToken == nil {
+		return ErrInvalidRefreshToken
+	}
+
+	err = s.refreshTokenRepo.Revoke(refreshToken.ID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke refresh token: %w", err)
+	}
+
+	return nil
+}
+
+// RevokeAllRefreshTokens revokes all refresh tokens for a user (logout all devices)
+func (s *UserService) RevokeAllRefreshTokens(userID int64) error {
+	err := s.refreshTokenRepo.RevokeAllForUser(userID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke all refresh tokens: %w", err)
+	}
+	return nil
+}
+
+// GetUserRefreshTokens gets all active refresh tokens for a user
+func (s *UserService) GetUserRefreshTokens(userID int64) ([]*domain.RefreshToken, error) {
+	tokens, err := s.refreshTokenRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user refresh tokens: %w", err)
+	}
+	return tokens, nil
+}
+
+// generateRefreshToken generates a cryptographically secure random token
+func generateRefreshToken() (string, error) {
+	bytes := make([]byte, 32) // 32 bytes = 256 bits
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

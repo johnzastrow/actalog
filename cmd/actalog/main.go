@@ -91,6 +91,7 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
+	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
 	movementRepo := repository.NewSQLiteMovementRepository(db)
 	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
 	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
@@ -127,8 +128,10 @@ func main() {
 	// Initialize services
 	userService := service.NewUserService(
 		userRepo,
+		refreshTokenRepo,
 		cfg.JWT.SecretKey,
 		cfg.JWT.ExpirationTime,
+		cfg.JWT.RefreshTokenDuration,
 		cfg.App.AllowRegistration,
 		emailService,
 		appURL,
@@ -182,6 +185,8 @@ func main() {
 		r.Post("/auth/reset-password", authHandler.ResetPassword)
 		r.Get("/auth/verify-email", authHandler.VerifyEmail)
 		r.Post("/auth/resend-verification", authHandler.ResendVerification)
+		r.Post("/auth/refresh", authHandler.RefreshToken)
+		r.Post("/auth/revoke", authHandler.RevokeToken)
 
 		// Movement routes (public for browsing)
 		r.Get("/movements", movementHandler.ListStandard)
