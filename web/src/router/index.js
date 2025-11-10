@@ -21,6 +21,18 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/ForgotPasswordView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'reset-password',
+      component: () => import('@/views/ResetPasswordView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/DashboardView.vue'),
@@ -71,7 +83,8 @@ router.beforeEach((to, from, next) => {
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
-  } else if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+  } else if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'reset-password') && authStore.isAuthenticated) {
+    // If already authenticated, redirect password reset flows to dashboard
     next('/dashboard')
   } else {
     next()
