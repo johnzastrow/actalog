@@ -5,6 +5,95 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1-beta] - 2025-11-10
+
+### Added
+- **Email Verification System (Complete)**
+  - Database migration v0.3.1 adding `email_verified` and `email_verified_at` columns to users table
+  - Backend API endpoints: `GET /api/auth/verify-email`, `POST /api/auth/resend-verification`
+  - Email service with SMTP integration for sending verification emails
+  - Styled HTML email templates with verification links
+  - 24-hour token expiration with secure token generation (crypto/rand)
+  - Single-use verification tokens (marked as used after verification)
+  - Repository layer: `CreateVerificationToken()`, `GetVerificationToken()`, `MarkTokenAsUsed()`
+  - Service layer: `SendVerificationEmail()`, `VerifyEmailWithToken()`, `ResendVerificationEmail()`
+  - Handler layer: `VerifyEmail()`, `ResendVerification()` with proper error handling
+
+- **Email Verification Frontend**
+  - VerifyEmailView component at `/verify-email?token=...` route
+    - Automatic email verification on page load
+    - Loading, success, and error states with appropriate messaging
+    - Handles expired, invalid, and already-used tokens
+    - Updates auth store user object on successful verification
+  - ResendVerificationView component at `/resend-verification` route
+    - Email input form to request new verification email
+    - Success confirmation displaying the email address
+    - Comprehensive error handling (404, 400, network errors)
+  - Updated RegisterView to show verification success message
+    - No longer auto-redirects to dashboard after registration
+    - Displays sent email address and 24-hour expiration notice
+    - Link to resend verification if email not received
+  - Dashboard verification status banner
+    - Warning alert for users with unverified emails
+    - Prominent "Resend Email" button
+    - Closable alert for better UX
+
+### Changed
+- User registration flow now includes email verification step
+- Users receive verification email immediately after registration
+- Dashboard shows verification reminder until email is verified
+- Router updated with `/verify-email` and `/resend-verification` routes
+- Navigation guards allow verify-email access for both authenticated and unauthenticated users
+- Version bumped to 0.3.1-beta across all version files
+
+### Technical
+- Email verification tokens stored in `email_verification_tokens` table
+- Tokens generated using crypto/rand (32 bytes hex-encoded) for security
+- SMTP configuration via environment variables (EMAIL_FROM, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)
+- HTML email template with inline styles for cross-client compatibility
+- Authorization checks ensure users can only resend verification for their own email
+- Frontend build: 618 modules, 47 PWA cache entries
+- Multi-database support (SQLite, PostgreSQL, MySQL) for email_verified field
+
+## [0.3.0-beta] - 2025-11-10
+
+### Added
+- **Personal Records (PR) Tracking System**
+  - Automatic PR detection when logging workouts (weight-based comparison)
+  - Manual PR flag toggle via API endpoint
+  - Database migration v0.3.0 adding `is_pr` column to workout_movements
+  - Multi-database support (SQLite, PostgreSQL, MySQL) for PR field
+  - New domain models: `PersonalRecord` struct and `IsPR` field in `WorkoutMovement`
+  - Repository methods: `GetPersonalRecords()`, `GetMaxWeightForMovement()`, `GetPRMovements()`
+  - Service layer methods: `DetectAndFlagPRs()`, `GetPersonalRecords()`, `TogglePRFlag()`
+  - API endpoints: `GET /api/workouts/prs`, `GET /api/workouts/pr-movements`, `POST /api/workouts/movements/:id/toggle-pr`
+  - Gold trophy badges (mdi-trophy) on workout cards containing PRs
+  - Individual PR indicators next to movements in workout lists
+  - Dedicated PR History page at `/prs` route showing recent PRs and all-time records
+  - Visual distinction with gold/amber color scheme (#ffc107) for PR indicators
+
+- **Password Reset Frontend (Part 3/3)**
+  - Forgot Password view with email submission form
+  - Reset Password view with token validation and new password form
+  - Router configuration for `/forgot-password` and `/reset-password/:token` routes
+  - "Forgot password?" link added to Login view
+  - Integration with backend password reset API endpoints
+  - Success/error messaging for user feedback
+
+### Changed
+- Integrated PR detection into workout creation workflow
+- Updated RecentWorkoutsCards component to display PR badges
+- Updated WorkoutsView to show PR indicators on individual movements
+- Enhanced router with authentication guards for password reset routes
+- Version bumped to 0.3.0-beta across all version files
+
+### Technical
+- PR auto-detection algorithm: compares current weight against previous max for each movement
+- Authorization checks on PR flag toggle to ensure workout ownership
+- Backward-compatible database migration with DEFAULT values
+- Clean Architecture maintained: domain → repository → service → handler layers
+- All PR queries include proper user scoping for security
+
 ## [0.2.0-beta] - 2025-11-06
 
 ### Added

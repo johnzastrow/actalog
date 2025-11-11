@@ -6,12 +6,37 @@
           <v-card-title class="text-h4 text-center pa-6">
             <div class="d-flex flex-column align-center">
               <div class="text-primary mb-2">ActaLog</div>
-              <div class="text-body-2 text-medium-emphasis">Create your account</div>
+              <div class="text-body-2 text-medium-emphasis">
+                {{ registrationSuccess ? 'Check Your Email' : 'Create your account' }}
+              </div>
             </div>
           </v-card-title>
 
           <v-card-text class="pa-6">
-            <v-form @submit.prevent="handleRegister">
+            <!-- Success Message -->
+            <div v-if="registrationSuccess" class="text-center">
+              <v-icon color="success" size="64" class="mb-4">mdi-email-check</v-icon>
+              <h3 class="text-h5 mb-3">Registration Successful!</h3>
+              <p class="text-body-1 mb-4">
+                We've sent a verification email to <strong>{{ email }}</strong>
+              </p>
+              <p class="text-body-2 text-medium-emphasis mb-6">
+                Please check your email and click the verification link to activate your account.
+                The link will expire in 24 hours.
+              </p>
+              <v-btn color="primary" block @click="router.push('/login')">
+                Go to Login
+              </v-btn>
+              <div class="text-center mt-4">
+                <span class="text-body-2">Didn't receive the email? </span>
+                <router-link to="/resend-verification" class="text-decoration-none">
+                  Resend verification email
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Registration Form -->
+            <v-form v-else @submit.prevent="handleRegister">
               <v-text-field
                 v-model="name"
                 label="Name"
@@ -88,6 +113,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const errors = ref({})
+const registrationSuccess = ref(false)
 
 const handleRegister = async () => {
   errors.value = {}
@@ -106,7 +132,8 @@ const handleRegister = async () => {
   })
 
   if (success) {
-    router.push('/dashboard')
+    // Show verification message instead of redirecting
+    registrationSuccess.value = true
   } else {
     errors.value.email = authStore.error || 'Registration failed'
   }

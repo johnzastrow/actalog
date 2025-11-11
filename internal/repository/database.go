@@ -440,11 +440,24 @@ func seedStandardMovements(db *sql.DB) error {
 		{"Ski Erg", "Ski erg machine", "cardio"},
 	}
 
-	// Prepare insert statement
-	stmt := `
+	// Get database-specific timestamp function
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Prepare insert statement with database-specific timestamp
+	stmt := fmt.Sprintf(`
 		INSERT INTO movements (name, description, type, is_standard, created_by, created_at, updated_at)
-		VALUES (?, ?, ?, 1, NULL, datetime('now'), datetime('now'))
-	`
+		VALUES (?, ?, ?, 1, NULL, %s, %s)
+	`, timestampFunc, timestampFunc)
 
 	// Insert each movement
 	for _, m := range movements {

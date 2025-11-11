@@ -1,20 +1,24 @@
 # TODO
 
-## Database Schema Migration (Planned for v0.3.0) - HIGH PRIORITY
+## Database Schema Migration (Planned for v0.4.0) - HIGH PRIORITY
 
-**Status:** Not yet started. v0.3.0 schema is documented but not implemented.
+**Status:** Partially implemented. v0.3.0 completed PR tracking, v0.3.1 completed email verification. Full v0.4.0 schema is documented but not yet implemented.
 
-### Schema Changes Required
-- [ ] Create database migration from v0.1.0 to v0.3.0
+### Completed (v0.3.1-beta)
+- [x] Add `is_pr` column to `workout_movements` table (migration v0.3.0 completed 2025-11-10)
+- [x] Multi-database support for `is_pr` field (SQLite, PostgreSQL, MySQL)
+- [x] Add `email_verified` and `email_verified_at` columns to `users` table (migration v0.3.1 completed 2025-11-10)
+- [x] Create `email_verification_tokens` table with token, user_id, expires_at, used_at
+
+### Schema Changes Required (v0.4.0)
+- [ ] Create database migration from v0.3.1 to v0.4.0
 - [ ] Add `birthday` column to `users` table
-- [ ] Add `email_verified` and `email_verified_at` columns to `users` table
 - [ ] Create `wods` table with all attributes (name, source, type, regime, score_type, is_standard, etc.)
 - [ ] Rename `movements` table to `strength_movements`
 - [ ] Add `movement_type` and `is_standard` columns to `strength_movements`
 - [ ] Modify `workouts` table (remove user_id, workout_date, workout_type, workout_name, total_time)
 - [ ] Create `user_workouts` junction table
 - [ ] Rename `workout_movements` to `workout_strength`
-- [ ] Add `is_pr` column to `workout_strength`
 - [ ] Create `workout_wods` junction table with `division` and `is_pr` columns
 - [ ] Create `user_settings` table
 - [ ] Create `audit_logs` table
@@ -40,30 +44,43 @@
 - [ ] Categorize movements by type (weightlifting, cardio, gymnastics)
 - [ ] Add descriptions and URLs for standard WODs
 
-## Design Refinements (Planned for v0.3.0) - HIGH PRIORITY
-
-**Status:** Documented but not yet implemented.
+## Design Refinements - HIGH PRIORITY
 
 ### Email Verification System
-- [ ] Implement email verification token generation
-- [ ] Create email verification endpoint (/api/verify-email)
-- [ ] Send verification email on user registration
-- [ ] Add "Resend verification email" functionality
-- [ ] Update login to check verification status
-- [ ] Lock leaderboard participation until verified
-- [ ] Lock data export until verified
-- [ ] Add verification status indicator in UI
+
+**Status:** ✅ **Completed in v0.3.1-beta** (2025-11-10)
+
+- [x] Implement email verification token generation (crypto/rand, 32 bytes hex)
+- [x] Create email verification endpoint (`GET /api/auth/verify-email?token=...`)
+- [x] Send verification email on user registration (SMTP with HTML template)
+- [x] Add "Resend verification email" functionality (`POST /api/auth/resend-verification`)
+- [x] Add verification status indicator in UI (Dashboard warning banner)
+- [x] Frontend views: VerifyEmailView, ResendVerificationView
+- [x] Updated RegisterView to show verification success message
+- [x] Router updates for `/verify-email` and `/resend-verification` routes
+- [x] Database migration v0.3.1 with email_verified fields
+- [x] Repository methods: `CreateVerificationToken()`, `GetVerificationToken()`, `MarkTokenAsUsed()`
+- [x] Service methods: `SendVerificationEmail()`, `VerifyEmailWithToken()`, `ResendVerificationEmail()`
+- [ ] Update login to check verification status - Future enhancement (currently soft check)
+- [ ] Lock leaderboard participation until verified - Future enhancement
+- [ ] Lock data export until verified - Future enhancement
 
 ### Personal Records (PR) Tracking
-- [ ] Implement auto-detection algorithm for PRs:
-  - [ ] Highest weight for strength movements (per user per movement)
-  - [ ] Fastest time for time-based WODs (per user per WOD)
-  - [ ] Most rounds+reps for AMRAP WODs (per user per WOD)
-- [ ] Add manual PR flag/unflag endpoints
-- [ ] Display PR badges on workout cards in dashboard
-- [ ] Show PR indicators (⭐) in movement history
-- [ ] Add PR filter to workout history view
-- [ ] Update PR status when new workout logged
+
+**Status:** ✅ **Completed in v0.3.0-beta** (2025-11-10)
+
+- [x] Implement auto-detection algorithm for PRs:
+  - [x] Highest weight for strength movements (per user per movement)
+  - [ ] Fastest time for time-based WODs (per user per WOD) - Future enhancement
+  - [ ] Most rounds+reps for AMRAP WODs (per user per WOD) - Future enhancement
+- [x] Add manual PR flag/unflag endpoints (`POST /api/workouts/movements/:id/toggle-pr`)
+- [x] Display PR badges on workout cards in dashboard (gold trophy icons)
+- [x] Show PR indicators (🏆) in movement history
+- [x] Add PR history view at `/prs` route showing recent PRs and all-time records
+- [x] Update PR status when new workout logged (integrated into CreateWorkout workflow)
+- [x] API endpoints: `GET /api/workouts/prs`, `GET /api/workouts/pr-movements`
+- [x] Repository methods: `GetPersonalRecords()`, `GetMaxWeightForMovement()`, `GetPRMovements()`
+- [x] Service layer: `DetectAndFlagPRs()`, authorization checks, PR aggregation
 
 ### Leaderboard System - Scaled Divisions
 - [ ] Create `leaderboard_entries` table (optional - could query from workout_wods)
@@ -127,9 +144,9 @@
 ## High Priority
 
 ### Authentication & User Management
-- [ ] Implement password reset functionality
-- [ ] Add email verification for new users (see Design Refinements section)
-- [ ] Implement "Remember Me" functionality
+- [x] Implement password reset functionality ✅ **Completed in v0.3.0-beta** (Parts 1-3: DB, backend, frontend)
+- [x] Add email verification for new users ✅ **Completed in v0.3.1-beta** (see Design Refinements section)
+- [ ] Implement "Remember Me" functionality - **NEXT PRIORITY**
 - [ ] Add profile picture upload
 - [ ] Add user profile editing with birthday field
 
@@ -246,6 +263,24 @@
 
 ## Technical Debt
 
+### Database & Performance
+- [ ] **Migrate from lib/pq to pgx for PostgreSQL support** - HIGH PRIORITY
+  - Current: Using `github.com/lib/pq` (maintenance mode, no new features)
+  - Target: Migrate to `github.com/jackc/pgx/v5` (actively maintained, better performance)
+  - Benefits:
+    - Better connection pooling
+    - Native support for PostgreSQL types
+    - Improved performance (binary protocol)
+    - Better prepared statement caching
+    - Active maintenance and security updates
+  - Migration Steps:
+    1. Add pgx/v5 dependency: `go get github.com/jackc/pgx/v5`
+    2. Update database connection string format
+    3. Replace `database/sql` + `lib/pq` with `pgx.Pool`
+    4. Update repository implementations for pgx-specific APIs
+    5. Test all database operations
+    6. Update connection pooling configuration
+    7. Performance benchmark before/after
 - [ ] Add comprehensive error handling
 - [ ] Improve logging with structured logging
 - [ ] Add request rate limiting
@@ -271,5 +306,5 @@
 
 ---
 
-**Last Updated:** 2025-11-09
-**Version:** 0.3.0-dev (design refinements documented)
+**Last Updated:** 2025-11-10
+**Version:** 0.3.1-beta (PR tracking, password reset, email verification complete)

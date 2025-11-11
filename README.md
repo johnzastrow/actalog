@@ -10,19 +10,23 @@
 
 ActaLog is a fitness tracker app focused on logging CrossFit workouts and tracking history for weights, reps, and named weightlifting lifts. Built with a Go backend and Vue.js/Vuetify frontend, it provides a clean, mobile-first interface for tracking your fitness journey.
 
-**Version:** 0.2.0-beta
+**Version:** 0.3.1-beta
 
 ## Features
 
-### Current Features (v0.2.0-beta)
+### Current Features (v0.3.1-beta)
 
 - ✅ **User Authentication**: Secure registration and login with JWT tokens
+- ✅ **Email Verification**: Verify email addresses with secure tokens and automated emails
+- ✅ **Password Reset**: Complete forgot password flow with email delivery
 - ✅ **Workout Logging**: Track workouts with movements, weights, sets, and reps
 - ✅ **Movement Database**: 31 pre-seeded standard CrossFit movements
 - ✅ **Searchable Movements**: Autocomplete search for quick movement selection
 - ✅ **Workout History**: View all logged workouts with movement details
+- ✅ **Personal Records (PR) Tracking**: Automatic PR detection and gold trophy badges
+- ✅ **PR History Page**: Dedicated view showing recent PRs and all-time records
 - ✅ **Dashboard**: Real-time statistics showing total and monthly workout counts
-- ✅ **Recent Activity**: Quick view of your last 5 workouts
+- ✅ **Recent Activity**: Quick view of your last 5 workouts with PR indicators
 - ✅ **Mobile-First Design**: Responsive UI optimized for mobile devices
 - ✅ **Modern UI**: Clean design with cyan accents and dark navy headers
 - ✅ **Rx/Scaled Tracking**: Mark movements as Rx or Scaled
@@ -243,14 +247,18 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ## Roadmap
 
-### Completed (v0.2.0-beta)
+### Completed (v0.3.1-beta)
 - [x] User authentication and registration
+- [x] Email verification system
+- [x] Password reset functionality (forgot password flow)
 - [x] Workout logging functionality
 - [x] Movement database with 31 standard CrossFit movements
 - [x] Workout history viewing
 - [x] Dashboard with statistics
 - [x] Mobile-responsive design
 - [x] Searchable movement selection
+- [x] Personal records (PR) tracking with auto-detection
+- [x] PR history page with all-time records
 
 ### In Progress
 - [ ] Performance tracking with charts
@@ -259,12 +267,12 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 - [ ] Workout filtering and search
 
 ### Planned
-- [ ] Data import/export (CSV, JSON)
-- [ ] Personal records (PR) tracking
+- [ ] Data import/export (CSV, JSON) with PR flags
 - [ ] Workout templates for common WODs
 - [ ] Timed workouts (AMRAP, EMOM, For Time)
 - [ ] PWA support for offline access
 - [ ] Dark mode
+- [ ] Profile management and settings
 - [ ] Mobile apps (iOS/Android)
 - [ ] Social features and leaderboards
 

@@ -28,14 +28,16 @@ type RegisterRequest struct {
 
 // LoginRequest represents a login request
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	RememberMe bool   `json:"remember_me,omitempty"`
 }
 
 // AuthResponse represents an authentication response
 type AuthResponse struct {
-	Token string      `json:"token"`
-	User  interface{} `json:"user"`
+	Token        string      `json:"token"`
+	RefreshToken string      `json:"refresh_token,omitempty"`
+	User         interface{} `json:"user"`
 }
 
 // ErrorResponse represents an error response
@@ -48,7 +50,7 @@ type ErrorResponse struct {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -82,7 +84,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		respondErrorWithDetail(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
@@ -98,15 +100,30 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		if err == service.ErrInvalidCredentials {
 			respondError(w, http.StatusUnauthorized, "Invalid email or password")
 		} else {
-			respondError(w, http.StatusInternalServerError, "Failed to login")
+			respondErrorWithDetail(w, http.StatusInternalServerError, "Failed to login", err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, AuthResponse{
+	response := AuthResponse{
 		Token: token,
 		User:  user,
-	})
+	}
+
+	// Create refresh token if remember_me is true
+	if req.RememberMe {
+		deviceInfo := r.UserAgent() // Get browser/device info from User-Agent header
+		refreshToken, err := h.userService.CreateRefreshToken(user.ID, deviceInfo)
+		if err != nil {
+			// Log error but don't fail the login
+			// User can still use the access token
+			respondErrorWithDetail(w, http.StatusInternalServerError, "Warning: Failed to create refresh token", err.Error())
+		} else {
+			response.RefreshToken = refreshToken
+		}
+	}
+
+	respondJSON(w, http.StatusOK, response)
 }
 
 // ForgotPasswordRequest represents a forgot password request
@@ -193,6 +210,148 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// VerifyEmailRequest represents an email verification request
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
+// VerifyEmail handles email verification requests
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	// Get token from query parameter
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		respondError(w, http.StatusBadRequest, "Verification token is required")
+		return
+	}
+
+	// Verify email
+	err := h.userService.VerifyEmail(token)
+	if err != nil {
+		switch err {
+		case service.ErrInvalidVerificationToken:
+			respondError(w, http.StatusBadRequest, "Invalid verification token")
+		case service.ErrVerificationTokenExpired:
+			respondError(w, http.StatusBadRequest, "Verification token has expired. Please request a new one")
+		case service.ErrEmailAlreadyVerified:
+			respondError(w, http.StatusBadRequest, "Email is already verified")
+		default:
+			respondError(w, http.StatusInternalServerError, "Failed to verify email")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "Email verified successfully. You can now login",
+	})
+}
+
+// ResendVerificationRequest represents a resend verification email request
+type ResendVerificationRequest struct {
+	Email string `json:"email"`
+}
+
+// ResendVerification handles resend verification email requests
+func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request) {
+	var req ResendVerificationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate email
+	if req.Email == "" {
+		respondError(w, http.StatusBadRequest, "Email is required")
+		return
+	}
+
+	// Resend verification email
+	err := h.userService.ResendVerificationEmail(req.Email)
+	if err != nil {
+		if err == service.ErrEmailAlreadyVerified {
+			respondError(w, http.StatusBadRequest, "Email is already verified")
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to resend verification email")
+		return
+	}
+
+	// Always return success (don't reveal if email exists)
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "If your email is registered and not yet verified, you will receive a verification link shortly",
+	})
+}
+
+// RefreshTokenRequest represents a refresh token request
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshToken handles refresh token requests
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate input
+	if req.RefreshToken == "" {
+		respondError(w, http.StatusBadRequest, "Refresh token is required")
+		return
+	}
+
+	// Refresh access token
+	user, newAccessToken, err := h.userService.RefreshAccessToken(req.RefreshToken)
+	if err != nil {
+		if err == service.ErrInvalidRefreshToken {
+			respondError(w, http.StatusUnauthorized, "Invalid or expired refresh token")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to refresh token")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, AuthResponse{
+		Token: newAccessToken,
+		User:  user,
+	})
+}
+
+// RevokeTokenRequest represents a revoke token request
+type RevokeTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RevokeToken handles token revocation (logout)
+func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
+	var req RevokeTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate input
+	if req.RefreshToken == "" {
+		respondError(w, http.StatusBadRequest, "Refresh token is required")
+		return
+	}
+
+	// Revoke token
+	err := h.userService.RevokeRefreshToken(req.RefreshToken)
+	if err != nil {
+		if err == service.ErrInvalidRefreshToken {
+			respondError(w, http.StatusNotFound, "Refresh token not found")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to revoke token")
+		}
+		return
+	}
+
+	respondJSON(w, http.StatusOK, MessageResponse{
+		Message: "Token revoked successfully",
+	})
+}
+
 // Helper functions
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -203,4 +362,8 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 
 func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, ErrorResponse{Message: message})
+}
+
+func respondErrorWithDetail(w http.ResponseWriter, status int, message string, detail string) {
+	respondJSON(w, status, ErrorResponse{Message: message, Error: detail})
 }
