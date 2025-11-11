@@ -35,7 +35,12 @@ func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time
 		return nil, fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
-		return nil, fmt.Errorf("workout template not found")
+		return nil, ErrWorkoutNotFound
+	}
+
+	// Check authorization: user can only log workouts they created or standard workouts (created_by = null)
+	if workout.CreatedBy != nil && *workout.CreatedBy != userID {
+		return nil, ErrUnauthorizedWorkoutAccess
 	}
 
 	// Check if user already logged this workout on this date
@@ -67,12 +72,24 @@ func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time
 
 // GetLoggedWorkout retrieves a logged workout by ID with full details
 func (s *UserWorkoutService) GetLoggedWorkout(userWorkoutID, userID int64) (*domain.UserWorkoutWithDetails, error) {
-	userWorkout, err := s.userWorkoutRepo.GetByIDWithDetails(userWorkoutID, userID)
+	// First check if workout exists (without user filtering)
+	basic, err := s.userWorkoutRepo.GetByID(userWorkoutID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logged workout: %w", err)
 	}
-	if userWorkout == nil {
-		return nil, fmt.Errorf("logged workout not found")
+	if basic == nil {
+		return nil, ErrUserWorkoutNotFound
+	}
+
+	// Check authorization
+	if basic.UserID != userID {
+		return nil, ErrUnauthorizedWorkoutAccess
+	}
+
+	// Get full details
+	userWorkout, err := s.userWorkoutRepo.GetByIDWithDetails(userWorkoutID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logged workout details: %w", err)
 	}
 
 	return userWorkout, nil
@@ -137,7 +154,7 @@ func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) er
 		return fmt.Errorf("failed to get logged workout: %w", err)
 	}
 	if existing == nil {
-		return fmt.Errorf("logged workout not found")
+		return ErrUserWorkoutNotFound
 	}
 
 	// Authorization check
