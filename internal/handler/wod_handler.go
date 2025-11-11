@@ -26,16 +26,52 @@ func NewWODHandler(wodService *service.WODService) *WODHandler {
 // CreateWODRequest represents a request to create a custom WOD
 type CreateWODRequest struct {
 	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	Source      *string `json:"source,omitempty"`
-	Type        *string `json:"type,omitempty"`        // girl, hero, open, games
-	Regime      *string `json:"regime,omitempty"`      // time, amrap, emom, tabata, strength, skill
-	ScoreType   *string `json:"score_type,omitempty"`  // time, reps, weight, rounds_reps
+	Source      string  `json:"source,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	Regime      string  `json:"regime,omitempty"`
+	ScoreType   string  `json:"score_type,omitempty"`
+	Description string  `json:"description,omitempty"`
+	URL         *string `json:"url,omitempty"`
+	Notes       *string `json:"notes,omitempty"`
+}
+
+// UpdateWODRequest represents a request to update a WOD
+type UpdateWODRequest struct {
+	Name        string  `json:"name"`
+	Source      string  `json:"source,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	Regime      string  `json:"regime,omitempty"`
+	ScoreType   string  `json:"score_type,omitempty"`
+	Description string  `json:"description,omitempty"`
+	URL         *string `json:"url,omitempty"`
+	Notes       *string `json:"notes,omitempty"`
+}
+
+// WODResponse represents a WOD
+type WODResponse struct {
+	ID          int64   `json:"id"`
+	Name        string  `json:"name"`
+	Source      string  `json:"source,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	Regime      string  `json:"regime,omitempty"`
+	ScoreType   string  `json:"score_type,omitempty"`
+	Description string  `json:"description,omitempty"`
+	URL         *string `json:"url,omitempty"`
+	Notes       *string `json:"notes,omitempty"`
+	IsStandard  bool    `json:"is_standard"`
+	CreatedBy   *int64  `json:"created_by,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
 }
 
 // CreateWOD creates a new custom WOD
 func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	var req CreateWODRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -49,93 +85,138 @@ func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create WOD
 	wod := &domain.WOD{
-		Name: req.Name,
+		Name:        req.Name,
+		Source:      req.Source,
+		Type:        req.Type,
+		Regime:      req.Regime,
+		ScoreType:   req.ScoreType,
+		Description: req.Description,
+		URL:         req.URL,
+		Notes:       req.Notes,
 	}
 
-	// Handle optional string pointer fields
-	if req.Description != nil {
-		wod.Description = *req.Description
-	}
-	if req.Source != nil {
-		wod.Source = *req.Source
-	}
-	if req.Type != nil {
-		wod.Type = *req.Type
-	}
-	if req.Regime != nil {
-		wod.Regime = *req.Regime
-	}
-	if req.ScoreType != nil {
-		wod.ScoreType = *req.ScoreType
-	}
-
-	err := h.wodService.CreateWOD(userID, wod)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create WOD")
+	if err := h.wodService.CreateWOD(userID, wod); err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create WOD: "+err.Error())
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, wod)
+	// Retrieve created WOD
+	created, err := h.wodService.GetWOD(wod.ID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve created WOD")
+		return
+	}
+
+	response := WODResponse{
+		ID:          created.ID,
+		Name:        created.Name,
+		Source:      created.Source,
+		Type:        created.Type,
+		Regime:      created.Regime,
+		ScoreType:   created.ScoreType,
+		Description: created.Description,
+		URL:         created.URL,
+		Notes:       created.Notes,
+		IsStandard:  created.IsStandard,
+		CreatedBy:   created.CreatedBy,
+		CreatedAt:   created.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:   created.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	}
+
+	respondJSON(w, http.StatusCreated, response)
 }
 
 // GetWOD retrieves a WOD by ID
 func (h *WODHandler) GetWOD(w http.ResponseWriter, r *http.Request) {
-	wodIDStr := chi.URLParam(r, "id")
-
-	wodID, err := strconv.ParseInt(wodIDStr, 10, 64)
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid WOD ID")
 		return
 	}
 
-	wod, err := h.wodService.GetWOD(wodID)
+	wod, err := h.wodService.GetWOD(id)
 	if err != nil {
-		switch err {
-		case service.ErrWODNotFound:
-			respondError(w, http.StatusNotFound, "WOD not found")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to get WOD")
-		}
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve WOD: "+err.Error())
 		return
 	}
 
-	respondJSON(w, http.StatusOK, wod)
+	response := WODResponse{
+		ID:          wod.ID,
+		Name:        wod.Name,
+		Source:      wod.Source,
+		Type:        wod.Type,
+		Regime:      wod.Regime,
+		ScoreType:   wod.ScoreType,
+		Description: wod.Description,
+		URL:         wod.URL,
+		Notes:       wod.Notes,
+		IsStandard:  wod.IsStandard,
+		CreatedBy:   wod.CreatedBy,
+		CreatedAt:   wod.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:   wod.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	}
+
+	respondJSON(w, http.StatusOK, response)
 }
 
-// ListWODs lists WODs (standard, user's custom, or all)
+// ListWODs retrieves all WODs (standard + user's custom)
 func (h *WODHandler) ListWODs(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-
-	// Check query parameter for filtering
-	filter := r.URL.Query().Get("filter")
+	// Extract user ID from JWT token in context (optional)
+	userID, ok := middleware.GetUserID(r.Context())
 
 	var wods []*domain.WOD
 	var err error
 
-	switch filter {
-	case "standard":
+	// Check if user wants only standard WODs
+	standardOnly := r.URL.Query().Get("standard") == "true"
+
+	if standardOnly {
 		wods, err = h.wodService.ListStandardWODs()
-	case "custom":
-		wods, err = h.wodService.ListUserWODs(userID)
-	default:
-		// List all (standard + user's custom)
+	} else if ok {
 		wods, err = h.wodService.ListAllWODs(userID)
+	} else {
+		wods, err = h.wodService.ListStandardWODs()
 	}
 
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to list WODs")
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve WODs")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, wods)
+	// Build response
+	var responses []WODResponse
+	for _, wod := range wods {
+		response := WODResponse{
+			ID:          wod.ID,
+			Name:        wod.Name,
+			Source:      wod.Source,
+			Type:        wod.Type,
+			Regime:      wod.Regime,
+			ScoreType:   wod.ScoreType,
+			Description: wod.Description,
+			URL:         wod.URL,
+			Notes:       wod.Notes,
+			IsStandard:  wod.IsStandard,
+			CreatedBy:   wod.CreatedBy,
+			CreatedAt:   wod.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:   wod.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+		responses = append(responses, response)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"wods": responses,
+	})
 }
 
 // SearchWODs searches for WODs by name
 func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
-		respondError(w, http.StatusBadRequest, "Search query parameter 'q' is required")
+		respondError(w, http.StatusBadRequest, "Search query is required")
 		return
 	}
 
@@ -145,25 +226,43 @@ func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, wods)
-}
+	// Build response
+	var responses []WODResponse
+	for _, wod := range wods {
+		response := WODResponse{
+			ID:          wod.ID,
+			Name:        wod.Name,
+			Source:      wod.Source,
+			Type:        wod.Type,
+			Regime:      wod.Regime,
+			ScoreType:   wod.ScoreType,
+			Description: wod.Description,
+			URL:         wod.URL,
+			Notes:       wod.Notes,
+			IsStandard:  wod.IsStandard,
+			CreatedBy:   wod.CreatedBy,
+			CreatedAt:   wod.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:   wod.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+		responses = append(responses, response)
+	}
 
-// UpdateWODRequest represents a request to update a WOD
-type UpdateWODRequest struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	Source      *string `json:"source,omitempty"`
-	Type        *string `json:"type,omitempty"`
-	Regime      *string `json:"regime,omitempty"`
-	ScoreType   *string `json:"score_type,omitempty"`
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"wods": responses,
+	})
 }
 
 // UpdateWOD updates a custom WOD
 func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	wodIDStr := chi.URLParam(r, "id")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	wodID, err := strconv.ParseInt(wodIDStr, 10, 64)
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid WOD ID")
 		return
@@ -175,72 +274,77 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
-	if req.Name == "" {
-		respondError(w, http.StatusBadRequest, "WOD name is required")
-		return
+	// Build update
+	wod := &domain.WOD{
+		Name:        req.Name,
+		Source:      req.Source,
+		Type:        req.Type,
+		Regime:      req.Regime,
+		ScoreType:   req.ScoreType,
+		Description: req.Description,
+		URL:         req.URL,
+		Notes:       req.Notes,
 	}
 
-	updates := &domain.WOD{
-		Name: req.Name,
-	}
-
-	// Handle optional string pointer fields
-	if req.Description != nil {
-		updates.Description = *req.Description
-	}
-	if req.Source != nil {
-		updates.Source = *req.Source
-	}
-	if req.Type != nil {
-		updates.Type = *req.Type
-	}
-	if req.Regime != nil {
-		updates.Regime = *req.Regime
-	}
-	if req.ScoreType != nil {
-		updates.ScoreType = *req.ScoreType
-	}
-
-	err = h.wodService.UpdateWOD(wodID, userID, updates)
-	if err != nil {
-		switch err {
-		case service.ErrWODNotFound:
-			respondError(w, http.StatusNotFound, "WOD not found")
-		case service.ErrUnauthorizedWODAccess:
-			respondError(w, http.StatusForbidden, "You can only update your own custom WODs")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to update WOD")
+	if err := h.wodService.UpdateWOD(id, userID, wod); err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to update this WOD")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to update WOD: "+err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, MessageResponse{Message: "WOD updated successfully"})
+	// Retrieve updated WOD
+	updated, err := h.wodService.GetWOD(id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve updated WOD")
+		return
+	}
+
+	response := WODResponse{
+		ID:          updated.ID,
+		Name:        updated.Name,
+		Source:      updated.Source,
+		Type:        updated.Type,
+		Regime:      updated.Regime,
+		ScoreType:   updated.ScoreType,
+		Description: updated.Description,
+		URL:         updated.URL,
+		Notes:       updated.Notes,
+		IsStandard:  updated.IsStandard,
+		CreatedBy:   updated.CreatedBy,
+		CreatedAt:   updated.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:   updated.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	}
+
+	respondJSON(w, http.StatusOK, response)
 }
 
 // DeleteWOD deletes a custom WOD
 func (h *WODHandler) DeleteWOD(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	wodIDStr := chi.URLParam(r, "id")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	wodID, err := strconv.ParseInt(wodIDStr, 10, 64)
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid WOD ID")
 		return
 	}
 
-	err = h.wodService.DeleteWOD(wodID, userID)
-	if err != nil {
-		switch err {
-		case service.ErrWODNotFound:
-			respondError(w, http.StatusNotFound, "WOD not found")
-		case service.ErrUnauthorizedWODAccess:
-			respondError(w, http.StatusForbidden, "You can only delete your own custom WODs")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to delete WOD")
+	if err := h.wodService.DeleteWOD(id, userID); err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to delete this WOD")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to delete WOD: "+err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, MessageResponse{Message: "WOD deleted successfully"})
+	respondJSON(w, http.StatusOK, map[string]string{"message": "WOD deleted successfully"})
 }

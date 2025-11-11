@@ -10,7 +10,7 @@ import (
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
-// WorkoutWODHandler handles workout-WOD linking endpoints
+// WorkoutWODHandler handles linking WODs to workout templates
 type WorkoutWODHandler struct {
 	workoutWODService *service.WorkoutWODService
 }
@@ -29,11 +29,23 @@ type AddWODToWorkoutRequest struct {
 	Division   *string `json:"division,omitempty"`
 }
 
+// UpdateWorkoutWODRequest represents a request to update a WOD in a workout
+type UpdateWorkoutWODRequest struct {
+	ScoreValue *string `json:"score_value,omitempty"`
+	Division   *string `json:"division,omitempty"`
+}
+
 // AddWODToWorkout adds a WOD to a workout template
 func (h *WorkoutWODHandler) AddWODToWorkout(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	workoutIDStr := chi.URLParam(r, "id")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
+	// Get workout ID from URL
+	workoutIDStr := chi.URLParam(r, "workout_id")
 	workoutID, err := strconv.ParseInt(workoutIDStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid workout ID")
@@ -52,23 +64,13 @@ func (h *WorkoutWODHandler) AddWODToWorkout(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	workoutWOD, err := h.workoutWODService.AddWODToWorkout(
-		workoutID,
-		req.WODID,
-		userID,
-		req.OrderIndex,
-		req.Division,
-	)
+	// Add WOD to workout
+	workoutWOD, err := h.workoutWODService.AddWODToWorkout(workoutID, req.WODID, userID, req.OrderIndex, req.Division)
 	if err != nil {
-		switch err {
-		case service.ErrWorkoutNotFound:
-			respondError(w, http.StatusNotFound, "Workout template not found")
-		case service.ErrWODNotFound:
-			respondError(w, http.StatusNotFound, "WOD not found")
-		case service.ErrUnauthorized:
-			respondError(w, http.StatusForbidden, "You can only modify your own workout templates")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to add WOD to workout")
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to modify this workout")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to add WOD to workout: "+err.Error())
 		}
 		return
 	}
@@ -78,61 +80,48 @@ func (h *WorkoutWODHandler) AddWODToWorkout(w http.ResponseWriter, r *http.Reque
 
 // RemoveWODFromWorkout removes a WOD from a workout template
 func (h *WorkoutWODHandler) RemoveWODFromWorkout(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	workoutIDStr := chi.URLParam(r, "id")
-	wodIDStr := chi.URLParam(r, "wod_id")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	workoutWODID, err := strconv.ParseInt(wodIDStr, 10, 64)
+	// Get workout WOD ID from URL
+	workoutWODIDStr := chi.URLParam(r, "workout_wod_id")
+	workoutWODID, err := strconv.ParseInt(workoutWODIDStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid workout WOD ID")
 		return
 	}
 
-	// workoutIDStr is not used directly but validates URL structure
-	_, err = strconv.ParseInt(workoutIDStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid workout ID")
-		return
-	}
-
-	err = h.workoutWODService.RemoveWODFromWorkout(workoutWODID, userID)
-	if err != nil {
-		switch err {
-		case service.ErrWorkoutNotFound:
-			respondError(w, http.StatusNotFound, "Workout template not found")
-		case service.ErrUnauthorized:
-			respondError(w, http.StatusForbidden, "You can only modify your own workout templates")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to remove WOD from workout")
+	// Remove WOD from workout
+	if err := h.workoutWODService.RemoveWODFromWorkout(workoutWODID, userID); err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to modify this workout")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to remove WOD from workout: "+err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, MessageResponse{Message: "WOD removed from workout successfully"})
-}
-
-// UpdateWorkoutWODRequest represents a request to update a WOD in a workout
-type UpdateWorkoutWODRequest struct {
-	ScoreValue *string `json:"score_value,omitempty"`
-	Division   *string `json:"division,omitempty"`
+	respondJSON(w, http.StatusOK, map[string]string{"message": "WOD removed from workout successfully"})
 }
 
 // UpdateWorkoutWOD updates a WOD in a workout template
 func (h *WorkoutWODHandler) UpdateWorkoutWOD(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	workoutIDStr := chi.URLParam(r, "id")
-	wodIDStr := chi.URLParam(r, "wod_id")
-
-	workoutWODID, err := strconv.ParseInt(wodIDStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid workout WOD ID")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	// workoutIDStr validates URL structure
-	_, err = strconv.ParseInt(workoutIDStr, 10, 64)
+	// Get workout WOD ID from URL
+	workoutWODIDStr := chi.URLParam(r, "workout_wod_id")
+	workoutWODID, err := strconv.ParseInt(workoutWODIDStr, 10, 64)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid workout ID")
+		respondError(w, http.StatusBadRequest, "Invalid workout WOD ID")
 		return
 	}
 
@@ -142,66 +131,53 @@ func (h *WorkoutWODHandler) UpdateWorkoutWOD(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.workoutWODService.UpdateWorkoutWOD(
-		workoutWODID,
-		userID,
-		req.ScoreValue,
-		req.Division,
-	)
-	if err != nil {
-		switch err {
-		case service.ErrWorkoutNotFound:
-			respondError(w, http.StatusNotFound, "Workout template not found")
-		case service.ErrUnauthorized:
-			respondError(w, http.StatusForbidden, "You can only modify your own workout templates")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to update workout WOD")
+	// Update workout WOD
+	if err := h.workoutWODService.UpdateWorkoutWOD(workoutWODID, userID, req.ScoreValue, req.Division); err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to modify this workout")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to update workout WOD: "+err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, MessageResponse{Message: "Workout WOD updated successfully"})
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Workout WOD updated successfully"})
 }
 
-// ToggleWODPR toggles the PR flag on a WOD in a workout template
+// ToggleWODPR toggles the PR flag on a WOD in a workout
 func (h *WorkoutWODHandler) ToggleWODPR(w http.ResponseWriter, r *http.Request) {
-	userID, _ := middleware.GetUserID(r.Context())
-	workoutIDStr := chi.URLParam(r, "id")
-	wodIDStr := chi.URLParam(r, "wod_id")
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	workoutWODID, err := strconv.ParseInt(wodIDStr, 10, 64)
+	// Get workout WOD ID from URL
+	workoutWODIDStr := chi.URLParam(r, "workout_wod_id")
+	workoutWODID, err := strconv.ParseInt(workoutWODIDStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid workout WOD ID")
 		return
 	}
 
-	// workoutIDStr validates URL structure
-	_, err = strconv.ParseInt(workoutIDStr, 10, 64)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid workout ID")
-		return
-	}
-
-	err = h.workoutWODService.ToggleWODPR(workoutWODID, userID)
-	if err != nil {
-		switch err {
-		case service.ErrWorkoutNotFound:
-			respondError(w, http.StatusNotFound, "Workout template not found")
-		case service.ErrUnauthorized:
-			respondError(w, http.StatusForbidden, "You can only modify your own workout templates")
-		default:
-			respondError(w, http.StatusInternalServerError, "Failed to toggle WOD PR")
+	// Toggle PR flag
+	if err := h.workoutWODService.ToggleWODPR(workoutWODID, userID); err != nil {
+		if err == service.ErrUnauthorized {
+			respondError(w, http.StatusForbidden, "You don't have permission to modify this workout")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to toggle WOD PR: "+err.Error())
 		}
 		return
 	}
 
-	respondJSON(w, http.StatusOK, MessageResponse{Message: "WOD PR flag toggled successfully"})
+	respondJSON(w, http.StatusOK, map[string]string{"message": "WOD PR flag toggled successfully"})
 }
 
-// ListWODsForWorkout lists all WODs in a workout template
+// ListWODsForWorkout retrieves all WODs for a workout template
 func (h *WorkoutWODHandler) ListWODsForWorkout(w http.ResponseWriter, r *http.Request) {
-	workoutIDStr := chi.URLParam(r, "id")
-
+	// Get workout ID from URL
+	workoutIDStr := chi.URLParam(r, "workout_id")
 	workoutID, err := strconv.ParseInt(workoutIDStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid workout ID")
@@ -210,9 +186,11 @@ func (h *WorkoutWODHandler) ListWODsForWorkout(w http.ResponseWriter, r *http.Re
 
 	wods, err := h.workoutWODService.ListWODsForWorkout(workoutID)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to list WODs for workout")
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve WODs for workout")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, wods)
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"wods": wods,
+	})
 }

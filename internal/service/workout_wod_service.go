@@ -7,7 +7,7 @@ import (
 	"github.com/johnzastrow/actalog/internal/domain"
 )
 
-// WorkoutWODService handles business logic for linking WODs to workout templates
+// WorkoutWODService handles linking WODs to workout templates
 type WorkoutWODService struct {
 	workoutWODRepo domain.WorkoutWODRepository
 	workoutRepo    domain.WorkoutRepository
@@ -27,24 +27,18 @@ func NewWorkoutWODService(
 	}
 }
 
-// AddWODToWorkout adds a WOD to a workout template
-func (s *WorkoutWODService) AddWODToWorkout(
-	workoutID int64,
-	wodID int64,
-	userID int64,
-	orderIndex int,
-	division *string,
-) (*domain.WorkoutWOD, error) {
+// AddWODToWorkout adds a WOD to a workout template with authorization check
+func (s *WorkoutWODService) AddWODToWorkout(workoutID, wodID int64, userID int64, orderIndex int, division *string) (*domain.WorkoutWOD, error) {
 	// Verify workout template exists and user has permission
 	workout, err := s.workoutRepo.GetByID(workoutID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
-		return nil, ErrWorkoutNotFound
+		return nil, fmt.Errorf("workout template not found")
 	}
 
-	// Authorization check - only creator can modify template
+	// Authorization check: only creator can modify template
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return nil, ErrUnauthorized
 	}
@@ -55,18 +49,19 @@ func (s *WorkoutWODService) AddWODToWorkout(
 		return nil, fmt.Errorf("failed to get WOD: %w", err)
 	}
 	if wod == nil {
-		return nil, ErrWODNotFound
+		return nil, fmt.Errorf("WOD not found")
 	}
 
-	// Create workout WOD link
+	// Create workout WOD association
+	now := time.Now()
 	workoutWOD := &domain.WorkoutWOD{
 		WorkoutID:  workoutID,
 		WODID:      wodID,
-		OrderIndex: orderIndex,
 		Division:   division,
+		OrderIndex: orderIndex,
 		IsPR:       false,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 
 	err = s.workoutWODRepo.Create(workoutWOD)
@@ -77,9 +72,9 @@ func (s *WorkoutWODService) AddWODToWorkout(
 	return workoutWOD, nil
 }
 
-// RemoveWODFromWorkout removes a WOD from a workout template
-func (s *WorkoutWODService) RemoveWODFromWorkout(workoutWODID int64, userID int64) error {
-	// Get workout WOD
+// RemoveWODFromWorkout removes a WOD from a workout template with authorization check
+func (s *WorkoutWODService) RemoveWODFromWorkout(workoutWODID, userID int64) error {
+	// Get the workout WOD
 	workoutWOD, err := s.workoutWODRepo.GetByID(workoutWODID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout WOD: %w", err)
@@ -88,20 +83,21 @@ func (s *WorkoutWODService) RemoveWODFromWorkout(workoutWODID int64, userID int6
 		return fmt.Errorf("workout WOD not found")
 	}
 
-	// Verify workout template exists and user has permission
+	// Get the workout to check authorization
 	workout, err := s.workoutRepo.GetByID(workoutWOD.WorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
-		return ErrWorkoutNotFound
+		return fmt.Errorf("workout template not found")
 	}
 
-	// Authorization check - only creator can modify template
+	// Authorization check: only creator can modify template
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
 
+	// Delete the association
 	err = s.workoutWODRepo.Delete(workoutWODID)
 	if err != nil {
 		return fmt.Errorf("failed to remove WOD from workout: %w", err)
@@ -110,14 +106,9 @@ func (s *WorkoutWODService) RemoveWODFromWorkout(workoutWODID int64, userID int6
 	return nil
 }
 
-// UpdateWorkoutWOD updates a WOD in a workout template (score, division, etc.)
-func (s *WorkoutWODService) UpdateWorkoutWOD(
-	workoutWODID int64,
-	userID int64,
-	scoreValue *string,
-	division *string,
-) error {
-	// Get workout WOD
+// UpdateWorkoutWOD updates a WOD in a workout with authorization check
+func (s *WorkoutWODService) UpdateWorkoutWOD(workoutWODID, userID int64, scoreValue *string, division *string) error {
+	// Get the workout WOD
 	workoutWOD, err := s.workoutWODRepo.GetByID(workoutWODID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout WOD: %w", err)
@@ -126,16 +117,16 @@ func (s *WorkoutWODService) UpdateWorkoutWOD(
 		return fmt.Errorf("workout WOD not found")
 	}
 
-	// Verify workout template exists and user has permission
+	// Get the workout to check authorization
 	workout, err := s.workoutRepo.GetByID(workoutWOD.WorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
-		return ErrWorkoutNotFound
+		return fmt.Errorf("workout template not found")
 	}
 
-	// Authorization check - only creator can modify template
+	// Authorization check: only creator can modify template
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
@@ -157,9 +148,9 @@ func (s *WorkoutWODService) UpdateWorkoutWOD(
 	return nil
 }
 
-// ToggleWODPR toggles the PR flag on a WOD in a workout template
-func (s *WorkoutWODService) ToggleWODPR(workoutWODID int64, userID int64) error {
-	// Get workout WOD
+// ToggleWODPR toggles the PR flag on a WOD in a workout with authorization check
+func (s *WorkoutWODService) ToggleWODPR(workoutWODID, userID int64) error {
+	// Get the workout WOD
 	workoutWOD, err := s.workoutWODRepo.GetByID(workoutWODID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout WOD: %w", err)
@@ -168,16 +159,16 @@ func (s *WorkoutWODService) ToggleWODPR(workoutWODID int64, userID int64) error 
 		return fmt.Errorf("workout WOD not found")
 	}
 
-	// Verify workout template exists and user has permission
+	// Get the workout to check authorization
 	workout, err := s.workoutRepo.GetByID(workoutWOD.WorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
-		return ErrWorkoutNotFound
+		return fmt.Errorf("workout template not found")
 	}
 
-	// Authorization check - only creator can modify template
+	// Authorization check: only creator can modify template
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
@@ -191,7 +182,7 @@ func (s *WorkoutWODService) ToggleWODPR(workoutWODID int64, userID int64) error 
 	return nil
 }
 
-// ListWODsForWorkout retrieves all WODs in a workout template with details
+// ListWODsForWorkout retrieves all WODs associated with a workout template
 func (s *WorkoutWODService) ListWODsForWorkout(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
 	wods, err := s.workoutWODRepo.ListByWorkoutWithDetails(workoutID)
 	if err != nil {

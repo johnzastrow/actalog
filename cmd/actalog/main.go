@@ -23,9 +23,9 @@ import (
 	"github.com/johnzastrow/actalog/pkg/version"
 
 	// Database drivers
-	_ "github.com/go-sql-driver/mysql"  // MySQL/MariaDB
-	_ "github.com/lib/pq"                // PostgreSQL
-	_ "github.com/mattn/go-sqlite3"     // SQLite
+	_ "github.com/go-sql-driver/mysql" // MySQL/MariaDB
+	_ "github.com/lib/pq"               // PostgreSQL
+	_ "github.com/mattn/go-sqlite3"    // SQLite
 )
 
 func main() {
@@ -95,8 +95,8 @@ func main() {
 	movementRepo := repository.NewMovementRepository(db)
 	workoutRepo := repository.NewWorkoutRepository(db)
 	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
-	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
 	wodRepo := repository.NewWODRepository(db)
+	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
 	workoutWODRepo := repository.NewWorkoutWODRepository(db)
 
 	// Initialize email service
@@ -140,12 +140,12 @@ func main() {
 		appURL,
 	)
 
-	// workoutService := service.NewWorkoutService(
-	// 	workoutRepo,
-	// 	workoutMovementRepo,
-	// 	movementRepo,
-	// 	workoutWODRepo,
-	// ) // Temporarily disabled until template handler is created
+	workoutService := service.NewWorkoutService(
+		workoutRepo,
+		workoutMovementRepo,
+		workoutWODRepo,
+		movementRepo,
+	)
 
 	userWorkoutService := service.NewUserWorkoutService(
 		userWorkoutRepo,
@@ -165,7 +165,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService)
 	userHandler := handler.NewUserHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
-	// workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo, workoutService) // DEPRECATED for v0.4.0
+	workoutHandler := handler.NewWorkoutHandler(workoutService)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
@@ -215,6 +215,16 @@ func main() {
 		r.Get("/movements/search", movementHandler.Search)
 		r.Get("/movements/{id}", movementHandler.GetByID)
 
+		// WOD routes (public for browsing standard WODs)
+		r.Get("/wods", wodHandler.ListWODs)
+		r.Get("/wods/search", wodHandler.SearchWODs)
+		r.Get("/wods/{id}", wodHandler.GetWOD)
+
+		// Template routes (public for browsing standard templates)
+		r.Get("/templates", workoutHandler.ListTemplates)
+		r.Get("/templates/{id}", workoutHandler.GetTemplate)
+		r.Get("/templates/{id}/stats", workoutHandler.GetTemplateStats)
+
 		// Protected routes (require authentication)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWT.SecretKey))
@@ -226,52 +236,35 @@ func main() {
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 
-			// Workout routes (authenticated) - DEPRECATED: v0.3.x compatibility - temporarily disabled for v0.4.0 migration
-			// r.Post("/workouts", workoutHandler.Create)
-			// r.Get("/workouts", workoutHandler.ListByUser)
-			// r.Get("/workouts/{id}", workoutHandler.GetByID)
-			// r.Put("/workouts/{id}", workoutHandler.Update)
-			// r.Delete("/workouts/{id}", workoutHandler.Delete)
+			// Workout Template routes (authenticated)
+			r.Post("/templates", workoutHandler.CreateTemplate)
+			r.Put("/templates/{id}", workoutHandler.UpdateTemplate)
+			r.Delete("/templates/{id}", workoutHandler.DeleteTemplate)
 
-			// PR tracking routes (authenticated) - temporarily disabled for v0.4.0 migration
-			// r.Get("/workouts/prs", workoutHandler.GetPersonalRecords)
-			// r.Get("/workouts/pr-movements", workoutHandler.GetPRMovements)
-			// r.Post("/workouts/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
+			// User Workout routes (logging workouts) (authenticated)
+			r.Post("/workouts", userWorkoutHandler.LogWorkout)
+			r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
+			r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
+			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
+			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
+			r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
 
-			// Progress tracking (authenticated) - temporarily disabled for v0.4.0 migration
-			// r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)
+			// WOD management (authenticated)
+			r.Post("/wods", wodHandler.CreateWOD)
+			r.Put("/wods/{id}", wodHandler.UpdateWOD)
+			r.Delete("/wods/{id}", wodHandler.DeleteWOD)
 
-			// === v0.4.0 NEW ROUTES ===
+			// Workout WOD linking (authenticated)
+			r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
+			r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
+			r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
+			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
+			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
-			// Workout Templates (authenticated) - temporarily disabled until template handler is created
-			// r.Get("/templates", workoutHandler.ListByUser)       // List user's templates
-			// r.Post("/templates", workoutHandler.Create)          // Create template
-			// r.Get("/templates/{id}", workoutHandler.GetByID)     // Get template details
-			// r.Put("/templates/{id}", workoutHandler.Update)      // Update template
-			// r.Delete("/templates/{id}", workoutHandler.Delete)   // Delete template
-
-			// WOD Management (authenticated)
-			r.Get("/wods", wodHandler.ListWODs)              // List all WODs (standard + user's custom)
-			r.Post("/wods", wodHandler.CreateWOD)            // Create custom WOD
-			r.Get("/wods/search", wodHandler.SearchWODs)     // Search WODs
-			r.Get("/wods/{id}", wodHandler.GetWOD)           // Get WOD details
-			r.Put("/wods/{id}", wodHandler.UpdateWOD)        // Update custom WOD
-			r.Delete("/wods/{id}", wodHandler.DeleteWOD)     // Delete custom WOD
-
-			// Link WODs to Templates (authenticated)
-			r.Post("/templates/{id}/wods", workoutWODHandler.AddWODToWorkout)              // Add WOD to template
-			r.Get("/templates/{id}/wods", workoutWODHandler.ListWODsForWorkout)            // List WODs in template
-			r.Put("/templates/{id}/wods/{wod_id}", workoutWODHandler.UpdateWorkoutWOD)     // Update WOD in template
-			r.Delete("/templates/{id}/wods/{wod_id}", workoutWODHandler.RemoveWODFromWorkout) // Remove WOD from template
-			r.Post("/templates/{id}/wods/{wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR) // Toggle PR flag
-
-			// User Workouts - Log workout instances (authenticated)
-			r.Post("/user-workouts", userWorkoutHandler.LogWorkout)               // Log a workout instance
-			r.Get("/user-workouts", userWorkoutHandler.ListLoggedWorkouts)        // List logged workouts
-			r.Get("/user-workouts/{id}", userWorkoutHandler.GetLoggedWorkout)     // Get logged workout details
-			r.Put("/user-workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)  // Update logged workout
-			r.Delete("/user-workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout) // Delete logged workout
-			r.Get("/user-workouts/stats/month", userWorkoutHandler.GetWorkoutStatsForMonth) // Monthly stats
+			// PR tracking routes (authenticated)
+			r.Get("/prs", workoutHandler.GetPersonalRecords)
+			r.Get("/pr-movements", workoutHandler.GetPRMovements)
+			r.Post("/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
 		})
 	})
 
