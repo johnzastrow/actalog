@@ -25,6 +25,13 @@ type Service struct {
 	logger *log.Logger
 }
 
+// EmailService defines the methods used by other packages so tests can provide fakes.
+// The concrete *Service type implements this interface.
+type EmailService interface {
+	SendPasswordResetEmail(to, resetURL string) error
+	SendVerificationEmail(to, verifyURL string) error
+}
+
 // NewService creates a new email service
 func NewService(config Config, logger *log.Logger) *Service {
 	return &Service{
@@ -43,7 +50,8 @@ type Message struct {
 
 // extractEmailAddress extracts the email address from a string that may contain a display name
 // Examples: "Name <email@example.com>" -> "email@example.com"
-//           "email@example.com" -> "email@example.com"
+//
+//	"email@example.com" -> "email@example.com"
 func extractEmailAddress(addr string) string {
 	// Try to extract email from "Name <email@example.com>" format
 	re := regexp.MustCompile(`<([^>]+)>`)

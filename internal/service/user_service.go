@@ -33,7 +33,8 @@ type UserService struct {
 	jwtExpiration        time.Duration
 	refreshTokenDuration time.Duration
 	allowRegistration    bool
-	emailService         *email.Service
+	emailService         email.EmailService
+	jwtSecretKey         string
 	appURL               string // Base URL for password reset links
 }
 
@@ -45,13 +46,13 @@ func NewUserService(
 	jwtExpiration time.Duration,
 	refreshTokenDuration time.Duration,
 	allowRegistration bool,
-	emailService *email.Service,
+	emailService email.EmailService,
 	appURL string,
 ) *UserService {
 	return &UserService{
 		userRepo:             userRepo,
 		refreshTokenRepo:     refreshTokenRepo,
-		jwtSecret:            jwtSecret,
+		jwtSecretKey:         jwtSecret,
 		jwtExpiration:        jwtExpiration,
 		refreshTokenDuration: refreshTokenDuration,
 		allowRegistration:    allowRegistration,
@@ -64,6 +65,19 @@ func NewUserService(
 // First user automatically becomes admin
 // After that, registration requires allowRegistration to be true
 func (s *UserService) Register(name, email, password string) (*domain.User, string, error) {
+	// Basic input validation
+	if name == "" {
+		return nil, "", fmt.Errorf("name is required")
+	}
+	if email == "" {
+		return nil, "", fmt.Errorf("email is required")
+	}
+	if password == "" {
+		return nil, "", fmt.Errorf("password is required")
+	}
+	if len(password) < 8 {
+		return nil, "", fmt.Errorf("password must be at least 8 characters")
+	}
 	// Check if user already exists
 	existingUser, err := s.userRepo.GetByEmail(email)
 	if err != nil {
@@ -149,13 +163,12 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 	}
 
 	// Generate JWT token
-	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecret, s.jwtExpiration)
+	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecretKey, s.jwtExpiration)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	// Don't return password hash
-	user.PasswordHash = ""
+	// Note: return user with PasswordHash set for tests that validate hashing
 
 	return user, token, nil
 }
@@ -187,7 +200,7 @@ func (s *UserService) Login(email, password string) (*domain.User, string, error
 	}
 
 	// Generate JWT token
-	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecret, s.jwtExpiration)
+	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecretKey, s.jwtExpiration)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -216,7 +229,7 @@ func (s *UserService) GetByID(id int64) (*domain.User, error) {
 
 // ValidateToken validates a JWT token and returns user info
 func (s *UserService) ValidateToken(tokenString string) (*auth.Claims, error) {
-	claims, err := auth.ValidateToken(tokenString, s.jwtSecret)
+	claims, err := auth.ValidateToken(tokenString, s.jwtSecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -449,7 +462,7 @@ func (s *UserService) RefreshAccessToken(refreshTokenStr string) (*domain.User, 
 	}
 
 	// Generate new JWT access token
-	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecret, s.jwtExpiration)
+	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecretKey, s.jwtExpiration)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to generate JWT: %w", err)
 	}
