@@ -253,8 +253,8 @@ var migrations = []Migration{
 			case "mysql":
 				queries = []string{
 					`CREATE TABLE IF NOT EXISTS refresh_tokens (
-						id INT AUTO_INCREMENT PRIMARY KEY,
-						user_id INT NOT NULL,
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
 						token VARCHAR(255) UNIQUE NOT NULL,
 						expires_at DATETIME NOT NULL,
 						created_at DATETIME NOT NULL,
