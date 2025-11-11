@@ -12,7 +12,7 @@ import (
 
 // Mock user repository
 type mockUserRepo struct {
-	users map[int64]*domain.User
+	users  map[int64]*domain.User
 	nextID int64
 }
 
@@ -45,6 +45,15 @@ func (m *mockUserRepo) GetByEmail(email string) (*domain.User, error) {
 func (m *mockUserRepo) GetByResetToken(token string) (*domain.User, error) {
 	for _, user := range m.users {
 		if user.ResetToken != nil && *user.ResetToken == token {
+			return user, nil
+		}
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockUserRepo) GetByVerificationToken(token string) (*domain.User, error) {
+	for _, user := range m.users {
+		if user.VerificationToken != nil && *user.VerificationToken == token {
 			return user, nil
 		}
 	}
@@ -100,12 +109,69 @@ func (m *mockEmailService) SendPasswordResetEmail(to, token, resetURL string) er
 	return nil
 }
 
+// Mock refresh token repository
+type mockRefreshTokenRepo struct {
+	tokens map[string]*domain.RefreshToken
+}
+
+func (m *mockRefreshTokenRepo) Create(token *domain.RefreshToken) error {
+	if m.tokens == nil {
+		m.tokens = make(map[string]*domain.RefreshToken)
+	}
+	m.tokens[token.Token] = token
+	return nil
+}
+
+func (m *mockRefreshTokenRepo) GetByToken(token string) (*domain.RefreshToken, error) {
+	if t, ok := m.tokens[token]; ok {
+		return t, nil
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockRefreshTokenRepo) DeleteByToken(token string) error {
+	delete(m.tokens, token)
+	return nil
+}
+
+func (m *mockRefreshTokenRepo) DeleteByUserID(userID int64) error {
+	for token, t := range m.tokens {
+		if t.UserID == userID {
+			delete(m.tokens, token)
+		}
+	}
+	return nil
+}
+
+func (m *mockRefreshTokenRepo) Delete(id int64) error {
+	// For this mock, we'll just delete by scanning
+	for token, t := range m.tokens {
+		if t.ID == id {
+			delete(m.tokens, token)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *mockRefreshTokenRepo) DeleteExpired() error {
+	now := time.Now()
+	for token, t := range m.tokens {
+		if t.ExpiresAt.Before(now) {
+			delete(m.tokens, token)
+		}
+	}
+	return nil
+}
+
 // Helper to create test user service
 func newTestUserService(allowRegistration bool) *UserService {
 	return NewUserService(
 		&mockUserRepo{users: make(map[int64]*domain.User), nextID: 0},
+		&mockRefreshTokenRepo{tokens: make(map[string]*domain.RefreshToken)},
 		"test-secret-key",
 		24*time.Hour,
+		7*24*time.Hour, // 7 days refresh token duration
 		allowRegistration,
 		&mockEmailService{},
 		"http://localhost:3000",
