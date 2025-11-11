@@ -9,15 +9,15 @@ import (
 )
 
 var (
-	ErrWorkoutNotFound = errors.New("workout not found")
-	ErrUnauthorized    = errors.New("unauthorized access")
+	ErrUnauthorized = errors.New("unauthorized access")
 )
 
-// WorkoutService handles workout-related business logic
+// WorkoutService handles workout template-related business logic
 type WorkoutService struct {
 	workoutRepo         domain.WorkoutRepository
 	workoutMovementRepo domain.WorkoutMovementRepository
 	movementRepo        domain.MovementRepository
+	workoutWODRepo      domain.WorkoutWODRepository
 }
 
 // NewWorkoutService creates a new workout service
@@ -25,36 +25,33 @@ func NewWorkoutService(
 	workoutRepo domain.WorkoutRepository,
 	workoutMovementRepo domain.WorkoutMovementRepository,
 	movementRepo domain.MovementRepository,
+	workoutWODRepo domain.WorkoutWODRepository,
 ) *WorkoutService {
 	return &WorkoutService{
 		workoutRepo:         workoutRepo,
 		workoutMovementRepo: workoutMovementRepo,
 		movementRepo:        movementRepo,
+		workoutWODRepo:      workoutWODRepo,
 	}
 }
 
-// CreateWorkout creates a new workout with movements
-func (s *WorkoutService) CreateWorkout(userID int64, workout *domain.Workout) error {
-	// Set user ID and timestamps
-	workout.UserID = userID
+// CreateTemplate creates a new workout template
+func (s *WorkoutService) CreateTemplate(userID int64, workout *domain.Workout) error {
+	// Set creator and timestamps
+	workout.CreatedBy = &userID
 	now := time.Now()
 	workout.CreatedAt = now
 	workout.UpdatedAt = now
 
-	// Create workout
+	// Create workout template
 	err := s.workoutRepo.Create(workout)
 	if err != nil {
-		return fmt.Errorf("failed to create workout: %w", err)
+		return fmt.Errorf("failed to create workout template: %w", err)
 	}
 
 	// Create workout movements if provided
 	if len(workout.Movements) > 0 {
-		// Detect PRs before creating movements
-		err = s.DetectAndFlagPRs(userID, workout.Movements)
-		if err != nil {
-			return fmt.Errorf("failed to detect PRs: %w", err)
-		}
-
+		now := time.Now()
 		for i, movement := range workout.Movements {
 			movement.WorkoutID = workout.ID
 			movement.OrderIndex = i
@@ -71,103 +68,69 @@ func (s *WorkoutService) CreateWorkout(userID int64, workout *domain.Workout) er
 	return nil
 }
 
-// GetWorkout retrieves a workout by ID with authorization check
-func (s *WorkoutService) GetWorkout(workoutID, userID int64) (*domain.Workout, error) {
-	workout, err := s.workoutRepo.GetByID(workoutID)
+// GetTemplate retrieves a workout template by ID with movements and WODs
+func (s *WorkoutService) GetTemplate(templateID int64) (*domain.Workout, error) {
+	workout, err := s.workoutRepo.GetByIDWithDetails(templateID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout: %w", err)
+		return nil, fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
 		return nil, ErrWorkoutNotFound
 	}
 
-	// Authorization check
-	if workout.UserID != userID {
-		return nil, ErrUnauthorized
-	}
-
-	// Load movements
-	movements, err := s.workoutMovementRepo.GetByWorkoutID(workoutID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workout movements: %w", err)
-	}
-
-	// Load movement details for each workout movement
-	for _, wm := range movements {
-		movement, err := s.movementRepo.GetByID(wm.MovementID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get movement details: %w", err)
-		}
-		wm.Movement = movement
-	}
-
-	workout.Movements = movements
-
 	return workout, nil
 }
 
-// ListUserWorkouts retrieves workouts for a user with pagination
-func (s *WorkoutService) ListUserWorkouts(userID int64, limit, offset int) ([]*domain.Workout, error) {
-	workouts, err := s.workoutRepo.GetByUserID(userID, limit, offset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list workouts: %w", err)
+// ListTemplates lists workout templates (standard or user-specific)
+func (s *WorkoutService) ListTemplates(userID *int64, limit, offset int) ([]*domain.Workout, error) {
+	var workouts []*domain.Workout
+	var err error
+
+	if userID == nil {
+		// List all standard templates (created_by IS NULL)
+		workouts, err = s.workoutRepo.ListStandard(limit, offset)
+	} else {
+		// List user's templates
+		workouts, err = s.workoutRepo.ListByUser(*userID, limit, offset)
 	}
 
-	// Load movements for each workout
-	for _, workout := range workouts {
-		movements, err := s.workoutMovementRepo.GetByWorkoutID(workout.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get workout movements: %w", err)
-		}
-
-		// Load movement details for each workout movement
-		for _, wm := range movements {
-			movement, err := s.movementRepo.GetByID(wm.MovementID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get movement details: %w", err)
-			}
-			wm.Movement = movement
-		}
-
-		workout.Movements = movements
+	if err != nil {
+		return nil, fmt.Errorf("failed to list workout templates: %w", err)
 	}
 
 	return workouts, nil
 }
 
-// UpdateWorkout updates a workout with authorization check
-func (s *WorkoutService) UpdateWorkout(workoutID, userID int64, updates *domain.Workout) error {
-	// Get existing workout
-	workout, err := s.workoutRepo.GetByID(workoutID)
+// UpdateTemplate updates a workout template (only if user is the creator)
+func (s *WorkoutService) UpdateTemplate(templateID, userID int64, updates *domain.Workout) error {
+	// Get existing template
+	workout, err := s.workoutRepo.GetByID(templateID)
 	if err != nil {
-		return fmt.Errorf("failed to get workout: %w", err)
+		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
 		return ErrWorkoutNotFound
 	}
 
-	// Authorization check
-	if workout.UserID != userID {
+	// Authorization check - only creator can update
+	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
 
 	// Update fields
-	workout.WorkoutDate = updates.WorkoutDate
-	workout.WorkoutType = updates.WorkoutType
-	workout.WorkoutName = updates.WorkoutName
+	workout.Name = updates.Name
 	workout.Notes = updates.Notes
-	workout.TotalTime = updates.TotalTime
 	workout.UpdatedAt = time.Now()
 
 	err = s.workoutRepo.Update(workout)
 	if err != nil {
-		return fmt.Errorf("failed to update workout: %w", err)
+		return fmt.Errorf("failed to update workout template: %w", err)
 	}
 
 	// Update movements if provided
 	if updates.Movements != nil {
 		// Delete existing movements
-		err = s.workoutMovementRepo.DeleteByWorkoutID(workoutID)
+		err = s.workoutMovementRepo.DeleteByWorkoutID(templateID)
 		if err != nil {
 			return fmt.Errorf("failed to delete workout movements: %w", err)
 		}
@@ -175,7 +138,7 @@ func (s *WorkoutService) UpdateWorkout(workoutID, userID int64, updates *domain.
 		// Create new movements
 		now := time.Now()
 		for i, movement := range updates.Movements {
-			movement.WorkoutID = workoutID
+			movement.WorkoutID = templateID
 			movement.OrderIndex = i
 			movement.CreatedAt = now
 			movement.UpdatedAt = now
@@ -190,55 +153,128 @@ func (s *WorkoutService) UpdateWorkout(workoutID, userID int64, updates *domain.
 	return nil
 }
 
-// DeleteWorkout deletes a workout with authorization check
-func (s *WorkoutService) DeleteWorkout(workoutID, userID int64) error {
-	// Get existing workout
-	workout, err := s.workoutRepo.GetByID(workoutID)
+// DeleteTemplate deletes a workout template (only if user is the creator)
+func (s *WorkoutService) DeleteTemplate(templateID, userID int64) error {
+	// Get existing template
+	workout, err := s.workoutRepo.GetByID(templateID)
 	if err != nil {
-		return fmt.Errorf("failed to get workout: %w", err)
+		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 	if workout == nil {
 		return ErrWorkoutNotFound
 	}
 
-	// Authorization check
-	if workout.UserID != userID {
+	// Authorization check - only creator can delete
+	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
 
-	// Delete workout (movements will be cascade deleted)
-	err = s.workoutRepo.Delete(workoutID)
+	// Delete template (movements and WODs will be cascade deleted)
+	err = s.workoutRepo.Delete(templateID)
 	if err != nil {
-		return fmt.Errorf("failed to delete workout: %w", err)
+		return fmt.Errorf("failed to delete workout template: %w", err)
 	}
 
 	return nil
 }
 
-// GetWorkoutsByDateRange retrieves workouts for a user within a date range
-func (s *WorkoutService) GetWorkoutsByDateRange(userID int64, startDate, endDate time.Time) ([]*domain.Workout, error) {
-	workouts, err := s.workoutRepo.GetByUserIDAndDateRange(userID, startDate, endDate)
+// GetTemplateUsageStats gets usage statistics for a template
+func (s *WorkoutService) GetTemplateUsageStats(templateID int64) (*domain.WorkoutWithUsageStats, error) {
+	stats, err := s.workoutRepo.GetUsageStats(templateID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workouts by date range: %w", err)
+		return nil, fmt.Errorf("failed to get usage stats: %w", err)
+	}
+	return stats, nil
+}
+
+// AddMovementToTemplate adds a movement to a workout template
+func (s *WorkoutService) AddMovementToTemplate(templateID, movementID int64, userID int64, wm *domain.WorkoutMovement) error {
+	// Get existing template
+	workout, err := s.workoutRepo.GetByID(templateID)
+	if err != nil {
+		return fmt.Errorf("failed to get workout template: %w", err)
+	}
+	if workout == nil {
+		return ErrWorkoutNotFound
 	}
 
-	// Load movements for each workout
-	for _, workout := range workouts {
-		movements, err := s.workoutMovementRepo.GetByWorkoutID(workout.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get workout movements: %w", err)
-		}
+	// Authorization check - only creator can modify
+	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
+		return ErrUnauthorized
+	}
 
-		// Load movement details for each workout movement
-		for _, wm := range movements {
-			movement, err := s.movementRepo.GetByID(wm.MovementID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get movement details: %w", err)
+	// Verify movement exists
+	movement, err := s.movementRepo.GetByID(movementID)
+	if err != nil {
+		return fmt.Errorf("failed to get movement: %w", err)
+	}
+	if movement == nil {
+		return errors.New("movement not found")
+	}
+
+	// Set IDs and timestamps
+	wm.WorkoutID = templateID
+	wm.MovementID = movementID
+	now := time.Now()
+	wm.CreatedAt = now
+	wm.UpdatedAt = now
+
+	err = s.workoutMovementRepo.Create(wm)
+	if err != nil {
+		return fmt.Errorf("failed to add movement to template: %w", err)
+	}
+
+	return nil
+}
+
+// AddWODToTemplate adds a WOD to a workout template
+func (s *WorkoutService) AddWODToTemplate(templateID, wodID int64, userID int64, wod *domain.WorkoutWOD) error {
+	// Get existing template
+	workout, err := s.workoutRepo.GetByID(templateID)
+	if err != nil {
+		return fmt.Errorf("failed to get workout template: %w", err)
+	}
+	if workout == nil {
+		return ErrWorkoutNotFound
+	}
+
+	// Authorization check - only creator can modify
+	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
+		return ErrUnauthorized
+	}
+
+	// Set IDs and timestamps
+	wod.WorkoutID = templateID
+	wod.WODID = wodID
+	now := time.Now()
+	wod.CreatedAt = now
+	wod.UpdatedAt = now
+
+	err = s.workoutWODRepo.Create(wod)
+	if err != nil {
+		return fmt.Errorf("failed to add WOD to template: %w", err)
+	}
+
+	return nil
+}
+
+// SearchTemplates searches workout templates by name
+func (s *WorkoutService) SearchTemplates(userID *int64, query string, limit int) ([]*domain.Workout, error) {
+	workouts, err := s.workoutRepo.Search(query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search workout templates: %w", err)
+	}
+
+	// Filter by user if specified
+	if userID != nil {
+		var filtered []*domain.Workout
+		for _, w := range workouts {
+			// Include standard templates (created_by IS NULL) or user's own templates
+			if w.CreatedBy == nil || *w.CreatedBy == *userID {
+				filtered = append(filtered, w)
 			}
-			wm.Movement = movement
 		}
-
-		workout.Movements = movements
+		return filtered, nil
 	}
 
 	return workouts, nil
@@ -264,6 +300,7 @@ func (s *WorkoutService) ListMovements(userID int64) ([]*domain.Movement, error)
 }
 
 // DetectAndFlagPRs automatically detects personal records for movements with weight
+// Note: This now needs to be called with a user_workout_id context, not workout template
 func (s *WorkoutService) DetectAndFlagPRs(userID int64, movements []*domain.WorkoutMovement) error {
 	for _, wm := range movements {
 		// Only check for PRs on movements with weight
@@ -314,7 +351,9 @@ func (s *WorkoutService) TogglePRFlag(movementID, userID int64) error {
 		return errors.New("workout movement not found")
 	}
 
-	// Get the workout to check authorization
+	// For v0.4.0: workout movements are part of templates, need different authorization
+	// Since templates can be standard (created_by = NULL) or user-created,
+	// we need to verify the user has access
 	workout, err := s.workoutRepo.GetByID(wm.WorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to get workout: %w", err)
@@ -322,7 +361,9 @@ func (s *WorkoutService) TogglePRFlag(movementID, userID int64) error {
 	if workout == nil {
 		return errors.New("workout not found")
 	}
-	if workout.UserID != userID {
+
+	// Only allow toggling PR on user's own templates
+	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
 
