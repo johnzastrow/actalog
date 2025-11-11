@@ -314,7 +314,7 @@ func (s *WorkoutService) AddWODToTemplate(templateID, wodID int64, userID int64,
 	// Create WOD association
 	err = s.workoutWODRepo.Create(wod)
 	if err != nil {
-		return fmt.Errorf("failed to delete workout: %w", err)
+		return fmt.Errorf("failed to add WOD to template: %w", err)
 	}
 
 	return nil
