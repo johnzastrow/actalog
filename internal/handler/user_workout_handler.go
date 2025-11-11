@@ -282,27 +282,15 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Parse workout date
-	workoutDate, err := time.Parse("2006-01-02", req.WorkoutDate)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid workout date format. Use YYYY-MM-DD")
-		return
-	}
-
-	// Build update
-	update := &domain.UserWorkout{
-		WorkoutDate: workoutDate,
-		WorkoutType: req.WorkoutType,
-		TotalTime:   req.TotalTime,
-		Notes:       req.Notes,
-	}
-
-	// Update logged workout
-	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, update); err != nil {
-		if err == service.ErrUnauthorized {
+	// Update logged workout with individual fields
+	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
+		switch err {
+		case service.ErrUserWorkoutNotFound:
+			respondError(w, http.StatusNotFound, "Logged workout not found")
+		case service.ErrUnauthorizedWorkoutAccess:
 			respondError(w, http.StatusForbidden, "You don't have permission to update this workout")
-		} else {
-			respondError(w, http.StatusInternalServerError, "Failed to update logged workout: "+err.Error())
+		default:
+			respondError(w, http.StatusInternalServerError, "Failed to update logged workout")
 		}
 		return
 	}
