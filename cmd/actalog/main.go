@@ -23,9 +23,9 @@ import (
 	"github.com/johnzastrow/actalog/pkg/version"
 
 	// Database drivers
-	_ "github.com/go-sql-driver/mysql"  // MySQL/MariaDB
-	_ "github.com/lib/pq"                // PostgreSQL
-	_ "github.com/mattn/go-sqlite3"     // SQLite
+	_ "github.com/go-sql-driver/mysql" // MySQL/MariaDB
+	_ "github.com/lib/pq"               // PostgreSQL
+	_ "github.com/mattn/go-sqlite3"    // SQLite
 )
 
 func main() {
@@ -92,9 +92,12 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
 	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
-	movementRepo := repository.NewSQLiteMovementRepository(db)
-	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
-	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
+	movementRepo := repository.NewMovementRepository(db)
+	workoutRepo := repository.NewWorkoutRepository(db)
+	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
+	wodRepo := repository.NewWODRepository(db)
+	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
+	workoutWODRepo := repository.NewWorkoutWODRepository(db)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -140,14 +143,32 @@ func main() {
 	workoutService := service.NewWorkoutService(
 		workoutRepo,
 		workoutMovementRepo,
+		workoutWODRepo,
 		movementRepo,
+	)
+
+	userWorkoutService := service.NewUserWorkoutService(
+		userWorkoutRepo,
+		workoutRepo,
+		workoutMovementRepo,
+	)
+
+	wodService := service.NewWODService(wodRepo)
+
+	workoutWODService := service.NewWorkoutWODService(
+		workoutWODRepo,
+		workoutRepo,
+		wodRepo,
 	)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	userHandler := handler.NewUserHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
-	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo, workoutService)
+	workoutHandler := handler.NewWorkoutHandler(workoutService)
+	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
+	wodHandler := handler.NewWODHandler(wodService)
+	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -194,6 +215,16 @@ func main() {
 		r.Get("/movements/search", movementHandler.Search)
 		r.Get("/movements/{id}", movementHandler.GetByID)
 
+		// WOD routes (public for browsing standard WODs)
+		r.Get("/wods", wodHandler.ListWODs)
+		r.Get("/wods/search", wodHandler.SearchWODs)
+		r.Get("/wods/{id}", wodHandler.GetWOD)
+
+		// Template routes (public for browsing standard templates)
+		r.Get("/templates", workoutHandler.ListTemplates)
+		r.Get("/templates/{id}", workoutHandler.GetTemplate)
+		r.Get("/templates/{id}/stats", workoutHandler.GetTemplateStats)
+
 		// Protected routes (require authentication)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWT.SecretKey))
@@ -205,20 +236,35 @@ func main() {
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 
-			// Workout routes (authenticated)
-			r.Post("/workouts", workoutHandler.Create)
-			r.Get("/workouts", workoutHandler.ListByUser)
-			r.Get("/workouts/{id}", workoutHandler.GetByID)
-			r.Put("/workouts/{id}", workoutHandler.Update)
-			r.Delete("/workouts/{id}", workoutHandler.Delete)
+			// Workout Template routes (authenticated)
+			r.Post("/templates", workoutHandler.CreateTemplate)
+			r.Put("/templates/{id}", workoutHandler.UpdateTemplate)
+			r.Delete("/templates/{id}", workoutHandler.DeleteTemplate)
+
+			// User Workout routes (logging workouts) (authenticated)
+			r.Post("/workouts", userWorkoutHandler.LogWorkout)
+			r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
+			r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
+			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
+			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
+			r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
+
+			// WOD management (authenticated)
+			r.Post("/wods", wodHandler.CreateWOD)
+			r.Put("/wods/{id}", wodHandler.UpdateWOD)
+			r.Delete("/wods/{id}", wodHandler.DeleteWOD)
+
+			// Workout WOD linking (authenticated)
+			r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
+			r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
+			r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
+			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
+			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
 			// PR tracking routes (authenticated)
-			r.Get("/workouts/prs", workoutHandler.GetPersonalRecords)
-			r.Get("/workouts/pr-movements", workoutHandler.GetPRMovements)
-			r.Post("/workouts/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
-
-			// Progress tracking (authenticated)
-			r.Get("/progress/movements/{movement_id}", workoutHandler.GetProgressByMovement)
+			r.Get("/prs", workoutHandler.GetPersonalRecords)
+			r.Get("/pr-movements", workoutHandler.GetPRMovements)
+			r.Post("/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
 		})
 	})
 

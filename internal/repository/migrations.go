@@ -977,6 +977,10 @@ func migrateV040_MigrateData(db *sql.DB, driver string) error {
 		}
 
 		if _, err := db.Exec(insertQuery, old.UserID, old.ID, old.WorkoutDate, old.WorkoutType, totalTime, notes, old.CreatedAt, old.UpdatedAt); err != nil {
+			// Skip if already exists (duplicate key on unique constraint)
+			if strings.Contains(err.Error(), "Duplicate") || strings.Contains(err.Error(), "UNIQUE") || strings.Contains(err.Error(), "unique") {
+				continue
+			}
 			return fmt.Errorf("failed to insert user_workout: %w", err)
 		}
 
@@ -1142,7 +1146,12 @@ func migrateV040_SeedWODs(db *sql.DB, driver string) error {
 		}
 
 		if _, err := db.Exec(insertQuery, wod.Name, wod.Source, wod.Type, wod.Regime, wod.ScoreType, wod.Description, now, now); err != nil {
-			// Skip duplicates
+			// Skip if already exists (duplicate key on unique constraint)
+			if strings.Contains(err.Error(), "Duplicate") || strings.Contains(err.Error(), "UNIQUE") || strings.Contains(err.Error(), "unique") {
+				continue
+			}
+			// For other errors, log but continue to allow partial seeding
+			fmt.Printf("  ⚠ Warning: failed to seed WOD '%s': %v\n", wod.Name, err)
 			continue
 		}
 	}
