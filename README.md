@@ -244,6 +244,19 @@ docker run -d --name actalog-mariadb -e MYSQL_ROOT_PASSWORD=example -e MYSQL_DAT
 go test ./test/integration -run Test -v -args -db=mysql -dsn="root:example@tcp(127.0.0.1:3306)/actalog_test?parseTime=true&multiStatements=true"
 ```
 
+Local CI note
+
+If you want to run the same checks locally as CI does, run the unit tests, linters and the web build:
+
+```bash
+# run linters and unit tests
+make lint
+make test
+
+# build frontend
+cd web && npm run build
+```
+
 
 ## Security
 

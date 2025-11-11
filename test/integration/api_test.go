@@ -1,6 +1,7 @@
 package integration
 
 import (
+	// standard library
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -11,11 +12,13 @@ import (
 	"testing"
 	"time"
 
+	// internal / external
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/internal/testhelpers"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
@@ -35,19 +38,23 @@ func TestMain(m *testing.M) {
 		*testDSN = envDSN
 	}
 
+	// Setup a temporary DB for postgres/mysql to isolate CI runs
+	var teardown func()
+	if *testDBDriver == "postgres" || *testDBDriver == "mysql" {
+		td, tdFn, err := testhelpers.SetupTempDB(*testDBDriver, *testDSN)
+		if err == nil {
+			*testDSN = td
+			teardown = tdFn
+			// export env for other helpers
+			_ = os.Setenv("DB_DRIVER", *testDBDriver)
+			_ = os.Setenv("DB_DSN", *testDSN)
+		}
+	}
+
 	code := m.Run()
 
-	// If using Postgres or MySQL in CI/local runs, attempt to clean up test DB schema
-	if *testDBDriver == "postgres" || *testDBDriver == "mysql" {
-		// Try to connect and drop tables created by migrations to keep CI clean. Ignore errors.
-		if db, err := repository.InitDatabase(*testDBDriver, *testDSN); err == nil {
-			// Best-effort cleanup: drop known tables if they exist
-			tables := []string{"workout_wods", "workouts", "user_workouts", "workout_strength", "strength_movements", "workout_movements", "movements", "users", "refresh_tokens"}
-			for _, t := range tables {
-				_, _ = db.Exec("DROP TABLE IF EXISTS " + t)
-			}
-			_ = db.Close()
-		}
+	if teardown != nil {
+		teardown()
 	}
 
 	os.Exit(code)

@@ -101,54 +101,21 @@ This document tracks planned features, improvements, and known issues for ActaLo
 
 ## Continuous Integration
 
-- A GitHub Actions workflow has been added at `.github/workflows/ci.yml` to run:
-	- Go vet and golangci-lint
-	- Go unit and integration tests (with CGO enabled for sqlite3 where necessary)
-	- Web build for the `web/` frontend (npm install and build)
+A GitHub Actions workflow is present at `.github/workflows/ci.yml`. It performs linting, unit tests, an integration test matrix (sqlite3, Postgres, MariaDB using Actions service containers), and a frontend build.
 
-Usage notes:
+Notes:
 
-- The workflow runs on push and pull_request against `main`.
-- The Go job enables `CGO_ENABLED=1` when running `go test ./...` to support the `github.com/mattn/go-sqlite3` driver used by integration tests. If you want CI to avoid CGO, replace sqlite-based integration tests or use a different driver.
+- The CI integration jobs pass `-db` and `-dsn` to the integration tests so they can run against different database backends.
+- The Go test job sets `CGO_ENABLED=1` when running sqlite3-based tests to support the `github.com/mattn/go-sqlite3` driver. If you want to avoid CGO, consider switching to a pure-Go SQLite driver or running only Postgres/MariaDB in CI.
 
-To run tests locally from the repository root:
+Run tests locally:
 
 ```bash
+# Run all tests
 go test ./... -v
-```
 
-Integration test matrix (CI)
-
-- The GitHub Actions CI runs integration tests in a matrix over three databases: sqlite3 (in-memory), Postgres, and MariaDB.
-
-- In CI the Postgres and MariaDB jobs use Actions service containers. The test job runs the integration package with the following test flags passed via `-args`:
-	- `-db` — the database driver name (`sqlite3`, `postgres`, `mysql`)
-	- `-dsn` — the DSN/connection string for the target DB
-
-Local examples
-
-- Run integration tests against SQLite (default):
-
-```bash
+# Run integration tests (default: sqlite in-memory)
 go test ./test/integration -run Test -v
-```
-
-- Run integration tests against a local Postgres container:
-
-```bash
-docker run -d --name actalog-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=actalog_test -p 5432:5432 postgres:15
-# wait for pg to be ready, then:
-go test ./test/integration -run Test -v -args -db=postgres -dsn="host=127.0.0.1 port=5432 user=postgres password=postgres dbname=actalog_test sslmode=disable"
-docker rm -f actalog-postgres
-```
-
-- Run integration tests against a local MariaDB container:
-
-```bash
-docker run -d --name actalog-mariadb -e MYSQL_ROOT_PASSWORD=example -e MYSQL_DATABASE=actalog_test -p 3306:3306 mariadb:10.11
-# wait for mysql to be ready, then:
-go test ./test/integration -run Test -v -args -db=mysql -dsn="root:example@tcp(127.0.0.1:3306)/actalog_test?parseTime=true&multiStatements=true"
-docker rm -f actalog-mariadb
 ```
 
 
