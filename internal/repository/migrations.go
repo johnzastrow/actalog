@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -771,6 +772,12 @@ func migrateV040_CreateNewTables(db *sql.DB, driver string) error {
 
 	for _, query := range queries {
 		if _, err := db.Exec(query); err != nil {
+			// For MySQL, ignore duplicate key/index errors (error 1061) which can occur
+			// if the migration was partially run before
+			if driver == "mysql" && strings.Contains(err.Error(), "Duplicate key name") {
+				fmt.Printf("  ⚠ Skipping existing index (already created)\n")
+				continue
+			}
 			return fmt.Errorf("failed to create table: %w", err)
 		}
 	}
@@ -810,6 +817,12 @@ func migrateV040_AddWorkoutColumns(db *sql.DB, driver string) error {
 
 	for _, query := range queries {
 		if _, err := db.Exec(query); err != nil {
+			// For MySQL, ignore duplicate column errors which can occur
+			// if the migration was partially run before
+			if driver == "mysql" && strings.Contains(err.Error(), "Duplicate column name") {
+				fmt.Printf("  ⚠ Skipping existing column (already created)\n")
+				continue
+			}
 			return fmt.Errorf("failed to add column: %w", err)
 		}
 	}
@@ -849,6 +862,13 @@ func migrateV040_RenameTables(db *sql.DB, driver string) error {
 
 	for _, query := range queries {
 		if _, err := db.Exec(query); err != nil {
+			// Ignore errors if table doesn't exist (already renamed) or target table exists
+			if strings.Contains(err.Error(), "doesn't exist") ||
+			   strings.Contains(err.Error(), "already exists") ||
+			   strings.Contains(err.Error(), "Table") && strings.Contains(err.Error(), "doesn't exist") {
+				fmt.Printf("  ⚠ Skipping table rename (already done or source doesn't exist)\n")
+				continue
+			}
 			return fmt.Errorf("failed to rename table: %w", err)
 		}
 	}
@@ -970,6 +990,10 @@ func migrateV040_MigrateData(db *sql.DB, driver string) error {
 		}
 
 		if _, err := db.Exec(insertQuery, old.UserID, old.ID, old.WorkoutDate, old.WorkoutType, totalTime, notes, old.CreatedAt, old.UpdatedAt); err != nil {
+			// Skip if already exists (duplicate key on unique constraint)
+			if strings.Contains(err.Error(), "Duplicate") || strings.Contains(err.Error(), "UNIQUE") || strings.Contains(err.Error(), "unique") {
+				continue
+			}
 			return fmt.Errorf("failed to insert user_workout: %w", err)
 		}
 
@@ -1135,7 +1159,12 @@ func migrateV040_SeedWODs(db *sql.DB, driver string) error {
 		}
 
 		if _, err := db.Exec(insertQuery, wod.Name, wod.Source, wod.Type, wod.Regime, wod.ScoreType, wod.Description, now, now); err != nil {
-			// Skip duplicates
+			// Skip if already exists (duplicate key on unique constraint)
+			if strings.Contains(err.Error(), "Duplicate") || strings.Contains(err.Error(), "UNIQUE") || strings.Contains(err.Error(), "unique") {
+				continue
+			}
+			// For other errors, log but continue to allow partial seeding
+			fmt.Printf("  ⚠ Warning: failed to seed WOD '%s': %v\n", wod.Name, err)
 			continue
 		}
 	}
