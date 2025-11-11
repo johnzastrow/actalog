@@ -2,6 +2,7 @@ package integration
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
@@ -16,38 +18,115 @@ import (
 )
 
 // Test helper to set up test router with dependencies
-func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, error) {
+func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, *sql.DB, int64, error) {
 	// Use in-memory SQLite for testing
 	db, err := repository.InitDatabase("sqlite3", ":memory:")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, 0, err
 	}
 
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
-	movementRepo := repository.NewSQLiteMovementRepository(db)
-	workoutRepo := repository.NewSQLiteWorkoutRepository(db)
-	workoutMovementRepo := repository.NewSQLiteWorkoutMovementRepository(db)
+	workoutRepo := repository.NewWorkoutRepository(db)
+	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
+
+	// Create a minimal workout template so tests can log a workout referencing it
+	// Schema may differ depending on migrations. Inspect table columns and insert accordingly.
+	cols := map[string]bool{}
+	rows, err := db.Query("PRAGMA table_info(workouts)")
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var cid int
+			var name string
+			var ctype string
+			var notnull int
+			var dflt sql.NullString
+			var pk int
+			_ = rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk)
+			cols[name] = true
+		}
+	}
+
+	var templateID int64
+	if cols["user_id"] {
+		// Old schema: workouts are user-specific and require a user_id. Create a user and insert accordingly.
+		u := &domain.User{
+			Email:        "template-owner@example.com",
+			PasswordHash: "",
+			Name:         "Template Owner",
+			Role:         "user",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		if err := userRepo.Create(u); err != nil {
+			return nil, nil, nil, 0, err
+		}
+
+		// If the migrated schema added a `name` column (templates), insert into `name` to keep WorkoutRepository happy.
+		var res sql.Result
+		if cols["name"] {
+			// include workout_date because older schema columns may still be present and NOT NULL
+			insertQuery := `INSERT INTO workouts (name, workout_date, workout_type, created_at, updated_at, user_id) VALUES (?, ?, ?, ?, ?, ?)`
+			res, err = db.Exec(insertQuery, "Test Template", time.Now().Format("2006-01-02"), "strength", time.Now(), time.Now(), u.ID)
+		} else {
+			insertQuery := `INSERT INTO workouts (user_id, workout_date, workout_type, workout_name, notes, total_time, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+			res, err = db.Exec(insertQuery, u.ID, time.Now().Format("2006-01-02"), "strength", "Test Template", nil, nil, time.Now(), time.Now())
+		}
+		if err != nil {
+			return nil, nil, nil, 0, err
+		}
+		id, _ := res.LastInsertId()
+		templateID = id
+	} else {
+		// New schema: workouts are templates
+		defaultWorkout := &domain.Workout{
+			Name: "Test Template",
+		}
+		if err := workoutRepo.Create(defaultWorkout); err != nil {
+			return nil, nil, nil, 0, err
+		}
+		templateID = defaultWorkout.ID
+	}
+
+	// Add a movement to the template if strength movements exist (movement_id 1 seeded)
+	wm := &domain.WorkoutMovement{
+		WorkoutID:  templateID,
+		MovementID: 1,
+		OrderIndex: 1,
+	}
+	if err := workoutMovementRepo.Create(wm); err != nil {
+		return nil, nil, nil, 0, err
+	}
+
+	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(
 		userRepo,
+		refreshTokenRepo,
 		"test-secret-key",
 		24*time.Hour,
+		7*24*time.Hour,
 		true, // allow registration
 		nil,  // no email service for tests
 		"http://localhost:3000",
 	)
 
-	workoutService := service.NewWorkoutService(
-		workoutRepo,
-		workoutMovementRepo,
-		movementRepo,
-	)
-
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
-	workoutHandler := handler.NewWorkoutHandler(workoutRepo, workoutMovementRepo, workoutService)
+	// Create user workout handler
+	userWorkoutService := service.NewUserWorkoutService(
+		repository.NewUserWorkoutRepository(db),
+		workoutRepo,
+		workoutMovementRepo,
+	)
+	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
+
+	// Create workout service for PR endpoints
+	movementRepo := repository.NewMovementRepository(db)
+	workoutWODRepo := repository.NewWorkoutWODRepository(db)
+	workoutService := service.NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -59,19 +138,52 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Auth("test-secret-key"))
-		r.Post("/api/workouts", workoutHandler.Create)
-		r.Get("/api/workouts", workoutHandler.ListByUser)
-		r.Get("/api/workouts/prs", workoutHandler.GetPersonalRecords)
-		r.Get("/api/workouts/pr-movements", workoutHandler.GetPRMovements)
-		r.Post("/api/workouts/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
+		r.Post("/api/workouts", userWorkoutHandler.LogWorkout)
+		r.Get("/api/workouts", userWorkoutHandler.ListLoggedWorkouts)
+		r.Get("/api/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
+		r.Put("/api/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
+		r.Delete("/api/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
+
+		// PR endpoints (used by integration tests)
+		r.Get("/api/workouts/prs", func(w http.ResponseWriter, r *http.Request) {
+			userID, ok := middleware.GetUserID(r.Context())
+			if !ok {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			prs, err := workoutService.GetPersonalRecords(userID)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"message": err.Error()})
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{"prs": prs})
+		})
+
+		r.Get("/api/workouts/pr-movements", func(w http.ResponseWriter, r *http.Request) {
+			userID, ok := middleware.GetUserID(r.Context())
+			if !ok {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			movs, err := workoutService.GetPRMovements(userID, 10)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"message": err.Error()})
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{"movements": movs})
+		})
 	})
 
-	return r, userRepo, nil
+	return r, userRepo, db, templateID, nil
 }
 
 // Test Registration and Login Flow
 func TestRegistrationAndLogin(t *testing.T) {
-	router, _, err := setupTestRouter(t)
+	router, _, _, _, err := setupTestRouter(t)
 	if err != nil {
 		t.Fatalf("Failed to setup router: %v", err)
 	}
@@ -156,7 +268,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 
 // Test Workout Creation and PR Detection
 func TestWorkoutAndPRFlow(t *testing.T) {
-	router, _, err := setupTestRouter(t)
+	router, _, _, templateID, err := setupTestRouter(t)
 	if err != nil {
 		t.Fatalf("Failed to setup router: %v", err)
 	}
@@ -187,9 +299,10 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 		reps := 5
 
 		body := map[string]interface{}{
-			"workout_date": time.Now().Format(time.RFC3339),
+			"workout_id":   templateID,
+			"workout_date": time.Now().Format("2006-01-02"),
 			"workout_type": "strength",
-			"workout_name": "Test Workout",
+			"notes":        "Test Workout notes",
 			"movements": []map[string]interface{}{
 				{
 					"movement_id": 1,
@@ -251,7 +364,7 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 
 // Test Authentication Required
 func TestAuthenticationRequired(t *testing.T) {
-	router, _, err := setupTestRouter(t)
+	router, _, _, _, err := setupTestRouter(t)
 	if err != nil {
 		t.Fatalf("Failed to setup router: %v", err)
 	}
