@@ -154,6 +154,11 @@ func main() {
 		workoutMovementRepo,
 	)
 
+	workoutTemplateService := service.NewWorkoutTemplateService(
+		workoutRepo,
+		workoutMovementRepo,
+	)
+
 	wodService := service.NewWODService(wodRepo)
 
 	workoutWODService := service.NewWorkoutWODService(
@@ -166,7 +171,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService)
 	userHandler := handler.NewUserHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
-	// workoutHandler := handler.NewWorkoutHandler(workoutService) // TODO: Create workout_handler.go for template management and PR tracking
+	workoutTemplateHandler := handler.NewWorkoutTemplateHandler(workoutTemplateService)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
@@ -221,10 +226,9 @@ func main() {
 		r.Get("/wods/search", wodHandler.SearchWODs)
 		r.Get("/wods/{id}", wodHandler.GetWOD)
 
-		// Template routes (public for browsing standard templates) - TODO: Implement workout_handler.go
-		// r.Get("/templates", workoutHandler.ListTemplates)
-		// r.Get("/templates/{id}", workoutHandler.GetTemplate)
-		// r.Get("/templates/{id}/stats", workoutHandler.GetTemplateStats)
+		// Template routes (public for browsing standard templates)
+		r.Get("/templates", workoutTemplateHandler.ListStandardTemplates)
+		r.Get("/templates/{id}", workoutTemplateHandler.GetTemplate)
 
 		// Protected routes (require authentication)
 		r.Group(func(r chi.Router) {
@@ -237,10 +241,11 @@ func main() {
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 
-			// Workout Template routes (authenticated) - TODO: Implement workout_handler.go
-			// r.Post("/templates", workoutHandler.CreateTemplate)
-			// r.Put("/templates/{id}", workoutHandler.UpdateTemplate)
-			// r.Delete("/templates/{id}", workoutHandler.DeleteTemplate)
+			// Workout Template routes (authenticated)
+			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
+			r.Get("/workouts/my-templates", workoutTemplateHandler.ListMyTemplates)
+			r.Put("/templates/{id}", workoutTemplateHandler.UpdateTemplate)
+			r.Delete("/templates/{id}", workoutTemplateHandler.DeleteTemplate)
 
 			// User Workout routes (logging workouts) (authenticated)
 			r.Post("/workouts", userWorkoutHandler.LogWorkout)
