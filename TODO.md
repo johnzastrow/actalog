@@ -99,6 +99,26 @@ This document tracks planned features, improvements, and known issues for ActaLo
 - [ ] Monitoring and logging (Prometheus, Grafana)
 - [ ] Production deployment guide
 
+## Continuous Integration
+
+- A GitHub Actions workflow has been added at `.github/workflows/ci.yml` to run:
+	- Go vet and golangci-lint
+	- Go unit and integration tests (with CGO enabled for sqlite3 where necessary)
+	- Web build for the `web/` frontend (npm install and build)
+
+Usage notes:
+
+- The workflow runs on push and pull_request against `main`.
+- The Go job enables `CGO_ENABLED=1` when running `go test ./...` to support the `github.com/mattn/go-sqlite3` driver used by integration tests. If you want CI to avoid CGO, replace sqlite-based integration tests or use a different driver.
+
+To run tests locally from the repository root:
+
+```bash
+go test ./... -v
+```
+
+
+
 ## Known Issues
 
 ### Bugs

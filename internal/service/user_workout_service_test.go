@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -109,7 +110,7 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 			)
 
 			if tt.expectedError != nil {
-				if err != tt.expectedError {
+				if !errors.Is(err, tt.expectedError) {
 					t.Errorf("expected error %v, got %v", tt.expectedError, err)
 				}
 				return
@@ -198,7 +199,7 @@ func TestUserWorkoutService_GetLoggedWorkout(t *testing.T) {
 			userWorkout, err := service.GetLoggedWorkout(tt.userWorkoutID, tt.userID)
 
 			if tt.expectedError != nil {
-				if err != tt.expectedError {
+				if !errors.Is(err, tt.expectedError) {
 					t.Errorf("expected error %v, got %v", tt.expectedError, err)
 				}
 				return
@@ -301,7 +302,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 			)
 
 			if tt.expectedError != nil {
-				if err != tt.expectedError {
+				if !errors.Is(err, tt.expectedError) {
 					t.Errorf("expected error %v, got %v", tt.expectedError, err)
 				}
 				return
@@ -386,7 +387,7 @@ func TestUserWorkoutService_DeleteLoggedWorkout(t *testing.T) {
 			err := service.DeleteLoggedWorkout(tt.userWorkoutID, tt.userID)
 
 			if tt.expectedError != nil {
-				if err != tt.expectedError {
+				if !errors.Is(err, tt.expectedError) {
 					t.Errorf("expected error %v, got %v", tt.expectedError, err)
 				}
 				return
