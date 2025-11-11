@@ -57,6 +57,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/wods',
+      name: 'wods',
+      component: () => import('@/views/WODsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/performance',
       name: 'performance',
       component: () => import('@/views/PerformanceView.vue'),

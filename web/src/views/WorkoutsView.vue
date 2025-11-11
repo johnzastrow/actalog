@@ -2,13 +2,13 @@
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
     <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Workouts</v-toolbar-title>
+      <v-toolbar-title class="text-white font-weight-bold">Workout Templates</v-toolbar-title>
       <v-spacer />
       <v-btn
         icon="mdi-plus"
         color="#00bcd4"
         variant="flat"
-        to="/workouts/log"
+        @click="createTemplateDialog = true"
         style="background: #00bcd4"
       />
     </v-app-bar>
@@ -19,118 +19,185 @@
         {{ error }}
       </v-alert>
 
+      <!-- Tabs for Standard vs Custom Templates -->
+      <v-tabs v-model="activeTemplateTab" color="#00bcd4" class="mb-3" grow>
+        <v-tab value="standard">
+          <v-icon start>mdi-star</v-icon>
+          Standard
+        </v-tab>
+        <v-tab value="custom">
+          <v-icon start>mdi-account</v-icon>
+          My Templates
+        </v-tab>
+      </v-tabs>
+
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular indeterminate color="#00bcd4" size="64" />
-          <p class="mt-4 text-medium-emphasis">Loading workouts...</p>
+          <p class="mt-4 text-medium-emphasis">Loading templates...</p>
         </div>
 
         <!-- Empty State -->
         <v-card
-          v-else-if="!loading && workouts.length === 0"
+          v-else-if="!loading && displayedTemplates.length === 0"
           elevation="0"
           rounded="lg"
           class="pa-8 text-center"
           style="background: white"
         >
-          <v-icon size="64" color="#ccc">mdi-dumbbell</v-icon>
-          <p class="text-h6 mt-4" style="color: #2c3e50">No workouts logged yet</p>
+          <v-icon size="64" color="#ccc">mdi-clipboard-text-outline</v-icon>
+          <p class="text-h6 mt-4" style="color: #2c3e50">
+            {{ activeTemplateTab === 'standard' ? 'No standard templates found' : 'No custom templates yet' }}
+          </p>
           <p class="text-body-2" style="color: #666">
-            Start logging your workouts to see them here
+            {{
+              activeTemplateTab === 'standard'
+                ? 'Standard templates will be seeded on first use'
+                : 'Create your first custom workout template'
+            }}
           </p>
           <v-btn
+            v-if="activeTemplateTab === 'custom'"
             color="#00bcd4"
             class="mt-4"
             prepend-icon="mdi-plus"
-            to="/workouts/log"
+            @click="createTemplateDialog = true"
             rounded="lg"
             style="text-transform: none; font-weight: 600"
           >
-            Log Your First Workout
+            Create Template
           </v-btn>
         </v-card>
 
-        <!-- Workouts List -->
+        <!-- Templates List -->
         <div v-else>
           <v-card
-            v-for="workout in workouts"
-            :key="workout.id"
+            v-for="template in displayedTemplates"
+            :key="template.id"
             elevation="0"
             rounded="lg"
             class="mb-2 pa-3"
-            style="background: white"
-            @click="viewWorkout(workout.id)"
+            style="background: white; cursor: pointer"
+            @click="selectTemplate(template)"
           >
             <div class="d-flex align-center mb-1">
               <v-icon
-                :color="workout.workout_type === 'named_wod' ? '#00bcd4' : '#666'"
+                :color="template.created_by ? '#00bcd4' : '#ffc107'"
                 class="mr-2"
                 size="small"
               >
-                mdi-dumbbell
+                {{ template.created_by ? 'mdi-account' : 'mdi-star' }}
               </v-icon>
               <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
-                  {{ formatDate(workout.workout_date) }}
-                  <v-chip
-                    v-if="workout.workout_name"
-                    size="x-small"
-                    color="#00bcd4"
-                    class="ml-1"
-                    style="color: white"
-                  >
-                    {{ workout.workout_name }}
-                  </v-chip>
+                <div class="font-weight-bold text-body-1" style="color: #1a1a1a">
+                  {{ template.name }}
+                </div>
+                <div v-if="template.notes" class="text-caption" style="color: #666">
+                  {{ truncateText(template.notes, 60) }}
                 </div>
               </div>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
-            </div>
-
-            <!-- Display movements -->
-            <div v-if="workout.movements && workout.movements.length > 0" class="ml-7">
-              <div
-                v-for="(movement, idx) in workout.movements"
-                :key="movement.id"
-                class="mt-1 text-caption d-flex align-center"
-                style="color: #333"
+              <v-btn
+                icon="mdi-play-circle"
+                color="#00bcd4"
+                variant="flat"
+                size="small"
+                @click.stop="logWorkoutFromTemplate(template.id)"
+                style="background: #00bcd4"
               >
-                <v-icon size="x-small" color="#00bcd4">mdi-chevron-right</v-icon>
-                <strong style="color: #1a1a1a">
-                  {{ movement.movement?.name || 'Unknown Movement' }}
-                </strong>
-                <span v-if="movement.weight"> - {{ movement.weight }} lbs</span>
-                <span v-if="movement.sets"> × {{ movement.sets }} sets</span>
-                <span v-if="movement.reps"> × {{ movement.reps }} reps</span>
-                <v-chip
-                  v-if="movement.is_rx"
-                  size="x-small"
-                  color="#00bcd4"
-                  class="ml-1"
-                  style="color: white; height: 16px"
-                >
-                  Rx
-                </v-chip>
-                <v-chip
-                  v-if="movement.is_pr"
-                  size="x-small"
-                  color="#ffc107"
-                  class="ml-1"
-                  style="color: white; height: 16px"
-                >
-                  <v-icon size="x-small" class="mr-1">mdi-trophy</v-icon>
-                  PR
-                </v-chip>
-              </div>
+                <v-icon color="white">mdi-play-circle</v-icon>
+              </v-btn>
             </div>
 
-            <div v-if="workout.notes" class="mt-2 text-caption" style="color: #666">
-              📝 {{ workout.notes }}
+            <!-- Display movements count -->
+            <div v-if="template.movements && template.movements.length > 0" class="ml-7 mt-2">
+              <v-chip size="small" color="#e0e0e0" class="mr-1">
+                <v-icon start size="x-small">mdi-weight-lifter</v-icon>
+                {{ template.movements.length }} movement{{ template.movements.length > 1 ? 's' : '' }}
+              </v-chip>
+            </div>
+
+            <!-- Display WODs count -->
+            <div v-if="template.wods && template.wods.length > 0" class="ml-7 mt-1">
+              <v-chip size="small" color="#e0e0e0" class="mr-1">
+                <v-icon start size="x-small">mdi-fire</v-icon>
+                {{ template.wods.length }} WOD{{ template.wods.length > 1 ? 's' : '' }}
+              </v-chip>
+            </div>
+
+            <!-- Action buttons for custom templates -->
+            <div v-if="template.created_by" class="mt-2 d-flex gap-2">
+              <v-btn
+                size="x-small"
+                variant="text"
+                prepend-icon="mdi-pencil"
+                @click.stop="editTemplate(template)"
+                style="text-transform: none"
+              >
+                Edit
+              </v-btn>
+              <v-btn
+                size="x-small"
+                variant="text"
+                prepend-icon="mdi-delete"
+                color="error"
+                @click.stop="deleteTemplate(template.id)"
+                style="text-transform: none"
+              >
+                Delete
+              </v-btn>
             </div>
           </v-card>
         </div>
       </div>
     </v-container>
+
+    <!-- Create Template Dialog -->
+    <v-dialog v-model="createTemplateDialog" max-width="600">
+      <v-card>
+        <v-card-title class="bg-primary text-white">
+          <v-icon start>mdi-plus</v-icon>
+          Create Workout Template
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <v-text-field
+            v-model="newTemplate.name"
+            label="Template Name"
+            placeholder="e.g., Monday Strength, Hero WOD"
+            variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-clipboard-text"
+            required
+          />
+          <v-textarea
+            v-model="newTemplate.notes"
+            label="Description / Notes"
+            placeholder="Describe the workout template..."
+            variant="outlined"
+            density="comfortable"
+            rows="3"
+            prepend-inner-icon="mdi-note-text"
+          />
+          <v-alert type="info" density="compact" class="mt-2">
+            After creating the template, you can add movements and WODs in the details view.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="createTemplateDialog = false" style="text-transform: none">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="#00bcd4"
+            :loading="creating"
+            @click="createTemplate"
+            style="text-transform: none"
+          >
+            Create
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation
@@ -154,7 +221,7 @@
       </v-btn>
       <v-btn value="workouts" to="/workouts">
         <v-icon>mdi-dumbbell</v-icon>
-        <span style="font-size: 10px">Workouts</span>
+        <span style="font-size: 10px">Templates</span>
       </v-btn>
       <v-btn value="profile" to="/profile">
         <v-icon>mdi-account</v-icon>
@@ -165,62 +232,148 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 
 const router = useRouter()
 const activeTab = ref('workouts')
+const activeTemplateTab = ref('standard')
 
 // State
-const workouts = ref([])
+const standardTemplates = ref([])
+const customTemplates = ref([])
 const loading = ref(false)
+const creating = ref(false)
 const error = ref(null)
+const createTemplateDialog = ref(false)
 
-// Fetch workouts from API
-async function fetchWorkouts() {
+// New template form
+const newTemplate = ref({
+  name: '',
+  notes: ''
+})
+
+// Computed property for displayed templates based on active tab
+const displayedTemplates = computed(() => {
+  return activeTemplateTab.value === 'standard' ? standardTemplates.value : customTemplates.value
+})
+
+// Fetch workout templates from API
+async function fetchTemplates() {
   loading.value = true
   error.value = null
 
   try {
-    const response = await axios.get('/api/workouts')
-    workouts.value = response.data.workouts || []
-    console.log('Fetched workouts:', workouts.value)
+    // Fetch standard templates
+    const standardResponse = await axios.get('/api/workouts/standard')
+    standardTemplates.value = standardResponse.data.workouts || []
+
+    // Fetch user's custom templates
+    const customResponse = await axios.get('/api/workouts/my-templates')
+    customTemplates.value = customResponse.data.workouts || []
+
+    console.log('Fetched templates:', {
+      standard: standardTemplates.value.length,
+      custom: customTemplates.value.length
+    })
   } catch (err) {
-    console.error('Failed to fetch workouts:', err)
+    console.error('Failed to fetch templates:', err)
     if (err.response) {
       error.value = err.response.data?.message || `Error ${err.response.status}`
     } else if (err.request) {
       error.value = 'No response from server. Is the backend running?'
     } else {
-      error.value = 'Failed to fetch workouts'
+      error.value = 'Failed to fetch templates'
     }
   } finally {
     loading.value = false
   }
 }
 
-// Format date for display
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  const options = {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+// Create new workout template
+async function createTemplate() {
+  if (!newTemplate.value.name.trim()) {
+    error.value = 'Template name is required'
+    return
   }
-  return date.toLocaleDateString('en-US', options)
+
+  creating.value = true
+  error.value = null
+
+  try {
+    const response = await axios.post('/api/workouts', {
+      name: newTemplate.value.name.trim(),
+      notes: newTemplate.value.notes.trim() || null
+    })
+
+    // Add to custom templates list
+    customTemplates.value.unshift(response.data.workout)
+
+    // Reset form and close dialog
+    newTemplate.value = { name: '', notes: '' }
+    createTemplateDialog.value = false
+
+    // Switch to custom tab to show new template
+    activeTemplateTab.value = 'custom'
+  } catch (err) {
+    console.error('Failed to create template:', err)
+    error.value = err.response?.data?.message || 'Failed to create template'
+  } finally {
+    creating.value = false
+  }
 }
 
-// View workout details
-function viewWorkout(workoutId) {
-  console.log('View workout:', workoutId)
-  // TODO: Navigate to workout detail page
-  // router.push(`/workouts/${workoutId}`)
+// Select template to view details
+function selectTemplate(template) {
+  console.log('View template details:', template.id)
+  // TODO: Navigate to template detail page
+  // router.push(`/workouts/templates/${template.id}`)
 }
 
-// Load workouts on mount
+// Log workout from template
+function logWorkoutFromTemplate(templateId) {
+  console.log('Log workout from template:', templateId)
+  router.push(`/workouts/log?template=${templateId}`)
+}
+
+// Edit template
+function editTemplate(template) {
+  console.log('Edit template:', template.id)
+  // TODO: Open edit dialog or navigate to edit page
+}
+
+// Delete template
+async function deleteTemplate(templateId) {
+  if (!confirm('Are you sure you want to delete this template?')) {
+    return
+  }
+
+  try {
+    await axios.delete(`/api/workouts/${templateId}`)
+
+    // Remove from list
+    customTemplates.value = customTemplates.value.filter(t => t.id !== templateId)
+  } catch (err) {
+    console.error('Failed to delete template:', err)
+    error.value = err.response?.data?.message || 'Failed to delete template'
+  }
+}
+
+// Utility function to truncate text
+function truncateText(text, maxLength) {
+  if (!text || text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
+
+// Load templates on mount
 onMounted(() => {
-  fetchWorkouts()
+  fetchTemplates()
 })
 </script>
+
+<style scoped>
+.gap-2 {
+  gap: 8px;
+}
+</style>
