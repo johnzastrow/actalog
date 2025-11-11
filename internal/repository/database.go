@@ -382,9 +382,21 @@ func getMySQLSchema() string {
 
 // seedStandardMovements seeds the database with standard CrossFit movements
 func seedStandardMovements(db *sql.DB) error {
-	// Check if movements already exist
+	// Determine target table before querying (migrations may rename it)
+	targetTable := "movements"
+	if ok, _ := checkTableExists(db, currentDriver, "movements"); !ok {
+		if ok2, _ := checkTableExists(db, currentDriver, "strength_movements"); ok2 {
+			targetTable = "strength_movements"
+		} else {
+			// No movements table found; nothing to seed
+			return nil
+		}
+	}
+
+	// Check if movements already exist in the target table
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM movements WHERE is_standard = 1").Scan(&count)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE is_standard = 1", targetTable)
+	err := db.QueryRow(countQuery).Scan(&count)
 	if err != nil {
 		return err
 	}
@@ -455,9 +467,9 @@ func seedStandardMovements(db *sql.DB) error {
 
 	// Prepare insert statement with database-specific timestamp
 	stmt := fmt.Sprintf(`
-		INSERT INTO movements (name, description, type, is_standard, created_by, created_at, updated_at)
+		INSERT INTO %s (name, description, type, is_standard, created_by, created_at, updated_at)
 		VALUES (?, ?, ?, 1, NULL, %s, %s)
-	`, timestampFunc, timestampFunc)
+	`, targetTable, timestampFunc, timestampFunc)
 
 	// Insert each movement
 	for _, m := range movements {
