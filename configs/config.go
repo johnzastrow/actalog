@@ -66,13 +66,14 @@ type LoggingConfig struct {
 
 // EmailConfig holds email/SMTP configuration
 type EmailConfig struct {
-	SMTPHost     string // SMTP server host
-	SMTPPort     int    // SMTP server port (587 for STARTTLS, 465 for TLS, 25 for plain)
-	SMTPUser     string // SMTP username
-	SMTPPassword string // SMTP password
-	FromAddress  string // From email address
-	FromName     string // From name
-	Enabled      bool   // Enable email sending
+	SMTPHost              string // SMTP server host
+	SMTPPort              int    // SMTP server port (587 for STARTTLS, 465 for TLS, 25 for plain)
+	SMTPUser              string // SMTP username
+	SMTPPassword          string // SMTP password
+	FromAddress           string // From email address
+	FromName              string // From name
+	Enabled               bool   // Enable email sending
+	RequireVerification   bool   // Require email verification for new users
 }
 
 // Load loads configuration from environment variables with sensible defaults
@@ -115,13 +116,14 @@ func Load() (*Config, error) {
 			MaxBackups: getEnvInt("LOG_MAX_BACKUPS", 3),   // Keep 3 old files
 		},
 		Email: EmailConfig{
-			SMTPHost:     getEnv("SMTP_HOST", ""),
-			SMTPPort:     getEnvInt("SMTP_PORT", 587), // Default to STARTTLS port
-			SMTPUser:     getEnv("SMTP_USER", ""),
-			SMTPPassword: getEnv("SMTP_PASSWORD", ""),
-			FromAddress:  getEnv("EMAIL_FROM", ""),
-			FromName:     getEnv("EMAIL_FROM_NAME", "ActaLog"),
-			Enabled:      getEnvBool("EMAIL_ENABLED", false), // Disabled by default
+			SMTPHost:            getEnv("SMTP_HOST", ""),
+			SMTPPort:            getEnvInt("SMTP_PORT", 587), // Default to STARTTLS port
+			SMTPUser:            getEnv("SMTP_USER", ""),
+			SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
+			FromAddress:         getEnv("EMAIL_FROM", ""),
+			FromName:            getEnv("EMAIL_FROM_NAME", "ActaLog"),
+			Enabled:             getEnvBool("EMAIL_ENABLED", false), // Disabled by default
+			RequireVerification: getEnvBool("REQUIRE_EMAIL_VERIFICATION", false), // Disabled by default for testing
 		},
 	}
 

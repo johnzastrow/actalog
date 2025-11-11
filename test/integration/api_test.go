@@ -151,9 +151,10 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		"test-secret-key",
 		24*time.Hour,
 		7*24*time.Hour,
-		true, // allow registration
-		nil,  // no email service for tests
+		true,  // allow registration
+		nil,   // no email service for tests
 		"http://localhost:3000",
+		false, // don't require email verification in tests
 	)
 
 	// Initialize handlers

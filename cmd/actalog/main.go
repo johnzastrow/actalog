@@ -138,6 +138,7 @@ func main() {
 		cfg.App.AllowRegistration,
 		emailService,
 		appURL,
+		cfg.Email.RequireVerification,
 	)
 
 	// workoutService := service.NewWorkoutService( // TODO: Uncomment when workout_handler.go is implemented

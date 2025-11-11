@@ -36,6 +36,7 @@ type UserService struct {
 	emailService         email.EmailService
 	jwtSecretKey         string
 	appURL               string // Base URL for password reset links
+	requireVerification  bool   // Require email verification for new users
 }
 
 // NewUserService creates a new user service
@@ -48,6 +49,7 @@ func NewUserService(
 	allowRegistration bool,
 	emailService email.EmailService,
 	appURL string,
+	requireVerification bool,
 ) *UserService {
 	return &UserService{
 		userRepo:             userRepo,
@@ -58,6 +60,7 @@ func NewUserService(
 		allowRegistration:    allowRegistration,
 		emailService:         emailService,
 		appURL:               appURL,
+		requireVerification:  requireVerification,
 	}
 }
 
@@ -125,8 +128,8 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Generate verification token if email service is enabled
-	if s.emailService != nil {
+	// Generate verification token if email verification is required
+	if s.requireVerification && s.emailService != nil {
 		verificationToken, err := generateVerificationToken()
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to generate verification token: %w", err)
@@ -152,7 +155,7 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 			fmt.Printf("warning: failed to send verification email: %v\n", err)
 		}
 	} else {
-		// If email service is not enabled, auto-verify the user
+		// If email verification is not required, auto-verify the user
 		user.EmailVerified = true
 		verifiedAt := time.Now()
 		user.EmailVerifiedAt = &verifiedAt
