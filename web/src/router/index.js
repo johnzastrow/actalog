@@ -57,9 +57,45 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/workouts/templates/create',
+      name: 'create-template',
+      component: () => import('@/views/WorkoutTemplateEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/workouts/templates/:id/edit',
+      name: 'edit-template',
+      component: () => import('@/views/WorkoutTemplateEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/wods',
       name: 'wods',
       component: () => import('@/views/WODsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/wods/create',
+      name: 'create-wod',
+      component: () => import('@/views/WODEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/wods/:id/edit',
+      name: 'edit-wod',
+      component: () => import('@/views/WODEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/movements/create',
+      name: 'create-movement',
+      component: () => import('@/views/MovementEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/movements/:id/edit',
+      name: 'edit-movement',
+      component: () => import('@/views/MovementEditView.vue'),
       meta: { requiresAuth: true }
     },
     {

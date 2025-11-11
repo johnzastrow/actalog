@@ -8,7 +8,7 @@
         icon="mdi-plus"
         color="#00bcd4"
         variant="flat"
-        @click="createWODDialog = true"
+        @click="$router.push('/wods/create')"
         style="background: #00bcd4"
       />
     </v-app-bar>
@@ -67,7 +67,7 @@
             color="#00bcd4"
             class="mt-4"
             prepend-icon="mdi-plus"
-            @click="createWODDialog = true"
+            @click="$router.push('/wods/create')"
             rounded="lg"
             style="text-transform: none; font-weight: 600"
           >
@@ -521,18 +521,7 @@ function selectWOD(wod) {
 
 // Edit WOD
 function editWOD(wod) {
-  editingWOD.value = wod
-  wodForm.value = {
-    name: wod.name,
-    type: wod.type || null,
-    regime: wod.regime || null,
-    score_type: wod.score_type || null,
-    source: wod.source || '',
-    description: wod.description || '',
-    url: wod.url || '',
-    notes: wod.notes || ''
-  }
-  createWODDialog.value = true
+  router.push(`/wods/${wod.id}/edit`)
 }
 
 // Delete WOD

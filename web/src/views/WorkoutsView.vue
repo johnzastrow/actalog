@@ -8,7 +8,7 @@
         icon="mdi-plus"
         color="#00bcd4"
         variant="flat"
-        @click="createTemplateDialog = true"
+        @click="$router.push('/workouts/templates/create')"
         style="background: #00bcd4"
       />
     </v-app-bar>
@@ -62,7 +62,7 @@
             color="#00bcd4"
             class="mt-4"
             prepend-icon="mdi-plus"
-            @click="createTemplateDialog = true"
+            @click="$router.push('/workouts/templates/create')"
             rounded="lg"
             style="text-transform: none; font-weight: 600"
           >
@@ -339,8 +339,7 @@ function logWorkoutFromTemplate(templateId) {
 
 // Edit template
 function editTemplate(template) {
-  console.log('Edit template:', template.id)
-  // TODO: Open edit dialog or navigate to edit page
+  router.push(`/workouts/templates/${template.id}/edit`)
 }
 
 // Delete template

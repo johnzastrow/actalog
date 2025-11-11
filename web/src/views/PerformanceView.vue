@@ -3,20 +3,91 @@
     <!-- Header -->
     <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
       <v-toolbar-title class="text-white font-weight-bold">Performance</v-toolbar-title>
+      <v-spacer />
+      <v-btn icon="mdi-refresh" color="white" @click="refreshData" />
     </v-app-bar>
 
     <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 70px">
-      <!-- Progress Tracking -->
+      <!-- Error Alert -->
+      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
+        {{ error }}
+      </v-alert>
+
+      <!-- Personal Records Summary -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Progress Tracking</h2>
+        <div class="d-flex align-center justify-space-between mb-2">
+          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Personal Records</h2>
+          <v-chip size="small" color="#4caf50">
+            <v-icon start size="x-small">mdi-trophy</v-icon>
+            {{ personalRecords.length }} PRs
+          </v-chip>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loadingPRs" class="text-center py-4">
+          <v-progress-circular indeterminate color="#00bcd4" size="32" />
+          <p class="mt-2 text-caption" style="color: #666">Loading PRs...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="personalRecords.length === 0" class="text-center py-4">
+          <v-icon size="48" color="#ccc">mdi-trophy-outline</v-icon>
+          <p class="text-body-2 mt-2" style="color: #666">No personal records yet</p>
+          <p class="text-caption" style="color: #999">
+            Start logging workouts with weights to track your PRs
+          </p>
+        </div>
+
+        <!-- PRs List -->
+        <div v-else>
+          <v-card
+            v-for="pr in personalRecords.slice(0, 5)"
+            :key="pr.movement_id"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-2"
+            style="background: #f5f7fa"
+          >
+            <div class="d-flex align-center">
+              <v-icon color="#ffc107" class="mr-2">mdi-trophy</v-icon>
+              <div class="flex-grow-1">
+                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                  {{ pr.movement_name }}
+                </div>
+                <div class="text-caption" style="color: #666">
+                  {{ pr.max_weight }} {{ pr.weight_unit || 'lbs' }}
+                  <span v-if="pr.date_achieved"> • {{ formatDate(pr.date_achieved) }}</span>
+                </div>
+              </div>
+            </div>
+          </v-card>
+
+          <v-btn
+            v-if="personalRecords.length > 5"
+            variant="text"
+            size="small"
+            color="#00bcd4"
+            block
+            class="mt-2"
+            style="text-transform: none"
+            @click="$router.push('/prs')"
+          >
+            View All {{ personalRecords.length }} PRs
+            <v-icon end size="small">mdi-arrow-right</v-icon>
+          </v-btn>
+        </div>
+      </v-card>
+
+      <!-- Movement Progress Tracking -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Track Progress</h2>
         <v-autocomplete
           v-model="selectedMovement"
           :items="movements"
           item-title="title"
           item-value="value"
-          :loading="loading"
-          label="Search for a movement..."
-          placeholder="Type to search..."
+          :loading="loadingMovements"
+          placeholder="Search for a movement..."
           variant="outlined"
           density="compact"
           rounded="lg"
@@ -24,12 +95,13 @@
           auto-select-first
           hide-details
           style="color: #1a1a1a"
+          @update:model-value="fetchMovementHistory"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4">mdi-magnify</v-icon>
+            <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
           </template>
           <template #item="{ props, item }">
-            <v-list-item v-bind="props">
+            <v-list-item v-bind="props" density="compact">
               <template #prepend>
                 <v-icon
                   :color="item.raw.type === 'weightlifting' ? '#00bcd4' : '#666'"
@@ -42,22 +114,116 @@
                 {{ item.raw.title }}
               </v-list-item-title>
               <v-list-item-subtitle class="text-caption">
-                {{ item.raw.type }}
+                {{ formatMovementType(item.raw.type) }}
               </v-list-item-subtitle>
             </v-list-item>
           </template>
         </v-autocomplete>
       </v-card>
 
-      <!-- Chart Placeholder -->
-      <v-card elevation="0" rounded="lg" class="pa-4 text-center" style="background: white">
-        <v-icon size="64" color="#ccc">mdi-chart-line</v-icon>
-        <p class="text-body-2 mt-2" style="color: #666">
-          Charts and performance metrics will appear here
-        </p>
-        <p class="text-caption" style="color: #999">
-          Log more workouts to track your progress
-        </p>
+      <!-- Movement History -->
+      <v-card
+        v-if="selectedMovement && movementHistory.length > 0"
+        elevation="0"
+        rounded="lg"
+        class="pa-3 mb-3"
+        style="background: white"
+      >
+        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">
+          {{ selectedMovementName }} History
+        </h2>
+
+        <!-- Loading State -->
+        <div v-if="loadingHistory" class="text-center py-4">
+          <v-progress-circular indeterminate color="#00bcd4" size="32" />
+        </div>
+
+        <!-- History List -->
+        <div v-else>
+          <v-card
+            v-for="(entry, index) in movementHistory"
+            :key="index"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-2"
+            style="background: #f5f7fa"
+          >
+            <div class="d-flex align-center">
+              <div class="flex-grow-1">
+                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                  {{ entry.sets }} × {{ entry.reps }} @ {{ entry.weight }} {{ entry.weight_unit || 'lbs' }}
+                </div>
+                <div class="text-caption" style="color: #666">
+                  {{ formatDate(entry.workout_date) }}
+                  <span v-if="entry.workout_name"> • {{ entry.workout_name }}</span>
+                </div>
+              </div>
+              <v-chip
+                v-if="entry.is_pr"
+                size="x-small"
+                color="#ffc107"
+                class="ml-2"
+              >
+                <v-icon start size="x-small">mdi-trophy</v-icon>
+                PR
+              </v-chip>
+            </div>
+          </v-card>
+        </div>
+      </v-card>
+
+      <!-- Recent Workouts Summary -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+        <div class="d-flex align-center justify-space-between mb-2">
+          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Recent Activity</h2>
+          <v-btn
+            size="small"
+            variant="text"
+            color="#00bcd4"
+            style="text-transform: none"
+            @click="$router.push('/dashboard')"
+          >
+            View All
+          </v-btn>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loadingWorkouts" class="text-center py-4">
+          <v-progress-circular indeterminate color="#00bcd4" size="32" />
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="recentWorkouts.length === 0" class="text-center py-4">
+          <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
+          <p class="text-body-2 mt-2" style="color: #666">No recent workouts</p>
+        </div>
+
+        <!-- Workouts List -->
+        <div v-else>
+          <v-card
+            v-for="workout in recentWorkouts.slice(0, 3)"
+            :key="workout.id"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-2"
+            style="background: #f5f7fa; cursor: pointer"
+            @click="viewWorkout(workout.id)"
+          >
+            <div class="d-flex align-center">
+              <v-icon color="#00bcd4" class="mr-2" size="small">mdi-dumbbell</v-icon>
+              <div class="flex-grow-1">
+                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                  {{ workout.workout_name || 'Workout' }}
+                </div>
+                <div class="text-caption" style="color: #666">
+                  {{ formatDate(workout.workout_date) }}
+                  <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
+                </div>
+              </div>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </div>
+          </v-card>
+        </div>
       </v-card>
     </v-container>
 
@@ -83,7 +249,7 @@
       </v-btn>
       <v-btn value="workouts" to="/workouts">
         <v-icon>mdi-dumbbell</v-icon>
-        <span style="font-size: 10px">Workouts</span>
+        <span style="font-size: 10px">Templates</span>
       </v-btn>
       <v-btn value="profile" to="/profile">
         <v-icon>mdi-account</v-icon>
@@ -94,17 +260,36 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 
+const router = useRouter()
 const activeTab = ref('performance')
+
+// State
 const selectedMovement = ref(null)
 const movements = ref([])
-const loading = ref(false)
+const personalRecords = ref([])
+const movementHistory = ref([])
+const recentWorkouts = ref([])
+
+const loadingMovements = ref(false)
+const loadingPRs = ref(false)
+const loadingHistory = ref(false)
+const loadingWorkouts = ref(false)
+const error = ref(null)
+
+// Computed
+const selectedMovementName = computed(() => {
+  if (!selectedMovement.value) return ''
+  const movement = movements.value.find(m => m.value === selectedMovement.value)
+  return movement ? movement.title : ''
+})
 
 // Fetch available movements
 async function fetchMovements() {
-  loading.value = true
+  loadingMovements.value = true
   try {
     const response = await axios.get('/api/movements')
     movements.value = response.data.movements.map((m) => ({
@@ -114,18 +299,126 @@ async function fetchMovements() {
     }))
   } catch (err) {
     console.error('Failed to fetch movements:', err)
-    // Fallback to hardcoded movements
-    movements.value = [
-      { value: 1, title: 'Back Squat', type: 'weightlifting' },
-      { value: 2, title: 'Deadlift', type: 'weightlifting' },
-      { value: 3, title: 'Bench Press', type: 'weightlifting' },
-    ]
+    error.value = 'Failed to load movements'
   } finally {
-    loading.value = false
+    loadingMovements.value = false
   }
 }
 
-onMounted(() => {
-  fetchMovements()
+// Fetch personal records
+async function fetchPersonalRecords() {
+  loadingPRs.value = true
+  try {
+    const response = await axios.get('/api/movements/personal-records')
+    personalRecords.value = response.data.personal_records || []
+  } catch (err) {
+    console.error('Failed to fetch personal records:', err)
+    // Silently fail - not critical
+    personalRecords.value = []
+  } finally {
+    loadingPRs.value = false
+  }
+}
+
+// Fetch movement history for selected movement
+async function fetchMovementHistory() {
+  if (!selectedMovement.value) {
+    movementHistory.value = []
+    return
+  }
+
+  loadingHistory.value = true
+  try {
+    const response = await axios.get(`/api/movements/${selectedMovement.value}/history`)
+    movementHistory.value = response.data.history || []
+  } catch (err) {
+    console.error('Failed to fetch movement history:', err)
+    error.value = 'Failed to load movement history'
+    movementHistory.value = []
+  } finally {
+    loadingHistory.value = false
+  }
+}
+
+// Fetch recent workouts
+async function fetchRecentWorkouts() {
+  loadingWorkouts.value = true
+  try {
+    const response = await axios.get('/api/user-workouts')
+    recentWorkouts.value = response.data.user_workouts || []
+  } catch (err) {
+    console.error('Failed to fetch recent workouts:', err)
+    recentWorkouts.value = []
+  } finally {
+    loadingWorkouts.value = false
+  }
+}
+
+// Refresh all data
+async function refreshData() {
+  await Promise.all([
+    fetchMovements(),
+    fetchPersonalRecords(),
+    fetchRecentWorkouts()
+  ])
+  if (selectedMovement.value) {
+    await fetchMovementHistory()
+  }
+}
+
+// Format date for display
+function formatDate(dateString) {
+  const date = new Date(dateString)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  // Reset time parts for comparison
+  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+  if (dateOnly.getTime() === todayOnly.getTime()) {
+    return 'Today'
+  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+    return 'Yesterday'
+  } else {
+    const options = { month: 'short', day: 'numeric', year: 'numeric' }
+    return date.toLocaleDateString('en-US', options)
+  }
+}
+
+// Format time (seconds to readable format)
+function formatTime(seconds) {
+  if (!seconds) return ''
+
+  if (seconds < 60) {
+    return `${seconds}s`
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes}min`
+  } else {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    return `${hours}h ${minutes}m`
+  }
+}
+
+// Format movement type
+function formatMovementType(type) {
+  if (!type) return ''
+  return type.charAt(0).toUpperCase() + type.slice(1)
+}
+
+// View workout details
+function viewWorkout(workoutId) {
+  console.log('View workout details:', workoutId)
+  // TODO: Navigate to workout detail page
+  // router.push(`/workouts/${workoutId}`)
+}
+
+// Load data on mount
+onMounted(async () => {
+  await refreshData()
 })
 </script>
