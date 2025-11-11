@@ -6,18 +6,21 @@ import (
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
 // UserHandler handles user profile endpoints
 type UserHandler struct {
 	userService *service.UserService
+	logger      *logger.Logger
 }
 
 // NewUserHandler creates a new user handler
-func NewUserHandler(userService *service.UserService) *UserHandler {
+func NewUserHandler(userService *service.UserService, l *logger.Logger) *UserHandler {
 	return &UserHandler{
 		userService: userService,
+		logger:      l,
 	}
 }
 
@@ -59,18 +62,35 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		birthday = &parsedBirthday
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=update_profile_attempt user_id=%d name=%s email=%s", userID, req.Name, req.Email)
+	}
+
 	// Update profile
 	user, err := h.userService.UpdateProfile(userID, req.Name, req.Email, birthday)
 	if err != nil {
 		switch err {
 		case service.ErrEmailAlreadyExists:
+			if h.logger != nil {
+				h.logger.Warn("action=update_profile outcome=failure user_id=%d reason=email_exists email=%s", userID, req.Email)
+			}
 			respondError(w, http.StatusConflict, "Email already in use")
 		case service.ErrUserNotFound:
+			if h.logger != nil {
+				h.logger.Warn("action=update_profile outcome=failure user_id=%d reason=not_found", userID)
+			}
 			respondError(w, http.StatusNotFound, "User not found")
 		default:
+			if h.logger != nil {
+				h.logger.Error("action=update_profile outcome=failure user_id=%d error=%v", userID, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to update profile")
 		}
 		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=update_profile outcome=success user_id=%d", userID)
 	}
 
 	respondJSON(w, http.StatusOK, ProfileResponse{
@@ -87,12 +107,22 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=get_profile user_id=%d", userID)
+	}
+
 	// Get user from service
 	user, err := h.userService.GetByID(userID)
 	if err != nil {
 		if err == service.ErrUserNotFound {
+			if h.logger != nil {
+				h.logger.Warn("action=get_profile outcome=failure user_id=%d reason=not_found", userID)
+			}
 			respondError(w, http.StatusNotFound, "User not found")
 		} else {
+			if h.logger != nil {
+				h.logger.Error("action=get_profile outcome=failure user_id=%d error=%v", userID, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to get profile")
 		}
 		return

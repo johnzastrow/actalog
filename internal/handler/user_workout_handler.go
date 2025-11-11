@@ -9,18 +9,21 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
 // UserWorkoutHandler handles logging workout instances
 type UserWorkoutHandler struct {
 	userWorkoutService *service.UserWorkoutService
+	logger             *logger.Logger
 }
 
 // NewUserWorkoutHandler creates a new user workout handler
-func NewUserWorkoutHandler(userWorkoutService *service.UserWorkoutService) *UserWorkoutHandler {
+func NewUserWorkoutHandler(userWorkoutService *service.UserWorkoutService, l *logger.Logger) *UserWorkoutHandler {
 	return &UserWorkoutHandler{
 		userWorkoutService: userWorkoutService,
+		logger:             l,
 	}
 }
 
@@ -74,6 +77,9 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 
 	// Validate required fields
 	if req.WorkoutID == 0 {
+		if h.logger != nil {
+			h.logger.Warn("action=log_workout outcome=failure user_id=%d reason=missing_workout_id", userID)
+		}
 		respondError(w, http.StatusBadRequest, "Workout ID is required")
 		return
 	}
@@ -90,9 +96,16 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=log_workout_attempt user_id=%d workout_id=%d date=%s", userID, req.WorkoutID, req.WorkoutDate)
+	}
+
 	// Log workout
 	userWorkout, err := h.userWorkoutService.LogWorkout(userID, req.WorkoutID, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=log_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, req.WorkoutID, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to log workout: "+err.Error())
 		return
 	}
@@ -100,6 +113,9 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 	// Retrieve logged workout with details
 	logged, err := h.userWorkoutService.GetLoggedWorkout(userWorkout.ID, userID)
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=log_workout outcome=failure user_id=%d workout_id=%d error=retrieval_failed %v", userID, req.WorkoutID, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve logged workout")
 		return
 	}
@@ -118,6 +134,10 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 		Movements:    logged.Movements,
 		WODs:         logged.WODs,
 		WorkoutNotes: logged.WorkoutDescription,
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=log_workout outcome=success user_id=%d logged_id=%d", userID, userWorkout.ID)
 	}
 
 	respondJSON(w, http.StatusCreated, response)
@@ -139,8 +159,15 @@ func (h *UserWorkoutHandler) GetLoggedWorkout(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=get_workout user_id=%d workout_id=%d", userID, id)
+	}
+
 	logged, err := h.userWorkoutService.GetLoggedWorkout(id, userID)
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=get_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve logged workout: "+err.Error())
 		return
 	}
@@ -204,6 +231,9 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 		endDate, err2 := time.Parse("2006-01-02", endDateStr)
 
 		if err1 != nil || err2 != nil {
+			if h.logger != nil {
+				h.logger.Warn("action=list_workouts outcome=failure user_id=%d reason=invalid_date_range start=%s end=%s", userID, startDateStr, endDateStr)
+			}
 			respondError(w, http.StatusBadRequest, "Invalid date format. Use YYYY-MM-DD")
 			return
 		}
@@ -211,6 +241,9 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 		// Get basic workouts in range
 		basicWorkouts, err := h.userWorkoutService.ListLoggedWorkoutsByDateRange(userID, startDate, endDate)
 		if err != nil {
+			if h.logger != nil {
+				h.logger.Error("action=list_workouts outcome=failure user_id=%d error=%v", userID, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to retrieve logged workouts")
 			return
 		}
@@ -224,10 +257,20 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 			workouts = append(workouts, detailed)
 		}
 	} else {
+		if h.logger != nil {
+			h.logger.Info("action=list_workouts_attempt user_id=%d limit=%d offset=%d", userID, limit, offset)
+		}
+
 		workouts, err = h.userWorkoutService.ListLoggedWorkouts(userID, limit, offset)
 		if err != nil {
+			if h.logger != nil {
+				h.logger.Error("action=list_workouts outcome=failure user_id=%d error=%v", userID, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to retrieve logged workouts")
 			return
+		}
+		if h.logger != nil {
+			h.logger.Info("action=list_workouts outcome=success user_id=%d returned=%d", userID, len(workouts))
 		}
 	}
 
@@ -282,13 +325,26 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 	}
 
 	// Update logged workout with individual fields
+	if h.logger != nil {
+		h.logger.Info("action=update_workout_attempt user_id=%d workout_id=%d", userID, id)
+	}
+
 	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
 		switch err {
 		case service.ErrUserWorkoutNotFound:
+			if h.logger != nil {
+				h.logger.Warn("action=update_workout outcome=failure user_id=%d workout_id=%d reason=not_found", userID, id)
+			}
 			respondError(w, http.StatusNotFound, "Logged workout not found")
 		case service.ErrUnauthorizedWorkoutAccess:
+			if h.logger != nil {
+				h.logger.Warn("action=update_workout outcome=failure user_id=%d workout_id=%d reason=unauthorized", userID, id)
+			}
 			respondError(w, http.StatusForbidden, "You don't have permission to update this workout")
 		default:
+			if h.logger != nil {
+				h.logger.Error("action=update_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to update logged workout")
 		}
 		return
@@ -336,13 +392,27 @@ func (h *UserWorkoutHandler) DeleteLoggedWorkout(w http.ResponseWriter, r *http.
 		return
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=delete_workout_attempt user_id=%d workout_id=%d", userID, id)
+	}
+
 	if err := h.userWorkoutService.DeleteLoggedWorkout(id, userID); err != nil {
 		if err == service.ErrUnauthorized {
+			if h.logger != nil {
+				h.logger.Warn("action=delete_workout outcome=failure user_id=%d workout_id=%d reason=unauthorized", userID, id)
+			}
 			respondError(w, http.StatusForbidden, "You don't have permission to delete this workout")
 		} else {
+			if h.logger != nil {
+				h.logger.Error("action=delete_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to delete logged workout: "+err.Error())
 		}
 		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=delete_workout outcome=success user_id=%d workout_id=%d", userID, id)
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Logged workout deleted successfully"})

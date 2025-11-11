@@ -5,17 +5,20 @@ import (
 	"net/http"
 
 	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/logger"
 )
 
 // AuthHandler handles authentication endpoints
 type AuthHandler struct {
 	userService *service.UserService
+	logger      *logger.Logger
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(userService *service.UserService) *AuthHandler {
+func NewAuthHandler(userService *service.UserService, l *logger.Logger) *AuthHandler {
 	return &AuthHandler{
 		userService: userService,
+		logger:      l,
 	}
 }
 
@@ -60,18 +63,36 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Log attempt
+	if h.logger != nil {
+		h.logger.Info("action=register_attempt email=%s name=%s remote=%s ua=%s", req.Email, req.Name, r.RemoteAddr, r.UserAgent())
+	}
+
 	// Register user
 	user, token, err := h.userService.Register(req.Name, req.Email, req.Password)
 	if err != nil {
 		switch err {
 		case service.ErrEmailAlreadyExists:
+			if h.logger != nil {
+				h.logger.Warn("action=register outcome=failure email=%s reason=email_exists", req.Email)
+			}
 			respondError(w, http.StatusConflict, "Email already exists")
 		case service.ErrRegistrationClosed:
+			if h.logger != nil {
+				h.logger.Warn("action=register outcome=failure email=%s reason=registration_closed", req.Email)
+			}
 			respondError(w, http.StatusForbidden, "Registration is closed. Please contact an administrator.")
 		default:
+			if h.logger != nil {
+				h.logger.Error("action=register outcome=failure email=%s error=%v", req.Email, err)
+			}
 			respondError(w, http.StatusInternalServerError, "Failed to register user")
 		}
 		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=register outcome=success user_id=%d email=%s", user.ID, user.Email)
 	}
 
 	respondJSON(w, http.StatusCreated, AuthResponse{
@@ -94,12 +115,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=login_attempt email=%s remote=%s ua=%s", req.Email, r.RemoteAddr, r.UserAgent())
+	}
+
 	// Login user
 	user, token, err := h.userService.Login(req.Email, req.Password)
 	if err != nil {
 		if err == service.ErrInvalidCredentials {
+			if h.logger != nil {
+				h.logger.Warn("action=login outcome=failure email=%s reason=invalid_credentials", req.Email)
+			}
 			respondError(w, http.StatusUnauthorized, "Invalid email or password")
 		} else {
+			if h.logger != nil {
+				h.logger.Error("action=login outcome=failure email=%s error=%v", req.Email, err)
+			}
 			respondErrorWithDetail(w, http.StatusInternalServerError, "Failed to login", err.Error())
 		}
 		return
@@ -116,11 +147,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		refreshToken, err := h.userService.CreateRefreshToken(user.ID, deviceInfo)
 		if err != nil {
 			// Log error but don't fail the login
+			if h.logger != nil {
+				h.logger.Warn("action=create_refresh_token outcome=failure user_id=%d email=%s error=%v", user.ID, user.Email, err)
+			}
 			// User can still use the access token
 			respondErrorWithDetail(w, http.StatusInternalServerError, "Warning: Failed to create refresh token", err.Error())
 		} else {
 			response.RefreshToken = refreshToken
 		}
+	}
+	if h.logger != nil {
+		h.logger.Info("action=login outcome=success user_id=%d email=%s", user.ID, user.Email)
 	}
 
 	respondJSON(w, http.StatusOK, response)

@@ -37,9 +37,19 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	}
 
 	var req struct {
-		Name        string                   `json:"name"`
-		Description *string                  `json:"description"`
-		Movements   []domain.WorkoutMovement `json:"movements"`
+		Name        string  `json:"name"`
+		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
+		Description *string `json:"description"`
+		Movements   []struct {
+			MovementID int64    `json:"movement_id"`
+			Sets       *int     `json:"sets"`
+			Reps       *int     `json:"reps"`
+			Weight     *float64 `json:"weight"`
+			WorkTime   *int     `json:"work_time"` // Work duration in seconds
+			Distance   *float64 `json:"distance"`
+			Notes      string   `json:"notes"`
+			OrderIndex int      `json:"order_index"`
+		} `json:"movements"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -52,7 +62,22 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	template, err := h.service.Create(userID, req.Name, req.Description, req.Movements)
+	// Convert request movements to domain movements
+	movements := make([]domain.WorkoutMovement, len(req.Movements))
+	for i, m := range req.Movements {
+		movements[i] = domain.WorkoutMovement{
+			MovementID: m.MovementID,
+			Sets:       m.Sets,
+			Reps:       m.Reps,
+			Weight:     m.Weight,
+			Time:       m.WorkTime, // Map work_time to Time field
+			Distance:   m.Distance,
+			Notes:      m.Notes,
+			OrderIndex: m.OrderIndex,
+		}
+	}
+
+	template, err := h.service.Create(userID, req.Name, req.Description, movements)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -166,9 +191,19 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	}
 
 	var req struct {
-		Name        string                   `json:"name"`
-		Description *string                  `json:"description"`
-		Movements   []domain.WorkoutMovement `json:"movements"`
+		Name        string  `json:"name"`
+		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
+		Description *string `json:"description"`
+		Movements   []struct {
+			MovementID int64    `json:"movement_id"`
+			Sets       *int     `json:"sets"`
+			Reps       *int     `json:"reps"`
+			Weight     *float64 `json:"weight"`
+			WorkTime   *int     `json:"work_time"` // Work duration in seconds
+			Distance   *float64 `json:"distance"`
+			Notes      string   `json:"notes"`
+			OrderIndex int      `json:"order_index"`
+		} `json:"movements"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -181,7 +216,22 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	template, err := h.service.Update(id, userID, req.Name, req.Description, req.Movements)
+	// Convert request movements to domain movements
+	movements := make([]domain.WorkoutMovement, len(req.Movements))
+	for i, m := range req.Movements {
+		movements[i] = domain.WorkoutMovement{
+			MovementID: m.MovementID,
+			Sets:       m.Sets,
+			Reps:       m.Reps,
+			Weight:     m.Weight,
+			Time:       m.WorkTime, // Map work_time to Time field
+			Distance:   m.Distance,
+			Notes:      m.Notes,
+			OrderIndex: m.OrderIndex,
+		}
+	}
+
+	template, err := h.service.Update(id, userID, req.Name, req.Description, movements)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

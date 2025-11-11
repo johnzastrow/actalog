@@ -349,7 +349,7 @@ function addMovement() {
     movement_id: null,
     sets: null,
     reps: null,
-    rest_seconds: 60,
+    work_time: 60,
     notes: '',
     order_index: template.value.movements.length + 1
   })
@@ -408,7 +408,7 @@ async function saveTemplate() {
         movement_id: m.movement_id,
         sets: m.sets || null,
         reps: m.reps || null,
-        rest_seconds: m.rest_seconds || null,
+        work_time: m.work_time || null,
         notes: m.notes?.trim() || null,
         order_index: idx + 1
       }))

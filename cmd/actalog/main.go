@@ -168,11 +168,11 @@ func main() {
 	)
 
 	// Initialize handlers
-	authHandler := handler.NewAuthHandler(userService)
-	userHandler := handler.NewUserHandler(userService)
-	movementHandler := handler.NewMovementHandler(movementRepo)
+	authHandler := handler.NewAuthHandler(userService, appLogger)
+	userHandler := handler.NewUserHandler(userService, appLogger)
+	movementHandler := handler.NewMovementHandler(movementRepo, appLogger)
 	workoutTemplateHandler := handler.NewWorkoutTemplateHandler(workoutTemplateService)
-	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
+	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, appLogger)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
 

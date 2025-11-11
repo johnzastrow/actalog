@@ -7,17 +7,20 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/pkg/logger"
 )
 
 // MovementHandler handles movement-related endpoints
 type MovementHandler struct {
 	movementRepo domain.MovementRepository
+	logger       *logger.Logger
 }
 
 // NewMovementHandler creates a new movement handler
-func NewMovementHandler(movementRepo domain.MovementRepository) *MovementHandler {
+func NewMovementHandler(movementRepo domain.MovementRepository, l *logger.Logger) *MovementHandler {
 	return &MovementHandler{
 		movementRepo: movementRepo,
+		logger:       l,
 	}
 }
 
@@ -25,11 +28,16 @@ func NewMovementHandler(movementRepo domain.MovementRepository) *MovementHandler
 func (h *MovementHandler) ListStandard(w http.ResponseWriter, r *http.Request) {
 	movements, err := h.movementRepo.ListStandard()
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_movements outcome=failure error=%v", err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve movements")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, movements)
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"movements": movements,
+	})
 }
 
 // Search searches for movements by name
@@ -48,13 +56,22 @@ func (h *MovementHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=search_movements query=%s limit=%d", query, limit)
+	}
+
 	movements, err := h.movementRepo.Search(query, limit)
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=search_movements outcome=failure query=%s error=%v", query, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to search movements")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, movements)
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"movements": movements,
+	})
 }
 
 // GetByID returns a single movement by ID
@@ -68,6 +85,9 @@ func (h *MovementHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	movement, err := h.movementRepo.GetByID(id)
 	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=get_movement outcome=failure id=%d error=%v", id, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve movement")
 		return
 	}
@@ -107,9 +127,20 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 		IsStandard:  false,
 	}
 
+	if h.logger != nil {
+		h.logger.Info("action=create_movement_attempt name=%s type=%s", req.Name, req.Type)
+	}
+
 	if err := h.movementRepo.Create(movement); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=create_movement outcome=failure name=%s error=%v", req.Name, err)
+		}
 		respondError(w, http.StatusInternalServerError, "Failed to create movement")
 		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=create_movement outcome=success id=%d name=%s", movement.ID, movement.Name)
 	}
 
 	respondJSON(w, http.StatusCreated, movement)

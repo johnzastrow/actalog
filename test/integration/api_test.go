@@ -19,6 +19,7 @@ import (
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/internal/testhelpers"
+	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
@@ -151,21 +152,23 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		"test-secret-key",
 		24*time.Hour,
 		7*24*time.Hour,
-		true,  // allow registration
-		nil,   // no email service for tests
+		true, // allow registration
+		nil,  // no email service for tests
 		"http://localhost:3000",
 		false, // don't require email verification in tests
 	)
 
 	// Initialize handlers
-	authHandler := handler.NewAuthHandler(userService)
+	// Create a test logger (stdout only) for handlers
+	testLogger, _ := logger.New(logger.Config{Level: "debug", EnableFile: false})
+	authHandler := handler.NewAuthHandler(userService, testLogger)
 	// Create user workout handler
 	userWorkoutService := service.NewUserWorkoutService(
 		repository.NewUserWorkoutRepository(db),
 		workoutRepo,
 		workoutMovementRepo,
 	)
-	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
+	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, testLogger)
 
 	// Create workout service for PR endpoints
 	movementRepo := repository.NewMovementRepository(db)

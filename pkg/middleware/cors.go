@@ -73,9 +73,17 @@ func RequestLogger(logger HTTPLogger) func(http.Handler) http.Handler {
 			// Process request
 			next.ServeHTTP(wrapped, r)
 
-			// Log request with timing
+			// Log request with timing and user context if available
 			duration := time.Since(start)
-			logger.Info("%s %s %d %s", r.Method, r.URL.Path, wrapped.statusCode, duration)
+			if userID, ok := GetUserID(r.Context()); ok {
+				if email, eok := GetUserEmail(r.Context()); eok {
+					logger.Info("%s %s status=%d duration=%s user_id=%d user_email=%s", r.Method, r.URL.Path, wrapped.statusCode, duration, userID, email)
+					return
+				}
+				logger.Info("%s %s status=%d duration=%s user_id=%d", r.Method, r.URL.Path, wrapped.statusCode, duration, userID)
+				return
+			}
+			logger.Info("%s %s status=%d duration=%s", r.Method, r.URL.Path, wrapped.statusCode, duration)
 		})
 	}
 }
