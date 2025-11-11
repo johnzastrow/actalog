@@ -331,3 +331,137 @@ func intPtr(i int) *int {
 func int64Ptr(i int64) *int64 {
 	return &i
 }
+
+// Mock WODRepository
+type mockWODRepo struct {
+	wods         map[int64]*domain.WOD
+	nextID       int64
+	getByIDError error
+	createError  error
+	updateError  error
+	deleteError  error
+}
+
+func newMockWODRepo() *mockWODRepo {
+	return &mockWODRepo{
+		wods:   make(map[int64]*domain.WOD),
+		nextID: 1,
+	}
+}
+
+func (m *mockWODRepo) Create(wod *domain.WOD) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	m.nextID++
+	wod.ID = m.nextID
+	m.wods[wod.ID] = wod
+	return nil
+}
+
+func (m *mockWODRepo) GetByID(id int64) (*domain.WOD, error) {
+	if m.getByIDError != nil {
+		return nil, m.getByIDError
+	}
+	wod, ok := m.wods[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return wod, nil
+}
+
+func (m *mockWODRepo) GetByName(name string) (*domain.WOD, error) {
+	for _, wod := range m.wods {
+		if wod.Name == name {
+			return wod, nil
+		}
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockWODRepo) List(filters map[string]interface{}) ([]*domain.WOD, error) {
+	var result []*domain.WOD
+	for _, wod := range m.wods {
+		result = append(result, wod)
+	}
+	return result, nil
+}
+
+func (m *mockWODRepo) ListStandard() ([]*domain.WOD, error) {
+	var result []*domain.WOD
+	for _, wod := range m.wods {
+		if wod.IsStandard {
+			result = append(result, wod)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWODRepo) ListByUser(userID int64) ([]*domain.WOD, error) {
+	var result []*domain.WOD
+	for _, wod := range m.wods {
+		if wod.CreatedBy != nil && *wod.CreatedBy == userID {
+			result = append(result, wod)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWODRepo) Update(wod *domain.WOD) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
+	if _, ok := m.wods[wod.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.wods[wod.ID] = wod
+	return nil
+}
+
+func (m *mockWODRepo) Delete(id int64) error {
+	if m.deleteError != nil {
+		return m.deleteError
+	}
+	if _, ok := m.wods[id]; !ok {
+		return sql.ErrNoRows
+	}
+	delete(m.wods, id)
+	return nil
+}
+
+func (m *mockWODRepo) Search(query string) ([]*domain.WOD, error) {
+	var result []*domain.WOD
+	for _, wod := range m.wods {
+		// Simple case-insensitive substring match
+		if len(query) == 0 || matchString(wod.Name, query) {
+			result = append(result, wod)
+		}
+	}
+	return result, nil
+}
+
+// Helper function for simple case-insensitive string matching
+func matchString(s, substr string) bool {
+	// Convert to lowercase for case-insensitive matching
+	sLower := toLower(s)
+	substrLower := toLower(substr)
+
+	for i := 0; i <= len(sLower)-len(substrLower); i++ {
+		if sLower[i:i+len(substrLower)] == substrLower {
+			return true
+		}
+	}
+	return false
+}
+
+func toLower(s string) string {
+	result := make([]byte, len(s))
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 'A' && s[i] <= 'Z' {
+			result[i] = s[i] + 32
+		} else {
+			result[i] = s[i]
+		}
+	}
+	return string(result)
+}
