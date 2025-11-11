@@ -44,7 +44,7 @@ func (m *mockUserWorkoutRepo) GetByID(id int64) (*domain.UserWorkout, error) {
 	}
 	uw, ok := m.userWorkouts[id]
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, nil
 	}
 	return uw, nil
 }
@@ -57,10 +57,10 @@ func (m *mockUserWorkoutRepo) GetByIDWithDetails(id int64, userID int64) (*domai
 	if !ok {
 		basicUW, exists := m.userWorkouts[id]
 		if !exists {
-			return nil, sql.ErrNoRows
+			return nil, nil
 		}
 		if basicUW.UserID != userID {
-			return nil, sql.ErrNoRows
+			return nil, nil
 		}
 		uw = &domain.UserWorkoutWithDetails{
 			UserWorkout:        *basicUW,
@@ -72,7 +72,7 @@ func (m *mockUserWorkoutRepo) GetByIDWithDetails(id int64, userID int64) (*domai
 		m.userWorkoutsDetails[id] = uw
 	}
 	if uw.UserID != userID {
-		return nil, sql.ErrNoRows
+		return nil, nil
 	}
 	return uw, nil
 }
@@ -148,7 +148,7 @@ func (m *mockUserWorkoutRepo) GetByUserWorkoutDate(userID, workoutID int64, date
 			return uw, nil
 		}
 	}
-	return nil, sql.ErrNoRows
+	return nil, nil
 }
 
 // Mock WorkoutRepository
@@ -180,7 +180,7 @@ func (m *mockWorkoutRepo) GetByID(id int64) (*domain.Workout, error) {
 	}
 	w, ok := m.workouts[id]
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, nil
 	}
 	return w, nil
 }
