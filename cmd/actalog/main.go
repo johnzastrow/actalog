@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 	"github.com/johnzastrow/actalog/configs"
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
@@ -21,6 +20,7 @@ import (
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/version"
+	"github.com/joho/godotenv"
 
 	// Database drivers
 	_ "github.com/go-sql-driver/mysql" // MySQL/MariaDB

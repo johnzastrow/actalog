@@ -125,7 +125,6 @@ func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, up
 	if err != nil {
 		return fmt.Errorf("failed to update logged workout: %w", err)
 	}
-
 	return nil
 }
 
@@ -150,7 +149,6 @@ func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) er
 	if err != nil {
 		return fmt.Errorf("failed to delete logged workout: %w", err)
 	}
-
 	return nil
 }
 
@@ -163,8 +161,7 @@ func (s *UserWorkoutService) GetWorkoutStatsForMonth(userID int64, year, month i
 	// Get workouts in range
 	workouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, startDate, endDate)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get workout stats: %w", err)
+		return 0, fmt.Errorf("failed to list workouts by month: %w", err)
 	}
-
 	return len(workouts), nil
 }

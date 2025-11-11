@@ -42,8 +42,6 @@ func (s *WorkoutWODService) AddWODToWorkout(workoutID, wodID int64, userID int64
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return nil, ErrUnauthorized
 	}
-
-	// Verify WOD exists
 	wod, err := s.wodRepo.GetByID(wodID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get WOD: %w", err)
@@ -63,12 +61,10 @@ func (s *WorkoutWODService) AddWODToWorkout(workoutID, wodID int64, userID int64
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
-
 	err = s.workoutWODRepo.Create(workoutWOD)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add WOD to workout: %w", err)
 	}
-
 	return workoutWOD, nil
 }
 
@@ -102,7 +98,6 @@ func (s *WorkoutWODService) RemoveWODFromWorkout(workoutWODID, userID int64) err
 	if err != nil {
 		return fmt.Errorf("failed to remove WOD from workout: %w", err)
 	}
-
 	return nil
 }
 
@@ -130,8 +125,6 @@ func (s *WorkoutWODService) UpdateWorkoutWOD(workoutWODID, userID int64, scoreVa
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
-
-	// Update fields
 	if scoreValue != nil {
 		workoutWOD.ScoreValue = scoreValue
 	}
@@ -139,12 +132,10 @@ func (s *WorkoutWODService) UpdateWorkoutWOD(workoutWODID, userID int64, scoreVa
 		workoutWOD.Division = division
 	}
 	workoutWOD.UpdatedAt = time.Now()
-
 	err = s.workoutWODRepo.Update(workoutWOD)
 	if err != nil {
 		return fmt.Errorf("failed to update workout WOD: %w", err)
 	}
-
 	return nil
 }
 
@@ -172,13 +163,10 @@ func (s *WorkoutWODService) ToggleWODPR(workoutWODID, userID int64) error {
 	if workout.CreatedBy == nil || *workout.CreatedBy != userID {
 		return ErrUnauthorized
 	}
-
-	// Toggle PR flag
 	err = s.workoutWODRepo.TogglePR(workoutWODID)
 	if err != nil {
 		return fmt.Errorf("failed to toggle WOD PR: %w", err)
 	}
-
 	return nil
 }
 
@@ -188,6 +176,5 @@ func (s *WorkoutWODService) ListWODsForWorkout(workoutID int64) ([]*domain.Worko
 	if err != nil {
 		return nil, fmt.Errorf("failed to list WODs for workout: %w", err)
 	}
-
 	return wods, nil
 }

@@ -46,7 +46,6 @@ func (s *WODService) GetWOD(wodID int64) (*domain.WOD, error) {
 	if wod == nil {
 		return nil, fmt.Errorf("WOD not found")
 	}
-
 	return wod, nil
 }
 
@@ -59,7 +58,6 @@ func (s *WODService) GetWODByName(name string) (*domain.WOD, error) {
 	if wod == nil {
 		return nil, fmt.Errorf("WOD not found")
 	}
-
 	return wod, nil
 }
 
@@ -69,7 +67,6 @@ func (s *WODService) ListStandardWODs() ([]*domain.WOD, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list standard WODs: %w", err)
 	}
-
 	return wods, nil
 }
 
@@ -79,7 +76,6 @@ func (s *WODService) ListUserWODs(userID int64) ([]*domain.WOD, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list user WODs: %w", err)
 	}
-
 	return wods, nil
 }
 
@@ -96,8 +92,6 @@ func (s *WODService) ListAllWODs(userID int64) ([]*domain.WOD, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Combine both lists
 	wods := append(standard, custom...)
 	return wods, nil
 }
@@ -108,13 +102,11 @@ func (s *WODService) SearchWODs(query string) ([]*domain.WOD, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to search WODs: %w", err)
 	}
-
 	return wods, nil
 }
 
 // UpdateWOD updates a custom WOD with authorization check
 func (s *WODService) UpdateWOD(wodID, userID int64, updates *domain.WOD) error {
-	// Get existing WOD
 	wod, err := s.wodRepo.GetByID(wodID)
 	if err != nil {
 		return fmt.Errorf("failed to get WOD: %w", err)
@@ -132,8 +124,6 @@ func (s *WODService) UpdateWOD(wodID, userID int64, updates *domain.WOD) error {
 	if wod.IsStandard {
 		return fmt.Errorf("cannot modify standard WODs")
 	}
-
-	// Update fields
 	wod.Name = updates.Name
 	wod.Source = updates.Source
 	wod.Type = updates.Type
@@ -146,13 +136,11 @@ func (s *WODService) UpdateWOD(wodID, userID int64, updates *domain.WOD) error {
 	if err != nil {
 		return fmt.Errorf("failed to update WOD: %w", err)
 	}
-
 	return nil
 }
 
 // DeleteWOD deletes a custom WOD with authorization check
 func (s *WODService) DeleteWOD(wodID, userID int64) error {
-	// Get existing WOD
 	wod, err := s.wodRepo.GetByID(wodID)
 	if err != nil {
 		return fmt.Errorf("failed to get WOD: %w", err)
@@ -176,6 +164,5 @@ func (s *WODService) DeleteWOD(wodID, userID int64) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete WOD: %w", err)
 	}
-
 	return nil
 }
