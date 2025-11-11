@@ -24,7 +24,7 @@ import (
 
 	// Database drivers
 	_ "github.com/go-sql-driver/mysql" // MySQL/MariaDB
-	_ "github.com/lib/pq"               // PostgreSQL
+	_ "github.com/lib/pq"              // PostgreSQL
 	_ "github.com/mattn/go-sqlite3"    // SQLite
 )
 
@@ -140,12 +140,12 @@ func main() {
 		appURL,
 	)
 
-	workoutService := service.NewWorkoutService(
-		workoutRepo,
-		workoutMovementRepo,
-		workoutWODRepo,
-		movementRepo,
-	)
+	// workoutService := service.NewWorkoutService( // TODO: Uncomment when workout_handler.go is implemented
+	// 	workoutRepo,
+	// 	workoutMovementRepo,
+	// 	workoutWODRepo,
+	// 	movementRepo,
+	// )
 
 	userWorkoutService := service.NewUserWorkoutService(
 		userWorkoutRepo,
@@ -165,7 +165,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService)
 	userHandler := handler.NewUserHandler(userService)
 	movementHandler := handler.NewMovementHandler(movementRepo)
-	workoutHandler := handler.NewWorkoutHandler(workoutService)
+	// workoutHandler := handler.NewWorkoutHandler(workoutService) // TODO: Create workout_handler.go for template management and PR tracking
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
@@ -220,10 +220,10 @@ func main() {
 		r.Get("/wods/search", wodHandler.SearchWODs)
 		r.Get("/wods/{id}", wodHandler.GetWOD)
 
-		// Template routes (public for browsing standard templates)
-		r.Get("/templates", workoutHandler.ListTemplates)
-		r.Get("/templates/{id}", workoutHandler.GetTemplate)
-		r.Get("/templates/{id}/stats", workoutHandler.GetTemplateStats)
+		// Template routes (public for browsing standard templates) - TODO: Implement workout_handler.go
+		// r.Get("/templates", workoutHandler.ListTemplates)
+		// r.Get("/templates/{id}", workoutHandler.GetTemplate)
+		// r.Get("/templates/{id}/stats", workoutHandler.GetTemplateStats)
 
 		// Protected routes (require authentication)
 		r.Group(func(r chi.Router) {
@@ -236,10 +236,10 @@ func main() {
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 
-			// Workout Template routes (authenticated)
-			r.Post("/templates", workoutHandler.CreateTemplate)
-			r.Put("/templates/{id}", workoutHandler.UpdateTemplate)
-			r.Delete("/templates/{id}", workoutHandler.DeleteTemplate)
+			// Workout Template routes (authenticated) - TODO: Implement workout_handler.go
+			// r.Post("/templates", workoutHandler.CreateTemplate)
+			// r.Put("/templates/{id}", workoutHandler.UpdateTemplate)
+			// r.Delete("/templates/{id}", workoutHandler.DeleteTemplate)
 
 			// User Workout routes (logging workouts) (authenticated)
 			r.Post("/workouts", userWorkoutHandler.LogWorkout)
@@ -261,10 +261,10 @@ func main() {
 			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
 			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
-			// PR tracking routes (authenticated)
-			r.Get("/prs", workoutHandler.GetPersonalRecords)
-			r.Get("/pr-movements", workoutHandler.GetPRMovements)
-			r.Post("/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
+			// PR tracking routes (authenticated) - TODO: Implement workout_handler.go
+			// r.Get("/prs", workoutHandler.GetPersonalRecords)
+			// r.Get("/pr-movements", workoutHandler.GetPRMovements)
+			// r.Post("/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
 		})
 	})
 
