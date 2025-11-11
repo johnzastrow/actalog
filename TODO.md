@@ -117,6 +117,41 @@ To run tests locally from the repository root:
 go test ./... -v
 ```
 
+Integration test matrix (CI)
+
+- The GitHub Actions CI runs integration tests in a matrix over three databases: sqlite3 (in-memory), Postgres, and MariaDB.
+
+- In CI the Postgres and MariaDB jobs use Actions service containers. The test job runs the integration package with the following test flags passed via `-args`:
+	- `-db` — the database driver name (`sqlite3`, `postgres`, `mysql`)
+	- `-dsn` — the DSN/connection string for the target DB
+
+Local examples
+
+- Run integration tests against SQLite (default):
+
+```bash
+go test ./test/integration -run Test -v
+```
+
+- Run integration tests against a local Postgres container:
+
+```bash
+docker run -d --name actalog-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=actalog_test -p 5432:5432 postgres:15
+# wait for pg to be ready, then:
+go test ./test/integration -run Test -v -args -db=postgres -dsn="host=127.0.0.1 port=5432 user=postgres password=postgres dbname=actalog_test sslmode=disable"
+docker rm -f actalog-postgres
+```
+
+- Run integration tests against a local MariaDB container:
+
+```bash
+docker run -d --name actalog-mariadb -e MYSQL_ROOT_PASSWORD=example -e MYSQL_DATABASE=actalog_test -p 3306:3306 mariadb:10.11
+# wait for mysql to be ready, then:
+go test ./test/integration -run Test -v -args -db=mysql -dsn="root:example@tcp(127.0.0.1:3306)/actalog_test?parseTime=true&multiStatements=true"
+docker rm -f actalog-mariadb
+```
+
+
 
 
 ## Known Issues

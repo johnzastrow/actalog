@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -17,10 +19,44 @@ import (
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
+var (
+	testDBDriver = flag.String("db", "sqlite3", "database driver for integration tests (sqlite3|postgres|mysql)")
+	testDSN      = flag.String("dsn", ":memory:", "database DSN for integration tests")
+)
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+
+	// Allow environment variables to override flags for CI convenience
+	if envDriver := os.Getenv("DB_DRIVER"); envDriver != "" {
+		*testDBDriver = envDriver
+	}
+	if envDSN := os.Getenv("DB_DSN"); envDSN != "" {
+		*testDSN = envDSN
+	}
+
+	code := m.Run()
+
+	// If using Postgres or MySQL in CI/local runs, attempt to clean up test DB schema
+	if *testDBDriver == "postgres" || *testDBDriver == "mysql" {
+		// Try to connect and drop tables created by migrations to keep CI clean. Ignore errors.
+		if db, err := repository.InitDatabase(*testDBDriver, *testDSN); err == nil {
+			// Best-effort cleanup: drop known tables if they exist
+			tables := []string{"workout_wods", "workouts", "user_workouts", "workout_strength", "strength_movements", "workout_movements", "movements", "users", "refresh_tokens"}
+			for _, t := range tables {
+				_, _ = db.Exec("DROP TABLE IF EXISTS " + t)
+			}
+			_ = db.Close()
+		}
+	}
+
+	os.Exit(code)
+}
+
 // Test helper to set up test router with dependencies
 func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, *sql.DB, int64, error) {
-	// Use in-memory SQLite for testing
-	db, err := repository.InitDatabase("sqlite3", ":memory:")
+	// Initialize using the configured test DB driver and DSN (defaults to sqlite in-memory)
+	db, err := repository.InitDatabase(*testDBDriver, *testDSN)
 	if err != nil {
 		return nil, nil, nil, 0, err
 	}

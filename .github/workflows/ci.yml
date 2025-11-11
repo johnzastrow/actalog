@@ -39,10 +39,61 @@ jobs:
       - name: Run golangci-lint
         run: golangci-lint run ./...
 
-      - name: Run unit & integration tests
+      - name: Run unit tests
+        run: go test ./internal/... -v
+
+  integration:
+    name: Integration tests (DB matrix)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        db: [sqlite3, postgres, mysql]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run integration tests (matrix)
         env:
           CGO_ENABLED: 1
-        run: go test ./... -v
+        run: |
+          if [ "${{ matrix.db }}" = "sqlite3" ]; then
+            echo "Running integration tests against sqlite3"
+            go test ./test/integration -run Test -v
+          elif [ "${{ matrix.db }}" = "postgres" ]; then
+            echo "Running integration tests against Postgres service"
+            dsn="host=localhost port=5432 user=postgres password=postgres dbname=actalog_test sslmode=disable"
+            go test ./test/integration -run Test -v -args -db=postgres -dsn="$dsn"
+          else
+            echo "Running integration tests against MariaDB service"
+            dsn="root:example@tcp(localhost:3306)/actalog_test?parseTime=true&multiStatements=true"
+            go test ./test/integration -run Test -v -args -db=mysql -dsn="$dsn"
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: actalog_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval=5s --health-timeout=2s --health-retries=10
+
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: actalog_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -uroot -pexample" --health-interval=5s --health-timeout=2s --health-retries=10
+
 
   web-build:
     name: Web: build

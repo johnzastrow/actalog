@@ -5,6 +5,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/johnzastrow/actalog/actions/workflows/ci.yml/badge.svg)](https://github.com/johnzastrow/actalog/actions/workflows/ci.yml)
 
 ## Overview
 
@@ -218,6 +219,32 @@ make test-integration
 make coverage
 ```
 
+## CI and Integration Tests
+
+We run CI using GitHub Actions. The primary workflow is `.github/workflows/ci.yml` and performs linting, unit tests, integration tests (matrix: sqlite3, postgres, mariadb), and a frontend build.
+
+Integration tests accept flags and environment variables:
+
+- Flag `-db` (default: `sqlite3`) — driver name passed to tests
+- Flag `-dsn` (default: `:memory:`) — DSN used by repository.InitDatabase
+- Environment variables `DB_DRIVER` and `DB_DSN` can also be used to override flags in CI or local runs.
+
+Examples:
+
+```bash
+# Run integration tests against in-memory SQLite (default)
+go test ./test/integration -run Test -v
+
+# Run against a local Postgres container
+docker run -d --name actalog-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=actalog_test -p 5432:5432 postgres:15
+go test ./test/integration -run Test -v -args -db=postgres -dsn="host=127.0.0.1 port=5432 user=postgres password=postgres dbname=actalog_test sslmode=disable"
+
+# Run against a local MariaDB container
+docker run -d --name actalog-mariadb -e MYSQL_ROOT_PASSWORD=example -e MYSQL_DATABASE=actalog_test -p 3306:3306 mariadb:10.11
+go test ./test/integration -run Test -v -args -db=mysql -dsn="root:example@tcp(127.0.0.1:3306)/actalog_test?parseTime=true&multiStatements=true"
+```
+
+
 ## Security
 
 - **Passwords**: Hashed with bcrypt (cost factor 12+)
@@ -278,4 +305,3 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ for the CrossFit community** 
