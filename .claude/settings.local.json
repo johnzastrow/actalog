@@ -12,7 +12,9 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(go test:*)",
-      "Bash(./bin/actalog:*)"
+      "Bash(./bin/actalog:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

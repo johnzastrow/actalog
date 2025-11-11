@@ -254,8 +254,8 @@ var migrations = []Migration{
 			case "mysql":
 				queries = []string{
 					`CREATE TABLE IF NOT EXISTS refresh_tokens (
-						id INT AUTO_INCREMENT PRIMARY KEY,
-						user_id INT NOT NULL,
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
 						token VARCHAR(255) UNIQUE NOT NULL,
 						expires_at DATETIME NOT NULL,
 						created_at DATETIME NOT NULL,
@@ -555,6 +555,19 @@ func RollbackMigration(db *sql.DB, driver string) error {
 // Phase 1: Create backup tables
 func migrateV040_CreateBackups(db *sql.DB, driver string) error {
 	fmt.Println("Phase 1: Creating backup tables...")
+
+	// Check if backup tables already exist (idempotency)
+	var exists int
+	err := db.QueryRow("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workouts_backup_v033'").Scan(&exists)
+	if err != nil && driver == "sqlite3" {
+		// For SQLite, use a different check
+		err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='workouts_backup_v033'").Scan(&exists)
+	}
+
+	if err == nil && exists > 0 {
+		fmt.Println("  ✓ Backup tables already exist, skipping")
+		return nil
+	}
 
 	queries := []string{
 		"CREATE TABLE workouts_backup_v033 AS SELECT * FROM workouts",
