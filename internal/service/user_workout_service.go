@@ -1,10 +1,16 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
+)
+
+var (
+	ErrUserWorkoutNotFound       = errors.New("user workout not found")
+	ErrUnauthorizedWorkoutAccess = errors.New("unauthorized workout access")
 )
 
 // UserWorkoutService handles logging workout instances (when users perform workouts)
@@ -99,26 +105,26 @@ func (s *UserWorkoutService) ListLoggedWorkoutsByDateRange(userID int64, startDa
 }
 
 // UpdateLoggedWorkout updates a logged workout with authorization check
-func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, updates *domain.UserWorkout) error {
+// UpdateLoggedWorkout updates a logged workout (notes, time, type - not date)
+func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, notes *string, totalTime *int, workoutType *string) error {
 	// Get existing logged workout
 	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to get logged workout: %w", err)
 	}
 	if existing == nil {
-		return fmt.Errorf("logged workout not found")
+		return ErrUserWorkoutNotFound
 	}
 
 	// Authorization check
 	if existing.UserID != userID {
-		return ErrUnauthorized
+		return ErrUnauthorizedWorkoutAccess
 	}
 
-	// Update fields
-	existing.WorkoutDate = updates.WorkoutDate
-	existing.WorkoutType = updates.WorkoutType
-	existing.TotalTime = updates.TotalTime
-	existing.Notes = updates.Notes
+	// Update fields (not including date)
+	existing.WorkoutType = workoutType
+	existing.TotalTime = totalTime
+	existing.Notes = notes
 	existing.UpdatedAt = time.Now()
 
 	err = s.userWorkoutRepo.Update(existing)
@@ -141,7 +147,7 @@ func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) er
 
 	// Authorization check
 	if existing.UserID != userID {
-		return ErrUnauthorized
+		return ErrUnauthorizedWorkoutAccess
 	}
 
 	// Delete logged workout
