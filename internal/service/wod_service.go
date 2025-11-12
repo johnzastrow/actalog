@@ -95,52 +95,49 @@ func (s *WODService) GetByName(name string) (*domain.WOD, error) {
 
 // List retrieves WODs with optional filtering
 func (s *WODService) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {
-	wods, err := s.wodRepo.List(filters)
+	wods, err := s.wodRepo.List(filters, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list wods: %w", err)
 	}
 
-	// Apply pagination at service layer
-	return s.paginateWODs(wods, limit, offset), nil
+	return wods, nil
 }
 
 // ListStandard retrieves all standard (pre-seeded) WODs
 func (s *WODService) ListStandard(limit, offset int) ([]*domain.WOD, error) {
-	wods, err := s.wodRepo.ListStandard()
+	wods, err := s.wodRepo.ListStandard(limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list standard wods: %w", err)
 	}
 
-	// Apply pagination at service layer
-	return s.paginateWODs(wods, limit, offset), nil
+	return wods, nil
 }
 
 // ListByUser retrieves all custom WODs created by a specific user
 func (s *WODService) ListByUser(userID int64, limit, offset int) ([]*domain.WOD, error) {
-	wods, err := s.wodRepo.ListByUser(userID)
+	wods, err := s.wodRepo.ListByUser(userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list user wods: %w", err)
 	}
 
-	// Apply pagination at service layer
-	return s.paginateWODs(wods, limit, offset), nil
+	return wods, nil
 }
 
 // ListAll retrieves all WODs (standard + user's custom) - convenience method
 func (s *WODService) ListAll(userID *int64, limit, offset int) ([]*domain.WOD, error) {
-	// Get standard WODs
-	standard, err := s.wodRepo.ListStandard()
+	// Get standard WODs (with large limit to get all for combining)
+	standard, err := s.wodRepo.ListStandard(10000, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list standard wods: %w", err)
 	}
 
-	// If no user ID, return only standard WODs
+	// If no user ID, return only standard WODs with pagination
 	if userID == nil {
 		return s.paginateWODs(standard, limit, offset), nil
 	}
 
-	// Get user's custom WODs
-	custom, err := s.wodRepo.ListByUser(*userID)
+	// Get user's custom WODs (with large limit to get all for combining)
+	custom, err := s.wodRepo.ListByUser(*userID, 10000, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list user wods: %w", err)
 	}
@@ -241,14 +238,9 @@ func (s *WODService) Search(query string, limit int) ([]*domain.WOD, error) {
 		return []*domain.WOD{}, nil
 	}
 
-	wods, err := s.wodRepo.Search(query)
+	wods, err := s.wodRepo.Search(query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search wods: %w", err)
-	}
-
-	// Apply limit at service layer
-	if limit > 0 && len(wods) > limit {
-		return wods[:limit], nil
 	}
 
 	return wods, nil
@@ -264,7 +256,7 @@ func (s *WODService) Count(isStandard *bool) (int64, error) {
 		}
 	}
 
-	wods, err := s.wodRepo.List(filters)
+	wods, err := s.wodRepo.List(filters, 10000, 0)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count wods: %w", err)
 	}

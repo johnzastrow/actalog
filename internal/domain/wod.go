@@ -32,14 +32,14 @@ type WODRepository interface {
 	// GetByName retrieves a WOD by name
 	GetByName(name string) (*WOD, error)
 
-	// List retrieves all WODs with optional filtering
-	List(filters map[string]interface{}) ([]*WOD, error)
+	// List retrieves all WODs with optional filtering and pagination
+	List(filters map[string]interface{}, limit, offset int) ([]*WOD, error)
 
-	// ListStandard retrieves all standard (pre-seeded) WODs
-	ListStandard() ([]*WOD, error)
+	// ListStandard retrieves all standard (pre-seeded) WODs with pagination
+	ListStandard(limit, offset int) ([]*WOD, error)
 
-	// ListByUser retrieves all custom WODs created by a specific user
-	ListByUser(userID int64) ([]*WOD, error)
+	// ListByUser retrieves all custom WODs created by a specific user with pagination
+	ListByUser(userID int64, limit, offset int) ([]*WOD, error)
 
 	// Update updates an existing WOD (only for user-created WODs)
 	Update(wod *WOD) error
@@ -47,6 +47,6 @@ type WODRepository interface {
 	// Delete deletes a WOD (only for user-created WODs)
 	Delete(id int64) error
 
-	// Search searches WODs by name (partial match)
-	Search(query string) ([]*WOD, error)
+	// Search searches WODs by name (partial match) with limit
+	Search(query string, limit int) ([]*WOD, error)
 }

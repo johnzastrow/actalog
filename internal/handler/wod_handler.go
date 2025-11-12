@@ -97,13 +97,13 @@ func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
 		Notes:       req.Notes,
 	}
 
-	if err := h.wodService.CreateWOD(userID, wod); err != nil {
+	if err := h.wodService.Create(wod, userID); err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to create WOD: "+err.Error())
 		return
 	}
 
 	// Retrieve created WOD
-	created, err := h.wodService.GetWOD(wod.ID)
+	created, err := h.wodService.GetByID(wod.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve created WOD")
 		return
@@ -137,7 +137,7 @@ func (h *WODHandler) GetWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wod, err := h.wodService.GetWOD(id)
+	wod, err := h.wodService.GetByID(id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve WOD: "+err.Error())
 		return
@@ -170,15 +170,31 @@ func (h *WODHandler) ListWODs(w http.ResponseWriter, r *http.Request) {
 	var wods []*domain.WOD
 	var err error
 
+	// Parse pagination parameters
+	limit := 100 // default
+	offset := 0  // default
+
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
+			offset = o
+		}
+	}
+
 	// Check if user wants only standard WODs
 	standardOnly := r.URL.Query().Get("standard") == "true"
 
 	if standardOnly {
-		wods, err = h.wodService.ListStandardWODs()
+		wods, err = h.wodService.ListStandard(limit, offset)
 	} else if ok {
-		wods, err = h.wodService.ListAllWODs(userID)
+		userIDPtr := &userID
+		wods, err = h.wodService.ListAll(userIDPtr, limit, offset)
 	} else {
-		wods, err = h.wodService.ListStandardWODs()
+		wods, err = h.wodService.ListStandard(limit, offset)
 	}
 
 	if err != nil {
@@ -220,7 +236,7 @@ func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wods, err := h.wodService.SearchWODs(query)
+	wods, err := h.wodService.Search(query, 20)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to search WODs")
 		return
@@ -276,6 +292,7 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 
 	// Build update
 	wod := &domain.WOD{
+		ID:          id,
 		Name:        req.Name,
 		Source:      req.Source,
 		Type:        req.Type,
@@ -286,7 +303,7 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 		Notes:       req.Notes,
 	}
 
-	if err := h.wodService.UpdateWOD(id, userID, wod); err != nil {
+	if err := h.wodService.Update(wod, userID); err != nil {
 		if err == service.ErrUnauthorized {
 			respondError(w, http.StatusForbidden, "You don't have permission to update this WOD")
 		} else {
@@ -296,7 +313,7 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve updated WOD
-	updated, err := h.wodService.GetWOD(id)
+	updated, err := h.wodService.GetByID(id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to retrieve updated WOD")
 		return
@@ -337,7 +354,7 @@ func (h *WODHandler) DeleteWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.wodService.DeleteWOD(id, userID); err != nil {
+	if err := h.wodService.Delete(id, userID); err != nil {
 		if err == service.ErrUnauthorized {
 			respondError(w, http.StatusForbidden, "You don't have permission to delete this WOD")
 		} else {

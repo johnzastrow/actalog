@@ -456,3 +456,4 @@ func (h *UserWorkoutHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Requ
 		"workout_count": count,
 	})
 }
+// ErrorResponse represents an error response
