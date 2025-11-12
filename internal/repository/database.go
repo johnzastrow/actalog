@@ -74,6 +74,16 @@ func InitDatabase(driver, dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to seed standard movements: %w", err)
 	}
 
+	// Seed standard WODs (if not already seeded)
+	if err := seedStandardWODs(db); err != nil {
+		return nil, fmt.Errorf("failed to seed standard WODs: %w", err)
+	}
+
+	// Seed workout templates (if not already seeded)
+	if err := seedWorkoutTemplates(db); err != nil {
+		return nil, fmt.Errorf("failed to seed workout templates: %w", err)
+	}
+
 	return db, nil
 }
 
@@ -627,4 +637,370 @@ func seedStandardMovements(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+// seedStandardWODs seeds the database with famous CrossFit benchmark WODs
+func seedStandardWODs(db *sql.DB) error {
+	// Check if WODs already seeded (check for "Fran" - a very famous benchmark WOD)
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM wods WHERE name = 'Fran' AND is_standard = 1").Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to check for existing WODs: %w", err)
+	}
+	
+	if count > 0 {
+		return nil // Already seeded
+	}
+
+	// List of standard CrossFit WODs (Girls, Heroes, and other benchmarks)
+	wods := []struct {
+		name        string
+		source      string
+		wodType     string
+		regime      string
+		scoreType   string
+		description string
+		url         string
+	}{
+		// Girls - Classic CrossFit Benchmark WODs
+		{
+			name:        "Fran",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "21-15-9 reps for time of: Thrusters (95/65 lb), Pull-ups",
+			url:         "https://www.crossfit.com/workout/fran",
+		},
+		{
+			name:        "Helen",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "3 rounds for time of: 400m Run, 21 Kettlebell Swings (53/35 lb), 12 Pull-ups",
+			url:         "https://www.crossfit.com/workout/helen",
+		},
+		{
+			name:        "Cindy",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "AMRAP",
+			scoreType:   "Rounds+Reps",
+			description: "20 min AMRAP of: 5 Pull-ups, 10 Push-ups, 15 Air Squats",
+			url:         "https://www.crossfit.com/workout/cindy",
+		},
+		{
+			name:        "Grace",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "30 Clean and Jerks for time (135/95 lb)",
+			url:         "https://www.crossfit.com/workout/grace",
+		},
+		{
+			name:        "Annie",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "50-40-30-20-10 reps for time of: Double-Unders, Sit-ups",
+			url:         "https://www.crossfit.com/workout/annie",
+		},
+		{
+			name:        "Karen",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "150 Wall Ball Shots for time (20/14 lb, 10/9 ft)",
+			url:         "https://www.crossfit.com/workout/karen",
+		},
+		{
+			name:        "Diane",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "21-15-9 reps for time of: Deadlifts (225/155 lb), Handstand Push-ups",
+			url:         "https://www.crossfit.com/workout/diane",
+		},
+		{
+			name:        "Elizabeth",
+			source:      "CrossFit",
+			wodType:     "Girl",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "21-15-9 reps for time of: Cleans (135/95 lb), Dips",
+			url:         "https://www.crossfit.com/workout/elizabeth",
+		},
+		// Hero WODs - Named after fallen military/first responders
+		{
+			name:        "Murph",
+			source:      "CrossFit",
+			wodType:     "Hero",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "For time: 1 mile Run, 100 Pull-ups, 200 Push-ups, 300 Air Squats, 1 mile Run (wear 20 lb vest if possible)",
+			url:         "https://www.crossfit.com/workout/murph",
+		},
+		{
+			name:        "DT",
+			source:      "CrossFit",
+			wodType:     "Hero",
+			regime:      "Fastest Time",
+			scoreType:   "Time (HH:MM:SS)",
+			description: "5 rounds for time of: 12 Deadlifts (155/105 lb), 9 Hang Power Cleans (155/105 lb), 6 Push Jerks (155/105 lb)",
+			url:         "https://www.crossfit.com/workout/dt",
+		},
+	}
+
+	// Insert WODs
+	query := `INSERT INTO wods (name, source, type, regime, score_type, description, url, is_standard, created_by, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, 1, NULL, datetime('now'), datetime('now'))`
+
+	for _, wod := range wods {
+		_, err := db.Exec(query, wod.name, wod.source, wod.wodType, wod.regime, wod.scoreType, wod.description, wod.url)
+		if err != nil {
+			return fmt.Errorf("failed to seed WOD %s: %w", wod.name, err)
+		}
+	}
+
+	return nil
+}
+
+// seedWorkoutTemplates seeds the database with sample workout templates
+// This demonstrates the template-based system with movements and WODs
+func seedWorkoutTemplates(db *sql.DB) error {
+	// Check if workout templates already seeded (check for "Strength Training - Back Squat Focus")
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM workouts WHERE name = 'Strength Training - Back Squat Focus'").Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to check for existing workout templates: %w", err)
+	}
+	
+	if count > 0 {
+		return nil // Already seeded
+	}
+
+	// Template 1: Strength Training - Back Squat Focus
+	workoutID, err := createWorkout(db, "Strength Training - Back Squat Focus", "5x5 progressive overload program")
+	if err != nil {
+		return err
+	}
+	
+	// Get movement IDs
+	backSquatID, err := getMovementIDByName(db, "Back Squat")
+	if err != nil {
+		return err
+	}
+	
+	// Add movements to workout
+	if err := addWorkoutMovement(db, workoutID, backSquatID, 225.0, 5, 5, 0); err != nil {
+		return err
+	}
+
+	// Template 2: Olympic Lifting - Clean & Jerk Practice
+	workoutID, err = createWorkout(db, "Olympic Lifting - Clean & Jerk Practice", "Technical practice with moderate weight")
+	if err != nil {
+		return err
+	}
+	
+	cleanID, err := getMovementIDByName(db, "Clean")
+	if err != nil {
+		return err
+	}
+	jerkID, err := getMovementIDByName(db, "Push Jerk")
+	if err != nil {
+		return err
+	}
+	
+	if err := addWorkoutMovement(db, workoutID, cleanID, 135.0, 5, 3, 0); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, jerkID, 135.0, 5, 3, 1); err != nil {
+		return err
+	}
+
+	// Template 3: Gymnastics Strength
+	workoutID, err = createWorkout(db, "Gymnastics Strength", "Bodyweight strength and skill work")
+	if err != nil {
+		return err
+	}
+	
+	pullupID, err := getMovementIDByName(db, "Pull-up")
+	if err != nil {
+		return err
+	}
+	dipID, err := getMovementIDByName(db, "Dip")
+	if err != nil {
+		return err
+	}
+	hspuID, err := getMovementIDByName(db, "Handstand Push-up")
+	if err != nil {
+		return err
+	}
+	
+	if err := addWorkoutMovement(db, workoutID, pullupID, 0, 5, 10, 0); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, dipID, 0, 5, 10, 1); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, hspuID, 0, 5, 5, 2); err != nil {
+		return err
+	}
+
+	// Template 4: Cardio Endurance
+	workoutID, err = createWorkout(db, "Cardio Endurance", "Mixed cardio modalities")
+	if err != nil {
+		return err
+	}
+	
+	runID, err := getMovementIDByName(db, "Running")
+	if err != nil {
+		return err
+	}
+	rowID, err := getMovementIDByName(db, "Rowing")
+	if err != nil {
+		return err
+	}
+	bikeID, err := getMovementIDByName(db, "Bike")
+	if err != nil {
+		return err
+	}
+	
+	// Time in seconds (20 minutes = 1200 seconds)
+	if err := addWorkoutMovementWithTime(db, workoutID, runID, 1200, 0); err != nil {
+		return err
+	}
+	if err := addWorkoutMovementWithTime(db, workoutID, rowID, 1200, 1); err != nil {
+		return err
+	}
+	if err := addWorkoutMovementWithTime(db, workoutID, bikeID, 1200, 2); err != nil {
+		return err
+	}
+
+	// Template 5: Fran (linking to WOD)
+	workoutID, err = createWorkout(db, "Fran - Classic Girl WOD", "21-15-9 Thrusters and Pull-ups")
+	if err != nil {
+		return err
+	}
+	
+	// Get Fran WOD ID
+	franWODID, err := getWODIDByName(db, "Fran")
+	if err != nil {
+		return err
+	}
+	
+	// Link WOD to workout
+	if err := addWorkoutWOD(db, workoutID, franWODID, 0); err != nil {
+		return err
+	}
+	
+	// Add movements for Fran
+	thrusterID, err := getMovementIDByName(db, "Thruster")
+	if err != nil {
+		return err
+	}
+	
+	// Fran: 21-15-9 (we'll represent as 3 rounds, 7 reps average for simplicity)
+	if err := addWorkoutMovement(db, workoutID, thrusterID, 95.0, 3, 15, 0); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, pullupID, 0, 3, 15, 1); err != nil {
+		return err
+	}
+
+	// Template 6: Helen (linking to WOD)
+	workoutID, err = createWorkout(db, "Helen - Classic Girl WOD", "3 rounds: 400m run, 21 KB swings, 12 pull-ups")
+	if err != nil {
+		return err
+	}
+	
+	helenWODID, err := getWODIDByName(db, "Helen")
+	if err != nil {
+		return err
+	}
+	
+	if err := addWorkoutWOD(db, workoutID, helenWODID, 0); err != nil {
+		return err
+	}
+	
+	kbSwingID, err := getMovementIDByName(db, "Kettlebell Swing")
+	if err != nil {
+		return err
+	}
+	
+	// Helen movements
+	if err := addWorkoutMovementWithDistance(db, workoutID, runID, 400.0, 3, 0); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, kbSwingID, 53.0, 3, 21, 1); err != nil {
+		return err
+	}
+	if err := addWorkoutMovement(db, workoutID, pullupID, 0, 3, 12, 2); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Helper functions for workout template seeding
+
+func createWorkout(db *sql.DB, name, notes string) (int64, error) {
+	query := `INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+	          VALUES (?, ?, NULL, datetime('now'), datetime('now'))`
+	result, err := db.Exec(query, name, notes)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create workout %s: %w", name, err)
+	}
+	return result.LastInsertId()
+}
+
+func addWorkoutMovement(db *sql.DB, workoutID, movementID int64, weight float64, sets, reps, orderIndex int) error {
+	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, datetime('now'), datetime('now'))`
+	_, err := db.Exec(query, workoutID, movementID, weight, sets, reps, orderIndex)
+	return err
+}
+
+func addWorkoutMovementWithTime(db *sql.DB, workoutID, movementID int64, timeSeconds, orderIndex int) error {
+	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, NULL, NULL, NULL, ?, NULL, 0, 0, ?, datetime('now'), datetime('now'))`
+	_, err := db.Exec(query, workoutID, movementID, timeSeconds, orderIndex)
+	return err
+}
+
+func addWorkoutMovementWithDistance(db *sql.DB, workoutID, movementID int64, distance float64, rounds, orderIndex int) error {
+	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, NULL, ?, NULL, NULL, ?, 0, 0, ?, datetime('now'), datetime('now'))`
+	_, err := db.Exec(query, workoutID, movementID, rounds, distance, orderIndex)
+	return err
+}
+
+func addWorkoutWOD(db *sql.DB, workoutID, wodID int64, orderIndex int) error {
+	query := `INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, datetime('now'), datetime('now'))`
+	_, err := db.Exec(query, workoutID, wodID, orderIndex)
+	return err
+}
+
+func getMovementIDByName(db *sql.DB, name string) (int64, error) {
+	var id int64
+	err := db.QueryRow("SELECT id FROM movements WHERE name = ?", name).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("failed to find movement %s: %w", name, err)
+	}
+	return id, nil
+}
+
+func getWODIDByName(db *sql.DB, name string) (int64, error) {
+	var id int64
+	err := db.QueryRow("SELECT id FROM wods WHERE name = ?", name).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("failed to find WOD %s: %w", name, err)
+	}
+	return id, nil
 }
