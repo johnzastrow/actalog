@@ -146,12 +146,118 @@ func (r *WorkoutWODRepository) Delete(id int64) error {
 	return nil
 }
 
+// GetByWorkoutID retrieves all WODs for a specific workout (alias for ListByWorkout)
+func (r *WorkoutWODRepository) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutWOD, error) {
+	return r.ListByWorkout(workoutID)
+}
+
+// GetByWODID finds which workouts use this WOD
+func (r *WorkoutWODRepository) GetByWODID(wodID int64) ([]*domain.WorkoutWOD, error) {
+	query := `SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at
+	          FROM workout_wods
+	          WHERE wod_id = ?
+	          ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(query, wodID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workouts by WOD ID: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanWorkoutWODs(rows)
+}
+
 // DeleteByWorkout deletes all WOD associations for a workout
 func (r *WorkoutWODRepository) DeleteByWorkout(workoutID int64) error {
 	query := `DELETE FROM workout_wods WHERE workout_id = ?`
 
 	if _, err := r.db.Exec(query, workoutID); err != nil {
 		return fmt.Errorf("failed to delete workout WODs: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteByWorkoutID deletes all WODs for a workout template (alias for DeleteByWorkout)
+func (r *WorkoutWODRepository) DeleteByWorkoutID(workoutID int64) error {
+	return r.DeleteByWorkout(workoutID)
+}
+
+// BatchCreate adds multiple WODs to a workout at once
+func (r *WorkoutWODRepository) BatchCreate(workoutID int64, wodIDs []int64) error {
+	if len(wodIDs) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	query := `INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, NULL, NULL, 0, ?, ?, ?)`
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	now := time.Now()
+	for i, wodID := range wodIDs {
+		_, err := stmt.Exec(workoutID, wodID, i, now, now)
+		if err != nil {
+			return fmt.Errorf("failed to create workout WOD for wod_id %d: %w", wodID, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// Reorder updates order_index for WODs in a workout
+func (r *WorkoutWODRepository) Reorder(workoutID int64, wodIDs []int64) error {
+	if len(wodIDs) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	query := `UPDATE workout_wods SET order_index = ?, updated_at = ? WHERE workout_id = ? AND wod_id = ?`
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	now := time.Now()
+	for i, wodID := range wodIDs {
+		result, err := stmt.Exec(i, now, workoutID, wodID)
+		if err != nil {
+			return fmt.Errorf("failed to update order for wod_id %d: %w", wodID, err)
+		}
+
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("failed to get rows affected: %w", err)
+		}
+
+		if rows == 0 {
+			return fmt.Errorf("workout WOD not found for workout_id %d, wod_id %d", workoutID, wodID)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -188,7 +294,7 @@ func (r *WorkoutWODRepository) scanWorkoutWODs(rows *sql.Rows) ([]*domain.Workou
 
 		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
 		}
 
 		if scoreValue.Valid {
@@ -215,7 +321,7 @@ func (r *WorkoutWODRepository) scanWorkoutWODsWithDetails(rows *sql.Rows) ([]*do
 		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt,
 			&workoutWOD.WODName, &workoutWOD.WODType, &workoutWOD.WODRegime, &workoutWOD.WODScoreType, &workoutWOD.WODDescription)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan workout WOD with details: %w", err)
 		}
 
 		if scoreValue.Valid {

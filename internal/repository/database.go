@@ -179,20 +179,16 @@ func getSQLiteSchema() string {
 
 	CREATE TABLE IF NOT EXISTS workouts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		workout_date DATE NOT NULL,
-		workout_type TEXT NOT NULL,
-		workout_name TEXT,
+		name TEXT NOT NULL,
 		notes TEXT,
-		total_time INTEGER,
+		created_by INTEGER,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON workouts(user_id);
-	CREATE INDEX IF NOT EXISTS idx_workouts_workout_date ON workouts(workout_date);
-	CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(user_id, workout_date DESC);
+	CREATE INDEX IF NOT EXISTS idx_workouts_created_by ON workouts(created_by);
+	CREATE INDEX IF NOT EXISTS idx_workouts_name ON workouts(name);
 
 	CREATE TABLE IF NOT EXISTS movements (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -210,6 +206,59 @@ func getSQLiteSchema() string {
 	CREATE INDEX IF NOT EXISTS idx_movements_type ON movements(type);
 	CREATE INDEX IF NOT EXISTS idx_movements_standard ON movements(is_standard);
 
+	CREATE TABLE IF NOT EXISTS wods (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		source TEXT,
+		type TEXT,
+		regime TEXT,
+		score_type TEXT,
+		description TEXT,
+		url TEXT,
+		notes TEXT,
+		is_standard INTEGER NOT NULL DEFAULT 0,
+		created_by INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_wods_name ON wods(name);
+	CREATE INDEX IF NOT EXISTS idx_wods_type ON wods(type);
+	CREATE INDEX IF NOT EXISTS idx_wods_is_standard ON wods(is_standard);
+
+	CREATE TABLE IF NOT EXISTS workout_wods (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workout_id INTEGER NOT NULL,
+		wod_id INTEGER NOT NULL,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_workout_wods_workout_id ON workout_wods(workout_id);
+	CREATE INDEX IF NOT EXISTS idx_workout_wods_wod_id ON workout_wods(wod_id);
+
+	CREATE TABLE IF NOT EXISTS user_workouts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		workout_id INTEGER NOT NULL,
+		workout_date DATE NOT NULL,
+		workout_type TEXT,
+		total_time INTEGER,
+		notes TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_user_id ON user_workouts(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_workout_date ON user_workouts(workout_date);
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_user_date ON user_workouts(user_id, workout_date DESC);
+
 	CREATE TABLE IF NOT EXISTS workout_movements (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		workout_id INTEGER NOT NULL,
@@ -220,6 +269,7 @@ func getSQLiteSchema() string {
 		time INTEGER,
 		distance REAL,
 		is_rx INTEGER NOT NULL DEFAULT 0,
+		is_pr INTEGER NOT NULL DEFAULT 0,
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
@@ -254,20 +304,16 @@ func getPostgreSQLSchema() string {
 
 	CREATE TABLE IF NOT EXISTS workouts (
 		id BIGSERIAL PRIMARY KEY,
-		user_id BIGINT NOT NULL,
-		workout_date DATE NOT NULL,
-		workout_type VARCHAR(50) NOT NULL,
-		workout_name VARCHAR(255),
+		name VARCHAR(255) NOT NULL,
 		notes TEXT,
-		total_time INTEGER,
+		created_by BIGINT,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON workouts(user_id);
-	CREATE INDEX IF NOT EXISTS idx_workouts_workout_date ON workouts(workout_date);
-	CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(user_id, workout_date DESC);
+	CREATE INDEX IF NOT EXISTS idx_workouts_created_by ON workouts(created_by);
+	CREATE INDEX IF NOT EXISTS idx_workouts_name ON workouts(name);
 
 	CREATE TABLE IF NOT EXISTS movements (
 		id BIGSERIAL PRIMARY KEY,
@@ -285,6 +331,59 @@ func getPostgreSQLSchema() string {
 	CREATE INDEX IF NOT EXISTS idx_movements_type ON movements(type);
 	CREATE INDEX IF NOT EXISTS idx_movements_standard ON movements(is_standard);
 
+	CREATE TABLE IF NOT EXISTS wods (
+		id BIGSERIAL PRIMARY KEY,
+		name VARCHAR(255) UNIQUE NOT NULL,
+		source VARCHAR(255),
+		type VARCHAR(255),
+		regime VARCHAR(255),
+		score_type VARCHAR(255),
+		description TEXT,
+		url TEXT,
+		notes TEXT,
+		is_standard BOOLEAN NOT NULL DEFAULT FALSE,
+		created_by BIGINT,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_wods_name ON wods(name);
+	CREATE INDEX IF NOT EXISTS idx_wods_type ON wods(type);
+	CREATE INDEX IF NOT EXISTS idx_wods_is_standard ON wods(is_standard);
+
+	CREATE TABLE IF NOT EXISTS workout_wods (
+		id BIGSERIAL PRIMARY KEY,
+		workout_id BIGINT NOT NULL,
+		wod_id BIGINT NOT NULL,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_workout_wods_workout_id ON workout_wods(workout_id);
+	CREATE INDEX IF NOT EXISTS idx_workout_wods_wod_id ON workout_wods(wod_id);
+
+	CREATE TABLE IF NOT EXISTS user_workouts (
+		id BIGSERIAL PRIMARY KEY,
+		user_id BIGINT NOT NULL,
+		workout_id BIGINT NOT NULL,
+		workout_date DATE NOT NULL,
+		workout_type VARCHAR(255),
+		total_time INTEGER,
+		notes TEXT,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_user_id ON user_workouts(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_workout_date ON user_workouts(workout_date);
+	CREATE INDEX IF NOT EXISTS idx_user_workouts_user_date ON user_workouts(user_id, workout_date DESC);
+
 	CREATE TABLE IF NOT EXISTS workout_movements (
 		id BIGSERIAL PRIMARY KEY,
 		workout_id BIGINT NOT NULL,
@@ -295,6 +394,7 @@ func getPostgreSQLSchema() string {
 		time INTEGER,
 		distance DOUBLE PRECISION,
 		is_rx BOOLEAN NOT NULL DEFAULT FALSE,
+		is_pr BOOLEAN NOT NULL DEFAULT FALSE,
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -328,18 +428,14 @@ func getMySQLSchema() string {
 
 	CREATE TABLE IF NOT EXISTS workouts (
 		id BIGINT AUTO_INCREMENT PRIMARY KEY,
-		user_id BIGINT NOT NULL,
-		workout_date DATE NOT NULL,
-		workout_type VARCHAR(50) NOT NULL,
-		workout_name VARCHAR(255),
+		name VARCHAR(255) NOT NULL,
 		notes TEXT,
-		total_time INTEGER,
+		created_by BIGINT,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		INDEX idx_workouts_user_id (user_id),
-		INDEX idx_workouts_workout_date (workout_date),
-		INDEX idx_workouts_user_date (user_id, workout_date DESC)
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+		INDEX idx_workouts_created_by (created_by),
+		INDEX idx_workouts_name (name)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 	CREATE TABLE IF NOT EXISTS movements (
@@ -357,6 +453,56 @@ func getMySQLSchema() string {
 		INDEX idx_movements_standard (is_standard)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+	CREATE TABLE IF NOT EXISTS wods (
+		id BIGINT AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(255) UNIQUE NOT NULL,
+		source VARCHAR(255),
+		type VARCHAR(255),
+		regime VARCHAR(255),
+		score_type VARCHAR(255),
+		description TEXT,
+		url TEXT,
+		notes TEXT,
+		is_standard BOOLEAN NOT NULL DEFAULT FALSE,
+		created_by BIGINT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+		INDEX idx_wods_name (name),
+		INDEX idx_wods_type (type),
+		INDEX idx_wods_is_standard (is_standard)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+	CREATE TABLE IF NOT EXISTS workout_wods (
+		id BIGINT AUTO_INCREMENT PRIMARY KEY,
+		workout_id BIGINT NOT NULL,
+		wod_id BIGINT NOT NULL,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT,
+		INDEX idx_workout_wods_workout_id (workout_id),
+		INDEX idx_workout_wods_wod_id (wod_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+	CREATE TABLE IF NOT EXISTS user_workouts (
+		id BIGINT AUTO_INCREMENT PRIMARY KEY,
+		user_id BIGINT NOT NULL,
+		workout_id BIGINT NOT NULL,
+		workout_date DATE NOT NULL,
+		workout_type VARCHAR(255),
+		total_time INTEGER,
+		notes TEXT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT,
+		INDEX idx_user_workouts_user_id (user_id),
+		INDEX idx_user_workouts_workout_date (workout_date),
+		INDEX idx_user_workouts_user_date (user_id, workout_date DESC)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 	CREATE TABLE IF NOT EXISTS workout_movements (
 		id BIGINT AUTO_INCREMENT PRIMARY KEY,
 		workout_id BIGINT NOT NULL,
@@ -367,6 +513,7 @@ func getMySQLSchema() string {
 		time INTEGER,
 		distance DOUBLE,
 		is_rx BOOLEAN NOT NULL DEFAULT FALSE,
+		is_pr BOOLEAN NOT NULL DEFAULT FALSE,
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

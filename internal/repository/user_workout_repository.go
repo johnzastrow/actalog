@@ -346,6 +346,80 @@ func (r *UserWorkoutRepository) GetByUserWorkoutDate(userID, workoutID int64, da
 	return userWorkout, nil
 }
 
+// Count counts total user workouts for a specific user
+func (r *UserWorkoutRepository) Count(userID int64) (int64, error) {
+	var count int64
+	query := `SELECT COUNT(*) FROM user_workouts WHERE user_id = ?`
+
+	err := r.db.QueryRow(query, userID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count user workouts: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetRecentForUser retrieves recent user workouts with details (for dashboard/activity feed)
+func (r *UserWorkoutRepository) GetRecentForUser(userID int64, limit int) ([]*domain.UserWorkoutWithDetails, error) {
+	query := `SELECT uw.id, uw.user_id, uw.workout_id, uw.workout_date, uw.workout_type, uw.total_time,
+	                 uw.notes, uw.created_at, uw.updated_at,
+	                 w.name as workout_name, w.notes as workout_description
+	          FROM user_workouts uw
+	          JOIN workouts w ON uw.workout_id = w.id
+	          WHERE uw.user_id = ?
+	          ORDER BY uw.workout_date DESC, uw.created_at DESC
+	          LIMIT ?`
+
+	rows, err := r.db.Query(query, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent user workouts: %w", err)
+	}
+	defer rows.Close()
+
+	var workouts []*domain.UserWorkoutWithDetails
+	for rows.Next() {
+		details := &domain.UserWorkoutWithDetails{}
+		var workoutType sql.NullString
+		var totalTime sql.NullInt64
+		var notes sql.NullString
+		var workoutDescription sql.NullString
+
+		err := rows.Scan(
+			&details.ID,
+			&details.UserID,
+			&details.WorkoutID,
+			&details.WorkoutDate,
+			&workoutType,
+			&totalTime,
+			&notes,
+			&details.CreatedAt,
+			&details.UpdatedAt,
+			&details.WorkoutName,
+			&workoutDescription)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan recent user workout: %w", err)
+		}
+
+		if workoutType.Valid {
+			details.WorkoutType = &workoutType.String
+		}
+		if totalTime.Valid {
+			t := int(totalTime.Int64)
+			details.TotalTime = &t
+		}
+		if notes.Valid {
+			details.Notes = &notes.String
+		}
+		if workoutDescription.Valid {
+			details.WorkoutDescription = &workoutDescription.String
+		}
+
+		workouts = append(workouts, details)
+	}
+
+	return workouts, rows.Err()
+}
+
 // scanUserWorkouts scans multiple user workout rows
 func (r *UserWorkoutRepository) scanUserWorkouts(rows *sql.Rows) ([]*domain.UserWorkout, error) {
 	var userWorkouts []*domain.UserWorkout
