@@ -51,13 +51,13 @@
 
       <!-- Error Alert -->
       <v-alert
-        v-if="error"
+        v-if="wodsStore.error"
         type="error"
         closable
-        @click:close="error = ''"
+        @click:close="wodsStore.error = ''"
         class="mb-3"
       >
-        {{ error }}
+        {{ wodsStore.error }}
       </v-alert>
 
       <!-- Loading State -->
@@ -195,15 +195,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import axios from '@/utils/axios'
+import { useWodsStore } from '@/stores/wods'
 
 const router = useRouter()
 const route = useRoute()
+const wodsStore = useWodsStore()
 
 // State
-const wods = ref([])
-const loading = ref(false)
-const error = ref('')
 const searchQuery = ref('')
 const selectedType = ref('all')
 const activeNav = ref('wods')
@@ -211,13 +209,17 @@ const activeNav = ref('wods')
 // Check if in selection mode
 const selectionMode = computed(() => route.query.select === 'true')
 
+// Computed properties from store
+const loading = computed(() => wodsStore.loading)
+const error = computed(() => wodsStore.error)
+
 // Filtered WODs
 const filteredWODs = computed(() => {
-  let filtered = wods.value
+  let filtered = wodsStore.wods
 
   // Filter by type
   if (selectedType.value !== 'all') {
-    filtered = filtered.filter(w => w.type === selectedType.value)
+    filtered = wodsStore.filterByType(selectedType.value)
   }
 
   // Filter by search query
@@ -234,18 +236,7 @@ const filteredWODs = computed(() => {
 
 // Load WODs
 async function fetchWODs() {
-  loading.value = true
-  error.value = ''
-
-  try {
-    const response = await axios.get('/api/wods')
-    wods.value = response.data.wods || []
-  } catch (err) {
-    console.error('Failed to fetch WODs:', err)
-    error.value = 'Failed to load WODs. Please try again.'
-  } finally {
-    loading.value = false
-  }
+  await wodsStore.fetchWods()
 }
 
 // Handle WOD click
