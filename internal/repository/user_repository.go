@@ -159,13 +159,18 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 		emailVerifiedAt = *user.EmailVerifiedAt
 	}
 
+	var profileImage interface{}
+	if user.ProfileImage != nil {
+		profileImage = *user.ProfileImage
+	}
+
 	user.UpdatedAt = time.Now()
 
 	_, err := r.db.Exec(
 		query,
 		user.Email,
 		user.Name,
-		user.ProfileImage,
+		profileImage,
 		user.Role,
 		user.UpdatedAt,
 		lastLoginAt,
