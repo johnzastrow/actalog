@@ -144,13 +144,6 @@ func main() {
 		cfg.Email.RequireVerification,
 	)
 
-	// workoutService := service.NewWorkoutService( // TODO: Uncomment when workout_handler.go is implemented
-	// 	workoutRepo,
-	// 	workoutMovementRepo,
-	// 	workoutWODRepo,
-	// 	movementRepo,
-	// )
-
 	userWorkoutService := service.NewUserWorkoutService(
 		userWorkoutRepo,
 		workoutRepo,
