@@ -178,7 +178,10 @@ func getSQLiteSchema() string {
 		password_hash TEXT NOT NULL,
 		name TEXT NOT NULL,
 		profile_image TEXT,
+		birthday DATE,
 		role TEXT NOT NULL DEFAULT 'user',
+		email_verified INTEGER NOT NULL DEFAULT 0,
+		email_verified_at DATETIME,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		last_login_at DATETIME
@@ -303,7 +306,10 @@ func getPostgreSQLSchema() string {
 		password_hash VARCHAR(255) NOT NULL,
 		name VARCHAR(255) NOT NULL,
 		profile_image TEXT,
+		birthday DATE,
 		role VARCHAR(50) NOT NULL DEFAULT 'user',
+		email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		email_verified_at TIMESTAMP,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		last_login_at TIMESTAMP
@@ -428,7 +434,10 @@ func getMySQLSchema() string {
 		password_hash VARCHAR(255) NOT NULL,
 		name VARCHAR(255) NOT NULL,
 		profile_image TEXT,
+		birthday DATE,
 		role VARCHAR(50) NOT NULL DEFAULT 'user',
+		email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		email_verified_at DATETIME,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		last_login_at DATETIME,
@@ -607,6 +616,9 @@ func seedStandardMovements(db *sql.DB) error {
 		{"Run", "Running (meters or miles)", "cardio"},
 		{"Bike", "Assault bike or stationary bike", "cardio"},
 		{"Ski Erg", "Ski erg machine", "cardio"},
+
+		// Other
+		{"Kettlebell Swing", "Kettlebell swing", "weightlifting"},
 	}
 
 	// Get database-specific timestamp function
@@ -858,11 +870,11 @@ func seedWorkoutTemplates(db *sql.DB) error {
 		return err
 	}
 	
-	runID, err := getMovementIDByName(db, "Running")
+	runID, err := getMovementIDByName(db, "Run")
 	if err != nil {
 		return err
 	}
-	rowID, err := getMovementIDByName(db, "Rowing")
+	rowID, err := getMovementIDByName(db, "Row")
 	if err != nil {
 		return err
 	}

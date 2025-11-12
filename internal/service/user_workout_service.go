@@ -49,16 +49,7 @@ func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time
 		return nil, ErrUnauthorizedWorkoutAccess
 	}
 
-	// Check if user already logged this workout on this date
-	existing, err := s.userWorkoutRepo.GetByUserWorkoutDate(userID, templateID, date)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check for existing workout: %w", err)
-	}
-	if existing != nil {
-		return nil, fmt.Errorf("workout already logged for this date")
-	}
-
-	// Create user workout
+	// Create user workout (users can log the same workout multiple times per day)
 	userWorkout := &domain.UserWorkout{
 		UserID:      userID,
 		WorkoutID:   templateID,

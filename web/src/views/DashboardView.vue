@@ -266,26 +266,37 @@ const monthWorkouts = computed(() => {
 const currentStreak = computed(() => {
   if (userWorkouts.value.length === 0) return 0
 
-  // Sort workouts by date (newest first)
-  const sortedWorkouts = [...userWorkouts.value].sort((a, b) =>
-    new Date(b.workout_date) - new Date(a.workout_date)
-  )
+  // Get unique workout dates (since users can log multiple workouts per day)
+  const uniqueDates = [...new Set(userWorkouts.value.map(w => {
+    const d = new Date(w.workout_date)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  }))].sort((a, b) => b - a) // Sort newest to oldest
 
+  if (uniqueDates.length === 0) return 0
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayTime = today.getTime()
+
+  // Check if most recent workout is today or yesterday (active streak)
+  const mostRecent = uniqueDates[0]
+  const daysSinceLastWorkout = Math.floor((todayTime - mostRecent) / (1000 * 60 * 60 * 24))
+
+  if (daysSinceLastWorkout > 1) {
+    return 0 // Streak broken if last workout was more than 1 day ago
+  }
+
+  // Count consecutive days going backwards
   let streak = 0
-  let currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  let expectedDate = mostRecent
 
-  for (const workout of sortedWorkouts) {
-    const workoutDate = new Date(workout.workout_date)
-    workoutDate.setHours(0, 0, 0, 0)
-
-    const diffDays = Math.floor((currentDate - workoutDate) / (1000 * 60 * 60 * 24))
-
-    if (diffDays === streak) {
+  for (const workoutTime of uniqueDates) {
+    if (workoutTime === expectedDate) {
       streak++
-      currentDate.setDate(currentDate.getDate() - 1)
-    } else if (diffDays > streak) {
-      break
+      expectedDate -= (1000 * 60 * 60 * 24) // Move back one day
+    } else {
+      break // Gap in dates, streak ends
     }
   }
 
@@ -311,7 +322,7 @@ async function fetchUserWorkouts() {
   loading.value = true
   try {
     const response = await axios.get('/api/workouts')
-    userWorkouts.value = response.data.user_workouts || []
+    userWorkouts.value = response.data.workouts || []
     console.log('Fetched user workouts:', userWorkouts.value.length)
   } catch (err) {
     console.error('Failed to fetch user workouts:', err)

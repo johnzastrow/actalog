@@ -14,8 +14,7 @@ const (
 	MovementTypeGymnastics    MovementType = "gymnastics"
 )
 
-// Movement represents a specific exercise or movement (strength_movements table)
-// Note: After v0.4.0 migration, this maps to the 'strength_movements' table in the database
+// Movement represents a specific exercise or movement (movements table)
 type Movement struct {
 	ID          int64        `json:"id" db:"id"`
 	Name        string       `json:"name" db:"name"`
@@ -27,13 +26,12 @@ type Movement struct {
 	UpdatedAt   time.Time    `json:"updated_at" db:"updated_at"`
 }
 
-// WorkoutMovement represents a movement in a workout template (workout_strength table)
-// Note: After v0.4.0 migration, this maps to the 'workout_strength' table in the database
+// WorkoutMovement represents a movement in a workout template (workout_movements table)
 // WorkoutID references a workout template, not a user-specific workout instance
 type WorkoutMovement struct {
 	ID         int64     `json:"id" db:"id"`
 	WorkoutID  int64     `json:"workout_id" db:"workout_id"`     // References workout template
-	MovementID int64     `json:"movement_id" db:"movement_id"`   // References strength_movements table (column may still be named movement_id in some DBs)
+	MovementID int64     `json:"movement_id" db:"movement_id"`   // References movements table
 	Weight     *float64  `json:"weight,omitempty" db:"weight"` // in lbs or kg
 	Sets       *int      `json:"sets,omitempty" db:"sets"`
 	Reps       *int      `json:"reps,omitempty" db:"reps"`

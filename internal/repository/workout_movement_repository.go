@@ -9,7 +9,6 @@ import (
 )
 
 // WorkoutMovementRepository implements domain.WorkoutMovementRepository
-// Note: After v0.4.0 migration, this accesses the 'workout_strength' table
 type WorkoutMovementRepository struct {
 	db *sql.DB
 }
@@ -24,7 +23,7 @@ func (r *WorkoutMovementRepository) Create(wm *domain.WorkoutMovement) error {
 	wm.CreatedAt = time.Now()
 	wm.UpdatedAt = time.Now()
 
-	query := `INSERT INTO workout_strength (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
+	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db.Exec(query, wm.WorkoutID, wm.MovementID, wm.Weight, wm.Sets, wm.Reps, wm.Time, wm.Distance, wm.IsRx, wm.IsPR, wm.Notes, wm.OrderIndex, wm.CreatedAt, wm.UpdatedAt)
@@ -43,7 +42,7 @@ func (r *WorkoutMovementRepository) Create(wm *domain.WorkoutMovement) error {
 
 // GetByID retrieves a workout movement by ID
 func (r *WorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMovement, error) {
-	query := `SELECT id, workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at FROM workout_strength WHERE id = ?`
+	query := `SELECT id, workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at FROM workout_movements WHERE id = ?`
 
 	wm := &domain.WorkoutMovement{}
 	var weight sql.NullFloat64
@@ -87,9 +86,9 @@ func (r *WorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*domain.W
 	query := `
 		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
-		       sm.name as movement_name, sm.type as movement_type
-		FROM workout_strength ws
-		JOIN strength_movements sm ON ws.movement_id = sm.id
+		       m.name as movement_name, m.type as movement_type
+		FROM workout_movements ws
+		JOIN movements m ON ws.movement_id = m.id
 		WHERE ws.workout_id = ?
 		ORDER BY ws.order_index`
 
@@ -154,7 +153,7 @@ func (r *WorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID 
 	query := `
 		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at
-		FROM workout_strength ws
+		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
 		WHERE uw.user_id = ? AND ws.movement_id = ?
 		ORDER BY uw.workout_date DESC, ws.created_at DESC
@@ -210,7 +209,7 @@ func (r *WorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID 
 func (r *WorkoutMovementRepository) Update(wm *domain.WorkoutMovement) error {
 	wm.UpdatedAt = time.Now()
 
-	query := `UPDATE workout_strength
+	query := `UPDATE workout_movements
 	          SET movement_id = ?, weight = ?, sets = ?, reps = ?,
 	              time = ?, distance = ?, is_rx = ?, is_pr = ?,
 	              notes = ?, order_index = ?, updated_at = ?
@@ -235,7 +234,7 @@ func (r *WorkoutMovementRepository) Update(wm *domain.WorkoutMovement) error {
 
 // Delete deletes a workout movement
 func (r *WorkoutMovementRepository) Delete(id int64) error {
-	query := `DELETE FROM workout_strength WHERE id = ?`
+	query := `DELETE FROM workout_movements WHERE id = ?`
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -256,7 +255,7 @@ func (r *WorkoutMovementRepository) Delete(id int64) error {
 
 // DeleteByWorkoutID deletes all movements for a workout template
 func (r *WorkoutMovementRepository) DeleteByWorkoutID(workoutID int64) error {
-	query := `DELETE FROM workout_strength WHERE workout_id = ?`
+	query := `DELETE FROM workout_movements WHERE workout_id = ?`
 
 	if _, err := r.db.Exec(query, workoutID); err != nil {
 		return fmt.Errorf("failed to delete workout movements: %w", err)
@@ -270,20 +269,20 @@ func (r *WorkoutMovementRepository) DeleteByWorkoutID(workoutID int64) error {
 func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.PersonalRecord, error) {
 	query := `
 		SELECT
-			sm.id as movement_id,
-			sm.name as movement_name,
+			m.id as movement_id,
+			m.name as movement_name,
 			MAX(ws.weight) as max_weight,
 			MAX(ws.reps) as max_reps,
 			MIN(ws.time) as best_time,
 			uw.id as user_workout_id,
 			ws.workout_id,
 			uw.workout_date
-		FROM workout_strength ws
+		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
-		INNER JOIN strength_movements sm ON ws.movement_id = sm.id
+		INNER JOIN movements m ON ws.movement_id = m.id
 		WHERE uw.user_id = ?
-		GROUP BY sm.id, sm.name
-		ORDER BY sm.name`
+		GROUP BY m.id, m.name
+		ORDER BY m.name`
 
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
@@ -335,7 +334,7 @@ func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.
 func (r *WorkoutMovementRepository) GetMaxWeightForMovement(userID, movementID int64) (*float64, error) {
 	query := `
 		SELECT MAX(ws.weight)
-		FROM workout_strength ws
+		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
 		WHERE uw.user_id = ? AND ws.movement_id = ? AND ws.weight IS NOT NULL`
 
@@ -361,10 +360,10 @@ func (r *WorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*
 	query := `
 		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
-		       sm.name as movement_name, sm.type as movement_type, sm.description as movement_description
-		FROM workout_strength ws
+		       m.name as movement_name, m.type as movement_type, m.description as movement_description
+		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
-		INNER JOIN strength_movements sm ON ws.movement_id = sm.id
+		INNER JOIN movements m ON ws.movement_id = m.id
 		WHERE uw.user_id = ? AND ws.is_pr = 1
 		ORDER BY uw.workout_date DESC, ws.created_at DESC
 		LIMIT ?`
