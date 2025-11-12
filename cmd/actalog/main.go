@@ -264,6 +264,7 @@ func main() {
 			// User Workout routes (logging workouts) (authenticated)
 			r.Post("/workouts", userWorkoutHandler.LogWorkout)
 			r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
+			r.Get("/workouts/standard", workoutTemplateHandler.ListStandardTemplates)
 			r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
 			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
 			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)

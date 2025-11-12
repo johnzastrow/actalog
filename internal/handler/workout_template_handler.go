@@ -171,7 +171,7 @@ func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"templates": templates,
+		"workouts": templates,
 	})
 }
 

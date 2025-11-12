@@ -101,13 +101,13 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		workoutDescription = &workoutNotes.String
 	}
 
-	// Get movements from workout_strength table with movement details
+	// Get movements from workout_movements table with movement details
 	movementsQuery := `
 		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
-		       sm.name as movement_name, sm.type as movement_type
-		FROM workout_strength ws
-		JOIN strength_movements sm ON ws.movement_id = sm.id
+		       m.name as movement_name, m.type as movement_type
+		FROM workout_movements ws
+		JOIN movements m ON ws.movement_id = m.id
 		WHERE ws.workout_id = ?
 		ORDER BY ws.order_index`
 
@@ -125,11 +125,12 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		var reps sql.NullInt64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var notes sql.NullString
 		var movementName string
 		var movementType string
 
 		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
 			&movementName, &movementType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout movement: %w", err)
@@ -153,6 +154,9 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		if distance.Valid {
 			wm.Distance = &distance.Float64
 		}
+		if notes.Valid {
+			wm.Notes = notes.String
+		}
 
 		wm.Movement = &domain.Movement{
 			ID:   wm.MovementID,
@@ -168,7 +172,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 
 	// Get WODs from workout_wods table with WOD details
 	wodsQuery := `
-		SELECT ww.id, ww.workout_id, ww.wod_id, ww.score_value, ww.division, ww.is_pr,
+		SELECT ww.id, ww.workout_id, ww.wod_id,
 		       ww.order_index, ww.created_at, ww.updated_at,
 		       w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
 		       w.score_type as wod_score_type, w.description as wod_description
@@ -186,21 +190,12 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	var wods []*domain.WorkoutWODWithDetails
 	for rows.Next() {
 		wod := &domain.WorkoutWODWithDetails{}
-		var scoreValue sql.NullString
-		var division sql.NullString
 
-		err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID, &scoreValue, &division, &wod.IsPR,
+		err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID,
 			&wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
 			&wod.WODName, &wod.WODType, &wod.WODRegime, &wod.WODScoreType, &wod.WODDescription)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
-		}
-
-		if scoreValue.Valid {
-			wod.ScoreValue = &scoreValue.String
-		}
-		if division.Valid {
-			wod.Division = &division.String
 		}
 
 		wods = append(wods, wod)

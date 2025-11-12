@@ -345,7 +345,7 @@ async function fetchRecentWorkouts() {
   loadingWorkouts.value = true
   try {
     const response = await axios.get('/api/workouts')
-    recentWorkouts.value = response.data.user_workouts || []
+    recentWorkouts.value = response.data.workouts || []
   } catch (err) {
     console.error('Failed to fetch recent workouts:', err)
     recentWorkouts.value = []

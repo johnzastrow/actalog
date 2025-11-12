@@ -260,12 +260,12 @@ async function fetchStats() {
   try {
     // Fetch workouts for stats
     const [workoutsRes, prsRes, templatesRes] = await Promise.all([
-      axios.get('/api/workouts').catch(() => ({ data: { user_workouts: [] } })),
+      axios.get('/api/workouts').catch(() => ({ data: { workouts: [] } })),
       axios.get('/api/pr-movements').catch(() => ({ data: { movements: [] } })),
       axios.get('/api/workouts/my-templates').catch(() => ({ data: { workouts: [] } }))
     ])
 
-    const userWorkouts = workoutsRes.data.user_workouts || []
+    const userWorkouts = workoutsRes.data.workouts || []
 
     // Calculate stats
     stats.value = {
