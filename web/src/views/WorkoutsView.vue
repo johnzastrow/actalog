@@ -31,6 +31,60 @@
         </v-tab>
       </v-tabs>
 
+      <!-- Quick Links -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+        <h3 class="text-body-2 font-weight-bold mb-2" style="color: #666">Quick Links</h3>
+        <v-row dense>
+          <v-col cols="6">
+            <v-btn
+              block
+              variant="outlined"
+              color="#00bcd4"
+              rounded="lg"
+              style="text-transform: none"
+              @click="$router.push('/wods')"
+            >
+              <v-icon start size="small">mdi-fire</v-icon>
+              WOD Library
+            </v-btn>
+          </v-col>
+          <v-col cols="6">
+            <v-btn
+              block
+              variant="outlined"
+              color="#00bcd4"
+              rounded="lg"
+              style="text-transform: none"
+              @click="$router.push('/movements')"
+            >
+              <v-icon start size="small">mdi-weight-lifter</v-icon>
+              Movements
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card>
+
+      <!-- Create Template Button for My Templates Tab -->
+      <v-card
+        v-if="activeTemplateTab === 'custom' && !loading"
+        elevation="0"
+        rounded="lg"
+        class="pa-3 mb-3"
+        style="background: white"
+      >
+        <v-btn
+          block
+          color="#00bcd4"
+          variant="flat"
+          prepend-icon="mdi-plus"
+          @click="$router.push('/workouts/templates/create')"
+          rounded="lg"
+          style="text-transform: none; font-weight: 600"
+        >
+          Create New Template
+        </v-btn>
+      </v-card>
+
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">

@@ -218,6 +218,107 @@
         </div>
       </v-card>
 
+      <!-- WODs Card -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+        <div class="d-flex align-center justify-space-between mb-3">
+          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">WODs</h2>
+          <div class="d-flex gap-2">
+            <v-btn
+              size="small"
+              color="#9c27b0"
+              variant="outlined"
+              prepend-icon="mdi-library"
+              @click="browseWODs"
+              style="text-transform: none"
+            >
+              Browse
+            </v-btn>
+            <v-btn
+              size="small"
+              color="#ffc107"
+              prepend-icon="mdi-plus"
+              @click="addWOD"
+              style="text-transform: none"
+            >
+              Add
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="template.wods.length === 0" class="text-center py-4">
+          <v-icon size="48" color="#ccc">mdi-fire</v-icon>
+          <p class="text-body-2 mt-2" style="color: #666">No WODs added yet</p>
+          <p class="text-caption" style="color: #999">Tap "Add WOD" to include benchmark workouts</p>
+        </div>
+
+        <!-- WODs List -->
+        <div v-else>
+          <v-card
+            v-for="(wod, index) in template.wods"
+            :key="index"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-3"
+            style="border: 1px solid #e0e0e0"
+          >
+            <div class="d-flex align-center mb-2">
+              <v-icon color="#ffc107" class="mr-2">mdi-drag-vertical</v-icon>
+              <span class="font-weight-bold text-body-2" style="color: #666">#{{ index + 1 }}</span>
+              <v-spacer />
+              <v-btn
+                icon="mdi-delete"
+                size="small"
+                variant="text"
+                color="#e91e63"
+                @click="removeWOD(index)"
+              />
+            </div>
+
+            <v-autocomplete
+              v-model="wod.wod_id"
+              :items="availableWODs"
+              item-title="name"
+              item-value="id"
+              label="Select WOD"
+              variant="outlined"
+              density="compact"
+              rounded="lg"
+              :loading="loadingWODs"
+              clearable
+              auto-select-first
+              class="mb-2"
+            >
+              <template #prepend-inner>
+                <v-icon color="#ffc107" size="small">mdi-magnify</v-icon>
+              </template>
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props">
+                  <template #prepend>
+                    <v-icon color="#ffc107" size="small">mdi-fire</v-icon>
+                  </template>
+                  <template #subtitle>
+                    <span class="text-caption">{{ item.raw.type }} - {{ item.raw.regime }}</span>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+
+            <v-textarea
+              v-model="wod.notes"
+              label="Notes (Optional)"
+              placeholder="e.g., Scaling options, time cap"
+              variant="outlined"
+              density="compact"
+              rounded="lg"
+              rows="2"
+              auto-grow
+              hide-details
+            />
+          </v-card>
+        </div>
+      </v-card>
+
       <!-- Actions Card -->
       <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
         <v-btn
@@ -290,11 +391,14 @@ const template = ref({
   name: '',
   workout_type: 'strength',
   description: '',
+  wods: [],
   movements: []
 })
 
 const availableMovements = ref([])
+const availableWODs = ref([])
 const loadingMovements = ref(false)
+const loadingWODs = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const successMessage = ref('')
@@ -328,6 +432,20 @@ async function fetchMovements() {
   }
 }
 
+// Load WODs
+async function fetchWODs() {
+  loadingWODs.value = true
+  try {
+    const response = await axios.get('/api/wods')
+    availableWODs.value = response.data.wods || []
+  } catch (err) {
+    console.error('Failed to fetch WODs:', err)
+    error.value = 'Failed to load WODs'
+  } finally {
+    loadingWODs.value = false
+  }
+}
+
 // Load existing template if editing
 async function loadTemplate() {
   if (!route.params.id) return
@@ -340,6 +458,11 @@ async function loadTemplate() {
       name: data.name || '',
       workout_type: data.workout_type || 'strength',
       description: data.description || '',
+      wods: (data.wods || []).map(w => ({
+        wod_id: w.wod_id,
+        notes: w.notes || '',
+        order_index: w.order_index
+      })),
       movements: (data.movements || []).map(m => ({
         movement_id: m.movement_id,
         sets: m.sets || null,
@@ -385,6 +508,33 @@ function browseMovements() {
   })
 }
 
+// Add new WOD
+function addWOD() {
+  template.value.wods.push({
+    wod_id: null,
+    notes: '',
+    order_index: template.value.wods.length + 1
+  })
+}
+
+// Remove WOD
+function removeWOD(index) {
+  template.value.wods.splice(index, 1)
+  // Update order indices
+  template.value.wods.forEach((w, idx) => {
+    w.order_index = idx + 1
+  })
+}
+
+// Browse WODs library
+function browseWODs() {
+  const currentPath = route.path
+  router.push({
+    path: '/wods',
+    query: { select: 'true', returnPath: currentPath }
+  })
+}
+
 // Validate template
 function validateTemplate() {
   validationErrors.value = {}
@@ -395,15 +545,26 @@ function validateTemplate() {
     isValid = false
   }
 
-  if (template.value.movements.length === 0) {
-    error.value = 'Please add at least one movement'
+  if (template.value.movements.length === 0 && template.value.wods.length === 0) {
+    error.value = 'Please add at least one movement or WOD'
     isValid = false
   }
 
+  // Validate movements
   for (let i = 0; i < template.value.movements.length; i++) {
     const movement = template.value.movements[i]
     if (!movement.movement_id) {
       error.value = `Movement #${i + 1}: Please select a movement`
+      isValid = false
+      break
+    }
+  }
+
+  // Validate WODs
+  for (let i = 0; i < template.value.wods.length; i++) {
+    const wod = template.value.wods[i]
+    if (!wod.wod_id) {
+      error.value = `WOD #${i + 1}: Please select a WOD`
       isValid = false
       break
     }
@@ -425,6 +586,11 @@ async function saveTemplate() {
       name: template.value.name.trim(),
       workout_type: template.value.workout_type,
       description: template.value.description?.trim() || null,
+      wods: template.value.wods.map((w, idx) => ({
+        wod_id: w.wod_id,
+        notes: w.notes?.trim() || null,
+        order_index: idx + 1
+      })),
       movements: template.value.movements.map((m, idx) => ({
         movement_id: m.movement_id,
         sets: m.sets || null,
@@ -485,7 +651,7 @@ async function deleteTemplate() {
 
 // Handle back navigation
 function handleBack() {
-  if (template.value.movements.length > 0 || template.value.name) {
+  if (template.value.wods.length > 0 || template.value.movements.length > 0 || template.value.name) {
     if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
       router.back()
     }
@@ -496,7 +662,7 @@ function handleBack() {
 
 // Initialize
 onMounted(async () => {
-  await fetchMovements()
+  await Promise.all([fetchMovements(), fetchWODs()])
   await loadTemplate()
 
   // Handle selected movement from library
@@ -504,6 +670,15 @@ onMounted(async () => {
     const movementId = parseInt(route.query.selectedMovement)
     addMovement()
     template.value.movements[template.value.movements.length - 1].movement_id = movementId
+    // Clear query param
+    router.replace({ path: route.path })
+  }
+
+  // Handle selected WOD from library
+  if (route.query.selectedWOD) {
+    const wodId = parseInt(route.query.selectedWOD)
+    addWOD()
+    template.value.wods[template.value.wods.length - 1].wod_id = wodId
     // Clear query param
     router.replace({ path: route.path })
   }

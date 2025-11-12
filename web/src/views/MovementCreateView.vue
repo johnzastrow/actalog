@@ -37,13 +37,13 @@
         {{ error }}
       </v-alert>
 
-      <!-- Movement Form Card -->
+      <!-- Basic Information Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Movement Details</h2>
+        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Basic Information</h2>
 
         <v-text-field
           v-model="movement.name"
-          label="Movement Name"
+          label="Movement Name *"
           placeholder="e.g., Barbell Back Squat"
           variant="outlined"
           density="compact"
@@ -61,7 +61,7 @@
         <v-select
           v-model="movement.type"
           :items="movementTypes"
-          label="Movement Type"
+          label="Movement Type *"
           variant="outlined"
           density="compact"
           rounded="lg"
@@ -74,34 +74,128 @@
           </template>
         </v-select>
 
-        <v-textarea
-          v-model="movement.description"
-          label="Description"
-          placeholder="Describe the movement, technique notes, or any important details"
+        <v-select
+          v-model="movement.difficulty"
+          :items="difficultyLevels"
+          label="Difficulty Level"
           variant="outlined"
           density="compact"
           rounded="lg"
-          rows="4"
-          auto-grow
-          :error-messages="validationErrors.description"
+          class="mb-2"
+          clearable
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+            <v-icon color="#00bcd4" size="small">mdi-signal</v-icon>
           </template>
-        </v-textarea>
+        </v-select>
+
+        <v-text-field
+          v-model="movement.equipment"
+          label="Equipment Required"
+          placeholder="e.g., Barbell, Squat Rack"
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          class="mb-2"
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-tools</v-icon>
+          </template>
+        </v-text-field>
+
+        <v-text-field
+          v-model="movement.primaryMuscles"
+          label="Primary Muscle Groups"
+          placeholder="e.g., Quadriceps, Glutes, Core"
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          class="mb-2"
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-arm-flex</v-icon>
+          </template>
+        </v-text-field>
 
         <!-- Info Note -->
         <v-alert
           type="info"
           variant="tonal"
           density="compact"
-          class="mt-2"
         >
           <template #prepend>
             <v-icon size="small">mdi-information</v-icon>
           </template>
           Custom movements will be available only to you
         </v-alert>
+      </v-card>
+
+      <!-- Description & Instructions Card -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Description & Instructions</h2>
+
+        <v-textarea
+          v-model="movement.description"
+          label="Movement Description *"
+          placeholder="Describe the movement execution, key technique points, and setup..."
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          rows="4"
+          auto-grow
+          :error-messages="validationErrors.description"
+          class="mb-2"
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+          </template>
+        </v-textarea>
+
+        <v-textarea
+          v-model="movement.coachingCues"
+          label="Coaching Cues"
+          placeholder="e.g., Keep chest up, drive through heels, maintain neutral spine..."
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          rows="3"
+          auto-grow
+          class="mb-2"
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-comment-text</v-icon>
+          </template>
+        </v-textarea>
+
+        <v-text-field
+          v-model="movement.videoUrl"
+          label="Video Tutorial URL"
+          placeholder="https://youtube.com/watch?v=..."
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          type="url"
+          class="mb-2"
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-video</v-icon>
+          </template>
+        </v-text-field>
+
+        <v-textarea
+          v-model="movement.scalingOptions"
+          label="Scaling/Modifications"
+          placeholder="Beginner: Goblet squat&#10;Intermediate: Front squat&#10;Advanced: Pause squat"
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          rows="3"
+          auto-grow
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-stairs</v-icon>
+          </template>
+        </v-textarea>
       </v-card>
 
       <!-- Actions Card -->
@@ -187,7 +281,13 @@ const route = useRoute()
 const movement = ref({
   name: '',
   type: 'weightlifting',
-  description: ''
+  difficulty: '',
+  equipment: '',
+  primaryMuscles: '',
+  description: '',
+  coachingCues: '',
+  videoUrl: '',
+  scalingOptions: ''
 })
 
 const saving = ref(false)
@@ -204,6 +304,13 @@ const movementTypes = [
   { title: 'Bodyweight', value: 'bodyweight' }
 ]
 
+const difficultyLevels = [
+  { title: 'Beginner', value: 'beginner' },
+  { title: 'Intermediate', value: 'intermediate' },
+  { title: 'Advanced', value: 'advanced' },
+  { title: 'Elite', value: 'elite' }
+]
+
 // Computed
 const isEditMode = computed(() => !!route.params.id)
 const returnPath = computed(() => route.query.returnPath || '/movements')
@@ -217,10 +324,28 @@ async function loadMovement() {
     const response = await axios.get(`/api/movements/${route.params.id}`)
     const data = response.data.movement || response.data
 
+    // Parse description if it contains structured data
+    let parsedData = {}
+    try {
+      if (data.description && data.description.startsWith('__STRUCTURED__')) {
+        const jsonStr = data.description.substring('__STRUCTURED__'.length)
+        parsedData = JSON.parse(jsonStr)
+      }
+    } catch (e) {
+      // Not structured data, use as plain description
+      parsedData.description = data.description || ''
+    }
+
     movement.value = {
       name: data.name || '',
       type: data.type || 'weightlifting',
-      description: data.description || ''
+      difficulty: parsedData.difficulty || '',
+      equipment: parsedData.equipment || '',
+      primaryMuscles: parsedData.primaryMuscles || '',
+      description: parsedData.description || data.description || '',
+      coachingCues: parsedData.coachingCues || '',
+      videoUrl: parsedData.videoUrl || '',
+      scalingOptions: parsedData.scalingOptions || ''
     }
   } catch (err) {
     console.error('Failed to load movement:', err)
@@ -260,10 +385,24 @@ async function saveMovement() {
   successMessage.value = ''
 
   try {
+    // Build structured data
+    const structuredData = {
+      difficulty: movement.value.difficulty || null,
+      equipment: movement.value.equipment?.trim() || null,
+      primaryMuscles: movement.value.primaryMuscles?.trim() || null,
+      description: movement.value.description.trim(),
+      coachingCues: movement.value.coachingCues?.trim() || null,
+      videoUrl: movement.value.videoUrl?.trim() || null,
+      scalingOptions: movement.value.scalingOptions?.trim() || null
+    }
+
+    // Encode structured data with marker
+    const descriptionField = '__STRUCTURED__' + JSON.stringify(structuredData)
+
     const payload = {
       name: movement.value.name.trim(),
       type: movement.value.type,
-      description: movement.value.description.trim()
+      description: descriptionField
     }
 
     let response
@@ -328,7 +467,16 @@ async function deleteMovement() {
 
 // Handle back navigation
 function handleBack() {
-  if (movement.value.name || movement.value.description) {
+  const hasChanges = movement.value.name ||
+                     movement.value.description ||
+                     movement.value.difficulty ||
+                     movement.value.equipment ||
+                     movement.value.primaryMuscles ||
+                     movement.value.coachingCues ||
+                     movement.value.videoUrl ||
+                     movement.value.scalingOptions
+
+  if (hasChanges) {
     if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
       router.push(returnPath.value)
     }

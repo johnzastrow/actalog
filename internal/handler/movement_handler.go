@@ -24,6 +24,22 @@ func NewMovementHandler(movementRepo domain.MovementRepository, l *logger.Logger
 	}
 }
 
+// ListAll returns all movements (both standard and custom)
+func (h *MovementHandler) ListAll(w http.ResponseWriter, r *http.Request) {
+	movements, err := h.movementRepo.ListAll()
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_all_movements outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve movements")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"movements": movements,
+	})
+}
+
 // ListStandard returns all standard movements
 func (h *MovementHandler) ListStandard(w http.ResponseWriter, r *http.Request) {
 	movements, err := h.movementRepo.ListStandard()

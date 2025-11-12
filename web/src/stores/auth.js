@@ -16,7 +16,12 @@ export const useAuthStore = defineStore('auth', () => {
     const savedUser = localStorage.getItem('user')
     if (savedUser && token.value) {
       try {
-        user.value = JSON.parse(savedUser)
+        const parsedUser = JSON.parse(savedUser)
+        // Ensure profile_image has full URL for display
+        if (parsedUser.profile_image && !parsedUser.profile_image.startsWith('http')) {
+          parsedUser.profile_image = `http://localhost:8080${parsedUser.profile_image}`
+        }
+        user.value = parsedUser
         // Set default authorization header
         axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
       } catch (e) {

@@ -357,9 +357,14 @@ async function handleFileSelect(event) {
       }
     })
 
-    // Update user in auth store
-    authStore.user = response.data.user
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+    // Update user in auth store - need to update the ref value property
+    const updatedUser = response.data.user
+    // Ensure profile_image has full URL for display
+    if (updatedUser.profile_image && !updatedUser.profile_image.startsWith('http')) {
+      updatedUser.profile_image = `http://localhost:8080${updatedUser.profile_image}`
+    }
+    authStore.user = updatedUser
+    localStorage.setItem('user', JSON.stringify(updatedUser))
 
     // Clear file input
     if (fileInput.value) {
@@ -382,8 +387,9 @@ async function deleteAvatar() {
     const response = await axios.delete('/api/users/avatar')
 
     // Update user in auth store
-    authStore.user = response.data.user
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+    const updatedUser = response.data.user
+    authStore.user = updatedUser
+    localStorage.setItem('user', JSON.stringify(updatedUser))
   } catch (err) {
     console.error('Failed to delete avatar:', err)
     alert(err.response?.data?.message || 'Failed to delete avatar')

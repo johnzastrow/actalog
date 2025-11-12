@@ -53,6 +53,7 @@ type MovementRepository interface {
 	Create(movement *Movement) error
 	GetByID(id int64) (*Movement, error)
 	GetByName(name string) (*Movement, error)
+	ListAll() ([]*Movement, error)
 	ListStandard() ([]*Movement, error)
 	ListByUser(userID int64) ([]*Movement, error)
 	Update(movement *Movement) error

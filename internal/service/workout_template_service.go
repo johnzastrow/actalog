@@ -11,17 +11,19 @@ import (
 type WorkoutTemplateService struct {
 	workoutRepo         domain.WorkoutRepository
 	workoutMovementRepo domain.WorkoutMovementRepository
+	workoutWODRepo      domain.WorkoutWODRepository
 }
 
-func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository) *WorkoutTemplateService {
+func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository, workoutWODRepo domain.WorkoutWODRepository) *WorkoutTemplateService {
 	return &WorkoutTemplateService{
 		workoutRepo:         workoutRepo,
 		workoutMovementRepo: workoutMovementRepo,
+		workoutWODRepo:      workoutWODRepo,
 	}
 }
 
 // Create creates a new workout template
-func (s *WorkoutTemplateService) Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Create the workout template
 	workout := &domain.Workout{
 		Name:      name,
@@ -52,6 +54,21 @@ func (s *WorkoutTemplateService) Create(userID int64, name string, notes *string
 
 			if err := s.workoutMovementRepo.Create(wm); err != nil {
 				return nil, fmt.Errorf("failed to add movement: %w", err)
+			}
+		}
+	}
+
+	// Add WODs if provided
+	if len(wods) > 0 {
+		for i, wod := range wods {
+			ww := &domain.WorkoutWOD{
+				WorkoutID:  workout.ID,
+				WODID:      wod.WODID,
+				OrderIndex: i + 1,
+			}
+
+			if err := s.workoutWODRepo.Create(ww); err != nil {
+				return nil, fmt.Errorf("failed to add WOD: %w", err)
 			}
 		}
 	}
@@ -103,7 +120,7 @@ func (s *WorkoutTemplateService) ListStandard(limit, offset int) ([]*domain.Work
 }
 
 // Update updates an existing workout template
-func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -149,6 +166,26 @@ func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *st
 
 			if err := s.workoutMovementRepo.Create(wm); err != nil {
 				return nil, fmt.Errorf("failed to add movement: %w", err)
+			}
+		}
+	}
+
+	// Delete existing WODs
+	if err := s.workoutWODRepo.DeleteByWorkout(id); err != nil {
+		return nil, fmt.Errorf("failed to delete existing WODs: %w", err)
+	}
+
+	// Add new WODs
+	if len(wods) > 0 {
+		for i, wod := range wods {
+			ww := &domain.WorkoutWOD{
+				WorkoutID:  id,
+				WODID:      wod.WODID,
+				OrderIndex: i + 1,
+			}
+
+			if err := s.workoutWODRepo.Create(ww); err != nil {
+				return nil, fmt.Errorf("failed to add WOD: %w", err)
 			}
 		}
 	}

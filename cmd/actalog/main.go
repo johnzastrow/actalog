@@ -153,6 +153,7 @@ func main() {
 	workoutTemplateService := service.NewWorkoutTemplateService(
 		workoutRepo,
 		workoutMovementRepo,
+		workoutWODRepo,
 	)
 
 	wodService := service.NewWODService(wodRepo)
@@ -222,7 +223,7 @@ func main() {
 		r.Post("/auth/revoke", authHandler.RevokeToken)
 
 		// Movement routes (public for browsing)
-		r.Get("/movements", movementHandler.ListStandard)
+		r.Get("/movements", movementHandler.ListAll)
 		r.Get("/movements/search", movementHandler.Search)
 		r.Get("/movements/{id}", movementHandler.GetByID)
 

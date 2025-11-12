@@ -98,6 +98,19 @@ func (r *MovementRepository) ListStandard() ([]*domain.Movement, error) {
 	return r.scanMovements(rows)
 }
 
+// ListAll retrieves all movements (both standard and custom)
+func (r *MovementRepository) ListAll() ([]*domain.Movement, error) {
+	query := `SELECT id, name, description, type, is_standard, created_by, created_at, updated_at FROM movements ORDER BY name`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all movements: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanMovements(rows)
+}
+
 // ListByUser retrieves movements created by a user
 func (r *MovementRepository) ListByUser(userID int64) ([]*domain.Movement, error) {
 	query := `SELECT id, name, description, type, is_standard, created_by, created_at, updated_at FROM movements WHERE created_by = ? ORDER BY name`

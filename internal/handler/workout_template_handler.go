@@ -11,12 +11,12 @@ import (
 )
 
 type WorkoutTemplateService interface {
-	Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement) (*domain.Workout, error)
+	Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	GetByID(id int64) (*domain.Workout, error)
 	GetByIDWithDetails(id int64) (*domain.Workout, error)
 	ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error)
 	ListStandard(limit, offset int) ([]*domain.Workout, error)
-	Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement) (*domain.Workout, error)
+	Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	Delete(id, userID int64) error
 }
 
@@ -50,6 +50,11 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 			Notes      string   `json:"notes"`
 			OrderIndex int      `json:"order_index"`
 		} `json:"movements"`
+		WODs []struct {
+			WODID      int64  `json:"wod_id"`
+			Notes      string `json:"notes"`
+			OrderIndex int    `json:"order_index"`
+		} `json:"wods"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -77,7 +82,16 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Create(userID, req.Name, req.Description, movements)
+	// Convert request WODs to domain WODs
+	wods := make([]domain.WorkoutWOD, len(req.WODs))
+	for i, w := range req.WODs {
+		wods[i] = domain.WorkoutWOD{
+			WODID:      w.WODID,
+			OrderIndex: w.OrderIndex,
+		}
+	}
+
+	template, err := h.service.Create(userID, req.Name, req.Description, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -204,6 +218,11 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 			Notes      string   `json:"notes"`
 			OrderIndex int      `json:"order_index"`
 		} `json:"movements"`
+		WODs []struct {
+			WODID      int64  `json:"wod_id"`
+			Notes      string `json:"notes"`
+			OrderIndex int    `json:"order_index"`
+		} `json:"wods"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -231,7 +250,16 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Update(id, userID, req.Name, req.Description, movements)
+	// Convert request WODs to domain WODs
+	wods := make([]domain.WorkoutWOD, len(req.WODs))
+	for i, w := range req.WODs {
+		wods[i] = domain.WorkoutWOD{
+			WODID:      w.WODID,
+			OrderIndex: w.OrderIndex,
+		}
+	}
+
+	template, err := h.service.Update(id, userID, req.Name, req.Description, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

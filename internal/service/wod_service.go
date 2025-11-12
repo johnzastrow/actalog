@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -142,8 +143,11 @@ func (s *WODService) ListAll(userID *int64, limit, offset int) ([]*domain.WOD, e
 		return nil, fmt.Errorf("failed to list user wods: %w", err)
 	}
 
-	// Combine both lists (standard first, then custom)
+	// Combine both lists and sort alphabetically by name
 	wods := append(standard, custom...)
+	sort.Slice(wods, func(i, j int) bool {
+		return strings.ToLower(wods[i].Name) < strings.ToLower(wods[j].Name)
+	})
 	return s.paginateWODs(wods, limit, offset), nil
 }
 

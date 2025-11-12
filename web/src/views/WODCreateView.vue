@@ -39,6 +39,22 @@
         </v-text-field>
 
         <v-select
+          v-model="wod.source"
+          :items="sources"
+          label="Source"
+          variant="outlined"
+          density="compact"
+          rounded="lg"
+          :error-messages="validationErrors.source"
+          class="mb-2"
+          required
+        >
+          <template #prepend-inner>
+            <v-icon color="#00bcd4" size="small">mdi-source-branch</v-icon>
+          </template>
+        </v-select>
+
+        <v-select
           v-model="wod.type"
           :items="wodTypes"
           label="WOD Type"
@@ -201,9 +217,10 @@ const route = useRoute()
 
 const wod = ref({
   name: '',
+  source: 'Self-recorded',
   type: 'Benchmark',
   regime: 'Fastest Time',
-  score_type: 'Time',
+  score_type: 'Time (HH:MM:SS)',
   description: '',
   url: '',
   notes: ''
@@ -216,9 +233,10 @@ const error = ref('')
 const validationErrors = ref({})
 const deleteDialog = ref(false)
 
+const sources = ['CrossFit', 'Other Coach', 'Self-recorded']
 const wodTypes = ['Benchmark', 'Hero', 'Girl', 'Games', 'Notables', 'Endurance', 'Self-created']
 const regimes = ['EMOM', 'AMRAP', 'Fastest Time', 'Slowest Round', 'Get Stronger', 'Skills']
-const scoreTypes = ['Time', 'Rounds+Reps', 'Max Weight', 'Distance', 'Calories']
+const scoreTypes = ['Time (HH:MM:SS)', 'Rounds+Reps', 'Max Weight']
 
 const isEditMode = computed(() => !!route.params.id)
 const returnPath = computed(() => route.query.returnPath || '/wods')
@@ -233,6 +251,7 @@ async function loadWOD() {
 
     wod.value = {
       name: data.name || '',
+      source: data.source || 'Self-recorded',
       type: data.type || 'Benchmark',
       regime: data.regime || 'Fastest Time',
       score_type: data.score_type || 'Time',
@@ -255,6 +274,11 @@ function validateWOD() {
     isValid = false
   }
 
+  if (!wod.value.source || wod.value.source.trim() === '') {
+    validationErrors.value.source = 'Source is required'
+    isValid = false
+  }
+
   if (!wod.value.description || wod.value.description.trim() === '') {
     validationErrors.value.description = 'Description is required'
     isValid = false
@@ -273,6 +297,7 @@ async function saveWOD() {
   try {
     const payload = {
       name: wod.value.name.trim(),
+      source: wod.value.source.trim(),
       type: wod.value.type,
       regime: wod.value.regime,
       score_type: wod.value.score_type,
@@ -338,7 +363,7 @@ async function deleteWOD() {
 }
 
 function handleBack() {
-  if (wod.value.name || wod.value.description) {
+  if (wod.value.name || wod.value.description || wod.value.source !== 'Self-recorded') {
     if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
       router.push(returnPath.value)
     }
