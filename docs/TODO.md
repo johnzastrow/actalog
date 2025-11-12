@@ -1,8 +1,8 @@
 # TODO
 
-## Database Schema Migration (v0.4.0) - IN PROGRESS
+## v0.4.0-beta Release - PARTIALLY COMPLETE (2025-11-12)
 
-**Status:** Service layer and handlers implemented. Database migration pending. Testing in progress.
+**Status:** Backend complete with seeded data. Frontend stores created. Critical path for testing established.
 
 ### Completed (v0.3.1-beta)
 - [x] Add `is_pr` column to `workout_movements` table (migration v0.3.0 completed 2025-11-10)
