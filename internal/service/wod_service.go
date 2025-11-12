@@ -1,13 +1,25 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
 
-// WODService handles WOD (Workout of the Day) management
+var (
+	ErrWODNotFound       = errors.New("wod not found")
+	ErrWODUnauthorized   = errors.New("unauthorized: cannot modify standard WOD")
+	ErrWODOwnership      = errors.New("unauthorized: not the owner of this WOD")
+	ErrWODNameRequired   = errors.New("wod name is required")
+	ErrWODSourceRequired = errors.New("wod source is required")
+	ErrWODTypeRequired   = errors.New("wod type is required")
+	ErrWODDuplicateName  = errors.New("wod with this name already exists")
+)
+
+// WODService handles WOD business logic
 type WODService struct {
 	wodRepo domain.WODRepository
 }
@@ -19,150 +31,337 @@ func NewWODService(wodRepo domain.WODRepository) *WODService {
 	}
 }
 
-// CreateWOD creates a custom WOD for a user
-func (s *WODService) CreateWOD(userID int64, wod *domain.WOD) error {
-	// Set creator and timestamps
-	wod.CreatedBy = &userID
+// Create creates a new custom WOD with validation
+func (s *WODService) Create(wod *domain.WOD, userID int64) error {
+	// Validate required fields
+	if err := s.validateWOD(wod); err != nil {
+		return err
+	}
+
+	// Check for duplicate name
+	existing, err := s.wodRepo.GetByName(wod.Name)
+	if err != nil {
+		return fmt.Errorf("failed to check for duplicate WOD name: %w", err)
+	}
+	if existing != nil {
+		return ErrWODDuplicateName
+	}
+
+	// Set custom WOD attributes
 	wod.IsStandard = false
+	wod.CreatedBy = &userID
 	now := time.Now()
 	wod.CreatedAt = now
 	wod.UpdatedAt = now
 
 	// Create WOD
-	err := s.wodRepo.Create(wod)
+	err = s.wodRepo.Create(wod)
 	if err != nil {
-		return fmt.Errorf("failed to create WOD: %w", err)
+		return fmt.Errorf("failed to create wod: %w", err)
 	}
 
 	return nil
 }
 
-// GetWOD retrieves a WOD by ID
-func (s *WODService) GetWOD(wodID int64) (*domain.WOD, error) {
-	wod, err := s.wodRepo.GetByID(wodID)
+// GetByID retrieves a WOD by ID
+func (s *WODService) GetByID(id int64) (*domain.WOD, error) {
+	wod, err := s.wodRepo.GetByID(id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get WOD: %w", err)
+		return nil, fmt.Errorf("failed to get wod: %w", err)
 	}
 	if wod == nil {
-		return nil, fmt.Errorf("WOD not found")
+		return nil, ErrWODNotFound
 	}
+
 	return wod, nil
 }
 
-// GetWODByName retrieves a WOD by name (e.g., "Fran", "Murph")
-func (s *WODService) GetWODByName(name string) (*domain.WOD, error) {
+// GetByName retrieves a WOD by name
+func (s *WODService) GetByName(name string) (*domain.WOD, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, ErrWODNameRequired
+	}
+
 	wod, err := s.wodRepo.GetByName(name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get WOD by name: %w", err)
+		return nil, fmt.Errorf("failed to get wod by name: %w", err)
 	}
 	if wod == nil {
-		return nil, fmt.Errorf("WOD not found")
+		return nil, ErrWODNotFound
 	}
+
 	return wod, nil
 }
 
-// ListStandardWODs retrieves all standard CrossFit benchmark WODs
-func (s *WODService) ListStandardWODs() ([]*domain.WOD, error) {
+// List retrieves WODs with optional filtering
+func (s *WODService) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {
+	wods, err := s.wodRepo.List(filters)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list wods: %w", err)
+	}
+
+	// Apply pagination at service layer
+	return s.paginateWODs(wods, limit, offset), nil
+}
+
+// ListStandard retrieves all standard (pre-seeded) WODs
+func (s *WODService) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 	wods, err := s.wodRepo.ListStandard()
 	if err != nil {
-		return nil, fmt.Errorf("failed to list standard WODs: %w", err)
+		return nil, fmt.Errorf("failed to list standard wods: %w", err)
 	}
-	return wods, nil
+
+	// Apply pagination at service layer
+	return s.paginateWODs(wods, limit, offset), nil
 }
 
-// ListUserWODs retrieves all custom WODs created by a user
-func (s *WODService) ListUserWODs(userID int64) ([]*domain.WOD, error) {
+// ListByUser retrieves all custom WODs created by a specific user
+func (s *WODService) ListByUser(userID int64, limit, offset int) ([]*domain.WOD, error) {
 	wods, err := s.wodRepo.ListByUser(userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list user WODs: %w", err)
+		return nil, fmt.Errorf("failed to list user wods: %w", err)
 	}
-	return wods, nil
+
+	// Apply pagination at service layer
+	return s.paginateWODs(wods, limit, offset), nil
 }
 
-// ListAllWODs retrieves combined list of standard and user WODs
-func (s *WODService) ListAllWODs(userID int64) ([]*domain.WOD, error) {
+// ListAll retrieves all WODs (standard + user's custom) - convenience method
+func (s *WODService) ListAll(userID *int64, limit, offset int) ([]*domain.WOD, error) {
 	// Get standard WODs
-	standard, err := s.ListStandardWODs()
+	standard, err := s.wodRepo.ListStandard()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list standard wods: %w", err)
+	}
+
+	// If no user ID, return only standard WODs
+	if userID == nil {
+		return s.paginateWODs(standard, limit, offset), nil
 	}
 
 	// Get user's custom WODs
-	custom, err := s.ListUserWODs(userID)
+	custom, err := s.wodRepo.ListByUser(*userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list user wods: %w", err)
 	}
+
+	// Combine both lists (standard first, then custom)
 	wods := append(standard, custom...)
-	return wods, nil
+	return s.paginateWODs(wods, limit, offset), nil
 }
 
-// SearchWODs searches for WODs by name
-func (s *WODService) SearchWODs(query string) ([]*domain.WOD, error) {
-	wods, err := s.wodRepo.Search(query)
+// Update updates an existing custom WOD with authorization checks
+func (s *WODService) Update(wod *domain.WOD, userID int64) error {
+	// Validate required fields
+	if err := s.validateWOD(wod); err != nil {
+		return err
+	}
+
+	// Get existing WOD
+	existing, err := s.wodRepo.GetByID(wod.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to search WODs: %w", err)
+		return fmt.Errorf("failed to get wod: %w", err)
 	}
-	return wods, nil
-}
-
-// UpdateWOD updates a custom WOD with authorization check
-func (s *WODService) UpdateWOD(wodID, userID int64, updates *domain.WOD) error {
-	wod, err := s.wodRepo.GetByID(wodID)
-	if err != nil {
-		return fmt.Errorf("failed to get WOD: %w", err)
-	}
-	if wod == nil {
-		return fmt.Errorf("WOD not found")
+	if existing == nil {
+		return ErrWODNotFound
 	}
 
-	// Authorization check: only creator can modify custom WOD
-	if wod.CreatedBy == nil || *wod.CreatedBy != userID {
-		return ErrUnauthorized
+	// Check if it's a standard WOD
+	if existing.IsStandard {
+		return ErrWODUnauthorized
 	}
 
-	// Can't modify standard WODs
-	if wod.IsStandard {
-		return fmt.Errorf("cannot modify standard WODs")
+	// Check ownership
+	if existing.CreatedBy == nil || *existing.CreatedBy != userID {
+		return ErrWODOwnership
 	}
-	wod.Name = updates.Name
-	wod.Source = updates.Source
-	wod.Type = updates.Type
-	wod.Regime = updates.Regime
-	wod.ScoreType = updates.ScoreType
-	wod.Description = updates.Description
+
+	// Check for duplicate name (if name changed)
+	if existing.Name != wod.Name {
+		duplicate, err := s.wodRepo.GetByName(wod.Name)
+		if err != nil {
+			return fmt.Errorf("failed to check for duplicate WOD name: %w", err)
+		}
+		if duplicate != nil && duplicate.ID != wod.ID {
+			return ErrWODDuplicateName
+		}
+	}
+
+	// Update timestamp
 	wod.UpdatedAt = time.Now()
 
+	// Preserve original creation info
+	wod.IsStandard = existing.IsStandard
+	wod.CreatedBy = existing.CreatedBy
+	wod.CreatedAt = existing.CreatedAt
+
+	// Update WOD
 	err = s.wodRepo.Update(wod)
 	if err != nil {
-		return fmt.Errorf("failed to update WOD: %w", err)
+		return fmt.Errorf("failed to update wod: %w", err)
 	}
+
 	return nil
 }
 
-// DeleteWOD deletes a custom WOD with authorization check
-func (s *WODService) DeleteWOD(wodID, userID int64) error {
-	wod, err := s.wodRepo.GetByID(wodID)
+// Delete deletes a custom WOD with authorization checks
+func (s *WODService) Delete(id int64, userID int64) error {
+	// Get existing WOD
+	wod, err := s.wodRepo.GetByID(id)
 	if err != nil {
-		return fmt.Errorf("failed to get WOD: %w", err)
+		return fmt.Errorf("failed to get wod: %w", err)
 	}
 	if wod == nil {
-		return fmt.Errorf("WOD not found")
+		return ErrWODNotFound
 	}
 
-	// Authorization check: only creator can delete custom WOD
-	if wod.CreatedBy == nil || *wod.CreatedBy != userID {
-		return ErrUnauthorized
-	}
-
-	// Can't delete standard WODs
+	// Check if it's a standard WOD
 	if wod.IsStandard {
-		return fmt.Errorf("cannot delete standard WODs")
+		return ErrWODUnauthorized
+	}
+
+	// Check ownership
+	if wod.CreatedBy == nil || *wod.CreatedBy != userID {
+		return ErrWODOwnership
 	}
 
 	// Delete WOD
-	err = s.wodRepo.Delete(wodID)
+	err = s.wodRepo.Delete(id)
 	if err != nil {
-		return fmt.Errorf("failed to delete WOD: %w", err)
+		return fmt.Errorf("failed to delete wod: %w", err)
 	}
+
 	return nil
+}
+
+// Search searches for WODs by name (partial match)
+func (s *WODService) Search(query string, limit int) ([]*domain.WOD, error) {
+	// Validate query
+	if strings.TrimSpace(query) == "" {
+		return []*domain.WOD{}, nil
+	}
+
+	wods, err := s.wodRepo.Search(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search wods: %w", err)
+	}
+
+	// Apply limit at service layer
+	if limit > 0 && len(wods) > limit {
+		return wods[:limit], nil
+	}
+
+	return wods, nil
+}
+
+// Count returns the total count of WODs
+func (s *WODService) Count(isStandard *bool) (int64, error) {
+	// Count all WODs or filtered by standard status
+	var filters map[string]interface{}
+	if isStandard != nil {
+		filters = map[string]interface{}{
+			"is_standard": *isStandard,
+		}
+	}
+
+	wods, err := s.wodRepo.List(filters)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count wods: %w", err)
+	}
+
+	return int64(len(wods)), nil
+}
+
+// validateWOD validates WOD required fields and business rules
+func (s *WODService) validateWOD(wod *domain.WOD) error {
+	// Validate name
+	if strings.TrimSpace(wod.Name) == "" {
+		return ErrWODNameRequired
+	}
+
+	// Validate source
+	if strings.TrimSpace(wod.Source) == "" {
+		return ErrWODSourceRequired
+	}
+
+	// Validate type
+	if strings.TrimSpace(wod.Type) == "" {
+		return ErrWODTypeRequired
+	}
+
+	// Validate allowed values for enums
+	validSources := map[string]bool{
+		"CrossFit":      true,
+		"Other Coach":   true,
+		"Self-recorded": true,
+	}
+	if !validSources[wod.Source] {
+		return fmt.Errorf("invalid source: must be one of [CrossFit, Other Coach, Self-recorded]")
+	}
+
+	validTypes := map[string]bool{
+		"Benchmark":    true,
+		"Hero":         true,
+		"Girl":         true,
+		"Notables":     true,
+		"Games":        true,
+		"Endurance":    true,
+		"Self-created": true,
+	}
+	if !validTypes[wod.Type] {
+		return fmt.Errorf("invalid type: must be one of [Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created]")
+	}
+
+	// Validate regime (optional but if provided must be valid)
+	if wod.Regime != "" {
+		validRegimes := map[string]bool{
+			"EMOM":          true,
+			"AMRAP":         true,
+			"Fastest Time":  true,
+			"Slowest Round": true,
+			"Get Stronger":  true,
+			"Skills":        true,
+		}
+		if !validRegimes[wod.Regime] {
+			return fmt.Errorf("invalid regime: must be one of [EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills]")
+		}
+	}
+
+	// Validate score type (optional but if provided must be valid)
+	if wod.ScoreType != "" {
+		validScoreTypes := map[string]bool{
+			"Time (HH:MM:SS)": true,
+			"Rounds+Reps":     true,
+			"Max Weight":      true,
+		}
+		if !validScoreTypes[wod.ScoreType] {
+			return fmt.Errorf("invalid score type: must be one of [Time (HH:MM:SS), Rounds+Reps, Max Weight]")
+		}
+	}
+
+	return nil
+}
+
+// paginateWODs applies limit and offset to a slice of WODs
+func (s *WODService) paginateWODs(wods []*domain.WOD, limit, offset int) []*domain.WOD {
+	// Set default limit if not provided
+	if limit <= 0 {
+		limit = 100
+	}
+
+	// Calculate start and end indices
+	start := offset
+	if start < 0 {
+		start = 0
+	}
+	if start >= len(wods) {
+		return []*domain.WOD{}
+	}
+
+	end := start + limit
+	if end > len(wods) {
+		end = len(wods)
+	}
+
+	return wods[start:end]
 }
