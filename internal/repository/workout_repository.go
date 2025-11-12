@@ -23,8 +23,6 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 	workout.CreatedAt = time.Now()
 	workout.UpdatedAt = time.Now()
 
-	// TODO: After migration to v0.3.0, this table won't have user_id
-	// For now, use created_by value as user_id to match old schema
 	query := `INSERT INTO workouts (name, notes, user_id, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?)`
 
@@ -44,7 +42,6 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 
 // GetByID retrieves a workout template by ID
 func (r *WorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	query := `SELECT id, name, notes, user_id, created_at, updated_at FROM workouts WHERE id = ?`
 
 	workout := &domain.Workout{}
@@ -197,7 +194,6 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 
 // List retrieves all workout templates with optional filtering
 func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset int) ([]*domain.Workout, error) {
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	query := `SELECT id, name, notes, user_id, created_at, updated_at FROM workouts WHERE 1=1`
 	args := []interface{}{}
 
@@ -226,7 +222,6 @@ func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset i
 
 // ListByUser retrieves all workout templates created by a specific user
 func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	query := `SELECT id, name, notes, user_id, created_at, updated_at
 	          FROM workouts
 	          WHERE user_id = ?
@@ -244,7 +239,6 @@ func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*doma
 
 // ListStandard retrieves all standard (system) workout templates
 func (r *WorkoutRepository) ListStandard(limit, offset int) ([]*domain.Workout, error) {
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	query := `SELECT id, name, notes, user_id, created_at, updated_at
 	          FROM workouts
 	          WHERE user_id IS NULL
@@ -308,7 +302,6 @@ func (r *WorkoutRepository) Delete(id int64) error {
 
 // Search searches workout templates by name
 func (r *WorkoutRepository) Search(query string, limit int) ([]*domain.Workout, error) {
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	searchQuery := `SELECT id, name, notes, user_id, created_at, updated_at
 	                FROM workouts
 	                WHERE name LIKE ?
@@ -329,7 +322,6 @@ func (r *WorkoutRepository) Count(userID *int64) (int64, error) {
 	var count int64
 	var query string
 
-	// TODO: After migration to v0.3.0, use created_by instead of user_id
 	if userID != nil {
 		query = `SELECT COUNT(*) FROM workouts WHERE user_id = ?`
 		err := r.db.QueryRow(query, *userID).Scan(&count)
