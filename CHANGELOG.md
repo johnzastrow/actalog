@@ -5,6 +5,69 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0-beta] - 2025-11-12
+
+### Added
+- **WOD (Workout of the Day) Management System**
+  - Database migration v0.4.0 adding `wods` table with complete schema
+  - WOD entity with fields: name, source, type, regime, score_type, description, standards, url, time_cap
+  - Seeded 10 standard WODs: 8 Girl WODs (Fran, Helen, Cindy, Grace, Annie, Karen, Diane, Elizabeth) + 2 Hero WODs (Murph, DT)
+  - Repository layer: `WODRepository` with CRUD operations, search, and filtering
+  - Service layer: `WODService` with validation, authorization, and business logic
+  - Handler layer: `WODHandler` with RESTful API endpoints
+  - API endpoints: `GET /api/wods`, `GET /api/wods/{id}`, `GET /api/wods/search`, `POST /api/wods`, `PUT /api/wods/{id}`, `DELETE /api/wods/{id}`
+  - Support for both standard (pre-seeded) and custom (user-created) WODs
+  - WOD types: Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created
+  - WOD sources: CrossFit, Other Coach, Self-recorded
+  - WOD regimes: EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills
+  - Score types: Time (HH:MM:SS), Rounds+Reps, Max Weight
+
+- **Workout Template System**
+  - Database migration v0.4.0 adding `workout_wods` linking table
+  - Workout templates can now include WODs (many-to-many relationship)
+  - Repository layer: `WorkoutWODRepository` for managing workout-WOD associations
+  - Service layer: `WorkoutWODService` with business logic for linking WODs to templates
+  - API endpoints: `POST /api/templates/{id}/wods`, `GET /api/templates/{id}/wods`, `PUT /api/templates/wods/{id}`, `DELETE /api/templates/wods/{id}`, `POST /api/templates/wods/{id}/toggle-pr`
+  - Seeded 3 workout templates with movements: Back Squat Focus, Olympic Lifting, Gymnastics Strength
+  - Templates can combine movements and WODs in single workout plan
+
+- **Frontend State Management (Pinia Stores)**
+  - `useWodsStore` - Complete WOD state management with CRUD operations
+    - Actions: fetchWods(), fetchWodById(), searchWods(), createWod(), updateWod(), deleteWod()
+    - Filters: filterByType(), filterBySource(), getStandardWods(), getCustomWods()
+  - `useTemplatesStore` - Complete template state management
+    - Actions: fetchTemplates(), fetchTemplateById(), fetchMyTemplates(), createTemplate(), updateTemplate(), deleteTemplate()
+    - WOD linking: fetchTemplateWods(), addWodToTemplate(), removeWodFromTemplate(), toggleWodPR()
+    - Filters: getStandardTemplates(), getCustomTemplates(), getTemplatesWithMovementCount()
+
+- **WOD Library View**
+  - Updated `/wods` route to use new Pinia store (useWodsStore)
+  - Browse all standard WODs with filtering by type (Benchmark, Girl, Hero, Games)
+  - Search WODs by name/description
+  - View WOD details with regime, score type, time cap, standards
+  - Create/edit custom WODs (authenticated users only)
+  - Selection mode for linking WODs to workout templates
+
+### Changed
+- Workout templates now support WODs in addition to movements
+- Updated WOD Library view to use Pinia state management instead of direct axios calls
+- Database schema extended to support workout-WOD relationships
+- Version bumped to 0.4.0-beta across all version files
+
+### Technical
+- Multi-table seeding: movements, WODs, workout templates, workout_movements, workout_wods
+- Clean Architecture maintained: domain → repository → service → handler → store → view
+- Idempotent seeding with sentinel checks to prevent duplicate data
+- WOD validation includes enum validation for source, type, regime, score_type
+- Authorization checks: only WOD creators can modify/delete custom WODs
+- Frontend stores follow Pinia Composition API pattern with proper error handling
+- Multi-database support (SQLite, PostgreSQL, MySQL) for all new tables
+
+### In Progress
+- Dashboard view integration with templates and WODs
+- Template Library browsing view
+- Template-based workout logging in LogWorkoutView
+
 ## [0.3.1-beta] - 2025-11-10
 
 ### Added
