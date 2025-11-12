@@ -39,6 +39,94 @@ var migrations = []Migration{
 			return fmt.Errorf("cannot rollback baseline migration")
 		},
 	},
+	{
+		Version:     "0.4.1",
+		Description: "Add score_value, division, and is_pr columns to workout_wods table",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite: Add columns with ALTER TABLE
+				queries := []string{
+					`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "postgres":
+				// PostgreSQL: Add columns with ALTER TABLE
+				queries := []string{
+					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS score_value TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS division TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS is_pr BOOLEAN NOT NULL DEFAULT false`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "mysql":
+				// MySQL: Add columns with ALTER TABLE
+				queries := []string{
+					`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT 0`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN easily, would require table recreation
+				return fmt.Errorf("SQLite does not support dropping columns; manual intervention required")
+
+			case "postgres":
+				queries := []string{
+					`ALTER TABLE workout_wods DROP COLUMN IF EXISTS is_pr`,
+					`ALTER TABLE workout_wods DROP COLUMN IF EXISTS division`,
+					`ALTER TABLE workout_wods DROP COLUMN IF EXISTS score_value`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "mysql":
+				queries := []string{
+					`ALTER TABLE workout_wods DROP COLUMN is_pr`,
+					`ALTER TABLE workout_wods DROP COLUMN division`,
+					`ALTER TABLE workout_wods DROP COLUMN score_value`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+	},
 	// Future migrations for incremental schema changes will be added here
 }
 
