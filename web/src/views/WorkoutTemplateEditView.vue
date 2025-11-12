@@ -91,15 +91,27 @@
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <div class="d-flex align-center justify-space-between mb-3">
           <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Movements</h2>
-          <v-btn
-            size="small"
-            color="#00bcd4"
-            prepend-icon="mdi-plus"
-            @click="addMovement"
-            style="text-transform: none"
-          >
-            Add Movement
-          </v-btn>
+          <div class="d-flex gap-2">
+            <v-btn
+              size="small"
+              color="#9c27b0"
+              variant="outlined"
+              prepend-icon="mdi-library"
+              @click="browseMovements"
+              style="text-transform: none"
+            >
+              Browse
+            </v-btn>
+            <v-btn
+              size="small"
+              color="#00bcd4"
+              prepend-icon="mdi-plus"
+              @click="addMovement"
+              style="text-transform: none"
+            >
+              Add
+            </v-btn>
+          </div>
         </div>
 
         <!-- Empty State -->
@@ -364,6 +376,15 @@ function removeMovement(index) {
   })
 }
 
+// Browse movements library
+function browseMovements() {
+  const currentPath = route.path
+  router.push({
+    path: '/movements',
+    query: { select: 'true', returnPath: currentPath }
+  })
+}
+
 // Validate template
 function validateTemplate() {
   validationErrors.value = {}
@@ -477,5 +498,14 @@ function handleBack() {
 onMounted(async () => {
   await fetchMovements()
   await loadTemplate()
+
+  // Handle selected movement from library
+  if (route.query.selectedMovement) {
+    const movementId = parseInt(route.query.selectedMovement)
+    addMovement()
+    template.value.movements[template.value.movements.length - 1].movement_id = movementId
+    // Clear query param
+    router.replace({ path: route.path })
+  }
 })
 </script>

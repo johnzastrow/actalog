@@ -344,7 +344,7 @@ async function fetchMovementHistory() {
 async function fetchRecentWorkouts() {
   loadingWorkouts.value = true
   try {
-    const response = await axios.get('/api/user-workouts')
+    const response = await axios.get('/api/workouts')
     recentWorkouts.value = response.data.user_workouts || []
   } catch (err) {
     console.error('Failed to fetch recent workouts:', err)

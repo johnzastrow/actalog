@@ -183,12 +183,12 @@ async function fetchPRs() {
 
   try {
     // Fetch all personal records
-    const recordsResponse = await axios.get('/api/workouts/prs')
-    personalRecords.value = recordsResponse.data.records || []
+    const recordsResponse = await axios.get('/api/prs')
+    personalRecords.value = recordsResponse.data.prs || []
 
     // Fetch recent PR movements
-    const recentResponse = await axios.get('/api/workouts/pr-movements?limit=5')
-    recentPRs.value = recentResponse.data.pr_movements || []
+    const recentResponse = await axios.get('/api/pr-movements?limit=5')
+    recentPRs.value = recentResponse.data.movements || []
 
     console.log('Personal records:', personalRecords.value)
     console.log('Recent PRs:', recentPRs.value)

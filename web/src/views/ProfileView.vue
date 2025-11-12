@@ -11,13 +11,49 @@
       <!-- Profile Card -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
         <div class="text-center mb-3">
-          <v-avatar size="80" color="#00bcd4">
-            <v-icon size="40" color="white">mdi-account</v-icon>
-          </v-avatar>
+          <!-- Avatar with Upload -->
+          <div style="position: relative; display: inline-block">
+            <UserAvatar :user="user" :size="100" />
+            <v-btn
+              icon
+              size="small"
+              color="#00bcd4"
+              style="position: absolute; bottom: 0; right: 0"
+              @click="openFileDialog"
+              :loading="uploadingAvatar"
+            >
+              <v-icon size="small">mdi-camera</v-icon>
+            </v-btn>
+          </div>
+
+          <!-- Hidden File Input -->
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="handleFileSelect"
+          />
+
           <h2 class="text-h6 mt-3 font-weight-bold" style="color: #1a1a1a">
             {{ user?.name || 'User' }}
           </h2>
           <p class="text-body-2" style="color: #666">{{ user?.email || 'email@example.com' }}</p>
+
+          <!-- Delete Avatar Button (only if avatar exists) -->
+          <v-btn
+            v-if="user?.profile_image"
+            size="x-small"
+            variant="text"
+            color="#e91e63"
+            class="mt-2"
+            @click="deleteAvatar"
+            :loading="deletingAvatar"
+          >
+            <v-icon start size="x-small">mdi-delete</v-icon>
+            Remove Avatar
+          </v-btn>
+
           <v-chip
             v-if="user?.role === 'admin'"
             size="small"
@@ -198,6 +234,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from '@/utils/axios'
+import UserAvatar from '@/components/UserAvatar.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -205,6 +242,9 @@ const activeTab = ref('profile')
 
 const user = computed(() => authStore.user)
 const loadingStats = ref(false)
+const uploadingAvatar = ref(false)
+const deletingAvatar = ref(false)
+const fileInput = ref(null)
 
 // Stats
 const stats = ref({
@@ -220,8 +260,8 @@ async function fetchStats() {
   try {
     // Fetch workouts for stats
     const [workoutsRes, prsRes, templatesRes] = await Promise.all([
-      axios.get('/api/user-workouts').catch(() => ({ data: { user_workouts: [] } })),
-      axios.get('/api/movements/personal-records').catch(() => ({ data: { personal_records: [] } })),
+      axios.get('/api/workouts').catch(() => ({ data: { user_workouts: [] } })),
+      axios.get('/api/pr-movements').catch(() => ({ data: { movements: [] } })),
       axios.get('/api/workouts/my-templates').catch(() => ({ data: { workouts: [] } }))
     ])
 
@@ -280,6 +320,76 @@ function formatMemberSince(dateString) {
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
+}
+
+// Avatar Upload Functions
+function openFileDialog() {
+  fileInput.value?.click()
+}
+
+async function handleFileSelect(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file')
+    return
+  }
+
+  // Validate file size (5MB max)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image must be smaller than 5MB')
+    return
+  }
+
+  uploadingAvatar.value = true
+
+  try {
+    // Create FormData for file upload
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    // Upload to backend
+    const response = await axios.post('/api/users/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    // Update user in auth store
+    authStore.user = response.data.user
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+
+    // Clear file input
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+  } catch (err) {
+    console.error('Failed to upload avatar:', err)
+    alert(err.response?.data?.message || 'Failed to upload avatar')
+  } finally {
+    uploadingAvatar.value = false
+  }
+}
+
+async function deleteAvatar() {
+  if (!confirm('Are you sure you want to remove your avatar?')) return
+
+  deletingAvatar.value = true
+
+  try {
+    const response = await axios.delete('/api/users/avatar')
+
+    // Update user in auth store
+    authStore.user = response.data.user
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+  } catch (err) {
+    console.error('Failed to delete avatar:', err)
+    alert(err.response?.data?.message || 'Failed to delete avatar')
+  } finally {
+    deletingAvatar.value = false
+  }
 }
 
 onMounted(() => {

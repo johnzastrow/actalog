@@ -372,6 +372,32 @@ func (s *UserService) VerifyEmail(token string) error {
 	return nil
 }
 
+// ChangePassword changes a user's password after validating the old password
+func (s *UserService) ChangePassword(userID int64, oldPassword, newPassword string) error {
+	// Get user
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	// Validate old password
+	if err := auth.CheckPassword(user.PasswordHash, oldPassword); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	// Hash new password
+	hashedPassword, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password
+	return s.userRepo.UpdatePassword(userID, hashedPassword)
+}
+
 // ResendVerificationEmail resends verification email to a user
 func (s *UserService) ResendVerificationEmail(email string) error {
 	// Get user by email
@@ -576,6 +602,26 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 	user.PasswordHash = ""
 
 	return user, nil
+}
+
+// UpdateAvatar updates the user's avatar URL
+func (s *UserService) UpdateAvatar(userID int64, avatarURL string) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	if avatarURL == "" {
+		user.ProfileImage = nil
+	} else {
+		user.ProfileImage = &avatarURL
+	}
+
+	user.UpdatedAt = time.Now()
+	return s.userRepo.Update(user)
 }
 
 // generateRefreshToken generates a cryptographically secure random token

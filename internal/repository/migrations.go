@@ -370,6 +370,75 @@ var migrations = []Migration{
 			return fmt.Errorf("rollback of 0.4.0 not supported - restore from backup instead")
 		},
 	},
+	{
+		Version:     "0.4.1",
+		Description: "Add user_settings table for user preferences",
+		Up: func(db *sql.DB, driver string) error {
+			var query string
+			switch driver {
+			case "sqlite3":
+				query = `
+					CREATE TABLE IF NOT EXISTS user_settings (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						notification_preferences TEXT DEFAULT '{}',
+						data_export_format TEXT DEFAULT 'JSON',
+						theme TEXT DEFAULT 'light',
+						weight_unit TEXT DEFAULT 'lbs',
+						distance_unit TEXT DEFAULT 'miles',
+						created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						UNIQUE(user_id)
+					)
+				`
+			case "postgres":
+				query = `
+					CREATE TABLE IF NOT EXISTS user_settings (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						notification_preferences TEXT DEFAULT '{}',
+						data_export_format VARCHAR(50) DEFAULT 'JSON',
+						theme VARCHAR(50) DEFAULT 'light',
+						weight_unit VARCHAR(10) DEFAULT 'lbs',
+						distance_unit VARCHAR(10) DEFAULT 'miles',
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						UNIQUE(user_id)
+					)
+				`
+			case "mysql":
+				query = `
+					CREATE TABLE IF NOT EXISTS user_settings (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						notification_preferences TEXT DEFAULT ('{}'),
+						data_export_format VARCHAR(50) DEFAULT 'JSON',
+						theme VARCHAR(50) DEFAULT 'light',
+						weight_unit VARCHAR(10) DEFAULT 'lbs',
+						distance_unit VARCHAR(10) DEFAULT 'miles',
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						UNIQUE KEY unique_user_id (user_id)
+					)
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			_, err := db.Exec(query)
+			if err != nil {
+				return fmt.Errorf("failed to create user_settings table: %w", err)
+			}
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			_, err := db.Exec("DROP TABLE IF EXISTS user_settings")
+			return err
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

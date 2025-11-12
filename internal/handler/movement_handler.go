@@ -145,3 +145,85 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusCreated, movement)
 }
+
+// Update updates an existing custom movement
+func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid movement ID")
+		return
+	}
+
+	var req struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.Name == "" || req.Type == "" {
+		respondError(w, http.StatusBadRequest, "Name and type are required")
+		return
+	}
+
+	movement := &domain.Movement{
+		ID:          id,
+		Name:        req.Name,
+		Description: req.Description,
+		Type:        domain.MovementType(req.Type),
+		IsStandard:  false,
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=update_movement_attempt id=%d name=%s", id, req.Name)
+	}
+
+	if err := h.movementRepo.Update(movement); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=update_movement outcome=failure id=%d error=%v", id, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to update movement")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=update_movement outcome=success id=%d", id)
+	}
+
+	respondJSON(w, http.StatusOK, movement)
+}
+
+// Delete deletes a custom movement
+func (h *MovementHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid movement ID")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=delete_movement_attempt id=%d", id)
+	}
+
+	if err := h.movementRepo.Delete(id); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=delete_movement outcome=failure id=%d error=%v", id, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to delete movement")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=delete_movement outcome=success id=%d", id)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "Movement deleted successfully",
+	})
+}

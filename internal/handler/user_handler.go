@@ -2,7 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/service"
@@ -130,5 +135,224 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusOK, ProfileResponse{
 		User: user,
+	})
+}
+
+// UploadAvatar handles avatar image uploads
+func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Parse multipart form (max 5MB)
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
+		respondError(w, http.StatusBadRequest, "File too large (max 5MB)")
+		return
+	}
+
+	// Get file from form
+	file, header, err := r.FormFile("avatar")
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "No file provided")
+		return
+	}
+	defer file.Close()
+
+	// Validate file type
+	contentType := header.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		respondError(w, http.StatusBadRequest, "File must be an image")
+		return
+	}
+
+	// Create avatars directory if it doesn't exist
+	avatarDir := "uploads/avatars"
+	if err := os.MkdirAll(avatarDir, 0755); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=upload_avatar outcome=failure user_id=%d error=failed_to_create_directory: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to save avatar")
+		return
+	}
+
+	// Generate unique filename
+	ext := filepath.Ext(header.Filename)
+	filename := fmt.Sprintf("user_%d_%d%s", userID, time.Now().Unix(), ext)
+	filePath := filepath.Join(avatarDir, filename)
+
+	// Create destination file
+	dst, err := os.Create(filePath)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=upload_avatar outcome=failure user_id=%d error=failed_to_create_file: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to save avatar")
+		return
+	}
+	defer dst.Close()
+
+	// Copy file data
+	if _, err := io.Copy(dst, file); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=upload_avatar outcome=failure user_id=%d error=failed_to_copy_file: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to save avatar")
+		return
+	}
+
+	// Get current user to check for old avatar
+	user, err := h.userService.GetByID(userID)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=upload_avatar outcome=failure user_id=%d error=failed_to_get_user: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to update profile")
+		return
+	}
+
+	// Delete old avatar if it exists
+	if user.ProfileImage != nil && *user.ProfileImage != "" {
+		oldPath := *user.ProfileImage
+		if strings.HasPrefix(oldPath, "/uploads/") {
+			oldPath = "." + oldPath
+		}
+		if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+			if h.logger != nil {
+				h.logger.Warn("action=upload_avatar outcome=warning user_id=%d error=failed_to_delete_old_avatar: %v", userID, err)
+			}
+		}
+	}
+
+	// Update user profile with new avatar URL
+	avatarURL := "/uploads/avatars/" + filename
+	user.ProfileImage = &avatarURL
+
+	if err := h.userService.UpdateAvatar(userID, avatarURL); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=upload_avatar outcome=failure user_id=%d error=failed_to_update_avatar: %v", userID, err)
+		}
+		// Try to clean up uploaded file
+		os.Remove(filePath)
+		respondError(w, http.StatusInternalServerError, "Failed to update profile")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=upload_avatar outcome=success user_id=%d avatar_url=%s", userID, avatarURL)
+	}
+
+	respondJSON(w, http.StatusOK, ProfileResponse{
+		User: user,
+	})
+}
+
+// DeleteAvatar handles avatar image deletion
+func (h *UserHandler) DeleteAvatar(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Get current user
+	user, err := h.userService.GetByID(userID)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=delete_avatar outcome=failure user_id=%d error=failed_to_get_user: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to delete avatar")
+		return
+	}
+
+	// Delete avatar file if it exists
+	if user.ProfileImage != nil && *user.ProfileImage != "" {
+		oldPath := *user.ProfileImage
+		if strings.HasPrefix(oldPath, "/uploads/") {
+			oldPath = "." + oldPath
+		}
+		if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+			if h.logger != nil {
+				h.logger.Warn("action=delete_avatar outcome=warning user_id=%d error=failed_to_delete_file: %v", userID, err)
+			}
+		}
+	}
+
+	// Update user profile to remove avatar
+	if err := h.userService.UpdateAvatar(userID, ""); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=delete_avatar outcome=failure user_id=%d error=failed_to_update_profile: %v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to delete avatar")
+		return
+	}
+
+	user.ProfileImage = nil
+
+	if h.logger != nil {
+		h.logger.Info("action=delete_avatar outcome=success user_id=%d", userID)
+	}
+
+	respondJSON(w, http.StatusOK, ProfileResponse{
+		User: user,
+	})
+}
+
+// ChangePassword handles password change requests
+func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req struct {
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.OldPassword == "" || req.NewPassword == "" {
+		respondError(w, http.StatusBadRequest, "Both old_password and new_password are required")
+		return
+	}
+
+	if len(req.NewPassword) < 8 {
+		respondError(w, http.StatusBadRequest, "New password must be at least 8 characters")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=change_password_attempt user_id=%d", userID)
+	}
+
+	if err := h.userService.ChangePassword(userID, req.OldPassword, req.NewPassword); err != nil {
+		if err == service.ErrInvalidCredentials {
+			if h.logger != nil {
+				h.logger.Warn("action=change_password outcome=failure user_id=%d reason=invalid_old_password", userID)
+			}
+			respondError(w, http.StatusUnauthorized, "Current password is incorrect")
+			return
+		}
+		if h.logger != nil {
+			h.logger.Error("action=change_password outcome=failure user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to change password")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=change_password outcome=success user_id=%d", userID)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Password changed successfully",
 	})
 }

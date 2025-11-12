@@ -44,6 +44,7 @@ type UserRepository interface {
 	GetByResetToken(token string) (*User, error)
 	GetByVerificationToken(token string) (*User, error)
 	Update(user *User) error
+	UpdatePassword(userID int64, hashedPassword string) error
 	Delete(id int64) error
 	List(limit, offset int) ([]*User, error)
 	Count() (int64, error)

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -98,6 +100,7 @@ func main() {
 	wodRepo := repository.NewWODRepository(db)
 	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
 	workoutWODRepo := repository.NewWorkoutWODRepository(db)
+	userSettingsRepo := repository.NewSQLiteUserSettingsRepository(db)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -167,6 +170,8 @@ func main() {
 		wodRepo,
 	)
 
+	userSettingsService := service.NewUserSettingsService(userSettingsRepo)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -175,12 +180,14 @@ func main() {
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, appLogger)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
+	settingsHandler := handler.NewSettingsHandler(userSettingsService, appLogger)
+	prHandler := handler.NewPRHandler(db, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.RequestLogger(appLogger))
+	r.Use(middleware.LoggingMiddleware(appLogger))
 	r.Use(middleware.CORS(cfg.App.CORSOrigins))
 
 	// Health check endpoint
@@ -203,6 +210,11 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"message":"Welcome to ActaLog API","version":"%s"}`, version.Version())
 	})
+
+	// Static file serving for uploads (avatars, etc.)
+	workDir, _ := os.Getwd()
+	uploadsDir := http.Dir(filepath.Join(workDir, "uploads"))
+	FileServer(r, "/uploads", uploadsDir)
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
@@ -236,10 +248,19 @@ func main() {
 
 			// Movement management (authenticated)
 			r.Post("/movements", movementHandler.Create)
+			r.Put("/movements/{id}", movementHandler.Update)
+			r.Delete("/movements/{id}", movementHandler.Delete)
 
 			// User profile routes (authenticated)
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
+			r.Post("/users/avatar", userHandler.UploadAvatar)
+			r.Delete("/users/avatar", userHandler.DeleteAvatar)
+
+			// User settings routes (authenticated)
+			r.Get("/users/settings", settingsHandler.GetSettings)
+			r.Put("/users/settings", settingsHandler.UpdateSettings)
+			r.Put("/users/password", userHandler.ChangePassword)
 
 			// Workout Template routes (authenticated)
 			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
@@ -267,10 +288,10 @@ func main() {
 			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
 			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
-			// PR tracking routes (authenticated) - TODO: Implement workout_handler.go
-			// r.Get("/prs", workoutHandler.GetPersonalRecords)
-			// r.Get("/pr-movements", workoutHandler.GetPRMovements)
-			// r.Post("/movements/{id}/toggle-pr", workoutHandler.TogglePRFlag)
+			// PR tracking routes (authenticated)
+			r.Get("/prs", prHandler.GetPersonalRecords)
+			r.Get("/pr-movements", prHandler.GetPRMovements)
+			r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
 		})
 	})
 
@@ -308,4 +329,24 @@ func main() {
 	}
 
 	appLogger.Info("Server exited")
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit URL parameters.")
+	}
+
+	fs := http.StripPrefix(path, http.FileServer(root))
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fs.ServeHTTP(w, r)
+	}))
 }

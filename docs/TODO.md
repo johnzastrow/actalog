@@ -191,9 +191,20 @@
 ### Authentication & User Management
 - [x] Implement password reset functionality ✅ **Completed in v0.3.0-beta** (Parts 1-3: DB, backend, frontend)
 - [x] Add email verification for new users ✅ **Completed in v0.3.1-beta** (see Design Refinements section)
+- [x] Add profile picture upload ✅ **Completed in v0.3.2-beta** (Avatar upload with initials fallback)
 - [ ] Implement "Remember Me" functionality - **NEXT PRIORITY**
-- [ ] Add profile picture upload
 - [ ] Add user profile editing with birthday field
+- [ ] Add user management for admins:
+  - [ ] Admin dashboard for user management
+  - [ ] List all users with pagination and search
+  - [ ] View user details (profile, stats, activity)
+  - [ ] Edit user roles (admin, user)
+  - [ ] Disable/enable user accounts
+  - [ ] Delete user accounts (with confirmation)
+  - [ ] View user workout history
+  - [ ] Reset user passwords (admin action)
+  - [ ] Manage user permissions
+  - [ ] Bulk user actions (export, disable, etc.)
 
 ### Workout Logging (Planned for v0.3.0 Schema - Not Yet Implemented)
 - [ ] Implement workout template creation API endpoints

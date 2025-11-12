@@ -353,7 +353,7 @@ async function logWorkout() {
       notes: notes.value.trim() || null
     }
 
-    const response = await axios.post('/api/user-workouts', payload)
+    const response = await axios.post('/api/workouts', payload)
 
     console.log('Workout logged:', response.data)
 

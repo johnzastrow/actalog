@@ -321,6 +321,13 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 	return err
 }
 
+// UpdatePassword updates only the password for a user
+func (r *SQLiteUserRepository) UpdatePassword(userID int64, hashedPassword string) error {
+	query := `UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`
+	_, err := r.db.Exec(query, hashedPassword, time.Now(), userID)
+	return err
+}
+
 // Delete deletes a user
 func (r *SQLiteUserRepository) Delete(id int64) error {
 	query := `DELETE FROM users WHERE id = ?`

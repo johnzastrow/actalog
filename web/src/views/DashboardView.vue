@@ -310,7 +310,7 @@ const recentWorkouts = computed(() => {
 async function fetchUserWorkouts() {
   loading.value = true
   try {
-    const response = await axios.get('/api/user-workouts')
+    const response = await axios.get('/api/workouts')
     userWorkouts.value = response.data.user_workouts || []
     console.log('Fetched user workouts:', userWorkouts.value.length)
   } catch (err) {
