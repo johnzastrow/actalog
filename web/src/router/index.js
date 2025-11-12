@@ -87,6 +87,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/movements/:id',
+      name: 'movement-detail',
+      component: () => import('@/views/MovementDetailView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/wods',
       name: 'wods-library',
       component: () => import('@/views/WODLibraryView.vue'),
@@ -102,6 +108,12 @@ const router = createRouter({
       path: '/wods/:id/edit',
       name: 'edit-wod',
       component: () => import('@/views/WODCreateView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/wods/:id',
+      name: 'wod-detail',
+      component: () => import('@/views/WODDetailView.vue'),
       meta: { requiresAuth: true }
     },
     {
