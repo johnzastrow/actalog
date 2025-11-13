@@ -120,9 +120,9 @@
         </div>
 
         <!-- Movement Performance (if template has movements OR if editing and has movements) -->
-        <div v-if="(selectedTemplate && selectedTemplate.movements && selectedTemplate.movements.length > 0) || (isEditMode && movementPerformance.length > 0)" class="mb-3">
+        <div v-if="shouldShowMovements" class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
-            Movement Performance
+            Movement Performance ({{ movementPerformance.length }} movements)
           </label>
           <v-card
             v-for="(movement, index) in movementPerformance"
@@ -213,9 +213,9 @@
         </div>
 
         <!-- WOD Performance (if template has WODs OR if editing and has WODs) -->
-        <div v-if="(selectedTemplate && selectedTemplate.wods && selectedTemplate.wods.length > 0) || (isEditMode && wodPerformance.length > 0)" class="mb-3">
+        <div v-if="shouldShowWODs" class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
-            WOD Performance
+            WOD Performance ({{ wodPerformance.length }} WODs)
           </label>
           <v-card
             v-for="(wod, index) in wodPerformance"
@@ -327,28 +327,6 @@
           </v-card>
         </div>
 
-        <!-- Workout Type -->
-        <div class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
-            Workout Type
-          </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
-            <v-select
-              v-model="workoutType"
-              :items="workoutTypes"
-              variant="plain"
-              density="compact"
-              hide-details
-              placeholder="Select type (optional)"
-              style="color: #1a1a1a; font-weight: 500"
-            >
-              <template #prepend-inner>
-                <v-icon color="#00bcd4" size="small">mdi-format-list-bulleted</v-icon>
-              </template>
-            </v-select>
-          </v-card>
-        </div>
-
         <!-- Total Time -->
         <div class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
@@ -454,7 +432,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 
@@ -466,12 +444,12 @@ const activeTab = ref('log')
 const isEditMode = ref(false)
 const editWorkoutId = ref(null)
 const workoutName = ref('')
+const editDataLoaded = ref(false)
 
 // State
 const workoutTemplates = ref([])
 const selectedTemplateId = ref(null)
 const workoutDate = ref(getTodayDate())
-const workoutType = ref(null)
 const totalTimeMinutes = ref(null)
 const notes = ref('')
 const movementPerformance = ref([])
@@ -482,15 +460,6 @@ const loadingWorkout = ref(false)
 const submitting = ref(false)
 const error = ref(null)
 const success = ref(null)
-
-// Workout types
-const workoutTypes = [
-  { title: 'Strength', value: 'strength' },
-  { title: 'Metcon', value: 'metcon' },
-  { title: 'Cardio', value: 'cardio' },
-  { title: 'Mixed', value: 'mixed' },
-  { title: 'Skill Work', value: 'skill' }
-]
 
 // Score types for WODs
 const scoreTypes = [
@@ -505,8 +474,26 @@ const selectedTemplate = computed(() => {
   return workoutTemplates.value.find(t => t.id === selectedTemplateId.value)
 })
 
+// Computed properties for showing movement/WOD sections
+const shouldShowMovements = computed(() => {
+  if (isEditMode.value && editDataLoaded.value) {
+    return movementPerformance.value.length > 0
+  }
+  return selectedTemplate.value && selectedTemplate.value.movements && selectedTemplate.value.movements.length > 0
+})
+
+const shouldShowWODs = computed(() => {
+  if (isEditMode.value && editDataLoaded.value) {
+    return wodPerformance.value.length > 0
+  }
+  return selectedTemplate.value && selectedTemplate.value.wods && selectedTemplate.value.wods.length > 0
+})
+
 // Watch for template selection to initialize performance arrays
 watch(selectedTemplate, (newTemplate) => {
+  // Don't initialize arrays in edit mode - we load them from existing workout data
+  if (isEditMode.value) return
+
   if (newTemplate) {
     initializePerformanceArrays()
   }
@@ -702,13 +689,14 @@ async function loadWorkoutForEdit(workoutId) {
     const workout = response.data
 
     console.log('Loaded workout for editing:', workout)
+    console.log('Performance movements:', workout.performance_movements)
+    console.log('Performance WODs:', workout.performance_wods)
 
     // Set basic fields
     editWorkoutId.value = workout.id
     workoutName.value = workout.workout_name
     selectedTemplateId.value = workout.workout_id
     workoutDate.value = workout.workout_date
-    workoutType.value = workout.workout_type
     totalTimeMinutes.value = workout.total_time ? Math.floor(workout.total_time / 60) : null
     notes.value = workout.notes || ''
 
@@ -716,7 +704,7 @@ async function loadWorkoutForEdit(workoutId) {
     if (workout.performance_movements && workout.performance_movements.length > 0) {
       movementPerformance.value = workout.performance_movements.map((m, index) => ({
         movement_id: m.movement_id,
-        movement_name: m.movement_name, // Store the name for display
+        movement_name: m.movement?.name || 'Unknown Movement', // Store the name for display
         sets: m.sets,
         reps: m.reps,
         weight: m.weight,
@@ -725,6 +713,7 @@ async function loadWorkoutForEdit(workoutId) {
         notes: m.notes || '',
         order_index: index
       }))
+      console.log('Populated movementPerformance:', movementPerformance.value)
     }
 
     // Load WOD performance data
@@ -735,7 +724,7 @@ async function loadWorkoutForEdit(workoutId) {
 
         return {
           wod_id: w.wod_id,
-          wod_name: w.wod_name, // Store the name for display
+          wod_name: w.wod?.name || 'Unknown WOD', // Store the name for display
           score_type: w.score_type,
           score_value: w.score_value,
           time_minutes: timeMinutes,
@@ -747,7 +736,22 @@ async function loadWorkoutForEdit(workoutId) {
           order_index: index
         }
       })
+      console.log('Populated wodPerformance:', wodPerformance.value)
     }
+
+    // Force reactivity update with nextTick
+    await nextTick()
+
+    // Reassign to trigger reactivity for v-for
+    movementPerformance.value = [...movementPerformance.value]
+    wodPerformance.value = [...wodPerformance.value]
+
+    console.log('After nextTick - movementPerformance:', movementPerformance.value.length)
+    console.log('After nextTick - wodPerformance:', wodPerformance.value.length)
+
+    // Mark edit data as loaded to trigger section rendering
+    editDataLoaded.value = true
+    console.log('Edit data loaded flag set to true')
   } catch (err) {
     console.error('Failed to load workout for editing:', err)
     error.value = err.response?.data?.message || 'Failed to load workout'
@@ -779,7 +783,6 @@ async function logWorkout() {
     if (isEditMode.value) {
       // Update existing workout
       const payload = {
-        workout_type: workoutType.value || null,
         total_time: totalTimeSeconds,
         notes: notes.value.trim() || null
       }
@@ -806,7 +809,6 @@ async function logWorkout() {
       const payload = {
         workout_id: selectedTemplateId.value,
         workout_date: workoutDate.value,
-        workout_type: workoutType.value || null,
         total_time: totalTimeSeconds,
         notes: notes.value.trim() || null
       }

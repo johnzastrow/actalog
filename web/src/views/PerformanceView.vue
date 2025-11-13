@@ -175,7 +175,7 @@
       <!-- Recent Workouts Summary -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <div class="d-flex align-center justify-space-between mb-2">
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Recent Activity</h2>
+          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h2>
           <v-btn
             size="small"
             variant="text"
@@ -201,7 +201,7 @@
         <!-- Workouts List -->
         <div v-else>
           <v-card
-            v-for="workout in recentWorkouts.slice(0, 3)"
+            v-for="workout in recentWorkouts.slice(0, 30)"
             :key="workout.id"
             elevation="0"
             rounded="lg"
@@ -340,12 +340,23 @@ async function fetchMovementHistory() {
   }
 }
 
-// Fetch recent workouts
+// Fetch recent workouts (last 30 days)
 async function fetchRecentWorkouts() {
   loadingWorkouts.value = true
   try {
     const response = await axios.get('/api/workouts')
-    recentWorkouts.value = response.data.workouts || []
+    const allWorkouts = response.data.workouts || []
+
+    // Filter to last 30 days
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000))
+
+    recentWorkouts.value = allWorkouts
+      .filter(w => {
+        const workoutDate = new Date(w.workout_date)
+        return workoutDate >= thirtyDaysAgo
+      })
+      .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
   } catch (err) {
     console.error('Failed to fetch recent workouts:', err)
     recentWorkouts.value = []
@@ -413,8 +424,7 @@ function formatMovementType(type) {
 // View workout details
 function viewWorkout(workoutId) {
   console.log('View workout details:', workoutId)
-  // TODO: Navigate to workout detail page
-  // router.push(`/workouts/${workoutId}`)
+  router.push(`/workouts/${workoutId}`)
 }
 
 // Load data on mount

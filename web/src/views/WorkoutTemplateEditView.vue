@@ -57,20 +57,6 @@
           </template>
         </v-text-field>
 
-        <v-select
-          v-model="template.workout_type"
-          :items="workoutTypes"
-          label="Workout Type"
-          variant="outlined"
-          density="compact"
-          rounded="lg"
-          class="mb-2"
-        >
-          <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tag</v-icon>
-          </template>
-        </v-select>
-
         <v-textarea
           v-model="template.description"
           label="Description (Optional)"
@@ -389,7 +375,6 @@ const route = useRoute()
 // State
 const template = ref({
   name: '',
-  workout_type: 'strength',
   description: '',
   wods: [],
   movements: []
@@ -405,15 +390,6 @@ const successMessage = ref('')
 const error = ref('')
 const validationErrors = ref({})
 const deleteDialog = ref(false)
-
-const workoutTypes = [
-  { title: 'Strength', value: 'strength' },
-  { title: 'Conditioning', value: 'conditioning' },
-  { title: 'Olympic Lifting', value: 'olympic_lifting' },
-  { title: 'Powerlifting', value: 'powerlifting' },
-  { title: 'Accessory', value: 'accessory' },
-  { title: 'WOD', value: 'wod' }
-]
 
 // Computed
 const isEditMode = computed(() => !!route.params.id)
