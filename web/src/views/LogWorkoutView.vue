@@ -3,7 +3,7 @@
     <!-- Header -->
     <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
       <v-btn icon="mdi-arrow-left" color="white" @click="$router.back()" />
-      <v-toolbar-title class="text-white font-weight-bold">Log Workout</v-toolbar-title>
+      <v-toolbar-title class="text-white font-weight-bold">{{ isEditMode ? 'Edit Workout' : 'Log Workout' }}</v-toolbar-title>
       <v-spacer />
     </v-app-bar>
 
@@ -18,9 +18,15 @@
         {{ error }}
       </v-alert>
 
-      <v-form @submit.prevent="logWorkout">
+      <!-- Loading State -->
+      <div v-if="loadingWorkout" class="text-center py-8">
+        <v-progress-circular indeterminate color="#00bcd4" size="64" />
+        <p class="mt-4 text-body-2" style="color: #666">Loading workout data...</p>
+      </div>
+
+      <v-form v-else @submit.prevent="logWorkout">
         <!-- Select Workout Template -->
-        <div class="mb-3">
+        <div v-if="!isEditMode" class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
             Workout Template *
           </label>
@@ -67,7 +73,7 @@
 
         <!-- Selected Template Info -->
         <v-card
-          v-if="selectedTemplate"
+          v-if="selectedTemplate || isEditMode"
           elevation="0"
           rounded="lg"
           class="mb-3 pa-3"
@@ -76,20 +82,20 @@
           <div class="d-flex align-center mb-2">
             <v-icon color="#00bcd4" class="mr-2">mdi-information-outline</v-icon>
             <span class="font-weight-bold" style="color: #1a1a1a">
-              {{ selectedTemplate.name }}
+              {{ workoutName || selectedTemplate?.name }}
             </span>
           </div>
-          <div v-if="selectedTemplate.notes" class="text-caption" style="color: #666">
+          <div v-if="selectedTemplate?.notes" class="text-caption" style="color: #666">
             {{ selectedTemplate.notes }}
           </div>
-          <div v-if="selectedTemplate.movements && selectedTemplate.movements.length > 0" class="mt-2">
+          <div v-if="(selectedTemplate?.movements && selectedTemplate.movements.length > 0) || movementPerformance.length > 0" class="mt-2">
             <v-chip size="x-small" color="#00bcd4" class="mr-1">
-              {{ selectedTemplate.movements.length }} movement(s)
+              {{ selectedTemplate?.movements?.length || movementPerformance.length }} movement(s)
             </v-chip>
           </div>
-          <div v-if="selectedTemplate.wods && selectedTemplate.wods.length > 0" class="mt-1">
+          <div v-if="(selectedTemplate?.wods && selectedTemplate.wods.length > 0) || wodPerformance.length > 0" class="mt-1">
             <v-chip size="x-small" color="#ffc107" class="mr-1">
-              {{ selectedTemplate.wods.length }} WOD(s)
+              {{ selectedTemplate?.wods?.length || wodPerformance.length }} WOD(s)
             </v-chip>
           </div>
         </v-card>
@@ -389,16 +395,17 @@
           block
           rounded="lg"
           :loading="submitting"
-          :disabled="!selectedTemplateId || !workoutDate"
+          :disabled="(!isEditMode && !selectedTemplateId) || !workoutDate"
           class="font-weight-bold"
           style="text-transform: none"
         >
-          <v-icon start>mdi-check-circle</v-icon>
-          Log Workout
+          <v-icon start>{{ isEditMode ? 'mdi-content-save' : 'mdi-check-circle' }}</v-icon>
+          {{ isEditMode ? 'Update Workout' : 'Log Workout' }}
         </v-btn>
 
         <!-- Quick Browse Templates Button -->
         <v-btn
+          v-if="!isEditMode"
           variant="outlined"
           color="#00bcd4"
           size="large"
@@ -455,6 +462,11 @@ const router = useRouter()
 const route = useRoute()
 const activeTab = ref('log')
 
+// Edit mode state
+const isEditMode = ref(false)
+const editWorkoutId = ref(null)
+const workoutName = ref('')
+
 // State
 const workoutTemplates = ref([])
 const selectedTemplateId = ref(null)
@@ -466,6 +478,7 @@ const movementPerformance = ref([])
 const wodPerformance = ref([])
 
 const loadingTemplates = ref(false)
+const loadingWorkout = ref(false)
 const submitting = ref(false)
 const error = ref(null)
 const success = ref(null)
@@ -549,6 +562,12 @@ function initializePerformanceArrays() {
 
 // Get movement name by ID
 function getMovementName(movementId) {
+  // In edit mode, get from movementPerformance array
+  if (isEditMode.value) {
+    const movement = movementPerformance.value.find(m => m.movement_id === movementId)
+    return movement?.movement_name || `Movement #${movementId}`
+  }
+
   if (!selectedTemplate.value || !selectedTemplate.value.movements) return 'Movement'
   const movement = selectedTemplate.value.movements.find(m => m.movement_id === movementId)
   return movement?.movement?.name || 'Movement'
@@ -556,6 +575,12 @@ function getMovementName(movementId) {
 
 // Get WOD name by ID
 function getWODName(wodId) {
+  // In edit mode, get from wodPerformance array
+  if (isEditMode.value) {
+    const wod = wodPerformance.value.find(w => w.wod_id === wodId)
+    return wod?.wod_name || `WOD #${wodId}`
+  }
+
   if (!selectedTemplate.value || !selectedTemplate.value.wods) return 'WOD'
   const wod = selectedTemplate.value.wods.find(w => w.wod_id === wodId)
   return wod?.wod?.name || 'WOD'
@@ -667,10 +692,79 @@ function buildWODsPayload() {
     })
 }
 
-// Log workout instance
+// Load existing workout for editing
+async function loadWorkoutForEdit(workoutId) {
+  loadingWorkout.value = true
+  error.value = null
+
+  try {
+    const response = await axios.get(`/api/workouts/${workoutId}`)
+    const workout = response.data
+
+    console.log('Loaded workout for editing:', workout)
+
+    // Set basic fields
+    editWorkoutId.value = workout.id
+    workoutName.value = workout.workout_name
+    selectedTemplateId.value = workout.workout_id
+    workoutDate.value = workout.workout_date
+    workoutType.value = workout.workout_type
+    totalTimeMinutes.value = workout.total_time ? Math.floor(workout.total_time / 60) : null
+    notes.value = workout.notes || ''
+
+    // Load movement performance data
+    if (workout.performance_movements && workout.performance_movements.length > 0) {
+      movementPerformance.value = workout.performance_movements.map((m, index) => ({
+        movement_id: m.movement_id,
+        movement_name: m.movement_name, // Store the name for display
+        sets: m.sets,
+        reps: m.reps,
+        weight: m.weight,
+        time: m.time_seconds,
+        distance: m.distance,
+        notes: m.notes || '',
+        order_index: index
+      }))
+    }
+
+    // Load WOD performance data
+    if (workout.performance_wods && workout.performance_wods.length > 0) {
+      wodPerformance.value = workout.performance_wods.map((w, index) => {
+        const timeMinutes = w.time_seconds ? Math.floor(w.time_seconds / 60) : null
+        const timeSeconds = w.time_seconds ? w.time_seconds % 60 : null
+
+        return {
+          wod_id: w.wod_id,
+          wod_name: w.wod_name, // Store the name for display
+          score_type: w.score_type,
+          score_value: w.score_value,
+          time_minutes: timeMinutes,
+          time_seconds: timeSeconds,
+          rounds: w.rounds,
+          reps: w.reps,
+          weight: w.weight,
+          notes: w.notes || '',
+          order_index: index
+        }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to load workout for editing:', err)
+    error.value = err.response?.data?.message || 'Failed to load workout'
+  } finally {
+    loadingWorkout.value = false
+  }
+}
+
+// Log or update workout instance
 async function logWorkout() {
-  if (!selectedTemplateId.value || !workoutDate.value) {
+  if (!isEditMode.value && (!selectedTemplateId.value || !workoutDate.value)) {
     error.value = 'Please select a template and date'
+    return
+  }
+
+  if (isEditMode.value && !workoutDate.value) {
+    error.value = 'Please select a date'
     return
   }
 
@@ -682,50 +776,61 @@ async function logWorkout() {
     // Convert total time from minutes to seconds if provided
     const totalTimeSeconds = totalTimeMinutes.value ? totalTimeMinutes.value * 60 : null
 
-    const payload = {
-      workout_id: selectedTemplateId.value,
-      workout_date: workoutDate.value,
-      workout_type: workoutType.value || null,
-      total_time: totalTimeSeconds,
-      notes: notes.value.trim() || null
+    if (isEditMode.value) {
+      // Update existing workout
+      const payload = {
+        workout_type: workoutType.value || null,
+        total_time: totalTimeSeconds,
+        notes: notes.value.trim() || null
+      }
+
+      console.log('Updating workout with payload:', payload)
+
+      await axios.put(`/api/workouts/${editWorkoutId.value}`, payload)
+
+      success.value = 'Workout updated successfully!'
+    } else {
+      // Create new workout
+      const payload = {
+        workout_id: selectedTemplateId.value,
+        workout_date: workoutDate.value,
+        workout_type: workoutType.value || null,
+        total_time: totalTimeSeconds,
+        notes: notes.value.trim() || null
+      }
+
+      // Add performance data if any
+      const movements = buildMovementsPayload()
+      const wods = buildWODsPayload()
+
+      if (movements.length > 0) {
+        payload.movements = movements
+      }
+
+      if (wods.length > 0) {
+        payload.wods = wods
+      }
+
+      console.log('Logging workout with payload:', payload)
+
+      const response = await axios.post('/api/workouts', payload)
+
+      console.log('Workout logged:', response.data)
+
+      success.value = 'Workout logged successfully!'
     }
-
-    // Add performance data if any
-    const movements = buildMovementsPayload()
-    const wods = buildWODsPayload()
-
-    if (movements.length > 0) {
-      payload.movements = movements
-    }
-
-    if (wods.length > 0) {
-      payload.wods = wods
-    }
-
-    console.log('Logging workout with payload:', payload)
-
-    const response = await axios.post('/api/workouts', payload)
-
-    console.log('Workout logged:', response.data)
-
-    success.value = 'Workout logged successfully!'
-
-    // Reset form
-    selectedTemplateId.value = null
-    workoutType.value = null
-    totalTimeMinutes.value = null
-    notes.value = ''
-    workoutDate.value = getTodayDate()
-    movementPerformance.value = []
-    wodPerformance.value = []
 
     // Redirect to dashboard after short delay
     setTimeout(() => {
-      router.push('/dashboard')
+      if (isEditMode.value) {
+        router.push(`/workouts/${editWorkoutId.value}`)
+      } else {
+        router.push('/dashboard')
+      }
     }, 1500)
   } catch (err) {
-    console.error('Failed to log workout:', err)
-    error.value = err.response?.data?.message || 'Failed to log workout'
+    console.error('Failed to save workout:', err)
+    error.value = err.response?.data?.message || 'Failed to save workout'
   } finally {
     submitting.value = false
   }
@@ -741,9 +846,16 @@ function truncateText(text, maxLength) {
 onMounted(async () => {
   await fetchTemplates()
 
+  // Check if editing existing workout
+  const editIdFromQuery = route.query.edit
+  if (editIdFromQuery) {
+    isEditMode.value = true
+    await loadWorkoutForEdit(parseInt(editIdFromQuery))
+  }
+
   // Check if template ID is provided in query params (from WorkoutsView)
   const templateIdFromQuery = route.query.template
-  if (templateIdFromQuery) {
+  if (templateIdFromQuery && !isEditMode.value) {
     selectedTemplateId.value = parseInt(templateIdFromQuery)
     await onTemplateSelected(selectedTemplateId.value)
   }
