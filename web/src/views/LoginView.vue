@@ -5,6 +5,7 @@
         <v-card elevation="4" rounded="lg">
           <v-card-title class="text-h4 text-center pa-6">
             <div class="d-flex flex-column align-center">
+              <img src="/logo.svg" alt="ActaLog Logo" style="height: 80px; margin-bottom: 16px;" />
               <div class="text-primary mb-2">ActaLog</div>
               <div class="text-body-2 text-medium-emphasis">Sign in to your account</div>
             </div>

@@ -32,7 +32,8 @@
       "Bash(go vet:*)",
       "Bash(golangci-lint run:*)",
       "Bash(test:*)",
-      "Bash(/tmp/user_workout_handler_fixed.go)"
+      "Bash(/tmp/user_workout_handler_fixed.go)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []
