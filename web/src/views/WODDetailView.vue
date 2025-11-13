@@ -190,7 +190,11 @@ async function fetchWOD() {
 // Format date
 function formatDate(dateString) {
   if (!dateString) return 'N/A'
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone conversion issues
+  // Extract YYYY-MM-DD from the date string
+  const datePart = dateString.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  const date = new Date(year, month - 1, day) // Month is 0-indexed
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',

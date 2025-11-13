@@ -208,7 +208,11 @@ async function fetchPRs() {
 
 // Format date for display
 function formatDate(dateString) {
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone conversion issues
+  // Extract YYYY-MM-DD from the date string
+  const datePart = dateString.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  const date = new Date(year, month - 1, day) // Month is 0-indexed
   const options = {
     year: 'numeric',
     month: 'short',
@@ -218,9 +222,16 @@ function formatDate(dateString) {
 }
 
 function formatRelativeDate(dateString) {
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone conversion issues
+  // Extract YYYY-MM-DD from the date string
+  const datePart = dateString.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  const date = new Date(year, month - 1, day) // Month is 0-indexed
+
   const today = new Date()
-  const diffTime = today - date
+  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const diffTime = todayOnly - dateOnly
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
   if (diffDays === 0) return 'Today'
