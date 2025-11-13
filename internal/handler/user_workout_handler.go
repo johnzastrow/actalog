@@ -29,8 +29,9 @@ func NewUserWorkoutHandler(userWorkoutService *service.UserWorkoutService, l *lo
 
 // LogWorkoutRequest represents a request to log a workout instance
 type LogWorkoutRequest struct {
-	WorkoutID   int64   `json:"workout_id"`   // Template ID
-	WorkoutDate string  `json:"workout_date"` // YYYY-MM-DD format
+	WorkoutID   *int64  `json:"workout_id,omitempty"`   // Template ID (optional for ad-hoc workouts)
+	WorkoutName *string `json:"workout_name,omitempty"` // Name for ad-hoc workouts (required if workout_id is null)
+	WorkoutDate string  `json:"workout_date"`           // YYYY-MM-DD format
 	WorkoutType *string `json:"workout_type,omitempty"`
 	TotalTime   *int    `json:"total_time,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
@@ -108,11 +109,12 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Validate required fields
-	if req.WorkoutID == 0 {
+	// Either workout_id (template-based) OR workout_name (ad-hoc) must be provided
+	if (req.WorkoutID == nil || *req.WorkoutID == 0) && (req.WorkoutName == nil || *req.WorkoutName == "") {
 		if h.logger != nil {
-			h.logger.Warn("action=log_workout outcome=failure user_id=%d reason=missing_workout_id", userID)
+			h.logger.Warn("action=log_workout outcome=failure user_id=%d reason=missing_workout_id_and_name", userID)
 		}
-		respondError(w, http.StatusBadRequest, "Workout ID is required")
+		respondError(w, http.StatusBadRequest, "Either workout_id or workout_name is required")
 		return
 	}
 
