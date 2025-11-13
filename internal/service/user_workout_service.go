@@ -186,7 +186,7 @@ func (s *UserWorkoutService) ListLoggedWorkoutsByDateRange(userID int64, startDa
 }
 
 // UpdateLoggedWorkout updates a logged workout with authorization check
-func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, notes *string, totalTime *int, workoutType *string) error {
+func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, workoutName *string, notes *string, totalTime *int, workoutType *string) error {
 	// Get existing logged workout
 	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
 	if err != nil {
@@ -202,6 +202,12 @@ func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, no
 	}
 
 	// Update fields
+	if workoutName != nil {
+		// Only allow updating workout_name for ad-hoc workouts (workout_id is null)
+		if existing.WorkoutID == nil {
+			existing.WorkoutName = workoutName
+		}
+	}
 	if notes != nil {
 		existing.Notes = notes
 	}

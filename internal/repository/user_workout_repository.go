@@ -440,11 +440,11 @@ func (r *UserWorkoutRepository) Update(userWorkout *domain.UserWorkout) error {
 	userWorkout.UpdatedAt = time.Now()
 
 	query := `UPDATE user_workouts
-	          SET workout_date = ?, workout_type = ?, total_time = ?,
+	          SET workout_name = ?, workout_date = ?, workout_type = ?, total_time = ?,
 	              notes = ?, updated_at = ?
 	          WHERE id = ? AND user_id = ?`
 
-	result, err := r.db.Exec(query, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.UpdatedAt, userWorkout.ID, userWorkout.UserID)
+	result, err := r.db.Exec(query, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.UpdatedAt, userWorkout.ID, userWorkout.UserID)
 	if err != nil {
 		return fmt.Errorf("failed to update user workout: %w", err)
 	}
