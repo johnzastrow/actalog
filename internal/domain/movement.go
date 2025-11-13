@@ -83,7 +83,7 @@ type UserWorkoutMovement struct {
 	Sets          *int      `json:"sets,omitempty" db:"sets"`
 	Reps          *int      `json:"reps,omitempty" db:"reps"`
 	Weight        *float64  `json:"weight,omitempty" db:"weight"`     // in lbs or kg
-	Time          *int      `json:"time,omitempty" db:"time"`         // in seconds
+	Time          *int      `json:"time_seconds,omitempty" db:"time"`         // in seconds
 	Distance      *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
 	Notes         string    `json:"notes,omitempty" db:"notes"`
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
@@ -91,7 +91,9 @@ type UserWorkoutMovement struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data (loaded via joins)
-	Movement *Movement `json:"movement,omitempty" db:"-"`
+	Movement     *Movement `json:"movement,omitempty" db:"-"`
+	MovementName string    `json:"movement_name,omitempty" db:"-"` // Flattened for convenience
+	MovementType string    `json:"movement_type,omitempty" db:"-"` // Flattened for convenience
 }
 
 // WorkoutMovementRepository defines the interface for workout movement data access

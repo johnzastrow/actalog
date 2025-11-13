@@ -119,8 +119,8 @@
           </v-card>
         </div>
 
-        <!-- Movement Performance (if template has movements) -->
-        <div v-if="selectedTemplate && selectedTemplate.movements && selectedTemplate.movements.length > 0" class="mb-3">
+        <!-- Movement Performance (if template has movements OR if editing and has movements) -->
+        <div v-if="(selectedTemplate && selectedTemplate.movements && selectedTemplate.movements.length > 0) || (isEditMode && movementPerformance.length > 0)" class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
             Movement Performance
           </label>
@@ -212,8 +212,8 @@
           </v-card>
         </div>
 
-        <!-- WOD Performance (if template has WODs) -->
-        <div v-if="selectedTemplate && selectedTemplate.wods && selectedTemplate.wods.length > 0" class="mb-3">
+        <!-- WOD Performance (if template has WODs OR if editing and has WODs) -->
+        <div v-if="(selectedTemplate && selectedTemplate.wods && selectedTemplate.wods.length > 0) || (isEditMode && wodPerformance.length > 0)" class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
             WOD Performance
           </label>
@@ -782,6 +782,18 @@ async function logWorkout() {
         workout_type: workoutType.value || null,
         total_time: totalTimeSeconds,
         notes: notes.value.trim() || null
+      }
+
+      // Add performance data if any
+      const movements = buildMovementsPayload()
+      const wods = buildWODsPayload()
+
+      if (movements.length > 0) {
+        payload.movements = movements
+      }
+
+      if (wods.length > 0) {
+        payload.wods = wods
       }
 
       console.log('Updating workout with payload:', payload)

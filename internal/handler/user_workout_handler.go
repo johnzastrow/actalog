@@ -66,9 +66,11 @@ type WODPerformance struct {
 
 // UpdateLoggedWorkoutRequest represents a request to update a logged workout
 type UpdateLoggedWorkoutRequest struct {
-	WorkoutType *string `json:"workout_type,omitempty"`
-	TotalTime   *int    `json:"total_time,omitempty"`
-	Notes       *string `json:"notes,omitempty"`
+	WorkoutType *string                `json:"workout_type,omitempty"`
+	TotalTime   *int                   `json:"total_time,omitempty"`
+	Notes       *string                `json:"notes,omitempty"`
+	Movements   []MovementPerformance  `json:"movements,omitempty"`
+	WODs        []WODPerformance       `json:"wods,omitempty"`
 }
 
 // UserWorkoutResponse represents a logged workout instance
@@ -425,6 +427,28 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 			respondError(w, http.StatusInternalServerError, "Failed to update logged workout")
 		}
 		return
+	}
+
+	// Update movements if provided
+	if len(req.Movements) > 0 {
+		if err := h.userWorkoutService.UpdateWorkoutMovements(id, userID, req.Movements); err != nil {
+			if h.logger != nil {
+				h.logger.Error("action=update_workout_movements outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
+			}
+			respondError(w, http.StatusInternalServerError, "Failed to update workout movements")
+			return
+		}
+	}
+
+	// Update WODs if provided
+	if len(req.WODs) > 0 {
+		if err := h.userWorkoutService.UpdateWorkoutWODs(id, userID, req.WODs); err != nil {
+			if h.logger != nil {
+				h.logger.Error("action=update_workout_wods outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
+			}
+			respondError(w, http.StatusInternalServerError, "Failed to update workout WODs")
+			return
+		}
 	}
 
 	// Retrieve updated logged workout

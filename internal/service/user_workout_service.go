@@ -238,6 +238,66 @@ func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) er
 	return nil
 }
 
+// UpdateWorkoutMovements updates the movements for a logged workout
+func (s *UserWorkoutService) UpdateWorkoutMovements(userWorkoutID, userID int64, movements []domain.UserWorkoutMovement) error {
+	// Authorization check
+	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
+	if err != nil {
+		return fmt.Errorf("failed to get logged workout: %w", err)
+	}
+	if existing == nil {
+		return ErrUserWorkoutNotFound
+	}
+	if existing.UserID != userID {
+		return ErrUnauthorizedWorkoutAccess
+	}
+
+	// Delete existing movements
+	if err := s.userWorkoutMovementRepo.DeleteByUserWorkoutID(userWorkoutID); err != nil {
+		return fmt.Errorf("failed to delete existing movements: %w", err)
+	}
+
+	// Insert new movements
+	for _, movement := range movements {
+		movement.UserWorkoutID = userWorkoutID
+		if err := s.userWorkoutMovementRepo.Create(&movement); err != nil {
+			return fmt.Errorf("failed to create movement: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateWorkoutWODs updates the WODs for a logged workout
+func (s *UserWorkoutService) UpdateWorkoutWODs(userWorkoutID, userID int64, wods []domain.UserWorkoutWOD) error {
+	// Authorization check
+	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
+	if err != nil {
+		return fmt.Errorf("failed to get logged workout: %w", err)
+	}
+	if existing == nil {
+		return ErrUserWorkoutNotFound
+	}
+	if existing.UserID != userID {
+		return ErrUnauthorizedWorkoutAccess
+	}
+
+	// Delete existing WODs
+	if err := s.userWorkoutWODRepo.DeleteByUserWorkoutID(userWorkoutID); err != nil {
+		return fmt.Errorf("failed to delete existing WODs: %w", err)
+	}
+
+	// Insert new WODs
+	for _, wod := range wods {
+		wod.UserWorkoutID = userWorkoutID
+		if err := s.userWorkoutWODRepo.Create(&wod); err != nil {
+			return fmt.Errorf("failed to create WOD: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // GetWorkoutStatsForMonth counts workouts logged in a specific month
 func (s *UserWorkoutService) GetWorkoutStatsForMonth(userID int64, year, month int) (int, error) {
 	// Calculate start and end dates for the month

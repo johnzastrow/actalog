@@ -204,13 +204,164 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		return nil, fmt.Errorf("failed to get workout WODs: %w", err)
 	}
 
+	// Get actual performance movements from user_workout_movements table
+	perfMovementsQuery := `
+		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight,
+		       uwm.time, uwm.distance, uwm.notes, uwm.order_index, uwm.created_at, uwm.updated_at,
+		       m.name as movement_name, m.type as movement_type
+		FROM user_workout_movements uwm
+		JOIN movements m ON uwm.movement_id = m.id
+		WHERE uwm.user_workout_id = ?
+		ORDER BY uwm.order_index`
+
+	perfMovRows, err := r.db.Query(perfMovementsQuery, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user workout movements: %w", err)
+	}
+	defer perfMovRows.Close()
+
+	var performanceMovements []*domain.UserWorkoutMovement
+	for perfMovRows.Next() {
+		uwm := &domain.UserWorkoutMovement{}
+		var sets sql.NullInt64
+		var reps sql.NullInt64
+		var weight sql.NullFloat64
+		var time sql.NullInt64
+		var distance sql.NullFloat64
+		var notes sql.NullString
+		var movementName string
+		var movementType string
+
+		err := perfMovRows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight,
+			&time, &distance, &notes, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
+			&movementName, &movementType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user workout movement: %w", err)
+		}
+
+		if sets.Valid {
+			s := int(sets.Int64)
+			uwm.Sets = &s
+		}
+		if reps.Valid {
+			r := int(reps.Int64)
+			uwm.Reps = &r
+		}
+		if weight.Valid {
+			uwm.Weight = &weight.Float64
+		}
+		if time.Valid {
+			t := int(time.Int64)
+			uwm.Time = &t
+		}
+		if distance.Valid {
+			uwm.Distance = &distance.Float64
+		}
+		if notes.Valid {
+			uwm.Notes = notes.String
+		}
+
+		uwm.Movement = &domain.Movement{
+			ID:   uwm.MovementID,
+			Name: movementName,
+			Type: domain.MovementType(movementType),
+		}
+		uwm.MovementName = movementName
+		uwm.MovementType = movementType
+
+		performanceMovements = append(performanceMovements, uwm)
+	}
+	if err = perfMovRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to get user workout movements: %w", err)
+	}
+
+	// Get actual performance WODs from user_workout_wods table
+	perfWODsQuery := `
+		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value,
+		       uww.time_seconds, uww.rounds, uww.reps, uww.weight, uww.notes,
+		       uww.order_index, uww.created_at, uww.updated_at,
+		       w.name as wod_name, w.type as wod_type, w.regime as wod_regime
+		FROM user_workout_wods uww
+		JOIN wods w ON uww.wod_id = w.id
+		WHERE uww.user_workout_id = ?
+		ORDER BY uww.order_index`
+
+	perfWODRows, err := r.db.Query(perfWODsQuery, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user workout WODs: %w", err)
+	}
+	defer perfWODRows.Close()
+
+	var performanceWODs []*domain.UserWorkoutWOD
+	for perfWODRows.Next() {
+		uww := &domain.UserWorkoutWOD{}
+		var scoreType sql.NullString
+		var scoreValue sql.NullString
+		var timeSeconds sql.NullInt64
+		var rounds sql.NullInt64
+		var reps sql.NullInt64
+		var weight sql.NullFloat64
+		var notes sql.NullString
+		var wodName string
+		var wodType string
+		var wodRegime string
+
+		err := perfWODRows.Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue,
+			&timeSeconds, &rounds, &reps, &weight, &notes,
+			&uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
+			&wodName, &wodType, &wodRegime)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user workout WOD: %w", err)
+		}
+
+		if scoreType.Valid {
+			uww.ScoreType = &scoreType.String
+		}
+		if scoreValue.Valid {
+			uww.ScoreValue = &scoreValue.String
+		}
+		if timeSeconds.Valid {
+			t := int(timeSeconds.Int64)
+			uww.TimeSeconds = &t
+		}
+		if rounds.Valid {
+			r := int(rounds.Int64)
+			uww.Rounds = &r
+		}
+		if reps.Valid {
+			r := int(reps.Int64)
+			uww.Reps = &r
+		}
+		if weight.Valid {
+			uww.Weight = &weight.Float64
+		}
+		if notes.Valid {
+			uww.Notes = notes.String
+		}
+
+		uww.WOD = &domain.WOD{
+			ID:     uww.WODID,
+			Name:   wodName,
+			Type:   wodType,
+			Regime: wodRegime,
+		}
+		uww.WODName = wodName
+
+		performanceWODs = append(performanceWODs, uww)
+	}
+	if err = perfWODRows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to get user workout WODs: %w", err)
+	}
+
 	// Construct the detailed response
 	result := &domain.UserWorkoutWithDetails{
-		UserWorkout:        *userWorkout,
-		WorkoutName:        workoutName,
-		WorkoutDescription: workoutDescription,
-		Movements:          movements,
-		WODs:               wods,
+		UserWorkout:          *userWorkout,
+		WorkoutName:          workoutName,
+		WorkoutDescription:   workoutDescription,
+		Movements:            movements,
+		WODs:                 wods,
+		PerformanceMovements: performanceMovements,
+		PerformanceWODs:      performanceWODs,
 	}
 
 	return result, nil

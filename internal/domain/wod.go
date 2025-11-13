@@ -39,7 +39,8 @@ type UserWorkoutWOD struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data (loaded via joins)
-	WOD *WOD `json:"wod,omitempty" db:"-"`
+	WOD     *WOD   `json:"wod,omitempty" db:"-"`
+	WODName string `json:"wod_name,omitempty" db:"-"` // Flattened for convenience
 }
 
 // WODRepository defines the interface for WOD data access
