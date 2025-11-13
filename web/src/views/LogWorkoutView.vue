@@ -600,8 +600,8 @@ async function onTemplateSelected(templateId) {
 
   // Fetch template details if needed
   try {
-    const response = await axios.get(`/api/workouts/${templateId}`)
-    const template = response.data.workout
+    const response = await axios.get(`/api/templates/${templateId}`)
+    const template = response.data.template
 
     // Update the template in the list with full details
     const index = workoutTemplates.value.findIndex(t => t.id === templateId)
