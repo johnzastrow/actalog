@@ -144,7 +144,7 @@ func (m *mockUserWorkoutRepo) Delete(id int64, userID int64) error {
 
 func (m *mockUserWorkoutRepo) GetByUserWorkoutDate(userID, workoutID int64, date time.Time) (*domain.UserWorkout, error) {
 	for _, uw := range m.userWorkouts {
-		if uw.UserID == userID && uw.WorkoutID == workoutID && uw.WorkoutDate.Equal(date) {
+		if uw.UserID == userID && uw.WorkoutID != nil && *uw.WorkoutID == workoutID && uw.WorkoutDate.Equal(date) {
 			return uw, nil
 		}
 	}

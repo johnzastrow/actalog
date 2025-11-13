@@ -67,6 +67,7 @@ type WODPerformance struct {
 
 // UpdateLoggedWorkoutRequest represents a request to update a logged workout
 type UpdateLoggedWorkoutRequest struct {
+	WorkoutName *string                `json:"workout_name,omitempty"` // For ad-hoc workouts
 	WorkoutType *string                `json:"workout_type,omitempty"`
 	TotalTime   *int                   `json:"total_time,omitempty"`
 	Notes       *string                `json:"notes,omitempty"`
@@ -78,7 +79,7 @@ type UpdateLoggedWorkoutRequest struct {
 type UserWorkoutResponse struct {
 	ID                   int64                           `json:"id"`
 	UserID               int64                           `json:"user_id"`
-	WorkoutID            int64                           `json:"workout_id"`
+	WorkoutID            *int64                          `json:"workout_id,omitempty"`         // Nullable for ad-hoc workouts
 	WorkoutName          string                          `json:"workout_name"`
 	WorkoutDate          string                          `json:"workout_date"`
 	WorkoutType          *string                         `json:"workout_type,omitempty"`
@@ -104,7 +105,10 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 
 	var req LogWorkoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
+		if h.logger != nil {
+			h.logger.Error("action=log_workout outcome=failure error=json_decode_error details=%v", err)
+		}
+		respondError(w, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
 	}
 
@@ -131,7 +135,11 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if h.logger != nil {
-		h.logger.Info("action=log_workout_attempt user_id=%d workout_id=%d date=%s", userID, req.WorkoutID, req.WorkoutDate)
+		if req.WorkoutID != nil {
+			h.logger.Info("action=log_workout_attempt user_id=%d workout_id=%d date=%s", userID, *req.WorkoutID, req.WorkoutDate)
+		} else {
+			h.logger.Info("action=log_adhoc_workout_attempt user_id=%d workout_name=%s date=%s", userID, *req.WorkoutName, req.WorkoutDate)
+		}
 	}
 
 	// Check if performance data was provided
@@ -170,18 +178,18 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 
 		// Log workout with performance data
 		userWorkout, err = h.userWorkoutService.LogWorkoutWithPerformance(
-			userID, req.WorkoutID, workoutDate,
+			userID, req.WorkoutID, req.WorkoutName, workoutDate,
 			req.Notes, req.TotalTime, req.WorkoutType,
 			movements, wods,
 		)
 	} else {
 		// Log workout without performance data
-		userWorkout, err = h.userWorkoutService.LogWorkout(userID, req.WorkoutID, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
+		userWorkout, err = h.userWorkoutService.LogWorkout(userID, req.WorkoutID, req.WorkoutName, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
 	}
 
 	if err != nil {
 		if h.logger != nil {
-			h.logger.Error("action=log_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, req.WorkoutID, err)
+			h.logger.Error("action=log_workout outcome=failure user_id=%d error=%v", userID, err)
 		}
 		respondError(w, http.StatusInternalServerError, "Failed to log workout: "+err.Error())
 		return
@@ -410,7 +418,7 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 		h.logger.Info("action=update_workout_attempt user_id=%d workout_id=%d", userID, id)
 	}
 
-	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
+	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, req.WorkoutName, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
 		switch err {
 		case service.ErrUserWorkoutNotFound:
 			if h.logger != nil {

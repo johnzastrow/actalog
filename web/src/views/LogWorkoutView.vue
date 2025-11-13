@@ -71,9 +71,27 @@
           </v-card>
         </div>
 
+        <!-- Edit Workout Name (for ad-hoc workouts only) -->
+        <div v-if="isEditMode && !selectedTemplateId" class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Workout Name *
+          </label>
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+            <v-text-field
+              v-model="workoutName"
+              variant="plain"
+              density="compact"
+              hide-details
+              required
+              placeholder="e.g., Morning Run, Upper Body, etc."
+              style="color: #1a1a1a; font-weight: 500"
+            />
+          </v-card>
+        </div>
+
         <!-- Selected Template Info -->
         <v-card
-          v-if="selectedTemplate || isEditMode"
+          v-if="selectedTemplate || (isEditMode && selectedTemplateId)"
           elevation="0"
           rounded="lg"
           class="mb-3 pa-3"

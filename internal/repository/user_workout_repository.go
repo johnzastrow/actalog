@@ -21,10 +21,10 @@ func (r *UserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
 	userWorkout.CreatedAt = time.Now()
 	userWorkout.UpdatedAt = time.Now()
 
-	query := `INSERT INTO user_workouts (user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO user_workouts (user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := r.db.Exec(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt)
+	result, err := r.db.Exec(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create user workout: %w", err)
 	}
@@ -40,14 +40,16 @@ func (r *UserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
 
 // GetByID retrieves a user workout by ID
 func (r *UserWorkoutRepository) GetByID(id int64) (*domain.UserWorkout, error) {
-	query := `SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE id = ?`
+	query := `SELECT id, user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE id = ?`
 
 	userWorkout := &domain.UserWorkout{}
+	var workoutID sql.NullInt64
+	var workoutName sql.NullString
 	var workoutType sql.NullString
 	var totalTime sql.NullInt64
 	var notes sql.NullString
 
-	err := r.db.QueryRow(query, id).Scan(&userWorkout.ID, &userWorkout.UserID, &userWorkout.WorkoutID, &userWorkout.WorkoutDate, &workoutType, &totalTime, &notes, &userWorkout.CreatedAt, &userWorkout.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&userWorkout.ID, &userWorkout.UserID, &workoutID, &workoutName, &userWorkout.WorkoutDate, &workoutType, &totalTime, &notes, &userWorkout.CreatedAt, &userWorkout.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -55,6 +57,13 @@ func (r *UserWorkoutRepository) GetByID(id int64) (*domain.UserWorkout, error) {
 		return nil, fmt.Errorf("failed to get user workout: %w", err)
 	}
 
+	if workoutID.Valid {
+		wid := workoutID.Int64
+		userWorkout.WorkoutID = &wid
+	}
+	if workoutName.Valid {
+		userWorkout.WorkoutName = &workoutName.String
+	}
 	if workoutType.Valid {
 		userWorkout.WorkoutType = &workoutType.String
 	}
@@ -85,123 +94,135 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		return nil, fmt.Errorf("unauthorized: workout does not belong to user")
 	}
 
-	// Get workout template details
+	// Get workout name and description
 	var workoutName string
-	var workoutNotes sql.NullString
-	query := `SELECT name, notes FROM workouts WHERE id = ?`
-	if err := r.db.QueryRow(query, userWorkout.WorkoutID).Scan(&workoutName, &workoutNotes); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("workout template not found")
-		}
-		return nil, fmt.Errorf("failed to get workout template: %w", err)
-	}
-
 	var workoutDescription *string
-	if workoutNotes.Valid {
-		workoutDescription = &workoutNotes.String
+
+	if userWorkout.WorkoutID != nil {
+		// Template-based workout - get name from template
+		var workoutNotes sql.NullString
+		query := `SELECT name, notes FROM workouts WHERE id = ?`
+		if err := r.db.QueryRow(query, *userWorkout.WorkoutID).Scan(&workoutName, &workoutNotes); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, fmt.Errorf("workout template not found")
+			}
+			return nil, fmt.Errorf("failed to get workout template: %w", err)
+		}
+		if workoutNotes.Valid {
+			workoutDescription = &workoutNotes.String
+		}
+	} else if userWorkout.WorkoutName != nil {
+		// Ad-hoc workout - use workout_name from user_workouts table
+		workoutName = *userWorkout.WorkoutName
+	} else {
+		return nil, fmt.Errorf("workout has neither workout_id nor workout_name")
 	}
 
-	// Get movements from workout_movements table with movement details
-	movementsQuery := `
-		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
-		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
-		       m.name as movement_name, m.type as movement_type
-		FROM workout_movements ws
-		JOIN movements m ON ws.movement_id = m.id
-		WHERE ws.workout_id = ?
-		ORDER BY ws.order_index`
-
-	rows, err := r.db.Query(movementsQuery, userWorkout.WorkoutID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workout movements: %w", err)
-	}
-	defer rows.Close()
-
+	// Get movements from workout_movements table with movement details (only for template-based workouts)
 	var movements []*domain.WorkoutMovement
-	for rows.Next() {
-		wm := &domain.WorkoutMovement{}
-		var weight sql.NullFloat64
-		var sets sql.NullInt64
-		var reps sql.NullInt64
-		var time sql.NullInt64
-		var distance sql.NullFloat64
-		var notes sql.NullString
-		var movementName string
-		var movementType string
+	if userWorkout.WorkoutID != nil {
+		movementsQuery := `
+			SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
+				   ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
+				   m.name as movement_name, m.type as movement_type
+			FROM workout_movements ws
+			JOIN movements m ON ws.movement_id = m.id
+			WHERE ws.workout_id = ?
+			ORDER BY ws.order_index`
 
-		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
-			&movementName, &movementType)
+		rows, err := r.db.Query(movementsQuery, *userWorkout.WorkoutID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan workout movement: %w", err)
+			return nil, fmt.Errorf("failed to get workout movements: %w", err)
 		}
+		defer rows.Close()
 
-		if weight.Valid {
-			wm.Weight = &weight.Float64
-		}
-		if sets.Valid {
-			s := int(sets.Int64)
-			wm.Sets = &s
-		}
-		if reps.Valid {
-			r := int(reps.Int64)
-			wm.Reps = &r
-		}
-		if time.Valid {
-			t := int(time.Int64)
-			wm.Time = &t
-		}
-		if distance.Valid {
-			wm.Distance = &distance.Float64
-		}
-		if notes.Valid {
-			wm.Notes = notes.String
-		}
+		for rows.Next() {
+			wm := &domain.WorkoutMovement{}
+			var weight sql.NullFloat64
+			var sets sql.NullInt64
+			var reps sql.NullInt64
+			var time sql.NullInt64
+			var distance sql.NullFloat64
+			var notes sql.NullString
+			var movementName string
+			var movementType string
 
-		wm.Movement = &domain.Movement{
-			ID:   wm.MovementID,
-			Name: movementName,
-			Type: domain.MovementType(movementType),
-		}
+			err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
+				&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+				&movementName, &movementType)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan workout movement: %w", err)
+			}
 
-		movements = append(movements, wm)
+			if weight.Valid {
+				wm.Weight = &weight.Float64
+			}
+			if sets.Valid {
+				s := int(sets.Int64)
+				wm.Sets = &s
+			}
+			if reps.Valid {
+				r := int(reps.Int64)
+				wm.Reps = &r
+			}
+			if time.Valid {
+				t := int(time.Int64)
+				wm.Time = &t
+			}
+			if distance.Valid {
+				wm.Distance = &distance.Float64
+			}
+			if notes.Valid {
+				wm.Notes = notes.String
+			}
+
+			wm.Movement = &domain.Movement{
+				ID:   wm.MovementID,
+				Name: movementName,
+				Type: domain.MovementType(movementType),
+			}
+
+			movements = append(movements, wm)
+		}
+		if err = rows.Err(); err != nil {
+			return nil, fmt.Errorf("failed to get workout movements: %w", err)
+		}
 	}
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed to get workout movements: %w", err)
-	}
 
-	// Get WODs from workout_wods table with WOD details
-	wodsQuery := `
-		SELECT ww.id, ww.workout_id, ww.wod_id,
-		       ww.order_index, ww.created_at, ww.updated_at,
-		       w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
-		       w.score_type as wod_score_type, w.description as wod_description
-		FROM workout_wods ww
-		JOIN wods w ON ww.wod_id = w.id
-		WHERE ww.workout_id = ?
-		ORDER BY ww.order_index`
-
-	rows, err = r.db.Query(wodsQuery, userWorkout.WorkoutID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workout WODs: %w", err)
-	}
-	defer rows.Close()
-
+	// Get WODs from workout_wods table with WOD details (only for template-based workouts)
 	var wods []*domain.WorkoutWODWithDetails
-	for rows.Next() {
-		wod := &domain.WorkoutWODWithDetails{}
+	if userWorkout.WorkoutID != nil {
+		wodsQuery := `
+			SELECT ww.id, ww.workout_id, ww.wod_id,
+				   ww.order_index, ww.created_at, ww.updated_at,
+				   w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
+				   w.score_type as wod_score_type, w.description as wod_description
+			FROM workout_wods ww
+			JOIN wods w ON ww.wod_id = w.id
+			WHERE ww.workout_id = ?
+			ORDER BY ww.order_index`
 
-		err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID,
-			&wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
-			&wod.WODName, &wod.WODType, &wod.WODRegime, &wod.WODScoreType, &wod.WODDescription)
+		rows, err := r.db.Query(wodsQuery, *userWorkout.WorkoutID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
+			return nil, fmt.Errorf("failed to get workout WODs: %w", err)
 		}
+		defer rows.Close()
 
-		wods = append(wods, wod)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed to get workout WODs: %w", err)
+		for rows.Next() {
+			wod := &domain.WorkoutWODWithDetails{}
+
+			err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID,
+				&wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
+				&wod.WODName, &wod.WODType, &wod.WODRegime, &wod.WODScoreType, &wod.WODDescription)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
+			}
+
+			wods = append(wods, wod)
+		}
+		if err = rows.Err(); err != nil {
+			return nil, fmt.Errorf("failed to get workout WODs: %w", err)
+		}
 	}
 
 	// Get actual performance movements from user_workout_movements table

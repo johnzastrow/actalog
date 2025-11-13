@@ -94,20 +94,39 @@
         </v-col>
       </v-row>
 
-      <!-- Quick Action -->
-      <v-card
-        elevation="0"
-        rounded="lg"
-        class="mb-3 pa-4 text-center"
-        style="background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%); cursor: pointer"
-        @click="$router.push('/workouts/log')"
-      >
-        <v-icon size="48" color="white" class="mb-2">mdi-plus-circle</v-icon>
-        <div class="text-h6 font-weight-bold text-white">Log Today's Workout</div>
-        <div class="text-caption text-white" style="opacity: 0.9">
-          Track your progress and stay consistent
-        </div>
-      </v-card>
+      <!-- Quick Actions -->
+      <v-row dense class="mb-3">
+        <v-col cols="6">
+          <v-card
+            elevation="0"
+            rounded="lg"
+            class="pa-3 text-center"
+            style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); cursor: pointer"
+            @click="quickLogDialog = true"
+          >
+            <v-icon size="32" color="white" class="mb-1">mdi-lightning-bolt</v-icon>
+            <div class="text-body-2 font-weight-bold text-white">Quick Log</div>
+            <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
+              Fast entry
+            </div>
+          </v-card>
+        </v-col>
+        <v-col cols="6">
+          <v-card
+            elevation="0"
+            rounded="lg"
+            class="pa-3 text-center"
+            style="background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%); cursor: pointer"
+            @click="$router.push('/workouts/log')"
+          >
+            <v-icon size="32" color="white" class="mb-1">mdi-dumbbell</v-icon>
+            <div class="text-body-2 font-weight-bold text-white">Log Workout</div>
+            <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
+              Use template
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
 
       <!-- Recent Workouts -->
       <div class="mb-3">
@@ -204,6 +223,102 @@
       </div>
     </v-container>
 
+    <!-- Quick Log Dialog -->
+    <v-dialog v-model="quickLogDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold" style="background: #ffc107; color: white">
+          <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
+          Quick Log Workout
+        </v-card-title>
+
+        <v-card-text class="pa-4">
+          <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
+            <!-- Date -->
+            <div class="mb-3">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Date *
+              </label>
+              <v-text-field
+                v-model="quickLogData.date"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+                required
+                @update:model-value="updateQuickLogName"
+              />
+            </div>
+
+            <!-- Workout Name -->
+            <div class="mb-3">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Workout Name *
+              </label>
+              <v-text-field
+                v-model="quickLogData.name"
+                variant="outlined"
+                density="compact"
+                placeholder="e.g., Morning Run, Upper Body, etc."
+                hide-details
+                required
+              />
+            </div>
+
+            <!-- Total Time -->
+            <div class="mb-3">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Total Time (minutes)
+              </label>
+              <v-text-field
+                v-model.number="quickLogData.totalTime"
+                type="number"
+                variant="outlined"
+                density="compact"
+                placeholder="e.g., 30"
+                hide-details
+                min="0"
+              />
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Notes
+              </label>
+              <v-textarea
+                v-model="quickLogData.notes"
+                variant="outlined"
+                density="compact"
+                rows="3"
+                placeholder="How did it feel? Any highlights?"
+                hide-details
+              />
+            </div>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions class="pa-4 pt-0">
+          <v-btn
+            variant="text"
+            @click="closeQuickLog"
+          >
+            Cancel
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            color="#ffc107"
+            variant="elevated"
+            :loading="quickLogSubmitting"
+            :disabled="!quickLogData.name || !quickLogData.date"
+            @click="submitQuickLog"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Log Workout
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Bottom Navigation -->
     <v-bottom-navigation
       v-model="activeTab"
@@ -248,6 +363,33 @@ const activeTab = ref('dashboard')
 
 const loading = ref(false)
 const userWorkouts = ref([])
+
+// Get today's date in YYYY-MM-DD format
+function getTodayDate() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Format date for Quick Log name like "Quick Log Thu Nov 13, 2025"
+function formatQuickLogName(dateString) {
+  const date = new Date(dateString + 'T00:00:00') // Ensure local timezone
+  const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
+  const formatted = date.toLocaleDateString('en-US', options)
+  return `Quick Log ${formatted}`
+}
+
+// Quick Log state
+const quickLogDialog = ref(false)
+const quickLogSubmitting = ref(false)
+const quickLogData = ref({
+  name: formatQuickLogName(getTodayDate()),
+  date: getTodayDate(),
+  totalTime: null,
+  notes: ''
+})
 
 // Computed stats
 const totalWorkouts = computed(() => userWorkouts.value.length)
@@ -386,6 +528,57 @@ function truncateText(text, maxLength) {
 function viewWorkout(workoutId) {
   console.log('View workout details:', workoutId)
   router.push(`/workouts/${workoutId}`)
+}
+
+// Update Quick Log name when date changes
+function updateQuickLogName() {
+  if (quickLogData.value.date) {
+    quickLogData.value.name = formatQuickLogName(quickLogData.value.date)
+  }
+}
+
+// Close Quick Log dialog
+function closeQuickLog() {
+  quickLogDialog.value = false
+  // Reset form
+  const today = getTodayDate()
+  quickLogData.value = {
+    name: formatQuickLogName(today),
+    date: today,
+    totalTime: null,
+    notes: ''
+  }
+}
+
+// Submit Quick Log
+async function submitQuickLog() {
+  if (!quickLogData.value.name || !quickLogData.value.date) {
+    return
+  }
+
+  quickLogSubmitting.value = true
+
+  try {
+    const payload = {
+      workout_name: quickLogData.value.name,
+      workout_date: quickLogData.value.date,
+      total_time: quickLogData.value.totalTime ? quickLogData.value.totalTime * 60 : null, // Convert to seconds
+      notes: quickLogData.value.notes || null
+    }
+
+    await axios.post('/api/workouts', payload)
+
+    // Close dialog
+    closeQuickLog()
+
+    // Refresh workouts list
+    await fetchUserWorkouts()
+  } catch (err) {
+    console.error('Failed to log workout:', err)
+    alert(err.response?.data?.message || 'Failed to log workout')
+  } finally {
+    quickLogSubmitting.value = false
+  }
 }
 
 // Load data on mount

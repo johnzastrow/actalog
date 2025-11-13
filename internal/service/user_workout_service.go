@@ -39,33 +39,36 @@ func NewUserWorkoutService(
 	}
 }
 
-// LogWorkout logs that a user performed a workout template on a specific date
-func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time, notes *string, totalTime *int, workoutType *string) (*domain.UserWorkout, error) {
-	// Verify template exists
-	workout, err := s.workoutRepo.GetByID(templateID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workout template: %w", err)
-	}
-	if workout == nil {
-		return nil, ErrWorkoutNotFound
-	}
+// LogWorkout logs that a user performed a workout (template-based or ad-hoc) on a specific date
+func (s *UserWorkoutService) LogWorkout(userID int64, templateID *int64, workoutName *string, date time.Time, notes *string, totalTime *int, workoutType *string) (*domain.UserWorkout, error) {
+	// If template ID is provided, verify it exists and check authorization
+	if templateID != nil && *templateID != 0 {
+		workout, err := s.workoutRepo.GetByID(*templateID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get workout template: %w", err)
+		}
+		if workout == nil {
+			return nil, ErrWorkoutNotFound
+		}
 
-	// Check authorization: user can only log workouts they created or standard workouts (created_by = null)
-	if workout.CreatedBy != nil && *workout.CreatedBy != userID {
-		return nil, ErrUnauthorizedWorkoutAccess
+		// Check authorization: user can only log workouts they created or standard workouts (created_by = null)
+		if workout.CreatedBy != nil && *workout.CreatedBy != userID {
+			return nil, ErrUnauthorizedWorkoutAccess
+		}
 	}
 
 	// Create user workout (users can log the same workout multiple times per day)
 	userWorkout := &domain.UserWorkout{
 		UserID:      userID,
 		WorkoutID:   templateID,
+		WorkoutName: workoutName,
 		WorkoutDate: date,
 		WorkoutType: workoutType,
 		TotalTime:   totalTime,
 		Notes:       notes,
 	}
 
-	err = s.userWorkoutRepo.Create(userWorkout)
+	err := s.userWorkoutRepo.Create(userWorkout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to log workout: %w", err)
 	}
@@ -75,7 +78,9 @@ func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time
 
 // LogWorkoutWithPerformance logs a workout with full performance data for movements and WODs
 func (s *UserWorkoutService) LogWorkoutWithPerformance(
-	userID, templateID int64,
+	userID int64,
+	templateID *int64,
+	workoutName *string,
 	date time.Time,
 	notes *string,
 	totalTime *int,
@@ -84,7 +89,7 @@ func (s *UserWorkoutService) LogWorkoutWithPerformance(
 	wods []*domain.UserWorkoutWOD,
 ) (*domain.UserWorkout, error) {
 	// First create the base user workout
-	userWorkout, err := s.LogWorkout(userID, templateID, date, notes, totalTime, workoutType)
+	userWorkout, err := s.LogWorkout(userID, templateID, workoutName, date, notes, totalTime, workoutType)
 	if err != nil {
 		return nil, err
 	}
