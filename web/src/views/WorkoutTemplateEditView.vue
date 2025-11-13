@@ -436,7 +436,7 @@ async function fetchMovements() {
 async function fetchWODs() {
   loadingWODs.value = true
   try {
-    const response = await axios.get('/api/wods')
+    const response = await axios.get('/api/wods?limit=1000')
     availableWODs.value = response.data.wods || []
   } catch (err) {
     console.error('Failed to fetch WODs:', err)
