@@ -112,7 +112,7 @@
       <!-- Recent Workouts -->
       <div class="mb-3">
         <div class="d-flex align-center justify-space-between mb-2">
-          <h3 class="text-h6 font-weight-bold" style="color: #1a1a1a">Recent Workouts</h3>
+          <h3 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
           <v-btn
             size="small"
             variant="text"
@@ -173,7 +173,6 @@
                 </div>
                 <div class="text-caption" style="color: #666">
                   {{ formatDate(workout.workout_date) }}
-                  <span v-if="workout.workout_type"> • {{ formatWorkoutType(workout.workout_type) }}</span>
                   <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
                 </div>
               </div>
@@ -312,9 +311,16 @@ const avgTimePerWorkout = computed(() => {
 })
 
 const recentWorkouts = computed(() => {
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000))
+
   return [...userWorkouts.value]
+    .filter(w => {
+      const workoutDate = new Date(w.workout_date)
+      return workoutDate >= thirtyDaysAgo
+    })
     .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
-    .slice(0, 5) // Show 5 most recent
+    .slice(0, 30) // Show up to 30 most recent from last 30 days
 })
 
 // Fetch user's logged workouts
@@ -352,12 +358,6 @@ function formatDate(dateString) {
     const options = { weekday: 'short', month: 'short', day: 'numeric' }
     return date.toLocaleDateString('en-US', options)
   }
-}
-
-// Format workout type
-function formatWorkoutType(type) {
-  if (!type) return ''
-  return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
 // Format time (seconds to readable format)

@@ -43,7 +43,6 @@
               </h2>
               <div class="text-caption" style="color: #666">
                 {{ formatDate(workout.workout_date) }}
-                <span v-if="workout.workout_type"> • {{ formatWorkoutType(workout.workout_type) }}</span>
               </div>
             </div>
             <v-chip
@@ -364,12 +363,6 @@ function formatDate(dateString) {
   } else {
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   }
-}
-
-// Format workout type
-function formatWorkoutType(type) {
-  if (!type) return ''
-  return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
 // Format time (seconds to readable format)

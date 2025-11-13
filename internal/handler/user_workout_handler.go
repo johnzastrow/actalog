@@ -431,7 +431,22 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 
 	// Update movements if provided
 	if len(req.Movements) > 0 {
-		if err := h.userWorkoutService.UpdateWorkoutMovements(id, userID, req.Movements); err != nil {
+		// Convert request movements to domain movements
+		movements := make([]domain.UserWorkoutMovement, len(req.Movements))
+		for i, m := range req.Movements {
+			movements[i] = domain.UserWorkoutMovement{
+				MovementID: m.MovementID,
+				Sets:       m.Sets,
+				Reps:       m.Reps,
+				Weight:     m.Weight,
+				Time:       m.Time,
+				Distance:   m.Distance,
+				Notes:      m.Notes,
+				OrderIndex: m.OrderIndex,
+			}
+		}
+
+		if err := h.userWorkoutService.UpdateWorkoutMovements(id, userID, movements); err != nil {
 			if h.logger != nil {
 				h.logger.Error("action=update_workout_movements outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
 			}
@@ -442,7 +457,23 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 
 	// Update WODs if provided
 	if len(req.WODs) > 0 {
-		if err := h.userWorkoutService.UpdateWorkoutWODs(id, userID, req.WODs); err != nil {
+		// Convert request WODs to domain WODs
+		wods := make([]domain.UserWorkoutWOD, len(req.WODs))
+		for i, w := range req.WODs {
+			wods[i] = domain.UserWorkoutWOD{
+				WODID:       w.WODID,
+				ScoreType:   w.ScoreType,
+				ScoreValue:  w.ScoreValue,
+				TimeSeconds: w.TimeSeconds,
+				Rounds:      w.Rounds,
+				Reps:        w.Reps,
+				Weight:      w.Weight,
+				Notes:       w.Notes,
+				OrderIndex:  w.OrderIndex,
+			}
+		}
+
+		if err := h.userWorkoutService.UpdateWorkoutWODs(id, userID, wods); err != nil {
 			if h.logger != nil {
 				h.logger.Error("action=update_workout_wods outcome=failure user_id=%d workout_id=%d error=%v", userID, id, err)
 			}

@@ -2,12 +2,13 @@ package domain
 
 import "time"
 
-// UserWorkout represents a user's logged instance of a workout template
+// UserWorkout represents a user's logged instance of a workout template or ad-hoc workout
 // This is the junction table between users and workouts, with the date and user-specific data
 type UserWorkout struct {
 	ID          int64      `json:"id" db:"id"`
 	UserID      int64      `json:"user_id" db:"user_id"`
-	WorkoutID   int64      `json:"workout_id" db:"workout_id"`           // References the workout template
+	WorkoutID   *int64     `json:"workout_id,omitempty" db:"workout_id"` // References the workout template (NULL for ad-hoc workouts)
+	WorkoutName *string    `json:"workout_name,omitempty" db:"workout_name"` // Name for ad-hoc workouts (used when WorkoutID is NULL)
 	WorkoutDate time.Time  `json:"workout_date" db:"workout_date"`       // Date the workout was performed
 	WorkoutType *string    `json:"workout_type,omitempty" db:"workout_type"` // strength, metcon, cardio, mixed
 	TotalTime   *int       `json:"total_time,omitempty" db:"total_time"` // Total workout duration in seconds
