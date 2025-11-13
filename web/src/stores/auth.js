@@ -57,7 +57,17 @@ export const useAuthStore = defineStore('auth', () => {
 
       return true
     } catch (e) {
-      error.value = e.response?.data?.message || 'Login failed'
+      console.error('Login error:', e)
+      if (e.response) {
+        // Server responded with error status
+        error.value = e.response.data?.message || `Server error: ${e.response.status}`
+      } else if (e.request) {
+        // Request was made but no response received
+        error.value = 'Cannot connect to server. Please check if the server is running.'
+      } else {
+        // Something else happened
+        error.value = e.message || 'Login failed'
+      }
       return false
     } finally {
       loading.value = false
@@ -79,7 +89,17 @@ export const useAuthStore = defineStore('auth', () => {
 
       return true
     } catch (e) {
-      error.value = e.response?.data?.message || 'Registration failed'
+      console.error('Registration error:', e)
+      if (e.response) {
+        // Server responded with error status
+        error.value = e.response.data?.message || `Server error: ${e.response.status}`
+      } else if (e.request) {
+        // Request was made but no response received
+        error.value = 'Cannot connect to server. Please check if the server is running.'
+      } else {
+        // Something else happened
+        error.value = e.message || 'Registration failed'
+      }
       return false
     } finally {
       loading.value = false

@@ -16,13 +16,15 @@ type UserWorkout struct {
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// UserWorkoutWithDetails includes the workout template details
+// UserWorkoutWithDetails includes the workout template details and performance data
 type UserWorkoutWithDetails struct {
 	UserWorkout
-	WorkoutName        string                  `json:"workout_name"`
-	WorkoutDescription *string                 `json:"workout_description,omitempty"`
-	Movements          []*WorkoutMovement      `json:"movements,omitempty"`
-	WODs               []*WorkoutWODWithDetails `json:"wods,omitempty"`
+	WorkoutName        string                   `json:"workout_name"`
+	WorkoutDescription *string                  `json:"workout_description,omitempty"`
+	Movements          []*WorkoutMovement       `json:"movements,omitempty"`          // Template movements
+	WODs               []*WorkoutWODWithDetails `json:"wods,omitempty"`               // Template WODs
+	PerformanceMovements []*UserWorkoutMovement `json:"performance_movements,omitempty"` // Actual performance data for movements
+	PerformanceWODs      []*UserWorkoutWOD      `json:"performance_wods,omitempty"`      // Actual performance data for WODs
 }
 
 // UserWorkoutRepository defines the interface for user workout data access

@@ -101,11 +101,12 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 		var reps sql.NullInt64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var notes sql.NullString
 		var movementName string
 		var movementType string
 
 		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
 			&movementName, &movementType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout movement: %w", err)
@@ -128,6 +129,9 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 		}
 		if distance.Valid {
 			wm.Distance = &distance.Float64
+		}
+		if notes.Valid {
+			wm.Notes = notes.String
 		}
 
 		wm.Movement = &domain.Movement{

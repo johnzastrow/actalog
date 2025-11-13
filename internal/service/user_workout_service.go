@@ -15,21 +15,27 @@ var (
 
 // UserWorkoutService handles logging workout instances (when users perform workouts)
 type UserWorkoutService struct {
-	userWorkoutRepo     domain.UserWorkoutRepository
-	workoutRepo         domain.WorkoutRepository
-	workoutMovementRepo domain.WorkoutMovementRepository
+	userWorkoutRepo         domain.UserWorkoutRepository
+	workoutRepo             domain.WorkoutRepository
+	workoutMovementRepo     domain.WorkoutMovementRepository
+	userWorkoutMovementRepo domain.UserWorkoutMovementRepository
+	userWorkoutWODRepo      domain.UserWorkoutWODRepository
 }
 
-// NewUserWorkoutService creates a new user workout service
+// NewUseroutService creates a new user workout service
 func NewUserWorkoutService(
 	userWorkoutRepo domain.UserWorkoutRepository,
 	workoutRepo domain.WorkoutRepository,
 	workoutMovementRepo domain.WorkoutMovementRepository,
+	userWorkoutMovementRepo domain.UserWorkoutMovementRepository,
+	userWorkoutWODRepo domain.UserWorkoutWODRepository,
 ) *UserWorkoutService {
 	return &UserWorkoutService{
-		userWorkoutRepo:     userWorkoutRepo,
-		workoutRepo:         workoutRepo,
-		workoutMovementRepo: workoutMovementRepo,
+		userWorkoutRepo:         userWorkoutRepo,
+		workoutRepo:             workoutRepo,
+		workoutMovementRepo:     workoutMovementRepo,
+		userWorkoutMovementRepo: userWorkoutMovementRepo,
+		userWorkoutWODRepo:      userWorkoutWODRepo,
 	}
 }
 
@@ -67,7 +73,55 @@ func (s *UserWorkoutService) LogWorkout(userID, templateID int64, date time.Time
 	return userWorkout, nil
 }
 
-// GetLoggedWorkout retrieves a logged workout by ID with full details
+// LogWorkoutWithPerformance logs a workout with full performance data for movements and WODs
+func (s *UserWorkoutService) LogWorkoutWithPerformance(
+	userID, templateID int64,
+	date time.Time,
+	notes *string,
+	totalTime *int,
+	workoutType *string,
+	movements []*domain.UserWorkoutMovement,
+	wods []*domain.UserWorkoutWOD,
+) (*domain.UserWorkout, error) {
+	// First create the base user workout
+	userWorkout, err := s.LogWorkout(userID, templateID, date, notes, totalTime, workoutType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the user_workout_id for all movements
+	for _, m := range movements {
+		m.UserWorkoutID = userWorkout.ID
+	}
+
+	// Set the user_workout_id for all WODs
+	for _, w := range wods {
+		w.UserWorkoutID = userWorkout.ID
+	}
+
+	// Save movement performance data
+	if len(movements) > 0 {
+		if err := s.userWorkoutMovementRepo.CreateBatch(movements); err != nil {
+			// Rollback: delete the user workout if performance data fails
+			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
+			return nil, fmt.Errorf("failed to save movement performance data: %w", err)
+		}
+	}
+
+	// Save WOD performance data
+	if len(wods) > 0 {
+		if err := s.userWorkoutWODRepo.CreateBatch(wods); err != nil {
+			// Rollback: delete movement data and user workout
+			_ = s.userWorkoutMovementRepo.DeleteByUserWorkoutID(userWorkout.ID)
+			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
+			return nil, fmt.Errorf("failed to save WOD performance data: %w", err)
+		}
+	}
+
+	return userWorkout, nil
+}
+
+// GetLoggedWorkout retrieves a logged workout by ID with full details including performance data
 func (s *UserWorkoutService) GetLoggedWorkout(userWorkoutID, userID int64) (*domain.UserWorkoutWithDetails, error) {
 	// First check if workout exists (without user filtering)
 	basic, err := s.userWorkoutRepo.GetByID(userWorkoutID)
@@ -88,6 +142,20 @@ func (s *UserWorkoutService) GetLoggedWorkout(userWorkoutID, userID int64) (*dom
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logged workout details: %w", err)
 	}
+
+	// Load performance data for movements
+	performanceMovements, err := s.userWorkoutMovementRepo.GetByUserWorkoutID(userWorkoutID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get movement performance data: %w", err)
+	}
+	userWorkout.PerformanceMovements = performanceMovements
+
+	// Load performance data for WODs
+	performanceWODs, err := s.userWorkoutWODRepo.GetByUserWorkoutID(userWorkoutID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get WOD performance data: %w", err)
+	}
+	userWorkout.PerformanceWODs = performanceWODs
 
 	return userWorkout, nil
 }

@@ -34,6 +34,34 @@ type LogWorkoutRequest struct {
 	WorkoutType *string `json:"workout_type,omitempty"`
 	TotalTime   *int    `json:"total_time,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
+	// Performance data
+	Movements []MovementPerformance `json:"movements,omitempty"`
+	WODs      []WODPerformance      `json:"wods,omitempty"`
+}
+
+// MovementPerformance represents performance data for a single movement
+type MovementPerformance struct {
+	MovementID int64    `json:"movement_id"`
+	Sets       *int     `json:"sets,omitempty"`
+	Reps       *int     `json:"reps,omitempty"`
+	Weight     *float64 `json:"weight,omitempty"`
+	Time       *int     `json:"time,omitempty"`       // in seconds
+	Distance   *float64 `json:"distance,omitempty"`
+	Notes      string   `json:"notes,omitempty"`
+	OrderIndex int      `json:"order_index"`
+}
+
+// WODPerformance represents performance data for a single WOD
+type WODPerformance struct {
+	WODID       int64    `json:"wod_id"`
+	ScoreType   *string  `json:"score_type,omitempty"`   // Time, Rounds+Reps, Max Weight
+	ScoreValue  *string  `json:"score_value,omitempty"`  // Formatted score
+	TimeSeconds *int     `json:"time_seconds,omitempty"` // For time-based WODs
+	Rounds      *int     `json:"rounds,omitempty"`       // For AMRAP
+	Reps        *int     `json:"reps,omitempty"`         // Remaining reps in AMRAP
+	Weight      *float64 `json:"weight,omitempty"`       // For max weight WODs
+	Notes       string   `json:"notes,omitempty"`
+	OrderIndex  int      `json:"order_index"`
 }
 
 // UpdateLoggedWorkoutRequest represents a request to update a logged workout
@@ -45,19 +73,21 @@ type UpdateLoggedWorkoutRequest struct {
 
 // UserWorkoutResponse represents a logged workout instance
 type UserWorkoutResponse struct {
-	ID           int64                           `json:"id"`
-	UserID       int64                           `json:"user_id"`
-	WorkoutID    int64                           `json:"workout_id"`
-	WorkoutName  string                          `json:"workout_name"`
-	WorkoutDate  string                          `json:"workout_date"`
-	WorkoutType  *string                         `json:"workout_type,omitempty"`
-	TotalTime    *int                            `json:"total_time,omitempty"`
-	Notes        *string                         `json:"notes,omitempty"`
-	CreatedAt    string                          `json:"created_at"`
-	UpdatedAt    string                          `json:"updated_at"`
-	Movements    []*domain.WorkoutMovement       `json:"movements,omitempty"`
-	WODs         []*domain.WorkoutWODWithDetails `json:"wods,omitempty"`
-	WorkoutNotes *string                         `json:"workout_notes,omitempty"`
+	ID                   int64                           `json:"id"`
+	UserID               int64                           `json:"user_id"`
+	WorkoutID            int64                           `json:"workout_id"`
+	WorkoutName          string                          `json:"workout_name"`
+	WorkoutDate          string                          `json:"workout_date"`
+	WorkoutType          *string                         `json:"workout_type,omitempty"`
+	TotalTime            *int                            `json:"total_time,omitempty"`
+	Notes                *string                         `json:"notes,omitempty"`
+	CreatedAt            string                          `json:"created_at"`
+	UpdatedAt            string                          `json:"updated_at"`
+	Movements            []*domain.WorkoutMovement       `json:"movements,omitempty"`       // Template movements
+	WODs                 []*domain.WorkoutWODWithDetails `json:"wods,omitempty"`            // Template WODs
+	PerformanceMovements []*domain.UserWorkoutMovement   `json:"performance_movements,omitempty"` // Actual performance
+	PerformanceWODs      []*domain.UserWorkoutWOD        `json:"performance_wods,omitempty"`      // Actual performance
+	WorkoutNotes         *string                         `json:"workout_notes,omitempty"`
 }
 
 // LogWorkout logs a workout instance (user performs a workout template)
@@ -100,8 +130,51 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 		h.logger.Info("action=log_workout_attempt user_id=%d workout_id=%d date=%s", userID, req.WorkoutID, req.WorkoutDate)
 	}
 
-	// Log workout
-	userWorkout, err := h.userWorkoutService.LogWorkout(userID, req.WorkoutID, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
+	// Check if performance data was provided
+	var userWorkout *domain.UserWorkout
+	if len(req.Movements) > 0 || len(req.WODs) > 0 {
+		// Convert request movements to domain movements
+		movements := make([]*domain.UserWorkoutMovement, len(req.Movements))
+		for i, m := range req.Movements {
+			movements[i] = &domain.UserWorkoutMovement{
+				MovementID: m.MovementID,
+				Sets:       m.Sets,
+				Reps:       m.Reps,
+				Weight:     m.Weight,
+				Time:       m.Time,
+				Distance:   m.Distance,
+				Notes:      m.Notes,
+				OrderIndex: m.OrderIndex,
+			}
+		}
+
+		// Convert request WODs to domain WODs
+		wods := make([]*domain.UserWorkoutWOD, len(req.WODs))
+		for i, w := range req.WODs {
+			wods[i] = &domain.UserWorkoutWOD{
+				WODID:       w.WODID,
+				ScoreType:   w.ScoreType,
+				ScoreValue:  w.ScoreValue,
+				TimeSeconds: w.TimeSeconds,
+				Rounds:      w.Rounds,
+				Reps:        w.Reps,
+				Weight:      w.Weight,
+				Notes:       w.Notes,
+				OrderIndex:  w.OrderIndex,
+			}
+		}
+
+		// Log workout with performance data
+		userWorkout, err = h.userWorkoutService.LogWorkoutWithPerformance(
+			userID, req.WorkoutID, workoutDate,
+			req.Notes, req.TotalTime, req.WorkoutType,
+			movements, wods,
+		)
+	} else {
+		// Log workout without performance data
+		userWorkout, err = h.userWorkoutService.LogWorkout(userID, req.WorkoutID, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
+	}
+
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=log_workout outcome=failure user_id=%d workout_id=%d error=%v", userID, req.WorkoutID, err)
@@ -121,19 +194,21 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 	}
 
 	response := UserWorkoutResponse{
-		ID:           logged.ID,
-		UserID:       logged.UserID,
-		WorkoutID:    logged.WorkoutID,
-		WorkoutName:  logged.WorkoutName,
-		WorkoutDate:  logged.WorkoutDate.Format("2006-01-02"),
-		WorkoutType:  logged.WorkoutType,
-		TotalTime:    logged.TotalTime,
-		Notes:        logged.Notes,
-		CreatedAt:    logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:    logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-		Movements:    logged.Movements,
-		WODs:         logged.WODs,
-		WorkoutNotes: logged.WorkoutDescription,
+		ID:                   logged.ID,
+		UserID:               logged.UserID,
+		WorkoutID:            logged.WorkoutID,
+		WorkoutName:          logged.WorkoutName,
+		WorkoutDate:          logged.WorkoutDate.Format("2006-01-02"),
+		WorkoutType:          logged.WorkoutType,
+		TotalTime:            logged.TotalTime,
+		Notes:                logged.Notes,
+		CreatedAt:            logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:            logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		Movements:            logged.Movements,
+		WODs:                 logged.WODs,
+		PerformanceMovements: logged.PerformanceMovements,
+		PerformanceWODs:      logged.PerformanceWODs,
+		WorkoutNotes:         logged.WorkoutDescription,
 	}
 
 	if h.logger != nil {
@@ -173,19 +248,21 @@ func (h *UserWorkoutHandler) GetLoggedWorkout(w http.ResponseWriter, r *http.Req
 	}
 
 	response := UserWorkoutResponse{
-		ID:           logged.ID,
-		UserID:       logged.UserID,
-		WorkoutID:    logged.WorkoutID,
-		WorkoutName:  logged.WorkoutName,
-		WorkoutDate:  logged.WorkoutDate.Format("2006-01-02"),
-		WorkoutType:  logged.WorkoutType,
-		TotalTime:    logged.TotalTime,
-		Notes:        logged.Notes,
-		CreatedAt:    logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:    logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-		Movements:    logged.Movements,
-		WODs:         logged.WODs,
-		WorkoutNotes: logged.WorkoutDescription,
+		ID:                   logged.ID,
+		UserID:               logged.UserID,
+		WorkoutID:            logged.WorkoutID,
+		WorkoutName:          logged.WorkoutName,
+		WorkoutDate:          logged.WorkoutDate.Format("2006-01-02"),
+		WorkoutType:          logged.WorkoutType,
+		TotalTime:            logged.TotalTime,
+		Notes:                logged.Notes,
+		CreatedAt:            logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:            logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		Movements:            logged.Movements,
+		WODs:                 logged.WODs,
+		PerformanceMovements: logged.PerformanceMovements,
+		PerformanceWODs:      logged.PerformanceWODs,
+		WorkoutNotes:         logged.WorkoutDescription,
 	}
 
 	respondJSON(w, http.StatusOK, response)
@@ -358,19 +435,21 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 	}
 
 	response := UserWorkoutResponse{
-		ID:           logged.ID,
-		UserID:       logged.UserID,
-		WorkoutID:    logged.WorkoutID,
-		WorkoutName:  logged.WorkoutName,
-		WorkoutDate:  logged.WorkoutDate.Format("2006-01-02"),
-		WorkoutType:  logged.WorkoutType,
-		TotalTime:    logged.TotalTime,
-		Notes:        logged.Notes,
-		CreatedAt:    logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:    logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-		Movements:    logged.Movements,
-		WODs:         logged.WODs,
-		WorkoutNotes: logged.WorkoutDescription,
+		ID:                   logged.ID,
+		UserID:               logged.UserID,
+		WorkoutID:            logged.WorkoutID,
+		WorkoutName:          logged.WorkoutName,
+		WorkoutDate:          logged.WorkoutDate.Format("2006-01-02"),
+		WorkoutType:          logged.WorkoutType,
+		TotalTime:            logged.TotalTime,
+		Notes:                logged.Notes,
+		CreatedAt:            logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:            logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		Movements:            logged.Movements,
+		WODs:                 logged.WODs,
+		PerformanceMovements: logged.PerformanceMovements,
+		PerformanceWODs:      logged.PerformanceWODs,
+		WorkoutNotes:         logged.WorkoutDescription,
 	}
 
 	respondJSON(w, http.StatusOK, response)
