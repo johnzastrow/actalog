@@ -37,7 +37,9 @@
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjMwODUwMzYsIm5iZiI6MTc2Mjk5ODYzNiwiaWF0IjoxNzYyOTk4NjM2fQ.NeIXCyNOsBlEjzYKqY6rwElVnvXEhIPqFcuYC1T5mnE\":*)",
       "Bash(xargs:*)",
       "Bash(go clean:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(chmod:*)",
+      "Bash(./restart.sh)"
     ],
     "deny": [],
     "ask": []
