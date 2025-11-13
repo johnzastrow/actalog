@@ -346,7 +346,12 @@ async function fetchWorkout() {
 
 // Format date for display
 function formatDate(dateString) {
-  const date = new Date(dateString)
+  // Parse as local date to avoid timezone conversion issues
+  // Extract YYYY-MM-DD from the date string
+  const datePart = dateString.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  const date = new Date(year, month - 1, day) // Month is 0-indexed
+
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
