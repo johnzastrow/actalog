@@ -39,7 +39,8 @@
       "Bash(go clean:*)",
       "Bash(kill:*)",
       "Bash(chmod:*)",
-      "Bash(./restart.sh)"
+      "Bash(./restart.sh)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjMwODUwMzYsIm5iZiI6MTc2Mjk5ODYzNiwiaWF0IjoxNzYyOTk4NjM2fQ.NeIXCyNOsBlEjzYKqY6rwElVnvXEhIPqFcuYC1T5mnE\" curl -v \"http://localhost:8080/api/auth/login\" -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"password123\"\"\"\"}')"
     ],
     "deny": [],
     "ask": []

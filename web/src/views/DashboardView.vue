@@ -385,8 +385,7 @@ function truncateText(text, maxLength) {
 // View workout details
 function viewWorkout(workoutId) {
   console.log('View workout details:', workoutId)
-  // TODO: Navigate to workout detail page
-  // router.push(`/workouts/${workoutId}`)
+  router.push(`/workouts/${workoutId}`)
 }
 
 // Load data on mount

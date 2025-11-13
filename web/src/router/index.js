@@ -69,6 +69,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/workouts/:id',
+      name: 'workout-detail',
+      component: () => import('@/views/WorkoutDetailView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/movements',
       name: 'movements-library',
       component: () => import('@/views/MovementsLibraryView.vue'),

@@ -166,7 +166,7 @@ function formatTime(seconds) {
 }
 
 function viewWorkout(workout) {
-  router.push(`/workouts?id=${workout.id}`)
+  router.push(`/workouts/${workout.id}`)
 }
 </script>
 
