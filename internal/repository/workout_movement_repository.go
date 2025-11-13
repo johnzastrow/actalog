@@ -50,8 +50,9 @@ func (r *WorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMovement, 
 	var reps sql.NullInt64
 	var time sql.NullInt64
 	var distance sql.NullFloat64
+	var notes sql.NullString
 
-	err := r.db.QueryRow(query, id).Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance, &wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance, &wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -76,6 +77,9 @@ func (r *WorkoutMovementRepository) GetByID(id int64) (*domain.WorkoutMovement, 
 	}
 	if distance.Valid {
 		wm.Distance = &distance.Float64
+	}
+	if notes.Valid {
+		wm.Notes = notes.String
 	}
 
 	return wm, nil
@@ -106,11 +110,12 @@ func (r *WorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*domain.W
 		var reps sql.NullInt64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var notes sql.NullString
 		var movementName string
 		var movementType string
 
 		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
 			&movementName, &movementType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout movement: %w", err)
@@ -133,6 +138,9 @@ func (r *WorkoutMovementRepository) GetByWorkoutID(workoutID int64) ([]*domain.W
 		}
 		if distance.Valid {
 			wm.Distance = &distance.Float64
+		}
+		if notes.Valid {
+			wm.Notes = notes.String
 		}
 
 		wm.Movement = &domain.Movement{
@@ -173,9 +181,10 @@ func (r *WorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID 
 		var reps sql.NullInt64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var notes sql.NullString
 
 		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt)
+			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout movement: %w", err)
 		}
@@ -197,6 +206,9 @@ func (r *WorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID 
 		}
 		if distance.Valid {
 			wm.Distance = &distance.Float64
+		}
+		if notes.Valid {
+			wm.Notes = notes.String
 		}
 
 		workoutMovements = append(workoutMovements, wm)
@@ -382,12 +394,13 @@ func (r *WorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*
 		var reps sql.NullInt64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var notes sql.NullString
 		var movementName string
 		var movementType string
 		var movementDescription sql.NullString
 
 		err := rows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
-			&wm.IsRx, &wm.IsPR, &wm.Notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+			&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
 			&movementName, &movementType, &movementDescription)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan PR movement: %w", err)
@@ -410,6 +423,9 @@ func (r *WorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*
 		}
 		if distance.Valid {
 			wm.Distance = &distance.Float64
+		}
+		if notes.Valid {
+			wm.Notes = notes.String
 		}
 
 		wm.Movement = &domain.Movement{
