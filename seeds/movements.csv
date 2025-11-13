@@ -1,76 +1,76 @@
-id,name,description,type,is_standard,created_by
-1,Back Squat,Barbell back squat - bar positioned on upper traps,weightlifting,TRUE,
-2,Front Squat,Barbell front squat - bar positioned on front deltoids,weightlifting,TRUE,
-3,Overhead Squat,Barbell overhead squat - bar held overhead with locked arms,weightlifting,TRUE,
-4,Deadlift,Conventional deadlift - lifting barbell from ground to standing position,weightlifting,TRUE,
-5,Sumo Deadlift,Sumo stance deadlift - wider stance with hands inside knees,weightlifting,TRUE,
-6,Snatch,Olympic lift - ground to overhead in one motion,weightlifting,TRUE,
-7,Power Snatch,Snatch variation - catch above parallel squat,weightlifting,TRUE,
-8,Hang Snatch,Snatch starting from hanging position (above knees),weightlifting,TRUE,
-9,Squat Snatch,Full snatch - catch in full squat position,weightlifting,TRUE,
-10,Clean,Olympic lift - ground to front rack position,weightlifting,TRUE,
-11,Power Clean,Clean variation - catch above parallel squat,weightlifting,TRUE,
-12,Hang Clean,Clean starting from hanging position (above knees),weightlifting,TRUE,
-13,Squat Clean,Full clean - catch in full front squat position,weightlifting,TRUE,
-14,Clean & Jerk,Olympic lift - clean followed by jerk to overhead,weightlifting,TRUE,
-15,Jerk,Overhead press from front rack - uses leg drive,weightlifting,TRUE,
-16,Push Jerk,Jerk variation - dip and drive to press overhead with partial squat catch,weightlifting,TRUE,
-17,Split Jerk,Jerk variation - catch in split stance position,weightlifting,TRUE,
-18,Push Press,Overhead press using leg drive to assist,weightlifting,TRUE,
-19,Strict Press,Overhead press without leg drive,weightlifting,TRUE,
-20,Bench Press,Horizontal press lying on bench,weightlifting,TRUE,
-21,Thruster,Front squat directly into push press,weightlifting,TRUE,
-22,Sumo Deadlift High Pull,Wide stance deadlift pulling to chest height,weightlifting,TRUE,
-23,Hang Power Clean,Power clean from hanging position,weightlifting,TRUE,
-24,Hang Power Snatch,Power snatch from hanging position,weightlifting,TRUE,
-25,Pull-up,Strict pull-up - chin over bar,gymnastics,TRUE,
-26,Kipping Pull-up,Dynamic pull-up using hip drive and kip,gymnastics,TRUE,
-27,Chest-to-Bar Pull-up,Pull-up bringing chest to contact bar,gymnastics,TRUE,
-28,Butterfly Pull-up,Advanced kipping pull-up with circular motion,gymnastics,TRUE,
-29,Muscle-up,Pull-up transitioning to dip above rings or bar,gymnastics,TRUE,
-30,Ring Muscle-up,Muscle-up performed on gymnastic rings,gymnastics,TRUE,
-31,Bar Muscle-up,Muscle-up performed on pull-up bar,gymnastics,TRUE,
-32,Handstand Push-up,Vertical push-up in handstand position,gymnastics,TRUE,
-33,Strict Handstand Push-up,Handstand push-up without kipping,gymnastics,TRUE,
-34,Kipping Handstand Push-up,Handstand push-up using leg drive,gymnastics,TRUE,
-35,Toes-to-Bar,Hanging ab exercise - toes touch pull-up bar,gymnastics,TRUE,
-36,Knees-to-Elbow,Hanging ab exercise - knees touch elbows,gymnastics,TRUE,
-37,Dip,Parallel bar or ring dips,gymnastics,TRUE,
-38,Ring Dip,Dips performed on gymnastic rings,gymnastics,TRUE,
-39,Rope Climb,Climbing rope using arms and legs,gymnastics,TRUE,
-40,Legless Rope Climb,Rope climb using arms only,gymnastics,TRUE,
-41,Pistol Squat,Single-leg squat to full depth,gymnastics,TRUE,
-42,Push-up,Standard push-up,bodyweight,TRUE,
-43,Air Squat,Bodyweight squat,bodyweight,TRUE,
-44,Box Jump,Jumping onto elevated box or platform,bodyweight,TRUE,
-45,Burpee,Full-body movement - squat to plank to jump,bodyweight,TRUE,
-46,Wall Ball,Squat throwing medicine ball to target on wall,weightlifting,TRUE,
-47,Kettlebell Swing,Hip-hinge movement swinging kettlebell,weightlifting,TRUE,
-48,American Kettlebell Swing,Kettlebell swing to overhead position,weightlifting,TRUE,
-49,Russian Kettlebell Swing,Kettlebell swing to eye level,weightlifting,TRUE,
-50,Goblet Squat,Front-loaded squat holding kettlebell or dumbbell,weightlifting,TRUE,
-51,Turkish Get-up,Complex movement from lying to standing with weight overhead,weightlifting,TRUE,
-52,Dumbbell Snatch,Single-arm snatch using dumbbell,weightlifting,TRUE,
-53,Dumbbell Clean,Single-arm clean using dumbbell,weightlifting,TRUE,
-54,Devil Press,Burpee to dual dumbbell snatch,weightlifting,TRUE,
-55,Row,Rowing machine for distance or calories,cardio,TRUE,
-56,Run,Running for distance or time,cardio,TRUE,
-57,Bike,Assault bike or stationary bike,cardio,TRUE,
-58,Ski Erg,Ski ergometer - full body cardio,cardio,TRUE,
-59,Double Under,Jump rope - rope passes under feet twice per jump,cardio,TRUE,
-60,Single Under,Jump rope - rope passes under feet once per jump,cardio,TRUE,
-61,Slam Ball,Throwing weighted ball to ground,weightlifting,TRUE,
-62,Sit-up,Abdominal crunch from lying to sitting,bodyweight,TRUE,
-63,GHD Sit-up,Sit-up performed on Glute-Ham Developer,gymnastics,TRUE,
-64,Back Extension,Lower back extension on GHD or Roman chair,gymnastics,TRUE,
-65,Lunge,Forward stepping lunge,bodyweight,TRUE,
-66,Walking Lunge,Continuous forward lunges,bodyweight,TRUE,
-67,Overhead Walking Lunge,Walking lunge with weight held overhead,weightlifting,TRUE,
-68,Bear Crawl,Quadrupedal crawl on hands and feet,bodyweight,TRUE,
-69,Farmer Carry,Carrying heavy weight in each hand,weightlifting,TRUE,
-70,Overhead Carry,Carrying weight overhead while walking,weightlifting,TRUE,
-71,Sled Push,Pushing weighted sled,weightlifting,TRUE,
-72,Sled Pull,Pulling weighted sled,weightlifting,TRUE,
-73,Power Snatch,Snatch catching above parallel,weightlifting,TRUE,
-74,Hang Squat Clean,Full clean from hanging position,weightlifting,TRUE,
-75,Deficit Deadlift,Deadlift standing on elevated platform,weightlifting,TRUE,
+"id","name","description","type","is_standard","created_by"
+"1","Back Squat","Barbell back squat - bar positioned on upper traps","weightlifting","TRUE",""
+"2","Front Squat","Barbell front squat - bar positioned on front deltoids","weightlifting","TRUE",""
+"3","Overhead Squat","Barbell overhead squat - bar held overhead with locked arms","weightlifting","TRUE",""
+"4","Deadlift","Conventional deadlift - lifting barbell from ground to standing position","weightlifting","TRUE",""
+"5","Sumo Deadlift","Sumo stance deadlift - wider stance with hands inside knees","weightlifting","TRUE",""
+"6","Snatch","Olympic lift - ground to overhead in one motion","weightlifting","TRUE",""
+"7","Power Snatch","Snatch variation - catch above parallel squat","weightlifting","TRUE",""
+"8","Hang Snatch","Snatch starting from hanging position (above knees)","weightlifting","TRUE",""
+"9","Squat Snatch","Full snatch - catch in full squat position","weightlifting","TRUE",""
+"10","Clean","Olympic lift - ground to front rack position","weightlifting","TRUE",""
+"11","Power Clean","Clean variation - catch above parallel squat","weightlifting","TRUE",""
+"12","Hang Clean","Clean starting from hanging position (above knees)","weightlifting","TRUE",""
+"13","Squat Clean","Full clean - catch in full front squat position","weightlifting","TRUE",""
+"14","Clean & Jerk","Olympic lift - clean followed by jerk to overhead","weightlifting","TRUE",""
+"15","Jerk","Overhead press from front rack - uses leg drive","weightlifting","TRUE",""
+"16","Push Jerk","Jerk variation - dip and drive to press overhead with partial squat catch","weightlifting","TRUE",""
+"17","Split Jerk","Jerk variation - catch in split stance position","weightlifting","TRUE",""
+"18","Push Press","Overhead press using leg drive to assist","weightlifting","TRUE",""
+"19","Strict Press","Overhead press without leg drive","weightlifting","TRUE",""
+"20","Bench Press","Horizontal press lying on bench","weightlifting","TRUE",""
+"21","Thruster","Front squat directly into push press","weightlifting","TRUE",""
+"22","Sumo Deadlift High Pull","Wide stance deadlift pulling to chest height","weightlifting","TRUE",""
+"23","Hang Power Clean","Power clean from hanging position","weightlifting","TRUE",""
+"24","Hang Power Snatch","Power snatch from hanging position","weightlifting","TRUE",""
+"25","Pull-up","Strict pull-up - chin over bar","gymnastics","TRUE",""
+"26","Kipping Pull-up","Dynamic pull-up using hip drive and kip","gymnastics","TRUE",""
+"27","Chest-to-Bar Pull-up","Pull-up bringing chest to contact bar","gymnastics","TRUE",""
+"28","Butterfly Pull-up","Advanced kipping pull-up with circular motion","gymnastics","TRUE",""
+"29","Muscle-up","Pull-up transitioning to dip above rings or bar","gymnastics","TRUE",""
+"30","Ring Muscle-up","Muscle-up performed on gymnastic rings","gymnastics","TRUE",""
+"31","Bar Muscle-up","Muscle-up performed on pull-up bar","gymnastics","TRUE",""
+"32","Handstand Push-up","Vertical push-up in handstand position","gymnastics","TRUE",""
+"33","Strict Handstand Push-up","Handstand push-up without kipping","gymnastics","TRUE",""
+"34","Kipping Handstand Push-up","Handstand push-up using leg drive","gymnastics","TRUE",""
+"35","Toes-to-Bar","Hanging ab exercise - toes touch pull-up bar","gymnastics","TRUE",""
+"36","Knees-to-Elbow","Hanging ab exercise - knees touch elbows","gymnastics","TRUE",""
+"37","Dip","Parallel bar or ring dips","gymnastics","TRUE",""
+"38","Ring Dip","Dips performed on gymnastic rings","gymnastics","TRUE",""
+"39","Rope Climb","Climbing rope using arms and legs","gymnastics","TRUE",""
+"40","Legless Rope Climb","Rope climb using arms only","gymnastics","TRUE",""
+"41","Pistol Squat","Single-leg squat to full depth","gymnastics","TRUE",""
+"42","Push-up","Standard push-up","bodyweight","TRUE",""
+"43","Air Squat","Bodyweight squat","bodyweight","TRUE",""
+"44","Box Jump","Jumping onto elevated box or platform","bodyweight","TRUE",""
+"45","Burpee","Full-body movement - squat to plank to jump","bodyweight","TRUE",""
+"46","Wall Ball","Squat throwing medicine ball to target on wall","weightlifting","TRUE",""
+"47","Kettlebell Swing","Hip-hinge movement swinging kettlebell","weightlifting","TRUE",""
+"48","American Kettlebell Swing","Kettlebell swing to overhead position","weightlifting","TRUE",""
+"49","Russian Kettlebell Swing","Kettlebell swing to eye level","weightlifting","TRUE",""
+"50","Goblet Squat","Front-loaded squat holding kettlebell or dumbbell","weightlifting","TRUE",""
+"51","Turkish Get-up","Complex movement from lying to standing with weight overhead","weightlifting","TRUE",""
+"52","Dumbbell Snatch","Single-arm snatch using dumbbell","weightlifting","TRUE",""
+"53","Dumbbell Clean","Single-arm clean using dumbbell","weightlifting","TRUE",""
+"54","Devil Press","Burpee to dual dumbbell snatch","weightlifting","TRUE",""
+"55","Row","Rowing machine for distance or calories","cardio","TRUE",""
+"56","Run","Running for distance or time","cardio","TRUE",""
+"57","Bike","Assault bike or stationary bike","cardio","TRUE",""
+"58","Ski Erg","Ski ergometer - full body cardio","cardio","TRUE",""
+"59","Double Under","Jump rope - rope passes under feet twice per jump","cardio","TRUE",""
+"60","Single Under","Jump rope - rope passes under feet once per jump","cardio","TRUE",""
+"61","Slam Ball","Throwing weighted ball to ground","weightlifting","TRUE",""
+"62","Sit-up","Abdominal crunch from lying to sitting","bodyweight","TRUE",""
+"63","GHD Sit-up","Sit-up performed on Glute-Ham Developer","gymnastics","TRUE",""
+"64","Back Extension","Lower back extension on GHD or Roman chair","gymnastics","TRUE",""
+"65","Lunge","Forward stepping lunge","bodyweight","TRUE",""
+"66","Walking Lunge","Continuous forward lunges","bodyweight","TRUE",""
+"67","Overhead Walking Lunge","Walking lunge with weight held overhead","weightlifting","TRUE",""
+"68","Bear Crawl","Quadrupedal crawl on hands and feet","bodyweight","TRUE",""
+"69","Farmer Carry","Carrying heavy weight in each hand","weightlifting","TRUE",""
+"70","Overhead Carry","Carrying weight overhead while walking","weightlifting","TRUE",""
+"71","Sled Push","Pushing weighted sled","weightlifting","TRUE",""
+"72","Sled Pull","Pulling weighted sled","weightlifting","TRUE",""
+"73","Power Snatch","Snatch catching above parallel","weightlifting","TRUE",""
+"74","Hang Squat Clean","Full clean from hanging position","weightlifting","TRUE",""
+"75","Deficit Deadlift","Deadlift standing on elevated platform","weightlifting","TRUE",""
