@@ -45,21 +45,31 @@ var migrations = []Migration{
 		Up: func(db *sql.DB, driver string) error {
 			switch driver {
 			case "sqlite3":
-				// SQLite: Add columns with ALTER TABLE
-				queries := []string{
-					`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
-					`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
-					`ALTER TABLE workout_wods ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0`,
+				// SQLite: Check if columns exist before adding
+				// Query to check if column exists
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('workout_wods') WHERE name='score_value'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for score_value column: %w", err)
 				}
-				for _, query := range queries {
-					if _, err := db.Exec(query); err != nil {
-						return fmt.Errorf("failed to execute query: %w", err)
+
+				// Only add columns if they don't exist
+				if count == 0 {
+					queries := []string{
+						`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
+						`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
+						`ALTER TABLE workout_wods ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0`,
+					}
+					for _, query := range queries {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to execute query: %w", err)
+						}
 					}
 				}
 				return nil
 
 			case "postgres":
-				// PostgreSQL: Add columns with ALTER TABLE
+				// PostgreSQL: Add columns with ALTER TABLE (IF NOT EXISTS supported)
 				queries := []string{
 					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS score_value TEXT`,
 					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS division TEXT`,
@@ -73,15 +83,27 @@ var migrations = []Migration{
 				return nil
 
 			case "mysql":
-				// MySQL: Add columns with ALTER TABLE
-				queries := []string{
-					`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
-					`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
-					`ALTER TABLE workout_wods ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT 0`,
+				// MySQL: Check if columns exist before adding
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS
+					WHERE TABLE_SCHEMA = DATABASE()
+					AND TABLE_NAME = 'workout_wods'
+					AND COLUMN_NAME = 'score_value'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for score_value column: %w", err)
 				}
-				for _, query := range queries {
-					if _, err := db.Exec(query); err != nil {
-						return fmt.Errorf("failed to execute query: %w", err)
+
+				// Only add columns if they don't exist
+				if count == 0 {
+					queries := []string{
+						`ALTER TABLE workout_wods ADD COLUMN score_value TEXT`,
+						`ALTER TABLE workout_wods ADD COLUMN division TEXT`,
+						`ALTER TABLE workout_wods ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT 0`,
+					}
+					for _, query := range queries {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to execute query: %w", err)
+						}
 					}
 				}
 				return nil
@@ -125,6 +147,169 @@ var migrations = []Migration{
 			default:
 				return fmt.Errorf("unsupported database driver: %s", driver)
 			}
+		},
+	},
+	{
+		Version:     "0.4.2",
+		Description: "Add user_workout_movements and user_workout_wods tables for performance tracking",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				queries := []string{
+					`CREATE TABLE IF NOT EXISTS user_workout_movements (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_workout_id INTEGER NOT NULL,
+						movement_id INTEGER NOT NULL,
+						sets INTEGER,
+						reps INTEGER,
+						weight REAL,
+						time INTEGER,
+						distance REAL,
+						notes TEXT,
+						order_index INTEGER NOT NULL DEFAULT 0,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_user_workout_id ON user_workout_movements(user_workout_id)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_movement_id ON user_workout_movements(movement_id)`,
+					`CREATE TABLE IF NOT EXISTS user_workout_wods (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_workout_id INTEGER NOT NULL,
+						wod_id INTEGER NOT NULL,
+						score_type TEXT,
+						score_value TEXT,
+						time_seconds INTEGER,
+						rounds INTEGER,
+						reps INTEGER,
+						weight REAL,
+						notes TEXT,
+						order_index INTEGER NOT NULL DEFAULT 0,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_user_workout_id ON user_workout_wods(user_workout_id)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_wod_id ON user_workout_wods(wod_id)`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "postgres":
+				queries := []string{
+					`CREATE TABLE IF NOT EXISTS user_workout_movements (
+						id BIGSERIAL PRIMARY KEY,
+						user_workout_id BIGINT NOT NULL,
+						movement_id BIGINT NOT NULL,
+						sets INTEGER,
+						reps INTEGER,
+						weight DECIMAL(10,2),
+						time INTEGER,
+						distance DECIMAL(10,2),
+						notes TEXT,
+						order_index INTEGER NOT NULL DEFAULT 0,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_user_workout_id ON user_workout_movements(user_workout_id)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_movement_id ON user_workout_movements(movement_id)`,
+					`CREATE TABLE IF NOT EXISTS user_workout_wods (
+						id BIGSERIAL PRIMARY KEY,
+						user_workout_id BIGINT NOT NULL,
+						wod_id BIGINT NOT NULL,
+						score_type VARCHAR(50),
+						score_value TEXT,
+						time_seconds INTEGER,
+						rounds INTEGER,
+						reps INTEGER,
+						weight DECIMAL(10,2),
+						notes TEXT,
+						order_index INTEGER NOT NULL DEFAULT 0,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_user_workout_id ON user_workout_wods(user_workout_id)`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_wod_id ON user_workout_wods(wod_id)`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "mysql":
+				queries := []string{
+					`CREATE TABLE IF NOT EXISTS user_workout_movements (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_workout_id BIGINT NOT NULL,
+						movement_id BIGINT NOT NULL,
+						sets INT,
+						reps INT,
+						weight DECIMAL(10,2),
+						time INT,
+						distance DECIMAL(10,2),
+						notes TEXT,
+						order_index INT NOT NULL DEFAULT 0,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT,
+						INDEX idx_user_workout_movements_user_workout_id (user_workout_id),
+						INDEX idx_user_workout_movements_movement_id (movement_id)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+					`CREATE TABLE IF NOT EXISTS user_workout_wods (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_workout_id BIGINT NOT NULL,
+						wod_id BIGINT NOT NULL,
+						score_type VARCHAR(50),
+						score_value TEXT,
+						time_seconds INT,
+						rounds INT,
+						reps INT,
+						weight DECIMAL(10,2),
+						notes TEXT,
+						order_index INT NOT NULL DEFAULT 0,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+						FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT,
+						INDEX idx_user_workout_wods_user_workout_id (user_workout_id),
+						INDEX idx_user_workout_wods_wod_id (wod_id)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+		Down: func(db *sql.DB, driver string) error {
+			queries := []string{
+				`DROP TABLE IF EXISTS user_workout_wods`,
+				`DROP TABLE IF EXISTS user_workout_movements`,
+			}
+			for _, query := range queries {
+				if _, err := db.Exec(query); err != nil {
+					return fmt.Errorf("failed to execute query: %w", err)
+				}
+			}
+			return nil
 		},
 	},
 	// Future migrations for incremental schema changes will be added here

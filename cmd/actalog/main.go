@@ -101,6 +101,8 @@ func main() {
 	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
 	workoutWODRepo := repository.NewWorkoutWODRepository(db)
 	userSettingsRepo := repository.NewSQLiteUserSettingsRepository(db)
+	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
+	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -148,6 +150,8 @@ func main() {
 		userWorkoutRepo,
 		workoutRepo,
 		workoutMovementRepo,
+		userWorkoutMovementRepo,
+		userWorkoutWODRepo,
 	)
 
 	workoutTemplateService := service.NewWorkoutTemplateService(

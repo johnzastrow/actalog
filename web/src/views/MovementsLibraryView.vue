@@ -159,6 +159,7 @@
     <v-bottom-navigation
       v-if="!selectionMode"
       v-model="activeNav"
+      name="bottom-navigation"
       color="#00bcd4"
       grow
       style="position: fixed; bottom: 0; width: 100%; z-index: 5"

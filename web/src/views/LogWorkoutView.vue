@@ -22,7 +22,7 @@
         <!-- Select Workout Template -->
         <div class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
-            Workout Template
+            Workout Template *
           </label>
           <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <v-autocomplete
@@ -113,6 +113,214 @@
           </v-card>
         </div>
 
+        <!-- Movement Performance (if template has movements) -->
+        <div v-if="selectedTemplate && selectedTemplate.movements && selectedTemplate.movements.length > 0" class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            Movement Performance
+          </label>
+          <v-card
+            v-for="(movement, index) in movementPerformance"
+            :key="index"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-3"
+            style="background: white; border: 1px solid #e0e0e0"
+          >
+            <div class="d-flex align-center mb-2">
+              <v-icon color="#00bcd4" size="small" class="mr-2">mdi-dumbbell</v-icon>
+              <span class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                {{ getMovementName(movement.movement_id) }}
+              </span>
+            </div>
+            <v-row dense>
+              <v-col cols="4">
+                <v-text-field
+                  v-model.number="movement.sets"
+                  type="number"
+                  label="Sets"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </v-col>
+              <v-col cols="4">
+                <v-text-field
+                  v-model.number="movement.reps"
+                  type="number"
+                  label="Reps"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </v-col>
+              <v-col cols="4">
+                <v-text-field
+                  v-model.number="movement.weight"
+                  type="number"
+                  label="Weight (lbs)"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  step="0.5"
+                />
+              </v-col>
+            </v-row>
+            <v-row dense class="mt-2">
+              <v-col cols="6">
+                <v-text-field
+                  v-model.number="movement.time"
+                  type="number"
+                  label="Time (sec)"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model.number="movement.distance"
+                  type="number"
+                  label="Distance (m)"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  step="0.1"
+                />
+              </v-col>
+            </v-row>
+            <v-textarea
+              v-model="movement.notes"
+              label="Notes"
+              variant="outlined"
+              density="compact"
+              hide-details
+              rows="2"
+              class="mt-2"
+              placeholder="How did this feel?"
+            />
+          </v-card>
+        </div>
+
+        <!-- WOD Performance (if template has WODs) -->
+        <div v-if="selectedTemplate && selectedTemplate.wods && selectedTemplate.wods.length > 0" class="mb-3">
+          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            WOD Performance
+          </label>
+          <v-card
+            v-for="(wod, index) in wodPerformance"
+            :key="index"
+            elevation="0"
+            rounded="lg"
+            class="mb-2 pa-3"
+            style="background: white; border: 1px solid #e0e0e0"
+          >
+            <div class="d-flex align-center mb-2">
+              <v-icon color="#ffc107" size="small" class="mr-2">mdi-flag-checkered</v-icon>
+              <span class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                {{ getWODName(wod.wod_id) }}
+              </span>
+            </div>
+
+            <!-- Score Type Selection -->
+            <v-select
+              v-model="wod.score_type"
+              :items="scoreTypes"
+              label="Score Type"
+              variant="outlined"
+              density="compact"
+              hide-details
+              class="mb-2"
+            />
+
+            <!-- Time Score -->
+            <div v-if="wod.score_type === 'Time'">
+              <v-row dense>
+                <v-col cols="4">
+                  <v-text-field
+                    v-model.number="wod.time_minutes"
+                    type="number"
+                    label="Minutes"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </v-col>
+                <v-col cols="4">
+                  <v-text-field
+                    v-model.number="wod.time_seconds"
+                    type="number"
+                    label="Seconds"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    max="59"
+                  />
+                </v-col>
+              </v-row>
+            </div>
+
+            <!-- Rounds + Reps Score -->
+            <div v-if="wod.score_type === 'Rounds+Reps'">
+              <v-row dense>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model.number="wod.rounds"
+                    type="number"
+                    label="Rounds"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model.number="wod.reps"
+                    type="number"
+                    label="Reps"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </v-col>
+              </v-row>
+            </div>
+
+            <!-- Max Weight Score -->
+            <div v-if="wod.score_type === 'Max Weight'">
+              <v-text-field
+                v-model.number="wod.weight"
+                type="number"
+                label="Weight (lbs)"
+                variant="outlined"
+                density="compact"
+                hide-details
+                min="0"
+                step="0.5"
+              />
+            </div>
+
+            <v-textarea
+              v-model="wod.notes"
+              label="Notes"
+              variant="outlined"
+              density="compact"
+              hide-details
+              rows="2"
+              class="mt-2"
+              placeholder="How did this feel?"
+            />
+          </v-card>
+        </div>
+
         <!-- Workout Type -->
         <div class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
@@ -158,7 +366,7 @@
         <!-- Notes -->
         <div class="mb-3">
           <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
-            Notes
+            Overall Notes
           </label>
           <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <v-textarea
@@ -239,7 +447,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 
@@ -254,6 +462,8 @@ const workoutDate = ref(getTodayDate())
 const workoutType = ref(null)
 const totalTimeMinutes = ref(null)
 const notes = ref('')
+const movementPerformance = ref([])
+const wodPerformance = ref([])
 
 const loadingTemplates = ref(false)
 const submitting = ref(false)
@@ -269,10 +479,24 @@ const workoutTypes = [
   { title: 'Skill Work', value: 'skill' }
 ]
 
+// Score types for WODs
+const scoreTypes = [
+  { title: 'Time (HH:MM:SS)', value: 'Time' },
+  { title: 'Rounds + Reps', value: 'Rounds+Reps' },
+  { title: 'Max Weight', value: 'Max Weight' }
+]
+
 // Computed selected template
 const selectedTemplate = computed(() => {
   if (!selectedTemplateId.value) return null
   return workoutTemplates.value.find(t => t.id === selectedTemplateId.value)
+})
+
+// Watch for template selection to initialize performance arrays
+watch(selectedTemplate, (newTemplate) => {
+  if (newTemplate) {
+    initializePerformanceArrays()
+  }
 })
 
 // Get today's date in YYYY-MM-DD format
@@ -282,6 +506,59 @@ function getTodayDate() {
   const month = String(today.getMonth() + 1).padStart(2, '0')
   const day = String(today.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+// Initialize performance arrays based on template
+function initializePerformanceArrays() {
+  if (!selectedTemplate.value) return
+
+  // Initialize movement performance
+  if (selectedTemplate.value.movements && selectedTemplate.value.movements.length > 0) {
+    movementPerformance.value = selectedTemplate.value.movements.map((m, index) => ({
+      movement_id: m.movement_id,
+      sets: null,
+      reps: null,
+      weight: null,
+      time: null,
+      distance: null,
+      notes: '',
+      order_index: index
+    }))
+  } else {
+    movementPerformance.value = []
+  }
+
+  // Initialize WOD performance
+  if (selectedTemplate.value.wods && selectedTemplate.value.wods.length > 0) {
+    wodPerformance.value = selectedTemplate.value.wods.map((w, index) => ({
+      wod_id: w.wod_id,
+      score_type: null,
+      score_value: null,
+      time_minutes: null,
+      time_seconds: null,
+      rounds: null,
+      reps: null,
+      weight: null,
+      notes: '',
+      order_index: index
+    }))
+  } else {
+    wodPerformance.value = []
+  }
+}
+
+// Get movement name by ID
+function getMovementName(movementId) {
+  if (!selectedTemplate.value || !selectedTemplate.value.movements) return 'Movement'
+  const movement = selectedTemplate.value.movements.find(m => m.movement_id === movementId)
+  return movement?.movement?.name || 'Movement'
+}
+
+// Get WOD name by ID
+function getWODName(wodId) {
+  if (!selectedTemplate.value || !selectedTemplate.value.wods) return 'WOD'
+  const wod = selectedTemplate.value.wods.find(w => w.wod_id === wodId)
+  return wod?.wod?.name || 'WOD'
 }
 
 // Fetch workout templates
@@ -296,8 +573,8 @@ async function fetchTemplates() {
       axios.get('/api/workouts/my-templates')
     ])
 
-    const standard = standardRes.data.workouts || []
-    const custom = customRes.data.workouts || []
+    const standard = Array.isArray(standardRes.data.workouts) ? standardRes.data.workouts : []
+    const custom = Array.isArray(customRes.data.workouts) ? customRes.data.workouts : []
 
     // Combine and sort (standard first, then custom)
     workoutTemplates.value = [...standard, ...custom]
@@ -305,7 +582,13 @@ async function fetchTemplates() {
     console.log('Fetched templates:', workoutTemplates.value.length)
   } catch (err) {
     console.error('Failed to fetch templates:', err)
-    error.value = err.response?.data?.message || 'Failed to load templates'
+    if (err.response) {
+      error.value = err.response.data?.message || `Server error: ${err.response.status}`
+    } else if (err.request) {
+      error.value = 'Cannot connect to server. Please check if the server is running.'
+    } else {
+      error.value = err.message || 'Failed to load templates'
+    }
   } finally {
     loadingTemplates.value = false
   }
@@ -328,6 +611,60 @@ async function onTemplateSelected(templateId) {
   } catch (err) {
     console.error('Failed to fetch template details:', err)
   }
+}
+
+// Build movements payload
+function buildMovementsPayload() {
+  return movementPerformance.value
+    .filter(m => m.sets || m.reps || m.weight || m.time || m.distance || m.notes)
+    .map(m => ({
+      movement_id: m.movement_id,
+      sets: m.sets || null,
+      reps: m.reps || null,
+      weight: m.weight || null,
+      time: m.time || null,
+      distance: m.distance || null,
+      notes: m.notes || '',
+      order_index: m.order_index
+    }))
+}
+
+// Build WODs payload
+function buildWODsPayload() {
+  return wodPerformance.value
+    .filter(w => w.score_type)
+    .map(w => {
+      const payload = {
+        wod_id: w.wod_id,
+        score_type: w.score_type,
+        notes: w.notes || '',
+        order_index: w.order_index
+      }
+
+      // Calculate time_seconds and score_value for Time-based WODs
+      if (w.score_type === 'Time' && (w.time_minutes || w.time_seconds)) {
+        const totalSeconds = (w.time_minutes || 0) * 60 + (w.time_seconds || 0)
+        payload.time_seconds = totalSeconds
+        const mins = Math.floor(totalSeconds / 60)
+        const secs = totalSeconds % 60
+        payload.score_value = `${mins}:${String(secs).padStart(2, '0')}`
+      }
+
+      // Set rounds and reps for AMRAP
+      if (w.score_type === 'Rounds+Reps') {
+        payload.rounds = w.rounds || null
+        payload.reps = w.reps || null
+        payload.score_value = `${w.rounds || 0}+${w.reps || 0}`
+      }
+
+      // Set weight for Max Weight
+      if (w.score_type === 'Max Weight') {
+        payload.weight = w.weight || null
+        payload.score_value = String(w.weight || 0)
+      }
+
+      return payload
+    })
 }
 
 // Log workout instance
@@ -353,6 +690,20 @@ async function logWorkout() {
       notes: notes.value.trim() || null
     }
 
+    // Add performance data if any
+    const movements = buildMovementsPayload()
+    const wods = buildWODsPayload()
+
+    if (movements.length > 0) {
+      payload.movements = movements
+    }
+
+    if (wods.length > 0) {
+      payload.wods = wods
+    }
+
+    console.log('Logging workout with payload:', payload)
+
     const response = await axios.post('/api/workouts', payload)
 
     console.log('Workout logged:', response.data)
@@ -365,6 +716,8 @@ async function logWorkout() {
     totalTimeMinutes.value = null
     notes.value = ''
     workoutDate.value = getTodayDate()
+    movementPerformance.value = []
+    wodPerformance.value = []
 
     // Redirect to dashboard after short delay
     setTimeout(() => {

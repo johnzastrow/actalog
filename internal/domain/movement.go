@@ -74,6 +74,26 @@ type PersonalRecord struct {
 	WorkoutDate     time.Time `json:"workout_date"`        // From user_workouts.workout_date
 }
 
+// UserWorkoutMovement represents a movement's performance in a logged workout (user_workout_movements table)
+// This stores the actual performance data when a user logs a workout
+type UserWorkoutMovement struct {
+	ID            int64     `json:"id" db:"id"`
+	UserWorkoutID int64     `json:"user_workout_id" db:"user_workout_id"` // References user_workouts (logged workout instance)
+	MovementID    int64     `json:"movement_id" db:"movement_id"`         // References movements table
+	Sets          *int      `json:"sets,omitempty" db:"sets"`
+	Reps          *int      `json:"reps,omitempty" db:"reps"`
+	Weight        *float64  `json:"weight,omitempty" db:"weight"`     // in lbs or kg
+	Time          *int      `json:"time,omitempty" db:"time"`         // in seconds
+	Distance      *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
+	Notes         string    `json:"notes,omitempty" db:"notes"`
+	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+
+	// Related data (loaded via joins)
+	Movement *Movement `json:"movement,omitempty" db:"-"`
+}
+
 // WorkoutMovementRepository defines the interface for workout movement data access
 type WorkoutMovementRepository interface {
 	Create(wm *WorkoutMovement) error
@@ -87,4 +107,28 @@ type WorkoutMovementRepository interface {
 	GetPersonalRecords(userID int64) ([]*PersonalRecord, error)
 	GetMaxWeightForMovement(userID, movementID int64) (*float64, error)
 	GetPRMovements(userID int64, limit int) ([]*WorkoutMovement, error)
+}
+
+// UserWorkoutMovementRepository defines the interface for user workout movement performance data
+type UserWorkoutMovementRepository interface {
+	// Create creates a new user workout movement performance record
+	Create(uwm *UserWorkoutMovement) error
+
+	// CreateBatch creates multiple user workout movement records at once
+	CreateBatch(movements []*UserWorkoutMovement) error
+
+	// GetByID retrieves a user workout movement by ID
+	GetByID(id int64) (*UserWorkoutMovement, error)
+
+	// GetByUserWorkoutID retrieves all movements for a specific logged workout
+	GetByUserWorkoutID(userWorkoutID int64) ([]*UserWorkoutMovement, error)
+
+	// Update updates an existing user workout movement
+	Update(uwm *UserWorkoutMovement) error
+
+	// Delete deletes a user workout movement
+	Delete(id int64) error
+
+	// DeleteByUserWorkoutID deletes all movements for a logged workout
+	DeleteByUserWorkoutID(userWorkoutID int64) error
 }

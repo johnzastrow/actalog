@@ -21,6 +21,27 @@ type WOD struct {
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
+// UserWorkoutWOD represents a WOD's performance in a logged workout (user_workout_wods table)
+// This stores the actual performance data when a user logs a WOD
+type UserWorkoutWOD struct {
+	ID            int64     `json:"id" db:"id"`
+	UserWorkoutID int64     `json:"user_workout_id" db:"user_workout_id"` // References user_workouts (logged workout instance)
+	WODID         int64     `json:"wod_id" db:"wod_id"`                   // References wods table
+	ScoreType     *string   `json:"score_type,omitempty" db:"score_type"` // Time (HH:MM:SS), Rounds+Reps, Max Weight
+	ScoreValue    *string   `json:"score_value,omitempty" db:"score_value"` // Formatted score (e.g., "12:34", "10+15", "225.5")
+	TimeSeconds   *int      `json:"time_seconds,omitempty" db:"time_seconds"` // For Time-based WODs
+	Rounds        *int      `json:"rounds,omitempty" db:"rounds"` // For AMRAP WODs
+	Reps          *int      `json:"reps,omitempty" db:"reps"` // Remaining reps in AMRAP
+	Weight        *float64  `json:"weight,omitempty" db:"weight"` // For Max Weight WODs
+	Notes         string    `json:"notes,omitempty" db:"notes"`
+	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+
+	// Related data (loaded via joins)
+	WOD *WOD `json:"wod,omitempty" db:"-"`
+}
+
 // WODRepository defines the interface for WOD data access
 type WODRepository interface {
 	// Create creates a new custom WOD
@@ -49,4 +70,28 @@ type WODRepository interface {
 
 	// Search searches WODs by name (partial match) with limit
 	Search(query string, limit int) ([]*WOD, error)
+}
+
+// UserWorkoutWODRepository defines the interface for user workout WOD performance data
+type UserWorkoutWODRepository interface {
+	// Create creates a new user workout WOD performance record
+	Create(uww *UserWorkoutWOD) error
+
+	// CreateBatch creates multiple user workout WOD records at once
+	CreateBatch(wods []*UserWorkoutWOD) error
+
+	// GetByID retrieves a user workout WOD by ID
+	GetByID(id int64) (*UserWorkoutWOD, error)
+
+	// GetByUserWorkoutID retrieves all WODs for a specific logged workout
+	GetByUserWorkoutID(userWorkoutID int64) ([]*UserWorkoutWOD, error)
+
+	// Update updates an existing user workout WOD
+	Update(uww *UserWorkoutWOD) error
+
+	// Delete deletes a user workout WOD
+	Delete(id int64) error
+
+	// DeleteByUserWorkoutID deletes all WODs for a logged workout
+	DeleteByUserWorkoutID(userWorkoutID int64) error
 }

@@ -154,6 +154,11 @@ func (h *WorkoutTemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// Ensure we always return an array, not null
+	if templates == nil {
+		templates = []*domain.Workout{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"workouts": templates,
@@ -181,6 +186,11 @@ func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// Ensure we always return an array, not null
+	if templates == nil {
+		templates = []*domain.Workout{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
