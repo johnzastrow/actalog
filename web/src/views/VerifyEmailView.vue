@@ -96,8 +96,6 @@ const showResend = ref(false)
 const email = ref('')
 const resending = ref(false)
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-
 onMounted(async () => {
   const token = route.query.token
 
@@ -109,7 +107,8 @@ onMounted(async () => {
   }
 
   try {
-    const response = await axios.get(`${API_URL}/api/auth/verify-email`, {
+    // Use relative URL to leverage Vite proxy in dev and work with any domain in production
+    const response = await axios.get('/api/auth/verify-email', {
       params: { token }
     })
 

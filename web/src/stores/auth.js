@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from '@/utils/axios'
+import { getProfileImageUrl } from '@/utils/url'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -18,8 +19,8 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         const parsedUser = JSON.parse(savedUser)
         // Ensure profile_image has full URL for display
-        if (parsedUser.profile_image && !parsedUser.profile_image.startsWith('http')) {
-          parsedUser.profile_image = `http://localhost:8080${parsedUser.profile_image}`
+        if (parsedUser.profile_image) {
+          parsedUser.profile_image = getProfileImageUrl(parsedUser.profile_image)
         }
         user.value = parsedUser
         // Set default authorization header

@@ -328,12 +328,18 @@
                 :items="movements"
                 item-title="name"
                 item-value="id"
+                :loading="loadingMovements"
                 variant="outlined"
                 density="compact"
                 hide-details
                 clearable
+                auto-select-first
                 placeholder="Search for a movement..."
-              />
+              >
+                <template #prepend-inner>
+                  <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                </template>
+              </v-autocomplete>
 
               <div v-if="quickLogData.movementId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
                 <div class="mb-2">
@@ -416,12 +422,18 @@
                 :items="wods"
                 item-title="name"
                 item-value="id"
+                :loading="loadingWods"
                 variant="outlined"
                 density="compact"
                 hide-details
                 clearable
+                auto-select-first
                 placeholder="Search for a WOD..."
-              />
+              >
+                <template #prepend-inner>
+                  <v-icon color="#ffc107" size="small">mdi-magnify</v-icon>
+                </template>
+              </v-autocomplete>
 
               <div v-if="quickLogData.wodId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
                 <div class="mb-2">
@@ -608,6 +620,8 @@ const quickLogData = ref({
 // Lists for movements and WODs
 const movements = ref([])
 const wods = ref([])
+const loadingMovements = ref(false)
+const loadingWods = ref(false)
 
 // Computed stats
 const totalWorkouts = computed(() => userWorkouts.value.length)
@@ -762,26 +776,34 @@ function updateQuickLogName() {
 
 // Open Quick Log dialog and fetch data
 async function openQuickLog() {
+  quickLogDialog.value = true
+
   // Fetch movements and WODs if not already loaded
   if (movements.value.length === 0) {
+    loadingMovements.value = true
     try {
       const response = await axios.get('/api/movements')
       movements.value = response.data.movements || []
+      console.log('Loaded movements:', movements.value.length)
     } catch (error) {
       console.error('Error fetching movements:', error)
+    } finally {
+      loadingMovements.value = false
     }
   }
 
   if (wods.value.length === 0) {
+    loadingWods.value = true
     try {
       const response = await axios.get('/api/wods')
       wods.value = response.data.wods || []
+      console.log('Loaded WODs:', wods.value.length)
     } catch (error) {
       console.error('Error fetching WODs:', error)
+    } finally {
+      loadingWods.value = false
     }
   }
-
-  quickLogDialog.value = true
 }
 
 // Close Quick Log dialog
