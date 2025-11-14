@@ -30,7 +30,7 @@
       <!-- WOD Details -->
       <div v-else-if="wod">
         <!-- Header Card -->
-        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
           <div class="d-flex align-center mb-3">
             <v-icon color="#ff5722" size="48" class="mr-3">mdi-fire</v-icon>
             <div style="flex: 1">
@@ -56,7 +56,7 @@
         </v-card>
 
         <!-- Details Card -->
-        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
           <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
             <v-icon color="#00bcd4" size="small" class="mr-1">mdi-information</v-icon>
             Workout Details
@@ -105,7 +105,7 @@
         </v-card>
 
         <!-- Workout Type Info Card -->
-        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
           <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
             <v-icon color="#00bcd4" size="small" class="mr-1">mdi-tag</v-icon>
             Workout Classification
@@ -134,7 +134,7 @@
         </v-card>
 
         <!-- Metadata Card -->
-        <v-card elevation="0" rounded="lg" class="pa-4" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
           <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
             <v-icon color="#00bcd4" size="small" class="mr-1">mdi-clock</v-icon>
             Metadata

@@ -80,9 +80,9 @@
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <div class="d-flex align-center">
-              <v-icon color="#e91e63" size="32" class="mr-2">mdi-clock-outline</v-icon>
+              <v-icon color="#e91e63" size="28" class="mr-2">mdi-clock-outline</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
                   {{ avgTimePerWorkout }}m
@@ -180,7 +180,7 @@
             :key="workout.id"
             elevation="0"
             rounded="lg"
-            class="mb-2 pa-3"
+            class="mb-2 pa-2"
             style="background: white; cursor: pointer"
             @click="viewWorkout(workout.id)"
           >
@@ -240,7 +240,7 @@
           Quick Log Workout
         </v-card-title>
 
-        <v-card-text class="pa-4">
+        <v-card-text class="pa-3">
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-2">
@@ -492,7 +492,7 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="pa-4 pt-0">
+        <v-card-actions class="pa-3 pt-0">
           <v-btn
             variant="text"
             @click="closeQuickLog"

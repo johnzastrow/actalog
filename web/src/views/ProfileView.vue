@@ -72,7 +72,7 @@
       </v-card>
 
       <!-- Stats Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Workout Summary</h2>
 
         <!-- Loading State -->
@@ -118,7 +118,7 @@
       </v-card>
 
       <!-- Quick Actions -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Quick Actions</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
@@ -166,7 +166,7 @@
       </v-card>
 
       <!-- Account Actions -->
-      <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Account</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item

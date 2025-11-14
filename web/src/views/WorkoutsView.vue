@@ -32,7 +32,7 @@
       </v-tabs>
 
       <!-- Quick Links -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <h3 class="text-body-2 font-weight-bold mb-2" style="color: #666">Quick Links</h3>
         <v-row dense>
           <v-col cols="6">
@@ -69,7 +69,7 @@
         v-if="activeTemplateTab === 'custom' && !loading"
         elevation="0"
         rounded="lg"
-        class="pa-3 mb-3"
+        class="pa-2 mb-2"
         style="background: white"
       >
         <v-btn
