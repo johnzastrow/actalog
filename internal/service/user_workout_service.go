@@ -20,6 +20,7 @@ type UserWorkoutService struct {
 	workoutMovementRepo     domain.WorkoutMovementRepository
 	userWorkoutMovementRepo domain.UserWorkoutMovementRepository
 	userWorkoutWODRepo      domain.UserWorkoutWODRepository
+	wodRepo                 domain.WODRepository
 }
 
 // NewUseroutService creates a new user workout service
@@ -29,6 +30,7 @@ func NewUserWorkoutService(
 	workoutMovementRepo domain.WorkoutMovementRepository,
 	userWorkoutMovementRepo domain.UserWorkoutMovementRepository,
 	userWorkoutWODRepo domain.UserWorkoutWODRepository,
+	wodRepo domain.WODRepository,
 ) *UserWorkoutService {
 	return &UserWorkoutService{
 		userWorkoutRepo:         userWorkoutRepo,
@@ -36,6 +38,7 @@ func NewUserWorkoutService(
 		workoutMovementRepo:     workoutMovementRepo,
 		userWorkoutMovementRepo: userWorkoutMovementRepo,
 		userWorkoutWODRepo:      userWorkoutWODRepo,
+		wodRepo:                 wodRepo,
 	}
 }
 
@@ -109,6 +112,14 @@ func (s *UserWorkoutService) LogWorkoutWithPerformance(
 		if err := s.DetectAndFlagMovementPRs(userID, movements); err != nil {
 			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
 			return nil, fmt.Errorf("failed to detect movement PRs: %w", err)
+		}
+	}
+
+	// Validate WOD score types before saving
+	if len(wods) > 0 {
+		if err := s.ValidateWODScoreTypes(wods); err != nil {
+			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
+			return nil, fmt.Errorf("WOD validation failed: %w", err)
 		}
 	}
 
@@ -307,6 +318,15 @@ func (s *UserWorkoutService) UpdateWorkoutWODs(userWorkoutID, userID int64, wods
 	}
 	if existing.UserID != userID {
 		return ErrUnauthorizedWorkoutAccess
+	}
+
+	// Validate WOD score types before updating
+	wodPointers := make([]*domain.UserWorkoutWOD, len(wods))
+	for i := range wods {
+		wodPointers[i] = &wods[i]
+	}
+	if err := s.ValidateWODScoreTypes(wodPointers); err != nil {
+		return fmt.Errorf("WOD validation failed: %w", err)
 	}
 
 	// Delete existing WODs
@@ -559,4 +579,56 @@ func (s *UserWorkoutService) RetroactivelyFlagPRs(userID int64) (int, int, error
 	}
 
 	return movementPRCount, wodPRCount, nil
+}
+
+// ValidateWODScoreTypes validates that WOD performance data matches each WOD's defined score_type
+func (s *UserWorkoutService) ValidateWODScoreTypes(wods []*domain.UserWorkoutWOD) error {
+	for _, w := range wods {
+		// Fetch the WOD definition
+		wod, err := s.wodRepo.GetByID(w.WODID)
+		if err != nil {
+			return fmt.Errorf("failed to get WOD definition for WOD ID %d: %w", w.WODID, err)
+		}
+		if wod == nil {
+			return fmt.Errorf("WOD with ID %d not found", w.WODID)
+		}
+
+		// Validate based on score_type
+		scoreType := wod.ScoreType
+
+		// Time-based WODs
+		if scoreType == "Time (HH:MM:SS)" {
+			// Must have time_seconds, must NOT have rounds/reps/weight
+			if w.TimeSeconds == nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but time_seconds is missing", wod.Name, scoreType)
+			}
+			if w.Rounds != nil || w.Reps != nil || w.Weight != nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but contains invalid fields (rounds/reps/weight)", wod.Name, scoreType)
+			}
+		}
+
+		// Rounds+Reps WODs
+		if scoreType == "Rounds+Reps" {
+			// Must have rounds, must NOT have time_seconds/weight
+			if w.Rounds == nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but rounds is missing", wod.Name, scoreType)
+			}
+			if w.TimeSeconds != nil || w.Weight != nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but contains invalid fields (time_seconds/weight)", wod.Name, scoreType)
+			}
+		}
+
+		// Max Weight WODs
+		if scoreType == "Max Weight" {
+			// Must have weight, must NOT have time_seconds/rounds/reps
+			if w.Weight == nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but weight is missing", wod.Name, scoreType)
+			}
+			if w.TimeSeconds != nil || w.Rounds != nil || w.Reps != nil {
+				return fmt.Errorf("WOD '%s' has score_type '%s' but contains invalid fields (time_seconds/rounds/reps)", wod.Name, scoreType)
+			}
+		}
+	}
+
+	return nil
 }

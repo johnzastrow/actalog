@@ -363,3 +363,70 @@ func (r *UserWorkoutMovementRepository) UpdatePRFlag(id int64, isPR bool) error 
 
 	return nil
 }
+
+// GetByUserIDAndMovementID retrieves all movement performance records for a specific user and movement
+func (r *UserWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
+	query := `
+		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.weight, uwm.reps,
+		       uwm.sets, uwm.time, uwm.notes, uwm.is_pr, uwm.order_index,
+		       uwm.created_at, uwm.updated_at,
+		       m.name, m.type,
+		       uw.workout_date
+		FROM user_workout_movements uwm
+		JOIN movements m ON uwm.movement_id = m.id
+		JOIN user_workouts uw ON uwm.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uwm.movement_id = ?
+		ORDER BY uw.workout_date DESC, uwm.created_at DESC
+		LIMIT ?`
+
+	rows, err := r.db.Query(query, userID, movementID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query movement performances: %w", err)
+	}
+	defer rows.Close()
+
+	var movements []*domain.UserWorkoutMovement
+	for rows.Next() {
+		uwm := &domain.UserWorkoutMovement{}
+		var weight sql.NullFloat64
+		var reps sql.NullInt64
+		var sets sql.NullInt64
+		var timeVal sql.NullInt64
+		var workoutDate time.Time
+
+		err := rows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &weight, &reps,
+			&sets, &timeVal, &uwm.Notes, &uwm.IsPR, &uwm.OrderIndex,
+			&uwm.CreatedAt, &uwm.UpdatedAt,
+			&uwm.MovementName, &uwm.MovementType, &workoutDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan movement performance: %w", err)
+		}
+
+		if weight.Valid {
+			uwm.Weight = &weight.Float64
+		}
+		if reps.Valid {
+			r := int(reps.Int64)
+			uwm.Reps = &r
+		}
+		if sets.Valid {
+			s := int(sets.Int64)
+			uwm.Sets = &s
+		}
+		if timeVal.Valid {
+			t := int(timeVal.Int64)
+			uwm.Time = &t
+		}
+
+		// Store workout date for reference (you may want to add this field to UserWorkoutMovement)
+		// For now, we'll just ignore it or you can add a WorkoutDate field to the domain model
+
+		movements = append(movements, uwm)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating movement performances: %w", err)
+	}
+
+	return movements, nil
+}

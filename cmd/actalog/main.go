@@ -152,6 +152,7 @@ func main() {
 		workoutMovementRepo,
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
+		wodRepo,
 	)
 
 	workoutTemplateService := service.NewWorkoutTemplateService(
@@ -180,6 +181,7 @@ func main() {
 	workoutWODHandler := handler.NewWorkoutWODHandler(workoutWODService)
 	settingsHandler := handler.NewSettingsHandler(userSettingsService, appLogger)
 	prHandler := handler.NewPRHandler(db, appLogger)
+	performanceHandler := handler.NewPerformanceHandler(movementRepo, wodRepo, userWorkoutMovementRepo, userWorkoutWODRepo, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -294,6 +296,11 @@ func main() {
 			r.Get("/prs", prHandler.GetPersonalRecords)
 			r.Get("/pr-movements", prHandler.GetPRMovements)
 			r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
+
+			// Performance tracking routes (authenticated)
+			r.Get("/performance/search", performanceHandler.UnifiedSearch)
+			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
+			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
 		})
 	})
 

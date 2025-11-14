@@ -445,6 +445,48 @@ type PersonalRecord struct {
 }
 ```
 
+### Retroactive PR Detection (v0.4.4-beta)
+
+**Location:** `internal/service/user_workout_service.go`, `internal/repository/user_workout_movement_repository.go`, `internal/repository/user_workout_wod_repository.go`, `scripts/retroactive_prs.go`
+
+System to analyze historical workouts and flag PRs retroactively:
+- **Service Method:** `RetroactivelyFlagPRs(userID)` - Processes all workouts chronologically
+- **API Endpoint:** `POST /api/workouts/retroactive-flag-prs` - Authenticated endpoint for retroactive PR flagging
+- **CLI Script:** `scripts/retroactive_prs.go` - Direct database script to flag PRs for a user
+
+**Key Implementation Details:**
+- Processes workouts in chronological order (by workout_date)
+- Tracks max weights per movement_id in-memory during processing
+- Tracks best times and best rounds+reps per wod_id in-memory
+- Repository methods: `UpdatePRFlag(id, isPR)` for movements and WODs
+- Flags PRs when new max is achieved chronologically
+- Returns count of movement PRs and WOD PRs flagged
+- Multi-database support (SQLite, PostgreSQL, MySQL)
+
+**How It Works:**
+1. Fetches all user workouts ordered by date (chronologically)
+2. For each workout, gets all movements and WODs
+3. For movements with weight: compares to historical max, flags if new max
+4. For WODs with time: compares to historical best time (lower is better), flags if faster
+5. For WODs with rounds+reps: compares to historical best, flags if more rounds/reps
+6. Updates database with `is_pr = true/false` for each performance record
+
+**Usage:**
+```bash
+# Via CLI script
+go run scripts/retroactive_prs.go
+
+# Via API (requires authentication)
+curl -X POST http://localhost:8080/api/workouts/retroactive-flag-prs \
+  -H "Authorization: Bearer <token>"
+```
+
+**Use Cases:**
+- Fixing historical data after PR system implementation
+- Recalculating PRs after data corrections
+- Initial PR flagging for existing users migrating to new system
+- Batch processing for multiple users via script modification
+
 ### Password Reset System (v0.3.0-beta)
 
 **Location:** `internal/repository/password_reset_repository.go`, `internal/service/user_service.go`, `internal/handler/auth_handler.go`, `web/src/views/ForgotPasswordView.vue`, `web/src/views/ResetPasswordView.vue`

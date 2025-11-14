@@ -256,16 +256,17 @@
               </span>
             </div>
 
-            <!-- Score Type Selection -->
-            <v-select
-              v-model="wod.score_type"
-              :items="scoreTypes"
+            <!-- Score Type (Read-only display) -->
+            <v-text-field
+              :model-value="wod.wod_score_type_display || wod.score_type"
               label="Score Type"
               variant="outlined"
               density="compact"
               hide-details
               rounded
+              readonly
               class="mb-2"
+              style="background: #f5f5f5"
             />
 
             <!-- Time Score -->
@@ -556,18 +557,34 @@ function initializePerformanceArrays() {
 
   // Initialize WOD performance
   if (selectedTemplate.value.wods && selectedTemplate.value.wods.length > 0) {
-    wodPerformance.value = selectedTemplate.value.wods.map((w, index) => ({
-      wod_id: w.wod_id,
-      score_type: null,
-      score_value: null,
-      time_minutes: null,
-      time_seconds: null,
-      rounds: null,
-      reps: null,
-      weight: null,
-      notes: '',
-      order_index: index
-    }))
+    wodPerformance.value = selectedTemplate.value.wods.map((w, index) => {
+      // Get the WOD's defined score_type
+      const wodScoreType = w.wod?.score_type || ''
+      let scoreTypeValue = null
+
+      // Map score_type to form value
+      if (wodScoreType.includes('Time')) {
+        scoreTypeValue = 'Time'
+      } else if (wodScoreType.includes('Rounds')) {
+        scoreTypeValue = 'Rounds+Reps'
+      } else if (wodScoreType.includes('Weight')) {
+        scoreTypeValue = 'Max Weight'
+      }
+
+      return {
+        wod_id: w.wod_id,
+        score_type: scoreTypeValue, // Set from WOD definition
+        wod_score_type_display: wodScoreType, // For display purposes
+        score_value: null,
+        time_minutes: null,
+        time_seconds: null,
+        rounds: null,
+        reps: null,
+        weight: null,
+        notes: '',
+        order_index: index
+      }
+    })
   } else {
     wodPerformance.value = []
   }

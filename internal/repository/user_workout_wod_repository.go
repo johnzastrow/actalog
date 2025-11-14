@@ -417,3 +417,75 @@ func (r *UserWorkoutWODRepository) UpdatePRFlag(id int64, isPR bool) error {
 
 	return nil
 }
+
+// GetByUserIDAndWODID retrieves all WOD performance records for a specific user and WOD
+func (r *UserWorkoutWODRepository) GetByUserIDAndWODID(userID, wodID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
+	query := `
+		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value,
+		       uww.time_seconds, uww.rounds, uww.reps, uww.weight, uww.notes, uww.is_pr,
+		       uww.order_index, uww.created_at, uww.updated_at,
+		       w.name, w.type, w.score_type,
+		       uw.workout_date
+		FROM user_workout_wods uww
+		JOIN wods w ON uww.wod_id = w.id
+		JOIN user_workouts uw ON uww.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uww.wod_id = ?
+		ORDER BY uw.workout_date DESC, uww.created_at DESC
+		LIMIT ?`
+
+	rows, err := r.db.Query(query, userID, wodID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query WOD performances: %w", err)
+	}
+	defer rows.Close()
+
+	var wods []*domain.UserWorkoutWOD
+	for rows.Next() {
+		uww := &domain.UserWorkoutWOD{}
+		var scoreType sql.NullString
+		var scoreValue sql.NullString
+		var timeSeconds sql.NullInt64
+		var rounds sql.NullInt64
+		var reps sql.NullInt64
+		var weight sql.NullFloat64
+		var workoutDate time.Time
+
+		err := rows.Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue,
+			&timeSeconds, &rounds, &reps, &weight, &uww.Notes, &uww.IsPR,
+			&uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
+			&uww.WODName, &uww.WODType, &uww.WODScoreType, &workoutDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan WOD performance: %w", err)
+		}
+
+		if scoreType.Valid {
+			uww.ScoreType = &scoreType.String
+		}
+		if scoreValue.Valid {
+			uww.ScoreValue = &scoreValue.String
+		}
+		if timeSeconds.Valid {
+			t := int(timeSeconds.Int64)
+			uww.TimeSeconds = &t
+		}
+		if rounds.Valid {
+			r := int(rounds.Int64)
+			uww.Rounds = &r
+		}
+		if reps.Valid {
+			r := int(reps.Int64)
+			uww.Reps = &r
+		}
+		if weight.Valid {
+			uww.Weight = &weight.Float64
+		}
+
+		wods = append(wods, uww)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate WOD performances: %w", err)
+	}
+
+	return wods, nil
+}

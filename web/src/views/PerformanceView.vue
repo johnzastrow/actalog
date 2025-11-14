@@ -2,100 +2,35 @@
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
     <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Performance</v-toolbar-title>
+      <v-toolbar-title class="text-white font-weight-bold">Performance Tracker</v-toolbar-title>
       <v-spacer />
-      <v-btn icon="mdi-refresh" color="white" size="small" @click="refreshData" />
+      <v-btn v-if="selectedItem" icon="mdi-close" color="white" size="small" @click="clearSelection" />
     </v-app-bar>
 
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
+    <v-container class="px-3 pb-1 pt-0" style="margin-top: 56px; margin-bottom: 70px">
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-2">
+      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
         {{ error }}
       </v-alert>
 
-      <!-- Personal Records Summary -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <div class="d-flex align-center justify-space-between mb-1">
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Personal Records</h2>
-          <v-chip size="small" color="#4caf50">
-            <v-icon start size="x-small">mdi-trophy</v-icon>
-            {{ personalRecords.length }} PRs
-          </v-chip>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loadingPRs" class="text-center py-4">
-          <v-progress-circular indeterminate color="#00bcd4" size="32" />
-          <p class="mt-2 text-caption" style="color: #666">Loading PRs...</p>
-        </div>
-
-        <!-- Empty State -->
-        <div v-else-if="personalRecords.length === 0" class="text-center py-4">
-          <v-icon size="48" color="#ccc">mdi-trophy-outline</v-icon>
-          <p class="text-body-2 mt-2" style="color: #666">No personal records yet</p>
-          <p class="text-caption" style="color: #999">
-            Start logging workouts with weights to track your PRs
-          </p>
-        </div>
-
-        <!-- PRs List -->
-        <div v-else>
-          <v-card
-            v-for="pr in personalRecords.slice(0, 5)"
-            :key="pr.movement_id"
-            elevation="0"
-            rounded
-            class="mb-1 pa-1"
-            style="background: #f5f7fa"
-          >
-            <div class="d-flex align-center">
-              <v-icon color="#ffc107" class="mr-2">mdi-trophy</v-icon>
-              <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
-                  {{ pr.movement_name }}
-                </div>
-                <div class="text-caption" style="color: #666">
-                  {{ pr.max_weight }} {{ pr.weight_unit || 'lbs' }}
-                  <span v-if="pr.date_achieved"> • {{ formatDate(pr.date_achieved) }}</span>
-                </div>
-              </div>
-            </div>
-          </v-card>
-
-          <v-btn
-            v-if="personalRecords.length > 5"
-            variant="text"
-            size="small"
-            color="#00bcd4"
-            block
-            class="mt-2"
-            style="text-transform: none"
-            @click="$router.push('/prs')"
-          >
-            View All {{ personalRecords.length }} PRs
-            <v-icon end size="small">mdi-arrow-right</v-icon>
-          </v-btn>
-        </div>
-      </v-card>
-
-      <!-- Movement Progress Tracking -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Track Progress</h2>
+      <!-- Unified Search (Movements + WODs) -->
+      <v-card elevation="2" rounded="lg" class="pa-3 mb-3" style="background: white">
         <v-autocomplete
-          v-model="selectedMovement"
-          :items="movements"
-          item-title="title"
-          item-value="value"
-          :loading="loadingMovements"
-          placeholder="Search for a movement..."
+          v-model="selectedItem"
+          :items="searchResults"
+          item-title="name"
+          item-value="id"
+          :loading="loadingSearch"
+          placeholder="Search for a WOD or Movement..."
           variant="outlined"
-          density="compact"
-          rounded
+          density="comfortable"
+          rounded="lg"
           clearable
           auto-select-first
           hide-details
-          style="color: #1a1a1a"
-          @update:model-value="fetchMovementHistory"
+          return-object
+          @update:search="handleSearch"
+          @update:model-value="handleSelection"
         >
           <template #prepend-inner>
             <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
@@ -104,152 +39,264 @@
             <v-list-item v-bind="props" density="compact">
               <template #prepend>
                 <v-icon
-                  :color="item.raw.type === 'weightlifting' ? '#00bcd4' : '#666'"
+                  :color="item.raw.type === 'movement' ? '#00bcd4' : '#ffc107'"
                   size="small"
                 >
-                  mdi-dumbbell
+                  {{ item.raw.type === 'movement' ? 'mdi-dumbbell' : 'mdi-fire' }}
                 </v-icon>
               </template>
               <v-list-item-title class="text-body-2">
-                {{ item.raw.title }}
+                {{ item.raw.name }}
               </v-list-item-title>
               <v-list-item-subtitle class="text-caption">
-                {{ formatMovementType(item.raw.type) }}
+                {{ item.raw.type === 'movement' ? formatMovementType(item.raw.data?.type) : item.raw.data?.type || 'WOD' }}
               </v-list-item-subtitle>
             </v-list-item>
           </template>
         </v-autocomplete>
       </v-card>
 
-      <!-- Movement History -->
-      <v-card
-        v-if="selectedMovement && movementHistory.length > 0"
-        elevation="0"
-        rounded
-        class="pa-2 mb-1"
-        style="background: white"
-      >
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">
-          {{ selectedMovementName }} History
-        </h2>
+      <!-- Empty State - Prompt to Search -->
+      <v-card v-if="!selectedItem" elevation="0" rounded="lg" class="pa-6 mb-3 text-center" style="background: white">
+        <v-icon size="64" color="#ccc">mdi-chart-line-variant</v-icon>
+        <h2 class="text-h6 font-weight-bold mt-3" style="color: #1a1a1a">Track Your Performance</h2>
+        <p class="text-body-2 mt-2" style="color: #666">
+          Search for a movement or WOD above to view your progress, PRs, and performance history
+        </p>
+      </v-card>
 
-        <!-- Loading State -->
-        <div v-if="loadingHistory" class="text-center py-4">
-          <v-progress-circular indeterminate color="#00bcd4" size="32" />
-        </div>
+      <!-- Performance Content (Movement or WOD) -->
+      <div v-if="selectedItem">
+        <!-- Quick Log Button -->
+        <v-btn
+          block
+          size="large"
+          color="#ffc107"
+          rounded="lg"
+          elevation="2"
+          class="mb-3 font-weight-bold"
+          style="text-transform: none"
+          @click="quickLog"
+        >
+          <v-icon start>mdi-lightning-bolt</v-icon>
+          Quick Log {{ selectedItem.name }}
+        </v-btn>
 
-        <!-- History List -->
-        <div v-else>
-          <v-card
-            v-for="(entry, index) in movementHistory"
-            :key="index"
-            elevation="0"
-            rounded
-            class="mb-1 pa-1"
-            style="background: #f5f7fa"
-          >
-            <div class="d-flex align-center">
-              <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
-                  {{ entry.sets }} × {{ entry.reps }} @ {{ entry.weight }} {{ entry.weight_unit || 'lbs' }}
-                </div>
-                <div class="text-caption" style="color: #666">
-                  {{ formatDate(entry.workout_date) }}
-                  <span v-if="entry.workout_name"> • {{ entry.workout_name }}</span>
-                </div>
-              </div>
-              <v-chip
-                v-if="entry.is_pr"
-                size="x-small"
-                color="#ffc107"
-                class="ml-2"
-              >
-                <v-icon start size="x-small">mdi-trophy</v-icon>
-                PR
+        <!-- MOVEMENT-SPECIFIC CONTENT -->
+        <template v-if="selectedItem.type === 'movement'">
+          <!-- Heaviest Lifts (Top 3 Maxes) -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+              <v-icon color="#ffc107" size="small" class="mr-1">mdi-trophy</v-icon>
+              Heaviest Lifts
+            </h2>
+
+            <div v-if="loadingPerformance" class="text-center py-4">
+              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            </div>
+
+            <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
+              <p class="text-caption" style="color: #999">No performance data yet</p>
+            </div>
+
+            <div v-else>
+              <v-row>
+                <v-col v-for="(lift, index) in heaviestLifts" :key="index" cols="4">
+                  <div class="text-center">
+                    <v-chip
+                      :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
+                      size="small"
+                      class="mb-2"
+                      label
+                    >
+                      #{{ index + 1 }}
+                    </v-chip>
+                    <div class="font-weight-bold text-h6" style="color: #1a1a1a">
+                      {{ lift.weight }}
+                    </div>
+                    <div class="text-caption" style="color: #666">
+                      lbs
+                    </div>
+                    <div v-if="lift.reps" class="text-caption" style="color: #999">
+                      {{ lift.reps }} reps
+                    </div>
+                  </div>
+                </v-col>
+              </v-row>
+            </div>
+          </v-card>
+
+          <!-- Rep Scheme Dropdown Filter -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <v-select
+              v-model="selectedRepScheme"
+              :items="repSchemes"
+              label="Filter by Rep Scheme"
+              variant="outlined"
+              density="comfortable"
+              rounded="lg"
+              hide-details
+              @update:model-value="filterChart"
+            >
+              <template #prepend-inner>
+                <v-icon color="#00bcd4" size="small">mdi-filter</v-icon>
+              </template>
+            </v-select>
+          </v-card>
+
+          <!-- Performance Chart -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance Chart</h2>
+
+            <div v-if="loadingPerformance" class="text-center py-4">
+              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            </div>
+
+            <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
+              <p class="text-caption" style="color: #999">No data for selected filter</p>
+            </div>
+
+            <div v-else style="height: 250px; position: relative; width: 100%">
+              <canvas ref="chartCanvas" style="width: 100%; height: 100%"></canvas>
+            </div>
+          </v-card>
+        </template>
+
+        <!-- WOD-SPECIFIC CONTENT -->
+        <template v-if="selectedItem.type === 'wod'">
+          <!-- Best WOD Performances (Top 3) -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+              <v-icon color="#ffc107" size="small" class="mr-1">mdi-trophy</v-icon>
+              Best Performances
+            </h2>
+
+            <div v-if="loadingPerformance" class="text-center py-4">
+              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            </div>
+
+            <div v-else-if="bestWODPerformances.length === 0" class="text-center py-4">
+              <p class="text-caption" style="color: #999">No performance data yet</p>
+            </div>
+
+            <div v-else>
+              <v-row>
+                <v-col v-for="(perf, index) in bestWODPerformances" :key="index" cols="4">
+                  <div class="text-center">
+                    <v-chip
+                      :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
+                      size="small"
+                      class="mb-2"
+                      label
+                    >
+                      #{{ index + 1 }}
+                    </v-chip>
+                    <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                      {{ formatWODScore(perf) }}
+                    </div>
+                    <div class="text-caption" style="color: #666">
+                      {{ formatDate(perf.created_at) }}
+                    </div>
+                  </div>
+                </v-col>
+              </v-row>
+            </div>
+          </v-card>
+
+          <!-- WOD Performance Chart -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance Chart</h2>
+
+            <div v-if="loadingPerformance" class="text-center py-4">
+              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            </div>
+
+            <div v-else-if="wodPerformanceData.length === 0" class="text-center py-4">
+              <p class="text-caption" style="color: #999">No performance data yet</p>
+            </div>
+
+            <div v-else style="height: 250px; position: relative; width: 100%">
+              <canvas ref="wodChartCanvas" style="width: 100%; height: 100%"></canvas>
+            </div>
+          </v-card>
+        </template>
+
+        <!-- Performance History (Grouped by Year) -->
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance History</h2>
+
+          <div v-if="loadingPerformance" class="text-center py-4">
+            <v-progress-circular indeterminate color="#00bcd4" size="32" />
+          </div>
+
+          <div v-else-if="Object.keys(groupedHistory).length === 0" class="text-center py-4">
+            <v-icon size="48" color="#ccc">mdi-history</v-icon>
+            <p class="text-body-2 mt-2" style="color: #666">No history yet</p>
+            <p class="text-caption" style="color: #999">
+              Start logging workouts with {{ selectedItem.name }} to track your progress
+            </p>
+          </div>
+
+          <!-- History Grouped by Year -->
+          <div v-else>
+            <div v-for="(entries, year) in groupedHistory" :key="year" class="mb-4">
+              <v-chip size="small" color="#00bcd4" label class="mb-2">
+                {{ year }}
               </v-chip>
-            </div>
-          </v-card>
-        </div>
-      </v-card>
 
-      <!-- Recent Workouts Summary -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <div class="d-flex align-center justify-space-between mb-1">
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h2>
-          <v-btn
-            size="small"
-            variant="text"
-            color="#00bcd4"
-            style="text-transform: none"
-            @click="$router.push('/dashboard')"
-          >
-            View All
-          </v-btn>
-        </div>
+              <v-card
+                v-for="(entry, index) in entries"
+                :key="index"
+                elevation="0"
+                rounded="lg"
+                class="mb-2 pa-2"
+                style="background: #f5f7fa"
+              >
+                <div class="d-flex align-center">
+                  <!-- PR Trophy Icon -->
+                  <v-icon v-if="entry.is_pr" color="#ffc107" size="small" class="mr-2">mdi-trophy</v-icon>
 
-        <!-- Loading State -->
-        <div v-if="loadingWorkouts" class="text-center py-4">
-          <v-progress-circular indeterminate color="#00bcd4" size="32" />
-        </div>
+                  <div class="flex-grow-1">
+                    <!-- Movement Performance Display -->
+                    <div v-if="selectedItem.type === 'movement'" class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                      <span v-if="entry.sets && entry.reps && entry.weight">
+                        {{ entry.sets }} × {{ entry.reps }} @ {{ entry.weight }} lbs
+                      </span>
+                      <span v-else-if="entry.weight">
+                        {{ entry.weight }} lbs
+                        <span v-if="entry.reps"> × {{ entry.reps }}</span>
+                      </span>
+                      <span v-else-if="entry.time">
+                        {{ formatTime(entry.time) }}
+                      </span>
+                    </div>
 
-        <!-- Empty State -->
-        <div v-else-if="recentWorkouts.length === 0" class="text-center py-4">
-          <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
-          <p class="text-body-2 mt-2" style="color: #666">No recent workouts</p>
-        </div>
+                    <!-- WOD Performance Display -->
+                    <div v-if="selectedItem.type === 'wod'" class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                      {{ formatWODScore(entry) }}
+                    </div>
 
-        <!-- Workouts List -->
-        <div v-else>
-          <v-card
-            v-for="workout in recentWorkouts.slice(0, 30)"
-            :key="workout.id"
-            elevation="0"
-            rounded
-            class="mb-1 pa-1"
-            style="background: #f5f7fa; cursor: pointer"
-            @click="viewWorkout(workout.id)"
-          >
-            <div class="d-flex align-center mb-1">
-              <v-icon color="#00bcd4" class="mr-2" size="small">mdi-dumbbell</v-icon>
-              <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
-                  {{ workout.workout_name || 'Workout' }}
+                    <div class="text-caption" style="color: #666">
+                      {{ formatDate(entry.created_at) }}
+                      <span v-if="entry.notes"> • {{ entry.notes }}</span>
+                    </div>
+                  </div>
+
+                  <!-- PR Badge -->
+                  <v-chip
+                    v-if="entry.is_pr"
+                    size="x-small"
+                    color="#ffc107"
+                    class="ml-2"
+                  >
+                    PR
+                  </v-chip>
                 </div>
-                <div class="text-caption" style="color: #666">
-                  {{ formatDate(workout.workout_date) }}
-                  <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
-                </div>
-              </div>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              </v-card>
             </div>
-
-            <!-- Display movement performance -->
-            <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-6 mt-1">
-              <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1" style="color: #666">
-                <v-icon size="x-small" color="#00bcd4">mdi-weight-lifter</v-icon>
-                <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
-                <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
-                <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
-                <span v-if="perf.distance"> {{ perf.distance }}m</span>
-                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
-              </div>
-            </div>
-
-            <!-- Display WOD performance -->
-            <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-6 mt-1">
-              <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1" style="color: #666">
-                <v-icon size="x-small" color="#ffc107">mdi-fire</v-icon>
-                <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
-                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
-                <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
-                <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
-                <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
-                <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
-              </div>
-            </div>
-          </v-card>
-        </div>
-      </v-card>
+          </div>
+        </v-card>
+      </div>
     </v-container>
 
     <!-- Bottom Navigation -->
@@ -285,136 +332,506 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import { Chart, registerables } from 'chart.js'
+
+Chart.register(...registerables)
 
 const router = useRouter()
 const activeTab = ref('performance')
 
 // State
-const selectedMovement = ref(null)
-const movements = ref([])
-const personalRecords = ref([])
-const movementHistory = ref([])
-const recentWorkouts = ref([])
+const selectedItem = ref(null) // { type: 'movement' | 'wod', id, name, data }
+const searchQuery = ref('')
+const searchResults = ref([])
+const loadingSearch = ref(false)
 
-const loadingMovements = ref(false)
-const loadingPRs = ref(false)
-const loadingHistory = ref(false)
-const loadingWorkouts = ref(false)
+// Performance data
+const performanceData = ref([]) // Raw performance data from API
+const loadingPerformance = ref(false)
+
+// Movement-specific
+const selectedRepScheme = ref('All Reps')
+const repSchemes = ref(['All Reps'])
+
+// Chart instances
+const chartCanvas = ref(null)
+const wodChartCanvas = ref(null)
+let chartInstance = null
+let wodChartInstance = null
+
 const error = ref(null)
 
-// Computed
-const selectedMovementName = computed(() => {
-  if (!selectedMovement.value) return ''
-  const movement = movements.value.find(m => m.value === selectedMovement.value)
-  return movement ? movement.title : ''
+// Computed: Heaviest Lifts (Top 3 Maxes - Movement only)
+const heaviestLifts = computed(() => {
+  if (!selectedItem.value || selectedItem.value.type !== 'movement') return []
+
+  // Get all unique weight records, sorted by weight descending
+  const weightRecords = performanceData.value
+    .filter(p => p.weight)
+    .sort((a, b) => b.weight - a.weight)
+
+  // Get top 3 unique weights
+  const seen = new Set()
+  const top3 = []
+
+  for (const record of weightRecords) {
+    const key = `${record.weight}-${record.reps || 0}`
+    if (!seen.has(key) && top3.length < 3) {
+      seen.add(key)
+      top3.push(record)
+    }
+  }
+
+  return top3
 })
 
-// Fetch available movements
-async function fetchMovements() {
-  loadingMovements.value = true
-  try {
-    const response = await axios.get('/api/movements')
-    movements.value = response.data.movements.map((m) => ({
-      value: m.id,
-      title: m.name,
-      type: m.type,
-    }))
-  } catch (err) {
-    console.error('Failed to fetch movements:', err)
-    error.value = 'Failed to load movements'
-  } finally {
-    loadingMovements.value = false
-  }
-}
+// Computed: Best WOD Performances (Top 3)
+const bestWODPerformances = computed(() => {
+  if (!selectedItem.value || selectedItem.value.type !== 'wod' || performanceData.value.length === 0) return []
 
-// Fetch personal records
-async function fetchPersonalRecords() {
-  loadingPRs.value = true
-  try {
-    const response = await axios.get('/api/movements/personal-records')
-    personalRecords.value = response.data.personal_records || []
-  } catch (err) {
-    console.error('Failed to fetch personal records:', err)
-    // Silently fail - not critical
-    personalRecords.value = []
-  } finally {
-    loadingPRs.value = false
-  }
-}
+  // Get WOD's defined score type
+  const wodScoreType = performanceData.value[0]?.wod_score_type || ''
 
-// Fetch movement history for selected movement
-async function fetchMovementHistory() {
-  if (!selectedMovement.value) {
-    movementHistory.value = []
+  // Filter data based on WOD's score type
+  let validData = []
+  if (wodScoreType.includes('Time')) {
+    validData = performanceData.value.filter(p => p.time_seconds)
+  } else if (wodScoreType.includes('Rounds')) {
+    validData = performanceData.value.filter(p => p.rounds !== null || p.reps !== null)
+  } else if (wodScoreType.includes('Weight')) {
+    validData = performanceData.value.filter(p => p.weight)
+  } else {
+    validData = performanceData.value
+  }
+
+  // Sort by best performance based on score type
+  const sorted = [...validData].sort((a, b) => {
+    if (wodScoreType.includes('Time')) {
+      // Time-based (lower is better)
+      return a.time_seconds - b.time_seconds
+    } else if (wodScoreType.includes('Rounds')) {
+      // Rounds+Reps (higher is better)
+      const aTotal = (a.rounds || 0) * 1000 + (a.reps || 0)
+      const bTotal = (b.rounds || 0) * 1000 + (b.reps || 0)
+      return bTotal - aTotal
+    } else if (wodScoreType.includes('Weight')) {
+      // Weight (higher is better)
+      return b.weight - a.weight
+    }
+    return 0
+  })
+
+  return sorted.slice(0, 3)
+})
+
+// Computed: Filtered Chart Data (for movement chart with rep scheme filter)
+const filteredChartData = computed(() => {
+  if (!selectedItem.value || selectedItem.value.type !== 'movement') return []
+
+  if (selectedRepScheme.value === 'All Reps') {
+    return performanceData.value.filter(p => p.weight)
+  }
+
+  const targetReps = parseInt(selectedRepScheme.value.split(' ')[0])
+  return performanceData.value.filter(p => p.weight && p.reps === targetReps)
+})
+
+// Watch performance data and auto-select rep scheme
+watch(performanceData, async (newData) => {
+  if (!selectedItem.value || selectedItem.value.type !== 'movement') {
     return
   }
 
-  loadingHistory.value = true
+  const schemes = new Set(['All Reps'])
+  newData.forEach(p => {
+    if (p.reps) {
+      schemes.add(`${p.reps} reps`)
+    }
+  })
+  repSchemes.value = Array.from(schemes)
+
+  // Auto-select the rep scheme with the heaviest weight
+  if (newData.length > 0) {
+    const heaviest = newData
+      .filter(p => p.weight && p.reps)
+      .sort((a, b) => b.weight - a.weight)[0]
+
+    if (heaviest) {
+      selectedRepScheme.value = `${heaviest.reps} reps`
+    } else {
+      selectedRepScheme.value = 'All Reps'
+    }
+  }
+}, { immediate: true })
+
+// Watch filtered chart data and render movement chart when it changes
+watch(filteredChartData, async () => {
+  if (selectedItem.value?.type === 'movement' && filteredChartData.value.length > 0) {
+    await nextTick()
+    renderMovementChart()
+  }
+}, { deep: true })
+
+// Computed: WOD Performance Data for Chart
+const wodPerformanceData = computed(() => {
+  if (!selectedItem.value || selectedItem.value.type !== 'wod') return []
+  return performanceData.value
+})
+
+// Computed: History Grouped by Year
+const groupedHistory = computed(() => {
+  if (!selectedItem.value || performanceData.value.length === 0) return {}
+
+  const grouped = {}
+
+  performanceData.value.forEach(entry => {
+    const year = new Date(entry.created_at).getFullYear()
+    if (!grouped[year]) {
+      grouped[year] = []
+    }
+    grouped[year].push(entry)
+  })
+
+  // Sort years descending
+  const sorted = {}
+  Object.keys(grouped)
+    .sort((a, b) => b - a)
+    .forEach(year => {
+      // Sort entries within year by date descending
+      sorted[year] = grouped[year].sort((a, b) =>
+        new Date(b.created_at) - new Date(a.created_at)
+      )
+    })
+
+  return sorted
+})
+
+// Search Handler (debounced unified search)
+let searchTimeout = null
+function handleSearch(query) {
+  searchQuery.value = query
+  if (!query || query.length < 2) {
+    searchResults.value = []
+    return
+  }
+
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(async () => {
+    await performUnifiedSearch(query)
+  }, 300)
+}
+
+// Unified Search (Movements + WODs)
+async function performUnifiedSearch(query) {
+  loadingSearch.value = true
   try {
-    const response = await axios.get(`/api/movements/${selectedMovement.value}/history`)
-    movementHistory.value = response.data.history || []
+    const response = await axios.get('/api/performance/search', {
+      params: { q: query, limit: 20 }
+    })
+
+    const results = response.data.results || []
+    searchResults.value = results.map(r => ({
+      id: `${r.type}-${r.id}`,
+      name: r.name,
+      type: r.type,
+      data: r.data
+    }))
   } catch (err) {
-    console.error('Failed to fetch movement history:', err)
-    error.value = 'Failed to load movement history'
-    movementHistory.value = []
+    console.error('Failed to search:', err)
+    error.value = 'Failed to search movements and WODs'
+    searchResults.value = []
   } finally {
-    loadingHistory.value = false
+    loadingSearch.value = false
   }
 }
 
-// Fetch recent workouts (last 30 days)
-async function fetchRecentWorkouts() {
-  loadingWorkouts.value = true
+// Selection Handler
+async function handleSelection(item) {
+  if (!item) {
+    clearSelection()
+    return
+  }
+
+  selectedItem.value = item
+  await fetchPerformanceData()
+}
+
+// Clear Selection
+function clearSelection() {
+  selectedItem.value = null
+  performanceData.value = []
+  destroyCharts()
+}
+
+// Fetch Performance Data (Movement or WOD specific)
+async function fetchPerformanceData() {
+  if (!selectedItem.value) return
+
+  loadingPerformance.value = true
+  error.value = null
+
   try {
-    const response = await axios.get('/api/workouts')
-    const allWorkouts = response.data.workouts || []
+    let response
+    if (selectedItem.value.type === 'movement') {
+      const movementId = selectedItem.value.data.id
+      response = await axios.get(`/api/performance/movements/${movementId}`)
+      performanceData.value = response.data.performances || []
+    } else if (selectedItem.value.type === 'wod') {
+      const wodId = selectedItem.value.data.id
+      response = await axios.get(`/api/performance/wods/${wodId}`)
+      performanceData.value = response.data.performances || []
+    }
 
-    // Filter to last 30 days
-    const now = new Date()
-    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000))
-
-    recentWorkouts.value = allWorkouts
-      .filter(w => {
-        const workoutDate = new Date(w.workout_date)
-        return workoutDate >= thirtyDaysAgo
-      })
-      .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
+    // Note: Chart rendering is handled by the performanceData watcher for movements
+    // For WODs, render directly since there's no rep scheme selection
+    if (selectedItem.value.type === 'wod') {
+      await nextTick()
+      renderCharts()
+    }
   } catch (err) {
-    console.error('Failed to fetch recent workouts:', err)
-    recentWorkouts.value = []
+    console.error('Failed to fetch performance data:', err)
+    error.value = `Failed to load ${selectedItem.value.type} performance data`
+    performanceData.value = []
   } finally {
-    loadingWorkouts.value = false
+    loadingPerformance.value = false
   }
 }
 
-// Refresh all data
-async function refreshData() {
-  await Promise.all([
-    fetchMovements(),
-    fetchPersonalRecords(),
-    fetchRecentWorkouts()
-  ])
-  if (selectedMovement.value) {
-    await fetchMovementHistory()
+// Filter Chart (when rep scheme changes)
+async function filterChart() {
+  await nextTick()
+  renderCharts()
+}
+
+// Render Charts
+function renderCharts() {
+  if (selectedItem.value?.type === 'movement') {
+    renderMovementChart()
+  } else if (selectedItem.value?.type === 'wod') {
+    renderWODChart()
   }
 }
 
-// Format date for display
+// Render Movement Chart
+function renderMovementChart() {
+  if (!chartCanvas.value || filteredChartData.value.length === 0) {
+    return
+  }
+
+  destroyCharts()
+
+  const data = filteredChartData.value
+    .filter(p => p.weight)
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+
+  if (data.length === 0) {
+    return
+  }
+
+  const labels = data.map(p => formatDate(p.created_at))
+  const weights = data.map(p => p.weight)
+
+  chartInstance = new Chart(chartCanvas.value, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Weight (lbs)',
+        data: weights,
+        borderColor: '#2c3e50',
+        backgroundColor: 'rgba(44, 62, 80, 0.1)',
+        tension: 0.4,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: '#2c3e50',
+        pointBorderColor: '#2c3e50',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const entry = data[context.dataIndex]
+              let label = `${entry.weight} lbs`
+              if (entry.reps) label += ` × ${entry.reps} reps`
+              if (entry.is_pr) label += ' 🏆 PR'
+              return label
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return Math.round(value) + ' lbs'
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+// Render WOD Chart
+function renderWODChart() {
+  if (!wodChartCanvas.value || wodPerformanceData.value.length === 0) return
+
+  destroyCharts()
+
+  // Use the WOD's defined score_type to determine what to plot
+  const wodScoreType = wodPerformanceData.value[0]?.wod_score_type || ''
+
+  // Filter data to only include records matching the WOD's score_type
+  let filteredData = [...wodPerformanceData.value]
+  let values, label, isTimeBased = false
+
+  if (wodScoreType.includes('Time')) {
+    // Only include records with time_seconds
+    filteredData = filteredData.filter(p => p.time_seconds)
+    values = filteredData.map(p => p.time_seconds / 60)
+    label = 'Time (minutes)'
+    isTimeBased = true
+  } else if (wodScoreType.includes('Rounds')) {
+    // Only include records with rounds or reps
+    filteredData = filteredData.filter(p => p.rounds !== null || p.reps !== null)
+    values = filteredData.map(p => (p.rounds || 0) * 100 + (p.reps || 0))
+    label = 'Rounds + Reps'
+  } else if (wodScoreType.includes('Weight')) {
+    // Only include records with weight
+    filteredData = filteredData.filter(p => p.weight)
+    values = filteredData.map(p => p.weight)
+    label = 'Weight (lbs)'
+  } else {
+    return
+  }
+
+  if (filteredData.length === 0) return
+
+  const data = filteredData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  const labels = data.map(p => formatDate(p.created_at))
+
+  chartInstance = new Chart(wodChartCanvas.value, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data: values,
+        borderColor: '#2c3e50',
+        backgroundColor: 'rgba(44, 62, 80, 0.1)',
+        tension: 0.4,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: '#2c3e50',
+        pointBorderColor: '#2c3e50',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const entry = data[context.dataIndex]
+              let labelText = formatWODScore(entry)
+              if (entry.is_pr) labelText += ' 🏆 PR'
+              return labelText
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          reverse: isTimeBased, // For time-based, lower is better
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return Math.round(value)
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+// Destroy Charts
+function destroyCharts() {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+  if (wodChartInstance) {
+    wodChartInstance.destroy()
+    wodChartInstance = null
+  }
+}
+
+// Quick Log Navigation
+function quickLog() {
+  if (!selectedItem.value) return
+
+  // Navigate to log workout page with pre-selected item
+  if (selectedItem.value.type === 'movement') {
+    router.push({
+      path: '/workouts/log',
+      query: { movement: selectedItem.value.data.id }
+    })
+  } else if (selectedItem.value.type === 'wod') {
+    router.push({
+      path: '/workouts/log',
+      query: { wod: selectedItem.value.data.id }
+    })
+  }
+}
+
+// Format WOD Score
+function formatWODScore(performance) {
+  if (performance.time_seconds) {
+    return formatTime(performance.time_seconds)
+  } else if (performance.rounds !== null && performance.reps !== null) {
+    return `${performance.rounds}+${performance.reps}`
+  } else if (performance.rounds !== null) {
+    return `${performance.rounds} rounds`
+  } else if (performance.reps !== null) {
+    return `${performance.reps} reps`
+  } else if (performance.weight) {
+    return `${performance.weight} lbs`
+  } else if (performance.score_value) {
+    return performance.score_value
+  }
+  return 'N/A'
+}
+
+// Format Date
 function formatDate(dateString) {
-  // Parse as local date to avoid timezone conversion issues
-  // Extract YYYY-MM-DD from the date string
   const datePart = dateString.split('T')[0]
   const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day) // Month is 0-indexed
+  const date = new Date(year, month - 1, day)
 
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
 
-  // Reset time parts for comparison
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
@@ -429,7 +846,7 @@ function formatDate(dateString) {
   }
 }
 
-// Format time (seconds to readable format)
+// Format Time
 function formatTime(seconds) {
   if (!seconds) return ''
 
@@ -437,7 +854,8 @@ function formatTime(seconds) {
     return `${seconds}s`
   } else if (seconds < 3600) {
     const minutes = Math.floor(seconds / 60)
-    return `${minutes}min`
+    const secs = seconds % 60
+    return secs > 0 ? `${minutes}:${secs.toString().padStart(2, '0')}` : `${minutes}:00`
   } else {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
@@ -445,20 +863,14 @@ function formatTime(seconds) {
   }
 }
 
-// Format movement type
+// Format Movement Type
 function formatMovementType(type) {
   if (!type) return ''
   return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
-// View workout details
-function viewWorkout(workoutId) {
-  console.log('View workout details:', workoutId)
-  router.push(`/workouts/${workoutId}`)
-}
-
-// Load data on mount
-onMounted(async () => {
-  await refreshData()
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  destroyCharts()
 })
 </script>
