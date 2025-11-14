@@ -1,13 +1,13 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" @click="$router.back()" />
+    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
+      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="$router.back()" />
       <v-toolbar-title class="text-white font-weight-bold">{{ isEditMode ? 'Edit Workout' : 'Log Workout' }}</v-toolbar-title>
       <v-spacer />
     </v-app-bar>
 
-    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 100px">
+    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 100px">
       <!-- Success Alert -->
       <v-alert v-if="success" type="success" closable @click:close="success = null" class="mb-4">
         {{ success }}

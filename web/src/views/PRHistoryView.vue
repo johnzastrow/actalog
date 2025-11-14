@@ -1,13 +1,13 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
+    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
       <v-toolbar-title class="text-white font-weight-bold">Personal Records</v-toolbar-title>
       <v-spacer />
-      <v-btn icon="mdi-refresh" color="white" variant="text" @click="fetchPRs" :loading="loading" />
+      <v-btn icon="mdi-refresh" color="white" size="small" variant="text" @click="fetchPRs" :loading="loading" />
     </v-app-bar>
 
-    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 70px">
+    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
         {{ error }}

@@ -1,8 +1,8 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" @click="handleBack" />
+    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
+      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="handleBack" />
       <v-toolbar-title class="text-white font-weight-bold">
         {{ isEditMode ? 'Edit Template' : 'Create Template' }}
       </v-toolbar-title>
@@ -15,7 +15,7 @@
       />
     </v-app-bar>
 
-    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 70px">
+    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
       <!-- Error/Success Alert -->
       <v-alert
         v-if="successMessage"
