@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ActaLog is a mobile-first CrossFit workout tracker built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend (Vuetify 3). The project follows Clean Architecture principles with strict separation between domain, service, repository, and handler layers.
 
-**Current Version:** 0.3.1-beta
+**Current Version:** 0.4.1-beta
 
 ## Essential Commands
 
@@ -271,12 +271,45 @@ The project includes OpenTelemetry for observability:
 
 ## Configuration Management
 
+### Backend Configuration
+
 All configuration via environment variables (see `.env.example`):
 
 - Copy `.env.example` to `.env` for local development
 - **Never commit `.env` file** (it's in `.gitignore`)
 - Required for development: `DB_DRIVER`, `DB_NAME`, `JWT_SECRET`
 - First registered user automatically becomes admin
+
+### Frontend Configuration
+
+The frontend uses environment variables prefixed with `VITE_` (see `web/.env.example`):
+
+**Development (localhost):**
+- Uses Vite proxy for `/api` and `/uploads` routes
+- No environment variables needed
+- Proxy automatically forwards requests to `localhost:8080`
+
+**Production Deployment:**
+- Set `VITE_API_BASE_URL` to your backend URL if on different domain/port
+- Examples:
+  - Same domain, different port: `http://your-domain.com:8080`
+  - Different domain: `https://api.your-domain.com`
+  - Local network: `http://192.168.1.100:8080`
+
+**URL Utilities (`web/src/utils/url.js`):**
+- `getApiBaseUrl()` - Returns environment-aware API base URL
+- `getAssetUrl(path)` - Converts relative paths to absolute URLs
+- `getProfileImageUrl(profileImage)` - Handles profile image URLs
+
+These utilities automatically:
+- Use Vite proxy in development
+- Use relative URLs when possible
+- Fall back to `window.location` in production
+- Support `VITE_API_BASE_URL` environment variable override
+
+**Important for Deployment:**
+- Backend `.env` must set `CORS_ORIGINS` to include frontend URL
+- Backend `.env` must set `APP_URL` to frontend URL (for email links)
 
 ## Common Development Tasks
 

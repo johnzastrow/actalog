@@ -11,11 +11,11 @@
 
 ActaLog is a fitness tracker app focused on logging CrossFit workouts and tracking history for weights, reps, and named weightlifting lifts. Built with a Go backend and Vue.js/Vuetify frontend, it provides a clean, mobile-first interface for tracking your fitness journey.
 
-**Version:** 0.3.1-beta
+**Version:** 0.4.1-beta
 
 ## Features
 
-### Current Features (v0.3.1-beta)
+### Current Features (v0.4.1-beta)
 
 - ✅ **User Authentication**: Secure registration and login with JWT tokens
 - ✅ **Email Verification**: Verify email addresses with secure tokens and automated emails

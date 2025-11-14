@@ -519,9 +519,13 @@ Potential future schema additions (not yet implemented):
 
 ## Version History
 
-- **v0.3.3-beta** (Current): User profile editing with birthday field
+- **v0.3.3-beta** (Current Schema): User profile editing with birthday field
+- **Application v0.4.1-beta**: No schema changes (bug fixes and deployment improvements)
+- **Application v0.4.0-beta**: No schema changes (backend refactoring for template architecture)
 - **v0.3.2-beta**: Remember Me functionality with refresh tokens
 - **v0.3.1-beta**: Email verification system
 - **v0.3.0-beta**: Personal Records (PR) tracking
 - **v0.2.0-beta**: Password reset functionality
 - **v0.1.0**: Initial schema design
+
+**Note:** Schema version may differ from application version when releases contain only bug fixes or code refactoring without database changes.

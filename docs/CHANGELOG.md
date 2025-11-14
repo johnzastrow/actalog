@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1-beta] - 2025-01-14
+
+### Fixed
+- **Quick Log movement search**: Fixed autocomplete not displaying movements in Quick Log dialog
+  - Added loading states for movements and WODs
+  - Added auto-select-first for better search UX
+  - Added search icon to match design patterns
+  - Added console logging for debugging data loading
+- **Localhost hardcoded URLs**: Fixed profile pictures and assets not working outside of localhost
+  - Created `web/src/utils/url.js` with dynamic URL resolution utilities
+  - `getApiBaseUrl()` - Environment-aware API base URL
+  - `getAssetUrl()` - Converts relative paths to absolute URLs
+  - `getProfileImageUrl()` - Specifically handles profile image URLs
+  - Updated `web/src/stores/auth.js` to use new URL utilities
+  - Updated `web/src/views/ProfileView.vue` to use new URL utilities
+  - Fixed `web/src/views/VerifyEmailView.vue` to use relative URLs
+  - Added `/uploads` proxy to Vite dev server configuration
+- **Axios configuration**: Changed baseURL to use relative URLs to leverage Vite proxy in development
+
+### Added
+- Created `web/.env.example` documenting `VITE_API_BASE_URL` environment variable
+- Added comprehensive URL utility functions for production deployments
+
+### Changed
+- Quick Log dialog now opens immediately and fetches data in background for better UX
+- Updated Vite proxy configuration to handle both `/api` and `/uploads` routes
+
+## [0.4.0-beta] - 2025-01-13
+
 ### Added - Multi-Database Support
 - **Multi-database support**: SQLite, PostgreSQL, and MySQL/MariaDB
 - **Database migration system** with version tracking and rollback support
@@ -279,6 +308,6 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.2.0-beta
+**Current Version:** 0.4.1-beta
 **Schema Version:** 0.1.0 (v0.3.0 schema designed, migration not yet implemented)
-**Last Updated:** 2025-11-09
+**Last Updated:** 2025-01-14

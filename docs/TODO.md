@@ -1,5 +1,47 @@
 # TODO
 
+## v0.4.1-beta Release - COMPLETE (2025-01-14)
+
+**Status:** Bug fix release addressing Quick Log and deployment issues.
+
+### Completed ✅
+- [x] **Quick Log Movement Search Fix**
+  - [x] Added loading states for movements and WODs in Quick Log dialog
+  - [x] Added `:loading` prop to autocomplete components
+  - [x] Added `auto-select-first` for better search UX
+  - [x] Added search icon (magnify) to match design patterns
+  - [x] Dialog now opens immediately and fetches data in background
+  - [x] Added console logging for debugging data loading
+  - [x] Updated `web/src/views/DashboardView.vue:326-342, 420-436`
+
+- [x] **Localhost URL Hardcoding Fixes**
+  - [x] Created `web/src/utils/url.js` with dynamic URL resolution utilities
+    - [x] `getApiBaseUrl()` - Environment-aware API base URL
+    - [x] `getAssetUrl(path)` - Converts relative paths to absolute URLs
+    - [x] `getProfileImageUrl(profileImage)` - Handles profile image URLs
+  - [x] Updated `web/src/stores/auth.js:22` to use `getProfileImageUrl()`
+  - [x] Updated `web/src/views/ProfileView.vue:364` to use `getProfileImageUrl()`
+  - [x] Fixed `web/src/views/VerifyEmailView.vue:99` to use relative URLs
+  - [x] Added `/uploads` proxy to `web/vite.config.js:164-167`
+  - [x] Changed axios baseURL to empty string for Vite proxy in development
+
+- [x] **Documentation & Configuration**
+  - [x] Created `web/.env.example` documenting `VITE_API_BASE_URL` variable
+  - [x] Updated `CLAUDE.md` with Frontend Configuration section
+  - [x] Added deployment guidance for production environments
+
+- [x] **Version Management**
+  - [x] Incremented version to 0.4.1-beta in `pkg/version/version.go`
+  - [x] Updated version to 0.4.1 in `web/package.json`
+  - [x] Updated CHANGELOG.md with v0.4.1-beta release notes
+  - [x] Updated README.md version references
+
+### Notes
+- Profile pictures and assets now work correctly outside localhost
+- Quick Log dialog movement search now functional
+- Frontend can be deployed to any domain/IP without hardcoded URLs
+- Production deployments should set `VITE_API_BASE_URL` as needed
+
 ## v0.4.0-beta Release - PARTIALLY COMPLETE (2025-11-12)
 
 **Status:** Backend complete with seeded data. Frontend stores created. Critical path for testing established.
@@ -418,10 +460,16 @@
 
 ---
 
-**Last Updated:** 2025-11-10
-**Version:** 0.4.0-dev (Template-based architecture - Service layer complete, database migration pending)
+**Last Updated:** 2025-01-14
+**Version:** 0.4.1-beta
 
-**v0.4.0 Status:**
+**v0.4.1-beta Status:**
+- ✅ Quick Log movement search fixed
+- ✅ Localhost URL hardcoding resolved
+- ✅ Production deployment support added
+- ✅ All documentation updated
+
+**v0.4.0 Status (Previous Release):**
 - ✅ Domain models updated for template architecture
 - ✅ Repositories implemented (UserWorkout, WOD, WorkoutWOD)
 - ✅ Services implemented (UserWorkoutService, WODService, WorkoutWODService, updated WorkoutService)
