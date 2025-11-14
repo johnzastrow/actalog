@@ -235,6 +235,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from '@/utils/axios'
 import UserAvatar from '@/components/UserAvatar.vue'
+import { getProfileImageUrl } from '@/utils/url'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -360,8 +361,8 @@ async function handleFileSelect(event) {
     // Update user in auth store - need to update the ref value property
     const updatedUser = response.data.user
     // Ensure profile_image has full URL for display
-    if (updatedUser.profile_image && !updatedUser.profile_image.startsWith('http')) {
-      updatedUser.profile_image = `http://localhost:8080${updatedUser.profile_image}`
+    if (updatedUser.profile_image) {
+      updatedUser.profile_image = getProfileImageUrl(updatedUser.profile_image)
     }
     authStore.user = updatedUser
     localStorage.setItem('user', JSON.stringify(updatedUser))
