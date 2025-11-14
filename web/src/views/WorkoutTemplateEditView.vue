@@ -38,7 +38,7 @@
       </v-alert>
 
       <!-- Basic Information Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Template Details</h2>
 
         <v-text-field
@@ -74,7 +74,7 @@
       </v-card>
 
       <!-- Movements Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <div class="d-flex align-center justify-space-between mb-3">
           <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Movements</h2>
           <div class="d-flex gap-2">
@@ -205,7 +205,7 @@
       </v-card>
 
       <!-- WODs Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <div class="d-flex align-center justify-space-between mb-3">
           <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">WODs</h2>
           <div class="d-flex gap-2">

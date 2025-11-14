@@ -14,7 +14,7 @@
       </v-alert>
 
       <!-- Personal Records Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <div class="d-flex align-center justify-space-between mb-2">
           <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Personal Records</h2>
           <v-chip size="small" color="#4caf50">
@@ -79,7 +79,7 @@
       </v-card>
 
       <!-- Movement Progress Tracking -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Track Progress</h2>
         <v-autocomplete
           v-model="selectedMovement"
@@ -126,7 +126,7 @@
         v-if="selectedMovement && movementHistory.length > 0"
         elevation="0"
         rounded="lg"
-        class="pa-3 mb-3"
+        class="pa-2 mb-2"
         style="background: white"
       >
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">
@@ -173,7 +173,7 @@
       </v-card>
 
       <!-- Recent Workouts Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <div class="d-flex align-center justify-space-between mb-2">
           <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h2>
           <v-btn

@@ -17,7 +17,7 @@
 
     <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
       <!-- Search and Filters Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
         <v-text-field
           v-model="searchQuery"
           label="Search movements"
@@ -100,7 +100,7 @@
           :key="movement.id"
           elevation="0"
           rounded="lg"
-          class="pa-3 mb-2"
+          class="pa-2 mb-2"
           style="background: white; border: 1px solid #e0e0e0"
           :ripple="true"
           @click="handleMovementClick(movement)"

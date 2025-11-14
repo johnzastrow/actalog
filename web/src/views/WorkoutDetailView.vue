@@ -34,7 +34,7 @@
       <!-- Workout Details -->
       <div v-else-if="workout">
         <!-- Workout Header Card -->
-        <v-card elevation="0" rounded="lg" class="mb-3 pa-4" style="background: white">
+        <v-card elevation="0" rounded="lg" class="mb-2 pa-2" style="background: white">
           <div class="d-flex align-center mb-2">
             <v-icon color="#00bcd4" size="32" class="mr-2">mdi-dumbbell</v-icon>
             <div class="flex-grow-1">
@@ -65,7 +65,7 @@
         </v-card>
 
         <!-- Notes Section -->
-        <v-card v-if="workout.notes" elevation="0" rounded="lg" class="mb-3 pa-4" style="background: white">
+        <v-card v-if="workout.notes" elevation="0" rounded="lg" class="mb-2 pa-2" style="background: white">
           <div class="d-flex align-center mb-2">
             <v-icon color="#00bcd4" size="small" class="mr-2">mdi-note-text</v-icon>
             <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Notes</h3>
@@ -78,7 +78,7 @@
           v-if="workout.performance_movements && workout.performance_movements.length > 0"
           elevation="0"
           rounded="lg"
-          class="mb-3 pa-4"
+          class="mb-2 pa-2"
           style="background: white"
         >
           <div class="d-flex align-center mb-3">
@@ -93,7 +93,7 @@
               v-for="(movement, index) in workout.performance_movements"
               :key="index"
               elevation="0"
-              class="mb-2 pa-3"
+              class="mb-2 pa-2"
               style="background: #f5f7fa; border: 1px solid #e0e0e0"
               rounded="lg"
             >
@@ -155,7 +155,7 @@
           v-if="workout.performance_wods && workout.performance_wods.length > 0"
           elevation="0"
           rounded="lg"
-          class="mb-3 pa-4"
+          class="mb-2 pa-2"
           style="background: white"
         >
           <div class="d-flex align-center mb-3">
@@ -170,7 +170,7 @@
               v-for="wod in workout.performance_wods"
               :key="wod.id"
               elevation="0"
-              class="mb-2 pa-3"
+              class="mb-2 pa-2"
               style="background: #fff8e1; border: 1px solid #ffc107"
               rounded="lg"
             >
