@@ -1,15 +1,15 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
+    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
       <v-toolbar-title class="text-white font-weight-bold">Performance</v-toolbar-title>
       <v-spacer />
-      <v-btn icon="mdi-refresh" color="white" @click="refreshData" />
+      <v-btn icon="mdi-refresh" color="white" size="small" @click="refreshData" />
     </v-app-bar>
 
-    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 70px">
+    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
+      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-2">
         {{ error }}
       </v-alert>
 
@@ -209,7 +209,7 @@
             style="background: #f5f7fa; cursor: pointer"
             @click="viewWorkout(workout.id)"
           >
-            <div class="d-flex align-center">
+            <div class="d-flex align-center mb-1">
               <v-icon color="#00bcd4" class="mr-2" size="small">mdi-dumbbell</v-icon>
               <div class="flex-grow-1">
                 <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
@@ -221,6 +221,31 @@
                 </div>
               </div>
               <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </div>
+
+            <!-- Display movement performance -->
+            <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-6 mt-1">
+              <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1" style="color: #666">
+                <v-icon size="x-small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
+                <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
+                <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
+                <span v-if="perf.distance"> {{ perf.distance }}m</span>
+                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+              </div>
+            </div>
+
+            <!-- Display WOD performance -->
+            <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-6 mt-1">
+              <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1" style="color: #666">
+                <v-icon size="x-small" color="#ffc107">mdi-fire</v-icon>
+                <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
+                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+                <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
+                <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
+                <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
+                <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
+              </div>
             </div>
           </v-card>
         </div>

@@ -1,20 +1,20 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
     <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" style="position: fixed; top: 0; z-index: 10; width: 100%">
+    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
       <v-toolbar-title class="text-white font-weight-bold">Dashboard</v-toolbar-title>
       <v-spacer />
-      <v-btn icon="mdi-bell-outline" color="white" />
+      <v-btn icon="mdi-bell-outline" color="white" size="small" />
     </v-app-bar>
 
-    <v-container class="pa-3" style="margin-top: 56px; margin-bottom: 70px">
+    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
       <!-- Email Verification Alert -->
       <v-alert
         v-if="authStore.user && !authStore.user.email_verified"
         type="warning"
         prominent
         closable
-        class="mb-3"
+        class="mb-2"
       >
         <v-row align="center">
           <v-col class="grow">
@@ -36,11 +36,11 @@
       </v-alert>
 
       <!-- Stats Cards -->
-      <v-row dense class="mb-3">
+      <v-row dense class="mb-2">
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <div class="d-flex align-center">
-              <v-icon color="#00bcd4" size="32" class="mr-2">mdi-dumbbell</v-icon>
+              <v-icon color="#00bcd4" size="28" class="mr-2">mdi-dumbbell</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
                   {{ totalWorkouts }}
@@ -51,9 +51,9 @@
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <div class="d-flex align-center">
-              <v-icon color="#ffc107" size="32" class="mr-2">mdi-calendar-month</v-icon>
+              <v-icon color="#ffc107" size="28" class="mr-2">mdi-calendar-month</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
                   {{ monthWorkouts }}
@@ -65,11 +65,11 @@
         </v-col>
       </v-row>
 
-      <v-row dense class="mb-3">
+      <v-row dense class="mb-2">
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
             <div class="d-flex align-center">
-              <v-icon color="#4caf50" size="32" class="mr-2">mdi-fire</v-icon>
+              <v-icon color="#4caf50" size="28" class="mr-2">mdi-fire</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
                   {{ currentStreak }}
@@ -95,16 +95,16 @@
       </v-row>
 
       <!-- Quick Actions -->
-      <v-row dense class="mb-3">
+      <v-row dense class="mb-2">
         <v-col cols="6">
           <v-card
             elevation="0"
             rounded="lg"
-            class="pa-3 text-center"
+            class="pa-2 text-center"
             style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); cursor: pointer"
-            @click="quickLogDialog = true"
+            @click="openQuickLog"
           >
-            <v-icon size="32" color="white" class="mb-1">mdi-lightning-bolt</v-icon>
+            <v-icon size="28" color="white" class="mb-1">mdi-lightning-bolt</v-icon>
             <div class="text-body-2 font-weight-bold text-white">Quick Log</div>
             <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
               Fast entry
@@ -115,11 +115,11 @@
           <v-card
             elevation="0"
             rounded="lg"
-            class="pa-3 text-center"
+            class="pa-2 text-center"
             style="background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%); cursor: pointer"
             @click="$router.push('/workouts/log')"
           >
-            <v-icon size="32" color="white" class="mb-1">mdi-dumbbell</v-icon>
+            <v-icon size="28" color="white" class="mb-1">mdi-dumbbell</v-icon>
             <div class="text-body-2 font-weight-bold text-white">Log Workout</div>
             <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
               Use template
@@ -129,7 +129,7 @@
       </v-row>
 
       <!-- Recent Workouts -->
-      <div class="mb-3">
+      <div class="mb-2">
         <div class="d-flex align-center justify-space-between mb-2">
           <h3 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
           <v-btn
@@ -198,20 +198,29 @@
               <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
             </div>
 
-            <!-- Display movements count -->
-            <div v-if="workout.movements && workout.movements.length > 0" class="ml-7">
-              <v-chip size="x-small" color="#e0e0e0" class="mr-1">
-                <v-icon start size="x-small">mdi-weight-lifter</v-icon>
-                {{ workout.movements.length }} movement(s)
-              </v-chip>
+            <!-- Display movement performance -->
+            <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
+              <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1" style="color: #666">
+                <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
+                <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
+                <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
+                <span v-if="perf.distance"> {{ perf.distance }}m</span>
+                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+              </div>
             </div>
 
-            <!-- Display WODs count -->
-            <div v-if="workout.wods && workout.wods.length > 0" class="ml-7 mt-1">
-              <v-chip size="x-small" color="#ffc107" class="mr-1">
-                <v-icon start size="x-small">mdi-fire</v-icon>
-                {{ workout.wods.length }} WOD(s)
-              </v-chip>
+            <!-- Display WOD performance -->
+            <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
+              <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1" style="color: #666">
+                <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
+                <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
+                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+                <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
+                <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
+                <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
+                <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
+              </div>
             </div>
 
             <!-- Notes -->
@@ -234,7 +243,7 @@
         <v-card-text class="pa-4">
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
-            <div class="mb-3">
+            <div class="mb-2">
               <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
                 Date *
               </label>
@@ -250,7 +259,7 @@
             </div>
 
             <!-- Workout Name -->
-            <div class="mb-3">
+            <div class="mb-2">
               <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
                 Workout Name *
               </label>
@@ -265,7 +274,7 @@
             </div>
 
             <!-- Total Time -->
-            <div class="mb-3">
+            <div class="mb-2">
               <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
                 Total Time (minutes)
               </label>
@@ -281,7 +290,7 @@
             </div>
 
             <!-- Notes -->
-            <div class="mb-3">
+            <div class="mb-2">
               <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
                 Notes
               </label>
@@ -293,6 +302,192 @@
                 placeholder="How did it feel? Any highlights?"
                 hide-details
               />
+            </div>
+
+            <!-- Performance Type Selector -->
+            <div class="mb-2">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Add Performance Data (Optional)
+              </label>
+              <v-select
+                v-model="quickLogData.performanceType"
+                :items="['None', 'Movement', 'WOD']"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+            </div>
+
+            <!-- Movement Performance -->
+            <div v-if="quickLogData.performanceType === 'Movement'" class="mb-2">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Select Movement
+              </label>
+              <v-autocomplete
+                v-model="quickLogData.movementId"
+                :items="movements"
+                item-title="name"
+                item-value="id"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                placeholder="Search for a movement..."
+              />
+
+              <div v-if="quickLogData.movementId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+                <div class="mb-2">
+                  <label class="text-caption">Sets</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.sets"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Reps</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.reps"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Weight (lbs)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.weight"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Time (seconds)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.time"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Distance (meters)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.distance"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label class="text-caption">Notes</label>
+                  <v-textarea
+                    v-model="quickLogData.movement.notes"
+                    variant="outlined"
+                    density="compact"
+                    rows="2"
+                    hide-details
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- WOD Performance -->
+            <div v-if="quickLogData.performanceType === 'WOD'" class="mb-2">
+              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+                Select WOD
+              </label>
+              <v-autocomplete
+                v-model="quickLogData.wodId"
+                :items="wods"
+                item-title="name"
+                item-value="id"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                placeholder="Search for a WOD..."
+              />
+
+              <div v-if="quickLogData.wodId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+                <div class="mb-2">
+                  <label class="text-caption">Score Type</label>
+                  <v-select
+                    v-model="quickLogData.wod.scoreType"
+                    :items="['Time', 'Rounds+Reps', 'Weight', 'Reps']"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Score Value</label>
+                  <v-text-field
+                    v-model="quickLogData.wod.scoreValue"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    placeholder="e.g., 12:34, 5+12, 185 lbs"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Time (seconds)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.wod.timeSeconds"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Rounds</label>
+                  <v-text-field
+                    v-model.number="quickLogData.wod.rounds"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Reps</label>
+                  <v-text-field
+                    v-model.number="quickLogData.wod.reps"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label class="text-caption">Notes</label>
+                  <v-textarea
+                    v-model="quickLogData.wod.notes"
+                    variant="outlined"
+                    density="compact"
+                    rows="2"
+                    hide-details
+                  />
+                </div>
+              </div>
             </div>
           </v-form>
         </v-card-text>
@@ -388,8 +583,31 @@ const quickLogData = ref({
   name: formatQuickLogName(getTodayDate()),
   date: getTodayDate(),
   totalTime: null,
-  notes: ''
+  notes: '',
+  performanceType: 'None',
+  movementId: null,
+  wodId: null,
+  movement: {
+    sets: null,
+    reps: null,
+    weight: null,
+    time: null,
+    distance: null,
+    notes: ''
+  },
+  wod: {
+    scoreType: null,
+    scoreValue: null,
+    timeSeconds: null,
+    rounds: null,
+    reps: null,
+    notes: ''
+  }
 })
+
+// Lists for movements and WODs
+const movements = ref([])
+const wods = ref([])
 
 // Computed stats
 const totalWorkouts = computed(() => userWorkouts.value.length)
@@ -542,6 +760,30 @@ function updateQuickLogName() {
   }
 }
 
+// Open Quick Log dialog and fetch data
+async function openQuickLog() {
+  // Fetch movements and WODs if not already loaded
+  if (movements.value.length === 0) {
+    try {
+      const response = await axios.get('/api/movements')
+      movements.value = response.data.movements || []
+    } catch (error) {
+      console.error('Error fetching movements:', error)
+    }
+  }
+
+  if (wods.value.length === 0) {
+    try {
+      const response = await axios.get('/api/wods')
+      wods.value = response.data.wods || []
+    } catch (error) {
+      console.error('Error fetching WODs:', error)
+    }
+  }
+
+  quickLogDialog.value = true
+}
+
 // Close Quick Log dialog
 function closeQuickLog() {
   quickLogDialog.value = false
@@ -551,7 +793,26 @@ function closeQuickLog() {
     name: formatQuickLogName(today),
     date: today,
     totalTime: null,
-    notes: ''
+    notes: '',
+    performanceType: 'None',
+    movementId: null,
+    wodId: null,
+    movement: {
+      sets: null,
+      reps: null,
+      weight: null,
+      time: null,
+      distance: null,
+      notes: ''
+    },
+    wod: {
+      scoreType: null,
+      scoreValue: null,
+      timeSeconds: null,
+      rounds: null,
+      reps: null,
+      notes: ''
+    }
   }
 }
 
@@ -569,6 +830,33 @@ async function submitQuickLog() {
       workout_date: quickLogData.value.date,
       total_time: quickLogData.value.totalTime ? quickLogData.value.totalTime * 60 : null, // Convert to seconds
       notes: quickLogData.value.notes || null
+    }
+
+    // Add movement performance data if selected
+    if (quickLogData.value.performanceType === 'Movement' && quickLogData.value.movementId) {
+      payload.movements = [{
+        movement_id: quickLogData.value.movementId,
+        sets: quickLogData.value.movement.sets || null,
+        reps: quickLogData.value.movement.reps || null,
+        weight: quickLogData.value.movement.weight || null,
+        time: quickLogData.value.movement.time || null,
+        distance: quickLogData.value.movement.distance || null,
+        notes: quickLogData.value.movement.notes || '',
+        order_index: 0
+      }]
+    }
+
+    // Add WOD performance data if selected
+    if (quickLogData.value.performanceType === 'WOD' && quickLogData.value.wodId) {
+      payload.wods = [{
+        wod_id: quickLogData.value.wodId,
+        score_type: quickLogData.value.wod.scoreType || null,
+        score_value: quickLogData.value.wod.scoreValue || null,
+        time_seconds: quickLogData.value.wod.timeSeconds || null,
+        rounds: quickLogData.value.wod.rounds || null,
+        reps: quickLogData.value.wod.reps || null,
+        notes: quickLogData.value.wod.notes || ''
+      }]
     }
 
     await axios.post('/api/workouts', payload)
