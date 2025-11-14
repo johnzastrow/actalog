@@ -7,15 +7,15 @@
       <v-btn icon="mdi-refresh" color="white" size="small" @click="refreshData" />
     </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-2">
         {{ error }}
       </v-alert>
 
       <!-- Personal Records Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <div class="d-flex align-center justify-space-between mb-2">
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <div class="d-flex align-center justify-space-between mb-1">
           <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Personal Records</h2>
           <v-chip size="small" color="#4caf50">
             <v-icon start size="x-small">mdi-trophy</v-icon>
@@ -44,8 +44,8 @@
             v-for="pr in personalRecords.slice(0, 5)"
             :key="pr.movement_id"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-2"
+            rounded
+            class="mb-1 pa-1"
             style="background: #f5f7fa"
           >
             <div class="d-flex align-center">
@@ -79,8 +79,8 @@
       </v-card>
 
       <!-- Movement Progress Tracking -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Track Progress</h2>
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Track Progress</h2>
         <v-autocomplete
           v-model="selectedMovement"
           :items="movements"
@@ -90,7 +90,7 @@
           placeholder="Search for a movement..."
           variant="outlined"
           density="compact"
-          rounded="lg"
+          rounded
           clearable
           auto-select-first
           hide-details
@@ -125,8 +125,8 @@
       <v-card
         v-if="selectedMovement && movementHistory.length > 0"
         elevation="0"
-        rounded="lg"
-        class="pa-2 mb-2"
+        rounded
+        class="pa-2 mb-1"
         style="background: white"
       >
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">
@@ -144,8 +144,8 @@
             v-for="(entry, index) in movementHistory"
             :key="index"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-2"
+            rounded
+            class="mb-1 pa-1"
             style="background: #f5f7fa"
           >
             <div class="d-flex align-center">
@@ -173,8 +173,8 @@
       </v-card>
 
       <!-- Recent Workouts Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <div class="d-flex align-center justify-space-between mb-2">
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <div class="d-flex align-center justify-space-between mb-1">
           <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h2>
           <v-btn
             size="small"
@@ -204,8 +204,8 @@
             v-for="workout in recentWorkouts.slice(0, 30)"
             :key="workout.id"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-2"
+            rounded
+            class="mb-1 pa-1"
             style="background: #f5f7fa; cursor: pointer"
             @click="viewWorkout(workout.id)"
           >

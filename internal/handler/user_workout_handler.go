@@ -600,4 +600,91 @@ func (h *UserWorkoutHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Requ
 		"workout_count": count,
 	})
 }
+
+// GetPersonalRecords retrieves all personal records (movements and WODs) for the user
+func (h *UserWorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Parse limit parameter (default 50)
+	limitStr := r.URL.Query().Get("limit")
+	limit := 50
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=get_personal_records user_id=%d limit=%d", userID, limit)
+	}
+
+	// Get PR movements
+	prMovements, err := h.userWorkoutService.GetPRMovements(userID, limit)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=get_personal_records outcome=failure user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve PR movements")
+		return
+	}
+
+	// Get PR WODs
+	prWODs, err := h.userWorkoutService.GetPRWODs(userID, limit)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=get_personal_records outcome=failure user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve PR WODs")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=get_personal_records outcome=success user_id=%d movements=%d wods=%d", userID, len(prMovements), len(prWODs))
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"pr_movements": prMovements,
+		"pr_wods":      prWODs,
+	})
+}
+
+// RetroactiveFlagPRs analyzes all existing workouts and flags PRs based on historical data
+func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=retroactive_flag_prs user_id=%d", userID)
+	}
+
+	// Run retroactive PR flagging
+	movementPRCount, wodPRCount, err := h.userWorkoutService.RetroactivelyFlagPRs(userID)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=retroactive_flag_prs outcome=failure user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to retroactively flag PRs")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=retroactive_flag_prs outcome=success user_id=%d movement_prs=%d wod_prs=%d", userID, movementPRCount, wodPRCount)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"message":          "PRs flagged successfully",
+		"movement_pr_count": movementPRCount,
+		"wod_pr_count":      wodPRCount,
+	})
+}
+
 // ErrorResponse represents an error response

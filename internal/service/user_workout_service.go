@@ -104,6 +104,22 @@ func (s *UserWorkoutService) LogWorkoutWithPerformance(
 		w.UserWorkoutID = userWorkout.ID
 	}
 
+	// Detect and flag PRs for movements before saving
+	if len(movements) > 0 {
+		if err := s.DetectAndFlagMovementPRs(userID, movements); err != nil {
+			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
+			return nil, fmt.Errorf("failed to detect movement PRs: %w", err)
+		}
+	}
+
+	// Detect and flag PRs for WODs before saving
+	if len(wods) > 0 {
+		if err := s.DetectAndFlagWODPRs(userID, wods); err != nil {
+			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
+			return nil, fmt.Errorf("failed to detect WOD PRs: %w", err)
+		}
+	}
+
 	// Save movement performance data
 	if len(movements) > 0 {
 		if err := s.userWorkoutMovementRepo.CreateBatch(movements); err != nil {
@@ -321,4 +337,226 @@ func (s *UserWorkoutService) GetWorkoutStatsForMonth(userID int64, year, month i
 		return 0, fmt.Errorf("failed to list workouts by month: %w", err)
 	}
 	return len(workouts), nil
+}
+
+// DetectAndFlagMovementPRs automatically detects personal records for movements with weight
+func (s *UserWorkoutService) DetectAndFlagMovementPRs(userID int64, movements []*domain.UserWorkoutMovement) error {
+	for _, m := range movements {
+		// Only check for PRs on movements with weight
+		if m.Weight == nil {
+			continue
+		}
+
+		// Get max weight for this movement for this user
+		maxWeight, err := s.userWorkoutMovementRepo.GetMaxWeightForMovement(userID, m.MovementID)
+		if err != nil {
+			return fmt.Errorf("failed to get max weight for movement %d: %w", m.MovementID, err)
+		}
+
+		// If this is the first time doing this movement, or if weight exceeds previous max, it's a PR
+		if maxWeight == nil || *m.Weight > *maxWeight {
+			m.IsPR = true
+		}
+	}
+	return nil
+}
+
+// DetectAndFlagWODPRs automatically detects personal records for WODs (time-based or rounds+reps)
+func (s *UserWorkoutService) DetectAndFlagWODPRs(userID int64, wods []*domain.UserWorkoutWOD) error {
+	for _, w := range wods {
+		// Check for time-based PRs (fastest time)
+		if w.TimeSeconds != nil {
+			bestTime, err := s.userWorkoutWODRepo.GetBestTimeForWOD(userID, w.WODID)
+			if err != nil {
+				return fmt.Errorf("failed to get best time for WOD %d: %w", w.WODID, err)
+			}
+
+			// If this is the first time doing this WOD, or if time is faster than previous best, it's a PR
+			if bestTime == nil || *w.TimeSeconds < *bestTime {
+				w.IsPR = true
+			}
+			continue
+		}
+
+		// Check for rounds+reps PRs (most rounds, then most reps)
+		if w.Rounds != nil {
+			bestRounds, bestReps, err := s.userWorkoutWODRepo.GetBestRoundsRepsForWOD(userID, w.WODID)
+			if err != nil {
+				return fmt.Errorf("failed to get best rounds+reps for WOD %d: %w", w.WODID, err)
+			}
+
+			// If this is the first time doing this WOD, it's a PR
+			if bestRounds == nil {
+				w.IsPR = true
+				continue
+			}
+
+			// Check if current rounds > best rounds
+			if *w.Rounds > *bestRounds {
+				w.IsPR = true
+				continue
+			}
+
+			// If rounds are equal, check reps
+			if *w.Rounds == *bestRounds && w.Reps != nil && bestReps != nil && *w.Reps > *bestReps {
+				w.IsPR = true
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+// GetPRMovements retrieves recent PR-flagged movements for a user
+func (s *UserWorkoutService) GetPRMovements(userID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
+	movements, err := s.userWorkoutMovementRepo.GetPRMovements(userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get PR movements: %w", err)
+	}
+	return movements, nil
+}
+
+// GetPRWODs retrieves recent PR-flagged WODs for a user
+func (s *UserWorkoutService) GetPRWODs(userID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
+	wods, err := s.userWorkoutWODRepo.GetPRWODs(userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get PR WODs: %w", err)
+	}
+	return wods, nil
+}
+
+// RetroactivelyFlagPRs analyzes all existing workouts for a user and flags PRs based on historical max values
+func (s *UserWorkoutService) RetroactivelyFlagPRs(userID int64) (int, int, error) {
+	movementPRCount := 0
+	wodPRCount := 0
+
+	// Get all user workouts ordered by date (chronologically)
+	workouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, time.Time{}, time.Now().AddDate(0, 0, 1))
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get user workouts: %w", err)
+	}
+
+	// Track max weights per movement_id
+	maxWeights := make(map[int64]float64)
+
+	// Track best times per wod_id
+	bestTimes := make(map[int64]int)
+
+	// Track best rounds+reps per wod_id
+	bestRoundsReps := make(map[int64]struct {
+		rounds int
+		reps   int
+	})
+
+	// Process each workout chronologically
+	for _, workout := range workouts {
+		// Get movements for this workout
+		movements, err := s.userWorkoutMovementRepo.GetByUserWorkoutID(workout.ID)
+		if err != nil {
+			return movementPRCount, wodPRCount, fmt.Errorf("failed to get movements for workout %d: %w", workout.ID, err)
+		}
+
+		// Process each movement
+		for _, movement := range movements {
+			// Only process movements with weight
+			if movement.Weight == nil {
+				continue
+			}
+
+			currentWeight := *movement.Weight
+			movementID := movement.MovementID
+
+			// Check if this is a PR
+			isPR := false
+			if maxWeight, exists := maxWeights[movementID]; exists {
+				// Compare with previous max
+				if currentWeight > maxWeight {
+					isPR = true
+					maxWeights[movementID] = currentWeight
+				}
+			} else {
+				// First time doing this movement - it's a PR
+				isPR = true
+				maxWeights[movementID] = currentWeight
+			}
+
+			// Update PR flag if needed
+			if isPR != movement.IsPR {
+				if err := s.userWorkoutMovementRepo.UpdatePRFlag(movement.ID, isPR); err != nil {
+					return movementPRCount, wodPRCount, fmt.Errorf("failed to update PR flag for movement %d: %w", movement.ID, err)
+				}
+				if isPR {
+					movementPRCount++
+				}
+			}
+		}
+
+		// Get WODs for this workout
+		wods, err := s.userWorkoutWODRepo.GetByUserWorkoutID(workout.ID)
+		if err != nil {
+			return movementPRCount, wodPRCount, fmt.Errorf("failed to get WODs for workout %d: %w", workout.ID, err)
+		}
+
+		// Process each WOD
+		for _, wod := range wods {
+			wodID := wod.WODID
+			isPR := false
+
+			// Check time-based PRs
+			if wod.TimeSeconds != nil {
+				currentTime := *wod.TimeSeconds
+
+				if bestTime, exists := bestTimes[wodID]; exists {
+					// Compare with previous best (lower time is better)
+					if currentTime < bestTime {
+						isPR = true
+						bestTimes[wodID] = currentTime
+					}
+				} else {
+					// First time doing this WOD - it's a PR
+					isPR = true
+					bestTimes[wodID] = currentTime
+				}
+			}
+
+			// Check rounds+reps PRs
+			if wod.Rounds != nil {
+				currentRounds := *wod.Rounds
+				currentReps := 0
+				if wod.Reps != nil {
+					currentReps = *wod.Reps
+				}
+
+				if best, exists := bestRoundsReps[wodID]; exists {
+					// Compare with previous best
+					if currentRounds > best.rounds || (currentRounds == best.rounds && currentReps > best.reps) {
+						isPR = true
+						bestRoundsReps[wodID] = struct {
+							rounds int
+							reps   int
+						}{currentRounds, currentReps}
+					}
+				} else {
+					// First time doing this WOD - it's a PR
+					isPR = true
+					bestRoundsReps[wodID] = struct {
+						rounds int
+						reps   int
+					}{currentRounds, currentReps}
+				}
+			}
+
+			// Update PR flag if needed
+			if isPR != wod.IsPR {
+				if err := s.userWorkoutWODRepo.UpdatePRFlag(wod.ID, isPR); err != nil {
+					return movementPRCount, wodPRCount, fmt.Errorf("failed to update PR flag for WOD %d: %w", wod.ID, err)
+				}
+				if isPR {
+					wodPRCount++
+				}
+			}
+		}
+	}
+
+	return movementPRCount, wodPRCount, nil
 }

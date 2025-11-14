@@ -86,6 +86,7 @@ type UserWorkoutMovement struct {
 	Time          *int      `json:"time_seconds,omitempty" db:"time"`         // in seconds
 	Distance      *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
 	Notes         string    `json:"notes,omitempty" db:"notes"`
+	IsPR          bool      `json:"is_pr" db:"is_pr"` // Personal record flag
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
@@ -133,4 +134,13 @@ type UserWorkoutMovementRepository interface {
 
 	// DeleteByUserWorkoutID deletes all movements for a logged workout
 	DeleteByUserWorkoutID(userWorkoutID int64) error
+
+	// GetMaxWeightForMovement retrieves the maximum weight for a specific movement for a user
+	GetMaxWeightForMovement(userID, movementID int64) (*float64, error)
+
+	// GetPRMovements retrieves recent PR-flagged movements for a user
+	GetPRMovements(userID int64, limit int) ([]*UserWorkoutMovement, error)
+
+	// UpdatePRFlag updates the is_pr flag for a user workout movement
+	UpdatePRFlag(id int64, isPR bool) error
 }

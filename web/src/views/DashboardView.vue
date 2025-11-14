@@ -7,7 +7,7 @@
       <v-btn icon="mdi-bell-outline" color="white" size="small" />
     </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
       <!-- Email Verification Alert -->
       <v-alert
         v-if="authStore.user && !authStore.user.email_verified"
@@ -36,9 +36,9 @@
       </v-alert>
 
       <!-- Stats Cards -->
-      <v-row dense class="mb-2">
+      <v-row dense class="mb-1">
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <div class="d-flex align-center">
               <v-icon color="#00bcd4" size="28" class="mr-2">mdi-dumbbell</v-icon>
               <div>
@@ -51,7 +51,7 @@
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <div class="d-flex align-center">
               <v-icon color="#ffc107" size="28" class="mr-2">mdi-calendar-month</v-icon>
               <div>
@@ -65,9 +65,9 @@
         </v-col>
       </v-row>
 
-      <v-row dense class="mb-2">
+      <v-row dense class="mb-1">
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <div class="d-flex align-center">
               <v-icon color="#4caf50" size="28" class="mr-2">mdi-fire</v-icon>
               <div>
@@ -80,7 +80,7 @@
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <div class="d-flex align-center">
               <v-icon color="#e91e63" size="28" class="mr-2">mdi-clock-outline</v-icon>
               <div>
@@ -95,12 +95,12 @@
       </v-row>
 
       <!-- Quick Actions -->
-      <v-row dense class="mb-2">
+      <v-row dense class="mb-1">
         <v-col cols="6">
           <v-card
             elevation="0"
-            rounded="lg"
-            class="pa-2 text-center"
+            rounded
+            class="pa-1 text-center"
             style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); cursor: pointer"
             @click="openQuickLog"
           >
@@ -114,8 +114,8 @@
         <v-col cols="6">
           <v-card
             elevation="0"
-            rounded="lg"
-            class="pa-2 text-center"
+            rounded
+            class="pa-1 text-center"
             style="background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%); cursor: pointer"
             @click="$router.push('/workouts/log')"
           >
@@ -129,8 +129,8 @@
       </v-row>
 
       <!-- Recent Workouts -->
-      <div class="mb-2">
-        <div class="d-flex align-center justify-space-between mb-2">
+      <div class="mb-1">
+        <div class="d-flex align-center justify-space-between mb-1">
           <h3 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
           <v-btn
             size="small"
@@ -153,24 +153,15 @@
         <v-card
           v-else-if="!loading && recentWorkouts.length === 0"
           elevation="0"
-          rounded="lg"
-          class="pa-6 text-center"
+          rounded
+          class="pa-2 text-center"
           style="background: white"
         >
-          <v-icon size="64" color="#ccc">mdi-clipboard-text-outline</v-icon>
-          <p class="text-h6 mt-2" style="color: #2c3e50">No workouts logged yet</p>
-          <p class="text-body-2 mb-3" style="color: #666">
+          <v-icon size="48" color="#ccc">mdi-clipboard-text-outline</v-icon>
+          <p class="text-body-1 mt-1 mb-0" style="color: #2c3e50">No workouts logged yet</p>
+          <p class="text-body-2 mb-0" style="color: #666">
             Start tracking your fitness journey today!
           </p>
-          <v-btn
-            color="#00bcd4"
-            rounded="lg"
-            style="text-transform: none; font-weight: 600"
-            @click="$router.push('/workouts/log')"
-          >
-            <v-icon start>mdi-plus</v-icon>
-            Log Your First Workout
-          </v-btn>
         </v-card>
 
         <!-- Recent Workouts List -->
@@ -179,8 +170,8 @@
             v-for="workout in recentWorkouts"
             :key="workout.id"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-2"
+            rounded
+            class="mb-1 pa-1"
             style="background: white; cursor: pointer"
             @click="viewWorkout(workout.id)"
           >
@@ -240,11 +231,11 @@
           Quick Log Workout
         </v-card-title>
 
-        <v-card-text class="pa-3">
+        <v-card-text class="pa-2">
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
-            <div class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Date *
               </label>
               <v-text-field
@@ -253,14 +244,15 @@
                 variant="outlined"
                 density="compact"
                 hide-details
+                rounded
                 required
                 @update:model-value="updateQuickLogName"
               />
             </div>
 
             <!-- Workout Name -->
-            <div class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Workout Name *
               </label>
               <v-text-field
@@ -274,8 +266,8 @@
             </div>
 
             <!-- Total Time -->
-            <div class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Total Time (minutes)
               </label>
               <v-text-field
@@ -290,8 +282,8 @@
             </div>
 
             <!-- Notes -->
-            <div class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Notes
               </label>
               <v-textarea
@@ -305,8 +297,8 @@
             </div>
 
             <!-- Performance Type Selector -->
-            <div class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Add Performance Data (Optional)
               </label>
               <v-select
@@ -315,12 +307,13 @@
                 variant="outlined"
                 density="compact"
                 hide-details
+                rounded
               />
             </div>
 
             <!-- Movement Performance -->
-            <div v-if="quickLogData.performanceType === 'Movement'" class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div v-if="quickLogData.performanceType === 'Movement'" class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Select Movement
               </label>
               <v-autocomplete
@@ -332,6 +325,7 @@
                 variant="outlined"
                 density="compact"
                 hide-details
+                rounded
                 clearable
                 auto-select-first
                 placeholder="Search for a movement..."
@@ -413,8 +407,8 @@
             </div>
 
             <!-- WOD Performance -->
-            <div v-if="quickLogData.performanceType === 'WOD'" class="mb-2">
-              <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+            <div v-if="quickLogData.performanceType === 'WOD'" class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Select WOD
               </label>
               <v-autocomplete
@@ -426,6 +420,7 @@
                 variant="outlined"
                 density="compact"
                 hide-details
+                rounded
                 clearable
                 auto-select-first
                 placeholder="Search for a WOD..."
@@ -444,6 +439,7 @@
                     variant="outlined"
                     density="compact"
                     hide-details
+                    rounded
                   />
                 </div>
                 <div class="mb-2">
@@ -504,7 +500,7 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="pa-3 pt-0">
+        <v-card-actions class="pa-2 pt-0">
           <v-btn
             variant="text"
             @click="closeQuickLog"

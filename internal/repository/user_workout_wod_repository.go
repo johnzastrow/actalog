@@ -23,10 +23,10 @@ func (r *UserWorkoutWODRepository) Create(uww *domain.UserWorkoutWOD) error {
 	uww.CreatedAt = time.Now()
 	uww.UpdatedAt = time.Now()
 
-	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+	result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create user workout WOD: %w", err)
 	}
@@ -52,8 +52,8 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -66,7 +66,7 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 		uww.CreatedAt = now
 		uww.UpdatedAt = now
 
-		result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+		result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to insert user workout WOD: %w", err)
 		}
@@ -265,6 +265,154 @@ func (r *UserWorkoutWODRepository) DeleteByUserWorkoutID(userWorkoutID int64) er
 	_, err := r.db.Exec(query, userWorkoutID)
 	if err != nil {
 		return fmt.Errorf("failed to delete user workout WODs: %w", err)
+	}
+
+	return nil
+}
+
+// GetBestTimeForWOD retrieves the fastest time for a specific WOD for a user
+func (r *UserWorkoutWODRepository) GetBestTimeForWOD(userID, wodID int64) (*int, error) {
+	query := `
+		SELECT MIN(uww.time_seconds)
+		FROM user_workout_wods uww
+		INNER JOIN user_workouts uw ON uww.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uww.wod_id = ? AND uww.time_seconds IS NOT NULL`
+
+	var bestTime sql.NullInt64
+	err := r.db.QueryRow(query, userID, wodID).Scan(&bestTime)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get best time: %w", err)
+	}
+
+	if !bestTime.Valid {
+		return nil, nil
+	}
+
+	t := int(bestTime.Int64)
+	return &t, nil
+}
+
+// GetBestRoundsRepsForWOD retrieves the best rounds+reps for a specific WOD for a user
+// Returns the most rounds, and if tied, the most reps
+func (r *UserWorkoutWODRepository) GetBestRoundsRepsForWOD(userID, wodID int64) (rounds *int, reps *int, err error) {
+	query := `
+		SELECT uww.rounds, uww.reps
+		FROM user_workout_wods uww
+		INNER JOIN user_workouts uw ON uww.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uww.wod_id = ? AND uww.rounds IS NOT NULL
+		ORDER BY uww.rounds DESC, uww.reps DESC
+		LIMIT 1`
+
+	var roundsVal sql.NullInt64
+	var repsVal sql.NullInt64
+	err = r.db.QueryRow(query, userID, wodID).Scan(&roundsVal, &repsVal)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, nil
+		}
+		return nil, nil, fmt.Errorf("failed to get best rounds+reps: %w", err)
+	}
+
+	if roundsVal.Valid {
+		r := int(roundsVal.Int64)
+		rounds = &r
+	}
+	if repsVal.Valid {
+		rp := int(repsVal.Int64)
+		reps = &rp
+	}
+
+	return rounds, reps, nil
+}
+
+// GetPRWODs retrieves recent PR-flagged WODs for a user
+func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
+	query := `
+		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value, uww.time_seconds, uww.rounds, uww.reps, uww.weight,
+		       uww.notes, uww.is_pr, uww.order_index, uww.created_at, uww.updated_at,
+		       w.name,
+		       uw.workout_date
+		FROM user_workout_wods uww
+		JOIN wods w ON uww.wod_id = w.id
+		JOIN user_workouts uw ON uww.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uww.is_pr = 1
+		ORDER BY uw.workout_date DESC, uww.created_at DESC
+		LIMIT ?`
+
+	rows, err := r.db.Query(query, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get PR WODs: %w", err)
+	}
+	defer rows.Close()
+
+	var wods []*domain.UserWorkoutWOD
+	for rows.Next() {
+		uww := &domain.UserWorkoutWOD{}
+		var scoreType sql.NullString
+		var scoreValue sql.NullString
+		var timeSeconds sql.NullInt64
+		var rounds sql.NullInt64
+		var reps sql.NullInt64
+		var weight sql.NullFloat64
+		var workoutDate time.Time
+
+		err := rows.Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight,
+			&uww.Notes, &uww.IsPR, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
+			&uww.WODName, &workoutDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan PR WOD: %w", err)
+		}
+
+		if scoreType.Valid {
+			uww.ScoreType = &scoreType.String
+		}
+		if scoreValue.Valid {
+			uww.ScoreValue = &scoreValue.String
+		}
+		if timeSeconds.Valid {
+			t := int(timeSeconds.Int64)
+			uww.TimeSeconds = &t
+		}
+		if rounds.Valid {
+			r := int(rounds.Int64)
+			uww.Rounds = &r
+		}
+		if reps.Valid {
+			r := int(reps.Int64)
+			uww.Reps = &r
+		}
+		if weight.Valid {
+			uww.Weight = &weight.Float64
+		}
+
+		wods = append(wods, uww)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate PR WODs: %w", err)
+	}
+
+	return wods, nil
+}
+
+// UpdatePRFlag updates the is_pr flag for a user workout WOD
+func (r *UserWorkoutWODRepository) UpdatePRFlag(id int64, isPR bool) error {
+	query := `UPDATE user_workout_wods SET is_pr = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	result, err := r.db.Exec(query, isPR, id)
+	if err != nil {
+		return fmt.Errorf("failed to update PR flag: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no user workout WOD found with id %d", id)
 	}
 
 	return nil

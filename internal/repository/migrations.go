@@ -312,6 +312,120 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.4.3",
+		Description: "Add is_pr column to user_workout_movements and user_workout_wods tables",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite: Check if column exists before adding
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('user_workout_movements') WHERE name='is_pr'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for is_pr column: %w", err)
+				}
+
+				// Only add columns if they don't exist
+				if count == 0 {
+					queries := []string{
+						`ALTER TABLE user_workout_movements ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0`,
+						`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_pr ON user_workout_movements(is_pr)`,
+						`ALTER TABLE user_workout_wods ADD COLUMN is_pr INTEGER NOT NULL DEFAULT 0`,
+						`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_pr ON user_workout_wods(is_pr)`,
+					}
+					for _, query := range queries {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to execute query: %w", err)
+						}
+					}
+				}
+				return nil
+
+			case "postgres":
+				// PostgreSQL: Add columns with ALTER TABLE (IF NOT EXISTS supported)
+				queries := []string{
+					`ALTER TABLE user_workout_movements ADD COLUMN IF NOT EXISTS is_pr BOOLEAN NOT NULL DEFAULT false`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_movements_pr ON user_workout_movements(is_pr)`,
+					`ALTER TABLE user_workout_wods ADD COLUMN IF NOT EXISTS is_pr BOOLEAN NOT NULL DEFAULT false`,
+					`CREATE INDEX IF NOT EXISTS idx_user_workout_wods_pr ON user_workout_wods(is_pr)`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "mysql":
+				// MySQL: Check if columns exist before adding
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS
+					WHERE TABLE_SCHEMA = DATABASE()
+					AND TABLE_NAME = 'user_workout_movements'
+					AND COLUMN_NAME = 'is_pr'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for is_pr column: %w", err)
+				}
+
+				// Only add columns if they don't exist
+				if count == 0 {
+					queries := []string{
+						`ALTER TABLE user_workout_movements ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT 0`,
+						`CREATE INDEX idx_user_workout_movements_pr ON user_workout_movements(is_pr)`,
+						`ALTER TABLE user_workout_wods ADD COLUMN is_pr BOOLEAN NOT NULL DEFAULT 0`,
+						`CREATE INDEX idx_user_workout_wods_pr ON user_workout_wods(is_pr)`,
+					}
+					for _, query := range queries {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to execute query: %w", err)
+						}
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN easily, would require table recreation
+				return fmt.Errorf("SQLite does not support dropping columns; manual intervention required")
+
+			case "postgres":
+				queries := []string{
+					`DROP INDEX IF EXISTS idx_user_workout_wods_pr`,
+					`ALTER TABLE user_workout_wods DROP COLUMN IF EXISTS is_pr`,
+					`DROP INDEX IF EXISTS idx_user_workout_movements_pr`,
+					`ALTER TABLE user_workout_movements DROP COLUMN IF EXISTS is_pr`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			case "mysql":
+				queries := []string{
+					`DROP INDEX idx_user_workout_wods_pr ON user_workout_wods`,
+					`ALTER TABLE user_workout_wods DROP COLUMN is_pr`,
+					`DROP INDEX idx_user_workout_movements_pr ON user_workout_movements`,
+					`ALTER TABLE user_workout_movements DROP COLUMN is_pr`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to execute query: %w", err)
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+	},
 	// Future migrations for incremental schema changes will be added here
 }
 

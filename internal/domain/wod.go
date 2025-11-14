@@ -34,6 +34,7 @@ type UserWorkoutWOD struct {
 	Reps          *int      `json:"reps,omitempty" db:"reps"` // Remaining reps in AMRAP
 	Weight        *float64  `json:"weight,omitempty" db:"weight"` // For Max Weight WODs
 	Notes         string    `json:"notes,omitempty" db:"notes"`
+	IsPR          bool      `json:"is_pr" db:"is_pr"` // Personal record flag
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
@@ -95,4 +96,16 @@ type UserWorkoutWODRepository interface {
 
 	// DeleteByUserWorkoutID deletes all WODs for a logged workout
 	DeleteByUserWorkoutID(userWorkoutID int64) error
+
+	// GetBestTimeForWOD retrieves the fastest time for a specific WOD for a user
+	GetBestTimeForWOD(userID, wodID int64) (*int, error)
+
+	// GetBestRoundsRepsForWOD retrieves the best rounds+reps for a specific WOD for a user
+	GetBestRoundsRepsForWOD(userID, wodID int64) (rounds *int, reps *int, err error)
+
+	// GetPRWODs retrieves recent PR-flagged WODs for a user
+	GetPRWODs(userID int64, limit int) ([]*UserWorkoutWOD, error)
+
+	// UpdatePRFlag updates the is_pr flag for a user workout WOD
+	UpdatePRFlag(id int64, isPR bool) error
 }

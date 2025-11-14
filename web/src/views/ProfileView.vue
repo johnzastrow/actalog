@@ -7,9 +7,9 @@
       <v-btn icon="mdi-cog" color="white" size="small" @click="$router.push('/settings')" />
     </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
       <!-- Profile Card -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
         <div class="text-center mb-3">
           <!-- Avatar with Upload -->
           <div style="position: relative; display: inline-block">
@@ -71,9 +71,27 @@
         </div>
       </v-card>
 
+      <!-- Version Info -->
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <div class="d-flex align-center justify-space-between">
+          <div>
+            <div class="text-caption" style="color: #999">Version</div>
+            <div class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+              {{ appVersion }}
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-caption" style="color: #999">Build</div>
+            <div class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+              #{{ buildNumber }}
+            </div>
+          </div>
+        </div>
+      </v-card>
+
       <!-- Stats Summary -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Workout Summary</h2>
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Workout Summary</h2>
 
         <!-- Loading State -->
         <div v-if="loadingStats" class="text-center py-4">
@@ -83,7 +101,7 @@
         <!-- Stats Grid -->
         <v-row v-else dense>
           <v-col cols="6">
-            <v-card elevation="0" rounded="lg" class="pa-2 text-center" style="background: #f5f7fa">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
               <div class="text-h5 font-weight-bold" style="color: #00bcd4">
                 {{ stats.totalWorkouts }}
               </div>
@@ -91,7 +109,7 @@
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded="lg" class="pa-2 text-center" style="background: #f5f7fa">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
               <div class="text-h5 font-weight-bold" style="color: #4caf50">
                 {{ stats.currentStreak }}
               </div>
@@ -99,7 +117,7 @@
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded="lg" class="pa-2 text-center" style="background: #f5f7fa">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
               <div class="text-h5 font-weight-bold" style="color: #ffc107">
                 {{ stats.personalRecords }}
               </div>
@@ -107,7 +125,7 @@
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded="lg" class="pa-2 text-center" style="background: #f5f7fa">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
               <div class="text-h5 font-weight-bold" style="color: #e91e63">
                 {{ stats.customTemplates }}
               </div>
@@ -118,13 +136,13 @@
       </v-card>
 
       <!-- Quick Actions -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Quick Actions</h2>
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Quick Actions</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-dumbbell"
             @click="$router.push('/workouts')"
-            rounded="lg"
+            rounded
             style="cursor: pointer"
           >
             <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
@@ -138,7 +156,7 @@
           <v-list-item
             prepend-icon="mdi-fire"
             @click="$router.push('/wods')"
-            rounded="lg"
+            rounded
             style="cursor: pointer"
           >
             <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
@@ -152,7 +170,7 @@
           <v-list-item
             prepend-icon="mdi-trophy"
             @click="$router.push('/prs')"
-            rounded="lg"
+            rounded
             style="cursor: pointer"
           >
             <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
@@ -166,13 +184,13 @@
       </v-card>
 
       <!-- Account Actions -->
-      <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Account</h2>
+      <v-card elevation="0" rounded class="pa-2" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Account</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-cog"
             @click="$router.push('/settings')"
-            rounded="lg"
+            rounded
             style="cursor: pointer"
           >
             <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
@@ -186,7 +204,7 @@
           <v-list-item
             prepend-icon="mdi-logout"
             @click="handleLogout"
-            rounded="lg"
+            rounded
             style="cursor: pointer"
           >
             <v-list-item-title class="font-weight-medium" style="color: #e91e63">
@@ -240,6 +258,10 @@ import { getProfileImageUrl } from '@/utils/url'
 const router = useRouter()
 const authStore = useAuthStore()
 const activeTab = ref('profile')
+
+// Version info
+const appVersion = ref('...')
+const buildNumber = ref(0)
 
 const user = computed(() => authStore.user)
 const loadingStats = ref(false)
@@ -399,7 +421,23 @@ async function deleteAvatar() {
   }
 }
 
+// Fetch version info
+async function fetchVersionInfo() {
+  try {
+    const response = await axios.get('/api/version')
+    appVersion.value = response.data.fullVersion || response.data.version
+    buildNumber.value = response.data.build || 0
+    console.log('Version info loaded:', response.data)
+  } catch (err) {
+    console.error('Failed to fetch version info:', err)
+    // Fallback to showing something
+    appVersion.value = '0.4.1-beta'
+    buildNumber.value = 1
+  }
+}
+
 onMounted(() => {
   fetchStats()
+  fetchVersionInfo()
 })
 </script>

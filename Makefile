@@ -24,6 +24,8 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 build: ## Build the application binary
+	@echo "Incrementing build number..."
+	@./scripts/increment-build.sh
 	@echo "Building $(APP_NAME)..."
 	@mkdir -p bin $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp
 	@go build -o $(BINARY) $(MAIN_PATH)

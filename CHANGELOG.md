@@ -5,6 +5,32 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4-beta] - 2025-11-14
+
+### Added
+- **Retroactive PR Detection System**
+  - Service method `RetroactivelyFlagPRs()` to analyze all historical workouts chronologically
+  - Automatically flags PRs based on historical max values for movements and WODs
+  - Processes workouts in chronological order, tracking max weights, best times, and best rounds+reps
+  - Repository methods: `UpdatePRFlag()` for both movements and WODs
+  - API endpoint: `POST /api/workouts/retroactive-flag-prs` (authenticated)
+  - Command-line script `scripts/retroactive_prs.go` for direct database PR flagging
+  - Returns count of movement PRs and WOD PRs flagged
+
+### Fixed
+- PR detection now works for historical workouts logged before PR system was implemented
+- Personal Records view now displays PRs from all workouts, not just newly logged ones
+- Resolved issue where existing workouts had `is_pr = 0` even when they contained record performances
+
+### Technical
+- Chronological processing ensures PRs are correctly identified based on order of performance
+- In-memory tracking of max values during processing to avoid multiple database queries
+- Multi-database support (SQLite, PostgreSQL, MySQL) for PR flag updates
+- Clean Architecture maintained: domain interfaces → repository implementation → service logic → handler/script
+
+### Changed
+- Version bumped to 0.4.4-beta across all version files (pkg/version/version.go, web/package.json)
+
 ## [0.4.0-beta] - 2025-11-12
 
 ### Added

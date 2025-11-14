@@ -7,7 +7,7 @@
       <v-spacer />
     </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 100px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 100px">
       <!-- Success Alert -->
       <v-alert v-if="success" type="success" closable @click:close="success = null" class="mb-4">
         {{ success }}
@@ -26,11 +26,11 @@
 
       <v-form v-else @submit.prevent="logWorkout">
         <!-- Select Workout Template -->
-        <div v-if="!isEditMode" class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div v-if="!isEditMode" class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Workout Template *
           </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <v-autocomplete
               v-model="selectedTemplateId"
               :items="workoutTemplates"
@@ -72,11 +72,11 @@
         </div>
 
         <!-- Edit Workout Name (for ad-hoc workouts only) -->
-        <div v-if="isEditMode && !selectedTemplateId" class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div v-if="isEditMode && !selectedTemplateId" class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Workout Name *
           </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <v-text-field
               v-model="workoutName"
               variant="plain"
@@ -93,8 +93,8 @@
         <v-card
           v-if="selectedTemplate || (isEditMode && selectedTemplateId)"
           elevation="0"
-          rounded="lg"
-          class="mb-3 pa-3"
+          rounded
+          class="mb-1 pa-2"
           style="background: #e3f2fd; border: 2px solid #00bcd4"
         >
           <div class="d-flex align-center mb-2">
@@ -119,11 +119,11 @@
         </v-card>
 
         <!-- Workout Date -->
-        <div class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Workout Date *
           </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <v-text-field
               v-model="workoutDate"
               type="date"
@@ -138,16 +138,16 @@
         </div>
 
         <!-- Movement Performance (if template has movements OR if editing and has movements) -->
-        <div v-if="shouldShowMovements" class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div v-if="shouldShowMovements" class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Movement Performance ({{ movementPerformance.length }} movements)
           </label>
           <v-card
             v-for="(movement, index) in movementPerformance"
             :key="index"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-3"
+            rounded
+            class="mb-1 pa-2"
             style="background: white; border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
@@ -165,6 +165,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
+                  rounded
                   min="0"
                 />
               </v-col>
@@ -176,6 +177,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
+                  rounded
                   min="0"
                 />
               </v-col>
@@ -187,6 +189,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
+                  rounded
                   min="0"
                   step="0.5"
                 />
@@ -201,6 +204,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
+                  rounded
                   min="0"
                 />
               </v-col>
@@ -212,6 +216,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
+                  rounded
                   min="0"
                   step="0.1"
                 />
@@ -223,6 +228,7 @@
               variant="outlined"
               density="compact"
               hide-details
+              rounded
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
@@ -231,16 +237,16 @@
         </div>
 
         <!-- WOD Performance (if template has WODs OR if editing and has WODs) -->
-        <div v-if="shouldShowWODs" class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div v-if="shouldShowWODs" class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             WOD Performance ({{ wodPerformance.length }} WODs)
           </label>
           <v-card
             v-for="(wod, index) in wodPerformance"
             :key="index"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-3"
+            rounded
+            class="mb-1 pa-2"
             style="background: white; border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
@@ -258,6 +264,7 @@
               variant="outlined"
               density="compact"
               hide-details
+              rounded
               class="mb-2"
             />
 
@@ -338,6 +345,7 @@
               variant="outlined"
               density="compact"
               hide-details
+              rounded
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
@@ -346,11 +354,11 @@
         </div>
 
         <!-- Total Time -->
-        <div class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Total Time (minutes)
           </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <v-text-field
               v-model.number="totalTimeMinutes"
               type="number"
@@ -366,11 +374,11 @@
         </div>
 
         <!-- Notes -->
-        <div class="mb-3">
-          <label class="text-caption font-weight-bold mb-1 d-block" style="color: #1a1a1a">
+        <div class="mb-1">
+          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
             Overall Notes
           </label>
-          <v-card elevation="0" rounded="lg" class="pa-2" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
             <v-textarea
               v-model="notes"
               variant="plain"
@@ -389,7 +397,7 @@
           color="#00bcd4"
           size="large"
           block
-          rounded="lg"
+          rounded
           :loading="submitting"
           :disabled="(!isEditMode && !selectedTemplateId) || !workoutDate"
           class="font-weight-bold"
@@ -406,8 +414,8 @@
           color="#00bcd4"
           size="large"
           block
-          rounded="lg"
-          class="mt-2 font-weight-bold"
+          rounded
+          class="mt-1 font-weight-bold"
           style="text-transform: none; border: 2px dashed #00bcd4"
           @click="$router.push('/workouts')"
         >

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ActaLog is a mobile-first CrossFit workout tracker built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend (Vuetify 3). The project follows Clean Architecture principles with strict separation between domain, service, repository, and handler layers.
 
-**Current Version:** 0.4.1-beta
+**Current Version:** 0.4.4-beta
 
 ## Essential Commands
 
@@ -354,9 +354,33 @@ Version number is defined in `pkg/version/version.go` and should be incremented 
 - **Minor** (0.X.0): New features (backward compatible)
 - **Major** (X.0.0): Breaking changes
 
-Update version in both:
-- `pkg/version/version.go`
-- `web/package.json`
+### Build Number Auto-Increment
+
+The build number is automatically incremented with each build:
+- **Build number** is stored in `pkg/version/version.go` (Build constant)
+- **Automatic increment** happens when you run `make build`
+- The script `scripts/increment-build.sh` handles the increment
+- Format: `0.4.1-beta+build.3`
+
+**How it works:**
+1. Running `make build` calls `scripts/increment-build.sh`
+2. Script extracts current build number from `pkg/version/version.go`
+3. Increments the build number by 1
+4. Updates the file with new build number
+5. Builds the application
+
+**Version Display:**
+- Backend exposes version via `/api/version` endpoint (public, no auth required)
+- Returns: `version`, `build`, `fullVersion`, `app` fields
+- Frontend displays in Profile screen (top card)
+- Shows: "Version: 0.4.1-beta+build.4" and "Build: #4"
+
+**Manual Version Updates:**
+
+When releasing a new version, update:
+1. `pkg/version/version.go` - Major, Minor, Patch, PreRelease constants
+2. `web/package.json` - version field
+3. Build number is auto-incremented, no manual update needed
 
 ## Development Workflow
 

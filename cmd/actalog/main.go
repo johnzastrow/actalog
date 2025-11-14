@@ -195,13 +195,6 @@ func main() {
 		fmt.Fprintf(w, `{"status":"healthy","version":"%s"}`, version.Version())
 	})
 
-	// Version endpoint
-	r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"version":"%s","app":"%s"}`, version.Version(), cfg.App.Name)
-	})
-
 	// Root endpoint
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -216,6 +209,14 @@ func main() {
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
+		// Version endpoint (public)
+		r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s"}`,
+				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name)
+		})
+
 		// Auth routes (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
@@ -274,6 +275,8 @@ func main() {
 			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
 			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
 			r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
+			r.Get("/workouts/personal-records", userWorkoutHandler.GetPersonalRecords)
+			r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
 
 			// WOD management (authenticated)
 			r.Post("/wods", wodHandler.CreateWOD)

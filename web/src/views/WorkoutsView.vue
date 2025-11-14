@@ -13,7 +13,7 @@
       />
     </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
         {{ error }}
@@ -32,15 +32,15 @@
       </v-tabs>
 
       <!-- Quick Links -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <h3 class="text-body-2 font-weight-bold mb-2" style="color: #666">Quick Links</h3>
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <h3 class="text-body-2 font-weight-bold mb-1" style="color: #666">Quick Links</h3>
         <v-row dense>
           <v-col cols="6">
             <v-btn
               block
               variant="outlined"
               color="#00bcd4"
-              rounded="lg"
+              rounded
               style="text-transform: none"
               @click="$router.push('/wods')"
             >
@@ -53,7 +53,7 @@
               block
               variant="outlined"
               color="#00bcd4"
-              rounded="lg"
+              rounded
               style="text-transform: none"
               @click="$router.push('/movements')"
             >
@@ -68,8 +68,8 @@
       <v-card
         v-if="activeTemplateTab === 'custom' && !loading"
         elevation="0"
-        rounded="lg"
-        class="pa-2 mb-2"
+        rounded
+        class="pa-2 mb-1"
         style="background: white"
       >
         <v-btn
@@ -78,7 +78,7 @@
           variant="flat"
           prepend-icon="mdi-plus"
           @click="$router.push('/workouts/templates/create')"
-          rounded="lg"
+          rounded
           style="text-transform: none; font-weight: 600"
         >
           Create New Template
@@ -96,8 +96,8 @@
         <v-card
           v-else-if="!loading && displayedTemplates.length === 0"
           elevation="0"
-          rounded="lg"
-          class="pa-8 text-center"
+          rounded
+          class="pa-3 text-center"
           style="background: white"
         >
           <v-icon size="64" color="#ccc">mdi-clipboard-text-outline</v-icon>
@@ -117,7 +117,7 @@
             class="mt-4"
             prepend-icon="mdi-plus"
             @click="$router.push('/workouts/templates/create')"
-            rounded="lg"
+            rounded
             style="text-transform: none; font-weight: 600"
           >
             Create Template
@@ -130,8 +130,8 @@
             v-for="template in displayedTemplates"
             :key="template.id"
             elevation="0"
-            rounded="lg"
-            class="mb-2 pa-3"
+            rounded
+            class="mb-1 pa-2"
             style="background: white; cursor: pointer"
             @click="selectTemplate(template)"
           >

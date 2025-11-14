@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3-beta] - 2025-01-14
+
+### Changed
+- **UI Spacing Improvements**: Reduced whitespace and padding throughout the application
+  - Reduced top margin from 36px to 5px on all main views (Dashboard, Profile, Performance, Workouts)
+  - Reduced card padding: `pa-4` → `pa-2`, `pa-3` → `pa-2`, `pa-2` → `pa-1`
+  - Reduced section margins: `mb-3` → `mb-2`, `mb-2` → `mb-1`
+  - Reduced form field spacing from `mb-2` to `mb-1`
+  - Removed top padding from main containers (`pt-0`)
+  - Changed border radius from `rounded="lg"` to `rounded` for tighter appearance
+  - Applied changes across Dashboard, Profile, Performance, and Workouts views
+  - Result: More compact, efficient use of screen space on mobile devices
+
+## [0.4.2-beta] - 2025-01-14
+
+### Added
+- **Version and Build Display**: Added version and build number display in Profile screen
+  - Created new version display card at top of Profile screen
+  - Shows full version (e.g., "0.4.2-beta+build.1") and build number
+  - Backend exposes `/api/version` endpoint (public, no auth required)
+  - Returns `version`, `build`, `fullVersion`, and `app` fields
+  - Frontend fetches version info on Profile page load
+- **Automatic Build Number Increment System**
+  - Created `scripts/increment-build.sh` for automatic build number management
+  - Updated `Makefile` to auto-increment build on every `make build`
+  - Build number stored in `pkg/version/version.go` as `Build` constant
+  - Added `FullVersion()`, `BuildNumber()`, and `FullString()` functions
+  - Format: `Major.Minor.Patch-PreRelease+build.N` (e.g., "0.4.2-beta+build.1")
+
+### Changed
+- Version endpoint moved from `/version` to `/api/version` for Vite proxy compatibility
+- Updated `CLAUDE.md` with comprehensive Build Number Auto-Increment documentation
+
 ## [0.4.1-beta] - 2025-01-14
 
 ### Fixed
@@ -308,6 +341,6 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.4.1-beta
+**Current Version:** 0.4.2-beta
 **Schema Version:** 0.1.0 (v0.3.0 schema designed, migration not yet implemented)
 **Last Updated:** 2025-01-14
