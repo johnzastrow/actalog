@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -249,4 +250,115 @@ func (r *SQLiteUserRepository) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(query).Scan(&count)
 	return count, err
+}
+
+// Account Security Methods
+
+// IncrementFailedAttempts increments the failed login attempts counter
+func (r *SQLiteUserRepository) IncrementFailedAttempts(userID int64) error {
+	query := `UPDATE users SET failed_login_attempts = failed_login_attempts + 1, updated_at = ? WHERE id = ?`
+	_, err := r.db.Exec(query, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to increment failed attempts: %w", err)
+	}
+	return nil
+}
+
+// ResetFailedAttempts resets the failed login attempts counter to zero
+func (r *SQLiteUserRepository) ResetFailedAttempts(userID int64) error {
+	query := `UPDATE users SET failed_login_attempts = 0, updated_at = ? WHERE id = ?`
+	_, err := r.db.Exec(query, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to reset failed attempts: %w", err)
+	}
+	return nil
+}
+
+// LockAccount locks a user account for a specified duration
+func (r *SQLiteUserRepository) LockAccount(userID int64, lockDuration time.Duration) error {
+	now := time.Now()
+	lockedUntil := now.Add(lockDuration)
+
+	query := `UPDATE users
+		SET locked_at = ?, locked_until = ?, updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, now, lockedUntil, now, userID)
+	if err != nil {
+		return fmt.Errorf("failed to lock account: %w", err)
+	}
+	return nil
+}
+
+// UnlockAccount unlocks a user account and resets failed attempts
+func (r *SQLiteUserRepository) UnlockAccount(userID int64) error {
+	query := `UPDATE users
+		SET locked_at = NULL, locked_until = NULL, failed_login_attempts = 0, updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to unlock account: %w", err)
+	}
+	return nil
+}
+
+// IsAccountLocked checks if an account is currently locked
+// Returns: locked (bool), unlock time (*time.Time), error
+func (r *SQLiteUserRepository) IsAccountLocked(userID int64) (bool, *time.Time, error) {
+	query := `SELECT locked_at, locked_until FROM users WHERE id = ?`
+
+	var lockedAt, lockedUntil *time.Time
+	err := r.db.QueryRow(query, userID).Scan(&lockedAt, &lockedUntil)
+	if err == sql.ErrNoRows {
+		return false, nil, fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return false, nil, fmt.Errorf("failed to check lock status: %w", err)
+	}
+
+	// If locked_at is NULL, account is not locked
+	if lockedAt == nil || lockedUntil == nil {
+		return false, nil, nil
+	}
+
+	// Check if lock has expired
+	if time.Now().After(*lockedUntil) {
+		// Lock has expired, auto-unlock
+		err = r.UnlockAccount(userID)
+		if err != nil {
+			return false, nil, fmt.Errorf("failed to auto-unlock account: %w", err)
+		}
+		return false, nil, nil
+	}
+
+	// Account is still locked
+	return true, lockedUntil, nil
+}
+
+// DisableAccount permanently disables a user account (admin action)
+func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64) error {
+	now := time.Now()
+	query := `UPDATE users
+		SET account_disabled = 1, disabled_at = ?, disabled_by_user_id = ?, updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, now, disabledBy, now, userID)
+	if err != nil {
+		return fmt.Errorf("failed to disable account: %w", err)
+	}
+	return nil
+}
+
+// EnableAccount re-enables a disabled user account (admin action)
+func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
+	query := `UPDATE users
+		SET account_disabled = 0, disabled_at = NULL, disabled_by_user_id = NULL, updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to enable account: %w", err)
+	}
+	return nil
 }

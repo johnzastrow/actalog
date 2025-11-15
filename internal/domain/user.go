@@ -20,6 +20,15 @@ type User struct {
 	VerificationTokenExpiresAt  *time.Time `json:"-" db:"verification_token_expires_at"`
 	ResetToken                  *string    `json:"-" db:"reset_token"` // Never serialize reset token
 	ResetTokenExpiresAt         *time.Time `json:"-" db:"reset_token_expires_at"`
+
+	// Security fields (account lockout and disable)
+	FailedLoginAttempts         int        `json:"-" db:"failed_login_attempts"` // Don't expose to client
+	LockedAt                    *time.Time `json:"-" db:"locked_at"`             // Don't expose to client
+	LockedUntil                 *time.Time `json:"-" db:"locked_until"`          // Don't expose to client
+	AccountDisabled             bool       `json:"account_disabled" db:"account_disabled"` // Expose so client knows
+	DisabledAt                  *time.Time `json:"disabled_at,omitempty" db:"disabled_at"`
+	DisabledByUserID            *int64     `json:"disabled_by_user_id,omitempty" db:"disabled_by_user_id"`
+
 	CreatedAt                   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt                   time.Time  `json:"updated_at" db:"updated_at"`
 	LastLoginAt                 *time.Time `json:"last_login_at,omitempty" db:"last_login_at"`
@@ -48,6 +57,15 @@ type UserRepository interface {
 	Delete(id int64) error
 	List(limit, offset int) ([]*User, error)
 	Count() (int64, error)
+
+	// Account security methods
+	IncrementFailedAttempts(userID int64) error
+	ResetFailedAttempts(userID int64) error
+	LockAccount(userID int64, lockDuration time.Duration) error
+	UnlockAccount(userID int64) error
+	IsAccountLocked(userID int64) (bool, *time.Time, error) // Returns locked status and unlock time
+	DisableAccount(userID int64, disabledBy int64) error
+	EnableAccount(userID int64) error
 }
 
 // RefreshTokenRepository defines the interface for refresh token data access
