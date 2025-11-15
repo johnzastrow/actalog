@@ -432,59 +432,103 @@
 
               <div v-if="quickLogData.wodId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
                 <div class="mb-2">
-                  <label class="text-caption">Score Type</label>
-                  <v-select
+                  <label class="text-caption">Score Type (from WOD)</label>
+                  <v-text-field
                     v-model="quickLogData.wod.scoreType"
-                    :items="['Time', 'Rounds+Reps', 'Weight', 'Reps']"
                     variant="outlined"
                     density="compact"
                     hide-details
                     rounded
+                    readonly
+                    bg-color="#e0e0e0"
                   />
                 </div>
-                <div class="mb-2">
-                  <label class="text-caption">Score Value</label>
-                  <v-text-field
-                    v-model="quickLogData.wod.scoreValue"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    placeholder="e.g., 12:34, 5+12, 185 lbs"
-                  />
+                <!-- Time-based WOD fields -->
+                <div v-if="quickLogData.wod.scoreType === 'Time (HH:MM:SS)'">
+                  <label class="text-caption d-block mb-1">Time (HH:MM:SS) *</label>
+                  <div class="d-flex gap-2 mb-2">
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeHours"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="23"
+                      placeholder="HH"
+                      style="flex: 1"
+                    />
+                    <span class="align-self-center">:</span>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeMinutes"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="59"
+                      placeholder="MM"
+                      style="flex: 1"
+                    />
+                    <span class="align-self-center">:</span>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeSecondsInput"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="59"
+                      placeholder="SS"
+                      style="flex: 1"
+                    />
+                  </div>
                 </div>
-                <div class="mb-2">
-                  <label class="text-caption">Time (seconds)</label>
+
+                <!-- Rounds+Reps WOD fields -->
+                <template v-if="quickLogData.wod.scoreType === 'Rounds+Reps'">
+                  <div class="mb-2">
+                    <label class="text-caption">Rounds *</label>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.rounds"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      placeholder="e.g., 10"
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="text-caption">Reps (optional)</label>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.reps"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                </template>
+
+                <!-- Max Weight WOD field (note: weight field is missing in quickLogData.wod, needs to be added) -->
+                <div v-if="quickLogData.wod.scoreType === 'Max Weight'" class="mb-2">
+                  <label class="text-caption">Weight (lbs) *</label>
                   <v-text-field
-                    v-model.number="quickLogData.wod.timeSeconds"
+                    v-model.number="quickLogData.wod.weight"
                     type="number"
                     variant="outlined"
                     density="compact"
                     hide-details
                     min="0"
+                    step="0.5"
+                    placeholder="e.g., 225"
                   />
                 </div>
-                <div class="mb-2">
-                  <label class="text-caption">Rounds</label>
-                  <v-text-field
-                    v-model.number="quickLogData.wod.rounds"
-                    type="number"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    min="0"
-                  />
-                </div>
-                <div class="mb-2">
-                  <label class="text-caption">Reps</label>
-                  <v-text-field
-                    v-model.number="quickLogData.wod.reps"
-                    type="number"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    min="0"
-                  />
-                </div>
+
+                <!-- Notes field (always shown) -->
                 <div>
                   <label class="text-caption">Notes</label>
                   <v-textarea
@@ -493,6 +537,7 @@
                     density="compact"
                     rows="2"
                     hide-details
+                    placeholder="How did it feel?"
                   />
                 </div>
               </div>
@@ -555,7 +600,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
@@ -607,8 +652,12 @@ const quickLogData = ref({
     scoreType: null,
     scoreValue: null,
     timeSeconds: null,
+    timeHours: null,
+    timeMinutes: null,
+    timeSecondsInput: null,
     rounds: null,
     reps: null,
+    weight: null,
     notes: ''
   }
 })
@@ -692,6 +741,38 @@ const recentWorkouts = computed(() => {
     .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
     .slice(0, 30) // Show up to 30 most recent from last 30 days
 })
+
+// Computed property to get the selected WOD object
+const selectedWOD = computed(() => {
+  if (!quickLogData.value.wodId) return null
+  return wods.value.find(w => w.id === quickLogData.value.wodId)
+})
+
+// Watch for WOD selection changes and auto-set score_type
+watch(() => quickLogData.value.wodId, (newWodId) => {
+  if (newWodId && selectedWOD.value) {
+    // Auto-populate the score type from the WOD definition
+    quickLogData.value.wod.scoreType = selectedWOD.value.score_type
+  } else {
+    // Clear score type when no WOD is selected
+    quickLogData.value.wod.scoreType = null
+  }
+})
+
+// Watch for time input changes and auto-calculate total seconds
+watch(
+  () => [
+    quickLogData.value.wod.timeHours,
+    quickLogData.value.wod.timeMinutes,
+    quickLogData.value.wod.timeSecondsInput
+  ],
+  ([hours, minutes, seconds]) => {
+    const h = hours || 0
+    const m = minutes || 0
+    const s = seconds || 0
+    quickLogData.value.wod.timeSeconds = (h * 3600) + (m * 60) + s
+  }
+)
 
 // Fetch user's logged workouts
 async function fetchUserWorkouts() {

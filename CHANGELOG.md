@@ -5,6 +5,43 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5-beta] - 2025-11-14
+
+### Added
+- **Admin Data Cleanup: Edit WOD Records**
+  - New API endpoint: `PUT /api/admin/data-cleanup/wod-record/{id}` for updating individual WOD records
+  - Backend validation ensures updates match WOD score_type requirements
+  - Clickable mismatch cards in admin cleanup view open edit dialog
+  - Edit dialog with score_type-specific form fields (only shows relevant fields)
+  - Hours, Minutes, Seconds input for Time-based WODs
+  - Rounds and Reps input for Rounds+Reps WODs
+  - Weight input for Max Weight WODs
+
+### Fixed
+- **Quick Log Form (Dashboard)**
+  - Fixed Quick Log to respect WOD score_type constraints
+  - Score type now auto-populates from selected WOD (read-only)
+  - Only shows fields relevant to the WOD's score_type
+  - Time-based WODs now support HH:MM:SS format (was only showing seconds)
+  - Added reactive watchers to auto-calculate total seconds from HH:MM:SS inputs
+- **Log Workout Form**
+  - Fixed score_type check from `'Time'` to `'Time (HH:MM:SS)'`
+  - Added hours field to time inputs (now fully supports HH:MM:SS)
+  - Updated time calculation logic to include hours in total seconds and score_value formatting
+- **Admin Cleanup View**
+  - Removed duplicate bottom navigation bar from admin cleanup view
+
+### Changed
+- All workout entry and edit forms now enforce WOD score_type constraints
+- Time-based WODs consistently use HH:MM:SS format across all forms
+- Version bumped to 0.4.5-beta build 1
+
+### Technical
+- Frontend conditional rendering prevents invalid field combinations based on score_type
+- Backend validation in `UpdateWODRecord` ensures data integrity
+- Multi-layer constraint enforcement: frontend UX + backend validation
+- Clean Architecture maintained: handler → service → repository layers
+
 ## [0.4.4-beta] - 2025-11-14
 
 ### Added

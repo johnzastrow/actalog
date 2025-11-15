@@ -270,8 +270,20 @@
             />
 
             <!-- Time Score -->
-            <div v-if="wod.score_type === 'Time'">
+            <div v-if="wod.score_type === 'Time (HH:MM:SS)'">
               <v-row dense>
+                <v-col cols="4">
+                  <v-text-field
+                    v-model.number="wod.time_hours"
+                    type="number"
+                    label="Hours"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    max="23"
+                  />
+                </v-col>
                 <v-col cols="4">
                   <v-text-field
                     v-model.number="wod.time_minutes"
@@ -281,6 +293,7 @@
                     density="compact"
                     hide-details
                     min="0"
+                    max="59"
                   />
                 </v-col>
                 <v-col cols="4">
@@ -697,12 +710,13 @@ function buildWODsPayload() {
       }
 
       // Calculate time_seconds and score_value for Time-based WODs
-      if (w.score_type === 'Time' && (w.time_minutes || w.time_seconds)) {
-        const totalSeconds = (w.time_minutes || 0) * 60 + (w.time_seconds || 0)
+      if (w.score_type === 'Time (HH:MM:SS)' && (w.time_hours || w.time_minutes || w.time_seconds)) {
+        const totalSeconds = (w.time_hours || 0) * 3600 + (w.time_minutes || 0) * 60 + (w.time_seconds || 0)
         payload.time_seconds = totalSeconds
-        const mins = Math.floor(totalSeconds / 60)
+        const hours = Math.floor(totalSeconds / 3600)
+        const mins = Math.floor((totalSeconds % 3600) / 60)
         const secs = totalSeconds % 60
-        payload.score_value = `${mins}:${String(secs).padStart(2, '0')}`
+        payload.score_value = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
       }
 
       // Set rounds and reps for AMRAP

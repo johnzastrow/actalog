@@ -2,7 +2,7 @@
 
 This document tracks planned features, improvements, and known issues for ActaLog.
 
-## Current Status (v0.2.0-beta)
+## Current Status (v0.4.5-beta)
 
 ### Completed Features
 - [x] User authentication (registration, login, JWT)
@@ -19,17 +19,30 @@ This document tracks planned features, improvements, and known issues for ActaLo
 - [x] API authentication middleware
 - [x] Database seeding for movements
 - [x] Responsive scrolling on all views
+- [x] Personal Records (PR) tracking system
+- [x] Password reset system with email delivery
+- [x] Email verification system
+- [x] WOD (Workout of the Day) management system
+- [x] Workout template system
+- [x] Pinia state management (stores for WODs and templates)
+- [x] WOD Library view with filtering
+- [x] Admin data cleanup tools (detect/fix WOD score_type mismatches)
+- [x] WOD score_type constraint enforcement across all forms
+- [x] HH:MM:SS time format support for Time-based WODs
+- [x] Admin edit functionality for mismatched WOD records
 
 ## High Priority
 
 ### Features
-- [ ] Workout detail view (individual workout page)
-- [ ] Edit workout functionality
+- [ ] Workout detail view (individual workout page) - **Partially implemented, needs enhancement**
+- [ ] Edit workout functionality - **Partially implemented, needs enhancement**
 - [ ] Delete workout with confirmation
 - [ ] Performance charts for movement progress over time
 - [ ] Add custom movements from the UI
 - [ ] Workout history filtering by date range
 - [ ] Search workouts by movement or date
+- [ ] Template Library browsing view
+- [ ] Template-based workout logging integration
 
 ### UI/UX Improvements
 - [ ] Loading states for all API calls
@@ -37,26 +50,28 @@ This document tracks planned features, improvements, and known issues for ActaLo
 - [ ] Error boundary for better error handling
 - [ ] Pull-to-refresh on mobile
 - [ ] Skeleton loaders for better perceived performance
+- [ ] Improve time input UX (consider time picker component)
 
 ### Backend
 - [ ] Pagination for workout lists
 - [ ] Workout search and filtering endpoints
-- [ ] Movement statistics endpoint (PR tracking)
+- [x] Movement statistics endpoint (PR tracking) - **Implemented in v0.3.0**
 - [ ] User preferences/settings storage
 - [ ] Data export functionality (CSV, JSON)
-- [ ] Enable support for Mariadb
+- [x] Enable support for MariaDB - **Implemented in CI/CD**
 
 ## Medium Priority
 
 ### Features
-- [ ] Multiple movements per workout (currently supports one)
-- [ ] Timed workouts (AMRAP, EMOM, For Time)
-- [ ] Workout templates for common WODs
-- [ ] Personal records (PR) tracking and display
+- [x] Multiple movements per workout - **Implemented**
+- [x] Timed workouts (AMRAP, EMOM, For Time) - **Implemented via WOD regimes**
+- [x] Workout templates for common WODs - **Implemented in v0.4.0**
+- [x] Personal records (PR) tracking and display - **Implemented in v0.3.0**
 - [ ] Workout sharing between users
-- [ ] Comments/notes on specific movements
+- [x] Comments/notes on specific movements - **Implemented via notes field**
 - [ ] Photo upload for form checks
 - [ ] Rest timer integration
+- [ ] Bulk data cleanup tools for admins (additional cleanup operations)
 
 ### Data & Analytics
 - [ ] Weekly/monthly workout summaries
@@ -86,16 +101,17 @@ This document tracks planned features, improvements, and known issues for ActaLo
 ### Backend
 - [ ] Redis caching layer
 - [ ] Background jobs for data aggregation
-- [ ] Email notifications
+- [x] Email notifications - **Implemented for password reset and email verification**
 - [ ] API rate limiting
 - [ ] GraphQL API option
 - [ ] Multi-tenant support for gyms
+- [x] Admin-only endpoints with role-based access control - **Implemented in v0.4.4**
 
 ### DevOps
-- [ ] Docker Compose for development
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Automated testing (unit, integration, e2e)
-- [ ] Database migration system
+- [x] Docker Compose for development - **Implemented**
+- [x] CI/CD pipeline (GitHub Actions) - **Implemented with multi-database testing**
+- [x] Automated testing (unit, integration) - **Implemented, e2e pending**
+- [x] Database migration system - **Implemented**
 - [ ] Monitoring and logging (Prometheus, Grafana)
 - [ ] Production deployment guide
 
@@ -124,17 +140,18 @@ go test ./test/integration -run Test -v
 ## Known Issues
 
 ### Bugs
-- [ ] Date picker may show timezone offset issues
+- [x] Date picker may show timezone offset issues - **Fixed with local date formatting**
 - [ ] Console warning about iterable (third-party library)
 - [ ] Movement type filter not yet implemented
 
 ### Technical Debt
-- [ ] Add comprehensive test coverage (currently minimal)
+- [ ] Add comprehensive test coverage (improving, needs more coverage)
 - [ ] Implement proper error logging system
 - [ ] Add API request/response validation with schemas
-- [ ] Implement database migrations instead of manual schema
+- [x] Implement database migrations instead of manual schema - **Implemented**
 - [ ] Add API versioning strategy
 - [ ] Refactor duplicate bottom navigation code into component
+- [ ] Consider time picker component for better UX (currently using 3 separate number inputs)
 
 ## Future Considerations
 
@@ -152,5 +169,5 @@ go test ./test/integration -run Test -v
 
 ---
 
-**Last Updated**: 2025-11-06
-**Version**: 0.2.0-beta
+**Last Updated**: 2025-11-14
+**Version**: 0.4.5-beta
