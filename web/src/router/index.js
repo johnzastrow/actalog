@@ -147,6 +147,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/admin/data-cleanup',
+      name: 'admin-data-cleanup',
+      component: () => import('@/views/AdminDataCleanupView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue')
@@ -158,9 +164,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
+  } else if (requiresAdmin && authStore.user?.role !== 'admin') {
+    // Redirect non-admins trying to access admin routes
+    next('/dashboard')
   } else if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'reset-password' || to.name === 'verify-email') && authStore.isAuthenticated) {
     // If already authenticated, redirect auth flows to dashboard (except verify-email can be accessed)
     if (to.name === 'verify-email') {

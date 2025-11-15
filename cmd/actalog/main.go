@@ -182,6 +182,7 @@ func main() {
 	settingsHandler := handler.NewSettingsHandler(userSettingsService, appLogger)
 	prHandler := handler.NewPRHandler(db, appLogger)
 	performanceHandler := handler.NewPerformanceHandler(movementRepo, wodRepo, userWorkoutMovementRepo, userWorkoutWODRepo, appLogger)
+	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, userRepo, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -301,6 +302,14 @@ func main() {
 			r.Get("/performance/search", performanceHandler.UnifiedSearch)
 			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
 			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
+
+			// Admin routes (authenticated + admin role check)
+			r.Route("/admin", func(r chi.Router) {
+				r.Use(middleware.AdminOnly)
+				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
+				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)
+				r.Put("/data-cleanup/wod-record/{id}", adminHandler.UpdateWODRecord)
+			})
 		})
 	})
 

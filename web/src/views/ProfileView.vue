@@ -183,6 +183,58 @@
         </v-list>
       </v-card>
 
+      <!-- Administration (Admin Only) -->
+      <v-card v-if="user?.role === 'admin'" elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">
+          <v-icon color="#e91e63" size="small" class="mr-1">mdi-shield-crown</v-icon>
+          Administration
+        </h2>
+        <v-list bg-color="transparent" density="compact">
+          <v-list-item
+            prepend-icon="mdi-database-refresh"
+            @click="$router.push('/admin/data-cleanup')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Data Cleanup
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Fix WOD score_type mismatches
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-account-multiple"
+            disabled
+            rounded
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #999">
+              User Management
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Coming soon
+            </v-list-item-subtitle>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-chart-bar"
+            disabled
+            rounded
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #999">
+              System Reports
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Coming soon
+            </v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
+      </v-card>
+
       <!-- Account Actions -->
       <v-card elevation="0" rounded class="pa-2" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Account</h2>

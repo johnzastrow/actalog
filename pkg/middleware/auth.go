@@ -75,3 +75,24 @@ func GetUserRole(ctx context.Context) (string, bool) {
 	role, ok := ctx.Value(UserRoleKey).(string)
 	return role, ok
 }
+
+// AdminOnly is a middleware that restricts access to admin users only
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract user role from context (must have Auth middleware before this)
+		role, ok := GetUserRole(r.Context())
+		if !ok {
+			http.Error(w, `{"message":"Unauthorized: no user context found"}`, http.StatusUnauthorized)
+			return
+		}
+
+		// Check if user is admin
+		if role != "admin" {
+			http.Error(w, `{"message":"Forbidden: admin access required"}`, http.StatusForbidden)
+			return
+		}
+
+		// User is admin, proceed to next handler
+		next.ServeHTTP(w, r)
+	})
+}
