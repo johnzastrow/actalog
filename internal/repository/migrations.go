@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -419,6 +420,384 @@ var migrations = []Migration{
 						return fmt.Errorf("failed to execute query: %w", err)
 					}
 				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+	},
+	{
+		Version:     "0.4.6",
+		Description: "Add security features: account lockout, manual disable, enhanced audit logging",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// Check if columns already exist
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('users') WHERE name='failed_login_attempts'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for failed_login_attempts column: %w", err)
+				}
+
+				if count == 0 {
+					// Add security columns to users table
+					queries := []string{
+						`ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0`,
+						`ALTER TABLE users ADD COLUMN locked_at DATETIME`,
+						`ALTER TABLE users ADD COLUMN locked_until DATETIME`,
+						`ALTER TABLE users ADD COLUMN account_disabled INTEGER NOT NULL DEFAULT 0`,
+						`ALTER TABLE users ADD COLUMN disabled_at DATETIME`,
+						`ALTER TABLE users ADD COLUMN disabled_by_user_id INTEGER`,
+					}
+					for _, query := range queries {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to add security column: %w", err)
+						}
+					}
+				}
+
+				// Check if audit_logs table exists at all
+				var tableExists bool
+				err = db.QueryRow(`SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='audit_logs'`).Scan(&tableExists)
+				if err != nil {
+					return fmt.Errorf("failed to check if audit_logs table exists: %w", err)
+				}
+
+				if !tableExists {
+					// Table doesn't exist, create it from scratch
+					createAuditLogs := `CREATE TABLE audit_logs (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER,
+						target_user_id INTEGER,
+						event_type TEXT NOT NULL,
+						ip_address TEXT,
+						user_agent TEXT,
+						details TEXT,
+						created_at DATETIME NOT NULL,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+						FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE
+					)`
+					if _, err := db.Exec(createAuditLogs); err != nil {
+						return fmt.Errorf("failed to create audit_logs: %w", err)
+					}
+
+					// Create indexes
+					indexes := []string{
+						`CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id)`,
+						`CREATE INDEX idx_audit_logs_target_user_id ON audit_logs(target_user_id)`,
+						`CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type)`,
+						`CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC)`,
+					}
+					for _, query := range indexes {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to create index: %w", err)
+						}
+					}
+				} else {
+					// Table exists, check if it has the new structure
+					err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('audit_logs') WHERE name='target_user_id'`).Scan(&count)
+					if err != nil {
+						return fmt.Errorf("failed to check audit_logs structure: %w", err)
+					}
+
+					// If target_user_id doesn't exist, we need to migrate the table
+					if count == 0 {
+						// Backup existing audit logs
+						if _, err := db.Exec(`CREATE TABLE audit_logs_backup AS SELECT * FROM audit_logs`); err != nil {
+							return fmt.Errorf("failed to backup audit_logs: %w", err)
+						}
+
+						// Drop old audit_logs table
+						if _, err := db.Exec(`DROP TABLE audit_logs`); err != nil {
+							return fmt.Errorf("failed to drop old audit_logs: %w", err)
+						}
+
+						// Create enhanced audit_logs table
+						createAuditLogs := `CREATE TABLE audit_logs (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							user_id INTEGER,
+							target_user_id INTEGER,
+							event_type TEXT NOT NULL,
+							ip_address TEXT,
+							user_agent TEXT,
+							details TEXT,
+							created_at DATETIME NOT NULL,
+							FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+							FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE
+						)`
+						if _, err := db.Exec(createAuditLogs); err != nil {
+							return fmt.Errorf("failed to create enhanced audit_logs: %w", err)
+						}
+
+						// Create indexes
+						indexes := []string{
+							`CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id)`,
+							`CREATE INDEX idx_audit_logs_target_user_id ON audit_logs(target_user_id)`,
+							`CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type)`,
+							`CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC)`,
+						}
+						for _, query := range indexes {
+							if _, err := db.Exec(query); err != nil {
+								return fmt.Errorf("failed to create index: %w", err)
+							}
+						}
+
+						// Migrate old data from backup table
+						var backupCount int
+						err = db.QueryRow(`SELECT COUNT(*) FROM audit_logs_backup`).Scan(&backupCount)
+						if err == nil && backupCount > 0 {
+							migrateData := `INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
+								SELECT user_id, NULL, action, NULL, NULL, details, timestamp
+								FROM audit_logs_backup`
+							if _, err := db.Exec(migrateData); err != nil {
+								return fmt.Errorf("failed to migrate audit log data: %w", err)
+							}
+						}
+					}
+				}
+
+				return nil
+
+			case "postgres":
+				// Add security columns to users table
+				queries := []string{
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_at TIMESTAMP`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_disabled BOOLEAN NOT NULL DEFAULT false`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_at TIMESTAMP`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_by_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to add security column: %w", err)
+					}
+				}
+
+				// Check if enhanced audit_logs columns exist
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns
+					WHERE table_name='audit_logs' AND column_name='target_user_id'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check audit_logs structure: %w", err)
+				}
+
+				// If target_user_id doesn't exist, add new columns
+				if count == 0 {
+					// Backup table
+					if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS audit_logs_backup AS SELECT * FROM audit_logs`); err != nil {
+						return fmt.Errorf("failed to backup audit_logs: %w", err)
+					}
+
+					// Drop old table
+					if _, err := db.Exec(`DROP TABLE audit_logs`); err != nil {
+						return fmt.Errorf("failed to drop old audit_logs: %w", err)
+					}
+
+					// Create new enhanced table
+					createAuditLogs := `CREATE TABLE audit_logs (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+						target_user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+						event_type VARCHAR(100) NOT NULL,
+						ip_address VARCHAR(45),
+						user_agent TEXT,
+						details TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+					)`
+					if _, err := db.Exec(createAuditLogs); err != nil {
+						return fmt.Errorf("failed to create enhanced audit_logs: %w", err)
+					}
+
+					// Create indexes
+					indexes := []string{
+						`CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id)`,
+						`CREATE INDEX idx_audit_logs_target_user_id ON audit_logs(target_user_id)`,
+						`CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type)`,
+						`CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC)`,
+					}
+					for _, query := range indexes {
+						if _, err := db.Exec(query); err != nil {
+							return fmt.Errorf("failed to create index: %w", err)
+						}
+					}
+
+					// Migrate data
+					var backupCount int
+					err = db.QueryRow(`SELECT COUNT(*) FROM audit_logs_backup`).Scan(&backupCount)
+					if err == nil && backupCount > 0 {
+						migrateData := `INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
+							SELECT user_id, NULL, action, NULL, NULL, details, timestamp
+							FROM audit_logs_backup`
+						if _, err := db.Exec(migrateData); err != nil {
+							return fmt.Errorf("failed to migrate audit log data: %w", err)
+						}
+					}
+				}
+
+				return nil
+
+			case "mysql":
+				// Add security columns to users table
+				queries := []string{
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INT NOT NULL DEFAULT 0`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_at DATETIME`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until DATETIME`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_disabled BOOLEAN NOT NULL DEFAULT 0`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_at DATETIME`,
+					`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_by_user_id BIGINT`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						// MySQL doesn't support IF NOT EXISTS for columns, so ignore duplicate column errors
+						if !strings.Contains(err.Error(), "Duplicate column") {
+							return fmt.Errorf("failed to add security column: %w", err)
+						}
+					}
+				}
+
+				// Add foreign key if it doesn't exist
+				_, err := db.Exec(`ALTER TABLE users ADD CONSTRAINT fk_users_disabled_by
+					FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL`)
+				if err != nil && !strings.Contains(err.Error(), "Duplicate") {
+					// Ignore if constraint already exists
+				}
+
+				// Check if enhanced audit_logs columns exist
+				var count int
+				err = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS
+					WHERE TABLE_SCHEMA = DATABASE()
+					AND TABLE_NAME = 'audit_logs'
+					AND COLUMN_NAME = 'target_user_id'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check audit_logs structure: %w", err)
+				}
+
+				// If target_user_id doesn't exist, recreate table
+				if count == 0 {
+					// Backup table
+					if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS audit_logs_backup AS SELECT * FROM audit_logs`); err != nil {
+						return fmt.Errorf("failed to backup audit_logs: %w", err)
+					}
+
+					// Drop old table
+					if _, err := db.Exec(`DROP TABLE audit_logs`); err != nil {
+						return fmt.Errorf("failed to drop old audit_logs: %w", err)
+					}
+
+					// Create new enhanced table
+					createAuditLogs := `CREATE TABLE audit_logs (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT,
+						target_user_id BIGINT,
+						event_type VARCHAR(100) NOT NULL,
+						ip_address VARCHAR(45),
+						user_agent TEXT,
+						details TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+						FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE,
+						INDEX idx_audit_logs_user_id (user_id),
+						INDEX idx_audit_logs_target_user_id (target_user_id),
+						INDEX idx_audit_logs_event_type (event_type),
+						INDEX idx_audit_logs_created_at (created_at DESC)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+					if _, err := db.Exec(createAuditLogs); err != nil {
+						return fmt.Errorf("failed to create enhanced audit_logs: %w", err)
+					}
+
+					// Migrate data
+					var backupCount int
+					err = db.QueryRow(`SELECT COUNT(*) FROM audit_logs_backup`).Scan(&backupCount)
+					if err == nil && backupCount > 0 {
+						migrateData := `INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
+							SELECT user_id, NULL, action, NULL, NULL, details, timestamp
+							FROM audit_logs_backup`
+						if _, err := db.Exec(migrateData); err != nil {
+							return fmt.Errorf("failed to migrate audit log data: %w", err)
+						}
+					}
+				}
+
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Rollback is complex for SQLite due to lack of DROP COLUMN support
+			// For now, we'll support rollback only for PostgreSQL and MySQL
+			switch driver {
+			case "sqlite3":
+				return fmt.Errorf("rollback not supported for SQLite; manual intervention required")
+
+			case "postgres":
+				// Restore old audit_logs if backup exists
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.tables WHERE table_name='audit_logs_backup'`).Scan(&count)
+				if err == nil && count > 0 {
+					if _, err := db.Exec(`DROP TABLE audit_logs`); err != nil {
+						return fmt.Errorf("failed to drop audit_logs: %w", err)
+					}
+					if _, err := db.Exec(`ALTER TABLE audit_logs_backup RENAME TO audit_logs`); err != nil {
+						return fmt.Errorf("failed to restore audit_logs backup: %w", err)
+					}
+				}
+
+				// Remove security columns from users
+				queries := []string{
+					`ALTER TABLE users DROP COLUMN IF EXISTS disabled_by_user_id`,
+					`ALTER TABLE users DROP COLUMN IF EXISTS disabled_at`,
+					`ALTER TABLE users DROP COLUMN IF EXISTS account_disabled`,
+					`ALTER TABLE users DROP COLUMN IF EXISTS locked_until`,
+					`ALTER TABLE users DROP COLUMN IF EXISTS locked_at`,
+					`ALTER TABLE users DROP COLUMN IF EXISTS failed_login_attempts`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						return fmt.Errorf("failed to remove column: %w", err)
+					}
+				}
+
+				return nil
+
+			case "mysql":
+				// Restore old audit_logs if backup exists
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.tables
+					WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'audit_logs_backup'`).Scan(&count)
+				if err == nil && count > 0 {
+					if _, err := db.Exec(`DROP TABLE audit_logs`); err != nil {
+						return fmt.Errorf("failed to drop audit_logs: %w", err)
+					}
+					if _, err := db.Exec(`RENAME TABLE audit_logs_backup TO audit_logs`); err != nil {
+						return fmt.Errorf("failed to restore audit_logs backup: %w", err)
+					}
+				}
+
+				// Remove foreign key constraint first
+				_, _ = db.Exec(`ALTER TABLE users DROP FOREIGN KEY fk_users_disabled_by`)
+
+				// Remove security columns from users
+				queries := []string{
+					`ALTER TABLE users DROP COLUMN disabled_by_user_id`,
+					`ALTER TABLE users DROP COLUMN disabled_at`,
+					`ALTER TABLE users DROP COLUMN account_disabled`,
+					`ALTER TABLE users DROP COLUMN locked_until`,
+					`ALTER TABLE users DROP COLUMN locked_at`,
+					`ALTER TABLE users DROP COLUMN failed_login_attempts`,
+				}
+				for _, query := range queries {
+					if _, err := db.Exec(query); err != nil {
+						// Ignore errors for non-existent columns
+						if !strings.Contains(err.Error(), "check that column/key exists") {
+							return fmt.Errorf("failed to remove column: %w", err)
+						}
+					}
+				}
+
 				return nil
 
 			default:
