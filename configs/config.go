@@ -16,6 +16,7 @@ type Config struct {
 	App      AppConfig
 	Logging  LoggingConfig
 	Email    EmailConfig
+	Security SecurityConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -76,6 +77,19 @@ type EmailConfig struct {
 	RequireVerification   bool   // Require email verification for new users
 }
 
+// SecurityConfig holds security-related configuration
+type SecurityConfig struct {
+	MaxLoginAttempts       int           // Max failed login attempts before lockout
+	AccountLockoutDuration time.Duration // How long to lock account after max attempts
+
+	// Password strength (for future use)
+	MinPasswordLength       int  // Minimum password length
+	RequirePasswordUppercase bool // Require at least one uppercase letter
+	RequirePasswordLowercase bool // Require at least one lowercase letter
+	RequirePasswordNumber    bool // Require at least one number
+	RequirePasswordSpecial   bool // Require at least one special character
+}
+
 // Load loads configuration from environment variables with sensible defaults
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -124,6 +138,17 @@ func Load() (*Config, error) {
 			FromName:            getEnv("EMAIL_FROM_NAME", "ActaLog"),
 			Enabled:             getEnvBool("EMAIL_ENABLED", false), // Disabled by default
 			RequireVerification: getEnvBool("REQUIRE_EMAIL_VERIFICATION", false), // Disabled by default for testing
+		},
+		Security: SecurityConfig{
+			MaxLoginAttempts:        getEnvInt("MAX_LOGIN_ATTEMPTS", 5),
+			AccountLockoutDuration:  getEnvDuration("ACCOUNT_LOCKOUT_DURATION", 15*time.Minute),
+
+			// Password strength (future use)
+			MinPasswordLength:        getEnvInt("MIN_PASSWORD_LENGTH", 8),
+			RequirePasswordUppercase: getEnvBool("REQUIRE_PASSWORD_UPPERCASE", false),
+			RequirePasswordLowercase: getEnvBool("REQUIRE_PASSWORD_LOWERCASE", false),
+			RequirePasswordNumber:    getEnvBool("REQUIRE_PASSWORD_NUMBER", false),
+			RequirePasswordSpecial:   getEnvBool("REQUIRE_PASSWORD_SPECIAL", false),
 		},
 	}
 

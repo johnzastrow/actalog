@@ -52,13 +52,16 @@ func (r *SQLiteUserRepository) Create(user *domain.User) error {
 func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 	query := `
 		SELECT id, email, password_hash, name, profile_image, role,
-		       created_at, updated_at, last_login_at
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id
 		FROM users
 		WHERE id = ?
 	`
 
 	user := &domain.User{}
-	var lastLoginAt sql.NullTime
+	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+	var disabledByUserID sql.NullInt64
 
 	err := r.db.QueryRow(query, id).Scan(
 		&user.ID,
@@ -70,6 +73,14 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&lastLoginAt,
+		&user.EmailVerified,
+		&emailVerifiedAt,
+		&user.FailedLoginAttempts,
+		&lockedAt,
+		&lockedUntil,
+		&user.AccountDisabled,
+		&disabledAt,
+		&disabledByUserID,
 	)
 
 	if err != nil {
@@ -79,8 +90,24 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 		return nil, err
 	}
 
+	// Handle nullable fields
 	if lastLoginAt.Valid {
 		user.LastLoginAt = &lastLoginAt.Time
+	}
+	if emailVerifiedAt.Valid {
+		user.EmailVerifiedAt = &emailVerifiedAt.Time
+	}
+	if lockedAt.Valid {
+		user.LockedAt = &lockedAt.Time
+	}
+	if lockedUntil.Valid {
+		user.LockedUntil = &lockedUntil.Time
+	}
+	if disabledAt.Valid {
+		user.DisabledAt = &disabledAt.Time
+	}
+	if disabledByUserID.Valid {
+		user.DisabledByUserID = &disabledByUserID.Int64
 	}
 
 	return user, nil
@@ -90,13 +117,16 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 	query := `
 		SELECT id, email, password_hash, name, profile_image, role,
-		       created_at, updated_at, last_login_at
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id
 		FROM users
 		WHERE email = ?
 	`
 
 	user := &domain.User{}
-	var lastLoginAt sql.NullTime
+	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+	var disabledByUserID sql.NullInt64
 
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID,
@@ -108,6 +138,14 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&lastLoginAt,
+		&user.EmailVerified,
+		&emailVerifiedAt,
+		&user.FailedLoginAttempts,
+		&lockedAt,
+		&lockedUntil,
+		&user.AccountDisabled,
+		&disabledAt,
+		&disabledByUserID,
 	)
 
 	if err != nil {
@@ -117,8 +155,24 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 		return nil, err
 	}
 
+	// Handle nullable fields
 	if lastLoginAt.Valid {
 		user.LastLoginAt = &lastLoginAt.Time
+	}
+	if emailVerifiedAt.Valid {
+		user.EmailVerifiedAt = &emailVerifiedAt.Time
+	}
+	if lockedAt.Valid {
+		user.LockedAt = &lockedAt.Time
+	}
+	if lockedUntil.Valid {
+		user.LockedUntil = &lockedUntil.Time
+	}
+	if disabledAt.Valid {
+		user.DisabledAt = &disabledAt.Time
+	}
+	if disabledByUserID.Valid {
+		user.DisabledByUserID = &disabledByUserID.Int64
 	}
 
 	return user, nil

@@ -94,6 +94,7 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
 	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
+	auditLogRepo := repository.NewAuditLogRepository(db, cfg.Database.Driver)
 	movementRepo := repository.NewMovementRepository(db)
 	workoutRepo := repository.NewWorkoutRepository(db)
 	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
@@ -134,9 +135,12 @@ func main() {
 	}
 
 	// Initialize services
+	auditLogService := service.NewAuditLogService(auditLogRepo)
+
 	userService := service.NewUserService(
 		userRepo,
 		refreshTokenRepo,
+		auditLogService,
 		cfg.JWT.SecretKey,
 		cfg.JWT.ExpirationTime,
 		cfg.JWT.RefreshTokenDuration,
@@ -144,6 +148,8 @@ func main() {
 		emailService,
 		appURL,
 		cfg.Email.RequireVerification,
+		cfg.Security.MaxLoginAttempts,
+		cfg.Security.AccountLockoutDuration,
 	)
 
 	userWorkoutService := service.NewUserWorkoutService(
@@ -183,9 +189,17 @@ func main() {
 	prHandler := handler.NewPRHandler(db, appLogger)
 	performanceHandler := handler.NewPerformanceHandler(movementRepo, wodRepo, userWorkoutMovementRepo, userWorkoutWODRepo, appLogger)
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, userRepo, appLogger)
+	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
+	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
+
+	// Initialize rate limiters
+	// Login/Register: 5 attempts per 15 minutes per IP
+	authRateLimiter := middleware.NewRateLimiter(5, 15*time.Minute)
+	// Password reset: 3 attempts per hour per IP
+	passwordResetLimiter := middleware.NewRateLimiter(3, 1*time.Hour)
 
 	// Middleware
 	r.Use(middleware.LoggingMiddleware(appLogger))
@@ -220,13 +234,13 @@ func main() {
 				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name)
 		})
 
-		// Auth routes (public)
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
-		r.Post("/auth/forgot-password", authHandler.ForgotPassword)
-		r.Post("/auth/reset-password", authHandler.ResetPassword)
+		// Auth routes (public with rate limiting)
+		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/register", authHandler.Register)
+		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/login", authHandler.Login)
+		r.With(middleware.RateLimit(passwordResetLimiter)).Post("/auth/forgot-password", authHandler.ForgotPassword)
+		r.With(middleware.RateLimit(passwordResetLimiter)).Post("/auth/reset-password", authHandler.ResetPassword)
 		r.Get("/auth/verify-email", authHandler.VerifyEmail)
-		r.Post("/auth/resend-verification", authHandler.ResendVerification)
+		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/resend-verification", authHandler.ResendVerification)
 		r.Post("/auth/refresh", authHandler.RefreshToken)
 		r.Post("/auth/revoke", authHandler.RevokeToken)
 
@@ -263,6 +277,9 @@ func main() {
 			r.Get("/users/settings", settingsHandler.GetSettings)
 			r.Put("/users/settings", settingsHandler.UpdateSettings)
 			r.Put("/users/password", userHandler.ChangePassword)
+
+			// User audit log routes (authenticated - own logs only)
+			r.Get("/users/me/audit-logs", auditLogHandler.GetMyAuditLogs)
 
 			// Workout Template routes (authenticated)
 			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
@@ -306,9 +323,23 @@ func main() {
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+
+				// Data cleanup routes
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
 				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)
 				r.Put("/data-cleanup/wod-record/{id}", adminHandler.UpdateWODRecord)
+
+				// Audit log routes (admin only)
+				r.Get("/audit-logs", auditLogHandler.ListAuditLogs)
+				r.Get("/audit-logs/{id}", auditLogHandler.GetAuditLog)
+				r.Post("/audit-logs/cleanup", auditLogHandler.CleanupOldLogs)
+
+				// User management routes (admin only)
+				r.Get("/users", adminUserHandler.ListUsers)
+				r.Post("/users/{id}/unlock", adminUserHandler.UnlockUser)
+				r.Post("/users/{id}/disable", adminUserHandler.DisableUser)
+				r.Post("/users/{id}/enable", adminUserHandler.EnableUser)
+				r.Put("/users/{id}/role", adminUserHandler.ChangeUserRole)
 			})
 		})
 	})
