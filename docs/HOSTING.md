@@ -46,19 +46,29 @@ Using Docker Compose simplifies the deployment process by allowing you to define
 1. **Install Docker and Docker Compose**: Ensure that both Docker and Docker Compose are installed
 2. on your server. You can follow the official installation guides for your operating system.
 3. **Create a Docker Compose File**: Create a `docker-compose.yml` file with the following content:
-   ```yaml
-   version: '3.8'
-   services:
-     actalog-db:
-       image: postgres:latest
-       environment:
-         POSTGRES_USER: actalog
-         POSTGRES_PASSWORD: yourpassword
-         POSTGRES_DB: actalog_db
-         volumes:
-              - actalog-db-data:/var/lib/postgresql/data
-         networks:
 
+    --- fix ---
+
+### Deploying from Source
+To deploy ActaLog from source, follow these steps:
+
+   **See SETUP.md for initial setup instructions.**
+
+    
+### Reverse Proxy Setup
+Setting up a reverse proxy is essential for securely hosting ActaLog in a production environment. A reverse proxy acts as an intermediary between clients and the ActaLog application, providing benefits such as load balancing, SSL termination, and improved security.
+Here are the general steps to set up a reverse proxy for ActaLog:
+    1.  **Choose a Reverse Proxy**: Select a reverse proxy server such as Nginx, Apache, or Caddy based on your preferences and requirements.
+    2.  **Install the Reverse Proxy**: Install the chosen reverse proxy server on
+    3.  your server following the official installation instructions.
+    4.  **Configure the Reverse Proxy**: Set up the reverse proxy to forward
+    5.  requests to the ActaLog application. This typically involves creating a configuration file that specifies the server name, port, and proxy settings.
+    6.  **Enable HTTPS**: For secure communication, configure SSL/TLS certificates
+    7.  for your reverse proxy. You can use Let's Encrypt for free SSL certificates.
+    8.  **Test the Configuration**: After setting up the reverse proxy, test
+    9.  the configuration to ensure that requests are correctly forwarded to ActaLog and that HTTPS is functioning properly.
+    10. **Monitor and Maintain**: Regularly monitor the reverse proxy logs and
+    
 
 
 ## Example Reverse Proxy Configuration
