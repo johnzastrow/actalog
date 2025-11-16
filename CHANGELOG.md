@@ -5,6 +5,50 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6-beta] - 2025-11-15
+
+### Added
+- **Admin User Management Enhancements**
+  - Delete user functionality with confirmation dialog (`DELETE /api/admin/users/{id}`)
+  - Prevents admin from deleting their own account
+  - Displays what will be deleted: profile, workouts, PRs, performance history
+  - Audit logging for all user deletion operations
+  - Service layer validation with authorization checks
+
+- **Session Management System**
+  - List active sessions endpoint (`GET /api/sessions`)
+  - Revoke specific session endpoint (`DELETE /api/sessions/{id}`)
+  - Revoke all sessions endpoint (`POST /api/sessions/revoke-all`)
+  - Session ownership validation (users can only manage their own sessions)
+  - Audit logging for session revocation events
+  - Service layer: `GetActiveSessions()`, `RevokeSession()`, `RevokeAllSessions()`
+  - Handler layer: `SessionHandler` with list, revoke, and revoke-all operations
+  - All endpoints require authentication
+
+- **User Repository Enhancements**
+  - Fixed `List()` method to include all admin-relevant fields
+  - Now properly selects: email_verified, account_disabled, locked_at, locked_until, disable_reason
+  - Proper NULL handling for all nullable timestamp and string fields
+
+### Fixed
+- **Admin Users View**
+  - Icons now correctly display current user state (verified, locked, enabled, role)
+  - Dynamic icon shapes and colors based on state
+  - Enhanced tooltips showing current state explicitly
+  - All toggles (verify email, lock, enable, role, delete) now work correctly
+
+### Changed
+- Version bumped to 0.4.6-beta
+- Build number reset to 1 for new minor version
+- Admin panel now has full CRUD capabilities for user management
+
+### Technical
+- Clean Architecture maintained: service → repository pattern
+- Audit trail for all administrative actions
+- Service layer performs authorization checks before operations
+- CASCADE delete configured for related user data
+- Security: token ownership validation prevents unauthorized access
+
 ## [0.4.5-beta] - 2025-11-14
 
 ### Added

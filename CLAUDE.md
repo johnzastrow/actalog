@@ -586,6 +586,92 @@ type EmailVerificationToken struct {
 }
 ```
 
+### Session Management System (v0.4.6-beta)
+
+**Location:** `internal/repository/refresh_token_repository.go`, `internal/service/user_service.go`, `internal/handler/session_handler.go`
+
+Complete session (refresh token) management for security and user control:
+- **List Sessions:** `GET /api/sessions` - Get all active sessions for authenticated user
+- **Revoke Session:** `DELETE /api/sessions/{id}` - Revoke a specific session
+- **Revoke All Sessions:** `POST /api/sessions/revoke-all` - Revoke all user sessions
+
+**Key Implementation Details:**
+- Session ownership validation (users can only manage their own sessions)
+- Service layer methods: `GetActiveSessions()`, `RevokeSession()`, `RevokeAllSessions()`
+- Audit logging for all session operations (security trail)
+- Sessions are refresh tokens stored in `refresh_tokens` table
+- Each session has: id, user_id, token, expires_at, created_at, revoked_at, device_info
+- Authorization checks prevent users from revoking other users' sessions
+
+**Security Features:**
+- All endpoints require authentication
+- Token ownership verified before any operation
+- Audit trail logged with user_email and token_id
+- Supports "revoke all except current" for security scenarios
+- Expired tokens automatically excluded from active session list
+
+**Use Cases:**
+- User wants to log out from all devices
+- User suspects unauthorized access and wants to revoke all sessions
+- User manages active sessions from security settings
+- Admin monitoring via audit logs
+
+**Domain Models:**
+```go
+type RefreshToken struct {
+  ID         int64      `json:"id" db:"id"`
+  UserID     int64      `json:"user_id" db:"user_id"`
+  Token      string     `json:"token" db:"token"`
+  ExpiresAt  time.Time  `json:"expires_at" db:"expires_at"`
+  CreatedAt  time.Time  `json:"created_at" db:"created_at"`
+  RevokedAt  *time.Time `json:"revoked_at,omitempty" db:"revoked_at"`
+  DeviceInfo string     `json:"device_info,omitempty" db:"device_info"`
+}
+```
+
+### Admin User Management (v0.4.6-beta)
+
+**Location:** `internal/service/user_service.go`, `internal/handler/admin_user_handler.go`, `web/src/views/AdminUsersView.vue`
+
+Complete administrative control over user accounts:
+- **List Users:** `GET /api/admin/users` - Paginated list with all user details
+- **Get User Details:** `GET /api/admin/users/{id}` - Full user information with admin fields
+- **Unlock Account:** `POST /api/admin/users/{id}/unlock` - Remove temporary account lock
+- **Disable Account:** `POST /api/admin/users/{id}/disable` - Permanently disable with reason
+- **Enable Account:** `POST /api/admin/users/{id}/enable` - Re-enable disabled account
+- **Change User Role:** `PUT /api/admin/users/{id}/role` - Change between "user" and "admin"
+- **Toggle Email Verification:** `POST /api/admin/users/{id}/toggle-email-verification` - Manual verification control
+- **Delete User:** `DELETE /api/admin/users/{id}` - Permanently delete user and all data
+
+**Key Implementation Details:**
+- All operations restricted to admin role via `middleware.AdminOnly`
+- Service layer validates admin permissions before each operation
+- Self-modification prevention (admin cannot delete/disable themselves)
+- Audit logging for all administrative actions
+- Cascading deletes configured for user-related data
+- Fixed `List()` method to include all admin-relevant fields
+
+**User Repository Fields:**
+- email_verified, email_verified_at - Email verification status
+- failed_login_attempts, locked_at, locked_until - Account lockout
+- account_disabled, disabled_at, disabled_by_user_id, disable_reason - Permanent disable
+- All fields properly handled with NULL-safe SQL queries
+
+**Frontend Integration:**
+- `web/src/views/AdminUsersView.vue` - Full admin user management UI
+- Dynamic icons showing current state (lock, verification, enabled, role)
+- Color-coded states: green (positive), red (negative), purple (admin), blue (user)
+- Enhanced tooltips displaying current state explicitly
+- Confirmation dialogs for destructive operations (disable, delete)
+- Delete dialog shows what will be removed: profile, workouts, PRs, performance history
+
+**Security Features:**
+- Admin-only access enforced by middleware
+- Authorization checks in service layer
+- Self-modification prevention
+- Audit trail for accountability
+- Confirmation required for destructive actions
+
 ### Workout Management (v0.2.0-beta)
 
 **Location:** `internal/repository/workout_repository.go`, `internal/service/workout_service.go`, `internal/handler/workout_handler.go`
