@@ -54,7 +54,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 		SELECT id, email, password_hash, name, profile_image, role,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
-		       account_disabled, disabled_at, disabled_by_user_id
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
 		FROM users
 		WHERE id = ?
 	`
@@ -62,6 +62,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
 	var disabledByUserID sql.NullInt64
+	var disableReason sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
 		&user.ID,
@@ -81,6 +82,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 		&user.AccountDisabled,
 		&disabledAt,
 		&disabledByUserID,
+		&disableReason,
 	)
 
 	if err != nil {
@@ -109,6 +111,9 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 	if disabledByUserID.Valid {
 		user.DisabledByUserID = &disabledByUserID.Int64
 	}
+	if disableReason.Valid {
+		user.DisableReason = &disableReason.String
+	}
 
 	return user, nil
 }
@@ -119,7 +124,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 		SELECT id, email, password_hash, name, profile_image, role,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
-		       account_disabled, disabled_at, disabled_by_user_id
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
 		FROM users
 		WHERE email = ?
 	`
@@ -127,6 +132,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
 	var disabledByUserID sql.NullInt64
+	var disableReason sql.NullString
 
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID,
@@ -146,6 +152,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.AccountDisabled,
 		&disabledAt,
 		&disabledByUserID,
+		&disableReason,
 	)
 
 	if err != nil {
@@ -173,6 +180,9 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 	}
 	if disabledByUserID.Valid {
 		user.DisabledByUserID = &disabledByUserID.Int64
+	}
+	if disableReason.Valid {
+		user.DisableReason = &disableReason.String
 	}
 
 	return user, nil
@@ -256,7 +266,9 @@ func (r *SQLiteUserRepository) Delete(id int64) error {
 func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 	query := `
 		SELECT id, email, password_hash, name, profile_image, role,
-		       created_at, updated_at, last_login_at
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
 		FROM users
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
@@ -271,7 +283,9 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 	var users []*domain.User
 	for rows.Next() {
 		user := &domain.User{}
-		var lastLoginAt sql.NullTime
+		var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+		var disabledByUserID sql.NullInt64
+		var disableReason sql.NullString
 
 		err := rows.Scan(
 			&user.ID,
@@ -283,13 +297,41 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 			&user.CreatedAt,
 			&user.UpdatedAt,
 			&lastLoginAt,
+			&user.EmailVerified,
+			&emailVerifiedAt,
+			&user.FailedLoginAttempts,
+			&lockedAt,
+			&lockedUntil,
+			&user.AccountDisabled,
+			&disabledAt,
+			&disabledByUserID,
+			&disableReason,
 		)
 		if err != nil {
 			return nil, err
 		}
 
+		// Handle nullable fields
 		if lastLoginAt.Valid {
 			user.LastLoginAt = &lastLoginAt.Time
+		}
+		if emailVerifiedAt.Valid {
+			user.EmailVerifiedAt = &emailVerifiedAt.Time
+		}
+		if lockedAt.Valid {
+			user.LockedAt = &lockedAt.Time
+		}
+		if lockedUntil.Valid {
+			user.LockedUntil = &lockedUntil.Time
+		}
+		if disabledAt.Valid {
+			user.DisabledAt = &disabledAt.Time
+		}
+		if disabledByUserID.Valid {
+			user.DisabledByUserID = &disabledByUserID.Int64
+		}
+		if disableReason.Valid {
+			user.DisableReason = &disableReason.String
 		}
 
 		users = append(users, user)
@@ -391,13 +433,18 @@ func (r *SQLiteUserRepository) IsAccountLocked(userID int64) (bool, *time.Time, 
 }
 
 // DisableAccount permanently disables a user account (admin action)
-func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64) error {
+func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64, reason string) error {
 	now := time.Now()
 	query := `UPDATE users
-		SET account_disabled = 1, disabled_at = ?, disabled_by_user_id = ?, updated_at = ?
+		SET account_disabled = 1, disabled_at = ?, disabled_by_user_id = ?, disable_reason = ?, updated_at = ?
 		WHERE id = ?`
 
-	_, err := r.db.Exec(query, now, disabledBy, now, userID)
+	reasonPtr := &reason
+	if reason == "" {
+		reasonPtr = nil
+	}
+
+	_, err := r.db.Exec(query, now, disabledBy, reasonPtr, now, userID)
 	if err != nil {
 		return fmt.Errorf("failed to disable account: %w", err)
 	}
@@ -407,7 +454,7 @@ func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64) er
 // EnableAccount re-enables a disabled user account (admin action)
 func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
 	query := `UPDATE users
-		SET account_disabled = 0, disabled_at = NULL, disabled_by_user_id = NULL, updated_at = ?
+		SET account_disabled = 0, disabled_at = NULL, disabled_by_user_id = NULL, disable_reason = NULL, updated_at = ?
 		WHERE id = ?`
 
 	_, err := r.db.Exec(query, time.Now(), userID)

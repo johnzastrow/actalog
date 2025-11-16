@@ -28,6 +28,7 @@ type User struct {
 	AccountDisabled             bool       `json:"account_disabled" db:"account_disabled"` // Expose so client knows
 	DisabledAt                  *time.Time `json:"disabled_at,omitempty" db:"disabled_at"`
 	DisabledByUserID            *int64     `json:"disabled_by_user_id,omitempty" db:"disabled_by_user_id"`
+	DisableReason               *string    `json:"disable_reason,omitempty" db:"disable_reason"` // Reason for account disable
 
 	CreatedAt                   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt                   time.Time  `json:"updated_at" db:"updated_at"`
@@ -64,7 +65,7 @@ type UserRepository interface {
 	LockAccount(userID int64, lockDuration time.Duration) error
 	UnlockAccount(userID int64) error
 	IsAccountLocked(userID int64) (bool, *time.Time, error) // Returns locked status and unlock time
-	DisableAccount(userID int64, disabledBy int64) error
+	DisableAccount(userID int64, disabledBy int64, reason string) error
 	EnableAccount(userID int64) error
 }
 
