@@ -75,18 +75,33 @@
 
         <!-- Status Column -->
         <template #item.status="{ item }">
-          <v-chip v-if="item.account_disabled" color="error" size="small">
-            <v-icon start size="small">mdi-cancel</v-icon>
-            Disabled
-          </v-chip>
-          <v-chip v-else-if="isLocked(item)" color="warning" size="small">
-            <v-icon start size="small">mdi-lock</v-icon>
-            Locked
-          </v-chip>
-          <v-chip v-else color="success" size="small">
-            <v-icon start size="small">mdi-check-circle</v-icon>
-            Active
-          </v-chip>
+          <div class="d-flex align-center gap-2">
+            <v-chip v-if="item.account_disabled" color="error" size="small">
+              <v-icon start size="small">mdi-cancel</v-icon>
+              Disabled
+            </v-chip>
+            <v-chip v-else-if="isLocked(item)" color="warning" size="small">
+              <v-icon start size="small">mdi-lock</v-icon>
+              Locked
+            </v-chip>
+            <v-chip v-else color="success" size="small">
+              <v-icon start size="small">mdi-check-circle</v-icon>
+              Active
+            </v-chip>
+
+            <!-- Email Verification Badge -->
+            <v-tooltip :text="item.email_verified ? 'Email Verified' : 'Email Not Verified'" location="top">
+              <template #activator="{ props }">
+                <v-icon
+                  v-bind="props"
+                  :color="item.email_verified ? 'success' : 'grey-lighten-1'"
+                  size="small"
+                >
+                  {{ item.email_verified ? 'mdi-email-check-outline' : 'mdi-email-outline' }}
+                </v-icon>
+              </template>
+            </v-tooltip>
+          </div>
         </template>
 
         <!-- Last Login Column -->
@@ -100,8 +115,27 @@
         <!-- Actions Column -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
+            <!-- View Details Button -->
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon
+                  size="small"
+                  variant="text"
+                  @click="viewUserDetails(item)"
+                >
+                  <v-icon color="primary">mdi-information-outline</v-icon>
+                </v-btn>
+              </template>
+              <div class="text-center">
+                <div class="font-weight-bold">View User Details</div>
+                <div class="text-caption">See all account information, flags, and timestamps</div>
+              </div>
+            </v-tooltip>
+
             <!-- Unlock Button -->
-            <v-tooltip text="Unlock Account" location="top">
+            <v-tooltip location="top">
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -111,13 +145,19 @@
                   :disabled="!isLocked(item)"
                   @click="unlockUser(item)"
                 >
-                  <v-icon>mdi-lock-open</v-icon>
+                  <v-icon :color="isLocked(item) ? 'error' : 'success'">
+                    {{ isLocked(item) ? 'mdi-lock' : 'mdi-lock-open' }}
+                  </v-icon>
                 </v-btn>
               </template>
+              <div class="text-center">
+                <div class="font-weight-bold">{{ isLocked(item) ? 'Click to Unlock' : 'Not Locked' }}</div>
+                <div class="text-caption">Current: {{ isLocked(item) ? 'LOCKED' : 'UNLOCKED' }} - {{ isLocked(item) ? 'Remove automatic login lockout' : 'No action needed' }}</div>
+              </div>
             </v-tooltip>
 
             <!-- Enable/Disable Button -->
-            <v-tooltip :text="item.account_disabled ? 'Enable Account' : 'Disable Account'" location="top">
+            <v-tooltip location="top">
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -126,13 +166,40 @@
                   variant="text"
                   @click="item.account_disabled ? enableUser(item) : disableUser(item)"
                 >
-                  <v-icon>{{ item.account_disabled ? 'mdi-account-check' : 'mdi-account-cancel' }}</v-icon>
+                  <v-icon :color="item.account_disabled ? 'error' : 'success'">
+                    {{ item.account_disabled ? 'mdi-account-off' : 'mdi-account-check' }}
+                  </v-icon>
                 </v-btn>
               </template>
+              <div class="text-center">
+                <div class="font-weight-bold">Click to {{ item.account_disabled ? 'Enable' : 'Disable' }} Account</div>
+                <div class="text-caption">Current: {{ item.account_disabled ? 'DISABLED' : 'ENABLED' }} - {{ item.account_disabled ? 'Re-activate this user account' : 'Permanently disable this user account' }}</div>
+              </div>
+            </v-tooltip>
+
+            <!-- Toggle Email Verification -->
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon
+                  size="small"
+                  variant="text"
+                  @click="toggleEmailVerification(item)"
+                >
+                  <v-icon :color="item.email_verified ? 'success' : 'error'">
+                    {{ item.email_verified ? 'mdi-email-check-outline' : 'mdi-email-remove-outline' }}
+                  </v-icon>
+                </v-btn>
+              </template>
+              <div class="text-center">
+                <div class="font-weight-bold">Click to {{ item.email_verified ? 'Unverify' : 'Verify' }} Email</div>
+                <div class="text-caption">Current: {{ item.email_verified ? 'VERIFIED' : 'NOT VERIFIED' }} - {{ item.email_verified ? 'Remove email verification status' : 'Manually verify user email address' }}</div>
+              </div>
             </v-tooltip>
 
             <!-- Change Role Button -->
-            <v-tooltip text="Change Role" location="top">
+            <v-tooltip location="top">
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -141,9 +208,34 @@
                   variant="text"
                   @click="openRoleDialog(item)"
                 >
-                  <v-icon>mdi-shield-account</v-icon>
+                  <v-icon :color="item.role === 'admin' ? 'purple' : 'blue'">
+                    {{ item.role === 'admin' ? 'mdi-shield-crown' : 'mdi-account' }}
+                  </v-icon>
                 </v-btn>
               </template>
+              <div class="text-center">
+                <div class="font-weight-bold">Change Role (Currently: {{ item.role === 'admin' ? 'Admin' : 'User' }})</div>
+                <div class="text-caption">Switch between User and Admin permissions</div>
+              </div>
+            </v-tooltip>
+
+            <!-- Delete User Button -->
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon
+                  size="small"
+                  variant="text"
+                  @click="openDeleteDialog(item)"
+                >
+                  <v-icon color="error">mdi-delete</v-icon>
+                </v-btn>
+              </template>
+              <div class="text-center">
+                <div class="font-weight-bold">Delete User</div>
+                <div class="text-caption">Permanently remove this user account</div>
+              </div>
             </v-tooltip>
           </div>
         </template>
@@ -226,6 +318,147 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Delete User Dialog -->
+    <v-dialog v-model="deleteDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-error">
+          <v-icon class="mr-2">mdi-alert</v-icon>
+          Delete User Account
+        </v-card-title>
+        <v-card-text>
+          <v-alert type="warning" variant="tonal" class="mb-4">
+            <strong>Warning:</strong> This action cannot be undone!
+          </v-alert>
+          <div class="mb-4">
+            Are you sure you want to permanently delete the account for <strong>{{ selectedUser?.email }}</strong>?
+          </div>
+          <div class="text-body-2 text-medium-emphasis">
+            This will remove:
+            <ul class="mt-2">
+              <li>User profile and settings</li>
+              <li>All workout logs and data</li>
+              <li>Personal records and performance history</li>
+            </ul>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="deleteDialog = false">Cancel</v-btn>
+          <v-btn color="error" @click="confirmDelete" :loading="actionLoading">
+            Delete Permanently
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- User Details Dialog -->
+    <v-dialog v-model="detailsDialog" max-width="700">
+      <v-card v-if="userDetails">
+        <v-card-title class="d-flex align-center">
+          <v-icon class="mr-2">mdi-account-details</v-icon>
+          User Details
+        </v-card-title>
+        <v-divider />
+        <v-card-text>
+          <v-list>
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Email</v-list-item-title>
+              <v-list-item-subtitle class="d-flex align-center mt-1">
+                {{ userDetails.email }}
+                <v-chip
+                  v-if="userDetails.email_verified"
+                  color="success"
+                  size="x-small"
+                  class="ml-2"
+                >
+                  <v-icon start size="x-small">mdi-check</v-icon>
+                  Verified
+                </v-chip>
+                <v-chip
+                  v-else
+                  color="warning"
+                  size="x-small"
+                  class="ml-2"
+                >
+                  <v-icon start size="x-small">mdi-alert</v-icon>
+                  Not Verified
+                </v-chip>
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Name</v-list-item-title>
+              <v-list-item-subtitle>{{ userDetails.name || 'Not set' }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Role</v-list-item-title>
+              <v-list-item-subtitle>
+                <v-chip :color="userDetails.role === 'admin' ? 'error' : 'default'" size="small" class="mt-1">
+                  {{ userDetails.role }}
+                </v-chip>
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Account Status</v-list-item-title>
+              <v-list-item-subtitle>
+                <v-chip
+                  v-if="userDetails.account_disabled"
+                  color="error"
+                  size="small"
+                  class="mt-1"
+                >
+                  <v-icon start size="small">mdi-cancel</v-icon>
+                  Disabled
+                </v-chip>
+                <v-chip
+                  v-else
+                  color="success"
+                  size="small"
+                  class="mt-1"
+                >
+                  <v-icon start size="small">mdi-check-circle</v-icon>
+                  Active
+                </v-chip>
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="userDetails.account_disabled && userDetails.disable_reason">
+              <v-list-item-title class="text-subtitle-2">Disable Reason</v-list-item-title>
+              <v-list-item-subtitle class="white-space-pre-wrap mt-1">
+                {{ userDetails.disable_reason }}
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="userDetails.disabled_at">
+              <v-list-item-title class="text-subtitle-2">Disabled At</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(userDetails.disabled_at) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Created At</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(userDetails.created_at) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="userDetails.last_login_at">
+              <v-list-item-title class="text-subtitle-2">Last Login</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(userDetails.last_login_at) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="userDetails.email_verified_at">
+              <v-list-item-title class="text-subtitle-2">Email Verified At</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(userDetails.email_verified_at) }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="detailsDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -245,7 +478,10 @@ const search = ref('')
 
 const disableDialog = ref(false)
 const roleDialog = ref(false)
+const detailsDialog = ref(false)
+const deleteDialog = ref(false)
 const selectedUser = ref(null)
+const userDetails = ref(null)
 const disableReason = ref('')
 const newRole = ref('user')
 
@@ -382,6 +618,66 @@ async function confirmRoleChange() {
   }
 }
 
+function openDeleteDialog(user) {
+  selectedUser.value = user
+  deleteDialog.value = true
+}
+
+async function confirmDelete() {
+  actionLoading.value = true
+  error.value = null
+  try {
+    await axios.delete(`/api/admin/users/${selectedUser.value.id}`)
+    successMessage.value = `User ${selectedUser.value.email} has been permanently deleted`
+    deleteDialog.value = false
+    await loadUsers()
+  } catch (e) {
+    console.error('Failed to delete user:', e)
+    error.value = e.response?.data?.message || 'Failed to delete user'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function viewUserDetails(user) {
+  actionLoading.value = true
+  error.value = null
+  try {
+    const response = await axios.get(`/api/admin/users/${user.id}`)
+    userDetails.value = response.data
+    detailsDialog.value = true
+  } catch (e) {
+    console.error('Failed to load user details:', e)
+    error.value = e.response?.data?.message || 'Failed to load user details'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function toggleEmailVerification(user) {
+  actionLoading.value = true
+  error.value = null
+  try {
+    const newStatus = !user.email_verified
+    await axios.post(`/api/admin/users/${user.id}/toggle-email-verification`, {
+      verified: newStatus
+    })
+    successMessage.value = `Email ${newStatus ? 'verified' : 'unverified'} for ${user.email}`
+    await loadUsers()
+  } catch (e) {
+    console.error('Failed to toggle email verification:', e)
+    error.value = e.response?.data?.message || 'Failed to toggle email verification'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function formatFullDate(dateString) {
+  if (!dateString) return 'Never'
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
 function previousPage() {
   if (offset.value >= limit.value) {
     offset.value -= limit.value
@@ -408,5 +704,9 @@ onMounted(() => {
 
 .gap-2 {
   gap: 8px;
+}
+
+.white-space-pre-wrap {
+  white-space: pre-wrap;
 }
 </style>

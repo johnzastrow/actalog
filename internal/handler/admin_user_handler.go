@@ -245,3 +245,117 @@ func (h *AdminUserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request
 		"message": "User role changed successfully",
 	})
 }
+
+// ToggleEmailVerification handles POST /api/admin/users/:id/toggle-email-verification
+func (h *AdminUserHandler) ToggleEmailVerification(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get target user ID from URL
+	targetUserIDStr := chi.URLParam(r, "id")
+	targetUserID, err := strconv.ParseInt(targetUserIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Parse request body
+	var request struct {
+		Verified bool `json:"verified"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Toggle email verification
+	if err := h.userService.SetEmailVerification(adminUserID, targetUserID, request.Verified); err != nil {
+		h.logger.Error("Failed to toggle email verification",
+			"admin_user_id", adminUserID,
+			"target_user_id", targetUserID,
+			"verified", request.Verified,
+			"error", err.Error(),
+		)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.logger.Info("Email verification toggled",
+		"admin_user_id", adminUserID,
+		"target_user_id", targetUserID,
+		"verified", request.Verified,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Email verification updated successfully",
+	})
+}
+
+// GetUserDetails handles GET /api/admin/users/:id
+func (h *AdminUserHandler) GetUserDetails(w http.ResponseWriter, r *http.Request) {
+	// Get target user ID from URL
+	targetUserIDStr := chi.URLParam(r, "id")
+	targetUserID, err := strconv.ParseInt(targetUserIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get user with admin details
+	user, err := h.userService.GetUserByIDWithAdminDetails(targetUserID)
+	if err != nil {
+		h.logger.Error("Failed to get user details",
+			"target_user_id", targetUserID,
+			"error", err.Error(),
+		)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+// DeleteUser handles DELETE /api/admin/users/:id
+func (h *AdminUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get target user ID from URL
+	targetUserIDStr := chi.URLParam(r, "id")
+	targetUserID, err := strconv.ParseInt(targetUserIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Delete the user
+	if err := h.userService.DeleteUser(adminUserID, targetUserID); err != nil {
+		h.logger.Error("Failed to delete user",
+			"admin_user_id", adminUserID,
+			"target_user_id", targetUserID,
+			"error", err.Error(),
+		)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	h.logger.Info("User deleted",
+		"admin_user_id", adminUserID,
+		"target_user_id", targetUserID,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "User deleted successfully",
+	})
+}

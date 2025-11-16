@@ -747,8 +747,8 @@ func (s *UserService) DisableAccount(adminUserID, targetUserID int64, reason str
 		return fmt.Errorf("cannot disable your own account")
 	}
 
-	// Disable the account
-	if err := s.userRepo.DisableAccount(targetUserID, adminUserID); err != nil {
+	// Disable the account with reason
+	if err := s.userRepo.DisableAccount(targetUserID, adminUserID, reason); err != nil {
 		return fmt.Errorf("failed to disable account: %w", err)
 	}
 
@@ -852,4 +852,111 @@ func (s *UserService) ListUsers(limit, offset int) ([]*domain.User, int64, error
 	}
 
 	return users, count, nil
+}
+
+// SetEmailVerification sets email verification status (admin operation)
+func (s *UserService) SetEmailVerification(adminUserID, targetUserID int64, verified bool) error {
+	// Get both users for audit logging
+	admin, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+
+	target, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+
+	// Update email verification status
+	if verified {
+		now := time.Now()
+		target.EmailVerified = true
+		target.EmailVerifiedAt = &now
+	} else {
+		target.EmailVerified = false
+		target.EmailVerifiedAt = nil
+	}
+
+	target.UpdatedAt = time.Now()
+	if err := s.userRepo.Update(target); err != nil {
+		return fmt.Errorf("failed to update email verification: %w", err)
+	}
+
+	// Log the verification change
+	if s.auditLogService != nil {
+		eventType := "email_verified"
+		if !verified {
+			eventType = "email_unverified"
+		}
+		details := map[string]interface{}{
+			"admin_email":  admin.Email,
+			"target_email": target.Email,
+			"verified":     verified,
+		}
+		s.auditLogService.LogEvent(eventType, &adminUserID, &targetUserID, nil, nil, details)
+	}
+
+	return nil
+}
+
+// GetUserByIDWithAdminDetails returns a user with all admin-visible details
+func (s *UserService) GetUserByIDWithAdminDetails(userID int64) (*domain.User, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
+	// Don't return password hash
+	user.PasswordHash = ""
+
+	return user, nil
+}
+
+// DeleteUser permanently deletes a user account (admin action)
+func (s *UserService) DeleteUser(adminUserID int64, targetUserID int64) error {
+	// Verify the admin user exists and is an admin
+	adminUser, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+	if adminUser == nil {
+		return ErrUserNotFound
+	}
+	if adminUser.Role != "admin" {
+		return fmt.Errorf("only admins can delete users")
+	}
+
+	// Get the target user
+	targetUser, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+	if targetUser == nil {
+		return ErrUserNotFound
+	}
+
+	// Prevent admin from deleting themselves
+	if adminUserID == targetUserID {
+		return fmt.Errorf("cannot delete your own account")
+	}
+
+	// Delete the user (this will cascade delete related data based on DB constraints)
+	if err := s.userRepo.Delete(targetUserID); err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	// Log the deletion
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"admin_email":  adminUser.Email,
+			"target_email": targetUser.Email,
+			"target_id":    targetUserID,
+		}
+		s.auditLogService.LogEvent("user_deleted", &adminUserID, &targetUserID, nil, nil, details)
+	}
+
+	return nil
 }

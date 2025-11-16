@@ -805,6 +805,78 @@ var migrations = []Migration{
 			}
 		},
 	},
+	// v0.4.7 - Add disable_reason column to users table
+	{
+		Version:     "0.4.7",
+		Description: "Add disable_reason column to users table for tracking why an account was disabled",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// Check if column already exists
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('users') WHERE name='disable_reason'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for existing column: %w", err)
+				}
+
+				if count == 0 {
+					_, err = db.Exec(`ALTER TABLE users ADD COLUMN disable_reason TEXT`)
+					if err != nil {
+						return fmt.Errorf("failed to add disable_reason column: %w", err)
+					}
+				}
+				return nil
+
+			case "postgres":
+				_, err := db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS disable_reason TEXT`)
+				if err != nil {
+					return fmt.Errorf("failed to add disable_reason column: %w", err)
+				}
+				return nil
+
+			case "mysql":
+				// Check if column exists
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns
+					WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'disable_reason'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for existing column: %w", err)
+				}
+
+				if count == 0 {
+					_, err = db.Exec(`ALTER TABLE users ADD COLUMN disable_reason TEXT`)
+					if err != nil {
+						return fmt.Errorf("failed to add disable_reason column: %w", err)
+					}
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite doesn't support DROP COLUMN easily
+				return fmt.Errorf("SQLite does not support dropping columns; manual intervention required")
+
+			case "postgres":
+				_, err := db.Exec(`ALTER TABLE users DROP COLUMN IF EXISTS disable_reason`)
+				return err
+
+			case "mysql":
+				_, err := db.Exec(`ALTER TABLE users DROP COLUMN disable_reason`)
+				if err != nil && !strings.Contains(err.Error(), "check that column/key exists") {
+					return err
+				}
+				return nil
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+		},
+	},
 	// Future migrations for incremental schema changes will be added here
 }
 
