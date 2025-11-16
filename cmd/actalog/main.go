@@ -191,6 +191,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, userRepo, appLogger)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
 	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
+	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -280,6 +281,11 @@ func main() {
 
 			// User audit log routes (authenticated - own logs only)
 			r.Get("/users/me/audit-logs", auditLogHandler.GetMyAuditLogs)
+
+			// Session management routes (authenticated)
+			r.Get("/sessions", sessionHandler.ListSessions)
+			r.Delete("/sessions/{id}", sessionHandler.RevokeSession)
+			r.Post("/sessions/revoke-all", sessionHandler.RevokeAllSessions)
 
 			// Workout Template routes (authenticated)
 			r.Post("/templates", workoutTemplateHandler.CreateTemplate)

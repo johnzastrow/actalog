@@ -10,7 +10,14 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.3.3-beta
+**Current Version:** 0.4.6-beta
+
+## Recent Changes (v0.4.6-beta)
+
+- Added session management endpoints and audit logging
+- Enhanced admin user management with delete functionality
+- Fixed user repository List() method to include all admin fields
+- All user security fields now properly exposed to admin interface
 
 ## Entity Relationship Diagram
 

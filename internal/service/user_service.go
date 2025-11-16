@@ -960,3 +960,117 @@ func (s *UserService) DeleteUser(adminUserID int64, targetUserID int64) error {
 
 	return nil
 }
+
+// GetActiveSessions returns all active refresh tokens (sessions) for a user
+func (s *UserService) GetActiveSessions(userID int64) ([]*domain.RefreshToken, error) {
+	// Verify the user exists
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
+	// Get all active refresh tokens
+	tokens, err := s.refreshTokenRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sessions: %w", err)
+	}
+
+	return tokens, nil
+}
+
+// RevokeSession revokes a specific session (refresh token)
+func (s *UserService) RevokeSession(userID int64, tokenID int64) error {
+	// Verify the user exists
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	// Get the token to verify it belongs to the user
+	tokens, err := s.refreshTokenRepo.GetByUserID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get sessions: %w", err)
+	}
+
+	// Check if the token belongs to this user
+	found := false
+	for _, token := range tokens {
+		if token.ID == tokenID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("session not found or does not belong to user")
+	}
+
+	// Revoke the token
+	if err := s.refreshTokenRepo.Revoke(tokenID); err != nil {
+		return fmt.Errorf("failed to revoke session: %w", err)
+	}
+
+	// Log the event
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"user_email": user.Email,
+			"token_id":   tokenID,
+		}
+		s.auditLogService.LogEvent("session_revoked", &userID, nil, nil, nil, details)
+	}
+
+	return nil
+}
+
+// RevokeAllSessions revokes all sessions (refresh tokens) for a user except the current one
+func (s *UserService) RevokeAllSessions(userID int64, exceptTokenID *int64) error {
+	// Verify the user exists
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	// If exceptTokenID is provided, revoke all except that one
+	if exceptTokenID != nil {
+		tokens, err := s.refreshTokenRepo.GetByUserID(userID)
+		if err != nil {
+			return fmt.Errorf("failed to get sessions: %w", err)
+		}
+
+		for _, token := range tokens {
+			if token.ID != *exceptTokenID {
+				if err := s.refreshTokenRepo.Revoke(token.ID); err != nil {
+					return fmt.Errorf("failed to revoke session: %w", err)
+				}
+			}
+		}
+	} else {
+		// Revoke all tokens
+		if err := s.refreshTokenRepo.RevokeAllForUser(userID); err != nil {
+			return fmt.Errorf("failed to revoke all sessions: %w", err)
+		}
+	}
+
+	// Log the event
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"user_email": user.Email,
+			"revoked_all": exceptTokenID == nil,
+		}
+		if exceptTokenID != nil {
+			details["except_token_id"] = *exceptTokenID
+		}
+		s.auditLogService.LogEvent("all_sessions_revoked", &userID, nil, nil, nil, details)
+	}
+
+	return nil
+}
