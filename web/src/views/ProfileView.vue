@@ -209,15 +209,36 @@
 
           <v-list-item
             prepend-icon="mdi-account-multiple"
-            disabled
+            @click="$router.push('/admin/users')"
             rounded
+            style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #999">
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
               User Management
             </v-list-item-title>
             <v-list-item-subtitle class="text-caption" style="color: #999">
-              Coming soon
+              Manage accounts and permissions
             </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-history"
+            @click="$router.push('/admin/audit-logs')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Audit Logs
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              View security events and activity
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
           </v-list-item>
 
           <v-list-item

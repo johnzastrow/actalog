@@ -12,6 +12,39 @@
           </v-card-title>
 
           <v-card-text class="pa-6">
+            <!-- Account Locked Alert -->
+            <v-alert
+              v-if="accountLocked"
+              type="error"
+              variant="tonal"
+              class="mb-4"
+              closable
+              @click:close="accountLocked = false"
+            >
+              <div class="text-subtitle-2 mb-1">Account Locked</div>
+              <div class="text-body-2">
+                {{ errorMessage }}
+              </div>
+              <div class="text-caption mt-2">
+                Please try again later or contact support if you need immediate access.
+              </div>
+            </v-alert>
+
+            <!-- Rate Limited Alert -->
+            <v-alert
+              v-else-if="rateLimited"
+              type="warning"
+              variant="tonal"
+              class="mb-4"
+              closable
+              @click:close="rateLimited = false"
+            >
+              <div class="text-subtitle-2 mb-1">Too Many Attempts</div>
+              <div class="text-body-2">
+                {{ errorMessage }}
+              </div>
+            </v-alert>
+
             <v-form @submit.prevent="handleLogin">
               <v-text-field
                 v-model="email"
@@ -83,9 +116,15 @@ const password = ref('')
 const rememberMe = ref(false)
 const loading = ref(false)
 const errors = ref({})
+const accountLocked = ref(false)
+const rateLimited = ref(false)
+const errorMessage = ref('')
 
 const handleLogin = async () => {
   errors.value = {}
+  accountLocked.value = false
+  rateLimited.value = false
+  errorMessage.value = ''
   loading.value = true
 
   const success = await authStore.login(email.value, password.value, rememberMe.value)
@@ -93,7 +132,18 @@ const handleLogin = async () => {
   if (success) {
     router.push('/dashboard')
   } else {
-    errors.value.email = authStore.error || 'Login failed'
+    const error = authStore.error || 'Login failed'
+    errorMessage.value = error
+
+    // Check for specific error types
+    if (error.toLowerCase().includes('account locked') || error.toLowerCase().includes('too many failed')) {
+      accountLocked.value = true
+    } else if (error.toLowerCase().includes('too many requests') || error.toLowerCase().includes('rate limit')) {
+      rateLimited.value = true
+    } else {
+      // Regular login error
+      errors.value.email = error
+    }
   }
 
   loading.value = false
