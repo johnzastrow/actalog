@@ -23,14 +23,26 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ```mermaid
 erDiagram
-    USERS ||--o{ WORKOUTS : logs
+    USERS ||--o{ WORKOUTS : creates_templates
+    USERS ||--o{ USER_WORKOUTS : logs_instances
     USERS ||--o{ MOVEMENTS : creates
-    USERS ||--o{ REFRESH_TOKENS : has
-    USERS ||--o{ PASSWORD_RESETS : requests
-    USERS ||--o{ EMAIL_VERIFICATION_TOKENS : has
+    USERS ||--o{ WODS : creates
+    USERS ||--o{ REFRESH_TOKENS : has_sessions
+    USERS ||--o{ AUDIT_LOGS : performs_actions
+    USERS ||--o{ AUDIT_LOGS : is_target_of
 
     WORKOUTS ||--o{ WORKOUT_MOVEMENTS : contains
-    MOVEMENTS ||--o{ WORKOUT_MOVEMENTS : included_in
+    WORKOUTS ||--o{ WORKOUT_WODS : includes
+    WORKOUTS ||--o{ USER_WORKOUTS : instantiated_as
+
+    USER_WORKOUTS ||--o{ USER_WORKOUT_MOVEMENTS : tracks_movement_performance
+    USER_WORKOUTS ||--o{ USER_WORKOUT_WODS : tracks_wod_performance
+
+    MOVEMENTS ||--o{ WORKOUT_MOVEMENTS : included_in_templates
+    MOVEMENTS ||--o{ USER_WORKOUT_MOVEMENTS : performed_in
+
+    WODS ||--o{ WORKOUT_WODS : included_in_templates
+    WODS ||--o{ USER_WORKOUT_WODS : performed_in
 
     USERS {
         int64 id PK
@@ -42,10 +54,13 @@ erDiagram
         string role
         boolean email_verified
         timestamp email_verified_at
-        string verification_token
-        timestamp verification_token_expires_at
-        string reset_token
-        timestamp reset_token_expires_at
+        int failed_login_attempts
+        timestamp locked_at
+        timestamp locked_until
+        boolean account_disabled
+        timestamp disabled_at
+        int64 disabled_by_user_id FK
+        string disable_reason
         timestamp created_at
         timestamp updated_at
         timestamp last_login_at
@@ -53,12 +68,21 @@ erDiagram
 
     WORKOUTS {
         int64 id PK
+        string name
+        text notes
+        int64 created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_WORKOUTS {
+        int64 id PK
         int64 user_id FK
+        int64 workout_id FK
         date workout_date
         string workout_type
-        string workout_name
-        text notes
         int total_time
+        text notes
         timestamp created_at
         timestamp updated_at
     }
@@ -68,6 +92,22 @@ erDiagram
         string name UK
         text description
         string type
+        boolean is_standard
+        int64 created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WODS {
+        int64 id PK
+        string name UK
+        string source
+        string type
+        string regime
+        string score_type
+        text description
+        string url
+        text notes
         boolean is_standard
         int64 created_by FK
         timestamp created_at
@@ -91,6 +131,51 @@ erDiagram
         timestamp updated_at
     }
 
+    WORKOUT_WODS {
+        int64 id PK
+        int64 workout_id FK
+        int64 wod_id FK
+        string score_value
+        string division
+        boolean is_pr
+        int order_index
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_WORKOUT_MOVEMENTS {
+        int64 id PK
+        int64 user_workout_id FK
+        int64 movement_id FK
+        int sets
+        int reps
+        float weight
+        int time
+        float distance
+        boolean is_pr
+        text notes
+        int order_index
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_WORKOUT_WODS {
+        int64 id PK
+        int64 user_workout_id FK
+        int64 wod_id FK
+        string score_type
+        string score_value
+        int time_seconds
+        int rounds
+        int reps
+        float weight
+        boolean is_pr
+        text notes
+        int order_index
+        timestamp created_at
+        timestamp updated_at
+    }
+
     REFRESH_TOKENS {
         int64 id PK
         int64 user_id FK
@@ -101,44 +186,40 @@ erDiagram
         text device_info
     }
 
-    PASSWORD_RESETS {
+    AUDIT_LOGS {
         int64 id PK
         int64 user_id FK
-        string token UK
-        timestamp expires_at
-        timestamp used_at
-        timestamp created_at
-    }
-
-    EMAIL_VERIFICATION_TOKENS {
-        int64 id PK
-        int64 user_id FK
-        string token UK
-        timestamp expires_at
-        timestamp used_at
+        int64 target_user_id FK
+        string event_type
+        string ip_address
+        string user_agent
+        text details
         timestamp created_at
     }
 ```
 
 ## Logical Data Model
 
-The ActaLog data model follows a straightforward structure:
+The ActaLog data model uses a **template-based workout system**:
 
-**Workout Instance = User-specific workout logged on a date**
+**Workout Template** → **User Workout Instance** → **Performance Tracking**
 
 ### Key Principles
 
-1. **Workouts** are user-specific instances logged on specific dates
-2. **Movements** are exercise definitions (weightlifting, cardio, gymnastics)
-3. **Workout Movements** link workouts to movements with performance data (weight, sets, reps, etc.)
-4. Users can create custom movements in addition to standard pre-seeded movements
-5. Personal Records (PRs) are tracked per movement for each user
+1. **Workouts** are reusable templates containing movements and/or WODs
+2. **User Workouts** are specific instances of workouts logged by users on specific dates
+3. **Movements** are exercise definitions (weightlifting, cardio, gymnastics)
+4. **WODs** are benchmark workout definitions (Fran, Murph, etc.)
+5. **Performance Tracking** captures actual sets, reps, weights, times for each workout instance
+6. **Personal Records (PRs)** are automatically flagged for both movements and WODs
+7. Users can create custom movements and WODs in addition to standard pre-seeded ones
+8. **Audit Logs** track all security-related events and administrative actions
 
 ## Table Definitions
 
 ### users
 
-Stores user account information, authentication credentials, and profile data.
+Stores user account information, authentication credentials, profile data, and security features.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -148,13 +229,16 @@ Stores user account information, authentication credentials, and profile data.
 | name | VARCHAR(255) | NOT NULL | User display name |
 | birthday | DATE | NULL | User's birth date (added v0.3.3) |
 | profile_image | TEXT | NULL | URL to profile picture |
-| role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | User role (user, admin) |
+| role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | User role: 'user' or 'admin' |
 | email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | Email verification status (added v0.3.1) |
 | email_verified_at | TIMESTAMP | NULL | When email was verified (added v0.3.1) |
-| verification_token | VARCHAR(255) | NULL | Email verification token (added v0.3.1) |
-| verification_token_expires_at | TIMESTAMP | NULL | Verification token expiration (added v0.3.1) |
-| reset_token | VARCHAR(255) | NULL | Password reset token (added v0.2.0) |
-| reset_token_expires_at | TIMESTAMP | NULL | Reset token expiration (added v0.2.0) |
+| failed_login_attempts | INT | NOT NULL, DEFAULT 0 | Count of consecutive failed logins (added v0.4.6) |
+| locked_at | TIMESTAMP | NULL | When account was locked due to failed attempts (added v0.4.6) |
+| locked_until | TIMESTAMP | NULL | When account lock expires (added v0.4.6) |
+| account_disabled | BOOLEAN | NOT NULL, DEFAULT FALSE | Manual disable by admin (added v0.4.6) |
+| disabled_at | TIMESTAMP | NULL | When account was manually disabled (added v0.4.6) |
+| disabled_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who disabled the account (added v0.4.6) |
+| disable_reason | TEXT | NULL | Reason for account disable (added v0.4.7) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Account creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
 | last_login_at | TIMESTAMP | NULL | Last successful login |
@@ -164,40 +248,79 @@ Stores user account information, authentication credentials, and profile data.
 - UNIQUE INDEX idx_users_email (email)
 - INDEX idx_users_role (role)
 
-**Security Notes:**
-- Passwords hashed with bcrypt (cost factor 12)
-- First registered user automatically receives admin role
-- JWT tokens used for authentication (stored client-side only)
+**Foreign Keys:**
+- FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+
+**Security Features:**
+- **Password hashing:** Bcrypt with cost factor 12
+- **Account lockout:** 5 failed login attempts → 15 minute lock (configurable)
+- **Manual disable:** Admins can disable accounts with reason tracking
+- **Email verification:** Prevents login until email is verified
+- **Audit trail:** All security events logged to audit_logs table
+
+**Business Rules:**
+- First registered user automatically receives 'admin' role
+- JWT tokens used for authentication (stored client-side only, server tracks refresh tokens)
+- Locked accounts automatically unlock after locked_until timestamp
+- Disabled accounts cannot login until re-enabled by admin
+- Admin cannot disable their own account
 
 ### workouts
 
-Stores user-specific workout instances logged on specific dates.
+Stores reusable workout templates (not instances). Templates can be standard (pre-seeded) or custom (user-created).
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| workout_date | DATE | NOT NULL | Date workout was performed |
-| workout_type | VARCHAR(50) | NOT NULL | Type: strength, metcon, cardio, mixed |
-| workout_name | VARCHAR(255) | NULL | Optional workout name/title |
-| notes | TEXT | NULL | User's notes for this workout |
-| total_time | INT | NULL | Total workout duration (seconds) |
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout template identifier |
+| name | VARCHAR(255) | NOT NULL | Template name (e.g., "Strength Training - Back Squat Focus") |
+| notes | TEXT | NULL | Template description/instructions |
+| created_by | BIGINT | NULL, FOREIGN KEY | User who created template (NULL for standard) |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
 
 **Indexes:**
 - PRIMARY KEY (id)
-- INDEX idx_workouts_user_id (user_id)
-- INDEX idx_workouts_workout_date (workout_date)
-- INDEX idx_workouts_user_date (user_id, workout_date DESC)
+- INDEX idx_workouts_created_by (created_by)
+- INDEX idx_workouts_name (name)
+
+**Foreign Keys:**
+- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+
+**Design Note:**
+- Workouts are templates, not instances
+- Templates can include movements (via workout_movements) and/or WODs (via workout_wods)
+- Users instantiate templates via user_workouts when logging actual workout sessions
+
+### user_workouts
+
+Stores user-specific workout instances logged on specific dates (instantiations of workout templates).
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout instance identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id (template) |
+| workout_date | DATE | NOT NULL | Date workout was performed |
+| workout_type | VARCHAR(255) | NULL | Type: strength, metcon, cardio, mixed |
+| total_time | INT | NULL | Total workout duration (seconds) |
+| notes | TEXT | NULL | User's notes for this workout instance |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+
+**Indexes:**
+- PRIMARY KEY (id)
+- INDEX idx_user_workouts_user_id (user_id)
+- INDEX idx_user_workouts_workout_date (workout_date)
+- INDEX idx_user_workouts_user_date (user_id, workout_date DESC)
 
 **Foreign Keys:**
 - FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+- FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT
 
 **Design Note:**
-- Each workout is a unique instance owned by a user
+- Each user_workout is a specific instance of a workout template
+- Performance data (sets, reps, weights) stored in user_workout_movements and user_workout_wods
 - Users can log multiple workouts per day
-- Workouts are not templates - they represent actual performed workouts
 
 ### movements
 
