@@ -46,7 +46,9 @@
       "Bash(./scripts/increment-build.sh:*)",
       "Bash(go run:*)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJlbWFpbCI6ImpjekB0aGVyZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2MzA4NTAzNiwibmJmIjoxNzYyOTk4NjM2LCJpYXQiOjE3NjI5OTg2MzZ9.NeIXCyNOsBlEjzYKqY6rwElVnvXEhIPqFcuYC1T5mnE\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pgrep:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

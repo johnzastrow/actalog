@@ -23,12 +23,15 @@ var (
 	ErrVerificationTokenExpired = errors.New("verification token has expired")
 	ErrEmailAlreadyVerified     = errors.New("email is already verified")
 	ErrInvalidRefreshToken      = errors.New("invalid or expired refresh token")
+	ErrAccountLocked            = errors.New("account locked due to too many failed login attempts")
+	ErrAccountDisabled          = errors.New("account has been disabled by an administrator")
 )
 
 // UserService handles user-related business logic
 type UserService struct {
 	userRepo             domain.UserRepository
 	refreshTokenRepo     domain.RefreshTokenRepository
+	auditLogService      *AuditLogService
 	jwtSecret            string
 	jwtExpiration        time.Duration
 	refreshTokenDuration time.Duration
@@ -37,12 +40,17 @@ type UserService struct {
 	jwtSecretKey         string
 	appURL               string // Base URL for password reset links
 	requireVerification  bool   // Require email verification for new users
+
+	// Security configuration
+	maxLoginAttempts  int
+	lockoutDuration   time.Duration
 }
 
 // NewUserService creates a new user service
 func NewUserService(
 	userRepo domain.UserRepository,
 	refreshTokenRepo domain.RefreshTokenRepository,
+	auditLogService *AuditLogService,
 	jwtSecret string,
 	jwtExpiration time.Duration,
 	refreshTokenDuration time.Duration,
@@ -50,10 +58,13 @@ func NewUserService(
 	emailService email.EmailService,
 	appURL string,
 	requireVerification bool,
+	maxLoginAttempts int,
+	lockoutDuration time.Duration,
 ) *UserService {
 	return &UserService{
 		userRepo:             userRepo,
 		refreshTokenRepo:     refreshTokenRepo,
+		auditLogService:      auditLogService,
 		jwtSecretKey:         jwtSecret,
 		jwtExpiration:        jwtExpiration,
 		refreshTokenDuration: refreshTokenDuration,
@@ -61,6 +72,8 @@ func NewUserService(
 		emailService:         emailService,
 		appURL:               appURL,
 		requireVerification:  requireVerification,
+		maxLoginAttempts:     maxLoginAttempts,
+		lockoutDuration:      lockoutDuration,
 	}
 }
 
@@ -187,10 +200,57 @@ func (s *UserService) Login(email, password string) (*domain.User, string, error
 		return nil, "", ErrInvalidCredentials
 	}
 
+	// Check if account is manually disabled
+	if user.AccountDisabled {
+		return nil, "", ErrAccountDisabled
+	}
+
+	// Check if account is locked (also handles auto-unlock if expired)
+	isLocked, _, err := s.userRepo.IsAccountLocked(user.ID)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to check lock status: %w", err)
+	}
+	if isLocked {
+		return nil, "", ErrAccountLocked
+	}
+
 	// Check password
 	err = auth.CheckPassword(user.PasswordHash, password)
 	if err != nil {
+		// Password is incorrect - increment failed attempts
+		if incrementErr := s.userRepo.IncrementFailedAttempts(user.ID); incrementErr != nil {
+			fmt.Printf("warning: failed to increment failed attempts: %v\n", incrementErr)
+		}
+
+		// Get updated user to check attempts
+		user, getErr := s.userRepo.GetByEmail(email)
+		if getErr == nil && user != nil {
+			// Check if we should lock the account
+			if user.FailedLoginAttempts >= s.maxLoginAttempts {
+				// Lock the account
+				if lockErr := s.userRepo.LockAccount(user.ID, s.lockoutDuration); lockErr != nil {
+					fmt.Printf("warning: failed to lock account: %v\n", lockErr)
+				} else {
+					// Log the account lockout event
+					if s.auditLogService != nil {
+						s.auditLogService.LogAccountLocked(user.ID, user.Email, "", "", user.FailedLoginAttempts)
+					}
+				}
+			} else {
+				// Log failed login attempt
+				if s.auditLogService != nil {
+					attemptsRemaining := s.maxLoginAttempts - user.FailedLoginAttempts
+					s.auditLogService.LogLoginFailed(email, "invalid_password", "", "", attemptsRemaining)
+				}
+			}
+		}
+
 		return nil, "", ErrInvalidCredentials
+	}
+
+	// Password is correct - reset failed attempts
+	if resetErr := s.userRepo.ResetFailedAttempts(user.ID); resetErr != nil {
+		fmt.Printf("warning: failed to reset failed attempts: %v\n", resetErr)
 	}
 
 	// Update last login time
@@ -202,14 +262,22 @@ func (s *UserService) Login(email, password string) (*domain.User, string, error
 		fmt.Printf("warning: failed to update last login: %v\n", err)
 	}
 
+	// Log successful login
+	if s.auditLogService != nil {
+		s.auditLogService.LogLoginSuccess(user.ID, "", "")
+	}
+
 	// Generate JWT token
 	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecretKey, s.jwtExpiration)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	// Don't return password hash
+	// Don't return password hash or sensitive security fields
 	user.PasswordHash = ""
+	user.FailedLoginAttempts = 0
+	user.LockedAt = nil
+	user.LockedUntil = nil
 
 	return user, token, nil
 }
@@ -631,4 +699,157 @@ func generateRefreshToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// Admin Account Security Methods
+
+// UnlockAccount unlocks a user account (admin operation)
+func (s *UserService) UnlockAccount(adminUserID, targetUserID int64) error {
+	// Get both users for audit logging
+	admin, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+
+	target, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+
+	// Unlock the account
+	if err := s.userRepo.UnlockAccount(targetUserID); err != nil {
+		return fmt.Errorf("failed to unlock account: %w", err)
+	}
+
+	// Log the unlock event
+	if s.auditLogService != nil {
+		s.auditLogService.LogAccountUnlocked(adminUserID, targetUserID, admin.Email, target.Email)
+	}
+
+	return nil
+}
+
+// DisableAccount permanently disables a user account (admin operation)
+func (s *UserService) DisableAccount(adminUserID, targetUserID int64, reason string) error {
+	// Get both users for audit logging
+	admin, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+
+	target, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+
+	// Don't allow disabling self
+	if adminUserID == targetUserID {
+		return fmt.Errorf("cannot disable your own account")
+	}
+
+	// Disable the account
+	if err := s.userRepo.DisableAccount(targetUserID, adminUserID); err != nil {
+		return fmt.Errorf("failed to disable account: %w", err)
+	}
+
+	// Log the disable event
+	if s.auditLogService != nil {
+		s.auditLogService.LogAccountDisabled(adminUserID, targetUserID, admin.Email, target.Email, reason)
+	}
+
+	return nil
+}
+
+// EnableAccount re-enables a disabled user account (admin operation)
+func (s *UserService) EnableAccount(adminUserID, targetUserID int64) error {
+	// Get both users for audit logging
+	admin, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+
+	target, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+
+	// Enable the account
+	if err := s.userRepo.EnableAccount(targetUserID); err != nil {
+		return fmt.Errorf("failed to enable account: %w", err)
+	}
+
+	// Log the enable event
+	if s.auditLogService != nil {
+		s.auditLogService.LogAccountEnabled(adminUserID, targetUserID, admin.Email, target.Email)
+	}
+
+	return nil
+}
+
+// ChangeUserRole changes a user's role (admin operation)
+func (s *UserService) ChangeUserRole(adminUserID, targetUserID int64, newRole string) error {
+	// Validate role
+	if newRole != "user" && newRole != "admin" {
+		return fmt.Errorf("invalid role: must be 'user' or 'admin'")
+	}
+
+	// Get both users for audit logging
+	admin, err := s.userRepo.GetByID(adminUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get admin user: %w", err)
+	}
+
+	target, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get target user: %w", err)
+	}
+
+	oldRole := target.Role
+
+	// Don't allow changing your own role
+	if adminUserID == targetUserID {
+		return fmt.Errorf("cannot change your own role")
+	}
+
+	// Update the role
+	target.Role = newRole
+	target.UpdatedAt = time.Now()
+	if err := s.userRepo.Update(target); err != nil {
+		return fmt.Errorf("failed to update user role: %w", err)
+	}
+
+	// Log the role change
+	if s.auditLogService != nil {
+		s.auditLogService.LogRoleChanged(adminUserID, targetUserID, admin.Email, target.Email, oldRole, newRole)
+	}
+
+	return nil
+}
+
+// ListUsers returns a paginated list of all users (admin operation)
+func (s *UserService) ListUsers(limit, offset int) ([]*domain.User, int64, error) {
+	// Validate pagination
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	users, err := s.userRepo.List(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list users: %w", err)
+	}
+
+	count, err := s.userRepo.Count()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	// Don't return password hashes
+	for _, user := range users {
+		user.PasswordHash = ""
+	}
+
+	return users, count, nil
 }
