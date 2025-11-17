@@ -70,20 +70,20 @@
             </v-chip>
           </div>
 
-          <!-- Description -->
+          <!-- Description with markdown -->
           <div v-if="wod.description" class="mb-3">
             <p class="text-caption font-weight-bold mb-1" style="color: #666">Description</p>
-            <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
-              {{ wod.description }}
-            </p>
+            <div class="text-body-2" style="color: #1a1a1a">
+              <MarkdownRenderer :content="wod.description" />
+            </div>
           </div>
 
-          <!-- Notes -->
+          <!-- Notes with markdown -->
           <div v-if="wod.notes" class="mb-3">
             <p class="text-caption font-weight-bold mb-1" style="color: #666">Notes</p>
-            <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
-              {{ wod.notes }}
-            </p>
+            <div class="text-body-2" style="color: #1a1a1a">
+              <MarkdownRenderer :content="wod.notes" />
+            </div>
           </div>
 
           <!-- Video URL -->
@@ -163,6 +163,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const route = useRoute()

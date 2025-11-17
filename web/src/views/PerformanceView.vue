@@ -7,7 +7,7 @@
       <v-btn v-if="selectedItem" icon="mdi-close" color="white" size="small" @click="clearSelection" />
     </v-app-bar>
 
-    <v-container class="px-3 pb-1 pt-0" style="margin-top: 56px; margin-bottom: 70px">
+    <v-container class="px-3 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
         {{ error }}

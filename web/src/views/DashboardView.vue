@@ -7,7 +7,7 @@
       <v-btn icon="mdi-bell-outline" color="white" size="small" />
     </v-app-bar>
 
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
       <!-- Email Verification Alert -->
       <v-alert
         v-if="authStore.user && !authStore.user.email_verified"
@@ -173,7 +173,7 @@
             rounded
             class="mb-1 pa-1"
             style="background: white; cursor: pointer"
-            @click="viewWorkout(workout.id)"
+            @click="toggleWorkoutExpand(workout.id)"
           >
             <div class="d-flex align-center mb-1">
               <v-icon color="#00bcd4" class="mr-2" size="small">mdi-dumbbell</v-icon>
@@ -186,37 +186,112 @@
                   <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
                 </div>
               </div>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="#00bcd4" size="small">
+                {{ expandedWorkouts.has(workout.id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+              </v-icon>
             </div>
 
-            <!-- Display movement performance -->
-            <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
-              <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1" style="color: #666">
-                <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
-                <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
-                <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
-                <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
-                <span v-if="perf.distance"> {{ perf.distance }}m</span>
-                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+            <!-- Collapsed view - showing summary only -->
+            <div v-if="!expandedWorkouts.has(workout.id)">
+              <!-- Display movement performance (first 2 only) -->
+              <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
+                <div v-for="(perf, index) in workout.performance_movements.slice(0, 2)" :key="index" class="text-caption mb-1" style="color: #666">
+                  <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                  <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
+                  <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
+                  <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
+                  <span v-if="perf.distance"> {{ perf.distance }}m</span>
+                  <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                    <v-icon size="x-small" start>mdi-trophy</v-icon>PR
+                  </v-chip>
+                </div>
+                <div v-if="workout.performance_movements.length > 2" class="text-caption ml-7" style="color: #999">
+                  +{{ workout.performance_movements.length - 2 }} more...
+                </div>
+              </div>
+
+              <!-- Display WOD performance (first 1 only) -->
+              <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
+                <div v-for="(perf, index) in workout.performance_wods.slice(0, 1)" :key="index" class="text-caption mb-1" style="color: #666">
+                  <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
+                  <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
+                  <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
+                  <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
+                  <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
+                  <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
+                  <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
+                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                    <v-icon size="x-small" start>mdi-trophy</v-icon>PR
+                  </v-chip>
+                </div>
+                <div v-if="workout.performance_wods.length > 1" class="text-caption ml-7" style="color: #999">
+                  +{{ workout.performance_wods.length - 1 }} more...
+                </div>
+              </div>
+
+              <!-- Notes preview -->
+              <div v-if="workout.notes" class="ml-7 mt-2 text-caption" style="color: #666">
+                📝 {{ truncateText(workout.notes, 80) }}
               </div>
             </div>
 
-            <!-- Display WOD performance -->
-            <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
-              <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1" style="color: #666">
-                <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
-                <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
-                <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
-                <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
-                <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
-                <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
-                <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
+            <!-- Expanded view - showing all details -->
+            <div v-else>
+              <!-- Display ALL movement performances -->
+              <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
+                <div class="text-caption font-weight-bold mb-1" style="color: #1a1a1a">Movements:</div>
+                <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1 ml-2" style="color: #666">
+                  <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                  <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
+                  <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
+                  <span v-if="perf.sets"> × {{ perf.sets }} sets</span>
+                  <span v-if="perf.reps"> × {{ perf.reps }} reps</span>
+                  <span v-if="perf.distance"> × {{ perf.distance }}m</span>
+                  <span v-if="perf.time_seconds"> in {{ formatTime(perf.time_seconds) }}</span>
+                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                    <v-icon size="x-small" start>mdi-trophy</v-icon>PR
+                  </v-chip>
+                </div>
               </div>
-            </div>
 
-            <!-- Notes -->
-            <div v-if="workout.notes" class="ml-7 mt-2 text-caption" style="color: #666">
-              📝 {{ truncateText(workout.notes, 80) }}
+              <!-- Display ALL WOD performances -->
+              <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
+                <div class="text-caption font-weight-bold mb-1" style="color: #1a1a1a">WODs:</div>
+                <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1 ml-2" style="color: #666">
+                  <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
+                  <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
+                  <span v-if="perf.time_seconds"> Time: {{ formatTime(perf.time_seconds) }}</span>
+                  <span v-if="perf.rounds && perf.reps"> Score: {{ perf.rounds }}+{{ perf.reps }}</span>
+                  <span v-else-if="perf.rounds"> Rounds: {{ perf.rounds }}</span>
+                  <span v-else-if="perf.reps"> Reps: {{ perf.reps }}</span>
+                  <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
+                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                    <v-icon size="x-small" start>mdi-trophy</v-icon>PR
+                  </v-chip>
+                </div>
+              </div>
+
+              <!-- Full notes with markdown rendering -->
+              <div v-if="workout.notes" class="ml-7 mt-2 text-caption" style="color: #666">
+                <div class="font-weight-bold mb-1" style="color: #1a1a1a">Notes:</div>
+                <div class="ml-2">
+                  <MarkdownRenderer :content="workout.notes" />
+                </div>
+              </div>
+
+              <!-- Action buttons when expanded -->
+              <div class="ml-7 mt-3 d-flex gap-2">
+                <v-btn
+                  size="small"
+                  color="#00bcd4"
+                  variant="outlined"
+                  @click.stop="viewWorkout(workout.id)"
+                >
+                  <v-icon start size="small">mdi-open-in-new</v-icon>
+                  View Details
+                </v-btn>
+              </div>
             </div>
           </v-card>
         </div>
@@ -244,7 +319,6 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                rounded
                 required
                 @update:model-value="updateQuickLogName"
               />
@@ -307,7 +381,6 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                rounded
               />
             </div>
 
@@ -325,7 +398,6 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                rounded
                 clearable
                 auto-select-first
                 placeholder="Search for a movement..."
@@ -420,7 +492,6 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                rounded
                 clearable
                 auto-select-first
                 placeholder="Search for a WOD..."
@@ -438,7 +509,6 @@
                     variant="outlined"
                     density="compact"
                     hide-details
-                    rounded
                     readonly
                     bg-color="#e0e0e0"
                   />
@@ -604,6 +674,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -611,6 +682,7 @@ const activeTab = ref('dashboard')
 
 const loading = ref(false)
 const userWorkouts = ref([])
+const expandedWorkouts = ref(new Set())
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -842,6 +914,17 @@ function truncateText(text, maxLength) {
 function viewWorkout(workoutId) {
   console.log('View workout details:', workoutId)
   router.push(`/workouts/${workoutId}`)
+}
+
+// Toggle workout card expansion
+function toggleWorkoutExpand(workoutId) {
+  if (expandedWorkouts.value.has(workoutId)) {
+    expandedWorkouts.value.delete(workoutId)
+  } else {
+    expandedWorkouts.value.add(workoutId)
+  }
+  // Force reactivity update for Set
+  expandedWorkouts.value = new Set(expandedWorkouts.value)
 }
 
 // Update Quick Log name when date changes
