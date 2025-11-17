@@ -1,10 +1,11 @@
 <template>
   <v-avatar :size="size" :color="avatarColor">
     <v-img
-      v-if="user?.profile_image"
+      v-if="user?.profile_image && !imageLoadError"
       :src="user.profile_image"
       :alt="user.name || 'User avatar'"
       cover
+      @error="handleImageError"
     />
     <span
       v-else
@@ -17,7 +18,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   user: {
@@ -29,6 +30,15 @@ const props = defineProps({
     default: 80
   }
 })
+
+// Track image load errors
+const imageLoadError = ref(false)
+
+// Handle image load error
+function handleImageError() {
+  console.warn('Failed to load profile image, falling back to initials')
+  imageLoadError.value = true
+}
 
 // Generate initials from user name
 const initials = computed(() => {

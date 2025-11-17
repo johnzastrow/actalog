@@ -7,7 +7,7 @@
       <v-btn icon="mdi-cog" color="white" size="small" @click="$router.push('/settings')" />
     </v-app-bar>
 
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
       <!-- Profile Card -->
       <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
         <div class="text-center mb-3">

@@ -52,7 +52,9 @@
       "Bash(/tmp/test_lockout.sh)",
       "Bash(/tmp/test_admin.sh)",
       "Bash(/tmp/test_unlocked_login.sh)",
-      "Bash(/home/jcz/Github/actionlog/web)"
+      "Bash(/home/jcz/Github/actionlog/web)",
+      "WebSearch",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
