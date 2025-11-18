@@ -1054,7 +1054,7 @@ ActaLog can be easily deployed using Docker, which simplifies the setup process 
 2. **Pull the ActaLog Docker Image**: Use the following command to pull the latest ActaLog Docker image from Docker Hub:
    ```bash
     docker pull actalog/actalog:latest
-    ```
+   ```
 3. **Create a Docker Network**: Create a Docker network to allow communication between the ActaLog container and the database container:
 4.   ```bash
     docker network create actalog-network
@@ -1086,7 +1086,7 @@ To deploy ActaLog from source, follow these steps:
 
    **See SETUP.md for initial setup instructions.**
 
-    
+
 ### Reverse Proxy Setup
 Setting up a reverse proxy is essential for securely hosting ActaLog in a production environment. A reverse proxy acts as an intermediary between clients and the ActaLog application, providing benefits such as load balancing, SSL termination, and improved security.
 Here are the general steps to set up a reverse proxy for ActaLog:
@@ -1157,6 +1157,141 @@ recipe.mydomainname.site {
 * Remember to open the necessary ports (80 and 443) on your server's firewall to allow HTTP and HTTPS traffic.
 * Also, ensure that your DNS settings are correctly pointing to your server's public IP address for each of the subdomains you wish to use.
 
+## About Caddy
+
+Below is an amazingly well written output from caddy's help command.
+
+```
+Caddy is an extensible server platform written in Go.
+
+At its core, Caddy merely manages configuration. Modules are plugged
+in statically at compile-time to provide useful functionality. Caddy's
+standard distribution includes common modules to serve HTTP, TLS,
+and PKI applications, including the automation of certificates.
+
+To run Caddy, use:
+
+        - 'caddy run' to run Caddy in the foreground (recommended).
+        - 'caddy start' to start Caddy in the background; only do this
+          if you will be keeping the terminal window open until you run
+          'caddy stop' to close the server.
+
+When Caddy is started, it opens a locally-bound administrative socket
+to which configuration can be POSTed via a restful HTTP API (see
+https://caddyserver.com/docs/api).
+
+Caddy's native configuration format is JSON. However, config adapters
+can be used to convert other config formats to JSON when Caddy receives
+its configuration. The Caddyfile is a built-in config adapter that is
+popular for hand-written configurations due to its straightforward
+syntax (see https://caddyserver.com/docs/caddyfile). Many third-party
+adapters are available (see https://caddyserver.com/docs/config-adapters).
+Use 'caddy adapt' to see how a config translates to JSON.
+
+For convenience, the CLI can act as an HTTP client to give Caddy its
+initial configuration for you. If a file named Caddyfile is in the
+current working directory, it will do this automatically. Otherwise,
+you can use the --config flag to specify the path to a config file.
+
+Some special-purpose subcommands build and load a configuration file
+for you directly from command line input; for example:
+
+        - caddy file-server
+        - caddy reverse-proxy
+        - caddy respond
+
+These commands disable the administration endpoint because their
+configuration is specified solely on the command line.
+
+In general, the most common way to run Caddy is simply:
+
+        $ caddy run
+
+Or, with a configuration file:
+
+        $ caddy run --config caddy.json
+
+If running interactively in a terminal, running Caddy in the
+background may be more convenient:
+
+        $ caddy start
+        ...
+        $ caddy stop
+
+This allows you to run other commands while Caddy stays running.
+Be sure to stop Caddy before you close the terminal!
+
+Depending on the system, Caddy may need permission to bind to low
+ports. One way to do this on Linux is to use setcap:
+
+        $ sudo setcap cap_net_bind_service=+ep $(which caddy)
+
+Remember to run that command again after replacing the binary.
+
+See the Caddy website for tutorials, configuration structure,
+syntax, and module documentation: https://caddyserver.com/docs/
+
+Custom Caddy builds are available on the Caddy download page at:
+https://caddyserver.com/download
+
+The xcaddy command can be used to build Caddy from source with or
+without additional plugins: https://github.com/caddyserver/xcaddy
+
+Where possible, Caddy should be installed using officially-supported
+package installers: https://caddyserver.com/docs/install
+
+Instructions for running Caddy in production are also available:
+https://caddyserver.com/docs/running
+
+Usage:
+  caddy [command]
+
+Examples:
+  $ caddy run
+  $ caddy run --config caddy.json
+  $ caddy reload --config caddy.json
+  $ caddy stop
+
+Available Commands:
+  adapt          Adapts a configuration to Caddy's native JSON
+  add-package    Adds Caddy packages (EXPERIMENTAL)
+  build-info     Prints information about this build
+  completion     Generate completion script
+  environ        Prints the environment
+  file-server    Spins up a production-ready file server
+  fmt            Formats a Caddyfile
+  hash-password  Hashes a password and writes base64
+  help           Help about any command
+  list-modules   Lists the installed Caddy modules
+  manpage        Generates the manual pages for Caddy commands
+  reload         Changes the config of the running Caddy instance
+  remove-package Removes Caddy packages (EXPERIMENTAL)
+  respond        Simple, hard-coded HTTP responses for development and testing
+  reverse-proxy  A quick and production-ready reverse proxy
+  run            Starts the Caddy process and blocks indefinitely
+  start          Starts the Caddy process in the background and then returns
+  stop           Gracefully stops a started Caddy process
+  storage        Commands for working with Caddy's storage (EXPERIMENTAL)
+  trust          Installs a CA certificate into local trust stores
+  untrust        Untrusts a locally-trusted CA certificate
+  upgrade        Upgrade Caddy (EXPERIMENTAL)
+  validate       Tests whether a configuration file is valid
+  version        Prints the version
+
+Flags:
+  -h, --help      help for caddy
+  -v, --version   version for caddy
+
+Use "caddy [command] --help" for more information about a command.
+
+Full documentation is available at:
+https://caddyserver.com/docs/command-line
+```
+
+
+
+
+
 ## Validating Caddyfile Syntax
 
 ### Using caddy validate
@@ -1187,6 +1322,84 @@ caddy adapt --config /path/to/Caddyfile # often /etc/caddy/Caddyfile
 * If successful, it will output the resulting JSON configuration to standard output (stdout).
 * If it fails, it means there is a syntax error in your Caddyfile.
 * Both commands are excellent ways to perform a "dry run" of your configuration and ensure it is correct before deploying it to a production environment. For more details, consult the Caddy Documentation on the command-line interface.
+
+
+
+### Restarting or reloading Caddy
+
+Restarting Caddy can be done in a few ways, depending on how Caddy is being managed.
+
+1. Using `systemctl` (for Caddy running as a systemd service):
+
+If Caddy is set up as a systemd service (common on Linux distributions), you can restart it using:
+
+```bash
+sudo systemctl restart caddy
+```
+
+2. Using the `caddy reload` command (for zero-downtime config changes):
+
+Caddy supports graceful, zero-downtime reloads when you modify its configuration. This is the recommended method for applying changes to your `Caddyfile` or JSON configuration without interrupting service.
+
+```bash
+caddy reload --config /path/to/Caddyfile
+```
+
+Replace `/path/to/Caddyfile` with the actual path to your Caddy configuration file. If Caddy is running as a service, you might use:
+
+```bash
+sudo systemctl reload caddy
+```
+
+This command leverages Caddy's internal API to gracefully replace the active configuration.
+
+3. Restarting a Docker container (if running in Docker):
+
+If Caddy is running within a Docker container, you would restart the container:
+
+```bash
+docker restart <container_name_or_id>
+```
+
+Alternatively, if using `docker-compose`, you can restart the service:
+
+```bash
+docker-compose restart caddy
+```
+
+4. Stopping and starting Caddy manually (for `caddy run` or `caddy start`):
+
+If Caddy was started manually using `caddy run` or `caddy start`, you would typically stop the running process and then start it again. to stop.
+
+```bash
+sudo caddy stop
+```
+
+to start.
+
+```bash
+sudo  caddy start
+```
+
+or
+
+```bash
+sudo caddy run
+```
+
+Important Considerations:
+
+- `caddy reload` vs. `systemctl restart`: 
+
+  `caddy reload` is preferred for config changes as it prevents downtime. `systemctl restart` will stop and then start the service, causing a brief interruption.
+
+- `--force` flag with `caddy reload`: 
+
+  The `--force` flag can be used with `caddy reload` to force a reload even if the configuration appears unchanged. This can be useful for reprovisioning modules or reloading manually-loaded TLS certificates.
+
+- **Docker considerations:** 
+
+  When using Docker, ensure your `Caddyfile` is correctly mounted into the container for changes to be reflected.
 
 ## Common Reverse Proxy Configuration Mistakes
 
