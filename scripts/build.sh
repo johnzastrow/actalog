@@ -43,6 +43,7 @@ set -u  # Treat unset variables as an error
 
 GO_VERSION="1.25.0"  # Go version to install (adjust as needed)
 NODE_VERSION="24"     # Node.js major version (LTS)
+MIN_NODE_MAJOR="18"   # Minimum Node.js major version required to run the frontend
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Project root (parent of scripts/)
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -84,6 +85,17 @@ print_error() {
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Ensure sudo is available when running installation/update steps that require
+# elevated privileges. Rebuild-only mode does not require sudo.
+ensure_sudo_for_installs() {
+    if ! command_exists sudo; then
+        print_error "This script needs 'sudo' for installation/update steps but 'sudo' was not found in PATH."
+        print_error "If you intend to run only a rebuild (no system package installation), run: ./build.sh --rebuild"
+        print_error "Otherwise install 'sudo' or run this script as a user that has sudo privileges."
+        exit 1
+    fi
 }
 
 # Compare version numbers (returns 0 if v1 < v2, 1 if v1 >= v2)
@@ -720,6 +732,8 @@ main() {
         build_backend
         build_frontend
     elif [ "$UPDATE_MODE" = true ]; then
+        # Ensure sudo is available for update mode
+        ensure_sudo_for_installs
         # Update mode: Update everything
         print_status "Running in UPDATE mode (updating all packages to latest versions)"
         update_system
@@ -734,6 +748,8 @@ main() {
         build_frontend
         create_run_script
     else
+        # For a fresh install we also need sudo for system package installs
+        ensure_sudo_for_installs
         # Fresh install mode: Install everything
         print_status "Running in INSTALL mode (fresh installation)"
         update_system

@@ -157,6 +157,24 @@ if ! command -v npm >/dev/null 2>&1; then
     exit 1
 fi
 
+# Verify Node.js version meets minimum requirement
+# Read the minimum required Node major version from environment if provided,
+# otherwise default to 18. Set MIN_NODE_MAJOR in your shell or export it from
+# another script if you need to override the requirement.
+MIN_NODE_MAJOR=${MIN_NODE_MAJOR:-18}
+NODE_VERSION_STR=$(node --version 2>/dev/null || echo "")
+NODE_MAJOR=$(echo "$NODE_VERSION_STR" | sed 's/^v//' | cut -d. -f1)
+if ! [[ "$NODE_MAJOR" =~ ^[0-9]+$ ]]; then
+    echo "❌ Could not determine Node.js version from: $NODE_VERSION_STR"
+    echo "Please ensure a compatible Node.js (>= ${MIN_NODE_MAJOR}) is installed."
+    exit 1
+fi
+if [ "$NODE_MAJOR" -lt "$MIN_NODE_MAJOR" ]; then
+    echo "❌ Node.js major version $MIN_NODE_MAJOR or higher is required. Detected: $NODE_VERSION_STR"
+    echo "Install a newer Node.js (https://nodejs.org/) or run './scripts/build.sh --update' to install one on Debian/Ubuntu systems."
+    exit 1
+fi
+
 # Install frontend dependencies if needed (uses npm --prefix so we don't change cwd)
 if [ ! -d "$PROJECT_ROOT/web/node_modules" ]; then
     echo "Installing frontend dependencies..."
