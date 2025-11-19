@@ -3,6 +3,24 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import fs from 'fs'
+
+// Optional local HTTPS support: if `web/certs/<host>.pem` and
+// `web/certs/<host>-key.pem` exist the Vite config will use them for
+// an HTTPS dev/preview server. To opt-in, generate certs using mkcert
+// and place them in `web/certs` (the `scripts/start-frontend.sh` helper
+// can generate these for you).
+const CERT_DIR = fileURLToPath(new URL('./certs', import.meta.url))
+const DEFAULT_HOST = process.env.VITE_DEV_HOST || 'subdomain.example.com'
+const KEY_PATH = `${CERT_DIR}/${DEFAULT_HOST}-key.pem`
+const CERT_PATH = `${CERT_DIR}/${DEFAULT_HOST}.pem`
+let httpsOptions = undefined
+if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
+  httpsOptions = {
+    key: fs.readFileSync(KEY_PATH),
+    cert: fs.readFileSync(CERT_PATH)
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -183,6 +201,7 @@ export default defineConfig({
     // If you prefer not to map hosts, start Vite with `--host 0.0.0.0` instead.
     host: 'subdomain.example.com',
     port: 3000,
+    https: httpsOptions ? httpsOptions : false,
     hmr: {
       // HMR client will try to connect to this host; set to the same host
       // you use to access the dev server. If running with `--host 0.0.0.0`,
