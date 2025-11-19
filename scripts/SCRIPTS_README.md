@@ -60,8 +60,8 @@ stop.bat
 
 After running `restart.sh` or `restart.bat`:
 
-- **Backend API:** http://localhost:8080
-- **Frontend:** http://localhost:3000 or http://localhost:5173
+- **Backend API:** [http://localhost:8080](http://localhost:8080)
+- **Frontend:** [http://localhost:3000](http://localhost:3000) or [http://localhost:5173](http://localhost:5173)
 
 ## Log Files
 

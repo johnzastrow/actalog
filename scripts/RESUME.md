@@ -116,7 +116,7 @@ POST   /api/movements         - Create custom movement
 ### Testing & Validation
 
 Currently **NOT tested** (critical for resuming):
-- [ ] Test WOD Library view in browser (http://localhost:3000/wods)
+- [ ] Test WOD Library view in browser ([http://localhost:3000/wods](http://localhost:3000/wods))
 - [ ] Verify WOD creation/editing works
 - [ ] Test template fetching from API
 - [ ] Verify navigation between views
@@ -217,7 +217,7 @@ sqlite3 actalog.db  # Open SQLite database
    ```
 
 2. **Test WOD Library:**
-   - Navigate to http://localhost:3000/wods
+   - Navigate to [http://localhost:3000/wods](http://localhost:3000/wods)
    - Verify 10 WODs display
    - Test filtering by type (Girl, Hero)
    - Test search functionality
