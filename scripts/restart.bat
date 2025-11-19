@@ -5,7 +5,11 @@ echo === ActaLog Restart Script ===
 echo.
 
 REM Get the current directory
-set "PROJECT_DIR=%~dp0"
+set "SCRIPT_DIR=%~dp0"
+set "PROJECT_DIR=%~dp0.."
+
+REM Change to project root (parent of scripts) so Makefile targets resolve
+pushd "%~dp0.." >nul
 set "PROJECT_NAME=actionlog"
 
 echo Project directory: %PROJECT_DIR%
@@ -135,9 +139,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Start backend in background
-start /B "" cmd /c "make run > backend.log 2>&1"
-echo ✓ Backend started (logs: backend.log)
+REM Start backend in background (use make -C to run from project root)
+start /B "" cmd /c "make -C \"%PROJECT_DIR%\" run > %PROJECT_DIR%\backend.log 2>&1"
+echo ✓ Backend started (logs: %PROJECT_DIR%\backend.log)
 
 REM Wait for backend to start
 timeout /t 2 /nobreak >nul
@@ -160,8 +164,8 @@ if not exist "node_modules" (
     call npm install
 )
 
-REM Start frontend in background
-start /B "" cmd /c "npm run dev > ..\frontend.log 2>&1"
+REM Start frontend in background using npm --prefix to avoid changing cwd
+start /B "" cmd /c "npm --prefix \"%PROJECT_DIR%\\web\" run dev > %PROJECT_DIR%\frontend.log 2>&1"
 cd ..
 echo ✓ Frontend started (logs: frontend.log)
 
@@ -196,3 +200,6 @@ echo.
 echo ✓ Restart complete!
 echo.
 pause
+
+REM Return to original directory
+popd >nul 2>&1 || rem ignore

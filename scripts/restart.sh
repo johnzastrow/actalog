@@ -5,9 +5,10 @@ echo ""
 
 # Get the absolute path of the project directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_NAME="actionlog"
 
-echo "Project directory: $SCRIPT_DIR"
+echo "Project directory: $PROJECT_ROOT"
 echo ""
 
 # Kill backend processes
@@ -17,7 +18,7 @@ echo "Stopping backend..."
 pkill -9 -f "bin/actalog" 2>/dev/null || true
 
 # Kill go run processes in this directory
-for pid in $(ps aux | grep "[g]o run" | grep "$SCRIPT_DIR" | awk '{print $2}'); do
+for pid in $(ps aux | grep "[g]o run" | grep "$PROJECT_ROOT" | awk '{print $2}'); do
     echo "  Killing go run process: $pid"
     kill -9 $pid 2>/dev/null || true
 done
@@ -27,7 +28,7 @@ for pid in $(ps aux | grep "[a]ctalog" | grep -v "grep" | awk '{print $2}'); do
     # Check if it's running from our directory
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"$PROJECT_ROOT"* ]]; then
             echo "  Killing actalog process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -49,7 +50,7 @@ echo "Stopping frontend..."
 for pid in $(ps aux | grep "[n]pm run dev" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing npm dev process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -60,7 +61,7 @@ done
 for pid in $(ps aux | grep "[v]ite" | grep -v "grep" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing vite process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -71,7 +72,7 @@ done
 for pid in $(ps aux | grep "[n]ode" | grep "vite" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing node/vite process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -85,17 +86,17 @@ sleep 1
 
 echo ""
 echo "Building and starting backend..."
-# Build backend
-make build
+# Build backend (run Make in project root)
+make -C "$PROJECT_ROOT" build
 if [ $? -ne 0 ]; then
     echo "❌ Backend build failed!"
     exit 1
 fi
 
-# Start backend in background
-make run > backend.log 2>&1 &
+# Start backend in background (make -C so we don't change cwd)
+make -C "$PROJECT_ROOT" run > "$PROJECT_ROOT/backend.log" 2>&1 &
 BACKEND_PID=$!
-echo "✓ Backend started (PID: $BACKEND_PID, logs: backend.log)"
+echo "✓ Backend started (PID: $BACKEND_PID, logs: $PROJECT_ROOT/backend.log)"
 
 # Wait a moment for backend to start
 sleep 2
@@ -115,26 +116,25 @@ fi
 
 echo ""
 echo "Starting frontend..."
-cd web
+cd web || exit 1
 
 # Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
+if [ ! -d "$PROJECT_ROOT/web/node_modules" ]; then
     echo "Installing frontend dependencies..."
-    npm install
+    npm --prefix "$PROJECT_ROOT/web" install
 fi
 
-# Start frontend in background
-npm run dev > ../frontend.log 2>&1 &
+# Start frontend in background using npm --prefix to avoid changing cwd
+npm --prefix "$PROJECT_ROOT/web" run dev > "$PROJECT_ROOT/frontend.log" 2>&1 &
 FRONTEND_PID=$!
-cd ..
-echo "✓ Frontend started (PID: $FRONTEND_PID, logs: frontend.log)"
+echo "✓ Frontend started (PID: $FRONTEND_PID, logs: $PROJECT_ROOT/frontend.log)"
 
 # Wait for frontend to start and detect its port
 sleep 3
 FRONTEND_PORT=$(lsof -Pan -p $FRONTEND_PID -i 2>/dev/null | grep LISTEN | awk '{print $9}' | cut -d: -f2 | head -1)
 if [ -z "$FRONTEND_PORT" ]; then
     # Try to find any vite process port
-    FRONTEND_PORT=$(lsof -Pan -c node -i 2>/dev/null | grep LISTEN | grep "$SCRIPT_DIR/web" | awk '{print $9}' | cut -d: -f2 | head -1)
+    FRONTEND_PORT=$(lsof -Pan -c node -i 2>/dev/null | grep LISTEN | grep "$PROJECT_ROOT/web" | awk '{print $9}' | cut -d: -f2 | head -1)
     if [ -z "$FRONTEND_PORT" ]; then
         FRONTEND_PORT="5173 or 3000"
     fi
@@ -146,12 +146,12 @@ echo "Backend:  http://localhost:$BACKEND_PORT (PID: $BACKEND_PID)"
 echo "Frontend: http://localhost:$FRONTEND_PORT (PID: $FRONTEND_PID)"
 echo ""
 echo "Log files:"
-echo "  Backend:  backend.log"
-echo "  Frontend: frontend.log"
+echo "  Backend:  $PROJECT_ROOT/backend.log"
+echo "  Frontend: $PROJECT_ROOT/frontend.log"
 echo ""
 echo "To view logs:"
-echo "  tail -f backend.log"
-echo "  tail -f frontend.log"
+echo "  tail -f $PROJECT_ROOT/backend.log"
+echo "  tail -f $PROJECT_ROOT/frontend.log"
 echo ""
 echo "To stop services:"
 echo "  ./stop.sh"
