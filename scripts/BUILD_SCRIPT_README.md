@@ -222,6 +222,57 @@ The update and rebuild modes preserve:
 chmod +x build.sh
 ```
 
+## Which user should run `build.sh`?
+
+- **Short recommendation:** Run `./build.sh` as your normal (non-root) user who has `sudo` privileges. Do NOT run the whole script with `sudo` (for example, avoid `sudo ./build.sh`) or as the `root` user.
+
+- **Why:** The script uses `sudo` internally to install system packages. Running the script as your normal user allows `sudo` to elevate only when required, while keeping files created during the build (binaries, caches, `bin/`, `.cache/`) owned by your user. Running the script as root or with `sudo` causes files in the repository to be owned by root and later leads to permission errors for non-root builds.
+
+- **Preferred commands:**
+
+```bash
+# Fresh install (will prompt and use sudo for package installs)
+./scripts/build.sh
+
+# Rebuild only (no system package installs; safe to run without sudo)
+./scripts/build.sh --rebuild
+```
+
+- **Quick pre-checks (run before build):**
+
+```bash
+whoami
+sudo -v && echo "sudo OK" || echo "sudo missing or not permitted"
+node --version || echo "node: missing"
+npm --version || echo "npm: missing"
+go version || echo "go: missing"
+```
+
+- **If you accidentally ran the script as `root` or with `sudo` and see permission errors later:**
+
+```bash
+# From the repository root — make files owned by your user again
+sudo chown -R $(whoami):$(whoami) .
+
+# Then run a rebuild as your non-root user
+./scripts/build.sh --rebuild
+```
+
+- **Avoiding cache permission issues without changing ownership:**
+
+You can set per-user Go cache directories before running the build to ensure the Go toolchain has writable cache locations:
+
+```bash
+export GOCACHE="$HOME/.cache/go-build"
+export GOMODCACHE="$HOME/.cache/go-mod"
+mkdir -p "$GOCACHE" "$GOMODCACHE"
+./scripts/build.sh --rebuild
+```
+
+- **If you cannot use `sudo` on the machine:**
+	- Ask an administrator to run the update/install parts (`./scripts/build.sh`) once, or to install required system packages, then use `./scripts/build.sh --rebuild` locally for subsequent builds.
+
+
 ### Go/Node Already Installed
 
 In fresh install mode, the script will ask if you want to reinstall. In update mode, it will automatically upgrade if needed.
