@@ -86,6 +86,29 @@ sleep 1
 
 echo ""
 echo "Building and starting backend..."
+# Ensure Go is installed before attempting to build
+if ! command -v go >/dev/null 2>&1; then
+    cat <<MSG
+❌ 'go' not found in PATH. The backend build requires Go to be installed.
+
+Install Go and ensure the 'go' binary is on your PATH. Common install commands:
+
+  # Debian/Ubuntu (may provide older Go package):
+  sudo apt update && sudo apt install -y golang
+
+  # Fedora/CentOS/RHEL (dnf):
+  sudo dnf install golang
+
+  # Arch Linux:
+  sudo pacman -S go
+
+  # Or download latest from https://go.dev/dl and follow the Linux tarball install instructions.
+
+After installing, reopen your shell or ensure the 'go' binary is available, then re-run this script.
+MSG
+    exit 1
+fi
+
 # Build backend (run Make in project root)
 make -C "$PROJECT_ROOT" build
 if [ $? -ne 0 ]; then
@@ -97,6 +120,7 @@ fi
 make -C "$PROJECT_ROOT" run > "$PROJECT_ROOT/backend.log" 2>&1 &
 BACKEND_PID=$!
 echo "✓ Backend started (PID: $BACKEND_PID, logs: $PROJECT_ROOT/backend.log)"
+
 
 # Wait a moment for backend to start
 sleep 2
@@ -116,9 +140,24 @@ fi
 
 echo ""
 echo "Starting frontend..."
-cd web || exit 1
+# Recommend running the full setup script on first use
+if [ ! -f "$PROJECT_ROOT/bin/actalog" ]; then
+    echo "\nNote: If this is the first time running ActaLog on this machine,"
+    echo "consider running the full setup script to install tools and dependencies:"
+    echo "  ./scripts/build.sh"
+fi
 
-# Install dependencies if node_modules doesn't exist
+# Verify Node/NPM are available before attempting to start the frontend
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ 'node' not found in PATH. Install Node.js (16+) and retry. See: https://nodejs.org/"
+    exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+    echo "❌ 'npm' not found in PATH. Install npm (bundled with Node.js) and retry."
+    exit 1
+fi
+
+# Install frontend dependencies if needed (uses npm --prefix so we don't change cwd)
 if [ ! -d "$PROJECT_ROOT/web/node_modules" ]; then
     echo "Installing frontend dependencies..."
     npm --prefix "$PROJECT_ROOT/web" install
@@ -128,6 +167,11 @@ fi
 npm --prefix "$PROJECT_ROOT/web" run dev > "$PROJECT_ROOT/frontend.log" 2>&1 &
 FRONTEND_PID=$!
 echo "✓ Frontend started (PID: $FRONTEND_PID, logs: $PROJECT_ROOT/frontend.log)"
+
+# Optional: warn if mkcert might be useful for local HTTPS testing
+if ! command -v mkcert >/dev/null 2>&1; then
+    echo "\nNote: 'mkcert' not found in PATH. If you plan to test HTTPS locally, install mkcert: https://github.com/FiloSottile/mkcert"
+fi
 
 # Wait for frontend to start and detect its port
 sleep 3
