@@ -44,6 +44,9 @@ set -u  # Treat unset variables as an error
 GO_VERSION="1.25.0"  # Go version to install (adjust as needed)
 NODE_VERSION="24"     # Node.js major version (LTS)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Project root (parent of scripts/)
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WEB_DIR="$PROJECT_ROOT/web"
 
 # Mode flags (controlled by command-line arguments)
 UPDATE_MODE=false     # Update all packages to latest versions
@@ -357,7 +360,7 @@ install_go_tools() {
 
 install_backend_deps() {
     print_status "Installing backend Go dependencies..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
     # Download and tidy Go modules
     go mod download
@@ -372,7 +375,7 @@ install_backend_deps() {
 
 install_frontend_deps() {
     print_status "Installing/updating frontend npm dependencies..."
-    cd "$SCRIPT_DIR/web"
+    cd "$WEB_DIR"
 
     if [ "$UPDATE_MODE" = true ]; then
         # In update mode, update all dependencies to latest compatible versions
@@ -410,10 +413,10 @@ setup_env_files() {
     print_status "Setting up environment configuration files..."
 
     # Backend .env file
-    if [ ! -f "$SCRIPT_DIR/.env" ]; then
-        if [ -f "$SCRIPT_DIR/.env.example" ]; then
+    if [ ! -f "$PROJECT_ROOT/.env" ]; then
+        if [ -f "$PROJECT_ROOT/.env.example" ]; then
             print_status "Creating .env from .env.example..."
-            cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+            cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
 
             # Generate a random JWT secret
             JWT_SECRET=$(openssl rand -base64 32)
@@ -422,9 +425,9 @@ setup_env_files() {
             if command_exists sed; then
                 # macOS and Linux compatible sed
                 if [[ "$OSTYPE" == "darwin"* ]]; then
-                    sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$SCRIPT_DIR/.env"
+                    sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
                 else
-                    sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$SCRIPT_DIR/.env"
+                    sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
                 fi
                 print_success "Generated random JWT_SECRET"
             else
@@ -440,10 +443,10 @@ setup_env_files() {
     fi
 
     # Frontend .env file (optional for production)
-    if [ ! -f "$SCRIPT_DIR/web/.env" ]; then
-        if [ -f "$SCRIPT_DIR/web/.env.example" ]; then
+    if [ ! -f "$WEB_DIR/.env" ]; then
+        if [ -f "$WEB_DIR/.env.example" ]; then
             print_status "Creating web/.env from .env.example..."
-            cp "$SCRIPT_DIR/web/.env.example" "$SCRIPT_DIR/web/.env"
+            cp "$WEB_DIR/.env.example" "$WEB_DIR/.env"
             print_success "Frontend .env file created"
         fi
     else
@@ -457,12 +460,12 @@ setup_env_files() {
 
 build_backend() {
     print_status "Building backend application..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
-    # Run the build using Makefile
-    make build
+    # Run the build using Makefile (run in project root)
+    make -C "$PROJECT_ROOT" build
 
-    print_success "Backend built successfully (binary: ./bin/actalog)"
+    print_success "Backend built successfully (binary: $PROJECT_ROOT/bin/actalog)"
 }
 
 ################################################################################
@@ -471,13 +474,13 @@ build_backend() {
 
 build_frontend() {
     print_status "Building frontend application..."
-    cd "$SCRIPT_DIR/web"
+    cd "$WEB_DIR"
 
     # Build for production
     npm run build
 
-    print_success "Frontend built successfully (output: ./web/dist)"
-    cd "$SCRIPT_DIR"
+    print_success "Frontend built successfully (output: $WEB_DIR/dist)"
+    cd "$PROJECT_ROOT"
 }
 
 ################################################################################
@@ -486,7 +489,7 @@ build_frontend() {
 
 init_database() {
     print_status "Initializing database..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
     # Check if database already exists
     if [ -f "actalog.db" ]; then
