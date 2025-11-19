@@ -260,7 +260,8 @@ func getSQLiteSchema() string {
 	CREATE TABLE IF NOT EXISTS user_workouts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
-		workout_id INTEGER NOT NULL,
+		workout_id INTEGER,
+		workout_name TEXT,
 		workout_date DATE NOT NULL,
 		workout_type TEXT,
 		total_time INTEGER,
@@ -391,7 +392,8 @@ func getPostgreSQLSchema() string {
 	CREATE TABLE IF NOT EXISTS user_workouts (
 		id BIGSERIAL PRIMARY KEY,
 		user_id BIGINT NOT NULL,
-		workout_id BIGINT NOT NULL,
+		workout_id BIGINT,
+		workout_name TEXT,
 		workout_date DATE NOT NULL,
 		workout_type VARCHAR(255),
 		total_time INTEGER,
@@ -517,7 +519,8 @@ func getMySQLSchema() string {
 	CREATE TABLE IF NOT EXISTS user_workouts (
 		id BIGINT AUTO_INCREMENT PRIMARY KEY,
 		user_id BIGINT NOT NULL,
-		workout_id BIGINT NOT NULL,
+		workout_id BIGINT,
+		workout_name TEXT,
 		workout_date DATE NOT NULL,
 		workout_type VARCHAR(255),
 		total_time INTEGER,

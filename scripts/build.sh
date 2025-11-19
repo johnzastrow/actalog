@@ -41,7 +41,7 @@ set -u  # Treat unset variables as an error
 # Configuration Variables
 ################################################################################
 
-GO_VERSION="1.25.0"  # Go version to install (adjust as needed)
+GO_VERSION="1.25.4"  # Go version to install (adjust as needed)
 NODE_VERSION="24"     # Node.js major version (LTS)
 MIN_NODE_MAJOR="18"   # Minimum Node.js major version required to run the frontend
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -574,47 +574,47 @@ print_summary() {
     # Only show configuration step for fresh installs
     if [ "$INTERACTIVE_MODE" = true ]; then
         echo "1. Review configuration:"
-        echo "   ${BLUE}nano .env${NC} (edit JWT_SECRET, DB settings, etc.)"
+        echo -e "   ${BLUE}nano .env${NC} (edit JWT_SECRET, DB settings, etc.)"
         echo ""
     fi
 
     echo "2. Start the backend:"
-    echo "   ${BLUE}./run.sh${NC}          (production mode)"
-    echo "   ${BLUE}make run${NC}          (via Makefile)"
-    echo "   ${BLUE}make dev${NC}          (development mode with hot reload)"
+    echo -e "   ${BLUE}./run.sh${NC}          (production mode)"
+    echo -e "   ${BLUE}make run${NC}          (via Makefile)"
+    echo -e "   ${BLUE}make dev${NC}          (development mode with hot reload)"
     echo ""
     echo "3. For development with frontend:"
-    echo "   Terminal 1: ${BLUE}make dev${NC}              (backend with hot reload)"
-    echo "   Terminal 2: ${BLUE}cd web && npm run dev${NC} (frontend dev server)"
+    echo -e "   Terminal 1: ${BLUE}make dev${NC}              (backend with hot reload)"
+    echo -e "   Terminal 2: ${BLUE}cd web && npm run dev${NC} (frontend dev server)"
     echo ""
     echo "4. Access the application:"
-    echo "   Backend API:  ${GREEN}http://localhost:8080${NC}"
-    echo "   Frontend Dev: ${GREEN}http://localhost:3000${NC} (if running npm run dev)"
-    echo "   Health Check: ${GREEN}http://localhost:8080/health${NC}"
+    echo -e "   Backend API:  ${GREEN}http://localhost:8080${NC}"
+    echo -e "   Frontend Dev: ${GREEN}http://localhost:3000${NC} (if running npm run dev)"
+    echo -e "   Health Check: ${GREEN}http://localhost:8080/health${NC}"
     echo ""
 
     # Only show first user info for fresh installs
     if [ "$INTERACTIVE_MODE" = true ]; then
         echo "5. First user registration:"
-        echo "   The first user to register will automatically become an admin"
+        echo -e "   The first user to register will automatically become an admin"
         echo ""
     fi
 
     echo "6. Run tests:"
-    echo "   ${BLUE}make test${NC}         (all tests with coverage)"
-    echo "   ${BLUE}make test-unit${NC}    (unit tests only)"
+    echo -e "   ${BLUE}make test${NC}         (all tests with coverage)"
+    echo -e "   ${BLUE}make test-unit${NC}    (unit tests only)"
     echo ""
     echo "7. Other useful commands:"
-    echo "   ${BLUE}make lint${NC}         (run linter)"
-    echo "   ${BLUE}make fmt${NC}          (format code)"
-    echo "   ${BLUE}make clean${NC}        (clean build artifacts)"
+    echo -e "   ${BLUE}make lint${NC}         (run linter)"
+    echo -e "   ${BLUE}make fmt${NC}          (format code)"
+    echo -e "   ${BLUE}make clean${NC}        (clean build artifacts)"
     echo ""
 
     # Show update/rebuild options
     if [ "$INTERACTIVE_MODE" = true ]; then
         echo "8. Future updates:"
-        echo "   ${BLUE}./build.sh --update${NC}   (update all packages and rebuild)"
-        echo "   ${BLUE}./build.sh --rebuild${NC}  (quick rebuild without updates)"
+        echo -e "   ${BLUE}./build.sh --update${NC}   (update all packages and rebuild)"
+        echo -e "   ${BLUE}./build.sh --rebuild${NC}  (quick rebuild without updates)"
         echo ""
     fi
 
