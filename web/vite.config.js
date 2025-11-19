@@ -20,8 +20,15 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        // NOTE: set `scope` and `start_url` to the canonical origin
+        // for your deployment. During local development you may want to
+        // replace this with a placeholder (e.g. `https://subdomain.example.com/`)
+        // but remember that Service Workers and some PWA features require a
+        // secure origin (HTTPS) and exact origin matching. If you test locally
+        // using a mapped hosts entry (see README) set these values to the
+        // production/staging origin you plan to use.
+        scope: 'https://subdomain.example.com/',
+        start_url: 'https://subdomain.example.com/',
         icons: [
           {
             src: '/icons/icon-72x72.png',
@@ -153,9 +160,35 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // SERVER CONFIGURATION
+  // --------------------
+  // The `server` block controls Vite's dev server behavior. Typical workflows:
+  // - Local development (no hosts file): bind to 0.0.0.0 or localhost and use
+  //   `http://localhost:3000`.
+  // - Local development with a mapped hostname (recommended for PWA/cookie
+  //   testing): map a name (example: subdomain.example.com) to your loopback
+  //   interface in your OS hosts file, then set `host` to that name so HMR and
+  //   Service Worker expectations match the origin.
+  // - Named server (staging/production): do NOT use the dev server. Build and
+  //   deploy the `dist/` output to your web host, ensuring the `build.base` and
+  //   PWA manifest values match the deployed origin.
+  //
+  // To run the dev server without editing your hosts file, start Vite with
+  // `--host 0.0.0.0` (or export HOST=0.0.0.0). Example:
+  //   cd web && npm run dev -- --host 0.0.0.0
+  // This will bind Vite to all interfaces and allow testing via
+  // `http://localhost:3000` or `http://<your-ip>:3000`.
   server: {
-    host: '0.0.0.0', // Listen on all network interfaces
+    // Default here is the example hostname to use if you map it in hosts file.
+    // If you prefer not to map hosts, start Vite with `--host 0.0.0.0` instead.
+    host: 'subdomain.example.com',
     port: 3000,
+    hmr: {
+      // HMR client will try to connect to this host; set to the same host
+      // you use to access the dev server. If running with `--host 0.0.0.0`,
+      // consider leaving this unset or overriding via CLI.
+      host: 'subdomain.example.com'
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -168,6 +201,8 @@ export default defineConfig({
     }
   },
   build: {
+    // Serve built assets from the production hostname
+    base: 'https://subdomain.example.com/',
     outDir: 'dist',
     sourcemap: true,
   }
