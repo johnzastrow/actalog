@@ -43,7 +43,11 @@ set -u  # Treat unset variables as an error
 
 GO_VERSION="1.25.0"  # Go version to install (adjust as needed)
 NODE_VERSION="24"     # Node.js major version (LTS)
+MIN_NODE_MAJOR="18"   # Minimum Node.js major version required to run the frontend
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Project root (parent of scripts/)
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WEB_DIR="$PROJECT_ROOT/web"
 
 # Mode flags (controlled by command-line arguments)
 UPDATE_MODE=false     # Update all packages to latest versions
@@ -81,6 +85,17 @@ print_error() {
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Ensure sudo is available when running installation/update steps that require
+# elevated privileges. Rebuild-only mode does not require sudo.
+ensure_sudo_for_installs() {
+    if ! command_exists sudo; then
+        print_error "This script needs 'sudo' for installation/update steps but 'sudo' was not found in PATH."
+        print_error "If you intend to run only a rebuild (no system package installation), run: ./build.sh --rebuild"
+        print_error "Otherwise install 'sudo' or run this script as a user that has sudo privileges."
+        exit 1
+    fi
 }
 
 # Compare version numbers (returns 0 if v1 < v2, 1 if v1 >= v2)
@@ -357,7 +372,7 @@ install_go_tools() {
 
 install_backend_deps() {
     print_status "Installing backend Go dependencies..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
     # Download and tidy Go modules
     go mod download
@@ -372,7 +387,7 @@ install_backend_deps() {
 
 install_frontend_deps() {
     print_status "Installing/updating frontend npm dependencies..."
-    cd "$SCRIPT_DIR/web"
+    cd "$WEB_DIR"
 
     if [ "$UPDATE_MODE" = true ]; then
         # In update mode, update all dependencies to latest compatible versions
@@ -410,10 +425,10 @@ setup_env_files() {
     print_status "Setting up environment configuration files..."
 
     # Backend .env file
-    if [ ! -f "$SCRIPT_DIR/.env" ]; then
-        if [ -f "$SCRIPT_DIR/.env.example" ]; then
+    if [ ! -f "$PROJECT_ROOT/.env" ]; then
+        if [ -f "$PROJECT_ROOT/.env.example" ]; then
             print_status "Creating .env from .env.example..."
-            cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+            cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
 
             # Generate a random JWT secret
             JWT_SECRET=$(openssl rand -base64 32)
@@ -422,9 +437,9 @@ setup_env_files() {
             if command_exists sed; then
                 # macOS and Linux compatible sed
                 if [[ "$OSTYPE" == "darwin"* ]]; then
-                    sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$SCRIPT_DIR/.env"
+                    sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
                 else
-                    sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$SCRIPT_DIR/.env"
+                    sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
                 fi
                 print_success "Generated random JWT_SECRET"
             else
@@ -440,10 +455,10 @@ setup_env_files() {
     fi
 
     # Frontend .env file (optional for production)
-    if [ ! -f "$SCRIPT_DIR/web/.env" ]; then
-        if [ -f "$SCRIPT_DIR/web/.env.example" ]; then
+    if [ ! -f "$WEB_DIR/.env" ]; then
+        if [ -f "$WEB_DIR/.env.example" ]; then
             print_status "Creating web/.env from .env.example..."
-            cp "$SCRIPT_DIR/web/.env.example" "$SCRIPT_DIR/web/.env"
+            cp "$WEB_DIR/.env.example" "$WEB_DIR/.env"
             print_success "Frontend .env file created"
         fi
     else
@@ -457,12 +472,12 @@ setup_env_files() {
 
 build_backend() {
     print_status "Building backend application..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
-    # Run the build using Makefile
-    make build
+    # Run the build using Makefile (run in project root)
+    make -C "$PROJECT_ROOT" build
 
-    print_success "Backend built successfully (binary: ./bin/actalog)"
+    print_success "Backend built successfully (binary: $PROJECT_ROOT/bin/actalog)"
 }
 
 ################################################################################
@@ -471,13 +486,13 @@ build_backend() {
 
 build_frontend() {
     print_status "Building frontend application..."
-    cd "$SCRIPT_DIR/web"
+    cd "$WEB_DIR"
 
     # Build for production
     npm run build
 
-    print_success "Frontend built successfully (output: ./web/dist)"
-    cd "$SCRIPT_DIR"
+    print_success "Frontend built successfully (output: $WEB_DIR/dist)"
+    cd "$PROJECT_ROOT"
 }
 
 ################################################################################
@@ -486,7 +501,7 @@ build_frontend() {
 
 init_database() {
     print_status "Initializing database..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
 
     # Check if database already exists
     if [ -f "actalog.db" ]; then
@@ -717,6 +732,8 @@ main() {
         build_backend
         build_frontend
     elif [ "$UPDATE_MODE" = true ]; then
+        # Ensure sudo is available for update mode
+        ensure_sudo_for_installs
         # Update mode: Update everything
         print_status "Running in UPDATE mode (updating all packages to latest versions)"
         update_system
@@ -731,6 +748,8 @@ main() {
         build_frontend
         create_run_script
     else
+        # For a fresh install we also need sudo for system package installs
+        ensure_sudo_for_installs
         # Fresh install mode: Install everything
         print_status "Running in INSTALL mode (fresh installation)"
         update_system

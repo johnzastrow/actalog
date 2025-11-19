@@ -5,9 +5,10 @@ echo ""
 
 # Get the absolute path of the project directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_NAME="actionlog"
 
-echo "Project directory: $SCRIPT_DIR"
+echo "Project directory: $PROJECT_ROOT"
 echo ""
 
 # Kill backend processes
@@ -17,7 +18,7 @@ echo "Stopping backend..."
 pkill -9 -f "bin/actalog" 2>/dev/null || true
 
 # Kill go run processes in this directory
-for pid in $(ps aux | grep "[g]o run" | grep "$SCRIPT_DIR" | awk '{print $2}'); do
+for pid in $(ps aux | grep "[g]o run" | grep "$PROJECT_ROOT" | awk '{print $2}'); do
     echo "  Killing go run process: $pid"
     kill -9 $pid 2>/dev/null || true
 done
@@ -27,7 +28,7 @@ for pid in $(ps aux | grep "[a]ctalog" | grep -v "grep" | awk '{print $2}'); do
     # Check if it's running from our directory
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"$PROJECT_ROOT"* ]]; then
             echo "  Killing actalog process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -49,7 +50,7 @@ echo "Stopping frontend..."
 for pid in $(ps aux | grep "[n]pm run dev" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing npm dev process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -60,7 +61,7 @@ done
 for pid in $(ps aux | grep "[v]ite" | grep -v "grep" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME"* ]] || [[ "$cwd" == *"/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing vite process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -71,7 +72,7 @@ done
 for pid in $(ps aux | grep "[n]ode" | grep "vite" | awk '{print $2}'); do
     if [ -d "/proc/$pid" ]; then
         cwd=$(readlink -f /proc/$pid/cwd 2>/dev/null || echo "")
-        if [[ "$cwd" == *"$PROJECT_NAME/web"* ]]; then
+        if [[ "$cwd" == *"$PROJECT_NAME/web"* ]] || [[ "$cwd" == *"$PROJECT_ROOT/web"* ]]; then
             echo "  Killing node/vite process: $pid (from $cwd)"
             kill -9 $pid 2>/dev/null || true
         fi
@@ -85,17 +86,41 @@ sleep 1
 
 echo ""
 echo "Building and starting backend..."
-# Build backend
-make build
+# Ensure Go is installed before attempting to build
+if ! command -v go >/dev/null 2>&1; then
+    cat <<MSG
+❌ 'go' not found in PATH. The backend build requires Go to be installed.
+
+Install Go and ensure the 'go' binary is on your PATH. Common install commands:
+
+  # Debian/Ubuntu (may provide older Go package):
+  sudo apt update && sudo apt install -y golang
+
+  # Fedora/CentOS/RHEL (dnf):
+  sudo dnf install golang
+
+  # Arch Linux:
+  sudo pacman -S go
+
+  # Or download latest from https://go.dev/dl and follow the Linux tarball install instructions.
+
+After installing, reopen your shell or ensure the 'go' binary is available, then re-run this script.
+MSG
+    exit 1
+fi
+
+# Build backend (run Make in project root)
+make -C "$PROJECT_ROOT" build
 if [ $? -ne 0 ]; then
     echo "❌ Backend build failed!"
     exit 1
 fi
 
-# Start backend in background
-make run > backend.log 2>&1 &
+# Start backend in background (make -C so we don't change cwd)
+make -C "$PROJECT_ROOT" run > "$PROJECT_ROOT/backend.log" 2>&1 &
 BACKEND_PID=$!
-echo "✓ Backend started (PID: $BACKEND_PID, logs: backend.log)"
+echo "✓ Backend started (PID: $BACKEND_PID, logs: $PROJECT_ROOT/backend.log)"
+
 
 # Wait a moment for backend to start
 sleep 2
@@ -115,26 +140,63 @@ fi
 
 echo ""
 echo "Starting frontend..."
-cd web
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    echo "Installing frontend dependencies..."
-    npm install
+# Recommend running the full setup script on first use
+if [ ! -f "$PROJECT_ROOT/bin/actalog" ]; then
+    echo "\nNote: If this is the first time running ActaLog on this machine,"
+    echo "consider running the full setup script to install tools and dependencies:"
+    echo "  ./scripts/build.sh"
 fi
 
-# Start frontend in background
-npm run dev > ../frontend.log 2>&1 &
+# Verify Node/NPM are available before attempting to start the frontend
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ 'node' not found in PATH. Install Node.js (16+) and retry. See: https://nodejs.org/"
+    exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+    echo "❌ 'npm' not found in PATH. Install npm (bundled with Node.js) and retry."
+    exit 1
+fi
+
+# Verify Node.js version meets minimum requirement
+# Read the minimum required Node major version from environment if provided,
+# otherwise default to 18. Set MIN_NODE_MAJOR in your shell or export it from
+# another script if you need to override the requirement.
+MIN_NODE_MAJOR=${MIN_NODE_MAJOR:-18}
+NODE_VERSION_STR=$(node --version 2>/dev/null || echo "")
+NODE_MAJOR=$(echo "$NODE_VERSION_STR" | sed 's/^v//' | cut -d. -f1)
+if ! [[ "$NODE_MAJOR" =~ ^[0-9]+$ ]]; then
+    echo "❌ Could not determine Node.js version from: $NODE_VERSION_STR"
+    echo "Please ensure a compatible Node.js (>= ${MIN_NODE_MAJOR}) is installed."
+    exit 1
+fi
+if [ "$NODE_MAJOR" -lt "$MIN_NODE_MAJOR" ]; then
+    echo "❌ Node.js major version $MIN_NODE_MAJOR or higher is required. Detected: $NODE_VERSION_STR"
+    echo "Install a newer Node.js (https://nodejs.org/) or run './scripts/build.sh --update' to install one on Debian/Ubuntu systems."
+    exit 1
+fi
+
+# Install frontend dependencies if needed (uses npm --prefix so we don't change cwd)
+if [ ! -d "$PROJECT_ROOT/web/node_modules" ]; then
+    echo "Installing frontend dependencies..."
+    npm --prefix "$PROJECT_ROOT/web" install
+fi
+
+# Start frontend in background using npm --prefix to avoid changing cwd
+npm --prefix "$PROJECT_ROOT/web" run dev > "$PROJECT_ROOT/frontend.log" 2>&1 &
 FRONTEND_PID=$!
-cd ..
-echo "✓ Frontend started (PID: $FRONTEND_PID, logs: frontend.log)"
+echo "✓ Frontend started (PID: $FRONTEND_PID, logs: $PROJECT_ROOT/frontend.log)"
+
+# Optional: warn if mkcert might be useful for local HTTPS testing
+if ! command -v mkcert >/dev/null 2>&1; then
+    echo "\nNote: 'mkcert' not found in PATH. If you plan to test HTTPS locally, install mkcert: https://github.com/FiloSottile/mkcert"
+fi
 
 # Wait for frontend to start and detect its port
 sleep 3
 FRONTEND_PORT=$(lsof -Pan -p $FRONTEND_PID -i 2>/dev/null | grep LISTEN | awk '{print $9}' | cut -d: -f2 | head -1)
 if [ -z "$FRONTEND_PORT" ]; then
     # Try to find any vite process port
-    FRONTEND_PORT=$(lsof -Pan -c node -i 2>/dev/null | grep LISTEN | grep "$SCRIPT_DIR/web" | awk '{print $9}' | cut -d: -f2 | head -1)
+    FRONTEND_PORT=$(lsof -Pan -c node -i 2>/dev/null | grep LISTEN | grep "$PROJECT_ROOT/web" | awk '{print $9}' | cut -d: -f2 | head -1)
     if [ -z "$FRONTEND_PORT" ]; then
         FRONTEND_PORT="5173 or 3000"
     fi
@@ -146,12 +208,12 @@ echo "Backend:  http://localhost:$BACKEND_PORT (PID: $BACKEND_PID)"
 echo "Frontend: http://localhost:$FRONTEND_PORT (PID: $FRONTEND_PID)"
 echo ""
 echo "Log files:"
-echo "  Backend:  backend.log"
-echo "  Frontend: frontend.log"
+echo "  Backend:  $PROJECT_ROOT/backend.log"
+echo "  Frontend: $PROJECT_ROOT/frontend.log"
 echo ""
 echo "To view logs:"
-echo "  tail -f backend.log"
-echo "  tail -f frontend.log"
+echo "  tail -f $PROJECT_ROOT/backend.log"
+echo "  tail -f $PROJECT_ROOT/frontend.log"
 echo ""
 echo "To stop services:"
 echo "  ./stop.sh"
