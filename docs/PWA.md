@@ -22,7 +22,7 @@ Files referenced from `scripts/`:
 
 ### Install mkcert
 
-mkcert is simple and platform-supported. Follow the instructions at https://github.com/FiloSottile/mkcert.
+mkcert is simple and platform-supported. Follow the instructions at [mkcert](https://github.com/FiloSottile/mkcert).
 
 Windows (recommended using PowerShell as Admin):
 
@@ -67,14 +67,14 @@ Map the hostname to localhost so your browser resolves it to your machine.
 
 Windows hosts file (run editor as Administrator):
 
-```
+```text
 # Add to C:\Windows\System32\drivers\etc\hosts
 127.0.0.1 subdomain.example.com
 ```
 
 Linux / macOS `/etc/hosts` (requires sudo):
 
-```
+```bash
 sudo -- sh -c 'echo "127.0.0.1 subdomain.example.com" >> /etc/hosts'
 ```
 
@@ -111,7 +111,7 @@ npm ci
 npm run build
 ```
 
-2. Start the preview server (Vite's `preview`) — it listens on `localhost:4173` by default. You can also run it with HTTPS using a small proxy or Caddy.
+1. Start the preview server (Vite's `preview`) — it listens on `localhost:4173` by default. You can also run it with HTTPS using a small proxy or Caddy.
 
 ```bash
 npm run preview
@@ -146,7 +146,7 @@ See `scripts/PWA_HEALTH_CHECK_README.md` for a full explanation of the checks an
 
 Example Caddyfile (reverse-proxy to local port 3000):
 
-```
+```text
 subdomain.example.com {
   reverse_proxy localhost:3000
 }
@@ -175,8 +175,8 @@ Run Caddy from your machine; it will handle HTTPS for that domain if publicly re
 - `scripts/PWA_HEALTH_CHECK_README.md`
 - `scripts/PWA_QUICK_REFERENCE.md`
 - `scripts/PWA_TESTING_EXAMPLES.md`
-- Vite dev server docs: https://vitejs.dev/guide/cli.html
-- mkcert: https://github.com/FiloSottile/mkcert
+-- Vite dev server docs: [Vite CLI guide](https://vitejs.dev/guide/cli.html)
+-- mkcert: [mkcert](https://github.com/FiloSottile/mkcert)
 
 ---
 
@@ -185,4 +185,4 @@ If you'd like, I can also:
 - Add an npm `dev:https` script in `web/package.json` that bundles the `--host`/`--https` flags using a configurable path to the certs, or
 - Add a small PowerShell helper `scripts/mkcert-windows.ps1` (if you want platform-automated cert generation + hosts-file editing prompts).
 
-Which of those would you prefer next? 
+Which of those would you prefer next?
