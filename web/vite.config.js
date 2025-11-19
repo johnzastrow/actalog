@@ -3,6 +3,24 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import fs from 'fs'
+
+// Optional local HTTPS support: if `web/certs/<host>.pem` and
+// `web/certs/<host>-key.pem` exist the Vite config will use them for
+// an HTTPS dev/preview server. To opt-in, generate certs using mkcert
+// and place them in `web/certs` (the `scripts/start-frontend.sh` helper
+// can generate these for you).
+const CERT_DIR = fileURLToPath(new URL('./certs', import.meta.url))
+const DEFAULT_HOST = process.env.VITE_DEV_HOST || 'subdomain.example.com'
+const KEY_PATH = `${CERT_DIR}/${DEFAULT_HOST}-key.pem`
+const CERT_PATH = `${CERT_DIR}/${DEFAULT_HOST}.pem`
+let httpsOptions = undefined
+if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
+  httpsOptions = {
+    key: fs.readFileSync(KEY_PATH),
+    cert: fs.readFileSync(CERT_PATH)
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,8 +38,15 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        // NOTE: set `scope` and `start_url` to the canonical origin
+        // for your deployment. During local development you may want to
+        // replace this with a placeholder (e.g. `https://subdomain.example.com/`)
+        // but remember that Service Workers and some PWA features require a
+        // secure origin (HTTPS) and exact origin matching. If you test locally
+        // using a mapped hosts entry (see README) set these values to the
+        // production/staging origin you plan to use.
+        scope: 'https://subdomain.example.com/',
+        start_url: 'https://subdomain.example.com/',
         icons: [
           {
             src: '/icons/icon-72x72.png',
@@ -153,9 +178,36 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // SERVER CONFIGURATION
+  // --------------------
+  // The `server` block controls Vite's dev server behavior. Typical workflows:
+  // - Local development (no hosts file): bind to 0.0.0.0 or localhost and use
+  //   `http://localhost:3000`.
+  // - Local development with a mapped hostname (recommended for PWA/cookie
+  //   testing): map a name (example: subdomain.example.com) to your loopback
+  //   interface in your OS hosts file, then set `host` to that name so HMR and
+  //   Service Worker expectations match the origin.
+  // - Named server (staging/production): do NOT use the dev server. Build and
+  //   deploy the `dist/` output to your web host, ensuring the `build.base` and
+  //   PWA manifest values match the deployed origin.
+  //
+  // To run the dev server without editing your hosts file, start Vite with
+  // `--host 0.0.0.0` (or export HOST=0.0.0.0). Example:
+  //   cd web && npm run dev -- --host 0.0.0.0
+  // This will bind Vite to all interfaces and allow testing via
+  // `http://localhost:3000` or `http://<your-ip>:3000`.
   server: {
-    host: '0.0.0.0', // Listen on all network interfaces
+    // Default here is the example hostname to use if you map it in hosts file.
+    // If you prefer not to map hosts, start Vite with `--host 0.0.0.0` instead.
+    host: 'subdomain.example.com',
     port: 3000,
+    https: httpsOptions ? httpsOptions : false,
+    hmr: {
+      // HMR client will try to connect to this host; set to the same host
+      // you use to access the dev server. If running with `--host 0.0.0.0`,
+      // consider leaving this unset or overriding via CLI.
+      host: 'subdomain.example.com'
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -168,6 +220,8 @@ export default defineConfig({
     }
   },
   build: {
+    // Serve built assets from the production hostname
+    base: 'https://subdomain.example.com/',
     outDir: 'dist',
     sourcemap: true,
   }
