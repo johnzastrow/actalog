@@ -8,11 +8,21 @@ DOCKER_COMPOSE=docker-compose
 
 # Go build cache directories (Windows-friendly, keeps everything in project)
 PROJECT_DIR=$(shell pwd)
+
+# Prefer a project-local cache if the project directory is writable (convenient for CI
+# and per-repo caches). If the project directory is not writable (e.g. files are owned
+# by root or another user), fall back to a per-user cache under $HOME to avoid
+# permission errors when building as a normal user.
+ifeq ($(shell [ -w "$(PROJECT_DIR)" ] && echo yes || echo no),yes)
 CACHE_DIR=$(PROJECT_DIR)/.cache
+else
+CACHE_DIR=$(HOME)/.cache/actionlog
+endif
+
 GO_BUILD_CACHE=$(CACHE_DIR)/go-build
 GO_MOD_CACHE=$(CACHE_DIR)/go-mod
 
-# Export Go environment variables to use project directory
+# Export Go environment variables to use the chosen cache directory
 export GOCACHE=$(GO_BUILD_CACHE)
 export GOMODCACHE=$(GO_MOD_CACHE)
 export GOTMPDIR=$(CACHE_DIR)/tmp
