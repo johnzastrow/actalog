@@ -8,6 +8,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 
+# Defaults to avoid 'unbound variable' with 'set -u'
+HOST_ARG=""
+HTTPS_FLAG=""
+
 echo "\nActaLog frontend starter — guided mode"
 
 read -r -p "Run in (d)ev or (p)review (production) mode? [d/p]: " MODE
@@ -120,12 +124,16 @@ if [[ "$MODE" == "d" ]]; then
   fi
 else
   echo "\nBuilding and starting preview (production-like) server..."
-  echo "Running: npm run build && npm run preview ${HTTPS_FLAG} --host $HOSTNAME"
-  # preview accepts --host and --https
-  npm run build
+  # Note: vite preview does NOT accept --https as a CLI flag
+  # HTTPS is controlled via vite.config.js server.https setting
+  # If certs exist in web/certs/, the preview server will use HTTPS automatically
   if [[ -n "$HTTPS_FLAG" ]]; then
-    exec npm run preview -- --https --host $HOSTNAME
+    echo "Note: HTTPS for preview mode is configured via vite.config.js (not CLI flags)"
+    echo "Ensure cert files exist in web/certs/ for HTTPS support"
+    echo "Running: npm run build && npm run preview -- --host $HOSTNAME"
   else
-    exec npm run preview -- --host $HOSTNAME
+    echo "Running: npm run build && npm run preview -- --host $HOSTNAME"
   fi
+  npm run build
+  exec npm run preview -- --host $HOSTNAME
 fi
