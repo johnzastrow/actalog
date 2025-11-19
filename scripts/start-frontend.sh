@@ -8,6 +8,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 
+# Defaults to avoid 'unbound variable' with 'set -u'
+HOST_ARG=""
+HTTPS_FLAG=""
+
 echo "\nActaLog frontend starter — guided mode"
 
 read -r -p "Run in (d)ev or (p)review (production) mode? [d/p]: " MODE
