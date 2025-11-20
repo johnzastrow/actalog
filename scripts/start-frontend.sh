@@ -90,17 +90,114 @@ else
   fi
   echo "Domain mode: $HOSTNAME"
 
-  read -r -p "Will you use HTTPS for this domain? [Y/n]: " USE_HTTPS
-  USE_HTTPS=${USE_HTTPS:-Y}
-  if [[ "$USE_HTTPS" =~ ^[Yy]$ ]]; then
-    HTTPS_FLAG="--https"
-    echo "Ensure DNS A/AAA record points to this machine and that you have certs available (mkcert for local dev or real certs in production)."
+  # Verify DNS resolution
+  echo "\nVerifying DNS configuration for $HOSTNAME..."
+  RESOLVED_IP=""
+  if command -v dig >/dev/null 2>&1; then
+    # Use dig if available (more reliable)
+    RESOLVED_IP=$(dig +short "$HOSTNAME" A | head -n 1)
+  elif command -v nslookup >/dev/null 2>&1; then
+    # Fall back to nslookup
+    RESOLVED_IP=$(nslookup "$HOSTNAME" 2>/dev/null | grep -A 1 "Name:" | tail -n 1 | awk '{print $2}')
+  elif command -v host >/dev/null 2>&1; then
+    # Fall back to host command
+    RESOLVED_IP=$(host "$HOSTNAME" 2>/dev/null | grep "has address" | head -n 1 | awk '{print $NF}')
+  fi
+
+  if [[ -n "$RESOLVED_IP" ]]; then
+    echo "✓ DNS resolved: $HOSTNAME → $RESOLVED_IP"
+
+    # Get local machine's IP addresses
+    LOCAL_IPS=""
+    if command -v hostname >/dev/null 2>&1; then
+      LOCAL_IPS=$(hostname -I 2>/dev/null || hostname -i 2>/dev/null || echo "")
+    fi
+
+    # Check if resolved IP matches any local IP
+    IP_MATCHES=false
+    if [[ -n "$LOCAL_IPS" ]]; then
+      for LOCAL_IP in $LOCAL_IPS; do
+        if [[ "$RESOLVED_IP" == "$LOCAL_IP" ]]; then
+          IP_MATCHES=true
+          echo "✓ DNS points to this machine ($LOCAL_IP)"
+          break
+        fi
+      done
+
+      if [[ "$IP_MATCHES" == false ]]; then
+        echo "⚠ WARNING: DNS does not point to this machine!"
+        echo "  Resolved IP: $RESOLVED_IP"
+        echo "  Local IPs:   $LOCAL_IPS"
+        echo "\nThis may cause issues unless:"
+        echo "  - You're behind a NAT/router doing port forwarding"
+        echo "  - You're testing with /etc/hosts override"
+        echo "  - The domain points to a load balancer that forwards here"
+      fi
+    else
+      echo "Could not determine local IP addresses for comparison."
+    fi
+
+    read -r -p "\nIs the resolved IP ($RESOLVED_IP) correct? [Y/n]: " IP_CORRECT
+    IP_CORRECT=${IP_CORRECT:-Y}
+    if [[ ! "$IP_CORRECT" =~ ^[Yy]$ ]]; then
+      echo "\n✗ DNS configuration issue detected!"
+      echo "Please fix your DNS records before continuing:"
+      echo "  1. Add/update an A record for '$HOSTNAME' pointing to your server's public IP"
+      echo "  2. Wait for DNS propagation (can take 5 minutes to 48 hours)"
+      echo "  3. Verify with: dig $HOSTNAME"
+      read -r -p "\nContinue anyway? [y/N]: " CONTINUE_ANYWAY
+      CONTINUE_ANYWAY=${CONTINUE_ANYWAY:-N}
+      if [[ ! "$CONTINUE_ANYWAY" =~ ^[Yy]$ ]]; then
+        echo "Exiting. Fix DNS configuration and re-run this script."
+        exit 1
+      fi
+    fi
   else
+    echo "✗ WARNING: Could not resolve DNS for '$HOSTNAME'"
+    echo "This domain does not appear to have a valid A record."
+    echo "\nPossible issues:"
+    echo "  - Domain/subdomain does not exist"
+    echo "  - DNS not yet propagated"
+    echo "  - DNS server issue"
+    echo "\nTo fix:"
+    echo "  1. Add an A record for '$HOSTNAME' in your DNS provider"
+    echo "  2. Point it to this server's public IP address"
+    echo "  3. Wait for DNS propagation (typically 5-30 minutes)"
+    echo "  4. Verify with: dig $HOSTNAME"
+
+    read -r -p "\nContinue anyway (for local testing with /etc/hosts)? [y/N]: " CONTINUE_ANYWAY
+    CONTINUE_ANYWAY=${CONTINUE_ANYWAY:-N}
+    if [[ ! "$CONTINUE_ANYWAY" =~ ^[Yy]$ ]]; then
+      echo "Exiting. Configure DNS and re-run this script."
+      exit 1
+    fi
+  fi
+
+  # Ask if using a reverse proxy (Caddy)
+  read -r -p "Will you use a reverse proxy like Caddy to handle HTTPS? [Y/n]: " USE_PROXY
+  USE_PROXY=${USE_PROXY:-Y}
+
+  if [[ "$USE_PROXY" =~ ^[Yy]$ ]]; then
+    echo "Reverse proxy mode: The frontend will run HTTP-only (no HTTPS flag needed)."
+    echo "Your reverse proxy (e.g., Caddy) will handle HTTPS and forward requests to the frontend."
+    echo "\nMake sure:"
+    echo "  - DNS A/AAAA record points to this machine"
+    echo "  - Reverse proxy is configured to proxy to localhost:3000 (or your configured port)"
+    echo "  - Reverse proxy handles SSL/TLS certificates (Caddy does this automatically via Let's Encrypt)"
     HTTPS_FLAG=""
+  else
+    read -r -p "Will you use HTTPS directly on the frontend? [Y/n]: " USE_HTTPS
+    USE_HTTPS=${USE_HTTPS:-Y}
+    if [[ "$USE_HTTPS" =~ ^[Yy]$ ]]; then
+      HTTPS_FLAG="--https"
+      echo "Ensure DNS A/AAAA record points to this machine and that you have certs available (mkcert for local dev or real certs in production)."
+    else
+      HTTPS_FLAG=""
+    fi
   fi
 
   # Give guidance about hosts file if it's local testing with domain
-  echo "If you're testing a domain locally, add an entry to /etc/hosts (or C:\\Windows\\System32\\drivers\\etc\\hosts on Windows):"
+  echo "\nIf you're testing a domain locally, add an entry to /etc/hosts (or C:\\Windows\\System32\\drivers\\etc\\hosts on Windows):"
   echo "  <your-machine-ip>  $HOSTNAME"
 fi
 
