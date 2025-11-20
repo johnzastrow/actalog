@@ -206,31 +206,150 @@ echo " Mode:       $([[ $MODE == 'd' ]] && echo 'dev' || echo 'preview')"
 echo " Hostname:   $HOSTNAME"
 echo " HTTPS flag: ${HTTPS_FLAG:-none}"
 
+# Check if port 3000 is already in use
+PORT=3000
+PORT_IN_USE=false
+PROCESS_INFO=""
+
+if command -v lsof >/dev/null 2>&1; then
+  PROCESS_INFO=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+elif command -v ss >/dev/null 2>&1; then
+  PROCESS_INFO=$(ss -tlnp 2>/dev/null | grep ":$PORT " | head -n 1)
+elif command -v netstat >/dev/null 2>&1; then
+  PROCESS_INFO=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | head -n 1)
+fi
+
+if [[ -n "$PROCESS_INFO" ]]; then
+  PORT_IN_USE=true
+  echo "\n⚠ WARNING: Port $PORT is already in use!"
+
+  # Try to get more detailed process information
+  if command -v lsof >/dev/null 2>&1; then
+    PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+    if [[ -n "$PID" ]]; then
+      PROC_NAME=$(ps -p "$PID" -o comm= 2>/dev/null || echo "unknown")
+      PROC_CMD=$(ps -p "$PID" -o args= 2>/dev/null || echo "unknown")
+      echo "  Process ID:   $PID"
+      echo "  Process name: $PROC_NAME"
+      echo "  Command:      $PROC_CMD"
+    else
+      echo "  $PROCESS_INFO"
+    fi
+  else
+    echo "  $PROCESS_INFO"
+  fi
+
+  echo "\nOptions:"
+  echo "  1) Stop the existing process and start ActaLog on port $PORT"
+  echo "  2) Start ActaLog on a different port"
+  echo "  3) Cancel and exit"
+
+  read -r -p "\nChoose an option [1/2/3]: " PORT_CHOICE
+  PORT_CHOICE=${PORT_CHOICE:-3}
+
+  case "$PORT_CHOICE" in
+    1)
+      echo "\nAttempting to stop process on port $PORT..."
+      if command -v lsof >/dev/null 2>&1; then
+        PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+        if [[ -n "$PID" ]]; then
+          echo "Killing process $PID..."
+          kill "$PID" 2>/dev/null || kill -9 "$PID" 2>/dev/null || {
+            echo "✗ Failed to kill process. You may need sudo privileges."
+            read -r -p "Try with sudo? [y/N]: " USE_SUDO
+            USE_SUDO=${USE_SUDO:-N}
+            if [[ "$USE_SUDO" =~ ^[Yy]$ ]]; then
+              sudo kill "$PID" 2>/dev/null || sudo kill -9 "$PID" 2>/dev/null || {
+                echo "✗ Failed to kill process even with sudo. Exiting."
+                exit 1
+              }
+            else
+              echo "Exiting."
+              exit 1
+            fi
+          }
+          # Wait for port to be released
+          sleep 2
+          echo "✓ Process stopped. Proceeding with port $PORT..."
+        fi
+      else
+        echo "✗ Cannot automatically kill process (lsof not available)."
+        echo "Please manually stop the process using port $PORT and re-run this script."
+        exit 1
+      fi
+      ;;
+    2)
+      echo "\nFinding an available port..."
+      # Find next available port starting from 3001
+      for TEST_PORT in {3001..3010}; do
+        if ! lsof -ti:$TEST_PORT >/dev/null 2>&1 && ! ss -tln 2>/dev/null | grep -q ":$TEST_PORT "; then
+          PORT=$TEST_PORT
+          echo "✓ Found available port: $PORT"
+          break
+        fi
+      done
+
+      if [[ "$PORT" == "3000" ]]; then
+        echo "✗ Could not find an available port in range 3001-3010"
+        exit 1
+      fi
+
+      echo "\n📌 IMPORTANT: ActaLog will start on port $PORT"
+      echo "   Access it at: http://$HOSTNAME:$PORT"
+      if [[ "$USE_PROXY" =~ ^[Yy]$ ]]; then
+        echo "\n   ⚠ Remember to update your reverse proxy configuration!"
+        echo "   Change 'reverse_proxy localhost:3000' to 'reverse_proxy localhost:$PORT'"
+        echo "   in your Caddyfile or nginx config."
+      fi
+      ;;
+    3)
+      echo "Exiting."
+      exit 0
+      ;;
+    *)
+      echo "Invalid choice. Exiting."
+      exit 1
+      ;;
+  esac
+fi
+
 cd "$WEB_DIR"
 
+# Show final configuration
+echo "\n========================================="
+echo "Starting ActaLog Frontend"
+echo "========================================="
+echo " Port:     $PORT"
+echo " Mode:     $([[ $MODE == 'd' ]] && echo 'Development' || echo 'Preview (Production-like)')"
+echo " Hostname: $HOSTNAME"
+if [[ "$PORT" != "3000" ]]; then
+  echo "\n⚠ Using non-standard port: $PORT"
+  echo "   Access URL: http://$HOSTNAME:$PORT"
+fi
+echo "=========================================\n"
+
 if [[ "$MODE" == "d" ]]; then
-  echo "\nStarting frontend in development mode..."
   # Use npm script (vite). Provide host/https flags directly to the vite CLI.
   # `npm run dev -- --host` passes flags through to vite.
   if [[ -n "$HOST_ARG" ]]; then
-    echo "Running: npm run dev -- $HOST_ARG $HOSTNAME $HTTPS_FLAG"
-    exec npm run dev -- $HOST_ARG $HOSTNAME $HTTPS_FLAG
+    echo "Running: npm run dev -- $HOST_ARG --port $PORT $HTTPS_FLAG"
+    exec npm run dev -- $HOST_ARG --port $PORT $HTTPS_FLAG
   else
-    echo "Running: npm run dev $HTTPS_FLAG"
-    exec npm run dev -- $HTTPS_FLAG
+    echo "Running: npm run dev -- --port $PORT $HTTPS_FLAG"
+    exec npm run dev -- --port $PORT $HTTPS_FLAG
   fi
 else
-  echo "\nBuilding and starting preview (production-like) server..."
+  echo "\nBuilding and starting preview (production-like) server on port $PORT..."
   # Note: vite preview does NOT accept --https as a CLI flag
   # HTTPS is controlled via vite.config.js server.https setting
   # If certs exist in web/certs/, the preview server will use HTTPS automatically
   if [[ -n "$HTTPS_FLAG" ]]; then
     echo "Note: HTTPS for preview mode is configured via vite.config.js (not CLI flags)"
     echo "Ensure cert files exist in web/certs/ for HTTPS support"
-    echo "Running: npm run build && npm run preview -- --host $HOSTNAME"
+    echo "Running: npm run build && npm run preview -- --host $HOSTNAME --port $PORT"
   else
-    echo "Running: npm run build && npm run preview -- --host $HOSTNAME"
+    echo "Running: npm run build && npm run preview -- --host $HOSTNAME --port $PORT"
   fi
   npm run build
-  exec npm run preview -- --host $HOSTNAME
+  exec npm run preview -- --host $HOSTNAME --port $PORT
 fi
