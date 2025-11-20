@@ -328,6 +328,41 @@ if [[ "$PORT" != "3000" ]]; then
 fi
 echo "=========================================\n"
 
+# Export environment variables for Vite configuration
+export VITE_DEV_HOST="$HOSTNAME"
+export VITE_DEV_PORT="$PORT"
+
+# Set HTTPS flag for Vite
+if [[ -n "$HTTPS_FLAG" ]]; then
+  export VITE_USE_HTTPS="true"
+else
+  export VITE_USE_HTTPS="false"
+fi
+
+# Construct deployment URL for PWA manifest and build configuration
+if [[ "$HOST_TYPE" == "l" || "$HOST_TYPE" == "L" ]]; then
+  # Localhost mode - always include port
+  if [[ -n "$HTTPS_FLAG" ]]; then
+    export VITE_DEPLOYMENT_URL="https://$HOSTNAME:$PORT"
+  else
+    export VITE_DEPLOYMENT_URL="http://$HOSTNAME:$PORT"
+  fi
+else
+  # Domain mode
+  if [[ "${USE_PROXY:-N}" =~ ^[Yy]$ ]]; then
+    # Using reverse proxy - don't include port in public URL
+    # (proxy listens on 80/443 and forwards to localhost:$PORT)
+    export VITE_DEPLOYMENT_URL="https://$HOSTNAME"
+  else
+    # Direct access - include port in URL
+    if [[ -n "$HTTPS_FLAG" ]]; then
+      export VITE_DEPLOYMENT_URL="https://$HOSTNAME:$PORT"
+    else
+      export VITE_DEPLOYMENT_URL="http://$HOSTNAME:$PORT"
+    fi
+  fi
+fi
+
 if [[ "$MODE" == "d" ]]; then
   # Use npm script (vite). Provide host/https flags directly to the vite CLI.
   # `npm run dev -- --host` passes flags through to vite.

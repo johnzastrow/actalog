@@ -11,11 +11,22 @@ import fs from 'fs'
 // and place them in `web/certs` (the `scripts/start-frontend.sh` helper
 // can generate these for you).
 const CERT_DIR = fileURLToPath(new URL('./certs', import.meta.url))
-const DEFAULT_HOST = process.env.VITE_DEV_HOST || 'subdomain.example.com'
+
+// Read configuration from environment variables (set by start-frontend.sh)
+const DEFAULT_HOST = process.env.VITE_DEV_HOST || 'localhost'
+const DEFAULT_PORT = process.env.VITE_DEV_PORT || '3000'
+const USE_HTTPS = process.env.VITE_USE_HTTPS === 'true'
+const DEPLOYMENT_URL = process.env.VITE_DEPLOYMENT_URL || `http://localhost:${DEFAULT_PORT}`
+
+// Ensure DEPLOYMENT_URL has protocol
+const FULL_DEPLOYMENT_URL = DEPLOYMENT_URL.match(/^https?:\/\//)
+  ? DEPLOYMENT_URL
+  : (USE_HTTPS ? `https://${DEPLOYMENT_URL}` : `http://${DEPLOYMENT_URL}`)
+
 const KEY_PATH = `${CERT_DIR}/${DEFAULT_HOST}-key.pem`
 const CERT_PATH = `${CERT_DIR}/${DEFAULT_HOST}.pem`
 let httpsOptions = undefined
-if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
+if (USE_HTTPS && fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
   httpsOptions = {
     key: fs.readFileSync(KEY_PATH),
     cert: fs.readFileSync(CERT_PATH)
@@ -39,14 +50,10 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         // NOTE: set `scope` and `start_url` to the canonical origin
-        // for your deployment. During local development you may want to
-        // replace this with a placeholder (e.g. `https://subdomain.example.com/`)
-        // but remember that Service Workers and some PWA features require a
-        // secure origin (HTTPS) and exact origin matching. If you test locally
-        // using a mapped hosts entry (see README) set these values to the
-        // production/staging origin you plan to use.
-        scope: 'https://subdomain.example.com/',
-        start_url: 'https://subdomain.example.com/',
+        // for your deployment. These are now read from VITE_DEPLOYMENT_URL
+        // environment variable (set by scripts/start-frontend.sh)
+        scope: `${FULL_DEPLOYMENT_URL}/`,
+        start_url: `${FULL_DEPLOYMENT_URL}/`,
         icons: [
           {
             src: '/icons/icon-72x72.png',
@@ -197,16 +204,15 @@ export default defineConfig({
   // This will bind Vite to all interfaces and allow testing via
   // `http://localhost:3000` or `http://<your-ip>:3000`.
   server: {
-    // Default here is the example hostname to use if you map it in hosts file.
-    // If you prefer not to map hosts, start Vite with `--host 0.0.0.0` instead.
-    host: 'subdomain.example.com',
-    port: 3000,
+    // Host and port are read from environment variables (set by start-frontend.sh)
+    // or can be overridden via CLI: npm run dev -- --host <host> --port <port>
+    host: DEFAULT_HOST,
+    port: parseInt(DEFAULT_PORT),
     https: httpsOptions ? httpsOptions : false,
     hmr: {
       // HMR client will try to connect to this host; set to the same host
-      // you use to access the dev server. If running with `--host 0.0.0.0`,
-      // consider leaving this unset or overriding via CLI.
-      host: 'subdomain.example.com'
+      // you use to access the dev server. CLI args override this.
+      host: DEFAULT_HOST
     },
     proxy: {
       '/api': {
@@ -220,8 +226,8 @@ export default defineConfig({
     }
   },
   build: {
-    // Serve built assets from the production hostname
-    base: 'https://subdomain.example.com/',
+    // Serve built assets from the deployment URL (read from environment)
+    base: `${FULL_DEPLOYMENT_URL}/`,
     outDir: 'dist',
     sourcemap: true,
   }
