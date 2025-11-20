@@ -5,6 +5,9 @@ set -euo pipefail
 # Guided script to configure and start the ActaLog frontend (dev or preview)
 # Usage: ./scripts/start-frontend.sh
 
+# Script version - increment when making changes
+SCRIPT_VERSION="1.2.0"
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 
@@ -12,7 +15,10 @@ WEB_DIR="$ROOT_DIR/web"
 HOST_ARG=""
 HTTPS_FLAG=""
 
-echo "\nActaLog frontend starter — guided mode"
+echo ""
+echo "ActaLog Frontend Starter v${SCRIPT_VERSION}"
+echo "========================================="
+echo ""
 
 read -r -p "Run in (d)ev or (p)review (production) mode? [d/p]: " MODE
 MODE=${MODE:-d}
@@ -56,10 +62,13 @@ if [[ "$HOST_TYPE" == "l" || "$HOST_TYPE" == "L" ]]; then
         echo "Created cert files:"
         echo "  $CERT_PEM"
         echo "  $CERT_KEY"
-        echo "\nNext steps (one-time):"
+        echo ""
+        echo "Next steps (one-time):"
         echo "- Keep these files under 'web/certs' (already created)."
         echo "- Update your 'web/vite.config.js' to point Vite's server.https to these files (example below)."
-        echo "\nPaste this snippet into your 'web/vite.config.js' (add 'import fs from \"fs\"'):\n"
+        echo ""
+        echo "Paste this snippet into your 'web/vite.config.js' (add 'import fs from \"fs\"'):"
+        echo ""
         cat <<EOF
 server: {
   host: '$HOSTNAME',
@@ -69,7 +78,8 @@ server: {
   }
 }
 EOF
-        echo "\nOr run preview with flags (does not require editing config):"
+        echo ""
+        echo "Or run preview with flags (does not require editing config):"
         echo "  npm run preview -- --https --host $HOSTNAME"
       else
         echo "Skipping mkcert generation — you'll need to provide certs and update Vite config if you want HTTPS."
@@ -316,17 +326,20 @@ fi
 cd "$WEB_DIR"
 
 # Show final configuration
-echo "\n========================================="
-echo "Starting ActaLog Frontend"
+echo ""
+echo "========================================="
+echo "Starting ActaLog Frontend v${SCRIPT_VERSION}"
 echo "========================================="
 echo " Port:     $PORT"
 echo " Mode:     $([[ $MODE == 'd' ]] && echo 'Development' || echo 'Preview (Production-like)')"
 echo " Hostname: $HOSTNAME"
 if [[ "$PORT" != "3000" ]]; then
-  echo "\n⚠ Using non-standard port: $PORT"
+  echo ""
+  echo "⚠ Using non-standard port: $PORT"
   echo "   Access URL: http://$HOSTNAME:$PORT"
 fi
-echo "=========================================\n"
+echo "========================================="
+echo ""
 
 # Export environment variables for Vite configuration
 export VITE_DEV_HOST="$HOSTNAME"
@@ -374,7 +387,8 @@ if [[ "$MODE" == "d" ]]; then
     exec npm run dev -- --port $PORT $HTTPS_FLAG
   fi
 else
-  echo "\nBuilding and starting preview (production-like) server on port $PORT..."
+  echo ""
+  echo "Building and starting preview (production-like) server on port $PORT..."
   # Note: vite preview does NOT accept --https as a CLI flag
   # HTTPS is controlled via vite.config.js server.https setting
   # If certs exist in web/certs/, the preview server will use HTTPS automatically
