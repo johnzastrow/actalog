@@ -1,0 +1,97 @@
+# ActaLog - Reverse Proxy Configuration
+# This Caddyfile configures two PWA applications:
+# 1. ActaLog (PWA) at https://al.fluidgrid.site (internal port 3000)
+# 2. Mealie (PWA) at https://recipe.fluidgrid.site (internal port 9925)
+
+# ActaLog Configuration
+al.fluidgrid.site {
+    # Reverse proxy to ActaLog frontend running on port 3000
+    reverse_proxy localhost:3000
+
+    # Logging with human-readable format
+    log {
+        output file /var/log/caddy/al.access.log {
+            roll_size 1MB     # Create new file when size exceeds 1MB
+            roll_keep 5       # Keep at most 5 rolled files
+        }
+        format console        # Human-readable format instead of JSON
+    }
+
+    # Response headers for security
+    header {
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Compression for better performance (important for PWA)
+    encode gzip
+
+    # Timeouts for reverse proxy
+    reverse_proxy localhost:3000 {
+        # Set timeouts for backend communication
+        transport http {
+            response_header_timeout 30s
+            read_timeout 1m
+            write_timeout 1m
+        }
+
+        # Health check
+        health_uri /health
+        health_interval 30s
+        health_timeout 5s
+
+        # Forward client information
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# Mealie Configuration (PWA)
+recipe.fluidgrid.site {
+    # Reverse proxy to Mealie (PWA) running on port 9925
+    reverse_proxy localhost:9925
+
+    # Logging with human-readable format
+    log {
+        output file /var/log/caddy/recipe.access.log {
+            roll_size 1MB     # Create new file when size exceeds 1MB
+            roll_keep 5       # Keep at most 5 rolled files
+        }
+        format console        # Human-readable format instead of JSON
+    }
+
+    # Response headers for security
+    header {
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Compression for better performance (important for PWA)
+    encode gzip
+
+    # Timeouts for reverse proxy
+    reverse_proxy localhost:9925 {
+        # Set timeouts for backend communication
+        transport http {
+            response_header_timeout 30s
+            read_timeout 1m
+            write_timeout 1m
+        }
+
+        # Forward client information
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
