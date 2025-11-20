@@ -58,7 +58,10 @@
       "Bash(/mnt/c/Users/br8kw/Github/actionlog/build.sh:*)",
       "Bash(DB_DRIVER=sqlite3 DB_NAME=actalog_test.db ./bin/actalog:*)",
       "Bash(export DB_DRIVER=sqlite3)",
-      "Bash(export DB_NAME=actalog_test.db)"
+      "Bash(export DB_NAME=actalog_test.db)",
+      "Bash(DB_DRIVER=sqlite3 DB_NAME=actalog_test.db make:*)",
+      "Bash(DB_DRIVER=sqlite3 DB_NAME=test_fresh.db timeout:*)",
+      "Bash(DB_DRIVER=sqlite3 DB_NAME=test_complete.db timeout:*)"
     ],
     "deny": [],
     "ask": []
