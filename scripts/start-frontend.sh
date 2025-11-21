@@ -6,7 +6,7 @@ set -euo pipefail
 # Usage: ./scripts/start-frontend.sh
 
 # Script version - increment when making changes
-SCRIPT_VERSION="1.3.0"
+SCRIPT_VERSION="1.3.1"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
@@ -408,10 +408,10 @@ else
   if [[ -n "$HTTPS_FLAG" ]]; then
     echo "Note: HTTPS for preview mode is configured via vite.config.js (not CLI flags)"
     echo "Ensure cert files exist in web/certs/ for HTTPS support"
-    echo "Running: npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
+    echo "Running: VITE_DEV_HOST=$HOSTNAME VITE_DEV_PORT=$PORT VITE_USE_HTTPS=$VITE_USE_HTTPS VITE_DEPLOYMENT_URL=$VITE_DEPLOYMENT_URL npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
   else
-    echo "Running: npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
+    echo "Running: VITE_DEV_HOST=$HOSTNAME VITE_DEV_PORT=$PORT VITE_USE_HTTPS=$VITE_USE_HTTPS VITE_DEPLOYMENT_URL=$VITE_DEPLOYMENT_URL npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
   fi
-  npm run build
+  VITE_DEV_HOST="$HOSTNAME" VITE_DEV_PORT="$PORT" VITE_USE_HTTPS="$VITE_USE_HTTPS" VITE_DEPLOYMENT_URL="$VITE_DEPLOYMENT_URL" npm run build
   exec npm run preview -- --host $BIND_HOST --port $PORT
 fi
