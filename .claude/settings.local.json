@@ -75,7 +75,8 @@
       "Bash(ss:*)",
       "Bash(command -v shellcheck:*)",
       "Bash(/dev/null)",
-      "Bash(./pwa-health-check.sh:*)"
+      "Bash(./pwa-health-check.sh:*)",
+      "Bash(lighthouse:*)"
     ],
     "deny": [],
     "ask": []
