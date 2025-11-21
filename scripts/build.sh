@@ -41,6 +41,8 @@ set -u  # Treat unset variables as an error
 # Configuration Variables
 ################################################################################
 
+SCRIPT_VERSION="1.0.1"  # Build script version (increment on every change)
+
 GO_VERSION="1.25.4"  # Go version to install (adjust as needed)
 NODE_VERSION="24"     # Node.js major version (LTS)
 MIN_NODE_MAJOR="18"   # Minimum Node.js major version required to run the frontend
@@ -106,7 +108,7 @@ version_lt() {
 # Show help message
 show_help() {
     cat << EOF
-ActaLog Build Script - Build and update ActaLog on Ubuntu
+ActaLog Build Script v${SCRIPT_VERSION} - Build and update ActaLog on Ubuntu
 
 USAGE:
     ./build.sh [OPTIONS]
@@ -436,10 +438,11 @@ setup_env_files() {
             # Update JWT_SECRET in .env
             if command_exists sed; then
                 # macOS and Linux compatible sed
+                # Use | as delimiter to avoid conflicts with / in base64 strings
                 if [[ "$OSTYPE" == "darwin"* ]]; then
-                    sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
+                    sed -i '' "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$PROJECT_ROOT/.env"
                 else
-                    sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" "$PROJECT_ROOT/.env"
+                    sed -i "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$PROJECT_ROOT/.env"
                 fi
                 print_success "Generated random JWT_SECRET"
             else
@@ -665,7 +668,7 @@ main() {
     # Show appropriate header based on mode
     echo "================================================================================"
     if [ "$UPDATE_MODE" = true ]; then
-        echo "                    ActaLog Update Script"
+        echo "                    ActaLog Update Script v${SCRIPT_VERSION}"
         echo "================================================================================"
         echo ""
         echo "This will update your ActaLog installation:"
@@ -680,7 +683,7 @@ main() {
         echo ""
         echo "NOTE: Your .env files and database will be preserved"
     elif [ "$REBUILD_MODE" = true ]; then
-        echo "                    ActaLog Rebuild Script"
+        echo "                    ActaLog Rebuild Script v${SCRIPT_VERSION}"
         echo "================================================================================"
         echo ""
         echo "This will rebuild your ActaLog installation:"
@@ -691,7 +694,7 @@ main() {
         echo ""
         echo "NOTE: System packages and tools will not be updated"
     else
-        echo "                    ActaLog Build Script for Ubuntu"
+        echo "                    ActaLog Build Script for Ubuntu v${SCRIPT_VERSION}"
         echo "================================================================================"
         echo ""
         echo "This script will:"
