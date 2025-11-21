@@ -15,7 +15,7 @@ const CERT_DIR = fileURLToPath(new URL('./certs', import.meta.url))
 // Read configuration from environment variables (set by start-frontend.sh)
 const DEFAULT_HOST = process.env.VITE_DEV_HOST || 'localhost'
 const DEFAULT_PORT = process.env.VITE_DEV_PORT || '3000'
-const USE_HTTPS = process.env.VITE_USE_HTTPS === 'true'
+const USE_HTTPS = (process.env.VITE_USE_HTTPS || 'false') === 'true'
 const DEPLOYMENT_URL = process.env.VITE_DEPLOYMENT_URL || `http://localhost:${DEFAULT_PORT}`
 
 // Ensure DEPLOYMENT_URL has protocol
