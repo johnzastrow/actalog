@@ -6,7 +6,7 @@ set -euo pipefail
 # Usage: ./scripts/start-frontend.sh
 
 # Script version - increment when making changes
-SCRIPT_VERSION="1.2.0"
+SCRIPT_VERSION="1.3.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
