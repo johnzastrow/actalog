@@ -2,7 +2,7 @@
 
 ################################################################################
 # PWA Health Check Script
-# Version: 1.1.0
+# Version: 1.1.1
 ################################################################################
 # This script checks whether a website meets Progressive Web App requirements.
 #
@@ -17,7 +17,7 @@ set -e
 set -u
 
 # Script version
-SCRIPT_VERSION="1.1.0"
+SCRIPT_VERSION="1.1.1"
 
 # Configuration
 TIMEOUT=10
@@ -451,49 +451,53 @@ run_lighthouse() {
     local temp_dir=$(mktemp -d)
     local report_file="$temp_dir/lighthouse-report.json"
 
-    # Run Lighthouse in headless mode
+    # Run Lighthouse in headless mode (v13+ removed pwa category, now part of best-practices)
     if lighthouse "$TARGET_URL" \
-        --only-categories=pwa \
         --output=json \
         --output-path="$report_file" \
         --chrome-flags="--headless --no-sandbox --disable-gpu" \
         --quiet 2>/dev/null; then
 
         # Parse Lighthouse results
-        local pwa_score=$(jq -r '.categories.pwa.score * 100' "$report_file" 2>/dev/null || echo "0")
+        # In Lighthouse v13+, check best-practices category for PWA-related audits
+        local best_practices_score=$(jq -r '.categories["best-practices"].score * 100' "$report_file" 2>/dev/null || echo "0")
 
-        if [ "$pwa_score" != "null" ] && [ -n "$pwa_score" ]; then
+        if [ "$best_practices_score" != "null" ] && [ -n "$best_practices_score" ]; then
             # Convert to integer for comparison
-            local pwa_score_int=${pwa_score%.*}
+            local score_int=${best_practices_score%.*}
 
-            if [ "$pwa_score_int" -ge 90 ]; then
-                print_pass "Lighthouse PWA Score: ${pwa_score}% - Excellent!"
-            elif [ "$pwa_score_int" -ge 70 ]; then
-                print_warning "Lighthouse PWA Score: ${pwa_score}% - Good, but can be improved"
+            if [ "$score_int" -ge 90 ]; then
+                print_pass "Lighthouse Best Practices Score: ${best_practices_score}% - Excellent!"
+            elif [ "$score_int" -ge 70 ]; then
+                print_warning "Lighthouse Best Practices Score: ${best_practices_score}% - Good, but can be improved"
             else
-                print_fail "Lighthouse PWA Score: ${pwa_score}% - Needs improvement"
+                print_fail "Lighthouse Best Practices Score: ${best_practices_score}% - Needs improvement"
             fi
 
-            # Show failed audits
-            print_detail "Key findings:"
+            # Show PWA-related audits from best-practices
+            print_detail "PWA-related findings:"
 
-            # Get failed audit IDs and titles
-            local failed_audits=$(jq -r '.categories.pwa.auditRefs[] | select(.weight > 0) | .id' "$report_file" 2>/dev/null)
+            # Check for specific PWA audits
+            local pwa_audit_ids=("viewport" "service-worker" "installable-manifest" "splash-screen" "themed-omnibox" "maskable-icon")
+            local found_issues=false
 
-            if [ -n "$failed_audits" ]; then
-                while IFS= read -r audit_id; do
-                    local audit_score=$(jq -r ".audits.\"$audit_id\".score" "$report_file" 2>/dev/null)
-                    local audit_title=$(jq -r ".audits.\"$audit_id\".title" "$report_file" 2>/dev/null)
+            for audit_id in "${pwa_audit_ids[@]}"; do
+                local audit_score=$(jq -r ".audits.\"$audit_id\".score" "$report_file" 2>/dev/null)
+                local audit_title=$(jq -r ".audits.\"$audit_id\".title" "$report_file" 2>/dev/null)
 
-                    if [ "$audit_score" != "1" ] && [ "$audit_score" != "null" ]; then
+                if [ "$audit_score" != "null" ] && [ "$audit_title" != "null" ]; then
+                    if [ "$audit_score" != "1" ]; then
+                        found_issues=true
                         if [ "$audit_score" == "0" ]; then
                             echo -e "   ${RED}✗${NC} $audit_title"
                         else
                             echo -e "   ${YELLOW}⚠${NC} $audit_title - partial pass"
                         fi
                     fi
-                done <<< "$failed_audits"
-            else
+                fi
+            done
+
+            if [ "$found_issues" = false ]; then
                 print_detail "All PWA audits passed!"
             fi
 
@@ -595,7 +599,7 @@ main() {
     cat << 'BANNER'
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║       PWA Health Check Tool v1.1.0                            ║
+║       PWA Health Check Tool v1.1.1                            ║
 ║       Progressive Web App Validator                           ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
