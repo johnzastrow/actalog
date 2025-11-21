@@ -2,74 +2,60 @@
 
 ################################################################################
 # PWA Health Check Script
+# Version: 1.0.0
 ################################################################################
-# This script checks whether a website meets all the requirements to run as
-# a Progressive Web App (PWA).
-#
-# What this script checks:
-# 1. HTTPS connection (required for PWA)
-# 2. Valid manifest.json file
-# 3. Service worker registration
-# 4. Manifest properties (name, icons, start_url, display)
-# 5. Icon sizes and formats
-# 6. Offline capability
-# 7. Viewport meta tag
-# 8. Theme color
-# 9. Apple touch icons
-# 10. Performance and accessibility scores (via Lighthouse if available)
+# This script checks whether a website meets Progressive Web App requirements.
 #
 # Usage:
-#   chmod +x pwa-health-check.sh
-#   ./pwa-health-check.sh
-#   ./pwa-health-check.sh https://example.com
+#   ./pwa-health-check.sh [URL]
 #
 # Requirements:
-#   - curl
-#   - jq (for JSON parsing)
-#   - openssl (for HTTPS checking)
-#   - Optional: lighthouse (for detailed PWA scoring)
+#   - curl, jq, openssl
 ################################################################################
 
-set -e  # Exit on error (we'll handle errors manually)
-set -u  # Treat unset variables as an error
+set -e
+set -u
 
-################################################################################
+# Script version
+SCRIPT_VERSION="1.0.0"
+
 # Configuration
-################################################################################
-
-# Default timeout for curl requests (in seconds)
 TIMEOUT=10
 
-# Color codes for output
+# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Unicode symbols
+# Symbols
 CHECK_MARK="✓"
 CROSS_MARK="✗"
 WARNING="⚠"
 INFO="ℹ"
 
-# Test results counters
+# Test counters
+TESTS_TOTAL=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 TESTS_WARNING=0
-TESTS_TOTAL=0
+
+# Global variables
+TARGET_URL=""
+HTML_CONTENT=""
+MANIFEST_CONTENT=""
 
 ################################################################################
 # Helper Functions
 ################################################################################
 
-# Print colored status messages
 print_header() {
-    echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}$1${NC}"
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
+    echo -e "\n${MAGENTA}═══════════════════════════════════════${NC}"
+    echo -e "${MAGENTA}$1${NC}"
+    echo -e "${MAGENTA}═══════════════════════════════════════${NC}\n"
 }
 
 print_section() {
@@ -95,62 +81,47 @@ print_warning() {
 }
 
 print_info() {
-    echo -e "${BLUE}${INFO}${NC} $1"
+    echo -e "${CYAN}${INFO}${NC} $1"
 }
 
 print_detail() {
     echo -e "   ${NC}$1${NC}"
 }
 
-# Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check dependencies
+################################################################################
+# Dependency Checks
+################################################################################
+
 check_dependencies() {
     local missing_deps=()
 
-    if ! command_exists curl; then
-        missing_deps+=("curl")
-    fi
-
-    if ! command_exists jq; then
-        missing_deps+=("jq")
-    fi
-
-    if ! command_exists openssl; then
-        missing_deps+=("openssl")
-    fi
+    for cmd in curl jq openssl; do
+        if ! command_exists "$cmd"; then
+            missing_deps+=("$cmd")
+        fi
+    done
 
     if [ ${#missing_deps[@]} -gt 0 ]; then
-        echo -e "${RED}Error: Missing required dependencies:${NC}"
-        for dep in "${missing_deps[@]}"; do
-            echo -e "  - $dep"
-        done
-        echo ""
-        echo "Install with:"
-        echo "  sudo apt-get install ${missing_deps[*]}"
+        echo -e "${RED}Error: Missing required dependencies: ${missing_deps[*]}${NC}"
+        echo "Install with: sudo apt-get install ${missing_deps[*]}"
         exit 1
-    fi
-
-    # Check for optional lighthouse
-    if ! command_exists lighthouse; then
-        print_info "Lighthouse not found (optional). Install with: npm install -g lighthouse"
     fi
 }
 
-# Normalize URL (add https:// if missing, remove trailing slash)
 normalize_url() {
     local url="$1"
-
-    # Remove trailing slash
-    url="${url%/}"
 
     # Add https:// if no protocol specified
     if [[ ! "$url" =~ ^https?:// ]]; then
         url="https://$url"
     fi
+
+    # Remove trailing slash
+    url="${url%/}"
 
     echo "$url"
 }
@@ -160,108 +131,90 @@ normalize_url() {
 ################################################################################
 
 check_https() {
-    print_section "1. HTTPS Connection"
+    print_section "1. HTTPS Security"
 
     if [[ "$TARGET_URL" =~ ^https:// ]]; then
-        # Try to connect with HTTPS
-        if curl -s -o /dev/null -w "%{http_code}" --max-time "$TIMEOUT" "$TARGET_URL" | grep -q "^[23]"; then
+        if curl -sI --max-time "$TIMEOUT" "$TARGET_URL" >/dev/null 2>&1; then
             print_pass "Site is served over HTTPS"
-
-            # Check SSL certificate validity
-            local domain=$(echo "$TARGET_URL" | sed -e 's|^https://||' -e 's|/.*||' -e 's|:.*||')
-            if echo | openssl s_client -servername "$domain" -connect "$domain:443" 2>/dev/null | openssl x509 -noout -dates 2>/dev/null >/dev/null; then
-                print_pass "SSL certificate is valid"
-            else
-                print_warning "Could not verify SSL certificate"
-            fi
         else
             print_fail "Cannot connect to site via HTTPS"
             return 1
         fi
     else
-        print_fail "Site is NOT served over HTTPS (PWA requires HTTPS)"
+        print_fail "Site is NOT served over HTTPS - PWA requires HTTPS"
         print_detail "HTTP is only allowed for localhost during development"
         return 1
     fi
 }
 
 ################################################################################
-# Test 2: Fetch HTML and Parse
+# Test 2: Fetch HTML
 ################################################################################
 
 fetch_html() {
-    print_section "2. Fetching Page Content"
+    print_section "2. Fetching Site Content"
 
-    # Fetch HTML content
-    HTML_CONTENT=$(curl -sL --max-time "$TIMEOUT" -H "User-Agent: Mozilla/5.0 (compatible; PWA-Health-Check/1.0)" "$TARGET_URL" 2>&1)
+    HTML_CONTENT=$(curl -sL --max-time "$TIMEOUT" "$TARGET_URL" 2>/dev/null)
 
-    if [ $? -eq 0 ] && [ -n "$HTML_CONTENT" ]; then
-        print_pass "Successfully fetched page content"
-        print_detail "Content size: $(echo "$HTML_CONTENT" | wc -c) bytes"
+    if [ -n "$HTML_CONTENT" ]; then
+        print_pass "Successfully fetched HTML content"
     else
-        print_fail "Failed to fetch page content"
+        print_fail "Failed to fetch HTML content"
         return 1
     fi
 }
 
 ################################################################################
-# Test 3: Web App Manifest Check
+# Test 3: Manifest Check
 ################################################################################
 
 check_manifest() {
     print_section "3. Web App Manifest"
 
-    # Look for manifest link in HTML
-    local manifest_path=$(echo "$HTML_CONTENT" | grep -oP '<link[^>]*rel=["\']manifest["\'][^>]*href=["\']?\K[^"'\'' >]+' | head -1)
+    # Find manifest link in HTML
+    local manifest_link=$(echo "$HTML_CONTENT" | grep -oP '<link[^>]*rel="manifest"[^>]*href="\K[^"]+' | head -1)
 
-    if [ -z "$manifest_path" ]; then
-        print_fail "No manifest.json link found in HTML"
-        print_detail "Add: <link rel=\"manifest\" href=\"/manifest.json\">"
+    if [ -z "$manifest_link" ]; then
+        print_fail "No manifest link found in HTML"
         return 1
     fi
 
-    print_pass "Manifest link found in HTML: $manifest_path"
+    print_pass "Manifest link found: $manifest_link"
 
     # Construct full manifest URL
-    if [[ "$manifest_path" =~ ^https?:// ]]; then
-        MANIFEST_URL="$manifest_path"
-    elif [[ "$manifest_path" =~ ^/ ]]; then
-        # Absolute path
-        local base_url=$(echo "$TARGET_URL" | sed -E 's|(https?://[^/]+).*|\1|')
-        MANIFEST_URL="$base_url$manifest_path"
+    local manifest_url
+    if [[ "$manifest_link" =~ ^https?:// ]]; then
+        manifest_url="$manifest_link"
+    elif [[ "$manifest_link" =~ ^/ ]]; then
+        local base_url=$(echo "$TARGET_URL" | grep -oP '^https?://[^/]+')
+        manifest_url="$base_url$manifest_link"
     else
-        # Relative path
-        MANIFEST_URL="$TARGET_URL/$manifest_path"
+        manifest_url="$TARGET_URL/$manifest_link"
     fi
 
-    print_detail "Manifest URL: $MANIFEST_URL"
-
     # Fetch manifest
-    MANIFEST_CONTENT=$(curl -sL --max-time "$TIMEOUT" "$MANIFEST_URL" 2>&1)
+    MANIFEST_CONTENT=$(curl -sL --max-time "$TIMEOUT" "$manifest_url" 2>/dev/null)
 
-    if [ $? -ne 0 ] || [ -z "$MANIFEST_CONTENT" ]; then
-        print_fail "Failed to fetch manifest.json"
+    if [ -z "$MANIFEST_CONTENT" ]; then
+        print_fail "Failed to fetch manifest file"
         return 1
     fi
 
     # Validate JSON
-    if ! echo "$MANIFEST_CONTENT" | jq empty 2>/dev/null; then
+    if echo "$MANIFEST_CONTENT" | jq empty 2>/dev/null; then
+        print_pass "Manifest is valid JSON"
+    else
         print_fail "Manifest is not valid JSON"
         return 1
     fi
 
-    print_pass "Manifest fetched and is valid JSON"
-
-    # Check required fields
     check_manifest_fields
 }
 
 check_manifest_fields() {
-    print_section "4. Manifest Properties"
-
     local manifest="$MANIFEST_CONTENT"
 
-    # Check name or short_name
+    # Check name
     local name=$(echo "$manifest" | jq -r '.name // empty' 2>/dev/null)
     local short_name=$(echo "$manifest" | jq -r '.short_name // empty' 2>/dev/null)
 
@@ -274,29 +227,26 @@ check_manifest_fields() {
     fi
 
     # Check icons
-    local icons_count=$(echo "$manifest" | jq '.icons | length' 2>/dev/null)
+    local icons_count=$(echo "$manifest" | jq '.icons | length' 2>/dev/null || echo "0")
+
     if [ "$icons_count" -gt 0 ]; then
-        print_pass "Icons defined: $icons_count icon(s)"
+        print_pass "Icons defined: $icons_count icons"
 
         # Check for required sizes
         local has_192=$(echo "$manifest" | jq '.icons[] | select(.sizes | contains("192x192"))' 2>/dev/null)
         local has_512=$(echo "$manifest" | jq '.icons[] | select(.sizes | contains("512x512"))' 2>/dev/null)
 
         if [ -n "$has_192" ]; then
-            print_pass "Has 192x192 icon (required for installability)"
+            print_pass "Has 192x192 icon - required for installability"
         else
-            print_fail "Missing 192x192 icon (required for PWA)"
+            print_fail "Missing 192x192 icon - required for PWA"
         fi
 
         if [ -n "$has_512" ]; then
-            print_pass "Has 512x512 icon (required for splash screen)"
+            print_pass "Has 512x512 icon - required for splash screen"
         else
-            print_warning "Missing 512x512 icon (recommended for splash screen)"
+            print_warning "Missing 512x512 icon - recommended for splash screen"
         fi
-
-        # List all icons
-        print_detail "Icon details:"
-        echo "$manifest" | jq -r '.icons[] | "   - \(.sizes) \(.type // "unknown type") \(.src)"' 2>/dev/null
     else
         print_fail "No icons defined in manifest"
     fi
@@ -306,7 +256,7 @@ check_manifest_fields() {
     if [ -n "$start_url" ]; then
         print_pass "Start URL: \"$start_url\""
     else
-        print_warning "Missing 'start_url' (recommended)"
+        print_warning "Missing 'start_url' - recommended"
     fi
 
     # Check display mode
@@ -315,11 +265,9 @@ check_manifest_fields() {
         print_pass "Display mode: \"$display\""
         if [[ "$display" =~ ^(standalone|fullscreen|minimal-ui)$ ]]; then
             print_detail "Good! Display mode is PWA-friendly"
-        else
-            print_warning "Display mode '$display' may not provide app-like experience"
         fi
     else
-        print_warning "Missing 'display' property (recommended: standalone)"
+        print_warning "Missing 'display' property - recommended: standalone"
     fi
 
     # Check theme_color
@@ -327,7 +275,7 @@ check_manifest_fields() {
     if [ -n "$theme_color" ]; then
         print_pass "Theme color: $theme_color"
     else
-        print_warning "Missing 'theme_color' (recommended)"
+        print_warning "Missing 'theme_color' - recommended"
     fi
 
     # Check background_color
@@ -335,110 +283,60 @@ check_manifest_fields() {
     if [ -n "$background_color" ]; then
         print_pass "Background color: $background_color"
     else
-        print_warning "Missing 'background_color' (recommended for splash screen)"
+        print_warning "Missing 'background_color' - recommended for splash screen"
     fi
 
     # Check description
     local description=$(echo "$manifest" | jq -r '.description // empty' 2>/dev/null)
     if [ -n "$description" ]; then
-        print_pass "Description: \"${description:0:60}...\""
+        print_pass "Description present"
     else
-        print_warning "Missing 'description' (recommended)"
-    fi
-
-    # Check scope
-    local scope=$(echo "$manifest" | jq -r '.scope // empty' 2>/dev/null)
-    if [ -n "$scope" ]; then
-        print_info "Scope: \"$scope\""
-    fi
-
-    # Check orientation
-    local orientation=$(echo "$manifest" | jq -r '.orientation // empty' 2>/dev/null)
-    if [ -n "$orientation" ]; then
-        print_info "Orientation: \"$orientation\""
+        print_warning "Missing 'description' - recommended"
     fi
 }
 
 ################################################################################
-# Test 5: Service Worker Check
+# Test 4: Service Worker
 ################################################################################
 
 check_service_worker() {
-    print_section "5. Service Worker"
+    print_section "4. Service Worker"
 
-    # Look for service worker registration in HTML or JS
-    # Check for common patterns: navigator.serviceWorker.register
-
-    # First, check inline scripts and linked scripts
-    local has_sw_registration=false
-
-    # Check for inline service worker registration
-    if echo "$HTML_CONTENT" | grep -q "serviceWorker.register\|navigator.serviceWorker"; then
-        has_sw_registration=true
-    fi
-
-    # Check linked JavaScript files for service worker registration
-    local js_files=$(echo "$HTML_CONTENT" | grep -oP '<script[^>]*src=["\']?\K[^"'\'' >]+\.js' | head -5)
-
-    for js_file in $js_files; do
-        # Construct full JS URL
-        if [[ "$js_file" =~ ^https?:// ]]; then
-            local js_url="$js_file"
-        elif [[ "$js_file" =~ ^/ ]]; then
-            local base_url=$(echo "$TARGET_URL" | sed -E 's|(https?://[^/]+).*|\1|')
-            local js_url="$base_url$js_file"
-        else
-            local js_url="$TARGET_URL/$js_file"
-        fi
-
-        # Fetch and check JS file
-        local js_content=$(curl -sL --max-time "$TIMEOUT" "$js_url" 2>/dev/null || true)
-        if echo "$js_content" | grep -q "serviceWorker.register\|navigator.serviceWorker"; then
-            has_sw_registration=true
-            break
-        fi
-    done
-
-    if [ "$has_sw_registration" = true ]; then
-        print_pass "Service worker registration code found"
-    else
-        print_fail "No service worker registration found"
-        print_detail "PWA requires a service worker for offline functionality"
-        return 1
-    fi
-
-    # Try to find service worker file
-    # Common names: sw.js, service-worker.js, firebase-messaging-sw.js
-    local sw_files=("sw.js" "service-worker.js" "serviceworker.js" "firebase-messaging-sw.js")
+    # Common service worker filenames
+    local sw_files=("service-worker.js" "sw.js" "serviceworker.js" "firebase-messaging-sw.js")
     local found_sw=false
+    local base_url=$(echo "$TARGET_URL" | grep -oP '^https?://[^/]+')
 
-    local base_url=$(echo "$TARGET_URL" | sed -E 's|(https?://[^/]+).*|\1|')
+    # Check if service worker is registered in HTML
+    if echo "$HTML_CONTENT" | grep -q "serviceWorker.register"; then
+        print_pass "Service worker registration found in HTML"
+    else
+        print_warning "No service worker registration found in HTML"
+    fi
 
+    # Try to fetch common service worker files
     for sw_file in "${sw_files[@]}"; do
         local sw_url="$base_url/$sw_file"
         local status_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time "$TIMEOUT" "$sw_url" 2>/dev/null || echo "000")
 
         if [[ "$status_code" =~ ^2 ]]; then
-            print_pass "Service worker file found: $sw_file (HTTP $status_code)"
+            print_pass "Service worker file found: $sw_file - HTTP $status_code"
             found_sw=true
 
             # Check service worker content
             local sw_content=$(curl -sL --max-time "$TIMEOUT" "$sw_url" 2>/dev/null || true)
 
-            # Check for fetch event handler (required for offline support)
-            if echo "$sw_content" | grep -q "addEventListener.*fetch\|self.addEventListener('fetch'"; then
-                print_pass "Service worker has fetch event handler (offline support)"
+            if echo "$sw_content" | grep -q "addEventListener.*fetch"; then
+                print_pass "Service worker has fetch event handler - offline support"
             else
-                print_warning "Service worker may not handle fetch events (limited offline support)"
+                print_warning "Service worker may not handle fetch events - limited offline"
             fi
 
-            # Check for install event
-            if echo "$sw_content" | grep -q "addEventListener.*install\|self.addEventListener('install'"; then
+            if echo "$sw_content" | grep -q "addEventListener.*install"; then
                 print_pass "Service worker has install event handler"
             fi
 
-            # Check for activate event
-            if echo "$sw_content" | grep -q "addEventListener.*activate\|self.addEventListener('activate'"; then
+            if echo "$sw_content" | grep -q "addEventListener.*activate"; then
                 print_pass "Service worker has activate event handler"
             fi
 
@@ -447,148 +345,82 @@ check_service_worker() {
     done
 
     if [ "$found_sw" = false ]; then
-        print_warning "Could not locate service worker file (checked: ${sw_files[*]})"
-        print_detail "Service worker might use a different filename"
+        print_warning "Could not locate service worker file"
     fi
 }
 
 ################################################################################
-# Test 6: HTML Meta Tags
+# Test 5: HTML Meta Tags
 ################################################################################
 
 check_meta_tags() {
-    print_section "6. HTML Meta Tags"
+    print_section "5. HTML Meta Tags"
 
     # Viewport meta tag
-    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name=["\']viewport["\']'; then
+    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name="viewport"'; then
         print_pass "Viewport meta tag present"
-        local viewport=$(echo "$HTML_CONTENT" | grep -oP '<meta[^>]*name=["\']viewport["\'][^>]*content=["\']?\K[^"'\'' >]+' | head -1)
-        print_detail "Content: $viewport"
     else
-        print_fail "Missing viewport meta tag (required for responsive PWA)"
-        print_detail "Add: <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        print_fail "Missing viewport meta tag - required for responsive PWA"
     fi
 
     # Theme color meta tag
-    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name=["\']theme-color["\']'; then
-        local theme_color=$(echo "$HTML_CONTENT" | grep -oP '<meta[^>]*name=["\']theme-color["\'][^>]*content=["\']?\K[^"'\'' >]+' | head -1)
+    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name="theme-color"'; then
+        local theme_color=$(echo "$HTML_CONTENT" | grep -oP '<meta[^>]*name="theme-color"[^>]*content="\K[^"]+' | head -1)
         print_pass "Theme color meta tag: $theme_color"
     else
-        print_warning "Missing theme-color meta tag (recommended)"
+        print_warning "Missing theme-color meta tag - recommended"
     fi
 
     # Description meta tag
-    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name=["\']description["\']'; then
-        local description=$(echo "$HTML_CONTENT" | grep -oP '<meta[^>]*name=["\']description["\'][^>]*content=["\']?\K[^"'\'' >]+' | head -1)
+    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name="description"'; then
         print_pass "Description meta tag present"
-        print_detail "${description:0:80}..."
     else
-        print_warning "Missing description meta tag (recommended for SEO)"
+        print_warning "Missing description meta tag - recommended for SEO"
     fi
 
     # Apple mobile web app capable
-    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name=["\']apple-mobile-web-app-capable["\']'; then
+    if echo "$HTML_CONTENT" | grep -q '<meta[^>]*name="apple-mobile-web-app-capable"'; then
         print_pass "Apple mobile web app capable tag present"
     else
-        print_info "Missing apple-mobile-web-app-capable (optional for iOS)"
+        print_info "Missing apple-mobile-web-app-capable - optional for iOS"
     fi
 
     # Apple touch icon
-    if echo "$HTML_CONTENT" | grep -q '<link[^>]*rel=["\']apple-touch-icon["\']'; then
-        print_pass "Apple touch icon present (good for iOS)"
+    if echo "$HTML_CONTENT" | grep -q '<link[^>]*rel="apple-touch-icon"'; then
+        print_pass "Apple touch icon present - good for iOS"
     else
-        print_info "Missing apple-touch-icon (optional for iOS home screen)"
+        print_info "Missing apple-touch-icon - optional for iOS home screen"
     fi
 }
 
 ################################################################################
-# Test 7: Lighthouse PWA Check (Optional)
-################################################################################
-
-run_lighthouse() {
-    print_section "7. Lighthouse PWA Audit (Optional)"
-
-    if ! command_exists lighthouse; then
-        print_info "Lighthouse not installed, skipping detailed PWA audit"
-        print_detail "Install: npm install -g lighthouse"
-        return 0
-    fi
-
-    print_info "Running Lighthouse PWA audit (this may take 30-60 seconds)..."
-
-    # Create temp directory for report
-    local temp_dir=$(mktemp -d)
-    local report_file="$temp_dir/lighthouse-report.json"
-
-    # Run Lighthouse in headless mode
-    if lighthouse "$TARGET_URL" \
-        --only-categories=pwa \
-        --output=json \
-        --output-path="$report_file" \
-        --chrome-flags="--headless --no-sandbox" \
-        --quiet 2>/dev/null; then
-
-        # Parse Lighthouse results
-        local pwa_score=$(jq -r '.categories.pwa.score * 100' "$report_file" 2>/dev/null || echo "0")
-
-        if [ "$pwa_score" != "null" ] && [ -n "$pwa_score" ]; then
-            if (( $(echo "$pwa_score >= 90" | bc -l) )); then
-                print_pass "Lighthouse PWA Score: ${pwa_score}% (Excellent!)"
-            elif (( $(echo "$pwa_score >= 70" | bc -l) )); then
-                print_warning "Lighthouse PWA Score: ${pwa_score}% (Good, but can be improved)"
-            else
-                print_fail "Lighthouse PWA Score: ${pwa_score}% (Needs improvement)"
-            fi
-
-            # Show failed audits
-            print_detail "Key findings:"
-            jq -r '.categories.pwa.auditRefs[] |
-                select(.weight > 0) |
-                .id as $id |
-                ($ENV.LIGHTHOUSE_AUDITS | fromjson | .[$id]) |
-                select(.score != null and .score < 1) |
-                "   ✗ \(.title)"' \
-                --arg LIGHTHOUSE_AUDITS "$(jq '.audits' "$report_file")" \
-                "$report_file" 2>/dev/null || true
-        else
-            print_warning "Could not parse Lighthouse PWA score"
-        fi
-    else
-        print_warning "Lighthouse audit failed or timed out"
-    fi
-
-    # Clean up
-    rm -rf "$temp_dir"
-}
-
-################################################################################
-# Test 8: Performance Basics
+# Test 6: Basic Performance
 ################################################################################
 
 check_performance() {
-    print_section "8. Basic Performance Check"
+    print_section "6. Basic Performance Check"
 
     # Measure page load time
     local start_time=$(date +%s%N)
-    curl -sL --max-time "$TIMEOUT" -o /dev/null "$TARGET_URL" 2>/dev/null
+    curl -sL --max-time "$TIMEOUT" "$TARGET_URL" >/dev/null 2>&1
     local end_time=$(date +%s%N)
 
     local load_time_ms=$(( (end_time - start_time) / 1000000 ))
 
     if [ "$load_time_ms" -lt 1000 ]; then
-        print_pass "Page load time: ${load_time_ms}ms (Excellent!)"
+        print_pass "Page load time: ${load_time_ms}ms - Excellent!"
     elif [ "$load_time_ms" -lt 3000 ]; then
-        print_warning "Page load time: ${load_time_ms}ms (Acceptable, but could be faster)"
+        print_warning "Page load time: ${load_time_ms}ms - Acceptable, could be faster"
     else
-        print_fail "Page load time: ${load_time_ms}ms (Too slow for good UX)"
+        print_fail "Page load time: ${load_time_ms}ms - Too slow for good UX"
     fi
 
     # Check for HTTP/2
     local http_version=$(curl -sI --http2 "$TARGET_URL" 2>/dev/null | grep -i "^http/" | head -1)
     if echo "$http_version" | grep -q "HTTP/2"; then
-        print_pass "HTTP/2 supported (better performance)"
+        print_pass "HTTP/2 supported - better performance"
     else
-        print_warning "HTTP/2 not detected (recommended for PWA performance)"
+        print_warning "HTTP/2 not detected - recommended for PWA performance"
     fi
 
     # Check for compression
@@ -596,12 +428,12 @@ check_performance() {
     if [ -n "$content_encoding" ]; then
         print_pass "Compression enabled: $content_encoding"
     else
-        print_warning "No compression detected (recommended: gzip or brotli)"
+        print_warning "No compression detected - recommended: gzip or brotli"
     fi
 }
 
 ################################################################################
-# Final Report
+# Summary Report
 ################################################################################
 
 print_summary() {
@@ -621,7 +453,7 @@ print_summary() {
     echo -e "  ${BLUE}Total:${NC}    $total"
     echo ""
 
-    # Calculate percentage
+    # Calculate status
     if [ "$total" -gt 0 ]; then
         local pass_percentage=$(( (passed * 100) / total ))
 
@@ -630,23 +462,23 @@ print_summary() {
             echo -e "Your site meets all critical PWA requirements and is ready for installation!"
         elif [ "$failed" -eq 0 ]; then
             echo -e "${GREEN}${CHECK_MARK} PWA Status: GOOD${NC}"
-            echo -e "Your site meets PWA requirements. Consider addressing warnings for optimal experience."
+            echo -e "Your site meets PWA requirements. Consider addressing warnings."
         elif [ "$failed" -le 2 ]; then
             echo -e "${YELLOW}${WARNING} PWA Status: NEEDS IMPROVEMENT${NC}"
-            echo -e "Your site has some PWA features but needs fixes to be fully installable."
+            echo -e "Your site has some PWA features but needs fixes to be installable."
         else
             echo -e "${RED}${CROSS_MARK} PWA Status: NOT A PWA${NC}"
-            echo -e "Your site does not meet PWA requirements. Address the failed checks above."
+            echo -e "Your site does not meet PWA requirements. Address the failed checks."
         fi
     fi
 
     echo ""
     echo -e "${BLUE}${INFO} Next Steps:${NC}"
-    echo "1. Fix any failed checks (marked with ${RED}✗${NC})"
-    echo "2. Address warnings for better user experience (marked with ${YELLOW}⚠${NC})"
-    echo "3. Test installation on mobile devices"
-    echo "4. Test offline functionality"
-    echo "5. Consider running full Lighthouse audit for detailed analysis"
+    echo -e "1. Fix any failed checks marked with ${RED}✗${NC}"
+    echo -e "2. Address warnings for better user experience marked with ${YELLOW}⚠${NC}"
+    echo -e "3. Test installation on mobile devices"
+    echo -e "4. Test offline functionality"
+    echo -e "5. Consider running Lighthouse audit for detailed analysis"
     echo ""
 }
 
@@ -658,14 +490,14 @@ main() {
     # Print banner
     clear
     echo -e "${MAGENTA}"
-    cat << "EOF"
+    cat << 'BANNER'
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║              PWA Health Check Tool v1.0                       ║
-║              Progressive Web App Validator                    ║
+║       PWA Health Check Tool v1.0.0                            ║
+║       Progressive Web App Validator                           ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
-EOF
+BANNER
     echo -e "${NC}"
 
     # Check dependencies
@@ -688,15 +520,14 @@ EOF
 
     echo -e "\n${CYAN}Checking:${NC} $TARGET_URL\n"
 
-    # Run all checks
-    set +e  # Don't exit on error, we want to run all tests
+    # Run all checks (don't exit on error)
+    set +e
 
     check_https
     fetch_html
     check_manifest
     check_service_worker
     check_meta_tags
-    run_lighthouse
     check_performance
 
     set -e
