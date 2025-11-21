@@ -2,7 +2,7 @@
 
 ################################################################################
 # PWA Health Check Script
-# Version: 1.0.0
+# Version: 1.1.0
 ################################################################################
 # This script checks whether a website meets Progressive Web App requirements.
 #
@@ -17,7 +17,7 @@ set -e
 set -u
 
 # Script version
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.1.0"
 
 # Configuration
 TIMEOUT=10
@@ -433,6 +433,107 @@ check_performance() {
 }
 
 ################################################################################
+# Test 7: Lighthouse PWA Audit (Optional)
+################################################################################
+
+run_lighthouse() {
+    print_section "7. Lighthouse PWA Audit - Optional"
+
+    if ! command_exists lighthouse; then
+        print_info "Lighthouse not installed - skipping detailed PWA audit"
+        print_detail "Install with: npm install -g lighthouse"
+        return 0
+    fi
+
+    print_info "Running Lighthouse PWA audit - this may take 30-60 seconds..."
+
+    # Create temp directory for report
+    local temp_dir=$(mktemp -d)
+    local report_file="$temp_dir/lighthouse-report.json"
+
+    # Run Lighthouse in headless mode
+    if lighthouse "$TARGET_URL" \
+        --only-categories=pwa \
+        --output=json \
+        --output-path="$report_file" \
+        --chrome-flags="--headless --no-sandbox --disable-gpu" \
+        --quiet 2>/dev/null; then
+
+        # Parse Lighthouse results
+        local pwa_score=$(jq -r '.categories.pwa.score * 100' "$report_file" 2>/dev/null || echo "0")
+
+        if [ "$pwa_score" != "null" ] && [ -n "$pwa_score" ]; then
+            # Convert to integer for comparison
+            local pwa_score_int=${pwa_score%.*}
+
+            if [ "$pwa_score_int" -ge 90 ]; then
+                print_pass "Lighthouse PWA Score: ${pwa_score}% - Excellent!"
+            elif [ "$pwa_score_int" -ge 70 ]; then
+                print_warning "Lighthouse PWA Score: ${pwa_score}% - Good, but can be improved"
+            else
+                print_fail "Lighthouse PWA Score: ${pwa_score}% - Needs improvement"
+            fi
+
+            # Show failed audits
+            print_detail "Key findings:"
+
+            # Get failed audit IDs and titles
+            local failed_audits=$(jq -r '.categories.pwa.auditRefs[] | select(.weight > 0) | .id' "$report_file" 2>/dev/null)
+
+            if [ -n "$failed_audits" ]; then
+                while IFS= read -r audit_id; do
+                    local audit_score=$(jq -r ".audits.\"$audit_id\".score" "$report_file" 2>/dev/null)
+                    local audit_title=$(jq -r ".audits.\"$audit_id\".title" "$report_file" 2>/dev/null)
+
+                    if [ "$audit_score" != "1" ] && [ "$audit_score" != "null" ]; then
+                        if [ "$audit_score" == "0" ]; then
+                            echo -e "   ${RED}✗${NC} $audit_title"
+                        else
+                            echo -e "   ${YELLOW}⚠${NC} $audit_title - partial pass"
+                        fi
+                    fi
+                done <<< "$failed_audits"
+            else
+                print_detail "All PWA audits passed!"
+            fi
+
+            # Show performance metrics
+            local performance_score=$(jq -r '.categories.performance.score * 100' "$report_file" 2>/dev/null || echo "N/A")
+            if [ "$performance_score" != "null" ] && [ "$performance_score" != "N/A" ]; then
+                print_detail "Performance Score: ${performance_score}%"
+            fi
+
+            local accessibility_score=$(jq -r '.categories.accessibility.score * 100' "$report_file" 2>/dev/null || echo "N/A")
+            if [ "$accessibility_score" != "null" ] && [ "$accessibility_score" != "N/A" ]; then
+                print_detail "Accessibility Score: ${accessibility_score}%"
+            fi
+
+            local best_practices_score=$(jq -r '.categories["best-practices"].score * 100' "$report_file" 2>/dev/null || echo "N/A")
+            if [ "$best_practices_score" != "null" ] && [ "$best_practices_score" != "N/A" ]; then
+                print_detail "Best Practices Score: ${best_practices_score}%"
+            fi
+
+            local seo_score=$(jq -r '.categories.seo.score * 100' "$report_file" 2>/dev/null || echo "N/A")
+            if [ "$seo_score" != "null" ] && [ "$seo_score" != "N/A" ]; then
+                print_detail "SEO Score: ${seo_score}%"
+            fi
+
+            # Offer to save full report
+            print_detail "Full report saved to: $report_file"
+            print_info "View HTML report with: lighthouse $TARGET_URL --view"
+        else
+            print_warning "Could not parse Lighthouse PWA score"
+        fi
+    else
+        print_warning "Lighthouse audit failed or timed out"
+        print_detail "This may happen if Chrome/Chromium is not installed"
+    fi
+
+    # Clean up (optional - keep for debugging)
+    # rm -rf "$temp_dir"
+}
+
+################################################################################
 # Summary Report
 ################################################################################
 
@@ -478,7 +579,8 @@ print_summary() {
     echo -e "2. Address warnings for better user experience marked with ${YELLOW}⚠${NC}"
     echo -e "3. Test installation on mobile devices"
     echo -e "4. Test offline functionality"
-    echo -e "5. Consider running Lighthouse audit for detailed analysis"
+    echo -e "5. Review Lighthouse audit results if available above"
+    echo -e "6. Generate full HTML Lighthouse report: lighthouse $TARGET_URL --view"
     echo ""
 }
 
@@ -493,7 +595,7 @@ main() {
     cat << 'BANNER'
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║       PWA Health Check Tool v1.0.0                            ║
+║       PWA Health Check Tool v1.1.0                            ║
 ║       Progressive Web App Validator                           ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -529,6 +631,7 @@ BANNER
     check_service_worker
     check_meta_tags
     check_performance
+    run_lighthouse
 
     set -e
 
