@@ -222,11 +222,11 @@ PORT_IN_USE=false
 PROCESS_INFO=""
 
 if command -v lsof >/dev/null 2>&1; then
-  PROCESS_INFO=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+  PROCESS_INFO=$(lsof -ti:$PORT 2>/dev/null | head -n 1 || true)
 elif command -v ss >/dev/null 2>&1; then
-  PROCESS_INFO=$(ss -tlnp 2>/dev/null | grep ":$PORT " | head -n 1)
+  PROCESS_INFO=$(ss -tlnp 2>/dev/null | grep ":$PORT " | head -n 1 || true)
 elif command -v netstat >/dev/null 2>&1; then
-  PROCESS_INFO=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | head -n 1)
+  PROCESS_INFO=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | head -n 1 || true)
 fi
 
 if [[ -n "$PROCESS_INFO" ]]; then
@@ -235,7 +235,7 @@ if [[ -n "$PROCESS_INFO" ]]; then
 
   # Try to get more detailed process information
   if command -v lsof >/dev/null 2>&1; then
-    PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+    PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1 || true)
     if [[ -n "$PID" ]]; then
       PROC_NAME=$(ps -p "$PID" -o comm= 2>/dev/null || echo "unknown")
       PROC_CMD=$(ps -p "$PID" -o args= 2>/dev/null || echo "unknown")
@@ -261,7 +261,7 @@ if [[ -n "$PROCESS_INFO" ]]; then
     1)
       echo "\nAttempting to stop process on port $PORT..."
       if command -v lsof >/dev/null 2>&1; then
-        PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1)
+        PID=$(lsof -ti:$PORT 2>/dev/null | head -n 1 || true)
         if [[ -n "$PID" ]]; then
           echo "Killing process $PID..."
           kill "$PID" 2>/dev/null || kill -9 "$PID" 2>/dev/null || {
@@ -352,6 +352,19 @@ else
   export VITE_USE_HTTPS="false"
 fi
 
+# Determine bind address for Vite server
+# When using reverse proxy, bind to 0.0.0.0 (all interfaces), not the domain name
+if [[ "$HOST_TYPE" == "l" || "$HOST_TYPE" == "L" ]]; then
+  BIND_HOST="$HOSTNAME"  # localhost or other host from config
+else
+  # Domain mode with reverse proxy: bind to 0.0.0.0
+  if [[ "${USE_PROXY:-N}" =~ ^[Yy]$ ]]; then
+    BIND_HOST="0.0.0.0"
+  else
+    BIND_HOST="$HOSTNAME"
+  fi
+fi
+
 # Construct deployment URL for PWA manifest and build configuration
 if [[ "$HOST_TYPE" == "l" || "$HOST_TYPE" == "L" ]]; then
   # Localhost mode - always include port
@@ -395,10 +408,10 @@ else
   if [[ -n "$HTTPS_FLAG" ]]; then
     echo "Note: HTTPS for preview mode is configured via vite.config.js (not CLI flags)"
     echo "Ensure cert files exist in web/certs/ for HTTPS support"
-    echo "Running: npm run build && npm run preview -- --host $HOSTNAME --port $PORT"
+    echo "Running: npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
   else
-    echo "Running: npm run build && npm run preview -- --host $HOSTNAME --port $PORT"
+    echo "Running: npm run build && npm run preview -- --host $BIND_HOST --port $PORT"
   fi
   npm run build
-  exec npm run preview -- --host $HOSTNAME --port $PORT
+  exec npm run preview -- --host $BIND_HOST --port $PORT
 fi
