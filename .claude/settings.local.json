@@ -71,7 +71,8 @@
       "Bash(export VITE_DEV_PORT=\"3000\")",
       "Bash(export VITE_USE_HTTPS=\"false\")",
       "Bash(export VITE_DEPLOYMENT_URL=\"https://al.fluidgrid.site\")",
-      "Bash(npm run preview:*)"
+      "Bash(npm run preview:*)",
+      "Bash(ss:*)"
     ],
     "deny": [],
     "ask": []
