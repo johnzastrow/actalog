@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import fs from 'fs'
 
+// https://vitejs.dev/config/
+
 // Optional local HTTPS support: if `web/certs/<host>.pem` and
 // `web/certs/<host>-key.pem` exist the Vite config will use them for
 // an HTTPS dev/preview server. To opt-in, generate certs using mkcert
