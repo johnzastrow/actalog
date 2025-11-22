@@ -179,6 +179,7 @@ func main() {
 
 	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
 	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+	wodifyImportService := service.NewWodifyImportService(userRepo, movementRepo, wodRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
 	// Determine backups and uploads directories
 	workDir, _ := os.Getwd()
@@ -212,6 +213,7 @@ func main() {
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 	exportHandler := handler.NewExportHandler(exportService)
 	importHandler := handler.NewImportHandler(importService)
+	wodifyImportHandler := handler.NewWodifyImportHandler(wodifyImportService)
 	backupHandler := handler.NewBackupHandler(backupService)
 
 	// Set up router
@@ -358,6 +360,8 @@ func main() {
 			r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
 			r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
 			r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
+			r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
+			r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
