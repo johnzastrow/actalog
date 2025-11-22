@@ -480,6 +480,9 @@ func (r *UserWorkoutWODRepository) GetByUserIDAndWODID(userID, wodID int64, limi
 			uww.Weight = &weight.Float64
 		}
 
+		// Store workout date from user_workouts table
+		uww.WorkoutDate = workoutDate
+
 		wods = append(wods, uww)
 	}
 

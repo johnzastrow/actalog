@@ -5,9 +5,11 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
+	"github.com/johnzastrow/actalog/pkg/prmath"
 )
 
 // PerformanceHandler handles performance tracking endpoints
@@ -17,6 +19,13 @@ type PerformanceHandler struct {
 	userWorkoutMovementRepo *repository.UserWorkoutMovementRepository
 	userWorkoutWODRepo      *repository.UserWorkoutWODRepository
 	logger                  *logger.Logger
+}
+
+// MovementPerformanceWithRM extends UserWorkoutMovement with calculated 1RM
+type MovementPerformanceWithRM struct {
+	*domain.UserWorkoutMovement
+	Calculated1RM *float64 `json:"calculated_1rm,omitempty"`
+	Formula       *string  `json:"formula,omitempty"`
 }
 
 // NewPerformanceHandler creates a new performance handler
@@ -121,7 +130,7 @@ func (h *PerformanceHandler) UnifiedSearch(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// GetMovementPerformance retrieves all performance history for a specific movement
+// GetMovementPerformance retrieves all performance history for a specific movement with calculated 1RM
 func (h *PerformanceHandler) GetMovementPerformance(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -150,13 +159,42 @@ func (h *PerformanceHandler) GetMovementPerformance(w http.ResponseWriter, r *ht
 		return
 	}
 
+	// Calculate 1RM for each performance and find the best
+	performancesWithRM := make([]MovementPerformanceWithRM, 0, len(performances))
+	var best1RM *float64
+	var bestFormula *string
+
+	for _, perf := range performances {
+		perfWithRM := MovementPerformanceWithRM{
+			UserWorkoutMovement: perf,
+		}
+
+		// Calculate 1RM if weight and reps are present
+		if perf.Weight != nil && perf.Reps != nil && *perf.Weight > 0 && *perf.Reps > 0 {
+			oneRM, formula := prmath.Calculate1RM(*perf.Weight, *perf.Reps)
+			perfWithRM.Calculated1RM = &oneRM
+			formulaStr := string(formula)
+			perfWithRM.Formula = &formulaStr
+
+			// Track best 1RM
+			if best1RM == nil || oneRM > *best1RM {
+				best1RM = &oneRM
+				bestFormula = &formulaStr
+			}
+		}
+
+		performancesWithRM = append(performancesWithRM, perfWithRM)
+	}
+
 	if h.logger != nil {
 		h.logger.Info("action=get_movement_performance outcome=success user_id=%d movement_id=%d records=%d", userID, movementID, len(performances))
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"performances": performances,
-		"count":        len(performances),
+		"performances": performancesWithRM,
+		"count":        len(performancesWithRM),
+		"best_1rm":     best1RM,
+		"best_formula": bestFormula,
 	})
 }
 

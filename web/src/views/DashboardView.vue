@@ -363,44 +363,55 @@
               />
             </div>
 
-            <!-- Performance Type Selector -->
+            <!-- Unified Search for Movement/WOD -->
             <div class="mb-1">
               <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
                 Add Performance Data (Optional)
               </label>
-              <v-select
-                v-model="quickLogData.performanceType"
-                :items="['None', 'Movement', 'WOD']"
-                variant="outlined"
-                density="compact"
-                hide-details
-              />
-            </div>
-
-            <!-- Movement Performance -->
-            <div v-if="quickLogData.performanceType === 'Movement'" class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
-                Select Movement
-              </label>
               <v-autocomplete
-                v-model="quickLogData.movementId"
-                :items="movements"
-                item-title="name"
+                v-model="quickLogData.selectedItem"
+                :items="unifiedSearchItems"
+                item-title="displayName"
                 item-value="id"
-                :loading="loadingMovements"
+                return-object
+                :loading="loadingMovements || loadingWods"
                 variant="outlined"
                 density="compact"
                 hide-details
                 clearable
                 auto-select-first
-                placeholder="Search for a movement..."
+                placeholder="Search for movement or WOD..."
               >
                 <template #prepend-inner>
                   <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
                 </template>
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #prepend>
+                      <v-icon
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        size="small"
+                      >
+                        {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : 'mdi-fire' }}
+                      </v-icon>
+                    </template>
+                    <template #append>
+                      <v-chip
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        size="x-small"
+                        variant="flat"
+                        class="text-uppercase"
+                      >
+                        {{ item.raw.type }}
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+                </template>
               </v-autocomplete>
+            </div>
 
-              <div v-if="quickLogData.movementId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <!-- Movement Performance Form -->
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Sets</label>
                   <v-text-field
@@ -469,32 +480,9 @@
                   />
                 </div>
               </div>
-            </div>
 
-            <!-- WOD Performance -->
-            <div v-if="quickLogData.performanceType === 'WOD'" class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
-                Select WOD
-              </label>
-              <v-autocomplete
-                v-model="quickLogData.wodId"
-                :items="wods"
-                item-title="name"
-                item-value="id"
-                :loading="loadingWods"
-                variant="outlined"
-                density="compact"
-                hide-details
-                clearable
-                auto-select-first
-                placeholder="Search for a WOD..."
-              >
-                <template #prepend-inner>
-                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
-                </template>
-              </v-autocomplete>
-
-              <div v-if="quickLogData.wodId" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <!-- WOD Performance Form -->
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Score Type (from WOD)</label>
                   <v-text-field
@@ -604,7 +592,6 @@
                   />
                 </div>
               </div>
-            </div>
           </v-form>
         </v-card-text>
 
@@ -703,9 +690,7 @@ const quickLogData = ref({
   date: getTodayDate(),
   totalTime: null,
   notes: '',
-  performanceType: 'None',
-  movementId: null,
-  wodId: null,
+  selectedItem: null,
   movement: {
     sets: null,
     reps: null,
@@ -808,17 +793,42 @@ const recentWorkouts = computed(() => {
     .slice(0, 30) // Show up to 30 most recent from last 30 days
 })
 
-// Computed property to get the selected WOD object
-const selectedWOD = computed(() => {
-  if (!quickLogData.value.wodId) return null
-  return wods.value.find(w => w.id === quickLogData.value.wodId)
+// Unified search items combining movements and WODs
+const unifiedSearchItems = computed(() => {
+  const items = []
+
+  // Add movements
+  movements.value.forEach(movement => {
+    items.push({
+      id: `movement-${movement.id}`,
+      type: 'movement',
+      entityId: movement.id,
+      name: movement.name,
+      displayName: movement.name,
+      data: movement
+    })
+  })
+
+  // Add WODs
+  wods.value.forEach(wod => {
+    items.push({
+      id: `wod-${wod.id}`,
+      type: 'wod',
+      entityId: wod.id,
+      name: wod.name,
+      displayName: wod.name,
+      data: wod
+    })
+  })
+
+  return items.sort((a, b) => a.name.localeCompare(b.name))
 })
 
-// Watch for WOD selection changes and auto-set score_type
-watch(() => quickLogData.value.wodId, (newWodId) => {
-  if (newWodId && selectedWOD.value) {
+// Watch for selectedItem changes and auto-set score_type for WODs
+watch(() => quickLogData.value.selectedItem, (newItem) => {
+  if (newItem && newItem.type === 'wod') {
     // Auto-populate the score type from the WOD definition
-    quickLogData.value.wod.scoreType = selectedWOD.value.score_type
+    quickLogData.value.wod.scoreType = newItem.data.score_type
   } else {
     // Clear score type when no WOD is selected
     quickLogData.value.wod.scoreType = null
@@ -970,9 +980,7 @@ function closeQuickLog() {
     date: today,
     totalTime: null,
     notes: '',
-    performanceType: 'None',
-    movementId: null,
-    wodId: null,
+    selectedItem: null,
     movement: {
       sets: null,
       reps: null,
@@ -985,8 +993,12 @@ function closeQuickLog() {
       scoreType: null,
       scoreValue: null,
       timeSeconds: null,
+      timeHours: null,
+      timeMinutes: null,
+      timeSecondsInput: null,
       rounds: null,
       reps: null,
+      weight: null,
       notes: ''
     }
   }
@@ -1009,9 +1021,9 @@ async function submitQuickLog() {
     }
 
     // Add movement performance data if selected
-    if (quickLogData.value.performanceType === 'Movement' && quickLogData.value.movementId) {
+    if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'movement') {
       payload.movements = [{
-        movement_id: quickLogData.value.movementId,
+        movement_id: quickLogData.value.selectedItem.entityId,
         sets: quickLogData.value.movement.sets || null,
         reps: quickLogData.value.movement.reps || null,
         weight: quickLogData.value.movement.weight || null,
@@ -1023,9 +1035,9 @@ async function submitQuickLog() {
     }
 
     // Add WOD performance data if selected
-    if (quickLogData.value.performanceType === 'WOD' && quickLogData.value.wodId) {
+    if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'wod') {
       payload.wods = [{
-        wod_id: quickLogData.value.wodId,
+        wod_id: quickLogData.value.selectedItem.entityId,
         score_type: quickLogData.value.wod.scoreType || null,
         score_value: quickLogData.value.wod.scoreValue || null,
         time_seconds: quickLogData.value.wod.timeSeconds || null,

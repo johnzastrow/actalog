@@ -95,6 +95,7 @@ type UserWorkoutMovement struct {
 	Movement     *Movement `json:"movement,omitempty" db:"-"`
 	MovementName string    `json:"movement_name,omitempty" db:"-"` // Flattened for convenience
 	MovementType string    `json:"movement_type,omitempty" db:"-"` // Flattened for convenience
+	WorkoutDate  time.Time `json:"workout_date" db:"-"`            // From user_workouts.workout_date
 }
 
 // WorkoutMovementRepository defines the interface for workout movement data access

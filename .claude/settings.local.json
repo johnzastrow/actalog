@@ -97,7 +97,10 @@
       "Bash(export:*)",
       "Bash(/tmp/test_workouts_api.sh)",
       "Bash(/tmp/test_workouts_raw.sh)",
-      "Bash(/tmp/test_export.sh)"
+      "Bash(/tmp/test_export.sh)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImJyOGt3YWxsQGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc2NDEzMzIxMywibmJmIjoxNzYzMDQ2ODEzLCJpYXQiOjE3NjMwNDY4MTN9.k1BfN4w2JeAvyy2hhiUKCQfLwkHO0KmjZaaSLgEHrqQ\" curl -s -X GET \"http://localhost:8080/api/performance/movements/1\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImJyOGt3YWxsQGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc2NDEzMzIxMywibmJmIjoxNzYzMDQ2ODEzLCJpYXQiOjE3NjMwNDY4MTN9.k1BfN4w2JeAvyy2hhiUKCQfLwkHO0KmjZaaSLgEHrqQ\" curl -s -X GET \"http://localhost:8080/api/workouts/387\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(/home/jcz/Github/actionlog/web/src/views/PerformanceView.vue)"
     ],
     "deny": [],
     "ask": []
