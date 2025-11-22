@@ -1,13 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Export Data</v-toolbar-title>
-      <v-spacer />
-      <v-btn icon="mdi-close" color="white" size="small" @click="$router.back()" />
-    </v-app-bar>
 
-    <v-container class="px-3 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
+    <v-container class="px-3 pb-1 pt-0" style=" margin-bottom: 70px">
       <!-- Success Alert -->
       <v-alert v-if="successMessage" type="success" closable @click:close="successMessage = null" class="mb-3">
         {{ successMessage }}
@@ -32,7 +26,7 @@
       <!-- WODs Export Section -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
         <div class="d-flex align-center mb-3">
-          <v-icon color="#ffc107" class="mr-2">mdi-fire</v-icon>
+          <v-icon color="teal" class="mr-2">mdi-fire</v-icon>
           <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Export WODs</h2>
         </div>
 
@@ -56,7 +50,7 @@
         <v-btn
           block
           size="large"
-          color="#ffc107"
+          color="teal"
           rounded="lg"
           elevation="2"
           :disabled="!exportOptions.wods.includeStandard && !exportOptions.wods.includeCustom"

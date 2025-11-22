@@ -1,6 +1,5 @@
 <template>
   <v-container fluid class="pa-4">
-    <!-- Header -->
     <div class="d-flex align-center mb-4">
       <v-btn icon @click="$router.back()" class="mr-2">
         <v-icon>mdi-arrow-left</v-icon>

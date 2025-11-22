@@ -25,7 +25,7 @@
         <v-card elevation="0" rounded class="pa-2 mb-2" style="background: white">
           <!-- Movement Header -->
           <div class="d-flex align-center mb-1">
-            <v-icon color="#ffc107" class="mr-2">mdi-trophy</v-icon>
+            <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
             <h3 class="text-body-1 font-weight-bold" style="color: #2c3e50">{{ movementName }}</h3>
           </div>
 
@@ -48,7 +48,7 @@
         <v-card elevation="0" rounded class="pa-2 mb-2" style="background: white">
           <!-- WOD Header -->
           <div class="d-flex align-center mb-1">
-            <v-icon color="#ffc107" class="mr-2">mdi-trophy</v-icon>
+            <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
             <h3 class="text-body-1 font-weight-bold" style="color: #2c3e50">{{ wodName }}</h3>
           </div>
 

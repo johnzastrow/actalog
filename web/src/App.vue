@@ -53,11 +53,11 @@
       <!-- Center FAB Button -->
       <v-btn
         value="log"
-        to="/workouts/log"
+        to="/dashboard?open=quick-log"
         size="small"
         class="fab-button"
       >
-        <v-avatar color="#ffc107" size="48">
+        <v-avatar color="teal" size="48">
           <v-icon color="white" size="28">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>
@@ -151,14 +151,43 @@ body {
   background-color: #f5f7fa;
 }
 
-/* Typography from requirements */
-h1, h2, h3, h4, h5, h6 {
+/* Typography - optimized for mobile */
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+h4, h5, h6 {
+  font-size: 16px;
   font-weight: 500;
 }
 
 p, span, div {
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
+}
+
+/* Smaller text variants */
+.text-caption {
+  font-size: 12px !important;
+}
+
+.text-body-2 {
+  font-size: 13px !important;
+}
+
+.text-body-1 {
+  font-size: 14px !important;
 }
 
 /* Spacing from requirements - 20px outer padding, 16px gutter */

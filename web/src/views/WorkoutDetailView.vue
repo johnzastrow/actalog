@@ -1,25 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="$router.back()" />
-      <v-toolbar-title class="text-white font-weight-bold">Workout Details</v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        v-if="workout"
-        icon="mdi-pencil"
-        color="white"
-        @click="editWorkout"
-      />
-      <v-btn
-        v-if="workout"
-        icon="mdi-delete"
-        color="white"
-        @click="confirmDelete"
-      />
-    </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="pa-2" style=" margin-bottom: 70px">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
         <v-progress-circular indeterminate color="#00bcd4" size="64" />
@@ -47,7 +29,7 @@
             </div>
             <v-chip
               v-if="hasPR"
-              color="#ffc107"
+              color="teal"
               size="small"
             >
               <v-icon size="small" class="mr-1">mdi-trophy</v-icon>
@@ -70,7 +52,9 @@
             <v-icon color="#00bcd4" size="small" class="mr-2">mdi-note-text</v-icon>
             <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Notes</h3>
           </div>
-          <p class="text-body-2" style="color: #666">{{ workout.notes }}</p>
+          <div class="text-body-2" style="color: #666">
+            <MarkdownRenderer :content="workout.notes" />
+          </div>
         </v-card>
 
         <!-- Movements Section -->
@@ -105,7 +89,7 @@
                     </span>
                     <v-chip
                       v-if="movement.is_pr"
-                      color="#ffc107"
+                      color="teal"
                       size="x-small"
                       class="ml-2"
                       style="height: 18px"
@@ -134,7 +118,7 @@
                   </div>
 
                   <div v-if="movement.notes" class="text-caption mt-1" style="color: #999; font-style: italic">
-                    {{ movement.notes }}
+                    <MarkdownRenderer :content="movement.notes" />
                   </div>
                 </div>
 
@@ -159,7 +143,7 @@
           style="background: white"
         >
           <div class="d-flex align-center mb-3">
-            <v-icon color="#ffc107" size="small" class="mr-2">mdi-fire</v-icon>
+            <v-icon color="teal" size="small" class="mr-2">mdi-fire</v-icon>
             <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">
               WODs ({{ workout.performance_wods.length }})
             </h3>
@@ -189,7 +173,7 @@
                 {{ formatTime(wod.time_seconds) }}
               </div>
               <div v-if="wod.notes" class="text-caption mt-1" style="color: #999; font-style: italic">
-                {{ wod.notes }}
+                <MarkdownRenderer :content="wod.notes" />
               </div>
             </v-card>
           </div>
@@ -258,8 +242,8 @@
         <v-icon>mdi-chart-line</v-icon>
         <span style="font-size: 10px">Performance</span>
       </v-btn>
-      <v-btn value="log" to="/workouts/log" style="position: relative; bottom: 20px">
-        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+      <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
+        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>
@@ -303,6 +287,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const route = useRoute()

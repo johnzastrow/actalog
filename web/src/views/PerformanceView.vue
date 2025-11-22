@@ -1,13 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Performance Tracker</v-toolbar-title>
-      <v-spacer />
-      <v-btn v-if="selectedItem" icon="mdi-close" color="white" size="small" @click="clearSelection" />
-    </v-app-bar>
 
-    <v-container class="px-3 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
+    <v-container class="px-3 pb-1 pt-0" style="margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
         {{ error }}
@@ -71,7 +65,7 @@
         <v-btn
           block
           size="large"
-          color="#ffc107"
+          color="teal"
           rounded="lg"
           elevation="2"
           class="mb-3 font-weight-bold"
@@ -87,7 +81,7 @@
           <!-- Heaviest Lifts (Top 3 Maxes) -->
           <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
             <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-              <v-icon color="#ffc107" size="small" class="mr-1">mdi-trophy</v-icon>
+              <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
               Heaviest Lifts
             </h2>
 
@@ -167,7 +161,7 @@
           <!-- Best WOD Performances (Top 3) -->
           <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
             <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-              <v-icon color="#ffc107" size="small" class="mr-1">mdi-trophy</v-icon>
+              <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
               Best Performances
             </h2>
 
@@ -254,7 +248,7 @@
               >
                 <div class="d-flex align-center">
                   <!-- PR Trophy Icon -->
-                  <v-icon v-if="entry.is_pr" color="#ffc107" size="small" class="mr-2">mdi-trophy</v-icon>
+                  <v-icon v-if="entry.is_pr" color="teal" size="small" class="mr-2">mdi-trophy</v-icon>
 
                   <div class="flex-grow-1">
                     <!-- Movement Performance Display -->
@@ -286,7 +280,7 @@
                   <v-chip
                     v-if="entry.is_pr"
                     size="x-small"
-                    color="#ffc107"
+                    color="teal"
                     class="ml-2"
                   >
                     PR
@@ -314,8 +308,8 @@
         <v-icon>mdi-chart-line</v-icon>
         <span style="font-size: 10px">Performance</span>
       </v-btn>
-      <v-btn value="log" to="/workouts/log" style="position: relative; bottom: 20px">
-        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+      <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
+        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

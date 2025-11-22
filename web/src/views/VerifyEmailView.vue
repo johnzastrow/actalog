@@ -20,7 +20,7 @@
             Your email has been successfully verified. You can now access all features of ActaLog.
           </p>
           <v-btn
-            color="#ffc107"
+            color="teal"
             size="large"
             rounded
             @click="goToLogin"
