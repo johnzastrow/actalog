@@ -1,0 +1,5 @@
+# Ignore all backup files
+*.zip
+
+# But keep this directory in git
+!.gitignore

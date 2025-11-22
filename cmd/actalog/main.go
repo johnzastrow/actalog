@@ -180,6 +180,21 @@ func main() {
 	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
 	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
+	// Determine backups and uploads directories
+	workDir, _ := os.Getwd()
+	backupDir := filepath.Join(workDir, "backups")
+	uploadsPath := filepath.Join(workDir, "uploads")
+
+	backupService := service.NewBackupService(
+		db,
+		cfg.Database.Driver,
+		cfg.Database.Database,
+		backupDir,
+		uploadsPath,
+		userRepo,
+		auditLogRepo,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -197,6 +212,7 @@ func main() {
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 	exportHandler := handler.NewExportHandler(exportService)
 	importHandler := handler.NewImportHandler(importService)
+	backupHandler := handler.NewBackupHandler(backupService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -226,8 +242,7 @@ func main() {
 	})
 
 	// Static file serving for uploads (avatars, etc.)
-	workDir, _ := os.Getwd()
-	uploadsDir := http.Dir(filepath.Join(workDir, "uploads"))
+	uploadsDir := http.Dir(uploadsPath)
 	FileServer(r, "/uploads", uploadsDir)
 
 	// API routes
@@ -347,6 +362,14 @@ func main() {
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+
+				// Backup routes (admin only)
+				r.Post("/backups", backupHandler.CreateBackup)
+				r.Get("/backups", backupHandler.ListBackups)
+				r.Get("/backups/{filename}", backupHandler.DownloadBackup)
+				r.Get("/backups/{filename}/metadata", backupHandler.GetBackupMetadata)
+				r.Delete("/backups/{filename}", backupHandler.DeleteBackup)
+				r.Post("/backups/{filename}/restore", backupHandler.RestoreBackup)
 
 				// Data cleanup routes
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)

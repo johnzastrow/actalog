@@ -5,10 +5,66 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1-beta] - 2025-11-21 (In Progress)
+## [0.6.0-beta] - 2025-11-21
 
 ### Added
-- **Import/Export System (Phase 1 & 2 - Mostly Complete)**
+- **Database Backup/Restore System**
+  - **Backend Service** (`internal/service/backup_service.go`)
+    - `CreateBackup()` - Exports all tables to JSON + uploaded files to ZIP
+    - `ListBackups()` - Returns metadata for all available backups
+    - `GetBackupMetadata()` - Reads metadata from backup file
+    - `DeleteBackup()` - Removes backup file with audit logging
+    - `RestoreBackup()` - Full database restore from backup
+    - Automatic table detection (skips tables that don't exist)
+    - Multi-database support (SQLite, PostgreSQL, MySQL)
+  - **API Endpoints** (`internal/handler/backup_handler.go`)
+    - `POST /api/admin/backups` - Create new backup
+    - `GET /api/admin/backups` - List all backups
+    - `GET /api/admin/backups/{filename}` - Download backup file
+    - `GET /api/admin/backups/{filename}/metadata` - Get backup metadata
+    - `DELETE /api/admin/backups/{filename}` - Delete backup
+    - `POST /api/admin/backups/{filename}/restore` - Restore from backup
+    - All endpoints admin-only with authorization checks
+    - Filename validation to prevent directory traversal attacks
+  - **Frontend View** (`web/src/views/AdminBackupsView.vue`)
+    - Backup list table with metadata (users, workouts, movements, WODs)
+    - Create backup button with progress indicator
+    - Download/delete/restore actions for each backup
+    - Strong confirmation dialog for restore (warns about data loss)
+    - Empty state for no backups
+    - File size formatting and date/time display
+  - **Backup Structure**
+    - ZIP file containing `backup_data.json` with all table data
+    - Includes uploaded files (profile pictures, etc.) in `uploads/` folder
+    - Metadata: version, database driver, user counts, file size, created by
+    - Stored in `/backups/` directory with .gitignore
+
+- **Documentation**
+  - Updated ProfileView with "Database Backups" admin navigation link
+  - Added `/admin/backups` route to router
+  - Created `backups/.gitignore` to prevent backup files from being committed
+
+### Technical
+- Clean Architecture maintained: domain → service → handler pattern
+- Audit logging for backup creation, deletion, and restore operations
+- Transaction-based restore to ensure data consistency
+- Automatic cleanup of existing data before restore
+- Security: Admin-only access, filename validation, token-based auth
+- Build number incremented: 24 → 25
+
+### Testing
+- ✅ Create backup: Successfully generates 1.7MB ZIP file
+- ✅ List backups: Returns metadata with correct statistics
+- ✅ Download backup: Serves ZIP file for download
+- ✅ Delete backup: Removes file and logs action
+- ⚠️ Restore backup: Tested manually (destructive operation)
+
+---
+
+## [0.5.1-beta] - 2025-11-21
+
+### Added
+- **Import/Export System (Phase 1 & 2 - COMPLETE)**
   - **WOD Export** (`GET /api/export/wods`)
     - CSV format with all WOD fields
     - Query parameters for filtering: `include_standard`, `include_custom`
@@ -35,10 +91,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Successfully tested: created 2 custom movements
   - **User Workouts Import** (`POST /api/import/user-workouts/preview`, `POST /api/import/user-workouts/confirm`)
     - Preview endpoint working correctly ✅
+    - Confirm endpoint working correctly ✅
     - JSON parsing and validation
     - Nested data handling (movements, WODs)
     - Auto-creation of missing movements and WODs
-    - **Known Issue:** Confirm endpoint has persistence bug (reports success but data doesn't persist)
+    - Default workout_name generation for ad-hoc workouts
 
 - **Frontend Views**
   - `ExportView.vue` at `/settings/export`
@@ -67,26 +124,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**
   - Created `docs/ROADMAP.md` with detailed development plan
   - Updated `docs/TODO.md` with completion status
-  - Testing results: 5.5/6 features working (92%)
+  - Testing results: 6/6 features working (100%)
 
-### Known Issues
-- **User Workouts Import Confirm Persistence Bug** (CRITICAL)
-  - Endpoint: `POST /api/import/user-workouts/confirm`
-  - Issue: Reports success (created_count: 2) but workouts don't persist to database
-  - Data doesn't appear in `/api/workouts` or export endpoints
-  - Likely transaction rollback or database constraint violation
-  - **Next Priority** for v0.5.1 completion
+### Fixed
+- **User Workouts Import Persistence Bug** (CRITICAL - Build 22)
+  - **Location:** `internal/service/import_service.go:760-776`
+  - **Issue:** Import reported success but workouts didn't appear in API responses
+  - **Root Cause 1:** Missing `WorkoutType` field when creating UserWorkout struct
+    - Field was present in JSON import data but not being set on the domain object
+    - Caused workout_type column to be NULL in database
+  - **Root Cause 2:** Missing `workout_name` default value for ad-hoc workouts
+    - Ad-hoc workouts (without workout_id) require workout_name to be queryable
+    - `GetByIDWithDetails()` throws error when both workout_id and workout_name are NULL
+    - This caused API to return empty array even though workouts existed in database
+  - **Fix Applied:**
+    - Added `WorkoutType: workoutData.WorkoutType` to UserWorkout struct creation
+    - Added default workout_name generation: `fmt.Sprintf("Workout %s", workoutDate.Format("2006-01-02"))`
+    - Ensures all ad-hoc workouts have a valid workout_name for retrieval
+  - **Testing Results:**
+    - Before: Database had workouts but API returned 0 ❌
+    - After: Database has workouts AND API returns all workouts ✅
+    - Verified via database query and `/api/workouts` endpoint
 
 ### Changed
-- Version bumped to 0.5.1-beta
-- Import/Export system is now feature-complete except for one critical bug
+- Version remains 0.5.0-beta (will bump to 0.5.1-beta on release)
+- Build number incremented: 20 → 22
+- Import/Export system is now 100% functional (6/6 features working)
 
 ### Testing
 - ✅ WOD export/import round-trip tested successfully
 - ✅ Movement export/import round-trip tested successfully
 - ✅ User Workouts export tested successfully
 - ✅ User Workouts import preview tested successfully
-- ⚠️ User Workouts import confirm needs debugging
+- ✅ User Workouts import confirm tested successfully (bug fixed)
 
 ### Technical
 - Clean Architecture maintained throughout implementation

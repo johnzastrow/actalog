@@ -86,7 +86,9 @@
       "Bash(/tmp/movement_confirm_response.txt)",
       "Bash(TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImltcG9ydGV4cG9ydHRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzg2NTc0MiwibmJmIjoxNzYzNzc5MzQyLCJpYXQiOjE3NjM3NzkzNDJ9.HKpXdR_XIof7SgYJPcbRhzZPQyDbcgeTeXGh_7dW-z8 echo '=== User Workouts Import Confirm ===' curl -s -X POST http://localhost:8080/api/import/user-workouts/confirm -H 'Authorization: Bearer $TOKEN' -F file=@/tmp/test_user_workouts_import.json -F skip_duplicates=false cat /tmp/user_workouts_confirm.txt)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImltcG9ydGV4cG9ydHRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzg2NjQ4MSwibmJmIjoxNzYzNzgwMDgxLCJpYXQiOjE3NjM3ODAwODF9.Ecj7MNxxkGwpdWrfdRqWDJ4USYBAgjEzVRnvgceYcPM\" curl -s -X GET \"http://localhost:8080/api/workouts\" -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImltcG9ydGV4cG9ydHRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzg2NjQ4MSwibmJmIjoxNzYzNzgwMDgxLCJpYXQiOjE3NjM3ODAwODF9.Ecj7MNxxkGwpdWrfdRqWDJ4USYBAgjEzVRnvgceYcPM\" curl -s -X GET \"http://localhost:8080/api/export/user-workouts\" -H \"Authorization: Bearer $TOKEN\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImltcG9ydGV4cG9ydHRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzg2NjQ4MSwibmJmIjoxNzYzNzgwMDgxLCJpYXQiOjE3NjM3ODAwODF9.Ecj7MNxxkGwpdWrfdRqWDJ4USYBAgjEzVRnvgceYcPM\" curl -s -X GET \"http://localhost:8080/api/export/user-workouts\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(/tmp/test_import_fixed.sh)",
+      "Bash(/tmp/test_backup.sh)"
     ],
     "deny": [],
     "ask": []

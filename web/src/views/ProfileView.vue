@@ -278,6 +278,23 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-database-export"
+            @click="$router.push('/admin/backups')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Database Backups
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Create and restore backups
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-chart-bar"
             disabled
             rounded
