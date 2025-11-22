@@ -758,10 +758,18 @@ func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, 
 		}
 
 		// Create UserWorkout record
+		// Ensure workout_name is set for ad-hoc workouts
+		workoutName := workoutData.WorkoutName
+		if workoutName == nil {
+			// Default workout name based on date and type
+			defaultName := fmt.Sprintf("Workout %s", workoutDate.Format("2006-01-02"))
+			workoutName = &defaultName
+		}
+
 		userWorkout := &domain.UserWorkout{
 			UserID:      userID,
 			WorkoutDate: workoutDate,
-			WorkoutName: workoutData.WorkoutName,
+			WorkoutName: workoutName,
 			WorkoutType: workoutData.WorkoutType,
 			Notes:       workoutData.Notes,
 			TotalTime:   workoutData.TotalTime,
