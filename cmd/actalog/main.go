@@ -274,6 +274,7 @@ func main() {
 
 		// WOD routes (public for browsing standard WODs)
 		r.Get("/wods", wodHandler.ListWODs)
+		r.Get("/wods/standard", wodHandler.ListStandardWODs)
 		r.Get("/wods/search", wodHandler.SearchWODs)
 		r.Get("/wods/{id}", wodHandler.GetWOD)
 
@@ -327,6 +328,7 @@ func main() {
 			r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
 
 			// WOD management (authenticated)
+			r.Get("/wods/my-wods", wodHandler.ListMyWODs)
 			r.Post("/wods", wodHandler.CreateWOD)
 			r.Put("/wods/{id}", wodHandler.UpdateWOD)
 			r.Delete("/wods/{id}", wodHandler.DeleteWOD)

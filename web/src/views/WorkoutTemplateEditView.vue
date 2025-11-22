@@ -398,8 +398,13 @@ async function fetchMovements() {
 async function fetchWODs() {
   loadingWODs.value = true
   try {
-    const response = await axios.get('/api/wods?limit=1000')
-    availableWODs.value = response.data.wods || []
+    const [standardRes, customRes] = await Promise.all([
+      axios.get('/api/wods/standard'),
+      axios.get('/api/wods/my-wods')
+    ])
+    const standard = Array.isArray(standardRes.data.wods) ? standardRes.data.wods : []
+    const custom = Array.isArray(customRes.data.wods) ? customRes.data.wods : []
+    availableWODs.value = [...standard, ...custom]
   } catch (err) {
     console.error('Failed to fetch WODs:', err)
     error.value = 'Failed to load WODs'

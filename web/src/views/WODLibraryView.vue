@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-
-    <v-container class="pa-2" style=" margin-bottom: 70px">
+  <div style="background-color: #f5f7fa; min-height: 100vh">
+    <v-container class="pa-2" style="margin-bottom: 70px; overflow-y: auto; max-height: calc(100vh - 70px)">
       <!-- Search and Filters Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <v-text-field
@@ -151,9 +150,9 @@
     <v-bottom-navigation
       v-if="!selectionMode"
       v-model="activeNav"
-      color="#00bcd4"
       grow
-      style="position: fixed; bottom: 0; width: 100%; z-index: 5"
+      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background: white"
+      elevation="8"
     >
       <v-btn value="dashboard" @click="$router.push('/dashboard')">
         <v-icon>mdi-view-dashboard</v-icon>
@@ -175,7 +174,7 @@
         <span>Profile</span>
       </v-btn>
     </v-bottom-navigation>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
