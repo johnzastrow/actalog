@@ -140,14 +140,15 @@
                 </div>
               </div>
               <v-btn
-                icon="mdi-play-circle"
-                color="#00bcd4"
+                icon="mdi-lightning-bolt"
+                color="teal"
                 variant="flat"
                 size="small"
                 @click.stop="logWorkoutFromTemplate(template.id)"
-                style="background: #00bcd4"
+                style="background: teal"
               >
-                <v-icon color="white">mdi-play-circle</v-icon>
+                <v-icon color="white">mdi-lightning-bolt</v-icon>
+                <v-tooltip activator="parent" location="top">Quick Log</v-tooltip>
               </v-btn>
             </div>
 
@@ -391,7 +392,7 @@ async function deleteTemplate(templateId) {
   }
 
   try {
-    await axios.delete(`/api/workouts/${templateId}`)
+    await axios.delete(`/api/templates/${templateId}`)
 
     // Remove from list
     customTemplates.value = customTemplates.value.filter(t => t.id !== templateId)
