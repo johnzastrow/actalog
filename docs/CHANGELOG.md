@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4-beta] - 2025-11-22
+
+### Added
+- **Quick Log Buttons on Library Cards**: Added Quick Log functionality directly to WOD and Movement library card views
+  - Teal lightning bolt icon buttons on each WOD card in WOD Library view
+  - Teal lightning bolt icon buttons on each Movement card in Movements Library view
+  - Quick Log dialog opens directly from cards without navigating to detail pages
+  - Pre-populated forms with selected WOD or Movement data
+  - Streamlined workout logging workflow from library browsing
+- **Quick Log Buttons on Detail Pages**: Enhanced WOD and Movement detail screens
+  - Added prominent Quick Log buttons to WODDetailView and MovementDetailView
+  - Pre-populated Quick Log dialogs with current item being viewed
+  - Consistent user experience across all viewing contexts
+
+### Changed
+- **Icon Consistency**: Unified Quick Log iconography across the entire application
+  - All Quick Log buttons now use `mdi-lightning-bolt` icon (teal color)
+  - Replaced `mdi-play-circle` icons in WorkoutsView template cards with lightning bolt
+  - Consistent visual language for Quick Log feature throughout the app
+  - Tooltips added to all Quick Log buttons for clarity
+
+### Fixed
+- **Vuetify Layout Issues**: Fixed bottom navigation layout conflicts
+  - Restructured WODLibraryView and MovementsLibraryView container hierarchies
+  - Changed outer containers from `<v-container>` to `<div>` to prevent layout system conflicts
+  - Moved bottom navigation outside scrollable content containers
+  - Eliminated "Could not find layout item 'bottom-navigation'" console errors
+  - Fixed scroll behavior with proper `overflow-y: auto` and `max-height` constraints
+- **Template Deletion Bug**: Fixed custom template deletion endpoint error
+  - Corrected API endpoint from `DELETE /api/workouts/{id}` to `DELETE /api/templates/{id}`
+  - Resolved 500 Internal Server Error and "unauthorized workout access" issue
+  - Custom workout templates now delete successfully
+
 ## [0.7.3-beta] - 2025-01-22
 
 ### Added
