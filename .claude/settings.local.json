@@ -92,7 +92,12 @@
       "Bash(/tmp/login_response.json)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJlbWFpbCI6IndvZGlmeXRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzg3MDM5MywibmJmIjoxNzYzNzgzOTkzLCJpYXQiOjE3NjM3ODM5OTN9.tY1GPG1khEs9ivhU_BTFpn6gTLtjSXzcnrGbVL3431U\")",
       "Bash(__NEW_LINE__ curl -X POST \"http://localhost:8080/api/import/wodify/preview\" )",
-      "Bash(__NEW_LINE__ curl -X POST \"http://localhost:8080/api/import/wodify/confirm\" )"
+      "Bash(__NEW_LINE__ curl -X POST \"http://localhost:8080/api/import/wodify/confirm\" )",
+      "Bash(__NEW_LINE__ curl -X POST \"http://localhost:8080/api/import/user-workouts/confirm\" )",
+      "Bash(export:*)",
+      "Bash(/tmp/test_workouts_api.sh)",
+      "Bash(/tmp/test_workouts_raw.sh)",
+      "Bash(/tmp/test_export.sh)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,6 @@
 {
   "name": "actalog-web",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "description": "ActaLog - CrossFit Workout Tracker",
   "private": true,
   "type": "module",
