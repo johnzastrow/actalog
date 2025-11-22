@@ -228,6 +228,111 @@ func (h *WODHandler) ListWODs(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListStandardWODs returns only standard/pre-seeded WODs
+func (h *WODHandler) ListStandardWODs(w http.ResponseWriter, r *http.Request) {
+	// Parse pagination parameters
+	limit := 100 // default
+	offset := 0  // default
+
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
+			offset = o
+		}
+	}
+
+	wods, err := h.wodService.ListStandard(limit, offset)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve standard WODs")
+		return
+	}
+
+	// Build response
+	var responses []WODResponse
+	for _, wod := range wods {
+		response := WODResponse{
+			ID:          wod.ID,
+			Name:        wod.Name,
+			Source:      wod.Source,
+			Type:        wod.Type,
+			Regime:      wod.Regime,
+			ScoreType:   wod.ScoreType,
+			Description: wod.Description,
+			URL:         wod.URL,
+			Notes:       wod.Notes,
+			IsStandard:  wod.IsStandard,
+			CreatedBy:   wod.CreatedBy,
+			CreatedAt:   wod.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:   wod.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+		responses = append(responses, response)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"wods": responses,
+	})
+}
+
+// ListMyWODs returns only the authenticated user's custom WODs
+func (h *WODHandler) ListMyWODs(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	// Parse pagination parameters
+	limit := 100 // default
+	offset := 0  // default
+
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
+			offset = o
+		}
+	}
+
+	wods, err := h.wodService.ListByUser(userID, limit, offset)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve custom WODs")
+		return
+	}
+
+	// Build response
+	var responses []WODResponse
+	for _, wod := range wods {
+		response := WODResponse{
+			ID:          wod.ID,
+			Name:        wod.Name,
+			Source:      wod.Source,
+			Type:        wod.Type,
+			Regime:      wod.Regime,
+			ScoreType:   wod.ScoreType,
+			Description: wod.Description,
+			URL:         wod.URL,
+			Notes:       wod.Notes,
+			IsStandard:  wod.IsStandard,
+			CreatedBy:   wod.CreatedBy,
+			CreatedAt:   wod.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:   wod.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+		responses = append(responses, response)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"wods": responses,
+	})
+}
+
 // SearchWODs searches for WODs by name
 func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")

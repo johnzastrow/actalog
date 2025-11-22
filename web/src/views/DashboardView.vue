@@ -389,15 +389,15 @@
                   <v-list-item v-bind="props">
                     <template #prepend>
                       <v-icon
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
                         size="small"
                       >
-                        {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : 'mdi-fire' }}
+                        {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : (item.raw.type === 'wod' ? 'mdi-fire' : 'mdi-clipboard-text') }}
                       </v-icon>
                     </template>
                     <template #append>
                       <v-chip
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
                         size="x-small"
                         variant="flat"
                         class="text-uppercase"
@@ -592,6 +592,18 @@
                   />
                 </div>
               </div>
+
+              <!-- Template Info -->
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3" style="background: #f3e5f5; border-radius: 8px; border: 1px solid #9c27b0">
+                <div class="d-flex align-center mb-2">
+                  <v-icon color="#9c27b0" size="small" class="mr-2">mdi-clipboard-text</v-icon>
+                  <span class="text-caption font-weight-bold" style="color: #9c27b0">Workout Template Selected</span>
+                </div>
+                <p class="text-caption mb-0" style="color: #666">
+                  This will create a workout based on the "{{ quickLogData.selectedItem.name }}" template.
+                  Template details will be included automatically.
+                </p>
+              </div>
           </v-form>
         </v-card-text>
 
@@ -716,6 +728,7 @@ const quickLogData = ref({
 // Lists for movements and WODs
 const movements = ref([])
 const wods = ref([])
+const workoutTemplates = ref([])
 const loadingMovements = ref(false)
 const loadingWods = ref(false)
 
@@ -818,6 +831,18 @@ const unifiedSearchItems = computed(() => {
       name: wod.name,
       displayName: wod.name,
       data: wod
+    })
+  })
+
+  // Add workout templates
+  workoutTemplates.value.forEach(template => {
+    items.push({
+      id: `template-${template.id}`,
+      type: 'template',
+      entityId: template.id,
+      name: template.name,
+      displayName: template.name,
+      data: template
     })
   })
 
@@ -959,13 +984,36 @@ async function openQuickLog() {
   if (wods.value.length === 0) {
     loadingWods.value = true
     try {
-      const response = await axios.get('/api/wods')
-      wods.value = response.data.wods || []
-      console.log('Loaded WODs:', wods.value.length)
+      const [standardRes, customRes] = await Promise.all([
+        axios.get('/api/wods/standard'),
+        axios.get('/api/wods/my-wods')
+      ])
+      const standard = Array.isArray(standardRes.data.wods) ? standardRes.data.wods : []
+      const custom = Array.isArray(customRes.data.wods) ? customRes.data.wods : []
+      wods.value = [...standard, ...custom]
+      console.log('Loaded WODs:', wods.value.length, '(standard:', standard.length, ', custom:', custom.length, ')')
     } catch (error) {
       console.error('Error fetching WODs:', error)
     } finally {
       loadingWods.value = false
+    }
+  }
+
+  // Fetch workout templates if not already loaded
+  if (workoutTemplates.value.length === 0) {
+    try {
+      const [standardRes, customRes] = await Promise.all([
+        axios.get('/api/workouts/standard'),
+        axios.get('/api/workouts/my-templates')
+      ])
+
+      const standard = Array.isArray(standardRes.data.workouts) ? standardRes.data.workouts : []
+      const custom = Array.isArray(customRes.data.workouts) ? customRes.data.workouts : []
+
+      workoutTemplates.value = [...standard, ...custom]
+      console.log('Loaded workout templates:', workoutTemplates.value.length)
+    } catch (error) {
+      console.error('Error fetching workout templates:', error)
     }
   }
 }
@@ -1007,6 +1055,19 @@ function closeQuickLog() {
 // Submit Quick Log
 async function submitQuickLog() {
   if (!quickLogData.value.name || !quickLogData.value.date) {
+    return
+  }
+
+  // If template is selected, navigate to log workout page with template pre-selected
+  if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'template') {
+    closeQuickLog()
+    router.push({
+      path: '/workouts/log',
+      query: {
+        template: quickLogData.value.selectedItem.entityId,
+        date: quickLogData.value.date
+      }
+    })
     return
   }
 

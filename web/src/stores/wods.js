@@ -13,8 +13,13 @@ export const useWodsStore = defineStore('wods', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.get('/api/wods')
-      wods.value = response.data.wods || []
+      const [standardRes, customRes] = await Promise.all([
+        axios.get('/api/wods/standard'),
+        axios.get('/api/wods/my-wods')
+      ])
+      const standard = Array.isArray(standardRes.data.wods) ? standardRes.data.wods : []
+      const custom = Array.isArray(customRes.data.wods) ? customRes.data.wods : []
+      wods.value = [...standard, ...custom]
       return true
     } catch (e) {
       error.value = e.response?.data?.message || 'Failed to fetch WODs'

@@ -48,6 +48,21 @@
           </div>
         </v-card>
 
+        <!-- Quick Log Button -->
+        <v-btn
+          block
+          size="large"
+          color="teal"
+          rounded="lg"
+          elevation="2"
+          class="mb-3 font-weight-bold"
+          style="text-transform: none"
+          @click="openQuickLog"
+        >
+          <v-icon start>mdi-lightning-bolt</v-icon>
+          Quick Log {{ movement.name }}
+        </v-btn>
+
         <!-- Details Card -->
         <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
           <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
@@ -144,6 +159,132 @@
         </v-card>
       </div>
     </v-container>
+
+    <!-- Quick Log Dialog -->
+    <v-dialog v-model="quickLogDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+          <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
+          Quick Log {{ movement?.name }}
+        </v-card-title>
+
+        <v-card-text class="pa-2">
+          <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
+            <!-- Date -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Date *</label>
+              <v-text-field
+                v-model="quickLogData.date"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+                required
+              />
+            </div>
+
+            <!-- Workout Name -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Workout Name *</label>
+              <v-text-field
+                v-model="quickLogData.name"
+                variant="outlined"
+                density="compact"
+                placeholder="e.g., Morning Run, Upper Body, etc."
+                hide-details
+                required
+              />
+            </div>
+
+            <!-- Movement Performance Form -->
+            <div class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <div class="mb-2">
+                <label class="text-caption">Sets</label>
+                <v-text-field
+                  v-model.number="quickLogData.movement.sets"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </div>
+              <div class="mb-2">
+                <label class="text-caption">Reps</label>
+                <v-text-field
+                  v-model.number="quickLogData.movement.reps"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </div>
+              <div class="mb-2">
+                <label class="text-caption">Weight (lbs)</label>
+                <v-text-field
+                  v-model.number="quickLogData.movement.weight"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+              <div class="mb-2">
+                <label class="text-caption">Time (seconds)</label>
+                <v-text-field
+                  v-model.number="quickLogData.movement.time"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                />
+              </div>
+              <div class="mb-2">
+                <label class="text-caption">Distance (meters)</label>
+                <v-text-field
+                  v-model.number="quickLogData.movement.distance"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+              <div>
+                <label class="text-caption">Notes</label>
+                <v-textarea
+                  v-model="quickLogData.movement.notes"
+                  variant="outlined"
+                  density="compact"
+                  rows="2"
+                  hide-details
+                />
+              </div>
+            </div>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions class="pa-2 pt-0">
+          <v-btn variant="text" @click="closeQuickLog">Cancel</v-btn>
+          <v-spacer />
+          <v-btn
+            color="teal"
+            variant="elevated"
+            :loading="quickLogSubmitting"
+            :disabled="!quickLogData.name || !quickLogData.date"
+            @click="submitQuickLog"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Log Workout
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -158,6 +299,22 @@ const route = useRoute()
 const movement = ref(null)
 const loading = ref(false)
 const error = ref('')
+
+// Quick Log state
+const quickLogDialog = ref(false)
+const quickLogSubmitting = ref(false)
+const quickLogData = ref({
+  name: '',
+  date: '',
+  movement: {
+    sets: null,
+    reps: null,
+    weight: null,
+    time: null,
+    distance: null,
+    notes: ''
+  }
+})
 
 // Parse structured data from description field
 const parsedData = computed(() => {
@@ -254,6 +411,86 @@ function formatDate(dateString) {
 // Edit movement
 function editMovement() {
   router.push(`/movements/${route.params.id}/edit`)
+}
+
+// Helper functions for Quick Log
+function getTodayDate() {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+function formatQuickLogName(date) {
+  if (!date) return 'Workout'
+  const d = new Date(date + 'T00:00:00')
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  return `${days[d.getDay()]} Workout`
+}
+
+// Open Quick Log
+function openQuickLog() {
+  if (!movement.value) return
+
+  // Reset and pre-populate quick log data
+  quickLogData.value = {
+    name: formatQuickLogName(getTodayDate()),
+    date: getTodayDate(),
+    movement: {
+      sets: null,
+      reps: null,
+      weight: null,
+      time: null,
+      distance: null,
+      notes: ''
+    }
+  }
+
+  quickLogDialog.value = true
+}
+
+// Close Quick Log
+function closeQuickLog() {
+  quickLogDialog.value = false
+}
+
+// Submit Quick Log
+async function submitQuickLog() {
+  quickLogSubmitting.value = true
+
+  try {
+    const payload = {
+      workout_date: quickLogData.value.date,
+      workout_name: quickLogData.value.name,
+      total_time: null,
+      notes: null,
+      movements: [],
+      wods: []
+    }
+
+    // Add movement performance
+    const m = quickLogData.value.movement
+    if (m.sets || m.reps || m.weight || m.time || m.distance) {
+      payload.movements.push({
+        movement_id: movement.value.id,
+        sets: m.sets || null,
+        reps: m.reps || null,
+        weight: m.weight || null,
+        time_seconds: m.time || null,
+        distance: m.distance || null,
+        notes: m.notes || null
+      })
+    }
+
+    await axios.post('/api/workouts', payload)
+
+    // Close dialog and navigate to dashboard
+    quickLogDialog.value = false
+    router.push('/dashboard')
+  } catch (err) {
+    console.error('Failed to log workout:', err)
+    alert(err.response?.data?.message || 'Failed to log workout')
+  } finally {
+    quickLogSubmitting.value = false
+  }
 }
 
 // Initialize
