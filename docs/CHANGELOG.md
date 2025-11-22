@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3-beta] - 2025-01-22
+
+### Added
+- **Quick Log on Performance Screen**: Complete Quick Log dialog integration on Performance view
+  - Quick Log button now opens dialog directly on Performance screen (no navigation to Dashboard)
+  - Pre-populates with the movement or WOD currently being viewed
+  - User can change selection within dialog if needed
+  - Automatically refreshes performance data after successful submission
+  - Maintains user context and viewing state
+
+### Fixed
+- **Performance Chart Sorting**: Fixed chronological ordering for workouts on the same date
+  - Implemented two-level sorting: primary by `workout_date`, secondary by `created_at` timestamp or `id`
+  - Ensures newest entries appear on the right side of charts (chronological order)
+  - Prevents multiple same-day workouts from appearing in database order
+  - Applied to both movement and WOD performance charts
+
 ## [0.7.2-beta] - 2025-01-22
 
 ### Added
