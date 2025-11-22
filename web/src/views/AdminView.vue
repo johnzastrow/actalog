@@ -33,22 +33,44 @@
             </v-card>
           </v-col>
 
-          <!-- User Management (Placeholder) -->
+          <!-- User Management -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" disabled>
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/users')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#999" size="32" class="mr-3">mdi-account-multiple</v-icon>
+                <v-icon color="#9c27b0" size="32" class="mr-3">mdi-account-multiple</v-icon>
                 <div>
-                  <h3 style="color: #999; font-size: 18px; font-weight: 600">User Management</h3>
-                  <p style="color: #999; font-size: 14px; margin: 0">Manage user accounts</p>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">User Management</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Manage user accounts</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
-              <p style="color: #999; font-size: 13px">
+              <p style="color: #666; font-size: 13px">
                 View, edit, and manage user accounts and permissions.
               </p>
-              <v-chip size="small" color="#999" class="mt-2">
-                Coming Soon
+              <v-chip size="small" color="#9c27b0" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
+          <!-- Database Backups -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/backups')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#ff9800" size="32" class="mr-3">mdi-database-export</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Database Backups</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Create and restore database backups</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                Protect your data with full database backups. Create, download, and restore backups.
+              </p>
+              <v-chip size="small" color="#ff9800" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
               </v-chip>
             </v-card>
           </v-col>

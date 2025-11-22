@@ -1,14 +1,25 @@
 <template>
-  <v-container fluid class="pa-4">
-    <div class="d-flex align-center mb-4">
-      <v-btn icon @click="$router.back()" class="mr-2">
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
-      <div>
-        <h1 class="text-h5">Database Backups</h1>
-        <div class="text-body-2 text-medium-emphasis">Create, download, and restore database backups</div>
-      </div>
+  <div style="background: #f5f7fa; min-height: 100vh; overflow-y: auto">
+    <v-container fluid class="pa-4" style="max-height: calc(100vh - 0px); overflow-y: auto">
+      <div class="d-flex align-center mb-4">
+        <v-btn icon @click="$router.back()" class="mr-2">
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <div>
+          <h1 class="text-h5">Database Backups</h1>
+          <div class="text-body-2 text-medium-emphasis">Create, download, and restore database backups</div>
+        </div>
       <v-spacer />
+      <v-btn
+        color="secondary"
+        prepend-icon="mdi-upload"
+        :loading="uploading"
+        :disabled="uploading || loading"
+        @click="$refs.fileInput.click()"
+        class="mr-2"
+      >
+        Upload Backup
+      </v-btn>
       <v-btn
         color="primary"
         prepend-icon="mdi-database-export"
@@ -19,6 +30,15 @@
         Create Backup
       </v-btn>
     </div>
+
+    <!-- Hidden file input for upload -->
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".zip"
+      style="display: none"
+      @change="handleFileSelect"
+    />
 
     <!-- Loading State -->
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
@@ -232,7 +252,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+    </v-container>
+  </div>
 </template>
 
 <script setup>
@@ -242,6 +263,7 @@ import axios from '@/utils/axios'
 // State
 const loading = ref(false)
 const creating = ref(false)
+const uploading = ref(false)
 const restoring = ref(false)
 const deleting = ref(false)
 const error = ref(null)
@@ -291,6 +313,49 @@ const createBackup = async () => {
     error.value = err.response?.data?.error || 'Failed to create backup'
   } finally {
     creating.value = false
+  }
+}
+
+// Handle file selection for upload
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validate file type
+  if (!file.name.endsWith('.zip')) {
+    error.value = 'Please select a ZIP file'
+    return
+  }
+
+  await uploadBackup(file)
+
+  // Reset file input
+  event.target.value = ''
+}
+
+// Upload backup file
+const uploadBackup = async (file) => {
+  uploading.value = true
+  error.value = null
+  successMessage.value = null
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await axios.post('/api/admin/backups/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    successMessage.value = `Backup uploaded successfully: ${response.data.filename}`
+    await fetchBackups()
+  } catch (err) {
+    console.error('Failed to upload backup:', err)
+    error.value = err.response?.data?.error || 'Failed to upload backup'
+  } finally {
+    uploading.value = false
   }
 }
 

@@ -514,18 +514,24 @@ func (s *UserService) ResendVerificationEmail(email string) error {
 }
 
 // CreateRefreshToken creates a new refresh token for a user
-func (s *UserService) CreateRefreshToken(userID int64, deviceInfo string) (string, error) {
+func (s *UserService) CreateRefreshToken(userID int64, deviceInfo string, rememberMe bool) (string, error) {
 	// Generate secure random token
 	tokenStr, err := generateRefreshToken()
 	if err != nil {
 		return "", fmt.Errorf("failed to generate token: %w", err)
 	}
 
+	// Determine token duration based on rememberMe flag
+	duration := s.refreshTokenDuration // Default: 7 days
+	if rememberMe {
+		duration = 30 * 24 * time.Hour // Extended: 30 days for "Remember Me"
+	}
+
 	// Create refresh token record
 	refreshToken := &domain.RefreshToken{
 		UserID:     userID,
 		Token:      tokenStr,
-		ExpiresAt:  time.Now().Add(s.refreshTokenDuration),
+		ExpiresAt:  time.Now().Add(duration),
 		CreatedAt:  time.Now(),
 		DeviceInfo: deviceInfo,
 	}

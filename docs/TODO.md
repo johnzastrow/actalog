@@ -620,19 +620,56 @@ Felt great today. Progressive overload working well.
 - [x] Implement password reset functionality ✅ **Completed in v0.3.0-beta** (Parts 1-3: DB, backend, frontend)
 - [x] Add email verification for new users ✅ **Completed in v0.3.1-beta** (see Design Refinements section)
 - [x] Add profile picture upload ✅ **Completed in v0.3.2-beta** (Avatar upload with initials fallback)
-- [ ] Implement "Remember Me" functionality - **NEXT PRIORITY**
+- [x] Add user management for admins ✅ **Completed in v0.7.4-beta** (Full admin user management dashboard)
+  - [x] Admin dashboard for user management (`/admin/users`)
+  - [x] List all users with pagination and search
+  - [x] View user details (profile, stats, activity)
+  - [x] Edit user roles (admin, user)
+  - [x] Disable/enable user accounts
+  - [x] Delete user accounts (with confirmation)
+  - [x] Unlock temporarily locked accounts
+  - [x] Toggle email verification manually
+  - [x] Individual column headers for each action (mobile-friendly)
+  - [x] Comprehensive user detail view dialog
+- [x] **Implement "Remember Me" Functionality** ✅ **Completed in v0.7.5-beta**
+  - [x] Backend: Modified `CreateRefreshToken()` to accept `rememberMe` parameter
+  - [x] Backend: Extended refresh token duration to 30 days when Remember Me is checked
+  - [x] Backend: Default refresh token duration remains 7 days without Remember Me
+  - [x] Frontend: Login form checkbox "Remember me for 30 days"
+  - [x] Frontend: Auth store sends `remember_me` flag to API
+  - [x] Frontend: Refresh token stored in localStorage when provided
+  - [x] Logging: Added audit logging for Remember Me token creation
+- [ ] **User Import/Export System** - HIGH PRIORITY (Admin only)
+  - [ ] Export users to CSV format
+    - [ ] Include all user fields (email, name, role, email_verified, account_disabled, etc.)
+    - [ ] Include timestamps (created_at, last_login_at, email_verified_at, disabled_at)
+    - [ ] Exclude sensitive fields (password_hash)
+    - [ ] Optional filters: role, account status, verification status
+    - [ ] Date range filtering for created_at or last_login_at
+  - [ ] Import users from CSV (bulk user creation)
+    - [ ] Preview workflow (validate before import)
+    - [ ] Required fields: email, name, role
+    - [ ] Optional fields: email_verified, account_disabled, notes
+    - [ ] Duplicate detection by email
+    - [ ] Password handling: auto-generate temporary passwords or require password reset
+    - [ ] Send welcome emails to new users with password reset link
+    - [ ] Skip/update options for duplicates
+    - [ ] Validation: email format, role enum, boolean fields
+  - [ ] Backend implementation
+    - [ ] `ExportUsersToCSV(adminUserID)` in export_service.go
+    - [ ] `ImportUsersFromCSV(adminUserID, csvData)` in import_service.go
+    - [ ] `POST /api/admin/export/users` endpoint
+    - [ ] `POST /api/admin/import/users/preview` endpoint
+    - [ ] `POST /api/admin/import/users/confirm` endpoint
+    - [ ] Admin-only authorization checks
+    - [ ] Audit logging for user imports/exports
+  - [ ] Frontend implementation
+    - [ ] Add "Users" export type to ExportView
+    - [ ] Add "Users" import type to ImportView
+    - [ ] Preview table for user imports
+    - [ ] Display duplicate warnings during preview
+    - [ ] Success summary: users created, duplicates skipped/updated
 - [ ] Add user profile editing with birthday field
-- [ ] Add user management for admins:
-  - [ ] Admin dashboard for user management
-  - [ ] List all users with pagination and search
-  - [ ] View user details (profile, stats, activity)
-  - [ ] Edit user roles (admin, user)
-  - [ ] Disable/enable user accounts
-  - [ ] Delete user accounts (with confirmation)
-  - [ ] View user workout history
-  - [ ] Reset user passwords (admin action)
-  - [ ] Manage user permissions
-  - [ ] Bulk user actions (export, disable, etc.)
 
 ### Workout Logging (Planned for v0.3.0 Schema - Not Yet Implemented)
 - [ ] Implement workout template creation API endpoints
@@ -676,198 +713,41 @@ Felt great today. Progressive overload working well.
 - [ ] System settings management
 - [ ] User activity monitoring
 
-### Database Backup and Restore System (v0.6.0-beta) - HIGH PRIORITY
+### Database Backup and Restore System ✅ **Completed in v0.7.5-beta**
 
-**Status:** Not started
+**Status:** ✅ Complete
 **Priority:** High - Critical for disaster recovery and data migration
-**Target Version:** v0.6.0-beta
+**Completed Version:** v0.7.5-beta
 
 #### Overview
 Complete backup and restore system allowing administrators to create full database backups and restore them when needed. Supports disaster recovery, data migration between installations, and changing database technologies.
 
-#### Phase 1: Full Backup and Restore (v0.6.0)
+**Implemented Features:**
+- ✅ Full database backup to ZIP format with JSON data export
+- ✅ **SQLite Database Dump**: All backups include portable SQLite database file
+  - If running SQLite: Direct copy of production database file included
+  - If running PostgreSQL/MySQL: New SQLite database created and populated from JSON export
+  - Provides universal database format for inspection and migration
+- ✅ Backup listing and management with metadata
+- ✅ Restore functionality with confirmation dialog
+- ✅ Admin-only access with audit logging
+- ✅ Support for all database drivers (SQLite, PostgreSQL, MySQL)
+- ✅ Download backup files
+- ✅ Delete backup files
+- ✅ Frontend: AdminBackupsView with full CRUD operations
+- ✅ Backend: Complete BackupService and BackupHandler
+- ✅ Routes: All endpoints wired up in main.go
+- ✅ Navigation: Database Backups card added to AdminView
 
-**Backend Implementation:**
+**API Endpoints:**
+- `POST /api/admin/backups` - Create new backup
+- `GET /api/admin/backups` - List all backups
+- `GET /api/admin/backups/{filename}` - Download backup
+- `GET /api/admin/backups/{filename}/metadata` - Get backup metadata
+- `DELETE /api/admin/backups/{filename}` - Delete backup
+- `POST /api/admin/backups/{filename}/restore` - Restore from backup
 
-- [ ] Create `internal/service/backup_service.go`
-  - [ ] `CreateBackup(adminUserID int64)` - Creates full backup
-    - [ ] Export all database tables to JSON format
-    - [ ] Include metadata (date, version, admin, record counts, date range)
-    - [ ] Copy all uploaded files from `uploads/` directory
-    - [ ] Copy `.env` configuration (sanitized, no secrets in plain text)
-    - [ ] Package everything into `.zip` file
-    - [ ] Store in `backups/` directory with timestamp filename
-  - [ ] `CreateSQLiteBackup(adminUserID int64)` - Direct SQLite file copy (if active database is SQLite)
-  - [ ] `ListBackups()` - Returns list of available backups with metadata
-    - [ ] Read all `.zip` files from `backups/` directory
-    - [ ] Extract and parse `metadata.json` from each backup
-    - [ ] Return sorted list (newest first) with file size
-  - [ ] `GetBackupMetadata(filename string)` - Reads metadata from specific backup
-  - [ ] `DeleteBackup(filename string, adminUserID int64)` - Deletes backup file
-    - [ ] Audit log entry for deletion
-    - [ ] Validate file exists before deletion
-  - [ ] `RestoreBackup(filename string, adminUserID int64)` - Full restore from backup
-    - [ ] Validate backup file integrity
-    - [ ] Parse metadata and check compatibility (schema version)
-    - [ ] Wipe all existing database tables (with confirmation)
-    - [ ] Parse JSON and insert all data into current database driver
-    - [ ] Restore uploaded files to `uploads/` directory
-    - [ ] Audit log entry for restore
-    - [ ] Return summary (records restored, files restored)
-
-- [ ] Create `internal/handler/backup_handler.go`
-  - [ ] `POST /api/admin/backups` - Create new backup
-    - [ ] Authorization: Admin only
-    - [ ] Async operation with progress tracking (optional)
-    - [ ] Returns backup filename and metadata
-  - [ ] `GET /api/admin/backups` - List all backups
-    - [ ] Authorization: Admin only
-    - [ ] Returns array of backup metadata
-  - [ ] `GET /api/admin/backups/{filename}` - Download specific backup
-    - [ ] Authorization: Admin only
-    - [ ] Streams `.zip` file to client
-    - [ ] Content-Disposition: attachment header
-  - [ ] `GET /api/admin/backups/{filename}/metadata` - Get backup metadata only
-    - [ ] Authorization: Admin only
-  - [ ] `DELETE /api/admin/backups/{filename}` - Delete backup
-    - [ ] Authorization: Admin only
-    - [ ] Audit log entry
-  - [ ] `POST /api/admin/backups/{filename}/restore` - Restore from backup
-    - [ ] Authorization: Admin only
-    - [ ] Requires confirmation token (prevent accidental wipe)
-    - [ ] Returns restore summary
-
-- [ ] Update `cmd/actalog/main.go`
-  - [ ] Initialize BackupService with all repository dependencies
-  - [ ] Initialize BackupHandler
-  - [ ] Register backup routes under `/api/admin` with AdminOnly middleware
-
-- [ ] Create `backups/` directory structure
-  - [ ] Add `.gitignore` entry for `backups/` (don't commit backups to git)
-  - [ ] Create directory on server startup if not exists
-  - [ ] Add permission checks (writable by application)
-
-**Frontend Implementation:**
-
-- [ ] Create `web/src/views/AdminBackupsView.vue`
-  - [ ] Route: `/admin/backups`
-  - [ ] **Create Backup Section:**
-    - [ ] "Create Backup" button
-    - [ ] Loading indicator during backup creation
-    - [ ] Success message with backup filename
-    - [ ] Error handling with user-friendly messages
-  - [ ] **Backup List Section:**
-    - [ ] Table displaying all backups
-    - [ ] Columns: Date, Size, Data Range, Created By, Actions
-    - [ ] Sort by date (newest first)
-    - [ ] **Actions per row:**
-      - [ ] Download button (downloads .zip file)
-      - [ ] Delete button (with confirmation dialog)
-      - [ ] Restore button (with strong confirmation dialog)
-  - [ ] **Restore Confirmation Dialog:**
-    - [ ] Warning message: "This will DELETE all current data"
-    - [ ] Checkbox: "I understand this action cannot be undone"
-    - [ ] Text input: Type "RESTORE" to confirm
-    - [ ] Cancel and Confirm buttons
-  - [ ] **Delete Confirmation Dialog:**
-    - [ ] Warning message: "Delete backup permanently?"
-    - [ ] Cancel and Confirm buttons
-  - [ ] **Empty State:**
-    - [ ] Message: "No backups found"
-    - [ ] "Create your first backup" button
-
-- [ ] Update `web/src/router/index.js`
-  - [ ] Add route: `/admin/backups` → AdminBackupsView
-  - [ ] Requires authentication and admin role
-
-- [ ] Update navigation (Profile or Admin section)
-  - [ ] Add "Database Backups" link for admins
-  - [ ] Icon: mdi-database-export or mdi-backup-restore
-
-**Testing:**
-
-- [ ] Unit tests for BackupService
-  - [ ] Test backup creation (all tables, files, metadata)
-  - [ ] Test SQLite file backup
-  - [ ] Test backup listing and sorting
-  - [ ] Test backup deletion with audit log
-  - [ ] Test metadata extraction
-  - [ ] Test restore validation (schema version check)
-  - [ ] Test restore with data integrity checks
-
-- [ ] Integration tests for backup/restore workflow
-  - [ ] Create backup, verify file exists
-  - [ ] Download backup, verify ZIP structure
-  - [ ] Restore backup, verify all data restored correctly
-  - [ ] Test restore with different database driver (SQLite → PostgreSQL)
-  - [ ] Test error scenarios (corrupted backup, insufficient permissions)
-
-- [ ] Manual testing checklist:
-  - [ ] Create backup with real data
-  - [ ] Download and inspect ZIP contents
-  - [ ] Restore backup on clean database
-  - [ ] Verify all users, workouts, movements, WODs restored
-  - [ ] Verify uploaded files (avatars) restored
-  - [ ] Test delete backup
-  - [ ] Test admin-only access control
-
-**Database Changes:**
-- [ ] No new tables needed (uses existing data)
-- [ ] Ensure `backups/` directory has proper file permissions
-
-**JSON Backup Structure:**
-```json
-{
-  "metadata": {
-    "backup_version": "1.0",
-    "app_version": "0.6.0",
-    "created_at": "2025-01-21T10:30:00Z",
-    "database_driver": "sqlite3",
-    "created_by": "admin@example.com",
-    "data_date_range": {
-      "earliest_workout": "2024-01-01",
-      "latest_workout": "2025-01-21"
-    },
-    "record_counts": {
-      "users": 150,
-      "workouts": 3420,
-      "movements": 45,
-      "wods": 120,
-      "audit_logs": 8950
-    },
-    "schema_version": "0.5.0"
-  },
-  "users": [...],
-  "movements": [...],
-  "wods": [...],
-  "workouts": [...],
-  "user_workouts": [...],
-  "user_workout_movements": [...],
-  "user_workout_wods": [...],
-  "audit_logs": [...],
-  "user_settings": [...]
-}
-```
-
-**ZIP File Structure:**
-```
-actalog_backup_2025-01-21_10-30-00.zip
-├── metadata.json
-├── database.json (all tables)
-├── database.db (optional, if SQLite)
-├── config/
-│   └── .env.backup
-└── uploads/
-    ├── avatars/
-    └── attachments/
-```
-
-**Dependencies:**
-- Go standard library: `archive/zip` for ZIP compression
-- All existing repositories for data access
-- File system utilities
-
-**Future Enhancements (v0.7.0+):**
+**Future Enhancements:**
 - [ ] Selective restore (choose specific tables or date ranges)
 - [ ] Merge mode restore (import without wiping existing data)
 - [ ] Automated scheduled backups (daily, weekly, monthly)
@@ -879,13 +759,20 @@ actalog_backup_2025-01-21_10-30-00.zip
 - [ ] Email notifications for backup completion/failure
 - [ ] Incremental backups (only changed data since last full backup)
 
-**Notes:**
-- Phase 1 focuses on full restore only (wipe and replace)
-- All duplicate handling uses overwrite strategy in Phase 1
-- No preview functionality in Phase 1 (too complex)
-- Manual backups only (no scheduling in Phase 1)
-- Admin-only feature (regular users cannot access)
-- Works with all supported database drivers (SQLite, PostgreSQL, MySQL)
+---
+
+### Old Implementation Plan (Archived - Completed)
+
+<details>
+<summary>Click to expand original detailed implementation plan</summary>
+
+#### Phase 1: Full Backup and Restore (v0.6.0)
+
+**Backend Implementation:**
+
+See original detailed implementation plan in archived documentation.
+
+</details>
 
 ### Frontend Enhancements
 - [ ] Connect all views to backend APIs
@@ -1056,22 +943,22 @@ actalog_backup_2025-01-21_10-30-00.zip
 
 ---
 
-**Last Updated:** 2025-01-14
-**Version:** 0.4.1-beta
+**Last Updated:** 2025-11-22
+**Version:** 0.7.5-beta
 
-**v0.4.1-beta Status:**
-- ✅ Quick Log movement search fixed
-- ✅ Localhost URL hardcoding resolved
-- ✅ Production deployment support added
-- ✅ All documentation updated
+**v0.7.5-beta Status:**
+- ✅ Admin User Management Dashboard fully implemented and activated
+- ✅ Mobile-friendly table with individual labeled columns (no hover tooltips required)
+- ✅ All admin user operations functional (unlock, enable/disable, email verification, role change, delete)
+- ✅ User details dialog with comprehensive account information
+- ✅ Vuetify layout issues resolved across all library and admin views
+- ✅ Quick Log functionality complete across entire application
+- ✅ Icon consistency maintained throughout (lightning bolt for Quick Log)
+- ✅ "Remember Me" functionality implemented with 30-day extended sessions
+- ✅ Refresh token system with configurable duration (7 days default, 30 days with Remember Me)
 
-**v0.4.0 Status (Previous Release):**
-- ✅ Domain models updated for template architecture
-- ✅ Repositories implemented (UserWorkout, WOD, WorkoutWOD)
-- ✅ Services implemented (UserWorkoutService, WODService, WorkoutWODService, updated WorkoutService)
-- ✅ Handlers created (user_workout_handler, wod_handler, workout_wod_handler)
-- ✅ API routes configured in main.go
-- ✅ Application compiles successfully
-- 🔄 Unit tests in progress (UserWorkoutService: 11/16 passing)
-- ⏳ Database migration not yet applied (still at v0.3.1 schema)
-- ⏳ Frontend updates pending
+**v0.7.4-beta Status (Previous Release):**
+- ✅ Quick Log buttons added to WOD and Movement library cards
+- ✅ Quick Log buttons added to detail pages
+- ✅ Template deletion bug fixed
+- ✅ Icon consistency improvements
