@@ -487,6 +487,100 @@ curl -X POST http://localhost:8080/api/workouts/retroactive-flag-prs \
 - Initial PR flagging for existing users migrating to new system
 - Batch processing for multiple users via script modification
 
+### Wodify Performance Import (v0.7.0-beta)
+
+**Location:** `internal/domain/wodify_import.go`, `internal/service/wodify_parser.go`, `internal/service/wodify_import_service.go`, `internal/handler/wodify_import_handler.go`
+
+Complete system to import workout history from Wodify Performance CSV exports:
+- **Preview Import:** `POST /api/import/wodify/preview` - Analyzes CSV and shows what will be imported
+- **Confirm Import:** `POST /api/import/wodify/confirm` - Executes the import with auto-entity creation
+- **Frontend Integration:** Import page with Wodify-specific preview showing workout summaries
+
+**Key Implementation Details:**
+- **CSV Parser:** Handles 19-column Wodify performance export format with multi-line field support
+- **Result String Parsing:** Regex-based parser for 9 different result types (Weight, Time, AMRAP variations, Calories, Distance, etc.)
+  - `"3 x 10 @ 85 lbs"` → sets: 3, reps: 10, weight: 85
+  - `"7 + 3"` → rounds: 7, reps: 3 (AMRAP)
+  - `"5:30"` → time_seconds: 330
+- **Date Grouping:** Groups performances by date to create cohesive UserWorkout entries
+- **Auto-Entity Creation:** Automatically creates movements and WODs if they don't exist in database
+- **PR Preservation:** Maintains "Is Personal Record" flags from Wodify export
+- **Preview System:** Shows total rows, unique workout dates, new entities to be created, and workout summaries
+
+**Result Type Parsing:**
+- `Weight` - Parses weightlifting results like "3 x 10 @ 85 lbs"
+- `Time` - Parses time results like "5:30" (MM:SS) or "1:05:30" (HH:MM:SS)
+- `AMRAP - Rounds and Reps` - Parses "7 + 3" format
+- `AMRAP - Reps` - Parses "50 Reps"
+- `AMRAP - Rounds` - Parses "5 Rounds"
+- `Max reps` - Parses "3 x 8" (sets x reps)
+- `Calories` - Parses "133 Calories"
+- `Distance` - Parses "500 m"
+- `Each Round` - Parses "175 Total Reps"
+
+**Frontend Integration:**
+- `web/src/views/ImportView.vue` - Added "Wodify Performance" import type
+- **Wodify-Specific Preview:**
+  - Summary stats: total rows, valid rows, workout dates, entities to create
+  - New Entities card: chips showing movements and WODs to be auto-created
+  - Workout Summary table: shows date, movement count, WOD count, component types, PR flags
+- **Success Message:** Displays workouts created, performances, movements/WODs auto-created, PRs flagged
+
+**Domain Models:**
+```go
+type WodifyPerformanceRow struct {
+  Date                  string // MM/DD/YYYY
+  ComponentType         string // "Weightlifting", "Metcon", "Gymnastics"
+  ComponentName         string
+  PerformanceResultType string // "Weight", "Time", "AMRAP - Rounds and Reps", etc.
+  FullyFormattedResult  string
+  IsPersonalRecord      bool
+  Comment               string
+  // ... 12 more fields
+}
+
+type WodifyImportPreview struct {
+  TotalRows             int
+  ValidRows             int
+  UniqueWorkoutDates    int
+  MovementsToCreate     int
+  WODsToCreate          int
+  UserWorkoutsToCreate  int
+  PerformancesToCreate  int
+  WorkoutSummary        []WodifyWorkoutSummary
+  NewMovements          []string
+  NewWODs               []string
+}
+
+type WodifyImportResult struct {
+  WorkoutsCreated     int
+  MovementsCreated    int
+  WODsCreated         int
+  PerformancesCreated int
+  PRsFlagged          int
+}
+```
+
+**Usage Example:**
+```bash
+# Preview Wodify CSV import
+curl -X POST http://localhost:8080/api/import/wodify/preview \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@Performance_fromWodify.csv"
+
+# Confirm import
+curl -X POST http://localhost:8080/api/import/wodify/confirm \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@Performance_fromWodify.csv"
+```
+
+**Real-World Test Results:**
+- Successfully imported 293 performance entries from 6+ years of data (2018-2025)
+- Created 189 user workouts (grouped by date)
+- Auto-created 37 new movements and 28 new WODs
+- Automatically flagged 62 PRs from Wodify data
+- 1 invalid row handled gracefully (missing component type/name)
+
 ### Password Reset System (v0.3.0-beta)
 
 **Location:** `internal/repository/password_reset_repository.go`, `internal/service/user_service.go`, `internal/handler/auth_handler.go`, `web/src/views/ForgotPasswordView.vue`, `web/src/views/ResetPasswordView.vue`

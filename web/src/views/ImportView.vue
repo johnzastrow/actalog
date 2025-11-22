@@ -11,7 +11,14 @@
       <!-- Success Alert -->
       <v-alert v-if="importResult" type="success" closable @click:close="resetImport" class="mb-3">
         <strong>Import Complete!</strong><br>
-        <span v-if="selectedEntity === 'user_workouts'">
+        <span v-if="selectedEntity === 'wodify'">
+          Workouts Created: {{ importResult.workouts_created }} |
+          Performances: {{ importResult.performances_created }} |
+          Movements Created: {{ importResult.movements_created }} |
+          WODs Created: {{ importResult.wods_created }} |
+          PRs Flagged: {{ importResult.prs_flagged || 0 }}
+        </span>
+        <span v-else-if="selectedEntity === 'user_workouts'">
           Workouts Created: {{ importResult.created_count }} |
           Movements Auto-Created: {{ importResult.movements_created || 0 }} |
           WODs Auto-Created: {{ importResult.wods_created || 0 }}
@@ -41,6 +48,7 @@
           <v-btn value="wods" prepend-icon="mdi-fire">WODs</v-btn>
           <v-btn value="movements" prepend-icon="mdi-dumbbell">Movements</v-btn>
           <v-btn value="user_workouts" prepend-icon="mdi-clipboard-text">User Workouts</v-btn>
+          <v-btn value="wodify" prepend-icon="mdi-file-chart">Wodify Performance</v-btn>
         </v-btn-toggle>
 
         <v-alert type="info" density="compact" class="text-caption">
@@ -51,6 +59,10 @@
           <template v-else-if="selectedEntity === 'movements'">
             <strong>Movements CSV Format:</strong><br>
             name, type, description, is_standard, created_by_email
+          </template>
+          <template v-else-if="selectedEntity === 'wodify'">
+            <strong>Wodify Performance Export CSV:</strong><br>
+            Export your performance data from Wodify. The import will automatically group performances by date and create workouts, movements, and WODs as needed.
           </template>
           <template v-else>
             <strong>User Workouts JSON Format:</strong><br>
@@ -114,7 +126,60 @@
         <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
           <h2 class="text-h6 font-weight-bold mb-3" style="color: #1a1a1a">3. Preview Results</h2>
 
-          <v-row dense>
+          <!-- Wodify Import Stats -->
+          <v-row v-if="isWodifyImport" dense>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">Total Rows</p>
+                <p class="text-h6 font-weight-bold" style="color: #1a1a1a">
+                  {{ previewResult.total_rows }}
+                </p>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">Valid Rows</p>
+                <p class="text-h6 font-weight-bold" style="color: #4caf50">
+                  {{ previewResult.valid_rows }}
+                </p>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">Workout Dates</p>
+                <p class="text-h6 font-weight-bold" style="color: #00bcd4">
+                  {{ previewResult.unique_workout_dates }}
+                </p>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">Workouts to Create</p>
+                <p class="text-h6 font-weight-bold" style="color: #00bcd4">
+                  {{ previewResult.user_workouts_to_create }}
+                </p>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">New Movements</p>
+                <p class="text-h6 font-weight-bold" style="color: #ff9800">
+                  {{ previewResult.movements_to_create }}
+                </p>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="stat-box">
+                <p class="text-caption" style="color: #666">New WODs</p>
+                <p class="text-h6 font-weight-bold" style="color: #ff9800">
+                  {{ previewResult.wods_to_create }}
+                </p>
+              </div>
+            </v-col>
+          </v-row>
+
+          <!-- Standard Import Stats -->
+          <v-row v-else dense>
             <v-col cols="6">
               <div class="stat-box">
                 <p class="text-caption" style="color: #666">
@@ -157,7 +222,7 @@
         </v-card>
 
         <!-- Import Options -->
-        <v-card v-if="selectedEntity !== 'user_workouts'" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+        <v-card v-if="selectedEntity !== 'user_workouts' && selectedEntity !== 'wodify'" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
           <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Import Options</h3>
 
           <v-radio-group v-model="duplicateHandling" density="compact">
@@ -196,8 +261,55 @@
           </v-alert>
         </v-card>
 
-        <!-- Preview Table -->
-        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
+        <!-- Wodify New Entities -->
+        <v-card v-if="isWodifyImport && (previewResult.new_movements?.length > 0 || previewResult.new_wods?.length > 0)" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">New Entities to Create</h3>
+
+          <div v-if="previewResult.new_movements?.length > 0" class="mb-3">
+            <p class="text-caption font-weight-bold mb-2" style="color: #666">Movements ({{ previewResult.new_movements.length }})</p>
+            <v-chip v-for="(movement, idx) in previewResult.new_movements" :key="'movement-' + idx" size="small" class="ma-1" color="#00bcd4">
+              {{ movement }}
+            </v-chip>
+          </div>
+
+          <div v-if="previewResult.new_wods?.length > 0">
+            <p class="text-caption font-weight-bold mb-2" style="color: #666">WODs ({{ previewResult.new_wods.length }})</p>
+            <v-chip v-for="(wod, idx) in previewResult.new_wods" :key="'wod-' + idx" size="small" class="ma-1" color="#ff9800">
+              {{ wod }}
+            </v-chip>
+          </div>
+        </v-card>
+
+        <!-- Wodify Workout Summary -->
+        <v-card v-if="isWodifyImport && previewResult.workout_summary?.length > 0" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
+          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Workout Summary</h3>
+
+          <v-data-table
+            :headers="[
+              { title: 'Date', key: 'date' },
+              { title: 'Movements', key: 'movement_count' },
+              { title: 'WODs', key: 'wod_count' },
+              { title: 'Component Types', key: 'component_types' },
+              { title: 'Has PRs', key: 'has_prs' }
+            ]"
+            :items="previewResult.workout_summary"
+            density="compact"
+            class="preview-table"
+            :items-per-page="10"
+          >
+            <template #item.has_prs="{ item }">
+              <v-icon v-if="item.has_prs" color="gold" size="small">mdi-trophy</v-icon>
+              <span v-else class="text-caption" style="color: #999">—</span>
+            </template>
+          </v-data-table>
+
+          <p v-if="previewResult.workout_summary.length > 10" class="text-caption text-center mt-2" style="color: #999">
+            Showing first 10 workouts of {{ previewResult.workout_summary.length }}
+          </p>
+        </v-card>
+
+        <!-- Standard Preview Table -->
+        <v-card v-if="!isWodifyImport" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
           <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Data Preview</h3>
 
           <v-data-table
@@ -325,6 +437,10 @@ const fileTypeLabel = computed(() => {
   return selectedEntity.value === 'user_workouts' ? 'JSON' : 'CSV'
 })
 
+const isWodifyImport = computed(() => {
+  return selectedEntity.value === 'wodify'
+})
+
 const previewData = computed(() => {
   if (!previewResult.value) return []
 
@@ -397,6 +513,8 @@ const previewImport = async () => {
       endpoint = '/api/import/wods/preview'
     } else if (selectedEntity.value === 'movements') {
       endpoint = '/api/import/movements/preview'
+    } else if (selectedEntity.value === 'wodify') {
+      endpoint = '/api/import/wodify/preview'
     } else {
       endpoint = '/api/import/user-workouts/preview'
     }
@@ -433,6 +551,8 @@ const confirmImport = async () => {
       endpoint = '/api/import/movements/confirm'
       formData.append('skip_duplicates', duplicateHandling.value === 'skip')
       formData.append('update_duplicates', duplicateHandling.value === 'update')
+    } else if (selectedEntity.value === 'wodify') {
+      endpoint = '/api/import/wodify/confirm'
     } else {
       endpoint = '/api/import/user-workouts/confirm'
       formData.append('skip_duplicates', skipDuplicates.value)
