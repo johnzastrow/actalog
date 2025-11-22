@@ -33,7 +33,7 @@
           <div v-for="pr in group" :key="pr.id" class="mb-1 pa-1" style="border-left: 3px solid #ffc107; padding-left: 8px">
             <div class="d-flex justify-space-between align-center">
               <div>
-                <span class="text-caption" style="color: #666">{{ formatDate(pr.created_at) }}</span>
+                <span class="text-caption" style="color: #666">{{ formatDate(pr.workout_date) }}</span>
               </div>
               <div class="text-body-2 font-weight-medium" style="color: #2c3e50">
                 {{ formatPerformance(pr) }}
@@ -56,7 +56,7 @@
           <div v-for="pr in group" :key="pr.id" class="mb-1 pa-1" style="border-left: 3px solid #ffc107; padding-left: 8px">
             <div class="d-flex justify-space-between align-center">
               <div>
-                <span class="text-caption" style="color: #666">{{ formatDate(pr.created_at) }}</span>
+                <span class="text-caption" style="color: #666">{{ formatDate(pr.workout_date) }}</span>
               </div>
               <div class="text-body-2 font-weight-medium" style="color: #2c3e50">
                 {{ formatWODPerformance(pr) }}
@@ -150,11 +150,11 @@ const groupedWODPRs = computed(() => {
   return groups
 })
 
-// Format date (e.g., "Fri, Oct 10")
+// Format date (e.g., "Fri, Oct 10, 2024")
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 // Format movement performance (e.g., "2 x 1 @ 175 lbs")

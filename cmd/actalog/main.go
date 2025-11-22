@@ -372,6 +372,7 @@ func main() {
 				// Backup routes (admin only)
 				r.Post("/backups", backupHandler.CreateBackup)
 				r.Get("/backups", backupHandler.ListBackups)
+				r.Post("/backups/upload", backupHandler.UploadBackup)
 				r.Get("/backups/{filename}", backupHandler.DownloadBackup)
 				r.Get("/backups/{filename}/metadata", backupHandler.GetBackupMetadata)
 				r.Delete("/backups/{filename}", backupHandler.DeleteBackup)

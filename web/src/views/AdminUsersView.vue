@@ -1,14 +1,15 @@
 <template>
-  <v-container fluid class="pa-4">
-    <div class="d-flex align-center mb-4">
-      <v-btn icon @click="$router.back()" class="mr-2">
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
-      <div>
-        <h1 class="text-h5">User Management</h1>
-        <div class="text-body-2 text-medium-emphasis">Manage user accounts and permissions</div>
+  <div style="background: #f5f7fa; min-height: 100vh; overflow-y: auto">
+    <v-container fluid class="pa-4" style="max-height: calc(100vh - 0px); overflow-y: auto">
+      <div class="d-flex align-center mb-4">
+        <v-btn icon @click="$router.back()" class="mr-2">
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <div>
+          <h1 class="text-h5">User Management</h1>
+          <div class="text-body-2 text-medium-emphasis">Manage user accounts and permissions</div>
+        </div>
       </div>
-    </div>
 
     <!-- Loading State -->
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
@@ -111,132 +112,85 @@
           <span v-else class="text-body-2 text-medium-emphasis">Never</span>
         </template>
 
-        <!-- Actions Column -->
-        <template #item.actions="{ item }">
-          <div class="d-flex gap-1">
-            <!-- View Details Button -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  @click="viewUserDetails(item)"
-                >
-                  <v-icon color="primary">mdi-information-outline</v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">View User Details</div>
-                <div class="text-caption">See all account information, flags, and timestamps</div>
-              </div>
-            </v-tooltip>
+        <!-- Details Column -->
+        <template #item.details="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="viewUserDetails(item)"
+          >
+            <v-icon color="primary">mdi-information-outline</v-icon>
+          </v-btn>
+        </template>
 
-            <!-- Unlock Button -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  :disabled="!isLocked(item)"
-                  @click="unlockUser(item)"
-                >
-                  <v-icon :color="isLocked(item) ? 'error' : 'success'">
-                    {{ isLocked(item) ? 'mdi-lock' : 'mdi-lock-open' }}
-                  </v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">{{ isLocked(item) ? 'Click to Unlock' : 'Not Locked' }}</div>
-                <div class="text-caption">Current: {{ isLocked(item) ? 'LOCKED' : 'UNLOCKED' }} - {{ isLocked(item) ? 'Remove automatic login lockout' : 'No action needed' }}</div>
-              </div>
-            </v-tooltip>
+        <!-- Lock Column -->
+        <template #item.lock="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            :disabled="!isLocked(item)"
+            @click="unlockUser(item)"
+          >
+            <v-icon :color="isLocked(item) ? 'error' : 'success'">
+              {{ isLocked(item) ? 'mdi-lock' : 'mdi-lock-open' }}
+            </v-icon>
+          </v-btn>
+        </template>
 
-            <!-- Enable/Disable Button -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  @click="item.account_disabled ? enableUser(item) : disableUser(item)"
-                >
-                  <v-icon :color="item.account_disabled ? 'error' : 'success'">
-                    {{ item.account_disabled ? 'mdi-account-off' : 'mdi-account-check' }}
-                  </v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">Click to {{ item.account_disabled ? 'Enable' : 'Disable' }} Account</div>
-                <div class="text-caption">Current: {{ item.account_disabled ? 'DISABLED' : 'ENABLED' }} - {{ item.account_disabled ? 'Re-activate this user account' : 'Permanently disable this user account' }}</div>
-              </div>
-            </v-tooltip>
+        <!-- Enable/Disable Column -->
+        <template #item.enable="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="item.account_disabled ? enableUser(item) : disableUser(item)"
+          >
+            <v-icon :color="item.account_disabled ? 'error' : 'success'">
+              {{ item.account_disabled ? 'mdi-account-off' : 'mdi-account-check' }}
+            </v-icon>
+          </v-btn>
+        </template>
 
-            <!-- Toggle Email Verification -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  @click="toggleEmailVerification(item)"
-                >
-                  <v-icon :color="item.email_verified ? 'success' : 'error'">
-                    {{ item.email_verified ? 'mdi-email-check-outline' : 'mdi-email-remove-outline' }}
-                  </v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">Click to {{ item.email_verified ? 'Unverify' : 'Verify' }} Email</div>
-                <div class="text-caption">Current: {{ item.email_verified ? 'VERIFIED' : 'NOT VERIFIED' }} - {{ item.email_verified ? 'Remove email verification status' : 'Manually verify user email address' }}</div>
-              </div>
-            </v-tooltip>
+        <!-- Email Verification Column -->
+        <template #item.email_verify="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="toggleEmailVerification(item)"
+          >
+            <v-icon :color="item.email_verified ? 'success' : 'error'">
+              {{ item.email_verified ? 'mdi-email-check-outline' : 'mdi-email-remove-outline' }}
+            </v-icon>
+          </v-btn>
+        </template>
 
-            <!-- Change Role Button -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  @click="openRoleDialog(item)"
-                >
-                  <v-icon :color="item.role === 'admin' ? 'purple' : 'blue'">
-                    {{ item.role === 'admin' ? 'mdi-shield-crown' : 'mdi-account' }}
-                  </v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">Change Role (Currently: {{ item.role === 'admin' ? 'Admin' : 'User' }})</div>
-                <div class="text-caption">Switch between User and Admin permissions</div>
-              </div>
-            </v-tooltip>
+        <!-- Change Role Column -->
+        <template #item.change_role="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="openRoleDialog(item)"
+          >
+            <v-icon :color="item.role === 'admin' ? 'purple' : 'blue'">
+              {{ item.role === 'admin' ? 'mdi-shield-crown' : 'mdi-account' }}
+            </v-icon>
+          </v-btn>
+        </template>
 
-            <!-- Delete User Button -->
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon
-                  size="small"
-                  variant="text"
-                  @click="openDeleteDialog(item)"
-                >
-                  <v-icon color="error">mdi-delete</v-icon>
-                </v-btn>
-              </template>
-              <div class="text-center">
-                <div class="font-weight-bold">Delete User</div>
-                <div class="text-caption">Permanently remove this user account</div>
-              </div>
-            </v-tooltip>
-          </div>
+        <!-- Delete Column -->
+        <template #item.delete="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="openDeleteDialog(item)"
+          >
+            <v-icon color="error">mdi-delete</v-icon>
+          </v-btn>
         </template>
       </v-data-table>
 
@@ -458,7 +412,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+    </v-container>
+  </div>
 </template>
 
 <script setup>
@@ -489,7 +444,12 @@ const headers = [
   { title: 'Role', value: 'role', sortable: false },
   { title: 'Status', value: 'status', sortable: false },
   { title: 'Last Login', value: 'last_login_at', sortable: false },
-  { title: 'Actions', value: 'actions', sortable: false, align: 'end' }
+  { title: 'Details', value: 'details', sortable: false, align: 'center', width: '80px' },
+  { title: 'Lock', value: 'lock', sortable: false, align: 'center', width: '80px' },
+  { title: 'Enable', value: 'enable', sortable: false, align: 'center', width: '80px' },
+  { title: 'Email', value: 'email_verify', sortable: false, align: 'center', width: '80px' },
+  { title: 'Change Role', value: 'change_role', sortable: false, align: 'center', width: '100px' },
+  { title: 'Delete', value: 'delete', sortable: false, align: 'center', width: '80px' }
 ]
 
 const filteredUsers = computed(() => {

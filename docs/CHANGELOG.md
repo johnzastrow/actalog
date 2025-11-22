@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5-beta] - 2025-11-22
+
+### Added
+- **Admin User Management - Complete Integration**: Fully activated admin user management dashboard
+  - Activated "User Management" card in AdminView (`/admin`) - now clickable and navigates to user management
+  - Removed "Coming Soon" placeholder status
+  - Backend API endpoints from v0.4.6-beta now fully integrated with frontend UI
+
+- **"Remember Me" Functionality**: Extended session duration for better user experience
+  - Added checkbox to login form: "Remember me for 30 days"
+  - Backend: Extended refresh token duration from 7 days to 30 days when Remember Me is checked
+  - Modified `CreateRefreshToken()` method to accept `rememberMe` parameter (`internal/service/user_service.go:517`)
+  - Updated login handler to pass Remember Me flag to service (`internal/handler/auth_handler.go:147`)
+  - Frontend: Auth store already configured to send `remember_me` flag to API
+  - Refresh tokens stored in localStorage for automatic session restoration
+  - Audit logging for Remember Me token creation
+  - Users who don't check "Remember Me" still get 7-day refresh tokens (default behavior)
+
+- **Database Backup and Restore System - Complete Activation**: Full disaster recovery and data migration capability
+  - Activated "Database Backups" card in AdminView (`/admin`) with orange database-export icon
+  - Complete backup/restore functionality previously implemented but not activated
+  - Backend fully implemented and wired up:
+    - `internal/service/backup_service.go` - Full database export to ZIP with JSON data
+    - `internal/handler/backup_handler.go` - All CRUD endpoints for backup management
+    - Routes active in `cmd/actalog/main.go` under `/api/admin/backups`
+  - Frontend fully implemented:
+    - `AdminBackupsView.vue` - Complete backup management interface at `/admin/backups`
+    - Create new backups with metadata (version, user counts, workout counts)
+    - List all backups with creation date, creator email, stats, and file size
+    - Download backups as ZIP files
+    - Delete backups with confirmation dialog
+    - Restore backups with strong warning dialog and confirmation requirement
+    - Empty state for first-time use
+  - API Endpoints (Admin-only):
+    - `POST /api/admin/backups` - Create new backup
+    - `GET /api/admin/backups` - List all backups
+    - `GET /api/admin/backups/{filename}` - Download backup file
+    - `GET /api/admin/backups/{filename}/metadata` - Get backup metadata
+    - `DELETE /api/admin/backups/{filename}` - Delete backup
+    - `POST /api/admin/backups/{filename}/restore` - Restore from backup
+  - ZIP backup structure includes all database tables exported as JSON
+  - **SQLite Database Dump**: All backups now include a portable SQLite database file (`actalog_backup.db`)
+    - If running SQLite: Direct copy of production database included in ZIP
+    - If running PostgreSQL/MySQL: New SQLite database created from exported data and included in ZIP
+    - Provides universal, portable database format that can be opened with any SQLite tool
+    - Enables easy data inspection and migration between database systems
+  - Supports all database drivers (SQLite, PostgreSQL, MySQL)
+  - Audit logging for all backup operations
+  - Security: Filename validation prevents directory traversal attacks
+
+### Changed
+- **Mobile-Friendly Admin Table**: Restructured user management table for better mobile accessibility
+  - Split single "Actions" column into 6 individual labeled columns (Details, Lock, Enable, Email, Change Role, Delete)
+  - Clear column headers eliminate need for hover tooltips on mobile devices
+  - Improved visual clarity with centered icons and consistent sizing
+  - Better touch targets for mobile users
+
+### Fixed
+- **PR History Date Display**: Fixed PR history to show workout date instead of record creation date
+  - Backend: Added `WorkoutDate` assignment in `GetPRMovements()` and `GetPRWODs()` repository methods
+  - Frontend: Changed `PRHistoryView.vue` to display `workout_date` instead of `created_at`
+  - PR dates now show when the workout was performed (e.g., "Fri, Oct 10, 2024")
+  - Previously showed database record creation timestamp which was incorrect for imported data
+  - Affects both movement PRs and WOD PRs
+
+- **AdminBackupsView Layout**: Fixed Vuetify bottom navigation layout error
+  - Restructured container hierarchy (outer `<v-container>` → `<div>`)
+  - Eliminated "Could not find layout item 'bottom-navigation'" console error
+  - Fixed scroll behavior with proper overflow handling
+  - Resolved layout conflicts when navigating from ProfileView
+  - Applied same container pattern from AdminUsersView, WODLibraryView, MovementsLibraryView
+
+- **AdminUsersView Layout**: Fixed Vuetify bottom navigation layout error
+  - Restructured container hierarchy (outer `<v-container>` → `<div>`)
+  - Eliminated "Could not find layout item 'bottom-navigation'" console error
+  - Fixed scroll behavior with proper overflow handling
+  - Resolved layout conflicts when navigating from ProfileView
+
 ## [0.7.4-beta] - 2025-11-22
 
 ### Added
@@ -20,6 +98,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added prominent Quick Log buttons to WODDetailView and MovementDetailView
   - Pre-populated Quick Log dialogs with current item being viewed
   - Consistent user experience across all viewing contexts
+- **Admin User Management Dashboard**: Complete administrative control system for user accounts
+  - Activated Admin User Management card in AdminView (`/admin`)
+  - Full-featured user management UI at `/admin/users` route
+  - User list table with pagination (50 users per page) and real-time search
+  - Mobile-optimized table with individual labeled columns (no hover tooltips required):
+    - **Details**: View comprehensive user information dialog
+    - **Lock**: Unlock temporarily locked accounts from failed login attempts
+    - **Enable**: Enable/disable user accounts with optional reason tracking
+    - **Email**: Toggle email verification status manually
+    - **Change Role**: Switch between "user" and "admin" roles
+    - **Delete**: Permanently delete users with confirmation dialog
+  - User details dialog showing all account information:
+    - Email verification status with visual badges
+    - Account status (Active/Disabled) with color coding
+    - Role display with chips
+    - Timestamps: created_at, last_login_at, email_verified_at, disabled_at
+    - Disable reason display when applicable
+  - Color-coded status indicators throughout (green/success, red/error, purple/admin, blue/user)
+  - Confirmation dialogs for destructive actions (disable, delete)
+  - Success/error messaging for all operations
+  - Backend API endpoints from v0.4.6-beta now fully integrated with frontend
 
 ### Changed
 - **Icon Consistency**: Unified Quick Log iconography across the entire application
@@ -27,10 +126,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced `mdi-play-circle` icons in WorkoutsView template cards with lightning bolt
   - Consistent visual language for Quick Log feature throughout the app
   - Tooltips added to all Quick Log buttons for clarity
+- **User Management Table Structure**: Improved accessibility and mobile usability
+  - Restructured "Actions" column into 6 individual labeled columns
+  - Clear column headers eliminate need for hover tooltips on mobile devices
+  - Centered icon buttons with consistent sizing and colors
+  - Enhanced visual feedback for current state (locked/unlocked, enabled/disabled, verified/unverified)
 
 ### Fixed
 - **Vuetify Layout Issues**: Fixed bottom navigation layout conflicts
-  - Restructured WODLibraryView and MovementsLibraryView container hierarchies
+  - Restructured WODLibraryView, MovementsLibraryView, and AdminUsersView container hierarchies
   - Changed outer containers from `<v-container>` to `<div>` to prevent layout system conflicts
   - Moved bottom navigation outside scrollable content containers
   - Eliminated "Could not find layout item 'bottom-navigation'" console errors

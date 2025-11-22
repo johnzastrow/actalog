@@ -388,6 +388,9 @@ func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain
 			uww.Weight = &weight.Float64
 		}
 
+		// Assign workout date
+		uww.WorkoutDate = workoutDate
+
 		wods = append(wods, uww)
 	}
 

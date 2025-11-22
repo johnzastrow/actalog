@@ -334,6 +334,9 @@ func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) 
 			uwm.Distance = &distance.Float64
 		}
 
+		// Assign workout date
+		uwm.WorkoutDate = workoutDate
+
 		movements = append(movements, uwm)
 	}
 

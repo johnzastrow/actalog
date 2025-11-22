@@ -51,6 +51,9 @@ type BackupService interface {
 	// DownloadBackup returns the file path for downloading a backup
 	DownloadBackup(filename string) (string, error)
 
+	// UploadBackup saves an uploaded backup file to the backups directory
+	UploadBackup(file interface{}, filename string, uploadedByUserID int64) (string, error)
+
 	// DeleteBackup removes a backup file and logs the deletion
 	DeleteBackup(filename string, deletedByUserID int64) error
 

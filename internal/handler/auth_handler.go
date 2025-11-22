@@ -144,7 +144,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Create refresh token if remember_me is true
 	if req.RememberMe {
 		deviceInfo := r.UserAgent() // Get browser/device info from User-Agent header
-		refreshToken, err := h.userService.CreateRefreshToken(user.ID, deviceInfo)
+		refreshToken, err := h.userService.CreateRefreshToken(user.ID, deviceInfo, req.RememberMe)
 		if err != nil {
 			// Log error but don't fail the login
 			if h.logger != nil {
@@ -154,6 +154,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			respondErrorWithDetail(w, http.StatusInternalServerError, "Warning: Failed to create refresh token", err.Error())
 		} else {
 			response.RefreshToken = refreshToken
+			if h.logger != nil {
+				h.logger.Info("action=create_refresh_token outcome=success user_id=%d email=%s remember_me=%v", user.ID, user.Email, req.RememberMe)
+			}
 		}
 	}
 	if h.logger != nil {

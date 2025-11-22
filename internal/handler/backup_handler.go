@@ -173,6 +173,57 @@ func (h *BackupHandler) DeleteBackup(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UploadBackup uploads a backup ZIP file from another system
+// POST /api/admin/backups/upload
+func (h *BackupHandler) UploadBackup(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Parse multipart form (32MB max)
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		respondError(w, http.StatusBadRequest, fmt.Sprintf("Failed to parse multipart form: %v", err))
+		return
+	}
+
+	// Get uploaded file
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		respondError(w, http.StatusBadRequest, fmt.Sprintf("Failed to get uploaded file: %v", err))
+		return
+	}
+	defer file.Close()
+
+	// Validate file extension
+	if filepath.Ext(header.Filename) != ".zip" {
+		respondError(w, http.StatusBadRequest, "Only ZIP files are allowed")
+		return
+	}
+
+	// Upload backup (this will save it to backups/ directory)
+	filename, err := h.backupService.UploadBackup(file, header.Filename, userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to upload backup: %v", err))
+		return
+	}
+
+	// Get metadata for the uploaded backup
+	metadata, err := h.backupService.GetBackupMetadata(filename)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to get backup metadata: %v", err))
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]interface{}{
+		"message":  "Backup uploaded successfully",
+		"filename": filename,
+		"metadata": metadata,
+	})
+}
+
 // RestoreBackup restores database from a backup file
 // POST /api/admin/backups/{filename}/restore
 func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
