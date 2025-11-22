@@ -1,21 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="handleBack" />
-      <v-toolbar-title class="text-white font-weight-bold">
-        {{ isEditMode ? 'Edit Template' : 'Create Template' }}
-      </v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        icon="mdi-content-save"
-        color="white"
-        :loading="saving"
-        @click="saveTemplate"
-      />
-    </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="pa-2" style=" margin-bottom: 70px">
       <!-- Error/Success Alert -->
       <v-alert
         v-if="successMessage"
@@ -221,7 +207,7 @@
             </v-btn>
             <v-btn
               size="small"
-              color="#ffc107"
+              color="teal"
               prepend-icon="mdi-plus"
               @click="addWOD"
               style="text-transform: none"
@@ -249,7 +235,7 @@
             style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="#ffc107" class="mr-2">mdi-drag-vertical</v-icon>
+              <v-icon color="teal" class="mr-2">mdi-drag-vertical</v-icon>
               <span class="font-weight-bold text-body-2" style="color: #666">#{{ index + 1 }}</span>
               <v-spacer />
               <v-btn
@@ -276,12 +262,12 @@
               class="mb-2"
             >
               <template #prepend-inner>
-                <v-icon color="#ffc107" size="small">mdi-magnify</v-icon>
+                <v-icon color="teal" size="small">mdi-magnify</v-icon>
               </template>
               <template #item="{ props, item }">
                 <v-list-item v-bind="props">
                   <template #prepend>
-                    <v-icon color="#ffc107" size="small">mdi-fire</v-icon>
+                    <v-icon color="teal" size="small">mdi-fire</v-icon>
                   </template>
                   <template #subtitle>
                     <span class="text-caption">{{ item.raw.type }} - {{ item.raw.regime }}</span>

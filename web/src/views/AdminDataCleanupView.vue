@@ -1,19 +1,8 @@
 <template>
   <v-app>
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" dark fixed style="z-index: 10">
-      <v-btn icon @click="$router.back()">
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
-      <v-toolbar-title>Data Cleanup</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon @click="logout">
-        <v-icon>mdi-logout</v-icon>
-      </v-btn>
-    </v-app-bar>
 
     <!-- Main Content -->
-    <v-main style="background: #f5f7fa; margin-top: 56px; margin-bottom: 70px; overflow-y: auto">
+    <v-main style="background: #f5f7fa;  margin-bottom: 70px; overflow-y: auto">
       <v-container fluid class="pa-4">
         <!-- Page Title -->
         <div class="mb-4">
@@ -78,7 +67,7 @@
                 @click="openEditDialog(mismatch)"
               >
                 <div class="d-flex align-center mb-2">
-                  <v-icon color="#ffc107" size="20" class="mr-2">mdi-alert-circle</v-icon>
+                  <v-icon color="teal" size="20" class="mr-2">mdi-alert-circle</v-icon>
                   <strong style="color: #2c3e50">{{ mismatch.wod_name }}</strong>
                   <v-chip size="x-small" color="#666" class="ml-2">ID: {{ mismatch.id }}</v-chip>
                   <v-spacer></v-spacer>

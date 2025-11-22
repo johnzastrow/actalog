@@ -56,7 +56,7 @@
                 </span>
                 <v-chip
                   v-if="hasPR(workout)"
-                  color="#ffc107"
+                  color="teal"
                   size="x-small"
                   class="ml-2"
                   style="height: 18px; font-size: 10px"
@@ -69,7 +69,7 @@
               <!-- Movement Details with PR indicators -->
               <div v-if="workout.movements && workout.movements.length > 0" class="text-caption" style="color: #666">
                 <div v-for="(movement, index) in workout.movements.slice(0, 3)" :key="index" class="d-flex align-center">
-                  <v-icon v-if="movement.is_pr" color="#ffc107" size="x-small" class="mr-1">mdi-trophy</v-icon>
+                  <v-icon v-if="movement.is_pr" color="teal" size="x-small" class="mr-1">mdi-trophy</v-icon>
                   <span>{{ movement.movement?.name || 'Movement' }}</span>
                   <span v-if="movement.weight" class="ml-1">- {{ movement.weight }}lb</span>
                   <span v-if="movement.reps" class="ml-1">x{{ movement.reps }}</span>

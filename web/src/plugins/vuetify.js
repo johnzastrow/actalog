@@ -8,9 +8,10 @@ import 'vuetify/styles'
 const actalogTheme = {
   dark: false,
   colors: {
-    primary: '#2c3657',      // Primary color from requirements
+    primary: '#2c3657',      // Dark blue for headers
     secondary: '#597a6a',    // Secondary color
     accent: '#5a4e68',       // Accent color
+    teal: '#00bcd4',         // Teal for buttons (logo color)
     error: '#DF3F40',        // Error/Alert color
     warning: '#FFA726',
     info: '#29B6F6',
@@ -20,6 +21,7 @@ const actalogTheme = {
     'on-primary': '#FFFFFF',
     'on-secondary': '#FFFFFF',
     'on-accent': '#FFFFFF',
+    'on-teal': '#FFFFFF',
     'on-background': '#1A1A1A',
     'on-surface': '#1A1A1A',
     // Additional colors
@@ -31,9 +33,10 @@ const actalogTheme = {
 const actalogDarkTheme = {
   dark: true,
   colors: {
-    primary: '#2c3657',
+    primary: '#2c3657',      // Dark blue for headers
     secondary: '#597a6a',
     accent: '#5a4e68',
+    teal: '#00bcd4',         // Teal for buttons (logo color)
     error: '#DF3F40',
     warning: '#FFA726',
     info: '#29B6F6',
@@ -43,6 +46,7 @@ const actalogDarkTheme = {
     'on-primary': '#FFFFFF',
     'on-secondary': '#FFFFFF',
     'on-accent': '#FFFFFF',
+    'on-teal': '#FFFFFF',
     'on-background': '#FFFFFF',
     'on-surface': '#FFFFFF',
     gold: '#FFD700',
@@ -68,28 +72,29 @@ export default createVuetify({
   defaults: {
     VCard: {
       elevation: 1,
-      rounded: 'lg',
+      rounded: 'sm',
       variant: 'elevated',
     },
     VBtn: {
+      color: 'teal',
       elevation: 0,
-      rounded: 'lg',
+      rounded: 'sm',
       style: 'text-transform: none;',
     },
     VTextField: {
       variant: 'outlined',
       density: 'comfortable',
-      rounded: 'lg',
+      rounded: 'sm',
     },
     VSelect: {
       variant: 'outlined',
       density: 'comfortable',
-      rounded: 'lg',
+      rounded: 'sm',
     },
     VTextarea: {
       variant: 'outlined',
       density: 'comfortable',
-      rounded: 'lg',
+      rounded: 'sm',
     },
   },
   display: {

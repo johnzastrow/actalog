@@ -1,21 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="handleBack" />
-      <v-toolbar-title class="text-white font-weight-bold">
-        {{ selectionMode ? 'Select WOD' : 'WOD Library' }}
-      </v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        v-if="!selectionMode"
-        icon="mdi-plus"
-        color="white"
-        @click="createNewWOD"
-      />
-    </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="pa-2" style=" margin-bottom: 70px">
       <!-- Search and Filters Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <v-text-field
@@ -115,7 +101,7 @@
                 <v-chip
                   v-if="!wod.is_standard"
                   size="x-small"
-                  color="#ffc107"
+                  color="teal"
                   class="ml-2"
                 >
                   Custom
@@ -155,7 +141,7 @@
       v-if="!selectionMode && !loading"
       icon="mdi-plus"
       size="x-large"
-      color="#ffc107"
+      color="teal"
       elevation="8"
       style="position: fixed; bottom: 80px; right: 16px; z-index: 5"
       @click="createNewWOD"

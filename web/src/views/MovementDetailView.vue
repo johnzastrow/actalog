@@ -1,21 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="router.back()" />
-      <v-toolbar-title class="text-white font-weight-bold">
-        Movement Details
-      </v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        v-if="movement && !movement.is_standard"
-        icon="mdi-pencil"
-        color="white"
-        @click="editMovement"
-      />
-    </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="pa-2" style=" margin-bottom: 70px">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
         <v-progress-circular indeterminate color="#00bcd4" size="48" />
@@ -43,7 +29,7 @@
                 <v-chip size="small" :color="getMovementTypeColor(movement.type)" variant="flat">
                   {{ capitalizeFirst(movement.type) }}
                 </v-chip>
-                <v-chip v-if="!movement.is_standard" size="small" color="#ffc107">
+                <v-chip v-if="!movement.is_standard" size="small" color="teal">
                   Custom
                 </v-chip>
               </div>

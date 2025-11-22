@@ -1,19 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Workout Templates</v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        icon="mdi-plus"
-        color="#00bcd4"
-        variant="flat"
-        @click="$router.push('/workouts/templates/create')"
-        style="background: #00bcd4"
-      />
-    </v-app-bar>
 
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-0" style="margin-bottom: 70px">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
         {{ error }}
@@ -268,8 +256,8 @@
         <v-icon>mdi-chart-line</v-icon>
         <span style="font-size: 10px">Performance</span>
       </v-btn>
-      <v-btn value="log" to="/workouts/log" style="position: relative; bottom: 20px">
-        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+      <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
+        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

@@ -1,13 +1,6 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-toolbar-title class="text-white font-weight-bold">Dashboard</v-toolbar-title>
-      <v-spacer />
-      <v-btn icon="mdi-bell-outline" color="white" size="small" />
-    </v-app-bar>
-
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 48px; margin-bottom: 70px">
+    <v-container class="px-1 pb-1 pt-2" style="margin-bottom: 70px">
       <!-- Email Verification Alert -->
       <v-alert
         v-if="authStore.user && !authStore.user.email_verified"
@@ -53,7 +46,7 @@
         <v-col cols="6">
           <v-card elevation="0" rounded class="pa-1" style="background: white">
             <div class="d-flex align-center">
-              <v-icon color="#ffc107" size="28" class="mr-2">mdi-calendar-month</v-icon>
+              <v-icon color="teal" size="28" class="mr-2">mdi-calendar-month</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
                   {{ monthWorkouts }}
@@ -202,7 +195,7 @@
                   <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
                   <span v-if="perf.distance"> {{ perf.distance }}m</span>
                   <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
-                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -214,14 +207,14 @@
               <!-- Display WOD performance (first 1 only) -->
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
                 <div v-for="(perf, index) in workout.performance_wods.slice(0, 1)" :key="index" class="text-caption mb-1" style="color: #666">
-                  <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
+                  <v-icon size="small" color="teal">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
                   <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
                   <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
                   <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
                   <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
-                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -249,7 +242,7 @@
                   <span v-if="perf.reps"> × {{ perf.reps }} reps</span>
                   <span v-if="perf.distance"> × {{ perf.distance }}m</span>
                   <span v-if="perf.time_seconds"> in {{ formatTime(perf.time_seconds) }}</span>
-                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -259,14 +252,14 @@
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
                 <div class="text-caption font-weight-bold mb-1" style="color: #1a1a1a">WODs:</div>
                 <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1 ml-2" style="color: #666">
-                  <v-icon size="small" color="#ffc107">mdi-fire</v-icon>
+                  <v-icon size="small" color="teal">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> Time: {{ formatTime(perf.time_seconds) }}</span>
                   <span v-if="perf.rounds && perf.reps"> Score: {{ perf.rounds }}+{{ perf.reps }}</span>
                   <span v-else-if="perf.rounds"> Rounds: {{ perf.rounds }}</span>
                   <span v-else-if="perf.reps"> Reps: {{ perf.reps }}</span>
                   <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
-                  <v-chip v-if="perf.is_pr" color="#ffc107" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -301,7 +294,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #ffc107; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log Workout
         </v-card-title>
@@ -497,7 +490,7 @@
                 placeholder="Search for a WOD..."
               >
                 <template #prepend-inner>
-                  <v-icon color="#ffc107" size="small">mdi-magnify</v-icon>
+                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
                 </template>
               </v-autocomplete>
 
@@ -624,7 +617,7 @@
           </v-btn>
           <v-spacer />
           <v-btn
-            color="#ffc107"
+            color="teal"
             variant="elevated"
             :loading="quickLogSubmitting"
             :disabled="!quickLogData.name || !quickLogData.date"
@@ -652,8 +645,8 @@
         <v-icon>mdi-chart-line</v-icon>
         <span style="font-size: 10px">Performance</span>
       </v-btn>
-      <v-btn value="log" to="/workouts/log" style="position: relative; bottom: 20px">
-        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+      <v-btn value="log" @click="openQuickLog" style="position: relative; bottom: 20px">
+        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>
@@ -671,12 +664,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const activeTab = ref('dashboard')
 
@@ -1055,6 +1049,15 @@ async function submitQuickLog() {
     quickLogSubmitting.value = false
   }
 }
+
+// Watch for route query parameter to auto-open Quick Log
+watch(() => route.query.open, (value) => {
+  if (value === 'quick-log' && !quickLogDialog.value) {
+    openQuickLog()
+    // Remove query parameter from URL without navigation
+    router.replace({ query: {} })
+  }
+}, { immediate: true })
 
 // Load data on mount
 onMounted(() => {

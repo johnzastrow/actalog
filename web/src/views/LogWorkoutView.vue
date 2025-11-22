@@ -1,13 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="$router.back()" />
-      <v-toolbar-title class="text-white font-weight-bold">{{ isEditMode ? 'Edit Workout' : 'Log Workout' }}</v-toolbar-title>
-      <v-spacer />
-    </v-app-bar>
 
-    <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 100px">
+    <v-container class="px-1 pb-1 pt-0" style=" margin-bottom: 100px">
       <!-- Success Alert -->
       <v-alert v-if="success" type="success" closable @click:close="success = null" class="mb-4">
         {{ success }}
@@ -112,7 +106,7 @@
             </v-chip>
           </div>
           <div v-if="(selectedTemplate?.wods && selectedTemplate.wods.length > 0) || wodPerformance.length > 0" class="mt-1">
-            <v-chip size="x-small" color="#ffc107" class="mr-1">
+            <v-chip size="x-small" color="teal" class="mr-1">
               {{ selectedTemplate?.wods?.length || wodPerformance.length }} WOD(s)
             </v-chip>
           </div>
@@ -250,7 +244,7 @@
             style="background: white; border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="#ffc107" size="small" class="mr-2">mdi-flag-checkered</v-icon>
+              <v-icon color="teal" size="small" class="mr-2">mdi-flag-checkered</v-icon>
               <span class="font-weight-bold text-body-2" style="color: #1a1a1a">
                 {{ getWODName(wod.wod_id) }}
               </span>
@@ -454,8 +448,8 @@
         <v-icon>mdi-chart-line</v-icon>
         <span style="font-size: 10px">Performance</span>
       </v-btn>
-      <v-btn value="log" to="/workouts/log" style="position: relative; bottom: 20px">
-        <v-avatar color="#ffc107" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+      <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
+        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

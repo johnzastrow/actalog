@@ -1,21 +1,7 @@
 <template>
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <!-- Header -->
-    <v-app-bar color="#2c3e50" elevation="0" density="compact" style="position: fixed; top: 0; z-index: 10; width: 100%">
-      <v-btn icon="mdi-arrow-left" color="white" size="small" @click="handleBack" />
-      <v-toolbar-title class="text-white font-weight-bold">
-        {{ isEditMode ? 'Edit Movement' : 'Create Custom Movement' }}
-      </v-toolbar-title>
-      <v-spacer />
-      <v-btn
-        icon="mdi-content-save"
-        color="white"
-        :loading="saving"
-        @click="saveMovement"
-      />
-    </v-app-bar>
 
-    <v-container class="pa-2" style="margin-top: 36px; margin-bottom: 70px">
+    <v-container class="pa-2" style=" margin-bottom: 70px">
       <!-- Error/Success Alert -->
       <v-alert
         v-if="successMessage"
