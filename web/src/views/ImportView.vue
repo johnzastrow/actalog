@@ -302,7 +302,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import axios from '@/utils/axios'
 
 // State
 const selectedEntity = ref('wods')
