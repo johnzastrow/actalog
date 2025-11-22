@@ -5,6 +5,90 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0-beta] - 2025-11-21
+
+### Added
+- **Wodify Performance Import System**
+  - **Backend Components**
+    - **Domain Models** (`internal/domain/wodify_import.go`)
+      - `WodifyPerformanceRow` - Represents CSV row from Wodify export (19 columns)
+      - `WodifyImportPreview` - Preview statistics and validation results
+      - `WodifyImportResult` - Import completion statistics
+      - `ParsedPerformanceResult` - Structured performance data after parsing
+    - **Result Parser** (`internal/service/wodify_parser.go` - 273 lines)
+      - 9 regex-based parsers for different result types:
+        - `Weight` - Parses "3 x 10 @ 85 lbs" → sets, reps, weight
+        - `Time` - Parses "5:30" (MM:SS) or "1:05:30" (HH:MM:SS) → seconds
+        - `AMRAP - Rounds and Reps` - Parses "7 + 3" → rounds, reps
+        - `AMRAP - Reps` - Parses "50 Reps"
+        - `AMRAP - Rounds` - Parses "5 Rounds"
+        - `Max reps` - Parses "3 x 8" (sets x reps)
+        - `Calories` - Parses "133 Calories"
+        - `Distance` - Parses "500 m"
+        - `Each Round` - Parses "175 Total Reps"
+      - `ParseDate()` - Handles MM/DD/YYYY and MM/DD/YY formats
+      - `DetermineMovementType()` - Maps component type to movement type
+      - `DetermineWODScoreType()` - Maps result type to WOD score type
+    - **Import Service** (`internal/service/wodify_import_service.go` - 582 lines)
+      - `PreviewImport()` - Analyzes CSV and returns preview without database changes
+      - `ConfirmImport()` - Executes import with entity auto-creation
+      - `parseCSV()` - Handles 19-column CSV with multi-line field support
+      - `groupByDate()` - Groups performances by workout date
+      - `getOrCreateMovement()` - Auto-creates missing movements
+      - `getOrCreateWOD()` - Auto-creates missing WODs
+      - `importWorkout()` - Creates UserWorkout with linked performances
+      - PR preservation from Wodify export
+    - **HTTP Handler** (`internal/handler/wodify_import_handler.go` - 107 lines)
+      - `POST /api/import/wodify/preview` - Preview Wodify CSV import
+      - `POST /api/import/wodify/confirm` - Execute Wodify CSV import
+      - File size limit: 10MB
+      - Multipart form-data with "file" field
+  - **Frontend Integration** (`web/src/views/ImportView.vue`)
+    - Added "Wodify Performance" import type with file-chart icon
+    - **Wodify-Specific Preview UI:**
+      - Summary stats: total rows, valid rows, workout dates, entities to create
+      - New Entities card with chips showing movements and WODs to auto-create
+      - Workout Summary table: date, movement count, WOD count, component types, PR flags
+      - Gold trophy icons for workouts containing PRs
+    - **Success Message:**
+      - Displays: workouts created, performances, movements/WODs auto-created, PRs flagged
+      - Format: "Workouts Created: 189 | Performances: 293 | Movements Created: 37 | WODs Created: 28 | PRs Flagged: 62"
+  - **Documentation**
+    - Updated `CLAUDE.md` with comprehensive Wodify import documentation
+    - Real-world test results with 6+ years of data
+    - Code examples for API usage
+    - Domain model definitions
+
+### Technical
+- Clean Architecture maintained: domain → service → handler pattern
+- CSV parsing with LazyQuotes and TrimLeadingSpace for robust handling
+- Regex-based result string parsing for data extraction
+- Date grouping logic to create cohesive UserWorkout entries
+- Auto-entity creation reduces manual data entry
+- PR flag preservation from source data
+- Build number incremented: 27 → 28
+
+### Testing
+- ✅ Preview import: Analyzed 293 performance entries, 189 unique dates
+- ✅ Confirm import: Successfully imported 6+ years of workout history (2018-2025)
+  - 189 user workouts created (grouped by date)
+  - 37 new movements auto-created
+  - 28 new WODs auto-created
+  - 293 performance entries
+  - 62 PRs automatically flagged
+- ✅ Data persistence verified in database
+- ✅ Data appears correctly in GET /api/workouts
+- ✅ Round-trip import → export verified working
+- ✅ Graceful handling of invalid rows (1 row with missing component type/name)
+
+### Bug Fixes
+- ✅ Investigated and resolved reported User Workouts Import bug
+  - Testing confirmed feature working correctly
+  - Data persists to database, appears in API, exports correctly
+  - Bug report was false or already fixed in previous session
+
+---
+
 ## [0.6.0-beta] - 2025-11-21
 
 ### Added
