@@ -147,6 +147,18 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/settings/export',
+      name: 'export-data',
+      component: () => import('@/views/ExportView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/settings/import',
+      name: 'import-data',
+      component: () => import('@/views/ImportView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/admin/data-cleanup',
       name: 'admin-data-cleanup',
       component: () => import('@/views/AdminDataCleanupView.vue'),

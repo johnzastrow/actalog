@@ -196,13 +196,289 @@
 - [ ] Add "Complete Scheduled Workout" flow
 - [ ] Prevent scheduling in the past (validation)
 
-### Import/Export Enhancements
-- [ ] Implement Markdown export for workout reports
-- [ ] Format Markdown with workout details, scores, notes
-- [ ] Ensure CSV export includes all new fields (division, PR flags, birthday)
-- [ ] Ensure JSON export includes complete data structure
-- [ ] Add date range selector for exports
-- [ ] Add data type checkboxes (Workouts, WODs, Movements, Profile)
+### Import/Export System (v0.5.1-beta) - IN PROGRESS
+
+**Priority:** HIGH - Next feature to implement
+**Status:** Planning phase
+**Target Version:** v0.5.1-beta
+
+#### Requirements Summary
+From REQUIREMENTS.md lines 864-870, the import/export system must support:
+1. **Round-trip CSV** for WODs and Movements (import what you export)
+2. **User Workouts** with full context (JSON format with nested data)
+3. **Flattened CSV** for workout performance analysis in spreadsheets
+4. **Performance data** export for each WOD and Movement with PR flags
+5. **Admin vs User permissions** - admins can export global data, users only their own
+6. **Import preview** before confirmation
+7. **Date range selector** for partial exports
+8. **Export history** tracking
+
+#### Phase 1: CSV Export/Import for WODs and Movements (CURRENT FOCUS)
+
+**CSV Schema Design:**
+
+**WODs CSV Format:**
+```csv
+name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Fran,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"21-15-9 reps for time of: Thrusters (95/65 lb), Pull-ups",https://www.crossfit.com/workout/fran,,true,
+```
+
+**Movements CSV Format:**
+```csv
+name,type,description,is_standard,created_by_email
+Back Squat,weightlifting,Barbell back squat,true,
+Custom Movement,weightlifting,My custom exercise,false,user@example.com
+```
+
+**Backend Tasks:**
+- [ ] Create `internal/service/export_service.go` - CSV export business logic
+  - [ ] `ExportWODsToCSV(userID, isAdmin)` - Export WODs with permission checks
+  - [ ] `ExportMovementsToCSV(userID, isAdmin)` - Export movements with permission checks
+  - [ ] Handle standard vs custom WODs/movements filtering
+  - [ ] Include created_by_email for custom entries
+  - [ ] Support admin export (all data) vs user export (own data only)
+
+- [ ] Create `internal/service/import_service.go` - CSV import business logic with validation
+  - [ ] `ImportWODsFromCSV(userID, isAdmin, csvData)` - Import WODs with moderate validation
+    - [ ] Parse CSV and validate headers
+    - [ ] Validate required fields (name, source, type, regime, score_type)
+    - [ ] Check for duplicate names (skip or update based on flag)
+    - [ ] Validate enum values (source, type, regime, score_type against domain constants)
+    - [ ] Foreign key validation (created_by_email exists)
+    - [ ] Data type validation (booleans, strings)
+    - [ ] Return preview data before actual import
+  - [ ] `ImportMovementsFromCSV(userID, isAdmin, csvData)` - Import movements with moderate validation
+    - [ ] Parse CSV and validate headers
+    - [ ] Validate required fields (name, type)
+    - [ ] Check for duplicate names (skip or update)
+    - [ ] Validate type enum (weightlifting, cardio, gymnastics, bodyweight)
+    - [ ] Foreign key validation (created_by_email exists)
+    - [ ] Return preview data before actual import
+  - [ ] `ValidateCSVFormat(csvData, entityType)` - Common validation logic
+  - [ ] Permission checks (users cannot import as standard, admins can)
+
+- [ ] Create `internal/handler/export_handler.go` - HTTP handlers for export
+  - [ ] `GET /api/export/wods` - Export WODs to CSV
+    - Query params: `format=csv`, `include_standard=true`, `include_custom=true`
+    - Response: CSV file download with Content-Disposition header
+    - Authorization: All users can export (filtered by ownership)
+  - [ ] `GET /api/export/movements` - Export movements to CSV
+    - Query params: `format=csv`, `include_standard=true`, `include_custom=true`
+    - Response: CSV file download
+    - Authorization: All users can export (filtered by ownership)
+
+- [ ] Create `internal/handler/import_handler.go` - HTTP handlers for import
+  - [ ] `POST /api/import/wods/preview` - Preview WOD import before committing
+    - Request: multipart/form-data with CSV file
+    - Response: JSON with parsed data, validation errors, counts (total, valid, invalid, duplicates)
+  - [ ] `POST /api/import/wods/confirm` - Commit WOD import after preview approval
+    - Request: JSON with import session ID and options (skip_duplicates, update_duplicates)
+    - Response: JSON with import result (created, updated, skipped counts)
+  - [ ] `POST /api/import/movements/preview` - Preview movement import
+  - [ ] `POST /api/import/movements/confirm` - Commit movement import
+  - [ ] Rate limiting for import endpoints (prevent abuse)
+  - [ ] File size limits (max 10MB CSV)
+
+- [ ] Update `cmd/actalog/main.go` - Wire up new services and routes
+  - [ ] Initialize ExportService and ImportService
+  - [ ] Initialize ExportHandler and ImportHandler
+  - [ ] Register export routes (GET /api/export/wods, /api/export/movements)
+  - [ ] Register import routes (POST /api/import/{entity}/preview, /api/import/{entity}/confirm)
+
+**Frontend Tasks:**
+- [ ] Create `web/src/views/ExportView.vue` - Export data screen
+  - [ ] Data type selector (WODs, Movements checkboxes)
+  - [ ] Format selector (CSV, JSON - Phase 2)
+  - [ ] Options: Include standard items, Include custom items only
+  - [ ] Export button triggers download
+  - [ ] Export history section (future - tracks past exports)
+  - [ ] Route: `/settings/export`
+
+- [ ] Create `web/src/views/ImportView.vue` - Import data screen
+  - [ ] File upload dropzone (drag & drop support)
+  - [ ] Supported formats info (CSV, JSON)
+  - [ ] Preview table showing parsed data with validation status
+  - [ ] Validation errors display (red highlights for invalid rows)
+  - [ ] Import statistics (total, valid, invalid, duplicates)
+  - [ ] Import options: Skip duplicates, Update duplicates, Create only new
+  - [ ] Confirm import button (after preview)
+  - [ ] Cancel button
+  - [ ] Route: `/settings/import`
+
+- [ ] Update `web/src/router/index.js` - Add new routes
+  - [ ] `/settings/import` → ImportView
+  - [ ] `/settings/export` → ExportView
+
+- [ ] Update `web/src/views/SettingsView.vue` or navigation
+  - [ ] Add "Import Data" menu item
+  - [ ] Add "Export Data" menu item
+
+**Testing Tasks:**
+- [ ] Unit tests for ExportService
+  - [ ] Test WOD export with standard only
+  - [ ] Test WOD export with custom only
+  - [ ] Test WOD export with both standard and custom
+  - [ ] Test Movement export with filtering
+  - [ ] Test admin vs user permission filtering
+
+- [ ] Unit tests for ImportService
+  - [ ] Test CSV parsing with valid data
+  - [ ] Test CSV parsing with invalid headers
+  - [ ] Test duplicate detection
+  - [ ] Test enum validation for WOD fields
+  - [ ] Test permission checks (user cannot import as standard)
+  - [ ] Test admin can import as standard
+
+- [ ] Integration tests for export/import endpoints
+  - [ ] Test full round-trip (export CSV, import same CSV)
+  - [ ] Test import with validation errors
+  - [ ] Test import preview workflow
+  - [ ] Test file upload limits
+
+**Migration:**
+- [ ] No database changes needed for Phase 1 (using existing v0.5.0 schema)
+
+#### Phase 2: User Workouts Export/Import (JSON) - FUTURE
+
+**Requirements:**
+- [ ] Export user workouts with full nested data (workouts, movements, WODs, scores)
+- [ ] Include all performance data (weights, reps, times, PR flags)
+- [ ] Support date range filtering
+- [ ] JSON format for complete data structure
+- [ ] Import with conflict resolution (duplicate workouts on same date)
+
+**JSON Schema Design:**
+```json
+{
+  "export_metadata": {
+    "user_email": "user@example.com",
+    "export_date": "2025-11-21T10:00:00Z",
+    "date_range": {"start": "2025-01-01", "end": "2025-11-21"},
+    "version": "0.5.1"
+  },
+  "user_workouts": [
+    {
+      "workout_date": "2025-11-20",
+      "workout_type": "metcon",
+      "notes": "Felt great today",
+      "wods": [
+        {
+          "wod_name": "Fran",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "00:05:43",
+          "is_pr": true
+        }
+      ],
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "sets": 5,
+          "reps": 5,
+          "weight": 225,
+          "is_pr": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Backend Tasks:**
+- [ ] `ExportUserWorkoutsToJSON(userID, startDate, endDate)` - Export workouts with nested data
+- [ ] `ImportUserWorkoutsFromJSON(userID, jsonData)` - Import with conflict resolution
+- [ ] Handle nested relationships (user_workouts → user_workout_movements, user_workout_wods)
+- [ ] Validate foreign key references (WOD names, movement names must exist or be created)
+- [ ] Duplicate detection by workout_date
+
+**Frontend Tasks:**
+- [ ] Update ExportView with date range picker
+- [ ] Update ExportView with JSON format option
+- [ ] Update ImportView to handle JSON uploads
+- [ ] Display nested data preview for JSON imports
+- [ ] Conflict resolution UI (update vs skip vs create new)
+
+#### Phase 3: Performance Analytics Export (CSV) - FUTURE
+
+**Requirements:**
+- [ ] Export flattened CSV for spreadsheet analysis
+- [ ] One row per performance record (movement or WOD)
+- [ ] Include PR flags, user info, workout date
+- [ ] Suitable for pivot tables and charts in Excel/Sheets
+
+**CSV Schema:**
+```csv
+date,workout_type,entity_type,entity_name,metric_type,metric_value,is_pr,notes
+2025-11-20,strength,movement,Back Squat,weight,225,false,5x5 progressive
+2025-11-20,metcon,wod,Fran,time,00:05:43,true,New PR!
+```
+
+**Backend Tasks:**
+- [ ] `ExportPerformanceDataToCSV(userID, startDate, endDate, entityType)` - Flatten performance
+- [ ] Support filtering by WOD or Movement
+- [ ] Include calculated metrics (volume = weight × reps × sets)
+
+#### Phase 4: Markdown Export for Workout Reports - FUTURE
+
+**Requirements:**
+- [ ] Format workouts as readable Markdown documents
+- [ ] Include workout details, scores, notes
+- [ ] Support rich formatting (bold, lists, links)
+- [ ] Suitable for blogs, social sharing, personal journaling
+
+**Markdown Template:**
+```markdown
+# Workout - November 20, 2025
+
+## WODs
+### Fran ⭐ PR
+**Score:** 5:43 (Time)
+**Notes:** New personal record!
+
+## Strength Work
+### Back Squat
+**Weight:** 225 lbs
+**Sets:** 5 × 5 reps
+
+## Workout Notes
+Felt great today. Progressive overload working well.
+```
+
+**Backend Tasks:**
+- [ ] `ExportWorkoutToMarkdown(workoutID)` - Format single workout
+- [ ] `ExportWorkoutsToMarkdown(userID, startDate, endDate)` - Format multiple workouts
+- [ ] Template system for customizable formatting
+
+#### Phase 5: Export History Tracking - FUTURE
+
+**Requirements:**
+- [ ] Track all exports in `export_history` table
+- [ ] Display export history in UI with download links
+- [ ] Auto-cleanup old exports after 30 days
+- [ ] Support re-download of previous exports
+
+**Database Changes:**
+- [ ] Create `export_history` table (id, user_id, entity_type, format, file_path, created_at)
+
+**Backend Tasks:**
+- [ ] Save export files to disk or S3
+- [ ] Create export history records
+- [ ] Auto-cleanup job (cron)
+
+**Frontend Tasks:**
+- [ ] Display export history list in ExportView
+- [ ] Download button for past exports
+- [ ] Delete button for manual cleanup
+
+---
+
+**Current Focus:** Phase 1 (CSV export/import for WODs and Movements)
+**Target Completion:** v0.5.1-beta
+**Estimated Effort:** 2-3 days (backend + frontend + testing)
+
+**Dependencies:**
+- All v0.5.0 features must be stable
+- Existing WOD and Movement repositories functional
+- Frontend router and Settings menu accessible
 
 ## PWA Features (v0.2.0)
 
@@ -288,8 +564,218 @@
 - [ ] Admin dashboard
 - [ ] User management interface
 - [ ] System settings management
-- [ ] Database backup functionality
 - [ ] User activity monitoring
+
+### Database Backup and Restore System (v0.6.0-beta) - HIGH PRIORITY
+
+**Status:** Not started
+**Priority:** High - Critical for disaster recovery and data migration
+**Target Version:** v0.6.0-beta
+
+#### Overview
+Complete backup and restore system allowing administrators to create full database backups and restore them when needed. Supports disaster recovery, data migration between installations, and changing database technologies.
+
+#### Phase 1: Full Backup and Restore (v0.6.0)
+
+**Backend Implementation:**
+
+- [ ] Create `internal/service/backup_service.go`
+  - [ ] `CreateBackup(adminUserID int64)` - Creates full backup
+    - [ ] Export all database tables to JSON format
+    - [ ] Include metadata (date, version, admin, record counts, date range)
+    - [ ] Copy all uploaded files from `uploads/` directory
+    - [ ] Copy `.env` configuration (sanitized, no secrets in plain text)
+    - [ ] Package everything into `.zip` file
+    - [ ] Store in `backups/` directory with timestamp filename
+  - [ ] `CreateSQLiteBackup(adminUserID int64)` - Direct SQLite file copy (if active database is SQLite)
+  - [ ] `ListBackups()` - Returns list of available backups with metadata
+    - [ ] Read all `.zip` files from `backups/` directory
+    - [ ] Extract and parse `metadata.json` from each backup
+    - [ ] Return sorted list (newest first) with file size
+  - [ ] `GetBackupMetadata(filename string)` - Reads metadata from specific backup
+  - [ ] `DeleteBackup(filename string, adminUserID int64)` - Deletes backup file
+    - [ ] Audit log entry for deletion
+    - [ ] Validate file exists before deletion
+  - [ ] `RestoreBackup(filename string, adminUserID int64)` - Full restore from backup
+    - [ ] Validate backup file integrity
+    - [ ] Parse metadata and check compatibility (schema version)
+    - [ ] Wipe all existing database tables (with confirmation)
+    - [ ] Parse JSON and insert all data into current database driver
+    - [ ] Restore uploaded files to `uploads/` directory
+    - [ ] Audit log entry for restore
+    - [ ] Return summary (records restored, files restored)
+
+- [ ] Create `internal/handler/backup_handler.go`
+  - [ ] `POST /api/admin/backups` - Create new backup
+    - [ ] Authorization: Admin only
+    - [ ] Async operation with progress tracking (optional)
+    - [ ] Returns backup filename and metadata
+  - [ ] `GET /api/admin/backups` - List all backups
+    - [ ] Authorization: Admin only
+    - [ ] Returns array of backup metadata
+  - [ ] `GET /api/admin/backups/{filename}` - Download specific backup
+    - [ ] Authorization: Admin only
+    - [ ] Streams `.zip` file to client
+    - [ ] Content-Disposition: attachment header
+  - [ ] `GET /api/admin/backups/{filename}/metadata` - Get backup metadata only
+    - [ ] Authorization: Admin only
+  - [ ] `DELETE /api/admin/backups/{filename}` - Delete backup
+    - [ ] Authorization: Admin only
+    - [ ] Audit log entry
+  - [ ] `POST /api/admin/backups/{filename}/restore` - Restore from backup
+    - [ ] Authorization: Admin only
+    - [ ] Requires confirmation token (prevent accidental wipe)
+    - [ ] Returns restore summary
+
+- [ ] Update `cmd/actalog/main.go`
+  - [ ] Initialize BackupService with all repository dependencies
+  - [ ] Initialize BackupHandler
+  - [ ] Register backup routes under `/api/admin` with AdminOnly middleware
+
+- [ ] Create `backups/` directory structure
+  - [ ] Add `.gitignore` entry for `backups/` (don't commit backups to git)
+  - [ ] Create directory on server startup if not exists
+  - [ ] Add permission checks (writable by application)
+
+**Frontend Implementation:**
+
+- [ ] Create `web/src/views/AdminBackupsView.vue`
+  - [ ] Route: `/admin/backups`
+  - [ ] **Create Backup Section:**
+    - [ ] "Create Backup" button
+    - [ ] Loading indicator during backup creation
+    - [ ] Success message with backup filename
+    - [ ] Error handling with user-friendly messages
+  - [ ] **Backup List Section:**
+    - [ ] Table displaying all backups
+    - [ ] Columns: Date, Size, Data Range, Created By, Actions
+    - [ ] Sort by date (newest first)
+    - [ ] **Actions per row:**
+      - [ ] Download button (downloads .zip file)
+      - [ ] Delete button (with confirmation dialog)
+      - [ ] Restore button (with strong confirmation dialog)
+  - [ ] **Restore Confirmation Dialog:**
+    - [ ] Warning message: "This will DELETE all current data"
+    - [ ] Checkbox: "I understand this action cannot be undone"
+    - [ ] Text input: Type "RESTORE" to confirm
+    - [ ] Cancel and Confirm buttons
+  - [ ] **Delete Confirmation Dialog:**
+    - [ ] Warning message: "Delete backup permanently?"
+    - [ ] Cancel and Confirm buttons
+  - [ ] **Empty State:**
+    - [ ] Message: "No backups found"
+    - [ ] "Create your first backup" button
+
+- [ ] Update `web/src/router/index.js`
+  - [ ] Add route: `/admin/backups` → AdminBackupsView
+  - [ ] Requires authentication and admin role
+
+- [ ] Update navigation (Profile or Admin section)
+  - [ ] Add "Database Backups" link for admins
+  - [ ] Icon: mdi-database-export or mdi-backup-restore
+
+**Testing:**
+
+- [ ] Unit tests for BackupService
+  - [ ] Test backup creation (all tables, files, metadata)
+  - [ ] Test SQLite file backup
+  - [ ] Test backup listing and sorting
+  - [ ] Test backup deletion with audit log
+  - [ ] Test metadata extraction
+  - [ ] Test restore validation (schema version check)
+  - [ ] Test restore with data integrity checks
+
+- [ ] Integration tests for backup/restore workflow
+  - [ ] Create backup, verify file exists
+  - [ ] Download backup, verify ZIP structure
+  - [ ] Restore backup, verify all data restored correctly
+  - [ ] Test restore with different database driver (SQLite → PostgreSQL)
+  - [ ] Test error scenarios (corrupted backup, insufficient permissions)
+
+- [ ] Manual testing checklist:
+  - [ ] Create backup with real data
+  - [ ] Download and inspect ZIP contents
+  - [ ] Restore backup on clean database
+  - [ ] Verify all users, workouts, movements, WODs restored
+  - [ ] Verify uploaded files (avatars) restored
+  - [ ] Test delete backup
+  - [ ] Test admin-only access control
+
+**Database Changes:**
+- [ ] No new tables needed (uses existing data)
+- [ ] Ensure `backups/` directory has proper file permissions
+
+**JSON Backup Structure:**
+```json
+{
+  "metadata": {
+    "backup_version": "1.0",
+    "app_version": "0.6.0",
+    "created_at": "2025-01-21T10:30:00Z",
+    "database_driver": "sqlite3",
+    "created_by": "admin@example.com",
+    "data_date_range": {
+      "earliest_workout": "2024-01-01",
+      "latest_workout": "2025-01-21"
+    },
+    "record_counts": {
+      "users": 150,
+      "workouts": 3420,
+      "movements": 45,
+      "wods": 120,
+      "audit_logs": 8950
+    },
+    "schema_version": "0.5.0"
+  },
+  "users": [...],
+  "movements": [...],
+  "wods": [...],
+  "workouts": [...],
+  "user_workouts": [...],
+  "user_workout_movements": [...],
+  "user_workout_wods": [...],
+  "audit_logs": [...],
+  "user_settings": [...]
+}
+```
+
+**ZIP File Structure:**
+```
+actalog_backup_2025-01-21_10-30-00.zip
+├── metadata.json
+├── database.json (all tables)
+├── database.db (optional, if SQLite)
+├── config/
+│   └── .env.backup
+└── uploads/
+    ├── avatars/
+    └── attachments/
+```
+
+**Dependencies:**
+- Go standard library: `archive/zip` for ZIP compression
+- All existing repositories for data access
+- File system utilities
+
+**Future Enhancements (v0.7.0+):**
+- [ ] Selective restore (choose specific tables or date ranges)
+- [ ] Merge mode restore (import without wiping existing data)
+- [ ] Automated scheduled backups (daily, weekly, monthly)
+- [ ] Backup retention policy (auto-delete old backups)
+- [ ] Encryption (password-protected backups)
+- [ ] Remote storage (S3, Google Drive, Dropbox)
+- [ ] Point-in-time recovery with transaction logs
+- [ ] CLI tool for backup/restore operations
+- [ ] Email notifications for backup completion/failure
+- [ ] Incremental backups (only changed data since last full backup)
+
+**Notes:**
+- Phase 1 focuses on full restore only (wipe and replace)
+- All duplicate handling uses overwrite strategy in Phase 1
+- No preview functionality in Phase 1 (too complex)
+- Manual backups only (no scheduling in Phase 1)
+- Admin-only feature (regular users cannot access)
+- Works with all supported database drivers (SQLite, PostgreSQL, MySQL)
 
 ### Frontend Enhancements
 - [ ] Connect all views to backend APIs

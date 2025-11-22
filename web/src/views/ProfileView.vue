@@ -180,6 +180,42 @@
               <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
+
+          <v-divider class="my-2" />
+
+          <v-list-item
+            prepend-icon="mdi-download"
+            @click="$router.push('/settings/export')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Export Data
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Download WODs and Movements as CSV
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-upload"
+            @click="$router.push('/settings/import')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Import Data
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Upload WODs and Movements from CSV
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
         </v-list>
       </v-card>
 

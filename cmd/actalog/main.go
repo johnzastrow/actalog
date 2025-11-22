@@ -177,6 +177,9 @@ func main() {
 
 	userSettingsService := service.NewUserSettingsService(userSettingsRepo)
 
+	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -192,6 +195,8 @@ func main() {
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
 	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
+	exportHandler := handler.NewExportHandler(exportService)
+	importHandler := handler.NewImportHandler(importService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -325,6 +330,19 @@ func main() {
 			r.Get("/performance/search", performanceHandler.UnifiedSearch)
 			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
 			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
+
+			// Export routes (authenticated)
+			r.Get("/export/wods", exportHandler.ExportWODs)
+			r.Get("/export/movements", exportHandler.ExportMovements)
+			r.Get("/export/user-workouts", exportHandler.ExportUserWorkouts)
+
+			// Import routes (authenticated)
+			r.Post("/import/wods/preview", importHandler.PreviewWODImport)
+			r.Post("/import/wods/confirm", importHandler.ConfirmWODImport)
+			r.Post("/import/movements/preview", importHandler.PreviewMovementImport)
+			r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
+			r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
+			r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
