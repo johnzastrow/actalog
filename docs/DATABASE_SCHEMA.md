@@ -10,7 +10,12 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.4.6-beta
+**Current Version:** 0.7.3-beta
+
+## Recent Changes (v0.7.3-beta)
+
+- No schema changes in this release
+- Frontend enhancements: Quick Log integration on Performance screen, improved chart sorting
 
 ## Recent Changes (v0.4.6-beta)
 

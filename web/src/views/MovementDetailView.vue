@@ -2,6 +2,17 @@
   <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
 
     <v-container class="pa-2" style=" margin-bottom: 70px">
+      <!-- Back Button -->
+      <v-btn
+        variant="text"
+        color="#00bcd4"
+        class="mb-2"
+        @click="router.back()"
+      >
+        <v-icon start>mdi-arrow-left</v-icon>
+        Back
+      </v-btn>
+
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
         <v-progress-circular indeterminate color="#00bcd4" size="48" />

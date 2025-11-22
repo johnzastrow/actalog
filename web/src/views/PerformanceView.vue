@@ -277,7 +277,11 @@
                 elevation="0"
                 rounded="lg"
                 class="mb-2 pa-2"
-                style="background: #f5f7fa"
+                style="background: #f5f7fa; cursor: pointer; transition: all 0.2s ease"
+                hover
+                @click="viewWorkout(entry.user_workout_id)"
+                @mouseenter="$event.currentTarget.style.background = '#e8f4f8'"
+                @mouseleave="$event.currentTarget.style.background = '#f5f7fa'"
               >
                 <div class="d-flex align-center">
                   <!-- PR Trophy Icon -->
@@ -687,14 +691,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
 
 const router = useRouter()
+const route = useRoute()
 const activeTab = ref('performance')
 
 // State
@@ -951,6 +956,16 @@ async function handleSelection(item) {
   }
 
   selectedItem.value = item
+
+  // Update URL query params to preserve state
+  router.replace({
+    query: {
+      type: item.type,
+      id: item.data.id,
+      name: item.name
+    }
+  })
+
   await fetchPerformanceData()
 }
 
@@ -961,6 +976,9 @@ function clearSelection() {
   best1RM.value = null
   bestFormula.value = null
   destroyCharts()
+
+  // Clear URL query params
+  router.replace({ query: {} })
 }
 
 // Fetch Performance Data (Movement or WOD specific)
@@ -1421,6 +1439,11 @@ function closeQuickLog() {
   quickLogDialog.value = false
 }
 
+// View workout details
+function viewWorkout(workoutId) {
+  router.push(`/workouts/${workoutId}`)
+}
+
 // Submit Quick Log
 async function submitQuickLog() {
   quickLogSubmitting.value = true
@@ -1553,6 +1576,27 @@ function formatMovementType(type) {
   if (!type) return ''
   return type.charAt(0).toUpperCase() + type.slice(1)
 }
+
+// Restore selection from URL query params on mount
+onMounted(async () => {
+  const { type, id, name } = route.query
+
+  if (type && id && name) {
+    // Reconstruct the selected item from query params
+    selectedItem.value = {
+      id: `${type}-${id}`,  // Composite ID matching search results format
+      type,
+      name,
+      data: {
+        id: parseInt(id),
+        name  // Include name for Quick Log functionality
+      }
+    }
+
+    // Fetch the performance data
+    await fetchPerformanceData()
+  }
+})
 
 // Cleanup on unmount
 onBeforeUnmount(() => {
