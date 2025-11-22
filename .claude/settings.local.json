@@ -76,7 +76,9 @@
       "Bash(command -v shellcheck:*)",
       "Bash(/dev/null)",
       "Bash(./pwa-health-check.sh:*)",
-      "Bash(lighthouse:*)"
+      "Bash(lighthouse:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMCwiZW1haWwiOiJ0ZXN0dXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzYzODUxNzc5LCJuYmYiOjE3NjM3NjUzNzksImlhdCI6MTc2Mzc2NTM3OX0.pd8Oy_P85Sz4sHSMF-XOJgQOmCTyuCmOGsWaqF2011w\")",
+      "Bash(make clean:*)"
     ],
     "deny": [],
     "ask": []

@@ -861,3 +861,211 @@ Each WOD can be linked to zero or more workouts, and each strength movement can 
 
 
 
+#### Import and Export
+Import and export functions should allow round-tripping key data entities data through CSV files, in addition to other more comprehensive functions through JSON and copying data through SQLite copies. Implement import and export tools via screens from the Profile menu. The administrator should be able to export global data, but normal users should only be able to import and export data visible to them.
+1. Import CSV of WODs, and export to the same format. Transform the CSV for WODs in the seeds/ directory to match what you would need to export to round-trip the data. The add seeding the database of a new database with these data. Do the same process for the movement CSV
+2. Export and Import of User Workouts with enough information to rebuild the associated workouts/WODs and Movements. Might need to be in JSON format
+3. Export of Workouts in CSV format for use in spreadsheets. Flatten out the workout details form other tables into a flattened CSV file
+4. Export of Performance information for each WOD and Movement into CSV format, with flags for PRs
+
+
+#### Database Backup and Restore System
+
+A comprehensive backup and restore system allows administrators to create full database backups and restore them when needed. This feature is critical for disaster recovery, data migration between installations, and changing database technologies.
+
+**User Story:**
+- As an admin, I want to create full database backups so that I can restore the entire application in case of data loss or system failure.
+- As an admin, I want to download backups to my local device so that I have offline copies for safekeeping.
+- As an admin, I want to restore from a backup so that I can recover from data loss or migrate to a new server.
+- As an admin, I want to list all available backups with metadata so that I can identify which backup to restore.
+- As an admin, I want to delete old backups so that I can manage storage space on the server.
+
+**Phase 1 Requirements (v0.6.0):**
+
+1. **Backup Creation (Admin Only)**
+   - Manual backup trigger via web UI ("Create Backup" button)
+   - Backup includes ALL application data:
+     - All database tables (users, workouts, movements, WODs, performance data, audit logs, settings, etc.)
+     - Uploaded files (avatars, attachments stored in `uploads/` directory)
+     - Application configuration files (`.env` settings, relevant config)
+   - Backup formats:
+     - **Primary format**: JSON (portable, database-agnostic, allows migration between database technologies)
+     - **Optional format**: SQLite file (if SQLite is the active database, offer direct database file download)
+   - Compression: All backups packaged as `.zip` files for reduced storage
+   - No encryption yet (passwords already hashed in database)
+   - Storage location: Server filesystem in `backups/` directory
+   - Backup filename format: `actalog_backup_YYYY-MM-DD_HH-MM-SS.zip`
+
+2. **Backup Metadata**
+   - Each backup includes a `metadata.json` file with:
+     - Backup creation date/time
+     - Application version
+     - Database driver used (sqlite3, postgres, mysql)
+     - Admin user who created backup
+     - Data date range (earliest and latest workout dates)
+     - Total record counts (users, workouts, movements, WODs)
+     - Backup file size
+     - Database schema version
+
+3. **Backup Management UI (Admin Only)**
+   - **Location**: `/admin/backups` route
+   - **List View**: Table showing all available backups with:
+     - Creation date/time
+     - File size (human-readable: KB, MB, GB)
+     - Data date range
+     - Created by (admin username)
+     - Record counts summary
+     - Actions: Download, Delete
+   - **Actions**:
+     - **Create Backup**: Button triggers backup creation with progress indicator
+     - **Download Backup**: Download `.zip` file to admin's device
+     - **Delete Backup**: Delete backup file from server (with confirmation dialog)
+   - **No preview**: Backups cannot be previewed before restore (too complex for Phase 1)
+
+4. **Restore Process (Admin Only) - Full Restore**
+   - **Phase 1**: Full restore only (wipes existing database and replaces with backup data)
+   - **Restore workflow**:
+     1. Admin selects backup from list
+     2. Confirmation dialog warns: "This will DELETE all current data and replace with backup data. Are you sure?"
+     3. Admin uploads backup `.zip` file (if not already on server)
+     4. System validates backup file (checks metadata, file integrity)
+     5. System stops application (maintenance mode)
+     6. System wipes current database tables
+     7. System restores all data from JSON backup (parses and inserts into current database driver)
+     8. System restores uploaded files to `uploads/` directory
+     9. System restarts application
+     10. Admin sees success message with summary (records restored, files restored)
+   - **Duplicate handling (Phase 1)**: Overwrite all existing data (full wipe and replace)
+   - **Database migration support**: JSON format allows restoring into different database technology than original backup
+
+5. **Multi-Database Support**
+   - Backup/restore must work with all supported database drivers:
+     - SQLite (`sqlite3`)
+     - PostgreSQL (`postgres`)
+     - MySQL/MariaDB (`mysql`)
+   - JSON format ensures portability between database types
+   - SQLite file download only available when SQLite is active database
+
+6. **Access Control**
+   - **Admin only**: Only users with `role = admin` can access backup/restore features
+   - Route protected by `middleware.AdminOnly`
+   - Non-admin users see 403 Forbidden if they attempt access
+
+7. **Error Handling**
+   - Backup creation errors: Disk space, file permissions, database read errors
+   - Restore errors: Invalid backup file, corrupted data, database write errors, schema mismatch
+   - User-friendly error messages with action hints
+   - Rollback mechanism if restore fails mid-process (restore database from pre-restore snapshot)
+
+**Future Enhancements (v0.7.0+):**
+
+1. **Selective Restore**
+   - Restore specific tables only (e.g., just workouts, just users)
+   - Restore data from specific date ranges
+   - Choose which data to include/exclude during restore
+
+2. **Merge Mode Restore**
+   - Import backup data into existing database without wiping
+   - Smart duplicate detection and resolution
+   - User chooses: Skip, Overwrite, or Rename duplicates
+
+3. **Automated Backups**
+   - Scheduled automatic backups (daily, weekly, monthly)
+   - Configurable retention policy (keep last N backups, auto-delete old)
+   - Email notifications when backup completes or fails
+
+4. **Encryption**
+   - Password-protected backups
+   - Encryption at rest for backup files
+   - Secure key management
+
+5. **Remote Storage**
+   - Upload backups to cloud storage (S3, Google Drive, Dropbox)
+   - Remote backup retention policy
+   - Download from cloud for restore
+
+6. **Point-in-Time Recovery (Advanced)**
+   - Transaction log backups for databases that support it
+   - Restore database to exact point in time
+   - Incremental backups between full backups
+
+7. **CLI Tool**
+   - Command-line interface for backup/restore operations
+   - Useful for server administrators and automation
+   - Example: `actalog backup create`, `actalog backup restore <file>`
+
+**Technical Implementation Notes:**
+
+- **JSON Structure** for backup:
+  ```json
+  {
+    "metadata": {
+      "backup_version": "1.0",
+      "app_version": "0.6.0",
+      "created_at": "2025-01-21T10:30:00Z",
+      "database_driver": "sqlite3",
+      "created_by": "admin@example.com",
+      "data_date_range": {
+        "earliest_workout": "2024-01-01",
+        "latest_workout": "2025-01-21"
+      },
+      "record_counts": {
+        "users": 150,
+        "workouts": 3420,
+        "movements": 45,
+        "wods": 120,
+        "audit_logs": 8950
+      },
+      "schema_version": "0.5.0"
+    },
+    "users": [...],
+    "movements": [...],
+    "wods": [...],
+    "workouts": [...],
+    "user_workouts": [...],
+    "user_workout_movements": [...],
+    "user_workout_wods": [...],
+    "audit_logs": [...],
+    "user_settings": [...]
+  }
+  ```
+
+- **File Structure** in backup `.zip`:
+  ```
+  actalog_backup_2025-01-21_10-30-00.zip
+  ├── metadata.json
+  ├── database.json (all tables)
+  ├── database.db (optional, if SQLite)
+  ├── config/
+  │   └── .env.backup
+  └── uploads/
+      ├── avatars/
+      └── attachments/
+  ```
+
+- **Service Layer** (`internal/service/backup_service.go`):
+  - `CreateBackup(adminUserID)` - Creates full backup
+  - `ListBackups()` - Returns list of available backups with metadata
+  - `GetBackupMetadata(filename)` - Reads metadata from backup file
+  - `RestoreBackup(filename, adminUserID)` - Full restore from backup
+  - `DeleteBackup(filename, adminUserID)` - Deletes backup file
+
+- **Repository Layer**: No new repositories needed (uses existing repos to read/write data)
+
+- **Handler Layer** (`internal/handler/backup_handler.go`):
+  - `POST /api/admin/backups` - Create backup
+  - `GET /api/admin/backups` - List backups
+  - `GET /api/admin/backups/{filename}` - Download backup
+  - `DELETE /api/admin/backups/{filename}` - Delete backup
+  - `POST /api/admin/backups/{filename}/restore` - Restore from backup
+
+- **Frontend** (`web/src/views/AdminBackupsView.vue`):
+  - Backup management interface
+  - Create, list, download, delete backups
+  - Restore with confirmation dialogs
+
+**Dependencies:**
+- `archive/zip` (Go standard library) - ZIP compression
+- Existing repositories for data access
+- File system utilities for file operations
+

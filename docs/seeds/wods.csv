@@ -1,0 +1,11 @@
+name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Fran,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"21-15-9 reps for time of: Thrusters (95/65 lb), Pull-ups",https://www.crossfit.com/workout/fran,,true,
+Helen,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"3 rounds for time of: 400m Run, 21 Kettlebell Swings (53/35 lb), 12 Pull-ups",https://www.crossfit.com/workout/helen,,true,
+Cindy,CrossFit,Girl,AMRAP,Rounds+Reps,"20 min AMRAP of: 5 Pull-ups, 10 Push-ups, 15 Air Squats",https://www.crossfit.com/workout/cindy,,true,
+Grace,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),30 Clean and Jerks for time (135/95 lb),https://www.crossfit.com/workout/grace,,true,
+Annie,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"50-40-30-20-10 reps for time of: Double-Unders, Sit-ups",https://www.crossfit.com/workout/annie,,true,
+Karen,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),150 Wall Ball Shots for time (20/14 lb to 10/9 ft target),https://www.crossfit.com/workout/karen,,true,
+Diane,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"21-15-9 reps for time of: Deadlifts (225/155 lb), Handstand Push-ups",https://www.crossfit.com/workout/diane,,true,
+Elizabeth,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"21-15-9 reps for time of: Cleans (135/95 lb), Ring Dips",https://www.crossfit.com/workout/elizabeth,,true,
+Murph,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"For time: 1 mile Run, 100 Pull-ups, 200 Push-ups, 300 Air Squats, 1 mile Run (wear 20 lb vest if possible)",https://www.crossfit.com/workout/murph,Partition the pull-ups/push-ups/squats as needed,true,
+DT,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"5 rounds for time of: 12 Deadlifts (155/105 lb), 9 Hang Power Cleans (155/105 lb), 6 Push Jerks (155/105 lb)",https://www.crossfit.com/workout/dt,,true,
