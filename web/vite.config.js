@@ -37,6 +37,15 @@ if (USE_HTTPS && fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    include: [
+      'vuetify',
+      'vuetify/components',
+      'vuetify/directives',
+      'workbox-window'
+    ],
+    exclude: []
+  },
   plugins: [
     vue(),
     vuetify({ autoImport: true }),
@@ -114,7 +123,13 @@ export default defineConfig({
         ]
       },
       workbox: {
+        globDirectory: 'dist',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api/],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -178,7 +193,8 @@ export default defineConfig({
       devOptions: {
         enabled: true,
         type: 'module',
-        navigateFallback: 'index.html'
+        navigateFallback: 'index.html',
+        suppressWarnings: true
       }
     })
   ],
