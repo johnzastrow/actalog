@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2-beta] - 2025-01-22
+
+### Added
+- **1RM (One-Rep Max) Calculation and Display**: Complete system for tracking estimated strength maximums
+  - **Backend**: Enhanced `/api/performance/movements/{id}` endpoint to calculate and return 1RM data
+    - Added `MovementPerformanceWithRM` response type with `calculated_1rm` and `formula` fields
+    - Returns `best_1rm` and `best_formula` for overall best performance
+    - Uses hybrid formula approach from `pkg/prmath/one_rm.go`:
+      - 1 rep = Actual weight
+      - 2-10 reps = Epley formula: `1RM = weight × (1 + reps/30)`
+      - 11+ reps = Wathan formula: `1RM = (100 × weight) / (48.8 + 53.8 × e^(-0.075 × reps))`
+  - **Frontend - Best 1RM Card**: New stat card displaying estimated 1RM
+    - Prominent gold-colored display (#ffc107) with arm-flex icon
+    - Shows rounded 1RM value with "lbs (estimated)" label
+    - Displays formula chip indicating calculation method
+    - Only appears when weight/reps data is available
+  - **Frontend - Performance History**: Enhanced history entries with 1RM estimates
+    - Shows "Est. 1RM: XXX lbs" in gold text for each performance record
+    - Appears alongside date and notes in subtitle line
+  - **Frontend - Chart Enhancements**: Dual-line performance chart
+    - Added dashed gold line showing estimated 1RM trend
+    - Original solid dark line shows actual weight lifted
+    - Legend automatically displays when 1RM data exists
+    - Enhanced tooltips showing both actual weight and estimated 1RM with formula
+    - Null value filtering prevents gaps in chart display
+  - **Y-Axis Labels**: Added clear axis labels to all performance charts
+    - Movement charts: "Weight (lbs)"
+    - WOD charts: Dynamic labels based on score type (Time/Rounds/Weight)
+
+### Fixed
+- **WOD Chart Rendering Issue**: Fixed canvas element not rendering on initial load
+  - Moved `loadingPerformance = false` before chart rendering to ensure DOM updates
+  - Added proper `await nextTick()` sequencing for canvas availability
+  - Resolved null reference errors in WOD performance charts
+
+### Changed
+- **Code Cleanup**: Removed debug console.log statements from PerformanceView
+  - Removed WOD debug logging throughout fetchPerformanceData and renderWODChart
+  - Cleaner console output in production
+
+## [0.7.1-beta] - 2025-01-22
+
+### Fixed
+- **Wodify Import Date Issue**: Fixed performance charts showing all imported workouts as "today" instead of actual workout dates
+  - Backend: Added `WorkoutDate` field to `UserWorkoutMovement` and `UserWorkoutWOD` domain models
+  - Backend: Updated repositories to populate `workout_date` from `user_workouts.workout_date` join
+  - Frontend: Changed PerformanceView to use `workout_date` instead of `created_at` for all date displays
+  - Charts now correctly show historical dates (e.g., Jul 30, 2018) from Wodify CSV imports
+  - History grouping and sorting now use actual workout dates
+
+### Changed
+- **Performance Chart Date Display**: Charts now display full dates with year
+  - X-axis labels show year: "Jul 30, 2018" instead of "Jul 30"
+  - Hover tooltips display full date with year in title
+  - Applied to both Movement and WOD performance charts
+- **Rep Scheme Filter Enhancement**: Improved dropdown filter in Performance view
+  - Changed "All Reps" to simplified "All" option
+  - "All" displays all weighted records regardless of rep scheme, sets, or other factors
+  - Cleaner, more intuitive filtering experience
+
 ## [0.4.3-beta] - 2025-01-14
 
 ### Changed

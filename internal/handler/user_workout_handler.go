@@ -367,19 +367,21 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 	var responses []UserWorkoutResponse
 	for _, logged := range workouts {
 		response := UserWorkoutResponse{
-			ID:           logged.ID,
-			UserID:       logged.UserID,
-			WorkoutID:    logged.WorkoutID,
-			WorkoutName:  logged.WorkoutName,
-			WorkoutDate:  logged.WorkoutDate.Format("2006-01-02"),
-			WorkoutType:  logged.WorkoutType,
-			TotalTime:    logged.TotalTime,
-			Notes:        logged.Notes,
-			CreatedAt:    logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
-			UpdatedAt:    logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-			Movements:    logged.Movements,
-			WODs:         logged.WODs,
-			WorkoutNotes: logged.WorkoutDescription,
+			ID:                   logged.ID,
+			UserID:               logged.UserID,
+			WorkoutID:            logged.WorkoutID,
+			WorkoutName:          logged.WorkoutName,
+			WorkoutDate:          logged.WorkoutDate.Format("2006-01-02"),
+			WorkoutType:          logged.WorkoutType,
+			TotalTime:            logged.TotalTime,
+			Notes:                logged.Notes,
+			CreatedAt:            logged.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:            logged.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			Movements:            logged.Movements,
+			WODs:                 logged.WODs,
+			PerformanceMovements: logged.PerformanceMovements,
+			PerformanceWODs:      logged.PerformanceWODs,
+			WorkoutNotes:         logged.WorkoutDescription,
 		}
 		responses = append(responses, response)
 	}

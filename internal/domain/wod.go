@@ -40,10 +40,11 @@ type UserWorkoutWOD struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data (loaded via joins)
-	WOD            *WOD   `json:"wod,omitempty" db:"-"`
-	WODName        string `json:"wod_name,omitempty" db:"-"`        // Flattened for convenience
-	WODType        string `json:"wod_type,omitempty" db:"-"`        // Flattened for convenience (Benchmark, Hero, Girl, etc.)
-	WODScoreType   string `json:"wod_score_type,omitempty" db:"-"`  // WOD's defined score_type from wods table
+	WOD            *WOD      `json:"wod,omitempty" db:"-"`
+	WODName        string    `json:"wod_name,omitempty" db:"-"`        // Flattened for convenience
+	WODType        string    `json:"wod_type,omitempty" db:"-"`        // Flattened for convenience (Benchmark, Hero, Girl, etc.)
+	WODScoreType   string    `json:"wod_score_type,omitempty" db:"-"`  // WOD's defined score_type from wods table
+	WorkoutDate    time.Time `json:"workout_date" db:"-"`              // From user_workouts.workout_date
 }
 
 // WODRepository defines the interface for WOD data access

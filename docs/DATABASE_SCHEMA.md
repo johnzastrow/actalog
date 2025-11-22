@@ -611,6 +611,14 @@ Database migrations are managed through `internal/repository/migrations.go` and 
 - `GET /api/workouts/pr-movements?limit=5` - Get recent PR-flagged movements
 - `POST /api/workouts/movements/{id}/toggle-pr` - Toggle PR flag
 
+### Performance Tracking
+- `GET /api/performance/search?q=...` - Unified search for movements and WODs
+- `GET /api/performance/movements/{id}` - Get movement performance history with calculated 1RM
+  - Returns: `performances` array with `calculated_1rm` and `formula` for each record
+  - Returns: `best_1rm` - Overall best estimated 1RM across all performances
+  - Returns: `best_formula` - Formula used for best 1RM (Actual 1RM, Epley, or Wathan)
+- `GET /api/performance/wods/{id}` - Get WOD performance history
+
 ## Security Considerations
 
 1. **Password Storage:** Bcrypt hashing with cost factor ≥12
@@ -650,6 +658,8 @@ Potential future schema additions (not yet implemented):
 ## Version History
 
 - **v0.3.3-beta** (Current Schema): User profile editing with birthday field
+- **Application v0.7.2-beta**: No schema changes (1RM calculation and display enhancements)
+- **Application v0.7.1-beta**: No schema changes (Wodify import date fixes)
 - **Application v0.4.1-beta**: No schema changes (bug fixes and deployment improvements)
 - **Application v0.4.0-beta**: No schema changes (backend refactoring for template architecture)
 - **v0.3.2-beta**: Remember Me functionality with refresh tokens

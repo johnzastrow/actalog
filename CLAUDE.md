@@ -581,6 +581,81 @@ curl -X POST http://localhost:8080/api/import/wodify/confirm \
 - Automatically flagged 62 PRs from Wodify data
 - 1 invalid row handled gracefully (missing component type/name)
 
+### 1RM (One-Rep Max) Calculation and Display (v0.7.2-beta)
+
+**Location:** `internal/handler/performance_handler.go`, `pkg/prmath/one_rm.go`, `web/src/views/PerformanceView.vue`
+
+Complete system for calculating and displaying estimated one-rep maximums for strength movements:
+- **Backend API Enhancement:** `GET /api/performance/movements/{id}` now calculates and returns 1RM data
+- **Frontend Display:** Performance screen shows best 1RM, trend chart, and per-record estimates
+- **Formula Selection:** Automatic formula selection based on rep range (Epley, Wathan, or Actual)
+
+**Key Implementation Details:**
+- **Backend (`internal/handler/performance_handler.go`):**
+  - New response type: `MovementPerformanceWithRM` with `calculated_1rm` and `formula` fields
+  - Returns `best_1rm` - overall best estimated 1RM across all performances
+  - Returns `best_formula` - formula used for best estimate (e.g., "Epley (2-10 reps)")
+  - Calculation performed on-the-fly (no database storage required)
+
+- **Calculation Package (`pkg/prmath/one_rm.go`):**
+  - Hybrid formula approach: `Calculate1RM(weight, reps) → (oneRM, formula)`
+  - 1 rep: Returns actual weight as "Actual 1RM"
+  - 2-10 reps: Epley formula `1RM = weight × (1 + reps/30)`
+  - 11+ reps: Wathan formula `1RM = (100 × weight) / (48.8 + 53.8 × e^(-0.075 × reps))`
+  - Also includes `CalculateAllFormulas()` for comparing multiple estimates
+
+- **Multi-database Support:** Works with SQLite, PostgreSQL, and MySQL (no schema changes)
+
+**Frontend Integration (`web/src/views/PerformanceView.vue`):**
+
+1. **Best 1RM Stat Card:**
+   - Gold-colored display (#ffc107) with arm-flex icon (mdi-arm-flex)
+   - Shows rounded estimated 1RM value
+   - Displays formula chip indicating calculation method
+   - Only appears when weight/reps data is available
+
+2. **Performance History Enhancement:**
+   - Each movement entry shows "Est. 1RM: XXX lbs" in gold text
+   - Appears alongside workout date and notes in subtitle
+   - Provides quick reference for strength progression
+
+3. **Dual-Line Performance Chart:**
+   - **Solid dark line (#2c3e50):** Actual weight lifted
+   - **Dashed gold line (#ffc107):** Estimated 1RM trend
+   - Legend automatically displays when 1RM data exists
+   - Y-axis labeled "Weight (lbs)" for clarity
+
+4. **Enhanced Chart Tooltips:**
+   - Weight line: Shows actual weight, reps, and PR flag
+   - 1RM line: Shows calculated 1RM with formula (e.g., "Est. 1RM: 225 lbs (Epley)")
+   - Null value filtering prevents gaps in visualization
+
+**API Response Example:**
+```json
+{
+  "performances": [
+    {
+      "id": 123,
+      "weight": 185,
+      "reps": 5,
+      "calculated_1rm": 215.5,
+      "formula": "Epley (2-10 reps)",
+      "is_pr": true,
+      "workout_date": "2025-01-22"
+    }
+  ],
+  "best_1rm": 225.0,
+  "best_formula": "Epley (2-10 reps)",
+  "count": 15
+}
+```
+
+**Use Cases:**
+- Track estimated strength progression over time without testing true 1RM
+- Compare performance across different rep schemes
+- Identify when to increase working weights
+- Visualize strength trends alongside actual workout data
+
 ### Password Reset System (v0.3.0-beta)
 
 **Location:** `internal/repository/password_reset_repository.go`, `internal/service/user_service.go`, `internal/handler/auth_handler.go`, `web/src/views/ForgotPasswordView.vue`, `web/src/views/ResetPasswordView.vue`

@@ -8,7 +8,7 @@
       </v-alert>
 
       <!-- Unified Search (Movements + WODs) -->
-      <v-card elevation="2" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="2" class="pa-3 mb-3" style="background: white">
         <v-autocomplete
           v-model="selectedItem"
           :items="searchResults"
@@ -18,7 +18,6 @@
           placeholder="Search for a WOD or Movement..."
           variant="outlined"
           density="comfortable"
-          rounded="lg"
           clearable
           auto-select-first
           hide-details
@@ -33,7 +32,7 @@
             <v-list-item v-bind="props" density="compact">
               <template #prepend>
                 <v-icon
-                  :color="item.raw.type === 'movement' ? '#00bcd4' : '#ffc107'"
+                  :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
                   size="small"
                 >
                   {{ item.raw.type === 'movement' ? 'mdi-dumbbell' : 'mdi-fire' }}
@@ -120,6 +119,40 @@
             </div>
           </v-card>
 
+          <!-- Best Estimated 1RM -->
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+              <v-icon color="#ffc107" size="small" class="mr-1">mdi-arm-flex</v-icon>
+              Best Estimated 1RM
+            </h2>
+
+            <div v-if="loadingPerformance" class="text-center py-4">
+              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            </div>
+
+            <div v-else-if="!best1RM" class="text-center py-4">
+              <p class="text-caption" style="color: #999">No weight/reps data available</p>
+            </div>
+
+            <div v-else class="text-center">
+              <div class="font-weight-bold text-h4" style="color: #ffc107">
+                {{ Math.round(best1RM) }}
+              </div>
+              <div class="text-caption mb-2" style="color: #666">
+                lbs (estimated)
+              </div>
+              <v-chip
+                v-if="bestFormula"
+                size="x-small"
+                color="grey-lighten-2"
+                label
+                class="text-caption"
+              >
+                {{ bestFormula }}
+              </v-chip>
+            </div>
+          </v-card>
+
           <!-- Rep Scheme Dropdown Filter -->
           <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
             <v-select
@@ -189,7 +222,7 @@
                       {{ formatWODScore(perf) }}
                     </div>
                     <div class="text-caption" style="color: #666">
-                      {{ formatDate(perf.created_at) }}
+                      {{ formatDate(perf.workout_date) }}
                     </div>
                   </div>
                 </v-col>
@@ -271,8 +304,11 @@
                     </div>
 
                     <div class="text-caption" style="color: #666">
-                      {{ formatDate(entry.created_at) }}
+                      {{ formatDate(entry.workout_date) }}
                       <span v-if="entry.notes"> • {{ entry.notes }}</span>
+                      <span v-if="entry.calculated_1rm" class="ml-2" style="color: #ffc107">
+                        • Est. 1RM: {{ Math.round(entry.calculated_1rm) }} lbs
+                      </span>
                     </div>
                   </div>
 
@@ -292,6 +328,331 @@
         </v-card>
       </div>
     </v-container>
+    <!-- Quick Log Dialog -->
+    <v-dialog v-model="quickLogDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+          <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
+          Quick Log Workout
+        </v-card-title>
+
+        <v-card-text class="pa-2">
+          <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
+            <!-- Date -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+                Date *
+              </label>
+              <v-text-field
+                v-model="quickLogData.date"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+                required
+                @update:model-value="updateQuickLogName"
+              />
+            </div>
+
+            <!-- Workout Name -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+                Workout Name *
+              </label>
+              <v-text-field
+                v-model="quickLogData.name"
+                variant="outlined"
+                density="compact"
+                placeholder="e.g., Morning Run, Upper Body, etc."
+                hide-details
+                required
+              />
+            </div>
+
+            <!-- Total Time -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+                Total Time (minutes)
+              </label>
+              <v-text-field
+                v-model.number="quickLogData.totalTime"
+                type="number"
+                variant="outlined"
+                density="compact"
+                placeholder="e.g., 30"
+                hide-details
+                min="0"
+              />
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+                Notes
+              </label>
+              <v-textarea
+                v-model="quickLogData.notes"
+                variant="outlined"
+                density="compact"
+                rows="3"
+                placeholder="How did it feel? Any highlights?"
+                hide-details
+              />
+            </div>
+
+            <!-- Unified Search for Movement/WOD -->
+            <div class="mb-1">
+              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+                Add Performance Data (Optional)
+              </label>
+              <v-autocomplete
+                v-model="quickLogData.selectedItem"
+                :items="unifiedSearchItems"
+                item-title="displayName"
+                item-value="id"
+                return-object
+                :loading="loadingMovements || loadingWods"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+                auto-select-first
+                placeholder="Search for movement or WOD..."
+              >
+                <template #prepend-inner>
+                  <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                </template>
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #prepend>
+                      <v-icon
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        size="small"
+                      >
+                        {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : 'mdi-fire' }}
+                      </v-icon>
+                    </template>
+                    <template #append>
+                      <v-chip
+                        :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                        size="x-small"
+                        variant="flat"
+                        class="text-uppercase"
+                      >
+                        {{ item.raw.type }}
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </div>
+
+              <!-- Movement Performance Form -->
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+                <div class="mb-2">
+                  <label class="text-caption">Sets</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.sets"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Reps</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.reps"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Weight (lbs)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.weight"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Time (seconds)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.time"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                  />
+                </div>
+                <div class="mb-2">
+                  <label class="text-caption">Distance (meters)</label>
+                  <v-text-field
+                    v-model.number="quickLogData.movement.distance"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label class="text-caption">Notes</label>
+                  <v-textarea
+                    v-model="quickLogData.movement.notes"
+                    variant="outlined"
+                    density="compact"
+                    rows="2"
+                    hide-details
+                  />
+                </div>
+              </div>
+
+              <!-- WOD Performance Form -->
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+                <div class="mb-2">
+                  <label class="text-caption">Score Type (from WOD)</label>
+                  <v-text-field
+                    v-model="quickLogData.wod.scoreType"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    readonly
+                    bg-color="#e0e0e0"
+                  />
+                </div>
+                <!-- Time-based WOD fields -->
+                <div v-if="quickLogData.wod.scoreType === 'Time (HH:MM:SS)'">
+                  <label class="text-caption d-block mb-1">Time (HH:MM:SS) *</label>
+                  <div class="d-flex gap-2 mb-2">
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeHours"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="23"
+                      placeholder="HH"
+                      style="flex: 1"
+                    />
+                    <span class="align-self-center">:</span>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeMinutes"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="59"
+                      placeholder="MM"
+                      style="flex: 1"
+                    />
+                    <span class="align-self-center">:</span>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.timeSecondsInput"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      max="59"
+                      placeholder="SS"
+                      style="flex: 1"
+                    />
+                  </div>
+                </div>
+
+                <!-- Rounds+Reps WOD fields -->
+                <template v-if="quickLogData.wod.scoreType === 'Rounds+Reps'">
+                  <div class="mb-2">
+                    <label class="text-caption">Rounds *</label>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.rounds"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      placeholder="e.g., 10"
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="text-caption">Reps (optional)</label>
+                    <v-text-field
+                      v-model.number="quickLogData.wod.reps"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      min="0"
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                </template>
+
+                <!-- Max Weight WOD field (note: weight field is missing in quickLogData.wod, needs to be added) -->
+                <div v-if="quickLogData.wod.scoreType === 'Max Weight'" class="mb-2">
+                  <label class="text-caption">Weight (lbs) *</label>
+                  <v-text-field
+                    v-model.number="quickLogData.wod.weight"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    min="0"
+                    step="0.5"
+                    placeholder="e.g., 225"
+                  />
+                </div>
+
+                <!-- Notes field (always shown) -->
+                <div>
+                  <label class="text-caption">Notes</label>
+                  <v-textarea
+                    v-model="quickLogData.wod.notes"
+                    variant="outlined"
+                    density="compact"
+                    rows="2"
+                    hide-details
+                    placeholder="How did it feel?"
+                  />
+                </div>
+              </div>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions class="pa-2 pt-0">
+          <v-btn
+            variant="text"
+            @click="closeQuickLog"
+          >
+            Cancel
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            color="teal"
+            variant="elevated"
+            :loading="quickLogSubmitting"
+            :disabled="!quickLogData.name || !quickLogData.date"
+            @click="submitQuickLog"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Log Workout
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation
@@ -345,10 +706,12 @@ const loadingSearch = ref(false)
 // Performance data
 const performanceData = ref([]) // Raw performance data from API
 const loadingPerformance = ref(false)
+const best1RM = ref(null) // Best calculated 1RM for movements
+const bestFormula = ref(null) // Formula used for best 1RM
 
 // Movement-specific
-const selectedRepScheme = ref('All Reps')
-const repSchemes = ref(['All Reps'])
+const selectedRepScheme = ref('All')
+const repSchemes = ref(['All'])
 
 // Chart instances
 const chartCanvas = ref(null)
@@ -357,6 +720,37 @@ let chartInstance = null
 let wodChartInstance = null
 
 const error = ref(null)
+
+// Quick Log state
+const quickLogDialog = ref(false)
+const quickLogSubmitting = ref(false)
+const quickLogData = ref({
+  name: '',
+  date: '',
+  totalTime: null,
+  notes: '',
+  selectedItem: null,
+  movement: {
+    sets: null,
+    reps: null,
+    weight: null,
+    time: null,
+    distance: null,
+    notes: ''
+  },
+  wod: {
+    scoreType: null,
+    scoreValue: null,
+    timeSeconds: null,
+    rounds: null,
+    reps: null,
+    notes: ''
+  }
+})
+const movements = ref([])
+const wods = ref([])
+const loadingMovements = ref(false)
+const loadingWods = ref(false)
 
 // Computed: Heaviest Lifts (Top 3 Maxes - Movement only)
 const heaviestLifts = computed(() => {
@@ -425,7 +819,7 @@ const bestWODPerformances = computed(() => {
 const filteredChartData = computed(() => {
   if (!selectedItem.value || selectedItem.value.type !== 'movement') return []
 
-  if (selectedRepScheme.value === 'All Reps') {
+  if (selectedRepScheme.value === 'All') {
     return performanceData.value.filter(p => p.weight)
   }
 
@@ -439,7 +833,7 @@ watch(performanceData, async (newData) => {
     return
   }
 
-  const schemes = new Set(['All Reps'])
+  const schemes = new Set(['All'])
   newData.forEach(p => {
     if (p.reps) {
       schemes.add(`${p.reps} reps`)
@@ -456,7 +850,7 @@ watch(performanceData, async (newData) => {
     if (heaviest) {
       selectedRepScheme.value = `${heaviest.reps} reps`
     } else {
-      selectedRepScheme.value = 'All Reps'
+      selectedRepScheme.value = 'All'
     }
   }
 }, { immediate: true })
@@ -468,6 +862,13 @@ watch(filteredChartData, async () => {
     renderMovementChart()
   }
 }, { deep: true })
+
+// Watch Quick Log selected item to populate WOD score type
+watch(() => quickLogData.value.selectedItem, (newItem) => {
+  if (newItem?.type === 'wod' && newItem.data?.score_type) {
+    quickLogData.value.wod.scoreType = newItem.data.score_type
+  }
+})
 
 // Computed: WOD Performance Data for Chart
 const wodPerformanceData = computed(() => {
@@ -482,7 +883,7 @@ const groupedHistory = computed(() => {
   const grouped = {}
 
   performanceData.value.forEach(entry => {
-    const year = new Date(entry.created_at).getFullYear()
+    const year = new Date(entry.workout_date).getFullYear()
     if (!grouped[year]) {
       grouped[year] = []
     }
@@ -496,7 +897,7 @@ const groupedHistory = computed(() => {
     .forEach(year => {
       // Sort entries within year by date descending
       sorted[year] = grouped[year].sort((a, b) =>
-        new Date(b.created_at) - new Date(a.created_at)
+        new Date(b.workout_date) - new Date(a.workout_date)
       )
     })
 
@@ -557,6 +958,8 @@ async function handleSelection(item) {
 function clearSelection() {
   selectedItem.value = null
   performanceData.value = []
+  best1RM.value = null
+  bestFormula.value = null
   destroyCharts()
 }
 
@@ -573,11 +976,16 @@ async function fetchPerformanceData() {
       const movementId = selectedItem.value.data.id
       response = await axios.get(`/api/performance/movements/${movementId}`)
       performanceData.value = response.data.performances || []
+      best1RM.value = response.data.best_1rm || null
+      bestFormula.value = response.data.best_formula || null
     } else if (selectedItem.value.type === 'wod') {
       const wodId = selectedItem.value.data.id
       response = await axios.get(`/api/performance/wods/${wodId}`)
       performanceData.value = response.data.performances || []
     }
+
+    // Stop loading spinner BEFORE rendering charts so canvas element is in DOM
+    loadingPerformance.value = false
 
     // Note: Chart rendering is handled by the performanceData watcher for movements
     // For WODs, render directly since there's no rep scheme selection
@@ -589,7 +997,6 @@ async function fetchPerformanceData() {
     console.error('Failed to fetch performance data:', err)
     error.value = `Failed to load ${selectedItem.value.type} performance data`
     performanceData.value = []
-  } finally {
     loadingPerformance.value = false
   }
 }
@@ -619,47 +1026,107 @@ function renderMovementChart() {
 
   const data = filteredChartData.value
     .filter(p => p.weight)
-    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .sort((a, b) => {
+      // Primary sort: workout_date (ascending - oldest to newest)
+      const dateCompare = new Date(a.workout_date) - new Date(b.workout_date)
+      if (dateCompare !== 0) return dateCompare
+
+      // Secondary sort: created_at or id (ascending - earliest to latest)
+      if (a.created_at && b.created_at) {
+        return new Date(a.created_at) - new Date(b.created_at)
+      }
+      return a.id - b.id
+    })
 
   if (data.length === 0) {
     return
   }
 
-  const labels = data.map(p => formatDate(p.created_at))
+  const labels = data.map(p => formatChartDate(p.workout_date))
   const weights = data.map(p => p.weight)
+  const estimated1RMs = data.map(p => p.calculated_1rm || null)
+
+  // Build datasets array - always include weight, only add 1RM if we have data
+  const datasets = [{
+    label: 'Weight (lbs)',
+    data: weights,
+    borderColor: '#2c3e50',
+    backgroundColor: 'rgba(44, 62, 80, 0.1)',
+    tension: 0.4,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    pointBackgroundColor: '#2c3e50',
+    pointBorderColor: '#2c3e50',
+    fill: true
+  }]
+
+  // Add 1RM dataset if we have any calculated 1RM values
+  if (estimated1RMs.some(rm => rm !== null)) {
+    datasets.push({
+      label: 'Estimated 1RM (lbs)',
+      data: estimated1RMs,
+      borderColor: '#ffc107',
+      backgroundColor: 'rgba(255, 193, 7, 0.1)',
+      tension: 0.4,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: '#ffc107',
+      pointBorderColor: '#ffc107',
+      fill: false,
+      borderDash: [5, 5] // Dashed line for estimated values
+    })
+  }
 
   chartInstance = new Chart(chartCanvas.value, {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: 'Weight (lbs)',
-        data: weights,
-        borderColor: '#2c3e50',
-        backgroundColor: 'rgba(44, 62, 80, 0.1)',
-        tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointBackgroundColor: '#2c3e50',
-        pointBorderColor: '#2c3e50',
-        fill: true
-      }]
+      datasets
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          display: estimated1RMs.some(rm => rm !== null), // Show legend only if 1RM data exists
+          position: 'bottom',
+          labels: {
+            boxWidth: 12,
+            padding: 10,
+            font: {
+              size: 11
+            }
+          }
         },
         tooltip: {
           callbacks: {
+            title: function(context) {
+              const entry = data[context[0].dataIndex]
+              return formatChartDate(entry.workout_date)
+            },
             label: function(context) {
               const entry = data[context.dataIndex]
-              let label = `${entry.weight} lbs`
-              if (entry.reps) label += ` × ${entry.reps} reps`
-              if (entry.is_pr) label += ' 🏆 PR'
-              return label
+              const datasetLabel = context.dataset.label
+
+              if (datasetLabel.includes('1RM')) {
+                // For 1RM dataset
+                if (entry.calculated_1rm) {
+                  let label = `Est. 1RM: ${Math.round(entry.calculated_1rm)} lbs`
+                  if (entry.formula) label += ` (${entry.formula})`
+                  return label
+                }
+                return null
+              } else {
+                // For weight dataset
+                let label = `${entry.weight} lbs`
+                if (entry.reps) label += ` × ${entry.reps} reps`
+                if (entry.is_pr) label += ' 🏆 PR'
+                return label
+              }
+            },
+            filter: function(tooltipItem) {
+              // Don't show tooltip for null values
+              return tooltipItem.raw !== null
             }
           }
         }
@@ -667,6 +1134,15 @@ function renderMovementChart() {
       scales: {
         y: {
           beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Weight (lbs)',
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            color: '#1a1a1a'
+          },
           ticks: {
             stepSize: 1,
             callback: function(value) {
@@ -681,7 +1157,9 @@ function renderMovementChart() {
 
 // Render WOD Chart
 function renderWODChart() {
-  if (!wodChartCanvas.value || wodPerformanceData.value.length === 0) return
+  if (!wodChartCanvas.value || wodPerformanceData.value.length === 0) {
+    return
+  }
 
   destroyCharts()
 
@@ -712,10 +1190,22 @@ function renderWODChart() {
     return
   }
 
-  if (filteredData.length === 0) return
+  if (filteredData.length === 0) {
+    return
+  }
 
-  const data = filteredData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  const labels = data.map(p => formatDate(p.created_at))
+  const data = filteredData.sort((a, b) => {
+    // Primary sort: workout_date (ascending - oldest to newest)
+    const dateCompare = new Date(a.workout_date) - new Date(b.workout_date)
+    if (dateCompare !== 0) return dateCompare
+
+    // Secondary sort: created_at or id (ascending - earliest to latest)
+    if (a.created_at && b.created_at) {
+      return new Date(a.created_at) - new Date(b.created_at)
+    }
+    return a.id - b.id
+  })
+  const labels = data.map(p => formatChartDate(p.workout_date))
 
   chartInstance = new Chart(wodChartCanvas.value, {
     type: 'line',
@@ -743,6 +1233,10 @@ function renderWODChart() {
         },
         tooltip: {
           callbacks: {
+            title: function(context) {
+              const entry = data[context[0].dataIndex]
+              return formatChartDate(entry.workout_date)
+            },
             label: function(context) {
               const entry = data[context.dataIndex]
               let labelText = formatWODScore(entry)
@@ -756,10 +1250,25 @@ function renderWODChart() {
         y: {
           beginAtZero: false,
           reverse: isTimeBased, // For time-based, lower is better
+          title: {
+            display: true,
+            text: label,
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            color: '#1a1a1a'
+          },
           ticks: {
             stepSize: 1,
             callback: function(value) {
-              return Math.round(value)
+              if (isTimeBased) {
+                return Math.round(value) + ' min'
+              } else if (wodScoreType.includes('Weight')) {
+                return Math.round(value) + ' lbs'
+              } else {
+                return Math.round(value)
+              }
             }
           }
         }
@@ -780,21 +1289,194 @@ function destroyCharts() {
   }
 }
 
-// Quick Log Navigation
-function quickLog() {
+// Helper functions for Quick Log
+function getTodayDate() {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+function formatQuickLogName(date) {
+  if (!date) return 'Workout'
+  const d = new Date(date + 'T00:00:00')
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  return `${days[d.getDay()]} Workout`
+}
+
+function updateQuickLogName() {
+  quickLogData.value.name = formatQuickLogName(quickLogData.value.date)
+}
+
+// Unified search items for Quick Log autocomplete
+const unifiedSearchItems = computed(() => {
+  const items = []
+
+  // Add movements
+  movements.value.forEach(movement => {
+    items.push({
+      id: `movement-${movement.id}`,
+      type: 'movement',
+      entityId: movement.id,
+      name: movement.name,
+      displayName: movement.name,
+      data: movement
+    })
+  })
+
+  // Add WODs
+  wods.value.forEach(wod => {
+    items.push({
+      id: `wod-${wod.id}`,
+      type: 'wod',
+      entityId: wod.id,
+      name: wod.name,
+      displayName: `${wod.name} (WOD)`,
+      data: wod
+    })
+  })
+
+  return items
+})
+
+// Quick Log - Opens dialog with pre-selected item
+async function quickLog() {
   if (!selectedItem.value) return
 
-  // Navigate to log workout page with pre-selected item
+  // Reset quick log data
+  quickLogData.value = {
+    name: formatQuickLogName(getTodayDate()),
+    date: getTodayDate(),
+    totalTime: null,
+    notes: '',
+    selectedItem: null,
+    movement: {
+      sets: null,
+      reps: null,
+      weight: null,
+      time: null,
+      distance: null,
+      notes: ''
+    },
+    wod: {
+      scoreType: null,
+      scoreValue: null,
+      timeSeconds: null,
+      rounds: null,
+      reps: null,
+      notes: ''
+    }
+  }
+
+  // Pre-populate with current item from Performance screen
   if (selectedItem.value.type === 'movement') {
-    router.push({
-      path: '/workouts/log',
-      query: { movement: selectedItem.value.data.id }
-    })
+    quickLogData.value.selectedItem = {
+      id: `movement-${selectedItem.value.data.id}`,
+      type: 'movement',
+      entityId: selectedItem.value.data.id,
+      name: selectedItem.value.data.name,
+      displayName: selectedItem.value.data.name,
+      data: selectedItem.value.data
+    }
   } else if (selectedItem.value.type === 'wod') {
-    router.push({
-      path: '/workouts/log',
-      query: { wod: selectedItem.value.data.id }
-    })
+    quickLogData.value.selectedItem = {
+      id: `wod-${selectedItem.value.data.id}`,
+      type: 'wod',
+      entityId: selectedItem.value.data.id,
+      name: selectedItem.value.data.name,
+      displayName: selectedItem.value.data.name,
+      data: selectedItem.value.data
+    }
+  }
+
+  // Load movements and WODs for autocomplete
+  if (movements.value.length === 0) {
+    loadingMovements.value = true
+    try {
+      const response = await axios.get('/api/movements')
+      movements.value = response.data.movements || []
+    } catch (err) {
+      console.error('Error fetching movements:', err)
+    } finally {
+      loadingMovements.value = false
+    }
+  }
+
+  if (wods.value.length === 0) {
+    loadingWods.value = true
+    try {
+      const response = await axios.get('/api/wods')
+      wods.value = response.data.wods || []
+    } catch (err) {
+      console.error('Error fetching WODs:', err)
+    } finally {
+      loadingWods.value = false
+    }
+  }
+
+  // Open dialog
+  quickLogDialog.value = true
+}
+
+// Close Quick Log dialog
+function closeQuickLog() {
+  quickLogDialog.value = false
+}
+
+// Submit Quick Log
+async function submitQuickLog() {
+  quickLogSubmitting.value = true
+
+  try {
+    const payload = {
+      workout_date: quickLogData.value.date,
+      workout_name: quickLogData.value.name,
+      total_time: quickLogData.value.totalTime ? quickLogData.value.totalTime * 60 : null,
+      notes: quickLogData.value.notes || null,
+      movements: [],
+      wods: []
+    }
+
+    // Add movement or WOD performance
+    if (quickLogData.value.selectedItem) {
+      if (quickLogData.value.selectedItem.type === 'movement') {
+        const m = quickLogData.value.movement
+        if (m.sets || m.reps || m.weight || m.time || m.distance) {
+          payload.movements.push({
+            movement_id: quickLogData.value.selectedItem.entityId,
+            sets: m.sets || null,
+            reps: m.reps || null,
+            weight: m.weight || null,
+            time: m.time ? m.time * 60 : null,
+            distance: m.distance || null,
+            notes: m.notes || null
+          })
+        }
+      } else if (quickLogData.value.selectedItem.type === 'wod') {
+        const w = quickLogData.value.wod
+        if (w.timeSeconds || w.rounds || w.reps || w.scoreValue) {
+          payload.wods.push({
+            wod_id: quickLogData.value.selectedItem.entityId,
+            time_seconds: w.timeSeconds || null,
+            rounds: w.rounds || null,
+            reps: w.reps || null,
+            score_value: w.scoreValue || null,
+            notes: w.notes || null
+          })
+        }
+      }
+    }
+
+    await axios.post('/api/workouts', payload)
+
+    // Close dialog
+    quickLogDialog.value = false
+
+    // Refresh performance data
+    await fetchPerformanceData()
+  } catch (err) {
+    console.error('Failed to log workout:', err)
+    alert(err.response?.data?.message || 'Failed to log workout')
+  } finally {
+    quickLogSubmitting.value = false
   }
 }
 
@@ -816,7 +1498,7 @@ function formatWODScore(performance) {
   return 'N/A'
 }
 
-// Format Date
+// Format Date (for display with Today/Yesterday)
 function formatDate(dateString) {
   const datePart = dateString.split('T')[0]
   const [year, month, day] = datePart.split('-').map(Number)
@@ -838,6 +1520,15 @@ function formatDate(dateString) {
     const options = { month: 'short', day: 'numeric', year: 'numeric' }
     return date.toLocaleDateString('en-US', options)
   }
+}
+
+// Format Date for charts (always show actual date with year)
+function formatChartDate(dateString) {
+  const datePart = dateString.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  const options = { month: 'short', day: 'numeric', year: 'numeric' }
+  return date.toLocaleDateString('en-US', options)
 }
 
 // Format Time

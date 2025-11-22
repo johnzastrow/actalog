@@ -418,8 +418,8 @@ func (r *UserWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movemen
 			uwm.Time = &t
 		}
 
-		// Store workout date for reference (you may want to add this field to UserWorkoutMovement)
-		// For now, we'll just ignore it or you can add a WorkoutDate field to the domain model
+		// Store workout date from user_workouts table
+		uwm.WorkoutDate = workoutDate
 
 		movements = append(movements, uwm)
 	}
