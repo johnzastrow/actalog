@@ -762,6 +762,7 @@ func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, 
 			UserID:      userID,
 			WorkoutDate: workoutDate,
 			WorkoutName: workoutData.WorkoutName,
+			WorkoutType: workoutData.WorkoutType,
 			Notes:       workoutData.Notes,
 			TotalTime:   workoutData.TotalTime,
 		}

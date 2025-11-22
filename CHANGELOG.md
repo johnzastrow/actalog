@@ -5,6 +5,101 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1-beta] - 2025-11-21 (In Progress)
+
+### Added
+- **Import/Export System (Phase 1 & 2 - Mostly Complete)**
+  - **WOD Export** (`GET /api/export/wods`)
+    - CSV format with all WOD fields
+    - Query parameters for filtering: `include_standard`, `include_custom`
+    - Successfully tested with all standard WODs
+  - **Movement Export** (`GET /api/export/movements`)
+    - CSV format with all movement fields
+    - Query parameters for filtering: `include_standard`, `include_custom`
+    - Successfully tested with all standard movements
+  - **User Workouts Export** (`GET /api/export/user-workouts`)
+    - JSON format with full nested data structure
+    - Optional date range filtering: `start_date`, `end_date`
+    - Includes metadata: user_email, export_date, version, total_count
+    - Nested workout data: movements, WODs, performance metrics
+  - **WOD Import** (`POST /api/import/wods/preview`, `POST /api/import/wods/confirm`)
+    - Preview endpoint with validation before committing
+    - CSV validation: source, type, regime, score_type enums
+    - Duplicate detection and handling
+    - Options: skip_duplicates, update_duplicates
+    - Successfully tested: created custom WOD
+  - **Movement Import** (`POST /api/import/movements/preview`, `POST /api/import/movements/confirm`)
+    - Preview endpoint with validation
+    - CSV validation: type enum (weightlifting, cardio, gymnastics, bodyweight)
+    - Duplicate detection
+    - Successfully tested: created 2 custom movements
+  - **User Workouts Import** (`POST /api/import/user-workouts/preview`, `POST /api/import/user-workouts/confirm`)
+    - Preview endpoint working correctly ✅
+    - JSON parsing and validation
+    - Nested data handling (movements, WODs)
+    - Auto-creation of missing movements and WODs
+    - **Known Issue:** Confirm endpoint has persistence bug (reports success but data doesn't persist)
+
+- **Frontend Views**
+  - `ExportView.vue` at `/settings/export`
+    - Data type selector (WODs, Movements, User Workouts)
+    - Format handling (CSV for WODs/Movements, JSON for User Workouts)
+    - Options: Include standard items, include custom items
+    - Date range picker for User Workouts
+    - Export button triggers file download
+  - `ImportView.vue` at `/settings/import`
+    - File upload with drag-and-drop support
+    - Supported formats info (CSV, JSON)
+    - Preview table showing parsed data with validation status
+    - Validation errors display (red highlights for invalid rows)
+    - Import statistics (total, valid, invalid, duplicates)
+    - Import options: Skip duplicates, Update duplicates
+    - Confirm and Cancel buttons
+  - Fixed axios import to use authenticated instance (was causing 401 errors)
+
+- **Backend Services (1,691 lines total)**
+  - `internal/service/export_service.go` (385 lines)
+  - `internal/service/import_service.go` (829 lines)
+  - `internal/handler/export_handler.go` (178 lines)
+  - `internal/handler/import_handler.go` (299 lines)
+  - All routes wired up in `cmd/actalog/main.go`
+
+- **Documentation**
+  - Created `docs/ROADMAP.md` with detailed development plan
+  - Updated `docs/TODO.md` with completion status
+  - Testing results: 5.5/6 features working (92%)
+
+### Known Issues
+- **User Workouts Import Confirm Persistence Bug** (CRITICAL)
+  - Endpoint: `POST /api/import/user-workouts/confirm`
+  - Issue: Reports success (created_count: 2) but workouts don't persist to database
+  - Data doesn't appear in `/api/workouts` or export endpoints
+  - Likely transaction rollback or database constraint violation
+  - **Next Priority** for v0.5.1 completion
+
+### Changed
+- Version bumped to 0.5.1-beta
+- Import/Export system is now feature-complete except for one critical bug
+
+### Testing
+- ✅ WOD export/import round-trip tested successfully
+- ✅ Movement export/import round-trip tested successfully
+- ✅ User Workouts export tested successfully
+- ✅ User Workouts import preview tested successfully
+- ⚠️ User Workouts import confirm needs debugging
+
+### Technical
+- Clean Architecture maintained throughout implementation
+- Multi-database support (SQLite, PostgreSQL, MySQL)
+- CSV parsing with validation
+- JSON nested data handling
+- Duplicate detection algorithms
+- Authorization checks (users can only import/export their own data)
+- Rate limiting on import endpoints
+- File size limits (max 10MB)
+
+---
+
 ## [0.4.6-beta] - 2025-11-15
 
 ### Added
