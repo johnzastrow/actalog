@@ -76,8 +76,16 @@ COPY --from=backend-builder /app/migrations /app/migrations
 # Copy frontend build from builder
 COPY --from=frontend-builder /app/web/dist /app/web/dist
 
+# Copy seed CSV files (movements and WODs)
+COPY seeds/ /app/seeds/
+
+# Copy seed initialization script and entrypoint
+COPY docker/scripts/init-seeds.sh /app/scripts/init-seeds.sh
+COPY docker/scripts/entrypoint.sh /app/scripts/entrypoint.sh
+
 # Create directories for uploads and database
-RUN mkdir -p /app/uploads /app/data && \
+RUN mkdir -p /app/uploads /app/data /app/scripts && \
+    chmod +x /app/scripts/init-seeds.sh /app/scripts/entrypoint.sh && \
     chown -R actalog:actalog /app
 
 # Switch to non-root user
@@ -97,5 +105,5 @@ ENV DB_DRIVER=sqlite3 \
     UPLOADS_DIR=/app/uploads \
     FRONTEND_DIR=/app/web/dist
 
-# Run the application
-CMD ["/app/actalog"]
+# Run the application via entrypoint (handles optional seed import)
+CMD ["/app/scripts/entrypoint.sh"]

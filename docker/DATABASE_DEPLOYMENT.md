@@ -391,6 +391,81 @@ command:
 
 ---
 
+## Seed Data Import
+
+ActaLog includes comprehensive seed data:
+- **182 movements** (all CrossFit movements including Girl/Hero WOD movements)
+- **314 WODs** (all benchmark Girl and Hero WODs)
+
+### Automatic Import (Recommended)
+
+To automatically import seed data on first deployment:
+
+1. **Set admin credentials in `.env`** before starting:
+   ```env
+   ADMIN_EMAIL=admin@example.com
+   ADMIN_PASSWORD=YourSecurePassword123
+   ```
+
+2. **Start the application:**
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Register your first user** with the same email/password from `.env`
+
+4. **Seeds import automatically** on first startup if credentials are set
+
+The import script:
+- Runs only once (creates marker file `/app/data/.seeds_imported`)
+- Skips if admin credentials are not set
+- Logs progress to container logs: `docker compose logs -f`
+
+### Manual Import (Alternative)
+
+If you prefer to import manually or didn't set credentials:
+
+1. **Via Web UI** (easiest):
+   - Login as admin
+   - Navigate to Import page
+   - Upload `/app/seeds/movements.csv`
+   - Upload `/app/seeds/wods.csv`
+
+2. **Via API**:
+   ```bash
+   # Get admin token
+   TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@example.com","password":"YourPassword"}' \
+     | jq -r '.access_token')
+
+   # Import movements
+   docker compose cp actalog:/app/seeds/movements.csv ./movements.csv
+   curl -X POST http://localhost:8080/api/import/movements/confirm \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@movements.csv" \
+     -F "skip_duplicates=true"
+
+   # Import WODs
+   docker compose cp actalog:/app/seeds/wods.csv ./wods.csv
+   curl -X POST http://localhost:8080/api/import/wods/confirm \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@wods.csv" \
+     -F "skip_duplicates=true"
+   ```
+
+### Checking Import Status
+
+```bash
+# Check if seeds were imported
+docker compose exec actalog ls -la /app/data/.seeds_imported
+
+# View import logs
+docker compose logs actalog | grep -i seed
+```
+
+---
+
 ## Quick Commands
 
 ```bash
