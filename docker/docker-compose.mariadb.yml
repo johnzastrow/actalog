@@ -64,7 +64,13 @@ services:
       - SMTP_PORT=${SMTP_PORT:-}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
-      
+
+      # Automatic Seed Import (optional)
+      # Set these to enable automatic import of movements and WODs from CSV files on first run
+      # The first user you create should match these credentials
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+
     volumes:
       - actalog-uploads:/app/uploads
     
