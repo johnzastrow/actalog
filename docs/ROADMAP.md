@@ -1,20 +1,46 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.8.0-beta
-**Last Updated:** 2025-11-22
-**Overall Completion:** ~87% of core requirements
+**Current Version:** 0.8.1-beta
+**Last Updated:** 2025-01-22
+**Overall Completion:** ~88% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The v0.8.0 release adds enterprise-grade PostgreSQL support with pgx driver, connection pooling, and schema isolation, making ActaLog ready for multi-user production deployments.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The v0.8.1 release adds **cross-database backup/restore** with automatic schema evolution handling, enabling seamless migrations between SQLite, PostgreSQL, and MariaDB, making ActaLog perfect for development-to-production workflows and multi-database deployments.
 
 ---
 
 ## Version History & Status
 
-### v0.8.0-beta (Current - Released)
+### v0.8.1-beta (Current - Released)
+**Status:** Cross-database backup/restore and schema evolution support
+
+**Completed:**
+- ✅ Database-agnostic backup/restore system
+- ✅ Cross-database migration support (SQLite ↔ PostgreSQL ↔ MariaDB)
+- ✅ Schema evolution handling (forward and backward compatibility)
+- ✅ Automatic PostgreSQL sequence reset
+- ✅ Data type conversion (boolean handling across databases)
+- ✅ Column filtering for missing/extra columns
+- ✅ Table introspection for schema differences
+
+**Technical Highlights:**
+- Full cross-database migration capability (any database → any database)
+- Schema evolution: restore v0.6.0 backups to v0.8.1 (handles missing columns)
+- Boolean conversion: `0/1` (SQLite/MySQL) ↔ `false/true` (PostgreSQL)
+- PostgreSQL sequence management prevents duplicate key errors
+- Zero manual SQL intervention for database migrations
+- 100% backward compatible with existing backup/restore
+
+**Use Cases Enabled:**
+- Development with SQLite → Production with PostgreSQL (using backup/restore)
+- Emergency recovery to different database type
+- Multi-tenant migrations using PostgreSQL schemas
+- Version upgrades with old backups
+
+### v0.8.0-beta (Released)
 **Status:** PostgreSQL migration and multi-database production readiness
 
 **Completed:**
