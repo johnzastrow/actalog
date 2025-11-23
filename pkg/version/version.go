@@ -13,7 +13,7 @@ const (
 	// PreRelease identifier (e.g., "alpha", "beta", "rc1")
 	PreRelease = "beta"
 	// Build number - increment this with each code change
-	Build = 43
+	Build = 44
 )
 
 // Version returns the full semantic version string
