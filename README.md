@@ -35,8 +35,8 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 </p><br>
 
 <p align="center">
-<img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_performance.png" width="300"><br>
-4. Annie performance over time
+<img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_performance.png" width="300"><br>
+1. Annie performance over time
 </p><br>
 
 <p align="center">
