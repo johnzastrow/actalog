@@ -20,12 +20,12 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 -->
 
 <p align="center">
-<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="250">
+<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="300"><br>
 1. Dashboard with Workout Summary
-</p>
+</p>  
 
 <p align="center">
-<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="250">
+<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="300"><br>
 2. Quick logging the standard "Annie" benchmark workout
 </p>
 
