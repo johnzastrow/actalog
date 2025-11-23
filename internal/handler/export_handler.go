@@ -22,8 +22,8 @@ func NewExportHandler(exportService *service.ExportService) *ExportHandler {
 	}
 }
 
-// ExportWODs exports WODs to CSV format
-// GET /api/export/wods?include_standard=true&include_custom=true
+// ExportWODs exports WODs to CSV or JSON format
+// GET /api/export/wods?include_standard=true&include_custom=true&format=csv
 func (h *ExportHandler) ExportWODs(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -43,26 +43,43 @@ func (h *ExportHandler) ExportWODs(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	includeStandard := parseBoolParam(r.URL.Query().Get("include_standard"), true)
 	includeCustom := parseBoolParam(r.URL.Query().Get("include_custom"), true)
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "csv" // default to CSV for backwards compatibility
+	}
 
-	// Generate CSV
-	csvData, err := h.exportService.ExportWODsToCSV(userID, isAdmin, includeStandard, includeCustom)
+	var data []byte
+	var err error
+	var contentType, filename string
+
+	// Generate export based on format
+	if format == "json" {
+		data, err = h.exportService.ExportWODsToJSON(userID, isAdmin, includeStandard, includeCustom)
+		contentType = "application/json"
+		filename = "wods_export.json"
+	} else {
+		data, err = h.exportService.ExportWODsToCSV(userID, isAdmin, includeStandard, includeCustom)
+		contentType = "text/csv"
+		filename = "wods_export.csv"
+	}
+
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to export WODs: %v", err))
 		return
 	}
 
-	// Set response headers for CSV download
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment; filename=wods_export.csv")
-	w.Header().Set("Content-Length", strconv.Itoa(len(csvData)))
+	// Set response headers for download
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 
-	// Write CSV data
+	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(csvData)
+	w.Write(data)
 }
 
-// ExportMovements exports movements to CSV format
-// GET /api/export/movements?include_standard=true&include_custom=true
+// ExportMovements exports movements to CSV or JSON format
+// GET /api/export/movements?include_standard=true&include_custom=true&format=csv
 func (h *ExportHandler) ExportMovements(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -82,22 +99,39 @@ func (h *ExportHandler) ExportMovements(w http.ResponseWriter, r *http.Request) 
 	// Parse query parameters
 	includeStandard := parseBoolParam(r.URL.Query().Get("include_standard"), true)
 	includeCustom := parseBoolParam(r.URL.Query().Get("include_custom"), true)
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "csv" // default to CSV for backwards compatibility
+	}
 
-	// Generate CSV
-	csvData, err := h.exportService.ExportMovementsToCSV(userID, isAdmin, includeStandard, includeCustom)
+	var data []byte
+	var err error
+	var contentType, filename string
+
+	// Generate export based on format
+	if format == "json" {
+		data, err = h.exportService.ExportMovementsToJSON(userID, isAdmin, includeStandard, includeCustom)
+		contentType = "application/json"
+		filename = "movements_export.json"
+	} else {
+		data, err = h.exportService.ExportMovementsToCSV(userID, isAdmin, includeStandard, includeCustom)
+		contentType = "text/csv"
+		filename = "movements_export.csv"
+	}
+
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to export movements: %v", err))
 		return
 	}
 
-	// Set response headers for CSV download
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment; filename=movements_export.csv")
-	w.Header().Set("Content-Length", strconv.Itoa(len(csvData)))
+	// Set response headers for download
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 
-	// Write CSV data
+	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(csvData)
+	w.Write(data)
 }
 
 // Helper function to parse boolean query parameters
@@ -112,8 +146,8 @@ func parseBoolParam(value string, defaultValue bool) bool {
 	return b
 }
 
-// ExportUserWorkouts exports user workouts with full nested data to JSON format
-// GET /api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31
+// ExportUserWorkouts exports user workouts to CSV or JSON format
+// GET /api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31&format=json
 func (h *ExportHandler) ExportUserWorkouts(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -125,6 +159,10 @@ func (h *ExportHandler) ExportUserWorkouts(w http.ResponseWriter, r *http.Reques
 	// Parse query parameters for date range
 	startDateStr := r.URL.Query().Get("start_date")
 	endDateStr := r.URL.Query().Get("end_date")
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json" // default to JSON for backwards compatibility
+	}
 
 	var startDate, endDate *time.Time
 
@@ -152,27 +190,42 @@ func (h *ExportHandler) ExportUserWorkouts(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Generate JSON
-	jsonData, err := h.exportService.ExportUserWorkoutsToJSON(userID, startDate, endDate)
+	var data []byte
+	var err error
+	var contentType, filename, fileExtension string
+
+	// Generate export based on format
+	if format == "csv" {
+		data, err = h.exportService.ExportUserWorkoutsToCSV(userID, startDate, endDate)
+		contentType = "text/csv"
+		fileExtension = "csv"
+	} else {
+		data, err = h.exportService.ExportUserWorkoutsToJSON(userID, startDate, endDate)
+		contentType = "application/json"
+		fileExtension = "json"
+	}
+
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to export user workouts: %v", err))
 		return
 	}
 
 	// Determine filename based on date range
-	filename := "user_workouts_export.json"
 	if startDate != nil && endDate != nil {
-		filename = fmt.Sprintf("user_workouts_%s_to_%s.json", 
-			startDate.Format("2006-01-02"), 
-			endDate.Format("2006-01-02"))
+		filename = fmt.Sprintf("user_workouts_%s_to_%s.%s",
+			startDate.Format("2006-01-02"),
+			endDate.Format("2006-01-02"),
+			fileExtension)
+	} else {
+		filename = fmt.Sprintf("user_workouts_export.%s", fileExtension)
 	}
 
-	// Set response headers for JSON download
-	w.Header().Set("Content-Type", "application/json")
+	// Set response headers for download
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	w.Header().Set("Content-Length", strconv.Itoa(len(jsonData)))
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 
-	// Write JSON data
+	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	w.Write(data)
 }

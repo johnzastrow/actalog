@@ -191,6 +191,67 @@ func (s *ExportService) ExportWODsToCSV(userID int64, isAdmin bool, includeStand
 	return buf.Bytes(), nil
 }
 
+// ExportWODsToJSON exports WODs to JSON format
+// If isAdmin is true, exports all WODs. Otherwise, only exports standard WODs and user's custom WODs
+func (s *ExportService) ExportWODsToJSON(userID int64, isAdmin bool, includeStandard, includeCustom bool) ([]byte, error) {
+	var wods []*domain.WOD
+	var err error
+
+	// Fetch WODs based on permissions and filters (same logic as CSV)
+	if isAdmin && includeStandard && includeCustom {
+		wods, err = s.wodRepo.List(nil, 10000, 0)
+	} else if includeStandard && includeCustom {
+		standardWods, err1 := s.wodRepo.ListStandard(10000, 0)
+		if err1 != nil {
+			return nil, fmt.Errorf("failed to fetch standard WODs: %w", err1)
+		}
+		customWods, err2 := s.wodRepo.ListByUser(userID, 10000, 0)
+		if err2 != nil {
+			return nil, fmt.Errorf("failed to fetch custom WODs: %w", err2)
+		}
+		wods = append(standardWods, customWods...)
+	} else if includeStandard {
+		wods, err = s.wodRepo.ListStandard(10000, 0)
+	} else if includeCustom {
+		wods, err = s.wodRepo.ListByUser(userID, 10000, 0)
+	} else {
+		return nil, fmt.Errorf("must select at least one option: standard or custom")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch WODs: %w", err)
+	}
+
+	// Enrich WODs with creator email
+	type WODExport struct {
+		*domain.WOD
+		CreatedByEmail string `json:"created_by_email,omitempty"`
+	}
+
+	exports := make([]WODExport, 0, len(wods))
+	for _, wod := range wods {
+		export := WODExport{WOD: wod}
+		if wod.CreatedBy != nil {
+			user, err := s.userRepo.GetByID(*wod.CreatedBy)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch user for WOD %d: %w", wod.ID, err)
+			}
+			if user != nil {
+				export.CreatedByEmail = user.Email
+			}
+		}
+		exports = append(exports, export)
+	}
+
+	// Convert to JSON
+	jsonData, err := json.MarshalIndent(exports, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	return jsonData, nil
+}
+
 // ExportMovementsToCSV exports movements to CSV format
 // If isAdmin is true, exports all movements. Otherwise, only exports standard movements and user's custom movements
 func (s *ExportService) ExportMovementsToCSV(userID int64, isAdmin bool, includeStandard, includeCustom bool) ([]byte, error) {
@@ -270,6 +331,67 @@ func (s *ExportService) ExportMovementsToCSV(userID int64, isAdmin bool, include
 	}
 
 	return buf.Bytes(), nil
+}
+
+// ExportMovementsToJSON exports movements to JSON format
+// If isAdmin is true, exports all movements. Otherwise, only exports standard movements and user's custom movements
+func (s *ExportService) ExportMovementsToJSON(userID int64, isAdmin bool, includeStandard, includeCustom bool) ([]byte, error) {
+	var movements []*domain.Movement
+	var err error
+
+	// Fetch movements based on permissions and filters (same logic as CSV)
+	if isAdmin && includeStandard && includeCustom {
+		movements, err = s.movementRepo.ListAll()
+	} else if includeStandard && includeCustom {
+		standardMovements, err1 := s.movementRepo.ListStandard()
+		if err1 != nil {
+			return nil, fmt.Errorf("failed to fetch standard movements: %w", err1)
+		}
+		customMovements, err2 := s.movementRepo.ListByUser(userID)
+		if err2 != nil {
+			return nil, fmt.Errorf("failed to fetch custom movements: %w", err2)
+		}
+		movements = append(standardMovements, customMovements...)
+	} else if includeStandard {
+		movements, err = s.movementRepo.ListStandard()
+	} else if includeCustom {
+		movements, err = s.movementRepo.ListByUser(userID)
+	} else {
+		return nil, fmt.Errorf("must select at least one option: standard or custom")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch movements: %w", err)
+	}
+
+	// Enrich movements with creator email
+	type MovementExport struct {
+		*domain.Movement
+		CreatedByEmail string `json:"created_by_email,omitempty"`
+	}
+
+	exports := make([]MovementExport, 0, len(movements))
+	for _, movement := range movements {
+		export := MovementExport{Movement: movement}
+		if movement.CreatedBy != nil {
+			user, err := s.userRepo.GetByID(*movement.CreatedBy)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch user for movement %d: %w", movement.ID, err)
+			}
+			if user != nil {
+				export.CreatedByEmail = user.Email
+			}
+		}
+		exports = append(exports, export)
+	}
+
+	// Convert to JSON
+	jsonData, err := json.MarshalIndent(exports, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	return jsonData, nil
 }
 
 // ExportUserWorkoutsToJSON exports user workouts with full nested data to JSON format
@@ -382,4 +504,189 @@ func (s *ExportService) ExportUserWorkoutsToJSON(userID int64, startDate, endDat
 	}
 
 	return jsonData, nil
+}
+
+// ExportUserWorkoutsToCSV exports user workouts to CSV format (flattened structure)
+// Supports optional date range filtering
+func (s *ExportService) ExportUserWorkoutsToCSV(userID int64, startDate, endDate *time.Time) ([]byte, error) {
+	// Fetch user for metadata
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user: %w", err)
+	}
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// Fetch workouts (with or without date range)
+	var workouts []*domain.UserWorkout
+	if startDate != nil && endDate != nil {
+		workouts, err = s.userWorkoutRepo.ListByUserAndDateRange(userID, *startDate, *endDate)
+	} else {
+		workouts, err = s.userWorkoutRepo.ListByUser(userID, 10000, 0)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user workouts: %w", err)
+	}
+
+	// Create CSV buffer
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV header
+	header := []string{
+		"workout_date",
+		"workout_type",
+		"workout_name",
+		"total_time_seconds",
+		"notes",
+		"performance_type",
+		"entity_name",
+		"entity_type",
+		"sets",
+		"reps",
+		"weight",
+		"time_seconds",
+		"distance",
+		"rounds",
+		"score_type",
+		"score_value",
+		"is_pr",
+		"performance_notes",
+		"order_index",
+	}
+	if err := writer.Write(header); err != nil {
+		return nil, fmt.Errorf("failed to write CSV header: %w", err)
+	}
+
+	// Process each workout
+	for _, workout := range workouts {
+		// Get full workout details with performance data
+		details, err := s.userWorkoutRepo.GetByIDWithDetails(workout.ID, userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch workout details for workout %d: %w", workout.ID, err)
+		}
+
+		if details == nil {
+			continue
+		}
+
+		// Helper to format optional values
+		formatInt := func(v *int) string {
+			if v == nil {
+				return ""
+			}
+			return strconv.Itoa(*v)
+		}
+		formatFloat := func(v *float64) string {
+			if v == nil {
+				return ""
+			}
+			return fmt.Sprintf("%.2f", *v)
+		}
+		formatString := func(v *string) string {
+			if v == nil {
+				return ""
+			}
+			return *v
+		}
+
+		workoutDate := details.WorkoutDate.Format("2006-01-02")
+		workoutType := formatString(details.WorkoutType)
+		workoutName := details.WorkoutName
+		totalTime := formatInt(details.TotalTime)
+		workoutNotes := formatString(details.Notes)
+
+		// Export movement performances
+		for _, perfMovement := range details.PerformanceMovements {
+			row := []string{
+				workoutDate,
+				workoutType,
+				workoutName,
+				totalTime,
+				workoutNotes,
+				"movement",                     // performance_type
+				perfMovement.MovementName,      // entity_name
+				perfMovement.MovementType,      // entity_type
+				formatInt(perfMovement.Sets),   // sets
+				formatInt(perfMovement.Reps),   // reps
+				formatFloat(perfMovement.Weight), // weight
+				formatInt(perfMovement.Time),   // time_seconds
+				formatFloat(perfMovement.Distance), // distance
+				"",                             // rounds (n/a for movements)
+				"",                             // score_type (n/a for movements)
+				"",                             // score_value (n/a for movements)
+				strconv.FormatBool(perfMovement.IsPR), // is_pr
+				perfMovement.Notes,             // performance_notes
+				strconv.Itoa(perfMovement.OrderIndex), // order_index
+			}
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write movement row: %w", err)
+			}
+		}
+
+		// Export WOD performances
+		for _, perfWOD := range details.PerformanceWODs {
+			row := []string{
+				workoutDate,
+				workoutType,
+				workoutName,
+				totalTime,
+				workoutNotes,
+				"wod",                          // performance_type
+				perfWOD.WODName,                // entity_name
+				perfWOD.WODType,                // entity_type
+				"",                             // sets (n/a for WODs)
+				formatInt(perfWOD.Reps),        // reps
+				formatFloat(perfWOD.Weight),    // weight
+				formatInt(perfWOD.TimeSeconds), // time_seconds
+				"",                             // distance (n/a for WODs)
+				formatInt(perfWOD.Rounds),      // rounds
+				formatString(perfWOD.ScoreType), // score_type
+				formatString(perfWOD.ScoreValue), // score_value
+				strconv.FormatBool(perfWOD.IsPR), // is_pr
+				perfWOD.Notes,                  // performance_notes
+				strconv.Itoa(perfWOD.OrderIndex), // order_index
+			}
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write WOD row: %w", err)
+			}
+		}
+
+		// If workout has no performances, write a row with just workout info
+		if len(details.PerformanceMovements) == 0 && len(details.PerformanceWODs) == 0 {
+			row := []string{
+				workoutDate,
+				workoutType,
+				workoutName,
+				totalTime,
+				workoutNotes,
+				"",  // performance_type
+				"",  // entity_name
+				"",  // entity_type
+				"",  // sets
+				"",  // reps
+				"",  // weight
+				"",  // time_seconds
+				"",  // distance
+				"",  // rounds
+				"",  // score_type
+				"",  // score_value
+				"",  // is_pr
+				"",  // performance_notes
+				"",  // order_index
+			}
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write workout row: %w", err)
+			}
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, fmt.Errorf("CSV writer error: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }

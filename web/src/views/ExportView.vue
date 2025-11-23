@@ -47,33 +47,33 @@
           class="mt-2"
         />
 
-        <div class="d-flex gap-2 mt-4">
+        <div class="d-flex mt-4" style="gap: 16px">
           <v-btn
-            size="large"
+            size="small"
             color="teal"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.wods.includeStandard && !exportOptions.wods.includeCustom"
             :loading="exportingWods === 'csv'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px"
             @click="exportWODs('csv')"
           >
-            <v-icon start>mdi-file-delimited</v-icon>
+            <v-icon start size="small">mdi-file-delimited</v-icon>
             CSV
           </v-btn>
           <v-btn
-            size="large"
+            size="small"
             color="teal"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.wods.includeStandard && !exportOptions.wods.includeCustom"
             :loading="exportingWods === 'json'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px"
             @click="exportWODs('json')"
           >
-            <v-icon start>mdi-code-json</v-icon>
+            <v-icon start size="small">mdi-code-json</v-icon>
             JSON
           </v-btn>
         </div>
@@ -103,33 +103,33 @@
           class="mt-2"
         />
 
-        <div class="d-flex gap-2 mt-4">
+        <div class="d-flex mt-4" style="gap: 16px">
           <v-btn
-            size="large"
+            size="small"
             color="#00bcd4"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
             :loading="exportingMovements === 'csv'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px; color: white"
             @click="exportMovements('csv')"
           >
-            <v-icon start>mdi-file-delimited</v-icon>
+            <v-icon start size="small" color="white">mdi-file-delimited</v-icon>
             CSV
           </v-btn>
           <v-btn
-            size="large"
+            size="small"
             color="#00bcd4"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
             :loading="exportingMovements === 'json'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px; color: white"
             @click="exportMovements('json')"
           >
-            <v-icon start>mdi-code-json</v-icon>
+            <v-icon start size="small" color="white">mdi-code-json</v-icon>
             JSON
           </v-btn>
         </div>
@@ -173,33 +173,33 @@
           {{ dateRangeError }}
         </p>
 
-        <div class="d-flex gap-2 mt-2">
+        <div class="d-flex mt-2" style="gap: 16px">
           <v-btn
-            size="large"
+            size="small"
             color="#4caf50"
             rounded="lg"
             elevation="2"
             :disabled="!!dateRangeError"
             :loading="exportingUserWorkouts === 'csv'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px"
             @click="exportUserWorkouts('csv')"
           >
-            <v-icon start>mdi-file-delimited</v-icon>
+            <v-icon start size="small">mdi-file-delimited</v-icon>
             CSV
           </v-btn>
           <v-btn
-            size="large"
+            size="small"
             color="#4caf50"
             rounded="lg"
             elevation="2"
             :disabled="!!dateRangeError"
             :loading="exportingUserWorkouts === 'json'"
             class="font-weight-bold flex-1"
-            style="text-transform: none"
+            style="text-transform: none; padding: 8px 12px"
             @click="exportUserWorkouts('json')"
           >
-            <v-icon start>mdi-code-json</v-icon>
+            <v-icon start size="small">mdi-code-json</v-icon>
             JSON
           </v-btn>
         </div>
