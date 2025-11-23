@@ -35,14 +35,22 @@
           v-model="selectedEntity"
           color="#00bcd4"
           variant="outlined"
-          divided
           mandatory
-          class="mb-4 d-flex flex-wrap"
+          class="mb-4"
+          style="display: flex; flex-wrap: wrap; gap: 8px"
         >
-          <v-btn value="wods" prepend-icon="mdi-fire">WODs</v-btn>
-          <v-btn value="movements" prepend-icon="mdi-dumbbell">Movements</v-btn>
-          <v-btn value="user_workouts" prepend-icon="mdi-clipboard-text">User Workouts</v-btn>
-          <v-btn value="wodify" prepend-icon="mdi-file-chart">Wodify Performance</v-btn>
+          <v-btn value="wods" prepend-icon="mdi-fire" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+            WODs
+          </v-btn>
+          <v-btn value="movements" prepend-icon="mdi-dumbbell" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+            Movements
+          </v-btn>
+          <v-btn value="user_workouts" prepend-icon="mdi-clipboard-text" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+            User Workouts
+          </v-btn>
+          <v-btn value="wodify" prepend-icon="mdi-file-chart" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+            Wodify Performance
+          </v-btn>
         </v-btn-toggle>
 
         <v-alert type="info" density="compact" class="text-caption">
