@@ -1,0 +1,79 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation
+*.md
+!README.md
+docs/
+LICENSE
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts and caches
+bin/
+dist/
+.cache/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Frontend development files
+web/node_modules/
+web/dist/
+web/dev-dist/
+web/.vite/
+web/package-lock.json
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+
+# Backend development files
+vendor/
+*.db
+*.db-shm
+*.db-wal
+actalog.db*
+
+# Test files
+test/
+*_test.go
+coverage.txt
+coverage.html
+*.test
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Uploads and data
+uploads/
+data/
+
+# Docker files (we're building FROM this)
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+Jenkinsfile
+
+# Misc
+tmp/
+temp/
+*.log

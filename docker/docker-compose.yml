@@ -1,85 +1,88 @@
+# Production Docker Compose for ActaLog
+# Uses pre-built images from GitHub Container Registry
+
 version: '3.8'
 
 services:
-  # ActaLog API server
-  actalog-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: actalog-api
+  actalog:
+    image: ghcr.io/${GITHUB_OWNER:-yourusername}/actalog:${TAG:-latest}
+    container_name: actalog
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     environment:
-      - APP_ENV=production
-      - LOG_LEVEL=info
-      - SERVER_HOST=0.0.0.0
-      - SERVER_PORT=8080
-      - DB_DRIVER=postgres
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=actalog
-      - DB_PASSWORD=actalog_secure_password
-      - DB_NAME=actalog
-      - DB_SSLMODE=disable
-      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
-      - JWT_EXPIRATION=24h
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+      # Database Configuration
+      - DB_DRIVER=${DB_DRIVER:-sqlite3}
+      - DB_NAME=${DB_NAME:-/app/data/actalog.db}
+      - DB_HOST=${DB_HOST:-}
+      - DB_PORT=${DB_PORT:-}
+      - DB_USER=${DB_USER:-}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      
+      # Application Configuration
+      - PORT=8080
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-15m}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-7d}
+      
+      # Email Configuration (optional)
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      
+      # OpenTelemetry (optional)
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      
     volumes:
-      - ./data:/app/data
-      - ./uploads:/app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - actalog-network
+      # Persist database
+      - actalog-data:/app/data
+      # Persist uploads
+      - actalog-uploads:/app/uploads
+    
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 3s
       retries: 3
-      start_period: 40s
-
-  # PostgreSQL database
-  postgres:
-    image: postgres:16-alpine
-    container_name: actalog-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=actalog
-      - POSTGRES_PASSWORD=actalog_secure_password
-      - POSTGRES_DB=actalog
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      start_period: 10s
+    
     networks:
       - actalog-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U actalog"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # Optional: Adminer for database management
-  adminer:
-    image: adminer:latest
-    container_name: actalog-adminer
-    restart: unless-stopped
-    ports:
-      - "8081:8080"
-    environment:
-      - ADMINER_DEFAULT_SERVER=postgres
-    depends_on:
-      - postgres
-    networks:
-      - actalog-network
+  # Optional: PostgreSQL Database
+  # Uncomment if using PostgreSQL instead of SQLite
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: actalog-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_DB=${DB_NAME:-actalog}
+  #     - POSTGRES_USER=${DB_USER:-actalog}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - actalog-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-actalog}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  actalog-data:
+    driver: local
+  actalog-uploads:
+    driver: local
+  # postgres-data:
+  #   driver: local
 
 networks:
   actalog-network:
     driver: bridge
-
-volumes:
-  postgres-data:
-    driver: local
