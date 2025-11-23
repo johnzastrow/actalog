@@ -31,19 +31,28 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 
 <p align="center">
 <img title="Annie WOD details" alt="Annie WOD details" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_details.png" width="300"><br>
-1. Annie WOD details
+3. Annie WOD details
 </p><br>
 
 <p align="center">
 <img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_performance.png" width="300"><br>
-1. Annie performance over time
+4. Annie performance over time
 </p><br>
 
 <p align="center">
-<img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_performance.png" width="300"><br>
-1. Annie performance over time
+<img title="Weight performance" alt="Weight performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf1.png" width="300"><br>
+5. Weight performance over time
 </p><br>
 
+<p align="center">
+<img title="Weight performance, cont" alt="Weight performance, cont" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf2.png" width="300"><br>
+6. Weight performance over time, cont. Movements can be lifts or other types such as running or rowing, box jumps, air squats, etc.
+</p><br>
+
+<p align="center">
+<img title="Composite workout templates" alt="Composite workout templates" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/mytemplates.png" width="300"><br>
+7. Workout templates are composite structures that contain a description and zero or more WODS and zero or more movements. Some are supplied as standard in the app, and users can create their own custom templates. Logging a workout against a template records results against all included WODs and movements and they count toward performance tracking. But the workout is only stored once.
+</p><br>
 
 
 ## Roadmap — Next priorities
