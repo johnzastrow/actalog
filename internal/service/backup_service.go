@@ -479,10 +479,17 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	}
 
 	// Create audit log (after restore, so it's in the new database)
+	details := fmt.Sprintf("Restored backup: %s (users: %d, workouts: %d, movements: %d, WODs: %d)",
+		filename,
+		backupData.Metadata.TotalUsers,
+		backupData.Metadata.TotalWorkouts,
+		backupData.Metadata.TotalMovements,
+		backupData.Metadata.TotalWODs,
+	)
 	if err := s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &restoredByUserID,
 		EventType: "backup_restored",
-		Details:   stringPtr(fmt.Sprintf("Restored backup: %s", filename)),
+		Details:   stringPtr(details),
 		CreatedAt: time.Now(),
 	}); err != nil {
 		// Log error but don't fail the restore

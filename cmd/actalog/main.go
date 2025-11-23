@@ -214,7 +214,7 @@ func main() {
 	exportHandler := handler.NewExportHandler(exportService)
 	importHandler := handler.NewImportHandler(importService)
 	wodifyImportHandler := handler.NewWodifyImportHandler(wodifyImportService)
-	backupHandler := handler.NewBackupHandler(backupService)
+	backupHandler := handler.NewBackupHandler(backupService, auditLogRepo)
 
 	// Set up router
 	r := chi.NewRouter()

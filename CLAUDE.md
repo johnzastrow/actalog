@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ActaLog is a mobile-first CrossFit workout tracker built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend (Vuetify 3). The project follows Clean Architecture principles with strict separation between domain, service, repository, and handler layers.
 
-**Current Version:** 0.7.5-beta
+**Current Version:** 0.7.6-beta
 
 ## Essential Commands
 
@@ -390,6 +390,39 @@ When releasing a new version, update:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8080
    - Health check: http://localhost:8080/health
+
+## Documentation Workflow
+
+When the user asks questions about ActaLog, evaluate whether the question and answer should be added to the help documentation:
+
+**Consider for End-User Help Documentation (docs/help/):**
+- "How do I...?" questions about using features
+- Common workflow questions (logging workouts, tracking PRs, creating templates)
+- Troubleshooting user-facing issues
+- Feature clarifications that would benefit regular users
+- Questions about PWA installation, offline mode, data import/export
+
+**Consider for Administrator Documentation (docs/admin/):**
+- Questions about system configuration and deployment
+- User management and security operations
+- Database backup, restore, and migration procedures
+- Admin-only feature usage (audit logs, user account management)
+- System troubleshooting and maintenance
+- Environment variable configuration
+
+**When to add to documentation:**
+- If the question is likely to be asked by other users
+- If the answer involves non-obvious steps or workflows
+- If it addresses a common pain point or confusion
+- If it provides valuable context about system behavior
+
+**Where to document:**
+- Update TODO.md under the appropriate documentation section with the Q&A
+- Add to FAQ subsection if it's a frequently asked question
+- Add to "How do I..." subsection if it's a procedural question
+- Note if screenshots or diagrams would enhance the explanation
+
+This ensures that valuable knowledge from our conversations is captured for future users and administrators.
 
 ## Documentation References
 

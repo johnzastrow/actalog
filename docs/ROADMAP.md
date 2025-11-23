@@ -1,8 +1,8 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.5.1-beta
-**Last Updated:** 2025-11-21
-**Overall Completion:** ~75% of core requirements
+**Current Version:** 0.7.6-beta
+**Last Updated:** 2025-11-22
+**Overall Completion:** ~85% of core requirements
 
 ---
 
@@ -14,8 +14,52 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 
 ## Version History & Status
 
-### v0.5.1-beta (Current - In Progress)
-**Status:** Import/Export implementation complete, one critical bug pending
+### v0.7.6-beta (Current - Released)
+**Status:** Database backup enhancements and comprehensive documentation planning
+
+**Completed:**
+- ✅ Backup upload for migration between systems
+- ✅ Enhanced audit logging for backup operations
+- ✅ Cross-version restore compatibility
+- ✅ Comprehensive documentation planning (end-user help, admin guide, test coverage)
+
+### v0.7.5-beta (Released)
+**Status:** Admin integration and Remember Me functionality
+
+**Completed:**
+- ✅ Admin user management complete integration
+- ✅ Remember Me functionality (30-day sessions)
+- ✅ Database backup system activation
+- ✅ SQLite dumps in all backups
+- ✅ PR History date display fixes
+
+### v0.7.4-beta (Released)
+**Status:** Quick Log enhancements and admin features
+
+**Completed:**
+- ✅ Quick Log buttons on library cards
+- ✅ Quick Log on detail pages
+- ✅ Admin user management dashboard
+- ✅ Template deletion bug fix
+
+### v0.7.0-beta (Released)
+**Status:** Wodify Performance Import system
+
+**Completed:**
+- ✅ Wodify CSV import with 9 result type parsers
+- ✅ Auto-entity creation for movements and WODs
+- ✅ Successfully tested with 6+ years of real-world data
+
+### v0.6.0-beta (Released)
+**Status:** Database backup/restore system implementation
+
+**Completed:**
+- ✅ Full database backup to ZIP with JSON
+- ✅ Restore functionality
+- ✅ Admin-only access with audit logging
+
+### v0.5.1-beta (Released)
+**Status:** Import/Export system complete
 
 **Completed:**
 - ✅ WOD export to CSV
@@ -23,14 +67,7 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 - ✅ User Workouts export to JSON
 - ✅ WOD import with preview and validation
 - ✅ Movement import with preview and validation
-- ✅ User Workouts import preview
-- ⚠️ User Workouts import confirm (has persistence bug)
-
-**Remaining:**
-- 🔴 Fix User Workouts import persistence bug
-- 🟡 Flattened CSV export for spreadsheet analysis
-- 🟡 Performance data export with PR flags
-- 🟢 Export history tracking (future)
+- ✅ User Workouts import (confirmed working)
 
 ### v0.5.0-beta (Released)
 **Status:** Core workout system complete
