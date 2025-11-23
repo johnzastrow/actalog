@@ -408,15 +408,14 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	}
 
 	for _, table := range tables {
-		// Check if table exists before trying to delete
-		var count int
-		checkQuery := fmt.Sprintf("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%s'", table)
-		if err := tx.QueryRow(checkQuery).Scan(&count); err != nil {
+		// Check if table exists before trying to delete (database-agnostic)
+		exists, err := s.tableExists(tx, table)
+		if err != nil {
 			return fmt.Errorf("failed to check if table %s exists: %w", table, err)
 		}
 
 		// Only delete if table exists
-		if count > 0 {
+		if exists {
 			if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)); err != nil {
 				return fmt.Errorf("failed to clear table %s: %w", table, err)
 			}
@@ -598,41 +597,67 @@ func (s *BackupServiceImpl) rowsToMaps(rows *sql.Rows) ([]map[string]interface{}
 	return results, rows.Err()
 }
 
-// restoreTable restores a single table from backup data
+// restoreTable restores a single table from backup data with schema evolution support
 func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}) error {
 	if len(data) == 0 {
 		return nil
 	}
 
-	// Check if table exists before trying to restore
-	var count int
-	checkQuery := fmt.Sprintf("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%s'", tableName)
-	if err := tx.QueryRow(checkQuery).Scan(&count); err != nil {
+	// Check if table exists before trying to restore (database-agnostic)
+	exists, err := s.tableExists(tx, tableName)
+	if err != nil {
 		return fmt.Errorf("failed to check if table %s exists: %w", tableName, err)
 	}
 
-	// Skip if table doesn't exist
-	if count == 0 {
-		fmt.Printf("Warning: table %s does not exist, skipping restore for this table\n", tableName)
+	// Skip if table doesn't exist (forward compatibility)
+	if !exists {
+		fmt.Printf("Warning: table %s does not exist in target schema, skipping restore for this table\n", tableName)
 		return nil
 	}
 
-	for _, row := range data {
-		// Build INSERT statement
+	// Get actual columns in target table for schema evolution support
+	targetColumns, err := s.getTableColumns(tx, tableName)
+	if err != nil {
+		return fmt.Errorf("failed to get columns for table %s: %w", tableName, err)
+	}
+
+	// Restore each row
+	for rowIdx, row := range data {
+		// Filter backup data to only include columns that exist in target schema
 		columns := make([]string, 0, len(row))
 		placeholders := make([]string, 0, len(row))
 		values := make([]interface{}, 0, len(row))
 
 		i := 1
+		skippedColumns := 0
 		for col, val := range row {
+			// Only include column if it exists in target schema (schema evolution support)
+			if !containsString(targetColumns, col) {
+				skippedColumns++
+				continue
+			}
+
 			columns = append(columns, col)
 			if s.dbDriver == "postgres" {
 				placeholders = append(placeholders, fmt.Sprintf("$%d", i))
 			} else {
 				placeholders = append(placeholders, "?")
 			}
-			values = append(values, val)
+
+			// Convert value for database compatibility (e.g., boolean conversion)
+			convertedValue := s.convertValue(val, col)
+			values = append(values, convertedValue)
 			i++
+		}
+
+		// Log schema evolution warnings
+		if skippedColumns > 0 && rowIdx == 0 {
+			fmt.Printf("Info: table %s - skipped %d column(s) not present in target schema (schema evolution)\n", tableName, skippedColumns)
+		}
+
+		// Skip row if no valid columns remain
+		if len(columns) == 0 {
+			continue
 		}
 
 		query := fmt.Sprintf(
@@ -643,8 +668,14 @@ func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []ma
 		)
 
 		if _, err := tx.Exec(query, values...); err != nil {
-			return fmt.Errorf("failed to insert row: %w", err)
+			return fmt.Errorf("failed to insert row into %s: %w", tableName, err)
 		}
+	}
+
+	// Reset auto-increment sequence for PostgreSQL
+	if err := s.resetSequence(tx, tableName); err != nil {
+		// Log warning but don't fail restore
+		fmt.Printf("Warning: sequence reset failed for %s: %v\n", tableName, err)
 	}
 
 	return nil
@@ -1097,4 +1128,191 @@ func joinStrings(strs []string, sep string) string {
 
 func isUploadFile(name string) bool {
 	return len(name) > 8 && name[:8] == "uploads/"
+}
+
+// tableExists checks if a table exists in the database (database-agnostic)
+func (s *BackupServiceImpl) tableExists(tx *sql.Tx, tableName string) (bool, error) {
+	var exists bool
+	var query string
+
+	switch s.dbDriver {
+	case "sqlite3":
+		// SQLite uses sqlite_master
+		query = "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name=?"
+	case "postgres":
+		// PostgreSQL uses information_schema
+		query = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = $1)"
+	case "mysql":
+		// MySQL uses information_schema
+		query = "SELECT COUNT(*) > 0 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?"
+	default:
+		return false, fmt.Errorf("unsupported database driver: %s", s.dbDriver)
+	}
+
+	err := tx.QueryRow(query, tableName).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check table existence: %w", err)
+	}
+
+	return exists, nil
+}
+
+// getTableColumns returns the list of column names for a table (database-agnostic)
+func (s *BackupServiceImpl) getTableColumns(tx *sql.Tx, tableName string) ([]string, error) {
+	var query string
+	var args []interface{}
+
+	switch s.dbDriver {
+	case "sqlite3":
+		// SQLite uses PRAGMA
+		query = fmt.Sprintf("PRAGMA table_info(%s)", tableName)
+	case "postgres":
+		// PostgreSQL uses information_schema
+		query = "SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1 ORDER BY ordinal_position"
+		args = []interface{}{tableName}
+	case "mysql":
+		// MySQL uses information_schema
+		query = "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? ORDER BY ordinal_position"
+		args = []interface{}{tableName}
+	default:
+		return nil, fmt.Errorf("unsupported database driver: %s", s.dbDriver)
+	}
+
+	rows, err := tx.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query table columns: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []string
+	if s.dbDriver == "sqlite3" {
+		// SQLite PRAGMA returns: cid, name, type, notnull, dflt_value, pk
+		for rows.Next() {
+			var cid int
+			var name, colType string
+			var notNull, pk int
+			var dfltValue sql.NullString
+			if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
+				return nil, fmt.Errorf("failed to scan column info: %w", err)
+			}
+			columns = append(columns, name)
+		}
+	} else {
+		// PostgreSQL and MySQL return column names directly
+		for rows.Next() {
+			var columnName string
+			if err := rows.Scan(&columnName); err != nil {
+				return nil, fmt.Errorf("failed to scan column name: %w", err)
+			}
+			columns = append(columns, columnName)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error reading table columns: %w", err)
+	}
+
+	return columns, nil
+}
+
+// resetSequence resets the auto-increment sequence for a table (PostgreSQL only)
+func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
+	if s.dbDriver != "postgres" {
+		return nil // Only needed for PostgreSQL
+	}
+
+	// List of tables with auto-increment id columns
+	tablesWithSequences := map[string]bool{
+		"users":                      true,
+		"movements":                  true,
+		"wods":                       true,
+		"workouts":                   true,
+		"user_workouts":              true,
+		"workout_movements":          true,
+		"workout_wods":               true,
+		"user_workout_movements":     true,
+		"user_workout_wods":          true,
+		"refresh_tokens":             true,
+		"password_resets":            true,
+		"email_verification_tokens":  true,
+		"audit_logs":                 true,
+		"user_settings":              true,
+	}
+
+	if !tablesWithSequences[tableName] {
+		return nil // Table doesn't have a sequence
+	}
+
+	// Reset the sequence to max(id) + 1
+	query := fmt.Sprintf(`
+		SELECT setval(pg_get_serial_sequence('%s', 'id'),
+		              COALESCE((SELECT MAX(id) FROM %s), 1),
+		              true)
+	`, tableName, tableName)
+
+	if _, err := tx.Exec(query); err != nil {
+		// Log warning but don't fail the restore
+		fmt.Printf("Warning: failed to reset sequence for %s: %v\n", tableName, err)
+	}
+
+	return nil
+}
+
+// convertValue converts a value from source database type to target database type
+func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) interface{} {
+	if val == nil {
+		return nil
+	}
+
+	// Boolean conversion for specific columns
+	booleanColumns := map[string]bool{
+		"is_pr":                true,
+		"is_template":          true,
+		"is_standard":          true,
+		"email_verified":       true,
+		"account_disabled":     true,
+		"notifications_enabled": true,
+	}
+
+	if booleanColumns[columnName] {
+		// Convert between different boolean representations
+		switch v := val.(type) {
+		case int64:
+			// Convert integer to boolean for PostgreSQL
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return v
+		case bool:
+			// Convert boolean to integer for SQLite/MySQL
+			if s.dbDriver == "sqlite3" || s.dbDriver == "mysql" {
+				if v {
+					return int64(1)
+				}
+				return int64(0)
+			}
+			return v
+		case float64:
+			// JSON unmarshaling might give us float64 for numbers
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			if v != 0 {
+				return int64(1)
+			}
+			return int64(0)
+		}
+	}
+
+	return val
+}
+
+// containsString checks if a slice contains a string
+func containsString(slice []string, str string) bool {
+	for _, item := range slice {
+		if item == str {
+			return true
+		}
+	}
+	return false
 }

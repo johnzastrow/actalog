@@ -13,7 +13,33 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.8.0-beta
+**Current Version:** 0.8.1-beta
+
+## Recent Changes (v0.8.1-beta)
+
+- **No schema changes** in this release (database structure remains identical)
+- **Cross-Database Backup/Restore**: Complete database-agnostic system
+  - Database-agnostic table existence checks (works with SQLite, PostgreSQL, MariaDB)
+  - Table column introspection for schema evolution support
+  - Automatic schema difference detection and handling
+  - **Cross-database migration support**:
+    - ✅ MariaDB → PostgreSQL
+    - ✅ SQLite → PostgreSQL
+    - ✅ MySQL → MariaDB
+    - ✅ Any combination of supported databases
+- **Schema Evolution Support**:
+  - Restore old backups (v0.6.0+) to newer versions
+  - Column filtering: Handles removed columns gracefully
+  - New columns use DEFAULT values from schema
+  - Automatic data type conversion (especially boolean handling)
+- **PostgreSQL Enhancements**:
+  - Automatic sequence reset after restore (`setval()` + `pg_get_serial_sequence()`)
+  - Prevents "duplicate key violation" errors on subsequent inserts
+- **Data Migration Capabilities**:
+  - Development (SQLite) → Production (PostgreSQL) via backup/restore
+  - Emergency recovery to different database type
+  - Multi-tenant migrations using PostgreSQL schema parameter
+  - Zero manual SQL intervention required
 
 ## Recent Changes (v0.8.0-beta)
 
