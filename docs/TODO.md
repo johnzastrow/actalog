@@ -1084,6 +1084,48 @@ See original detailed implementation plan in archived documentation.
 - [ ] Add friend system (future - not in current scope)
 - [x] Add workout templates (moved to HIGH PRIORITY - Hybrid Template System)
 
+### Sharing & Collaboration Features
+- [ ] **User-to-User Entity Sharing System**
+  - **Overview**: Allow users to share self-created WODs, Movements, and Templates with other users
+  - **Sender Workflow**:
+    - [ ] Search for recipients by username or email (autocomplete with multi-select)
+    - [ ] "Share" or "Send" button on WOD/Movement/Template detail pages
+    - [ ] Admins have "Share to all users" button
+  - **Recipient Workflow**:
+    - [ ] Dashboard displays list of pending shared items
+    - [ ] Each item shows: sender username, date/time sent, entity type and name
+    - [ ] Accept button: Creates a copy as user's own self-created entity
+    - [ ] Deny button: Deletes the pending share
+  - **Database Schema**:
+    - [ ] Create `shared_entities` table (id, sender_user_id, recipient_user_id, entity_type, entity_id, sent_at, status)
+    - [ ] Status enum: pending, accepted, denied
+    - [ ] Support entity_type: wod, movement, template
+  - **Backend Implementation**:
+    - [ ] API endpoint: `POST /api/share/{entity_type}/{id}` - Share entity with users
+    - [ ] API endpoint: `GET /api/shares/pending` - List pending shares for authenticated user
+    - [ ] API endpoint: `POST /api/shares/{id}/accept` - Accept shared entity
+    - [ ] API endpoint: `POST /api/shares/{id}/deny` - Deny/delete shared entity
+    - [ ] Service methods for copying entities on accept
+    - [ ] Validation: Users can only share their own custom entities (not standard ones)
+    - [ ] Authorization: Users can only accept/deny shares addressed to them
+  - **Frontend Implementation**:
+    - [ ] Add "Share" button to WOD/Movement/Template detail pages
+    - [ ] User search autocomplete with multi-select
+    - [ ] "Shared Items" section on Dashboard
+    - [ ] Pending shares list with accept/deny buttons
+    - [ ] Share success/error notifications
+  - **Questions to Refine**:
+    - [ ] Should there be notifications when someone shares with you?
+    - [ ] Do multiple recipients each get their own copy when accepting?
+    - [ ] Can users see who else received the same shared item?
+    - [ ] Should there be a limit to how many users you can share with at once?
+    - [ ] Can you share the same item multiple times to the same user?
+    - [ ] When accepted, does it maintain reference to original creator or become fully owned?
+    - [ ] Should there be a way to revoke/cancel pending shares before acceptance?
+    - [ ] What if a user is deleted - what happens to their pending shares?
+    - [ ] Should admins be able to see all pending shares in the system?
+    - [ ] Should there be a separate "Shared Items" view or just show on dashboard?
+
 ### Notifications
 - [ ] Implement email notifications
 - [ ] Add in-app notifications
