@@ -12,7 +12,15 @@
 ActaLog is an open-source web application designed for CrossFit/Functional Fitness athletes to log their workouts, monitor progress, and analyze performance over time. Built with Go on the backend and Vue.js on the frontend, ActaLog offers a responsive and user-friendly interface optimized for mobile devices.
 
 ## Screenshots
-![Dashboard Screenshot](docs/images/dash_with_annie.png)
+
+<!--
+Source - https://stackoverflow.com/a
+Posted by alciregi, modified by community. See post 'Timeline' for change history
+Retrieved 2025-11-23, License - CC BY-SA 4.0
+-->
+
+<img src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="48">
+
 
 
 ## Roadmap — Next priorities
