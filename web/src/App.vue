@@ -17,6 +17,28 @@
       </v-app-bar-title>
 
       <template v-slot:append>
+        <!-- Network Status Indicator -->
+        <v-chip
+          v-if="!networkStore.isOnline"
+          size="small"
+          color="warning"
+          variant="flat"
+          class="mr-2"
+        >
+          <v-icon start size="small">mdi-cloud-off-outline</v-icon>
+          Offline
+        </v-chip>
+        <v-chip
+          v-else-if="networkStore.isSyncing"
+          size="small"
+          color="info"
+          variant="flat"
+          class="mr-2"
+        >
+          <v-icon start size="small">mdi-sync</v-icon>
+          Syncing...
+        </v-chip>
+
         <!-- Current Date -->
         <div class="text-white text-caption mr-2" style="opacity: 0.9">
           {{ currentDate }}
@@ -26,9 +48,70 @@
       </template>
     </v-app-bar>
 
+    <!-- Network Status Notifications -->
+    <v-snackbar
+      v-model="networkStore.showOfflineNotification"
+      :timeout="-1"
+      location="top"
+      color="warning"
+      elevation="8"
+    >
+      <div class="d-flex align-center">
+        <v-icon start>mdi-cloud-off-outline</v-icon>
+        <div>
+          <strong>You're offline</strong>
+          <div class="text-caption">Changes will be saved locally and synced when you're back online</div>
+        </div>
+      </div>
+      <template v-slot:actions>
+        <v-btn
+          variant="text"
+          size="small"
+          @click="networkStore.dismissOfflineNotification()"
+        >
+          Dismiss
+        </v-btn>
+      </template>
+    </v-snackbar>
+
+    <v-snackbar
+      v-model="networkStore.showOnlineNotification"
+      :timeout="3000"
+      location="top"
+      color="success"
+      elevation="8"
+    >
+      <div class="d-flex align-center">
+        <v-icon start>mdi-cloud-check-outline</v-icon>
+        <div>
+          <strong>You're back online</strong>
+          <div class="text-caption" v-if="networkStore.hasPendingSync">Syncing your changes...</div>
+        </div>
+      </div>
+    </v-snackbar>
+
+    <v-snackbar
+      v-model="networkStore.showSyncNotification"
+      :timeout="3000"
+      location="top"
+      color="success"
+      elevation="8"
+    >
+      <div class="d-flex align-center">
+        <v-icon start>mdi-check-circle-outline</v-icon>
+        <div>
+          <strong>All changes synced</strong>
+          <div class="text-caption">Your data is up to date</div>
+        </div>
+      </div>
+    </v-snackbar>
+
     <v-main :style="{ paddingBottom: showBottomNav ? '70px' : '0' }">
       <router-view />
     </v-main>
+
+    <!-- Install Prompt -->
+    <InstallPrompt v-if="authStore.isAuthenticated" />
 
     <!-- Bottom Navigation (only show when authenticated) -->
     <v-bottom-navigation
@@ -84,10 +167,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
+import { useNetworkStore } from '@/stores/network'
+import InstallPrompt from '@/components/InstallPrompt.vue'
 
 const route = useRoute()
 const theme = useTheme()
 const authStore = useAuthStore()
+const networkStore = useNetworkStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
@@ -132,6 +218,9 @@ onMounted(() => {
   if (user && user.profile_image) {
     userAvatar.value = user.profile_image
   }
+
+  // Initialize network status listeners
+  networkStore.initNetworkListeners()
 })
 </script>
 

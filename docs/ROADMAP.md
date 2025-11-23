@@ -1,20 +1,37 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.8.1-beta
-**Last Updated:** 2025-01-22
+**Current Version:** 0.8.2-beta
+**Last Updated:** 2025-01-23
 **Overall Completion:** ~88% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The v0.8.1 release adds **cross-database backup/restore** with automatic schema evolution handling, enabling seamless migrations between SQLite, PostgreSQL, and MariaDB, making ActaLog perfect for development-to-production workflows and multi-database deployments.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. Recent releases focus on improving Quick Log UX, template workflows, and cross-database backup/restore with automatic schema evolution handling, enabling seamless migrations between SQLite, PostgreSQL, and MariaDB.
 
 ---
 
 ## Version History & Status
 
-### v0.8.1-beta (Current - Released)
+### v0.8.2-beta (Current - Released)
+**Status:** Quick Log template selection bug fixes and UX improvements
+
+**Completed:**
+- ✅ Fixed crash when selecting templates from Quick Log
+- ✅ Fixed WOD names not displaying in template logging
+- ✅ Improved UI consistency between Quick Log and Log Workout pages
+- ✅ Added clear warning about data preservation when using templates
+- ✅ Hidden "Browse Templates" button for cleaner UX when coming from Quick Log
+
+**Technical Highlights:**
+- Removed conflicting v-autocomplete configuration causing null errors
+- Added optional chaining for defensive null-safety
+- Support for both nested and flattened WOD API data formats
+- Improved template initialization and performance array handling
+- Orange warning UI for important user communication
+
+### v0.8.1-beta (Released)
 **Status:** Cross-database backup/restore and schema evolution support
 
 **Completed:**
