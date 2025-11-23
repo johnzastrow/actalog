@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
@@ -31,10 +30,11 @@ func main() {
 		cfg.Database.Password,
 		cfg.Database.Database,
 		cfg.Database.SSLMode,
+		cfg.Database.Schema,
 	)
 
-	// Open database connection
-	db, err := sql.Open(cfg.Database.Driver, dsn)
+	// Initialize database connection
+	db, err := repository.InitDatabase(cfg.Database.Driver, dsn, cfg.Database)
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
@@ -45,7 +45,11 @@ func main() {
 	if cfg.Database.Driver == "sqlite3" {
 		query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
 	} else if cfg.Database.Driver == "postgres" {
-		query = "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
+		schema := cfg.Database.Schema
+		if schema == "" {
+			schema = "public"
+		}
+		query = fmt.Sprintf("SELECT tablename FROM pg_tables WHERE schemaname='%s' ORDER BY tablename", schema)
 	} else {
 		query = "SHOW TABLES"
 	}

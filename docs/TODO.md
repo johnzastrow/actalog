@@ -737,6 +737,7 @@ Felt great today. Progressive overload working well.
   - [ ] Create scripts to automate the extraction and conversion process
   - [ ] Update seed migration files with expanded WOD and movement data
   - [ ] Document the extraction process and data sources
+  - [ ] Update seed text fields with additional descriptions and URLs and format workouts with markdown where applicable
 
 ### Progress Tracking
 - [ ] Implement data aggregation for charts
@@ -1058,6 +1059,7 @@ See original detailed implementation plan in archived documentation.
     - [ ] Mock external dependencies (email service, etc.)
     - [ ] Database transaction testing
     - [ ] Error handling and edge case testing
+    - [ ] Performance/load + benchmark testing with each of the database drivers
   - **Frontend Testing:**
     - [ ] Unit tests for Vue components
     - [ ] Unit tests for composables and utilities
@@ -1123,6 +1125,151 @@ See original detailed implementation plan in archived documentation.
 - [ ] Set up SSL auto-renewal
 - [ ] Performance testing and optimization
 - [ ] Security audit
+
+### Docker Deployment & GitHub Container Registry
+
+**Objective:** Create comprehensive Docker deployment solution with public image distribution via GitHub Container Registry (ghcr.io).
+
+**Documentation Tasks:**
+- [ ] Create `docs/DOCKER_DEPLOYMENT.md` - Comprehensive Docker deployment guide
+  - [ ] Overview of Docker deployment architecture
+  - [ ] Prerequisites (Docker, Docker Compose, Git)
+  - [ ] Quick Start guide for end users
+  - [ ] Environment variable configuration reference
+  - [ ] Multi-database support (SQLite, PostgreSQL, MariaDB)
+  - [ ] Volume mapping and data persistence
+  - [ ] Health checks and monitoring
+  - [ ] Backup and restore procedures in Docker
+  - [ ] Upgrading between versions
+  - [ ] Troubleshooting common issues
+  - [ ] Security best practices (secrets, network isolation)
+  - [ ] Production deployment checklist
+- [ ] Create `docs/DOCKER_BUILD.md` - Developer guide for building and publishing images
+  - [ ] Multi-stage build strategy
+  - [ ] GitHub Actions workflow setup
+  - [ ] GitHub Container Registry (ghcr.io) authentication
+  - [ ] Image tagging strategy (semver, latest, sha)
+  - [ ] Building for multiple architectures (amd64, arm64)
+  - [ ] Local development with Docker
+  - [ ] Testing Docker builds locally
+  - [ ] Publishing workflow and permissions
+- [ ] Update `README.md` with Docker quick start and badge
+  - [ ] Add Docker pull command with ghcr.io URL
+  - [ ] Add container registry badge
+  - [ ] Add "Deploy with Docker" section
+  - [ ] Link to detailed Docker documentation
+
+**Implementation Tasks:**
+- [ ] Create `Dockerfile` for production builds
+  - [ ] Multi-stage build (builder + runtime)
+  - [ ] Stage 1: Build Go backend binary (alpine-based)
+  - [ ] Stage 2: Build Vue.js frontend (node-based)
+  - [ ] Stage 3: Final runtime image (minimal alpine)
+  - [ ] Copy backend binary and frontend dist files
+  - [ ] Configure non-root user for security
+  - [ ] Set proper file permissions
+  - [ ] Health check endpoint configuration
+  - [ ] EXPOSE port 8080
+  - [ ] Environment variable defaults
+  - [ ] Volume mount points for data persistence
+- [ ] Create `Dockerfile.dev` for development
+  - [ ] Hot-reload support for backend (air)
+  - [ ] Hot-reload support for frontend (vite)
+  - [ ] Development tools included
+  - [ ] Debug mode enabled
+- [ ] Create `docker-compose.yml` for single-node deployment
+  - [ ] ActaLog backend+frontend service
+  - [ ] SQLite database (volume mounted)
+  - [ ] Environment variable configuration
+  - [ ] Health checks configured
+  - [ ] Restart policies (unless-stopped)
+  - [ ] Port mapping (8080:8080)
+  - [ ] Volume definitions for persistence
+- [ ] Create `docker-compose.postgres.yml` for PostgreSQL stack
+  - [ ] ActaLog service with PostgreSQL driver
+  - [ ] PostgreSQL 16 service
+  - [ ] pgAdmin service (optional)
+  - [ ] Named volumes for PostgreSQL data
+  - [ ] Network isolation between services
+  - [ ] Environment variable templates
+  - [ ] Connection pooling configuration
+- [ ] Create `docker-compose.mysql.yml` for MariaDB stack
+  - [ ] ActaLog service with MySQL driver
+  - [ ] MariaDB 11 service
+  - [ ] phpMyAdmin service (optional)
+  - [ ] Named volumes for MariaDB data
+  - [ ] Character set configuration (utf8mb4)
+- [ ] Create `.dockerignore` file
+  - [ ] Exclude .git, node_modules, bin/, .cache/
+  - [ ] Exclude development files (.env, *.db)
+  - [ ] Exclude test files and documentation
+- [ ] Create GitHub Actions workflow `.github/workflows/docker-publish.yml`
+  - [ ] Trigger on: push to main, version tags (v*)
+  - [ ] Build multi-arch images (amd64, arm64)
+  - [ ] Login to GitHub Container Registry
+  - [ ] Build and tag images (semver + latest)
+  - [ ] Push to ghcr.io/johnzastrow/actalog
+  - [ ] Add metadata labels (version, commit sha, build date)
+  - [ ] Cache layer optimization for faster builds
+  - [ ] Security scanning with Trivy
+  - [ ] Create GitHub release with changelog
+- [ ] Create `.env.docker.example` template
+  - [ ] Database driver selection (sqlite3, postgres, mysql)
+  - [ ] PostgreSQL connection settings
+  - [ ] MariaDB connection settings
+  - [ ] JWT secret configuration
+  - [ ] CORS origins for frontend
+  - [ ] Log level and file logging
+  - [ ] Connection pooling parameters
+  - [ ] Email/SMTP configuration
+  - [ ] Security settings
+- [ ] Create `scripts/docker-entrypoint.sh`
+  - [ ] Database migration runner
+  - [ ] Environment validation
+  - [ ] Wait for database readiness (PostgreSQL/MySQL)
+  - [ ] Initialize first user if needed
+  - [ ] Start application server
+- [ ] Configure GitHub Container Registry settings
+  - [ ] Set repository visibility to public
+  - [ ] Configure package settings and README
+  - [ ] Set up retention policies for old images
+  - [ ] Link container to GitHub repository
+- [ ] Test Docker deployment end-to-end
+  - [ ] Test SQLite deployment (docker-compose.yml)
+  - [ ] Test PostgreSQL deployment (docker-compose.postgres.yml)
+  - [ ] Test MariaDB deployment (docker-compose.mysql.yml)
+  - [ ] Test multi-arch builds (amd64, arm64)
+  - [ ] Test upgrade path (v0.7 → v0.8)
+  - [ ] Test backup/restore in Docker
+  - [ ] Test volume persistence across restarts
+  - [ ] Verify health checks working
+  - [ ] Test resource limits and constraints
+- [ ] Create example deployment scenarios
+  - [ ] Single-node SQLite (personal use)
+  - [ ] Multi-container PostgreSQL (small team)
+  - [ ] Production stack with reverse proxy (Nginx/Caddy)
+  - [ ] Kubernetes manifests (future consideration)
+- [ ] Performance optimization
+  - [ ] Minimize image size (multi-stage builds)
+  - [ ] Layer caching optimization
+  - [ ] Build-time dependency optimization
+  - [ ] Runtime dependency minimization
+
+**Success Criteria:**
+- ✅ Users can deploy ActaLog with single `docker-compose up -d` command
+- ✅ Public Docker image available at `ghcr.io/johnzastrow/actalog:latest`
+- ✅ Multi-architecture support (amd64, arm64)
+- ✅ Automated builds on version tags
+- ✅ Complete documentation for end users and developers
+- ✅ All three database backends tested in Docker
+- ✅ Image size < 100MB (compressed)
+- ✅ Health checks and graceful shutdown working
+- ✅ Data persistence across container restarts
+- ✅ Zero-downtime upgrades possible
+
+**Priority:** Medium (after Phase 1 features)
+**Estimated Tasks:** 50+ sub-tasks
+**Target Version:** v0.9.0-beta
 
 ---
 

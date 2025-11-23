@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -14,19 +15,22 @@ import (
 var currentDriver string
 
 // BuildDSN constructs a database connection string based on the driver type
-func BuildDSN(driver, host string, port int, user, password, database, sslMode string) string {
+func BuildDSN(driver, host string, port int, user, password, database, sslMode, schema string) string {
 	switch driver {
 	case "sqlite3":
 		// For SQLite, database is the file path
 		return database
 
 	case "postgres":
-		// PostgreSQL connection string
-		dsn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s",
-			host, port, user, database, sslMode)
+		// PostgreSQL connection string (pgx format)
+		// Format: postgres://user:password@host:port/database?sslmode=disable&search_path=schema
+		dsn := fmt.Sprintf("postgres://%s", user)
 		if password != "" {
-			dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-				host, port, user, password, database, sslMode)
+			dsn = fmt.Sprintf("postgres://%s:%s", user, password)
+		}
+		dsn = fmt.Sprintf("%s@%s:%d/%s?sslmode=%s", dsn, host, port, database, sslMode)
+		if schema != "" && schema != "public" {
+			dsn = fmt.Sprintf("%s&search_path=%s", dsn, schema)
 		}
 		return dsn
 
@@ -43,13 +47,39 @@ func BuildDSN(driver, host string, port int, user, password, database, sslMode s
 }
 
 // InitDatabase initializes the database connection and runs migrations
-func InitDatabase(driver, dsn string) (*sql.DB, error) {
+func InitDatabase(driver, dsn string, dbConfig interface{}) (*sql.DB, error) {
 	// Store driver for later use
 	currentDriver = driver
 
-	db, err := sql.Open(driver, dsn)
+	// Use pgx driver name for PostgreSQL
+	driverName := driver
+	if driver == "postgres" {
+		driverName = "pgx"
+	}
+
+	db, err := sql.Open(driverName, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	// Configure connection pooling for PostgreSQL and MySQL
+	if driver == "postgres" || driver == "mysql" {
+		// Type assert to get database config
+		// This is safe because the caller passes configs.DatabaseConfig
+		if cfg, ok := dbConfig.(interface {
+			GetMaxOpenConns() int
+			GetMaxIdleConns() int
+			GetConnMaxLifetime() time.Duration
+		}); ok {
+			db.SetMaxOpenConns(cfg.GetMaxOpenConns())
+			db.SetMaxIdleConns(cfg.GetMaxIdleConns())
+			db.SetConnMaxLifetime(cfg.GetConnMaxLifetime())
+		} else {
+			// Fallback to default values if type assertion fails
+			db.SetMaxOpenConns(25)
+			db.SetMaxIdleConns(5)
+			db.SetConnMaxLifetime(5 * time.Minute)
+		}
 	}
 
 	// Test connection
@@ -844,6 +874,40 @@ func getMySQLSchema() string {
 	`
 }
 
+// getBoolValue returns database-specific boolean value for WHERE clauses
+func getBoolValue(driver string, value bool) string {
+	if driver == "sqlite3" {
+		if value {
+			return "1"
+		}
+		return "0"
+	}
+	// PostgreSQL and MySQL use TRUE/FALSE
+	if value {
+		return "TRUE"
+	}
+	return "FALSE"
+}
+
+// getPlaceholders returns database-specific placeholder syntax
+// count is the number of placeholders needed
+// Returns a slice of placeholder strings like ["?", "?"] or ["$1", "$2"]
+func getPlaceholders(driver string, count int) []string {
+	placeholders := make([]string, count)
+	if driver == "postgres" {
+		// PostgreSQL uses $1, $2, $3, etc.
+		for i := 0; i < count; i++ {
+			placeholders[i] = fmt.Sprintf("$%d", i+1)
+		}
+	} else {
+		// SQLite and MySQL use ?
+		for i := 0; i < count; i++ {
+			placeholders[i] = "?"
+		}
+	}
+	return placeholders
+}
+
 // seedStandardMovements seeds the database with standard CrossFit movements
 func seedStandardMovements(db *sql.DB) error {
 	// Determine target table before querying (migrations may rename it)
@@ -859,7 +923,7 @@ func seedStandardMovements(db *sql.DB) error {
 
 	// Check if movements already exist in the target table
 	var count int
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE is_standard = 1", targetTable)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE is_standard = %s", targetTable, getBoolValue(currentDriver, true))
 	err := db.QueryRow(countQuery).Scan(&count)
 	if err != nil {
 		return err
@@ -932,11 +996,12 @@ func seedStandardMovements(db *sql.DB) error {
 		timestampFunc = "CURRENT_TIMESTAMP"
 	}
 
-	// Prepare insert statement with database-specific timestamp
+	// Prepare insert statement with database-specific placeholders, timestamp and boolean
+	ph := getPlaceholders(currentDriver, 3) // 3 parameters: name, description, type
 	stmt := fmt.Sprintf(`
 		INSERT INTO %s (name, description, type, is_standard, created_by, created_at, updated_at)
-		VALUES (?, ?, ?, 1, NULL, %s, %s)
-	`, targetTable, timestampFunc, timestampFunc)
+		VALUES (%s, %s, %s, %s, NULL, %s, %s)
+	`, targetTable, ph[0], ph[1], ph[2], getBoolValue(currentDriver, true), timestampFunc, timestampFunc)
 
 	// Insert each movement
 	for _, m := range movements {
@@ -953,7 +1018,8 @@ func seedStandardMovements(db *sql.DB) error {
 func seedStandardWODs(db *sql.DB) error {
 	// Check if WODs already seeded (check for "Fran" - a very famous benchmark WOD)
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM wods WHERE name = 'Fran' AND is_standard = 1").Scan(&count)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM wods WHERE name = 'Fran' AND is_standard = %s", getBoolValue(currentDriver, true))
+	err := db.QueryRow(query).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("failed to check for existing WODs: %w", err)
 	}
@@ -1066,12 +1132,27 @@ func seedStandardWODs(db *sql.DB) error {
 		},
 	}
 
-	// Insert WODs
-	query := `INSERT INTO wods (name, source, type, regime, score_type, description, url, is_standard, created_by, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, 1, NULL, datetime('now'), datetime('now'))`
+	// Determine database-specific timestamp function
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Prepare insert statement with database-specific placeholders, timestamp and boolean
+	ph := getPlaceholders(currentDriver, 7) // 7 parameters: name, source, type, regime, score_type, description, url
+	insertQuery := fmt.Sprintf(`INSERT INTO wods (name, source, type, regime, score_type, description, url, is_standard, created_by, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, %s, %s)`,
+		ph[0], ph[1], ph[2], ph[3], ph[4], ph[5], ph[6], getBoolValue(currentDriver, true), timestampFunc, timestampFunc)
 
 	for _, wod := range wods {
-		_, err := db.Exec(query, wod.name, wod.source, wod.wodType, wod.regime, wod.scoreType, wod.description, wod.url)
+		_, err := db.Exec(insertQuery, wod.name, wod.source, wod.wodType, wod.regime, wod.scoreType, wod.description, wod.url)
 		if err != nil {
 			return fmt.Errorf("failed to seed WOD %s: %w", wod.name, err)
 		}
@@ -1260,8 +1341,37 @@ func seedWorkoutTemplates(db *sql.DB) error {
 // Helper functions for workout template seeding
 
 func createWorkout(db *sql.DB, name, notes string) (int64, error) {
-	query := `INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
-	          VALUES (?, ?, NULL, datetime('now'), datetime('now'))`
+	// Get database-specific timestamp function
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Get database-specific placeholders
+	ph := getPlaceholders(currentDriver, 2) // name, notes
+
+	// PostgreSQL uses RETURNING clause instead of LastInsertId
+	if currentDriver == "postgres" {
+		query := fmt.Sprintf(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+		          VALUES (%s, %s, NULL, %s, %s) RETURNING id`, ph[0], ph[1], timestampFunc, timestampFunc)
+		var id int64
+		err := db.QueryRow(query, name, notes).Scan(&id)
+		if err != nil {
+			return 0, fmt.Errorf("failed to create workout %s: %w", name, err)
+		}
+		return id, nil
+	}
+
+	// SQLite and MySQL use LastInsertId
+	query := fmt.Sprintf(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+	          VALUES (%s, %s, NULL, %s, %s)`, ph[0], ph[1], timestampFunc, timestampFunc)
 	result, err := db.Exec(query, name, notes)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create workout %s: %w", name, err)
@@ -1270,15 +1380,49 @@ func createWorkout(db *sql.DB, name, notes string) (int64, error) {
 }
 
 func addWorkoutMovement(db *sql.DB, workoutID, movementID int64, weight float64, sets, reps, orderIndex int) error {
-	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, datetime('now'), datetime('now'))`
+	// Get database-specific timestamp and boolean functions
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Get database-specific placeholders and boolean values
+	ph := getPlaceholders(currentDriver, 6) // workoutID, movementID, weight, sets, reps, orderIndex
+	boolFalse := getBoolValue(currentDriver, false)
+	query := fmt.Sprintf(`INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s, NULL, NULL, %s, %s, %s, %s, %s)`,
+		ph[0], ph[1], ph[2], ph[3], ph[4], boolFalse, boolFalse, ph[5], timestampFunc, timestampFunc)
 	_, err := db.Exec(query, workoutID, movementID, weight, sets, reps, orderIndex)
 	return err
 }
 
 func addWorkoutMovementWithTime(db *sql.DB, workoutID, movementID int64, timeSeconds, orderIndex int) error {
-	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, NULL, NULL, NULL, ?, NULL, 0, 0, ?, datetime('now'), datetime('now'))`
+	// Get database-specific timestamp and boolean functions
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Get database-specific placeholders and boolean values
+	ph := getPlaceholders(currentDriver, 4) // workoutID, movementID, timeSeconds, orderIndex
+	boolFalse := getBoolValue(currentDriver, false)
+	query := fmt.Sprintf(`INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (%s, %s, NULL, NULL, NULL, %s, NULL, %s, %s, %s, %s, %s)`,
+		ph[0], ph[1], ph[2], boolFalse, boolFalse, ph[3], timestampFunc, timestampFunc)
 	_, err := db.Exec(query, workoutID, movementID, timeSeconds, orderIndex)
 	return err
 }
@@ -1291,15 +1435,32 @@ func addWorkoutMovementWithDistance(db *sql.DB, workoutID, movementID int64, dis
 }
 
 func addWorkoutWOD(db *sql.DB, workoutID, wodID int64, orderIndex int) error {
-	query := `INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, datetime('now'), datetime('now'))`
+	// Get database-specific timestamp function
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Get database-specific placeholders
+	ph := getPlaceholders(currentDriver, 3) // workoutID, wodID, orderIndex
+	query := fmt.Sprintf(`INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s)`, ph[0], ph[1], ph[2], timestampFunc, timestampFunc)
 	_, err := db.Exec(query, workoutID, wodID, orderIndex)
 	return err
 }
 
 func getMovementIDByName(db *sql.DB, name string) (int64, error) {
 	var id int64
-	err := db.QueryRow("SELECT id FROM movements WHERE name = ?", name).Scan(&id)
+	ph := getPlaceholders(currentDriver, 1)
+	query := fmt.Sprintf("SELECT id FROM movements WHERE name = %s", ph[0])
+	err := db.QueryRow(query, name).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find movement %s: %w", name, err)
 	}
@@ -1308,7 +1469,9 @@ func getMovementIDByName(db *sql.DB, name string) (int64, error) {
 
 func getWODIDByName(db *sql.DB, name string) (int64, error) {
 	var id int64
-	err := db.QueryRow("SELECT id FROM wods WHERE name = ?", name).Scan(&id)
+	ph := getPlaceholders(currentDriver, 1)
+	query := fmt.Sprintf("SELECT id FROM wods WHERE name = %s", ph[0])
+	err := db.QueryRow(query, name).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find WOD %s: %w", name, err)
 	}

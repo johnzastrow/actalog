@@ -81,10 +81,11 @@ func main() {
 		cfg.Database.Password,
 		cfg.Database.Database,
 		cfg.Database.SSLMode,
+		cfg.Database.Schema,
 	)
 
-	// Initialize database
-	db, err := repository.InitDatabase(cfg.Database.Driver, dsn)
+	// Initialize database with connection pooling
+	db, err := repository.InitDatabase(cfg.Database.Driver, dsn, cfg.Database)
 	if err != nil {
 		appLogger.Fatal("Failed to initialize database: %v", err)
 	}

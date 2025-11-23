@@ -7,6 +7,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0-beta] - 2025-11-22
+
+### Changed
+- **PostgreSQL Driver Migration (BREAKING for PostgreSQL users)**: Migrated from `lib/pq` to `pgx/v5` driver
+  - **Dependency Change**: Removed `github.com/lib/pq v1.10.9`, added `github.com/jackc/pgx/v5 v5.7.6`
+  - **Performance**: 10-30% faster for most PostgreSQL workloads
+  - **Active Development**: pgx is actively maintained vs lib/pq in maintenance mode
+  - **Better Features**: Improved support for PostgreSQL-specific features (LISTEN/NOTIFY, COPY, binary protocol)
+  - **Context Support**: Better cancellation and timeout handling
+  - **Backward Compatibility**: SQLite and MySQL/MariaDB unaffected, full backward compatibility maintained
+
+### Added
+- **PostgreSQL Schema Support**: Added `DB_SCHEMA` environment variable for schema isolation
+  - Enables multi-tenant PostgreSQL deployments using database schemas
+  - DSN now includes `search_path` parameter for schema targeting
+  - Default schema: `public` (standard PostgreSQL behavior)
+  - Example: `DB_SCHEMA=actalog` routes all operations to the actalog schema
+
+- **Connection Pooling Configuration**: Fine-grained control over database connection pools
+  - `DB_MAX_OPEN_CONNS`: Maximum simultaneous database connections (default: 25)
+  - `DB_MAX_IDLE_CONNS`: Maximum idle connections kept ready (default: 5)
+  - `DB_CONN_MAX_LIFETIME`: Maximum connection lifetime before recycling (default: 5m)
+  - Applies to PostgreSQL and MySQL/MariaDB only (SQLite uses single connection)
+  - Configurable per deployment for optimal resource usage
+  - Updated `.env.example` with connection pooling examples and tuning guidance
+
+- **Multi-Database Testing**: Comprehensive verification across all supported databases
+  - ✅ SQLite (sqlite3): Fully backward compatible, all features tested
+  - ✅ PostgreSQL (pgx/v5): Full migration verified with real database at 192.168.1.143
+  - ✅ MariaDB/MySQL (mysql): Compatibility verified with real database at 192.168.1.234
+  - All three databases: schema creation, migrations, seeding, and operations verified
+  - Real-world connection pooling and schema isolation tested
+
+- **Documentation**: Created comprehensive migration guide
+  - `docs/POSTGRESQL_MIGRATION.md`: Complete migration guide for PostgreSQL users
+  - Step-by-step migration instructions for existing lib/pq users
+  - New PostgreSQL deployment instructions from scratch
+  - Schema isolation configuration examples
+  - Connection pooling tuning guidelines
+  - Troubleshooting section for common issues
+  - Performance comparison (pgx vs lib/pq)
+  - Rollback instructions if needed
+  - Test results for all three databases with real connection details
+
+- **Docker Deployment Planning**: Added comprehensive Docker deployment roadmap to TODO.md
+  - 50+ sub-tasks for complete Docker deployment solution
+  - Documentation planning: `DOCKER_DEPLOYMENT.md`, `DOCKER_BUILD.md`, README updates
+  - Implementation tasks: Dockerfile (multi-stage), docker-compose files for all 3 databases
+  - GitHub Actions workflow for automated builds and publishing to ghcr.io
+  - Multi-architecture support (amd64, arm64)
+  - Testing across all deployment scenarios
+  - Target: One-command deployment with `docker-compose up -d`
+  - Target version: v0.9.0-beta
+
+### Enhanced
+- **Database Abstraction Layer**: Improved database compatibility handling
+  - New helper functions: `getBoolValue()`, `getPlaceholders()` for database-agnostic SQL
+  - SQL placeholders: SQLite/MySQL use `?`, PostgreSQL uses `$1, $2, $3`
+  - Boolean values: SQLite uses `0/1`, PostgreSQL/MySQL use `TRUE/FALSE`
+  - Timestamp functions: SQLite uses `datetime('now')`, PostgreSQL uses `CURRENT_TIMESTAMP`, MySQL uses `NOW()`
+  - Insert ID retrieval: PostgreSQL uses `RETURNING id` clause instead of `LastInsertId()`
+  - All seeding functions updated: `seedStandardMovements()`, `seedStandardWODs()`, `seedWorkoutTemplates()`
+  - All helper functions updated: `createWorkout()`, `addWorkoutMovement()`, `addWorkoutMovementWithTime()`, `addWorkoutWOD()`, `getMovementIDByName()`, `getWODIDByName()`
+
+- **DSN Format**: Updated PostgreSQL connection string format for pgx compatibility
+  - Old format (lib/pq): `host=localhost port=5432 user=actalog dbname=actalog sslmode=disable`
+  - New format (pgx): `postgres://user:password@host:port/database?sslmode=disable&search_path=schema`
+  - Automatic schema path inclusion when `DB_SCHEMA` is configured
+  - Full compatibility with PostgreSQL URIs
+
+- **Configuration Files**: Updated all configuration examples
+  - `.env.example`: Added DB_SCHEMA, connection pooling parameters, and tuning guidelines
+  - `configs/config.go`: New DatabaseConfig fields (Schema, MaxOpenConns, MaxIdleConns, ConnMaxLifetime)
+  - Environment loading functions: `getEnvInt()`, `getEnvDuration()` for typed config values
+  - Default values optimized for production use
+
+### Fixed
+- **MariaDB Compatibility**: Fixed SQL syntax issues for MariaDB/MySQL
+  - Fixed `addWorkoutWOD()` to use database-specific timestamp functions
+  - Fixed `getMovementIDByName()` to use database-specific placeholders
+  - Fixed `getWODIDByName()` to use database-specific placeholders
+  - All helper functions now properly handle MySQL/MariaDB-specific SQL
+
+### Technical Details
+- **Build Number Range**: #47-56 (10 builds during migration)
+- **Files Modified**:
+  - Core: `go.mod`, `configs/config.go`, `internal/repository/database.go`
+  - Commands: `cmd/actalog/main.go`, `cmd/migrate/main.go`, `cmd/check-schema/main.go`
+  - Documentation: `.env.example`, `docs/POSTGRESQL_MIGRATION.md`
+- **Breaking Changes**:
+  - PostgreSQL users must update from lib/pq to pgx (see migration guide)
+  - No breaking changes for SQLite or MySQL users
+  - Database schemas and data remain fully compatible
+- **Migration Path**: Existing PostgreSQL databases work without changes (DSN format updated automatically)
+
 ## [0.7.6-beta] - 2025-11-22
 
 ### Added

@@ -37,6 +37,12 @@ type DatabaseConfig struct {
 	Password string
 	Database string
 	SSLMode  string
+	Schema   string // PostgreSQL schema (default: public)
+
+	// Connection pooling (PostgreSQL and MySQL only)
+	MaxOpenConns    int           // Maximum number of open connections
+	MaxIdleConns    int           // Maximum number of idle connections
+	ConnMaxLifetime time.Duration // Maximum connection lifetime
 }
 
 // JWTConfig holds JWT authentication configuration
@@ -101,13 +107,17 @@ func Load() (*Config, error) {
 			IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
-			Driver:   getEnv("DB_DRIVER", "sqlite3"),
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnvInt("DB_PORT", 5432),
-			User:     getEnv("DB_USER", "actalog"),
-			Password: getEnv("DB_PASSWORD", ""),
-			Database: getEnv("DB_NAME", "actalog.db"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			Driver:          getEnv("DB_DRIVER", "sqlite3"),
+			Host:            getEnv("DB_HOST", "localhost"),
+			Port:            getEnvInt("DB_PORT", 5432),
+			User:            getEnv("DB_USER", "actalog"),
+			Password:        getEnv("DB_PASSWORD", ""),
+			Database:        getEnv("DB_NAME", "actalog.db"),
+			SSLMode:         getEnv("DB_SSLMODE", "disable"),
+			Schema:          getEnv("DB_SCHEMA", "public"), // PostgreSQL schema
+			MaxOpenConns:    getEnvInt("DB_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 5),
+			ConnMaxLifetime: getEnvDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		JWT: JWTConfig{
 			SecretKey:            getEnv("JWT_SECRET", ""), // Must be set in production
