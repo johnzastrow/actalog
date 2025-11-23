@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2-beta] - 2025-01-23
+
+### Fixed
+- **Quick Log Template Selection**: Fixed crash when selecting workout templates from Quick Log dialog
+  - Removed conflicting `item-value` property from v-autocomplete (was causing null object errors)
+  - Added optional chaining (`?.`) throughout `submitQuickLog()` for defensive coding
+  - Added error alert when template data is invalid
+- **Template WOD Display**: Fixed WOD names not showing when logging from template
+  - Updated `getWODName()` to handle both nested (`wod.name`) and flattened (`wod_name`) API formats
+  - Updated `initializePerformanceArrays()` to handle both WOD data formats
+  - Fixed score type mapping to use full format (`'Time (HH:MM:SS)'` instead of `'Time'`)
+  - Added missing `time_hours` field to WOD performance initialization
+
+### Enhanced
+- **UI Consistency**: Updated Log Workout page styling to match Quick Log aesthetic
+  - Removed excessive rounded corners from form elements (changed `rounded` to `border-radius: 8px`)
+  - Made card styles more compact and consistent
+- **Quick Log UX**: Improved template selection workflow
+  - Hidden "Browse Templates" button when arriving from Quick Log with pre-selected template
+  - Added prominent warning message explaining data preservation behavior
+  - Changed template info box to orange warning theme with information icon
+  - Clear message: "Only the date will be preserved. Notes, workout name, and total time entered here will not be carried over."
+
+### Technical
+- Enhanced `onTemplateSelected()` function to properly initialize performance arrays after loading template
+- Added template to list if not already present (handles Quick Log navigation scenario)
+- Improved data format compatibility between different API response structures
+
 ## [0.8.1-beta] - 2025-01-22
 
 ### Added
