@@ -408,8 +408,18 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	}
 
 	for _, table := range tables {
-		if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)); err != nil {
-			return fmt.Errorf("failed to clear table %s: %w", table, err)
+		// Check if table exists before trying to delete
+		var count int
+		checkQuery := fmt.Sprintf("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%s'", table)
+		if err := tx.QueryRow(checkQuery).Scan(&count); err != nil {
+			return fmt.Errorf("failed to check if table %s exists: %w", table, err)
+		}
+
+		// Only delete if table exists
+		if count > 0 {
+			if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)); err != nil {
+				return fmt.Errorf("failed to clear table %s: %w", table, err)
+			}
 		}
 	}
 
@@ -584,6 +594,19 @@ func (s *BackupServiceImpl) rowsToMaps(rows *sql.Rows) ([]map[string]interface{}
 // restoreTable restores a single table from backup data
 func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}) error {
 	if len(data) == 0 {
+		return nil
+	}
+
+	// Check if table exists before trying to restore
+	var count int
+	checkQuery := fmt.Sprintf("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%s'", tableName)
+	if err := tx.QueryRow(checkQuery).Scan(&count); err != nil {
+		return fmt.Errorf("failed to check if table %s exists: %w", tableName, err)
+	}
+
+	// Skip if table doesn't exist
+	if count == 0 {
+		fmt.Printf("Warning: table %s does not exist, skipping restore for this table\n", tableName)
 		return nil
 	}
 
