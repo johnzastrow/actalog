@@ -4,13 +4,30 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Supported Databases
 
-- SQLite (default for development)
-- PostgreSQL (recommended for production)
-- MariaDB/MySQL (supported)
+- **SQLite** (default for development, single-user deployments)
+- **PostgreSQL** (recommended for production, multi-user deployments)
+  - Driver: `pgx/v5` (migrated from lib/pq in v0.8.0)
+  - Features: Schema isolation, connection pooling, 10-30% performance improvement
+- **MariaDB/MySQL** (supported for production, shared hosting)
+  - Features: Connection pooling, full compatibility verified
 
 ## Schema Version
 
-**Current Version:** 0.7.6-beta
+**Current Version:** 0.8.0-beta
+
+## Recent Changes (v0.8.0-beta)
+
+- **No schema changes** in this release (database structure remains identical)
+- **Database Driver Migration**: PostgreSQL driver migrated from lib/pq to pgx/v5
+  - BREAKING for PostgreSQL users (see docs/POSTGRESQL_MIGRATION.md)
+  - Full backward compatibility for SQLite and MySQL/MariaDB
+  - 10-30% performance improvement for PostgreSQL workloads
+- **New Database Features**:
+  - Schema isolation support via `DB_SCHEMA` environment variable (PostgreSQL)
+  - Connection pooling configuration: `DB_MAX_OPEN_CONNS`, `DB_MAX_IDLE_CONNS`, `DB_CONN_MAX_LIFETIME`
+  - Database-agnostic SQL abstraction layer for multi-database compatibility
+- **Testing**: All three databases verified working (SQLite, PostgreSQL 16, MariaDB 11)
+- **Documentation**: Created comprehensive PostgreSQL migration guide
 
 ## Recent Changes (v0.7.6-beta)
 

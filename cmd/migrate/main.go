@@ -30,10 +30,11 @@ func main() {
 		cfg.Database.Password,
 		cfg.Database.Database,
 		cfg.Database.SSLMode,
+		cfg.Database.Schema,
 	)
 
 	// Initialize database
-	db, err := repository.InitDatabase(cfg.Database.Driver, dsn)
+	db, err := repository.InitDatabase(cfg.Database.Driver, dsn, cfg.Database)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
