@@ -211,6 +211,15 @@ export async function markWorkoutSynced(workoutId) {
 export async function syncWithServer(apiClient) {
   const pendingOps = await getPendingSync()
 
+  if (pendingOps.length === 0) {
+    console.log('No pending operations to sync')
+    return { success: true, synced: 0, failed: 0 }
+  }
+
+  console.log(`Syncing ${pendingOps.length} pending operations...`)
+  let syncedCount = 0
+  let failedCount = 0
+
   for (const op of pendingOps) {
     try {
       if (op.operation === 'CREATE_WORKOUT') {
@@ -218,13 +227,30 @@ export async function syncWithServer(apiClient) {
         await apiClient.post('/api/workouts', op.data)
         // Mark as synced and remove from queue
         await removePendingSync(op.id)
+        syncedCount++
+      } else if (op.operation === 'API_REQUEST') {
+        // Replay the original API request
+        const requestData = op.data
+        await apiClient({
+          method: requestData.method,
+          url: requestData.url,
+          data: requestData.data,
+          headers: requestData.headers
+        })
+        // Remove from queue
+        await removePendingSync(op.id)
+        syncedCount++
       }
       // Add more operations as needed (UPDATE, DELETE, etc.)
     } catch (error) {
       console.error('Sync failed for operation:', op, error)
+      failedCount++
       // Keep in queue for retry
     }
   }
+
+  console.log(`Sync completed: ${syncedCount} synced, ${failedCount} failed`)
+  return { success: failedCount === 0, synced: syncedCount, failed: failedCount }
 }
 
 /**

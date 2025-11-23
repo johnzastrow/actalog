@@ -1,4 +1,10 @@
 import axios from 'axios'
+import {
+  saveWorkoutOffline,
+  addToPendingSync,
+  syncWithServer,
+  getPendingSync
+} from '@/utils/offlineStorage'
 
 // Create axios instance with default config
 const instance = axios.create({
@@ -8,6 +14,46 @@ const instance = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Function to check if request can be handled offline
+function canHandleOffline(config) {
+  // Only handle POST requests to /api/workouts offline
+  return config.method === 'post' && config.url.includes('/api/workouts')
+}
+
+// Function to save request for later sync
+async function saveForOfflineSync(config, error) {
+  try {
+    const requestData = {
+      method: config.method,
+      url: config.url,
+      data: config.data,
+      headers: config.headers,
+      timestamp: Date.now()
+    }
+
+    await addToPendingSync({
+      operation: 'API_REQUEST',
+      data: requestData,
+      timestamp: Date.now()
+    })
+
+    console.log('Request saved for offline sync:', config.url)
+    return {
+      data: {
+        success: true,
+        offline: true,
+        message: 'Saved offline. Will sync when connection is restored.'
+      },
+      status: 202, // Accepted
+      statusText: 'Accepted (Offline)',
+      config
+    }
+  } catch (saveError) {
+    console.error('Failed to save request offline:', saveError)
+    throw error // Throw original error if we can't save offline
+  }
+}
 
 // Request interceptor
 instance.interceptors.request.use(
@@ -46,6 +92,21 @@ instance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config
+
+    // Handle network errors (offline)
+    if (!error.response && error.message === 'Network Error') {
+      console.log('Network error detected, checking if can handle offline...')
+
+      // Check if this request can be handled offline
+      if (canHandleOffline(originalRequest)) {
+        console.log('Request can be handled offline, saving for sync...')
+        return saveForOfflineSync(originalRequest, error)
+      }
+
+      // For GET requests, we might have cached data (handled by service worker)
+      // Let the error propagate for the UI to handle
+      console.log('Request cannot be handled offline')
+    }
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -122,5 +183,29 @@ instance.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Export sync function for external use
+export async function triggerSync() {
+  try {
+    console.log('Triggering background sync...')
+    await syncWithServer(instance)
+    console.log('Background sync completed')
+    return true
+  } catch (error) {
+    console.error('Background sync failed:', error)
+    return false
+  }
+}
+
+// Export pending sync count checker
+export async function getPendingSyncCount() {
+  try {
+    const pending = await getPendingSync()
+    return pending.length
+  } catch (error) {
+    console.error('Failed to get pending sync count:', error)
+    return 0
+  }
+}
 
 export default instance

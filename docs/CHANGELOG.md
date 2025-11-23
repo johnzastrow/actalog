@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0-beta] - 2025-01-23
+
+### Added - Full Offline Support & PWA Enhancements
+
+**iOS PWA Support:**
+- iOS-specific meta tags for full PWA capabilities
+- Apple touch icon configuration
+- Black-translucent status bar styling
+
+**Network Status Management:**
+- Pinia network store for centralized online/offline state
+- Real-time status chip in app bar (Offline/Syncing indicators)
+- Automatic network event detection
+- Pending sync operation counter
+
+**User Notifications:**
+- Persistent offline notification with explanation
+- 3-second online notification when reconnected
+- Sync complete confirmation notification
+- All notifications dismissible by user
+
+**Offline Data Storage:**
+- IndexedDB integration with axios interceptors
+- Automatic request queuing for failed network calls
+- Offline workout creation with background sync
+- Movement list caching for offline access
+
+**Auto-Sync Mechanism:**
+- Automatic sync when connection restored
+- Visual sync status feedback
+- Error handling with retry logic
+- Manual and automatic sync triggers
+
+**Offline-Capable Data Fetching:**
+- `useOfflineData` composable for network-aware loading
+- Cache-first strategy with API fallback
+- Generic `fetchWithCache` pattern
+- Movement caching implementation
+
+**PWA Install Prompt:**
+- Custom branded install UI
+- Smart timing (1 minute delay)
+- 7-day dismissal memory
+- Installation state detection
+
+### Changed
+- Enhanced axios interceptors for offline request handling
+- Updated service worker runtime caching configuration
+- App.vue now includes network notifications and install prompt
+
+### Technical Details
+- **Build**: #61
+- **New Files**: network.js store, InstallPrompt.vue, useOfflineData.js composable
+- **Modified**: index.html, App.vue, axios.js, offlineStorage.js
+
 ## [0.8.2-beta] - 2025-01-23
 
 ### Fixed
