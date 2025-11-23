@@ -73,6 +73,7 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+backups/*
 
 # Test cache
 .cache/
