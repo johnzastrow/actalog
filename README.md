@@ -15,19 +15,19 @@ ActaLog is an open-source web application designed for CrossFit/Functional Fitne
 
 <!--
 Source - https://stackoverflow.com/a
-Posted by alciregi, modified by community. See post 'Timeline' for change history
+Posted by alciregi, modified by the community. See post 'Timeline' for change history
 Retrieved 2025-11-23, License - CC BY-SA 4.0
 -->
 
 <p align="center">
-<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="250">
+<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="300">
 1. Dashboard with Workout Summary
-</p>
+</p><br>
 
 <p align="center">
-<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="250">
+<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="300">
 2. Quick logging the standard "Annie" benchmark workout
-</p>
+</p><br>
 
 ## Roadmap — Next priorities
 
