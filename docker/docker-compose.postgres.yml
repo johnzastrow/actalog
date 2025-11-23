@@ -1,0 +1,85 @@
+# Docker Compose for ActaLog with PostgreSQL
+# Usage: docker compose -f docker-compose.postgres.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: actalog-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-actalog}
+      - POSTGRES_USER=${DB_USER:-actalog}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?Database password required}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - actalog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-actalog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"  # Expose for debugging (remove in production)
+
+  actalog:
+    image: ghcr.io/${GITHUB_OWNER:-yourusername}/actalog:${TAG:-latest}
+    container_name: actalog
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      # PostgreSQL Configuration
+      - DB_DRIVER=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-actalog}
+      - DB_USER=${DB_USER:-actalog}
+      - DB_PASSWORD=${DB_PASSWORD:?Database password required}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      
+      # Application Configuration
+      - PORT=8080
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:?JWT secret required}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-15m}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-7d}
+      
+      # Email Configuration (optional)
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      
+    volumes:
+      - actalog-uploads:/app/uploads
+    
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    
+    networks:
+      - actalog-network
+
+volumes:
+  postgres-data:
+    driver: local
+  actalog-uploads:
+    driver: local
+
+networks:
+  actalog-network:
+    driver: bridge
