@@ -115,7 +115,8 @@
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImltcG9ydGV4cG9ydHRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImV4cCI6MTc2Mzk5NTY5OSwibmJmIjoxNzYzOTA5Mjk5LCJpYXQiOjE3NjM5MDkyOTl9.1O4tiF-TTNQN3VPc2KVxpsFyXrxQdsY-rT7IWj2faIM\")",
       "Bash(/tmp/test_user_workouts.sh)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImJyOGt3YWxsQGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc2NDEzMzIxMywibmJmIjoxNzYzMDQ2ODEzLCJpYXQiOjE3NjMwNDY4MTN9.k1BfN4w2JeAvyy2hhiUKCQfLwkHO0KmjZaaSLgEHrqQ\" curl -s -X GET \"http://localhost:8080/api/templates/9\" -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(./docker/scripts/build.sh:*)"
     ],
     "deny": [],
     "ask": []
