@@ -19,10 +19,10 @@ Posted by alciregi, modified by community. See post 'Timeline' for change histor
 Retrieved 2025-11-23, License - CC BY-SA 4.0
 -->
 
-<img src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="150">
+<img src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="250">
 1. Dashboard with Workout Summary
    
-   
+
 
 
 ## Roadmap — Next priorities
