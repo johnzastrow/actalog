@@ -1,5 +1,40 @@
 # TODO
 
+## v0.7.6-beta Release - COMPLETE ✅ (2025-11-22)
+
+**Status:** Database Backup enhancements and comprehensive documentation planning completed.
+
+### Completed ✅
+- [x] **Backup Upload for Migration**
+  - [x] Upload button in AdminBackupsView with file picker
+  - [x] `POST /api/admin/backups/upload` endpoint
+  - [x] `UploadBackup()` service method with validation
+  - [x] ZIP verification and filename sanitization
+  - [x] Audit logging for uploads
+  - [x] Successfully tested with external backup files
+- [x] **Enhanced Audit Logging**
+  - [x] `backup_downloaded` event with file size tracking
+  - [x] `backup_restored` event with detailed statistics (users, workouts, movements, WODs)
+  - [x] Asynchronous audit log creation to prevent blocking
+- [x] **Cross-Version Restore Compatibility**
+  - [x] Table existence checks using sqlite_master
+  - [x] Graceful handling of missing tables with warnings
+  - [x] Forward and backward compatibility for different schema versions
+- [x] **Documentation Planning Added to TODO**
+  - [x] End-user help documentation system (34 sub-tasks)
+  - [x] Administrator documentation system (31 sub-tasks)
+  - [x] Test coverage planning (34 sub-tasks)
+  - [x] Scheduled remote backups planning (11 sub-tasks)
+  - [x] Expanded seed data from import files (11 sub-tasks)
+
+### Testing
+- ✅ Backup upload tested with external ZIP files
+- ✅ Restore tested across schema versions
+- ✅ Audit logging verified for all backup operations
+- ✅ SQLite database dumps verified in all backups
+
+---
+
 ## v0.7.0-beta Release - COMPLETE ✅ (2025-11-21)
 
 **Status:** Wodify Performance Import system fully implemented and tested with real-world data.
@@ -690,6 +725,18 @@ Felt great today. Progressive overload working well.
 - [ ] Implement movement search functionality
 - [ ] Add movement details and instructions
 - [ ] Support for custom movements per user
+- [ ] **Expand Seed Data from Import Files**
+  - [ ] Parse PDFs in `imports/` directory to extract additional WODs and Movements
+  - [ ] Parse `imports/crossfit_wods.csv` to extract standard CrossFit WODs
+  - [ ] Convert extracted data into seed CSV format
+  - [ ] Add parsed WODs to seed data (benchmark WODs, hero WODs, etc.)
+  - [ ] Add parsed movements to seed data (with type, description, instructions)
+  - [ ] Implement PDF text extraction (consider libraries like pdftotext, PyPDF2, or Go PDF libraries)
+  - [ ] Implement CSV parsing for crossfit_wods.csv
+  - [ ] Validate extracted data for completeness and accuracy
+  - [ ] Create scripts to automate the extraction and conversion process
+  - [ ] Update seed migration files with expanded WOD and movement data
+  - [ ] Document the extraction process and data sources
 
 ### Progress Tracking
 - [ ] Implement data aggregation for charts
@@ -754,6 +801,24 @@ Complete backup and restore system allowing administrators to create full databa
 - [ ] Backup retention policy (auto-delete old backups)
 - [ ] Encryption (password-protected backups)
 - [ ] Remote storage (S3, Google Drive, Dropbox)
+- [ ] **Scheduled Backups to Remote File Services**
+  - [ ] Automatic scheduled backups uploaded to remote storage services
+  - [ ] Support for multiple cloud providers:
+    - [ ] AWS S3 / MinIO (S3-compatible)
+    - [ ] Google Cloud Storage
+    - [ ] Azure Blob Storage
+    - [ ] Dropbox API
+    - [ ] Google Drive API
+    - [ ] SFTP/FTP servers
+  - [ ] Configurable backup schedule (hourly, daily, weekly, monthly)
+  - [ ] Retention policies per remote destination
+  - [ ] Backup verification (download and validate checksum)
+  - [ ] Notification on upload success/failure
+  - [ ] Configuration UI in admin settings for remote destinations
+  - [ ] Credential management (API keys, OAuth tokens) stored securely
+  - [ ] Bandwidth throttling for large backups
+  - [ ] Resume support for interrupted uploads
+  - [ ] Backup rotation (keep N most recent backups per destination)
 - [ ] Point-in-time recovery with transaction logs
 - [ ] CLI tool for backup/restore operations
 - [ ] Email notifications for backup completion/failure
@@ -879,6 +944,83 @@ See original detailed implementation plan in archived documentation.
 - [ ] Create developer setup guide
 - [ ] Add deployment guide
 - [ ] Create video tutorials
+- [ ] **End-User Help Documentation System**
+  - [ ] Create comprehensive help documentation for end users
+  - [ ] Use Markdown format with screenshots and Mermaid diagrams
+  - [ ] Store documentation in GitHub repository (docs/help/ directory)
+  - [ ] Link to help system from Profile screen
+  - [ ] Structure as multi-document system with cross-references
+  - [ ] Include main Table of Contents document
+  - [ ] Create FAQ section document
+  - [ ] Add "How do I..." tutorial sections:
+    - [ ] How do I log my first workout?
+    - [ ] How do I track my personal records (PRs)?
+    - [ ] How do I use the quick log feature?
+    - [ ] How do I create and use workout templates?
+    - [ ] How do I view my performance trends?
+    - [ ] How do I import data from Wodify?
+    - [ ] How do I export/backup my data?
+    - [ ] How do I use the PWA/install the app?
+  - [ ] Add Mermaid diagrams for workflows:
+    - [ ] Workout logging flow diagram
+    - [ ] PR detection process diagram
+    - [ ] Import/export process diagram
+    - [ ] Authentication flow diagram
+  - [ ] Include image placeholders with descriptive captions:
+    - [ ] Example: `[Screenshot: Dashboard view showing recent workouts and PR summary]`
+    - [ ] Example: `[Screenshot: Quick Log interface with movement selection]`
+    - [ ] Example: `[Screenshot: Performance view with chart and filters]`
+  - [ ] Cross-reference related help topics within documents
+  - [ ] Add troubleshooting section for common issues
+  - [ ] Include glossary of CrossFit and app-specific terms
+- [ ] **Administrator Documentation System**
+  - [ ] Create comprehensive administrator documentation
+  - [ ] Use Markdown format with screenshots and Mermaid diagrams
+  - [ ] Store documentation in GitHub repository (docs/admin/ directory)
+  - [ ] Link to admin documentation from Profile screen (admin users only)
+  - [ ] Structure as multi-document system with cross-references
+  - [ ] Include main Table of Contents document
+  - [ ] Create Admin FAQ section document
+  - [ ] Add "How do I..." administrative tutorial sections:
+    - [ ] How do I manage user accounts?
+    - [ ] How do I unlock a locked user account?
+    - [ ] How do I disable/enable user accounts?
+    - [ ] How do I change user roles (admin/user)?
+    - [ ] How do I create and manage database backups?
+    - [ ] How do I restore from a backup?
+    - [ ] How do I upload backups from another system?
+    - [ ] How do I monitor the audit log?
+    - [ ] How do I verify user emails manually?
+    - [ ] How do I handle failed login attempts?
+    - [ ] How do I manage system settings?
+    - [ ] How do I troubleshoot database issues?
+  - [ ] Add Mermaid diagrams for admin workflows:
+    - [ ] User account lifecycle diagram
+    - [ ] Backup and restore process diagram
+    - [ ] Security and audit flow diagram
+    - [ ] Admin role permissions diagram
+    - [ ] Account lockout and unlock process diagram
+  - [ ] Include image placeholders with descriptive captions:
+    - [ ] Example: `[Screenshot: Admin Users view showing user list with status indicators]`
+    - [ ] Example: `[Screenshot: Backup Management interface with create/restore options]`
+    - [ ] Example: `[Screenshot: Audit Log view with filtering and event details]`
+    - [ ] Example: `[Screenshot: User account management dialog with role and status controls]`
+  - [ ] Add security best practices section:
+    - [ ] Password policy recommendations
+    - [ ] JWT secret key management
+    - [ ] CORS configuration guidelines
+    - [ ] Email service configuration
+    - [ ] Database backup schedules
+    - [ ] User access monitoring
+  - [ ] Include system configuration guide:
+    - [ ] Environment variables reference
+    - [ ] Database driver selection and setup
+    - [ ] Email SMTP configuration
+    - [ ] PWA and frontend deployment
+    - [ ] Production deployment checklist
+  - [ ] Cross-reference related admin topics within documents
+  - [ ] Add troubleshooting section for common admin issues
+  - [ ] Include reference to relevant API endpoints for automation
 
 ## Future Considerations
 
@@ -899,6 +1041,47 @@ See original detailed implementation plan in archived documentation.
 - [ ] Multi-language support
 
 ## Technical Debt
+
+### Testing & Quality Assurance
+- [ ] **Complete Test Coverage** - HIGH PRIORITY
+  - **Backend Testing:**
+    - [ ] Unit tests for all service layer methods
+    - [ ] Unit tests for all repository methods
+    - [ ] Integration tests for API endpoints
+    - [ ] Integration tests for database operations
+    - [ ] Test coverage for backup/restore functionality
+    - [ ] Test coverage for import/export functionality
+    - [ ] Test coverage for Wodify import with edge cases
+    - [ ] Test coverage for authentication and authorization
+    - [ ] Test coverage for session management
+    - [ ] Test coverage for admin operations
+    - [ ] Mock external dependencies (email service, etc.)
+    - [ ] Database transaction testing
+    - [ ] Error handling and edge case testing
+  - **Frontend Testing:**
+    - [ ] Unit tests for Vue components
+    - [ ] Unit tests for composables and utilities
+    - [ ] Integration tests for views
+    - [ ] E2E tests for critical user flows (login, log workout, view PRs)
+    - [ ] E2E tests for admin workflows (user management, backups)
+    - [ ] PWA functionality testing (offline mode, install, caching)
+    - [ ] Form validation testing
+    - [ ] API integration testing
+    - [ ] Router navigation testing
+    - [ ] Store (Pinia) testing
+  - **Testing Infrastructure:**
+    - [ ] Set up test databases (separate from development)
+    - [ ] Configure CI/CD pipeline for automated testing
+    - [ ] Set up code coverage reporting (>80% target)
+    - [ ] Add test fixtures and factories for test data generation
+    - [ ] Configure E2E testing framework (Playwright/Cypress)
+    - [ ] Add performance/load testing
+    - [ ] Set up mutation testing
+  - **Documentation:**
+    - [ ] Document testing patterns and best practices
+    - [ ] Add testing guidelines to CLAUDE.md
+    - [ ] Create test data setup scripts
+    - [ ] Document how to run tests locally and in CI
 
 ### Database & Performance
 - [ ] **Migrate from lib/pq to pgx for PostgreSQL support** - HIGH PRIORITY

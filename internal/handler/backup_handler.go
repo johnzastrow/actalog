@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -15,12 +16,14 @@ import (
 // BackupHandler handles backup/restore endpoints
 type BackupHandler struct {
 	backupService domain.BackupService
+	auditLogRepo  domain.AuditLogRepository
 }
 
 // NewBackupHandler creates a new backup handler
-func NewBackupHandler(backupService domain.BackupService) *BackupHandler {
+func NewBackupHandler(backupService domain.BackupService, auditLogRepo domain.AuditLogRepository) *BackupHandler {
 	return &BackupHandler{
 		backupService: backupService,
+		auditLogRepo:  auditLogRepo,
 	}
 }
 
@@ -109,6 +112,13 @@ func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract user ID from JWT token in context
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	filePath, err := h.backupService.DownloadBackup(filename)
 	if err != nil {
 		respondError(w, http.StatusNotFound, fmt.Sprintf("Backup not found: %v", err))
@@ -137,6 +147,18 @@ func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// Copy file contents to response
 	http.ServeContent(w, r, filename, fileInfo.ModTime(), file)
+
+	// Create audit log for download
+	go func() {
+		if err := h.auditLogRepo.Create(&domain.AuditLog{
+			UserID:    &userID,
+			EventType: "backup_downloaded",
+			Details:   stringPtr(fmt.Sprintf("Downloaded backup: %s (size: %d bytes)", filename, fileInfo.Size())),
+			CreatedAt: time.Now(),
+		}); err != nil {
+			fmt.Printf("Warning: failed to create audit log for backup download: %v\n", err)
+		}
+	}()
 }
 
 // DeleteBackup deletes a backup file
@@ -290,4 +312,9 @@ func isValidFilename(filename string) bool {
 	}
 
 	return true
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
 }

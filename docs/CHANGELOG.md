@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6-beta] - 2025-11-22
+
+### Added
+- **Backup Upload for Migration**: Added ability to upload external backup ZIP files from other systems
+  - New upload button in AdminBackupsView with file picker for .zip files
+  - `POST /api/admin/backups/upload` endpoint for multipart file upload
+  - `UploadBackup()` service method with filename validation and ZIP verification
+  - Timestamp-based renaming to prevent filename conflicts
+  - Audit logging for all backup uploads with original filename tracking
+  - Enables data migration between different ActaLog installations
+  - Supports cross-database migrations (e.g., PostgreSQL backup restored to SQLite system)
+
+- **Documentation Planning**: Comprehensive planning for future documentation systems added to TODO.md
+  - **End-User Help Documentation System**: Multi-document help system with Markdown, screenshots, and Mermaid diagrams
+    - Planned GitHub storage (docs/help/ directory) with links from Profile screen
+    - Table of Contents, FAQ section, and "How do I..." tutorials
+    - 8 tutorial topics covering key features (logging, PRs, templates, performance, imports, PWA)
+    - 4 workflow diagrams (workout logging, PR detection, import/export, authentication)
+    - Image placeholders with descriptive captions for future screenshots
+    - Cross-referenced topics and troubleshooting section
+  - **Administrator Documentation System**: Comprehensive admin guide for system operators
+    - Planned GitHub storage (docs/admin/ directory) with admin-only access from Profile screen
+    - 12 administrative tutorials (user management, backups, audit logs, security, troubleshooting)
+    - 5 admin workflow diagrams (user lifecycle, backup/restore, security/audit, permissions, lockout process)
+    - Security best practices section (password policy, JWT management, CORS, email, monitoring)
+    - System configuration guide (environment variables, database setup, SMTP, PWA, deployment)
+    - API endpoint reference for automation
+  - **Test Coverage Planning**: Comprehensive testing strategy for both backend and frontend
+    - Backend testing: 13 tasks covering unit tests, integration tests, mocking, transactions
+    - Frontend testing: 10 tasks covering components, E2E flows, PWA functionality, routing
+    - Testing infrastructure: 7 tasks including CI/CD, coverage reporting, E2E framework, performance testing
+    - Documentation: 4 tasks for testing patterns, guidelines, data setup, and CI documentation
+  - **Scheduled Remote Backups**: Future enhancement planning for automatic cloud backups
+    - Support for 6 cloud providers (AWS S3, Google Cloud Storage, Azure, Dropbox, Google Drive, SFTP/FTP)
+    - Configurable schedules (hourly, daily, weekly, monthly)
+    - Retention policies, verification, notifications, bandwidth throttling
+  - **Expanded Seed Data**: Planning for extracting additional WODs and Movements from import files
+    - Parse PDFs and crossfit_wods.csv to expand standard movement and WOD library
+    - Automated extraction and conversion to seed CSV format
+
+### Enhanced
+- **Audit Logging for Backup Operations**: Comprehensive audit trail for all backup activities
+  - `backup_downloaded` event now logs file size in bytes asynchronously
+  - `backup_restored` event now includes detailed statistics:
+    - Total users, workouts, movements, and WODs restored
+    - Provides visibility into restore scope and impact
+  - All audit logs include user email and timestamp
+  - Enables security monitoring and compliance tracking for data operations
+
+### Fixed
+- **Cross-Version Restore Compatibility**: Backup restore now handles schema version differences gracefully
+  - Added table existence checks before DELETE and INSERT operations using `sqlite_master` queries
+  - Tables missing in current schema are skipped with warnings instead of causing fatal errors
+  - `restoreTable()` method validates table existence before attempting data restore
+  - Enables restoring backups from different ActaLog versions (forward and backward compatibility)
+  - Warning messages logged for skipped tables to aid troubleshooting
+  - Prevents 500 errors when restoring backups created on different schema versions
+
 ## [0.7.5-beta] - 2025-11-22
 
 ### Added
