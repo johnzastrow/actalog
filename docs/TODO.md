@@ -1,5 +1,43 @@
 # TODO
 
+## v0.8.2-beta Release - COMPLETE ✅ (2025-01-23)
+
+**Status:** Quick Log template selection bug fixes and UX improvements completed.
+
+### Completed ✅
+- [x] **Quick Log Template Selection Fix**
+  - [x] Fixed crash when selecting workout templates from Quick Log dialog
+  - [x] Removed conflicting `item-value` property from v-autocomplete
+  - [x] Added optional chaining (`?.`) for defensive null-safety
+  - [x] Added error alert when template data is invalid
+
+- [x] **Template WOD Display Fix**
+  - [x] Fixed WOD names not showing when logging from template
+  - [x] Updated `getWODName()` to handle both nested and flattened API formats
+  - [x] Updated `initializePerformanceArrays()` to handle both WOD data formats
+  - [x] Fixed score type mapping to use full format
+  - [x] Added missing `time_hours` field to WOD performance
+
+- [x] **UI Consistency Improvements**
+  - [x] Updated Log Workout page styling to match Quick Log
+  - [x] Removed excessive rounded corners (changed to `border-radius: 8px`)
+  - [x] Made card styles more compact and consistent
+
+- [x] **Quick Log UX Enhancement**
+  - [x] Hidden "Browse Templates" button when arriving from Quick Log with template
+  - [x] Added prominent orange warning message about data preservation
+  - [x] Clear user communication: Only date preserved when selecting template
+
+### Technical Details
+- **Build Number**: #60
+- **Files Modified**:
+  - `web/src/views/DashboardView.vue` (Quick Log dialog fixes and warning)
+  - `web/src/views/LogWorkoutView.vue` (WOD display fixes, styling, Browse button logic)
+- **Bug Severity**: High (crash) → Fixed
+- **UX Impact**: Significant improvement in template workflow clarity
+
+---
+
 ## v0.8.1-beta Release - COMPLETE ✅ (2025-01-22)
 
 **Status:** Cross-database backup/restore and schema evolution support completed.
