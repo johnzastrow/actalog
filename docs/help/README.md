@@ -205,6 +205,23 @@ Quick Log is the fastest way to record a workout!
 - **Current Date:** Defaults to today's date
 - **Quick Entry:** Just enter your performance details and save
 - **Immediate Feedback:** See your PR status instantly
+- **Template Selection:** You can search for and select workout templates
+
+### Using Templates in Quick Log
+
+**Important:** When you select a workout template from Quick Log:
+- ⚠️ **Only the workout date is preserved**
+- Notes, workout name, and total time entered in Quick Log will NOT be carried over
+- You'll be taken to the full Log Workout page with the template pre-loaded
+- There you can enter all the detailed performance data for movements and WODs
+
+**Workflow:**
+1. Open Quick Log dialog
+2. Search for a template in the "Add Performance Data" field
+3. Select the template
+4. Set the workout date
+5. Click "Log Workout"
+6. You'll be redirected to the full logging page with all template details ready to fill in
 
 ---
 

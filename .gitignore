@@ -88,4 +88,4 @@ docker-compose.override.yml
 logs/
 
 Caddyfile
-
+*.pid
