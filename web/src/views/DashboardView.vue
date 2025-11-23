@@ -433,7 +433,6 @@
                 v-model="quickLogData.selectedItem"
                 :items="unifiedSearchItems"
                 item-title="displayName"
-                item-value="id"
                 return-object
                 :loading="loadingMovements || loadingWods"
                 variant="outlined"
@@ -655,14 +654,16 @@
               </div>
 
               <!-- Template Info -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3" style="background: #f3e5f5; border-radius: 8px; border: 1px solid #9c27b0">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3" style="background: #fff3e0; border-radius: 8px; border: 1px solid #ff9800">
                 <div class="d-flex align-center mb-2">
-                  <v-icon color="#9c27b0" size="small" class="mr-2">mdi-clipboard-text</v-icon>
-                  <span class="text-caption font-weight-bold" style="color: #9c27b0">Workout Template Selected</span>
+                  <v-icon color="#ff9800" size="small" class="mr-2">mdi-information</v-icon>
+                  <span class="text-caption font-weight-bold" style="color: #ff9800">Template Selected</span>
                 </div>
-                <p class="text-caption mb-0" style="color: #666">
-                  This will create a workout based on the "{{ quickLogData.selectedItem.name }}" template.
-                  Template details will be included automatically.
+                <p class="text-caption mb-1" style="color: #666">
+                  Clicking "Log Workout" will take you to the full workout logging page with the "{{ quickLogData.selectedItem.name }}" template pre-loaded.
+                </p>
+                <p class="text-caption mb-0" style="color: #f57c00; font-weight: 500">
+                  ⚠️ Only the date will be preserved. Notes, workout name, and total time entered here will not be carried over.
                 </p>
               </div>
           </v-form>
@@ -1178,12 +1179,18 @@ async function submitQuickLog() {
   }
 
   // If template is selected, navigate to log workout page with template pre-selected
-  if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'template') {
+  if (quickLogData.value.selectedItem?.type === 'template') {
+    const entityId = quickLogData.value.selectedItem?.entityId
+    if (!entityId) {
+      console.error('Template selected but entityId is missing:', quickLogData.value.selectedItem)
+      alert('Error: Template data is invalid. Please try selecting the template again.')
+      return
+    }
     closeQuickLog()
     router.push({
       path: '/workouts/log',
       query: {
-        template: quickLogData.value.selectedItem.entityId,
+        template: entityId,
         date: quickLogData.value.date
       }
     })
@@ -1201,30 +1208,36 @@ async function submitQuickLog() {
     }
 
     // Add movement performance data if selected
-    if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'movement') {
-      payload.movements = [{
-        movement_id: quickLogData.value.selectedItem.entityId,
-        sets: quickLogData.value.movement.sets || null,
-        reps: quickLogData.value.movement.reps || null,
-        weight: quickLogData.value.movement.weight || null,
-        time: quickLogData.value.movement.time || null,
-        distance: quickLogData.value.movement.distance || null,
-        notes: quickLogData.value.movement.notes || '',
-        order_index: 0
-      }]
+    if (quickLogData.value.selectedItem?.type === 'movement') {
+      const entityId = quickLogData.value.selectedItem?.entityId
+      if (entityId) {
+        payload.movements = [{
+          movement_id: entityId,
+          sets: quickLogData.value.movement.sets || null,
+          reps: quickLogData.value.movement.reps || null,
+          weight: quickLogData.value.movement.weight || null,
+          time: quickLogData.value.movement.time || null,
+          distance: quickLogData.value.movement.distance || null,
+          notes: quickLogData.value.movement.notes || '',
+          order_index: 0
+        }]
+      }
     }
 
     // Add WOD performance data if selected
-    if (quickLogData.value.selectedItem && quickLogData.value.selectedItem.type === 'wod') {
-      payload.wods = [{
-        wod_id: quickLogData.value.selectedItem.entityId,
-        score_type: quickLogData.value.wod.scoreType || null,
-        score_value: quickLogData.value.wod.scoreValue || null,
-        time_seconds: quickLogData.value.wod.timeSeconds || null,
-        rounds: quickLogData.value.wod.rounds || null,
-        reps: quickLogData.value.wod.reps || null,
-        notes: quickLogData.value.wod.notes || ''
-      }]
+    if (quickLogData.value.selectedItem?.type === 'wod') {
+      const entityId = quickLogData.value.selectedItem?.entityId
+      if (entityId) {
+        payload.wods = [{
+          wod_id: entityId,
+          score_type: quickLogData.value.wod.scoreType || null,
+          score_value: quickLogData.value.wod.scoreValue || null,
+          time_seconds: quickLogData.value.wod.timeSeconds || null,
+          rounds: quickLogData.value.wod.rounds || null,
+          reps: quickLogData.value.wod.reps || null,
+          notes: quickLogData.value.wod.notes || ''
+        }]
+      }
     }
 
     await axios.post('/api/workouts', payload)

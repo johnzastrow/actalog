@@ -87,7 +87,6 @@
         <v-card
           v-if="selectedTemplate || (isEditMode && selectedTemplateId)"
           elevation="0"
-          rounded
           class="mb-1 pa-2"
           style="background: #e3f2fd; border: 2px solid #00bcd4"
         >
@@ -140,9 +139,8 @@
             v-for="(movement, index) in movementPerformance"
             :key="index"
             elevation="0"
-            rounded
             class="mb-1 pa-2"
-            style="background: white; border: 1px solid #e0e0e0"
+            style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="#00bcd4" size="small" class="mr-2">mdi-dumbbell</v-icon>
@@ -159,7 +157,6 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rounded
                   min="0"
                 />
               </v-col>
@@ -171,7 +168,6 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rounded
                   min="0"
                 />
               </v-col>
@@ -183,7 +179,6 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rounded
                   min="0"
                   step="0.5"
                 />
@@ -198,7 +193,6 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rounded
                   min="0"
                 />
               </v-col>
@@ -210,7 +204,6 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rounded
                   min="0"
                   step="0.1"
                 />
@@ -222,7 +215,6 @@
               variant="outlined"
               density="compact"
               hide-details
-              rounded
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
@@ -239,9 +231,8 @@
             v-for="(wod, index) in wodPerformance"
             :key="index"
             elevation="0"
-            rounded
             class="mb-1 pa-2"
-            style="background: white; border: 1px solid #e0e0e0"
+            style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="teal" size="small" class="mr-2">mdi-flag-checkered</v-icon>
@@ -257,7 +248,6 @@
               variant="outlined"
               density="compact"
               hide-details
-              rounded
               readonly
               class="mb-2"
               style="background: #f5f5f5"
@@ -353,7 +343,6 @@
               variant="outlined"
               density="compact"
               hide-details
-              rounded
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
@@ -405,7 +394,6 @@
           color="#00bcd4"
           size="large"
           block
-          rounded
           :loading="submitting"
           :disabled="(!isEditMode && !selectedTemplateId) || !workoutDate"
           class="font-weight-bold"
@@ -415,14 +403,13 @@
           {{ isEditMode ? 'Update Workout' : 'Log Workout' }}
         </v-btn>
 
-        <!-- Quick Browse Templates Button -->
+        <!-- Quick Browse Templates Button (hide if came from Quick Log with template) -->
         <v-btn
-          v-if="!isEditMode"
+          v-if="!isEditMode && !route.query.template"
           variant="outlined"
           color="#00bcd4"
           size="large"
           block
-          rounded
           class="mt-1 font-weight-bold"
           style="text-transform: none; border: 2px dashed #00bcd4"
           @click="$router.push('/workouts')"
@@ -565,13 +552,13 @@ function initializePerformanceArrays() {
   // Initialize WOD performance
   if (selectedTemplate.value.wods && selectedTemplate.value.wods.length > 0) {
     wodPerformance.value = selectedTemplate.value.wods.map((w, index) => {
-      // Get the WOD's defined score_type
-      const wodScoreType = w.wod?.score_type || ''
+      // Get the WOD's defined score_type (handle both nested and flattened formats)
+      const wodScoreType = w.wod?.score_type || w.wod_score_type || ''
       let scoreTypeValue = null
 
       // Map score_type to form value
       if (wodScoreType.includes('Time')) {
-        scoreTypeValue = 'Time'
+        scoreTypeValue = 'Time (HH:MM:SS)'
       } else if (wodScoreType.includes('Rounds')) {
         scoreTypeValue = 'Rounds+Reps'
       } else if (wodScoreType.includes('Weight')) {
@@ -583,6 +570,7 @@ function initializePerformanceArrays() {
         score_type: scoreTypeValue, // Set from WOD definition
         wod_score_type_display: wodScoreType, // For display purposes
         score_value: null,
+        time_hours: null,
         time_minutes: null,
         time_seconds: null,
         rounds: null,
@@ -620,7 +608,8 @@ function getWODName(wodId) {
 
   if (!selectedTemplate.value || !selectedTemplate.value.wods) return 'WOD'
   const wod = selectedTemplate.value.wods.find(w => w.wod_id === wodId)
-  return wod?.wod?.name || 'WOD'
+  // Handle both nested format (wod.name) and flattened format (wod_name)
+  return wod?.wod?.name || wod?.wod_name || 'WOD'
 }
 
 // Fetch workout templates
@@ -669,7 +658,13 @@ async function onTemplateSelected(templateId) {
     const index = workoutTemplates.value.findIndex(t => t.id === templateId)
     if (index !== -1) {
       workoutTemplates.value[index] = template
+    } else {
+      // Template not in list, add it
+      workoutTemplates.value.push(template)
     }
+
+    // Initialize performance arrays with the template data
+    initializePerformanceArrays()
   } catch (err) {
     console.error('Failed to fetch template details:', err)
   }
