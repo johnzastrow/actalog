@@ -140,13 +140,16 @@ const calendarWeeks = computed(() => {
 })
 
 function hasWorkoutOnDate(date) {
+  // Create YYYY-MM-DD string from the calendar date
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
   return props.workoutDates.some(workoutDate => {
-    const wd = new Date(workoutDate)
-    return (
-      wd.getDate() === date.getDate() &&
-      wd.getMonth() === date.getMonth() &&
-      wd.getFullYear() === date.getFullYear()
-    )
+    // Extract YYYY-MM-DD from workout date string
+    const workoutDateStr = workoutDate.split('T')[0]
+    return workoutDateStr === dateStr
   })
 }
 

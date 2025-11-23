@@ -109,13 +109,63 @@
             elevation="0"
             rounded
             class="pa-1 text-center"
-            style="background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%); cursor: pointer"
-            @click="$router.push('/workouts/log')"
+            style="background: linear-gradient(135deg, #9c27b0 0%, #8e24aa 100%); cursor: pointer"
+            @click="$router.push('/workouts/calendar')"
           >
-            <v-icon size="28" color="white" class="mb-1">mdi-dumbbell</v-icon>
-            <div class="text-body-2 font-weight-bold text-white">Log Workout</div>
+            <v-icon size="28" color="white" class="mb-1">mdi-calendar-month</v-icon>
+            <div class="text-body-2 font-weight-bold text-white">Calendar</div>
             <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
-              Use template
+              View by date
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Additional Stats -->
+      <v-row dense class="mb-1">
+        <v-col cols="6">
+          <v-card elevation="0" rounded class="pa-1" style="background: white">
+            <div class="d-flex align-center">
+              <v-icon color="#9c27b0" size="28" class="mr-2">mdi-chart-timeline-variant</v-icon>
+              <div>
+                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                  {{ avgWorkoutsPerWeek }}
+                </div>
+                <div class="text-caption" style="color: #666">Avg Wrk/Week ({{ new Date().getFullYear() }})</div>
+              </div>
+            </div>
+          </v-card>
+        </v-col>
+        <v-col cols="6">
+          <v-card elevation="0" rounded class="pa-2" style="background: white">
+            <div class="text-caption mb-1" style="color: #666; text-align: center">This Week</div>
+            <div class="d-flex justify-space-around">
+              <div
+                v-for="(day, index) in weekDays"
+                :key="index"
+                class="text-center"
+                style="flex: 1"
+              >
+                <div
+                  :style="{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    margin: '0 auto',
+                    background: day.hasWorkout ? '#00bcd4' : '#e0e0e0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }"
+                >
+                  <span
+                    class="text-caption font-weight-bold"
+                    :style="{ color: day.hasWorkout ? 'white' : '#999' }"
+                  >
+                    {{ day.letter }}
+                  </span>
+                </div>
+              </div>
             </div>
           </v-card>
         </v-col>
@@ -123,42 +173,52 @@
 
       <!-- Recent Workouts -->
       <div class="mb-1">
-        <div class="d-flex align-center justify-space-between mb-1">
-          <h3 class="text-h6 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
+        <div
+          class="d-flex align-center justify-space-between mb-1"
+          style="cursor: pointer"
+          @click="showRecentWorkouts = !showRecentWorkouts"
+        >
+          <div class="d-flex align-center">
+            <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
+            <v-icon size="small" class="ml-1" color="#666">
+              {{ showRecentWorkouts ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+            </v-icon>
+          </div>
           <v-btn
-            size="small"
+            size="x-small"
             variant="text"
             color="#00bcd4"
-            style="text-transform: none"
-            @click="$router.push('/workouts')"
+            style="text-transform: none; font-size: 11px"
+            @click.stop="$router.push('/workouts')"
           >
             View All
           </v-btn>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="#00bcd4" size="48" />
-          <p class="mt-2 text-caption" style="color: #666">Loading workouts...</p>
-        </div>
+        <div v-if="showRecentWorkouts">
+          <!-- Loading State -->
+          <div v-if="loading" class="text-center py-8">
+            <v-progress-circular indeterminate color="#00bcd4" size="48" />
+            <p class="mt-2 text-caption" style="color: #666">Loading workouts...</p>
+          </div>
 
-        <!-- Empty State -->
-        <v-card
-          v-else-if="!loading && recentWorkouts.length === 0"
-          elevation="0"
-          rounded
-          class="pa-2 text-center"
-          style="background: white"
-        >
-          <v-icon size="48" color="#ccc">mdi-clipboard-text-outline</v-icon>
-          <p class="text-body-1 mt-1 mb-0" style="color: #2c3e50">No workouts logged yet</p>
-          <p class="text-body-2 mb-0" style="color: #666">
-            Start tracking your fitness journey today!
-          </p>
-        </v-card>
+          <!-- Empty State -->
+          <v-card
+            v-else-if="!loading && recentWorkouts.length === 0"
+            elevation="0"
+            rounded
+            class="pa-2 text-center"
+            style="background: white"
+          >
+            <v-icon size="48" color="#ccc">mdi-clipboard-text-outline</v-icon>
+            <p class="text-body-2 mt-1 mb-0" style="color: #2c3e50">No workouts logged yet</p>
+            <p class="text-caption mb-0" style="color: #666">
+              Start tracking your fitness journey today!
+            </p>
+          </v-card>
 
-        <!-- Recent Workouts List -->
-        <div v-else>
+          <!-- Recent Workouts List -->
+          <div v-else>
           <v-card
             v-for="workout in recentWorkouts"
             :key="workout.id"
@@ -169,17 +229,17 @@
             @click="toggleWorkoutExpand(workout.id)"
           >
             <div class="d-flex align-center mb-1">
-              <v-icon color="#00bcd4" class="mr-2" size="small">mdi-dumbbell</v-icon>
+              <v-icon color="#00bcd4" class="mr-2" size="x-small">mdi-dumbbell</v-icon>
               <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-1" style="color: #1a1a1a">
+                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
                   {{ workout.workout_name || 'Workout' }}
                 </div>
-                <div class="text-caption" style="color: #666">
+                <div style="color: #666; font-size: 11px">
                   {{ formatDate(workout.workout_date) }}
                   <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
                 </div>
               </div>
-              <v-icon color="#00bcd4" size="small">
+              <v-icon color="#00bcd4" size="x-small">
                 {{ expandedWorkouts.has(workout.id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
             </div>
@@ -287,6 +347,7 @@
               </div>
             </div>
           </v-card>
+          </div>
         </div>
       </div>
     </v-container>
@@ -676,6 +737,7 @@ const activeTab = ref('dashboard')
 const loading = ref(false)
 const userWorkouts = ref([])
 const expandedWorkouts = ref(new Set())
+const showRecentWorkouts = ref(false) // Collapsed by default
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -793,6 +855,62 @@ const avgTimePerWorkout = computed(() => {
   return Math.round(totalMinutes / workoutsWithTime.length)
 })
 
+const avgWorkoutsPerWeek = computed(() => {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const startOfYear = new Date(currentYear, 0, 1) // January 1st of current year
+
+  // Filter workouts from this year
+  const thisYearWorkouts = userWorkouts.value.filter(w => {
+    const workoutDate = new Date(w.workout_date)
+    return workoutDate.getFullYear() === currentYear
+  })
+
+  if (thisYearWorkouts.length === 0) return 0
+
+  // Calculate weeks elapsed in the year
+  const daysSinceStart = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24))
+  const weeksElapsed = Math.max(1, daysSinceStart / 7)
+
+  return (thisYearWorkouts.length / weeksElapsed).toFixed(1)
+})
+
+const weekDays = computed(() => {
+  const now = new Date()
+  const dayOfWeek = now.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+  // Adjust to get Monday as start of week
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + mondayOffset)
+  monday.setHours(0, 0, 0, 0)
+
+  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+
+  return days.map((letter, index) => {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + index)
+
+    // Format as YYYY-MM-DD for comparison
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+
+    // Check if there's a workout on this day
+    const hasWorkout = userWorkouts.value.some(w => {
+      const workoutDateStr = w.workout_date.split('T')[0]
+      return workoutDateStr === dateStr
+    })
+
+    return {
+      letter,
+      date: dateStr,
+      hasWorkout
+    }
+  })
+})
+
 const recentWorkouts = computed(() => {
   const now = new Date()
   const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000))
@@ -879,7 +997,8 @@ watch(
 async function fetchUserWorkouts() {
   loading.value = true
   try {
-    const response = await axios.get('/api/workouts')
+    // Request all workouts by setting a high limit
+    const response = await axios.get('/api/workouts?limit=10000')
     userWorkouts.value = response.data.workouts || []
     console.log('Fetched user workouts:', userWorkouts.value.length)
   } catch (err) {
