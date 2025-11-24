@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0-beta] - 2025-01-23
+
+### Added - Docker Deployment with Automatic Seed Import
+
+**Docker Infrastructure:**
+- Multi-stage Dockerfile with optimized build process
+- Three docker-compose configurations:
+  - `docker-compose.yml` - SQLite (default, single-server deployments)
+  - `docker-compose.postgres.yml` - PostgreSQL (production recommended)
+  - `docker-compose.mariadb.yml` - MariaDB/MySQL (production alternative)
+- GitHub Actions CI/CD workflow for automated image building
+- Helper scripts for building and pushing Docker images
+- Health checks for container monitoring
+
+**Automatic Seed Data Import:**
+- Optional automatic import of CSV seed data on first deployment
+- Environment-based configuration (ADMIN_EMAIL, ADMIN_PASSWORD)
+- Entrypoint script orchestrating app startup and seed import
+- Imports 182 movements and 314 WODs automatically
+- One-time execution using marker file pattern
+- Graceful degradation when credentials not provided
+
+**Comprehensive Documentation:**
+- `DOCKER.md` - Complete Docker deployment guide with examples
+- `DATABASE_DEPLOYMENT.md` - Multi-database deployment guide
+- `TEST.md` - Testing guide for Docker deployments
+- Environment configuration templates for all databases
+- Migration guides between database types
+
+**Seed Data:**
+- 182 CrossFit movements (all standard movements including Girl/Hero WOD movements)
+- 314 benchmark WODs (all Girl and Hero WODs)
+- CSV format for easy import and modification
+
+### Technical Details
+- **Build**: #62 → #63 (build number auto-incremented)
+- **New Files**:
+  - `docker/Dockerfile` - Multi-stage build (frontend, backend, runtime)
+  - `docker/scripts/entrypoint.sh` - Startup orchestration
+  - `docker/scripts/init-seeds.sh` - Seed import script
+  - `docker/scripts/build.sh` - Docker build helper
+  - `docker/scripts/push.sh` - GitHub Container Registry push helper
+  - `.github/workflows/docker-build.yml` - CI/CD automation
+- **Modified**: All environment template files (.env.example, .env.postgres, .env.mariadb)
+- **Documentation**: Added comprehensive Docker and database deployment guides
+
+### Deployment Features
+- GitHub Container Registry (ghcr.io) integration
+- Automatic image builds on push to main branch
+- Tag-based versioning (latest, version-specific tags)
+- Health check endpoints for monitoring
+- Volume management for persistent data
+- Network isolation with bridge networks
+- Non-root container user for security
+
 ## [0.9.0-beta] - 2025-01-23
 
 ### Added - Full Offline Support & PWA Enhancements

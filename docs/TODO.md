@@ -1506,8 +1506,8 @@ See original detailed implementation plan in archived documentation.
 
 ---
 
-**Last Updated:** 2025-11-22
-**Version:** 0.7.5-beta
+**Last Updated:** 2025-01-23
+**Version:** 0.10.0-beta
 
 **v0.7.5-beta Status:**
 - ✅ Admin User Management Dashboard fully implemented and activated

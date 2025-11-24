@@ -9,10 +9,10 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/web
 
 # Copy package files
-COPY web/package*.json ./
+COPY web/package.json web/package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (including dev dependencies needed for build)
+RUN npm ci
 
 # Copy frontend source
 COPY web/ ./
@@ -23,7 +23,7 @@ RUN npm run build
 # ============================================================================
 # Stage 2: Build Backend (Go)
 # ============================================================================
-FROM golang:1.22-alpine AS backend-builder
+FROM golang:1.23-alpine AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
@@ -34,17 +34,20 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Download dependencies
+# Allow Go to auto-download required toolchain version
+ENV GOTOOLCHAIN=auto
 RUN go mod download
 
 # Copy source code
 COPY cmd/ ./cmd/
+COPY configs/ ./configs/
 COPY internal/ ./internal/
 COPY pkg/ ./pkg/
-COPY migrations/ ./migrations/
 
 # Build the application
 # CGO is required for SQLite support
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
+# GOTOOLCHAIN=auto allows automatic toolchain download if needed
+RUN CGO_ENABLED=1 GOOS=linux GOTOOLCHAIN=auto go build -a -installsuffix cgo \
     -ldflags '-extldflags "-static"' \
     -o /app/bin/actalog \
     ./cmd/actalog
@@ -69,9 +72,6 @@ WORKDIR /app
 
 # Copy backend binary from builder
 COPY --from=backend-builder /app/bin/actalog /app/actalog
-
-# Copy migrations
-COPY --from=backend-builder /app/migrations /app/migrations
 
 # Copy frontend build from builder
 COPY --from=frontend-builder /app/web/dist /app/web/dist
