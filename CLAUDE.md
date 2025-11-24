@@ -101,18 +101,42 @@ npm run dev
 ### Docker Operations
 
 ```bash
-# Start all services (backend, frontend, database)
-make docker-up
+# Build Docker image (multi-stage build with frontend and backend)
+./docker/scripts/build.sh <tag>
 
-# Stop all services
-make docker-down
+# Push to GitHub Container Registry
+./docker/scripts/push.sh <tag>
 
-# View logs
-make docker-logs
+# Pull and run image
+docker pull ghcr.io/johnzastrow/actalog:<tag>
+docker run -p 8080:8080 ghcr.io/johnzastrow/actalog:<tag>
 
-# Build Docker image
-make docker-build
+# Or use docker-compose (for development with different databases)
+docker-compose -f docker/docker-compose.sqlite.yml up -d
+docker-compose -f docker/docker-compose.postgresql.yml up -d
+docker-compose -f docker/docker-compose.mariadb.yml up -d
 ```
+
+**Docker Deployment Architecture:**
+
+The Docker image uses a **production-ready single-port architecture**:
+
+- **Port 8080** serves BOTH the backend API and frontend static files
+- Frontend is built into static files (`/app/web/dist`) during Docker build
+- No separate Node.js server runs in production (port 3000 only used for local development)
+- Go backend serves:
+  - `/api/*` - Backend API endpoints
+  - `/uploads/*` - User-uploaded files
+  - `/*` - Frontend static files with SPA routing support
+
+**Why Single Port?**
+- Simpler deployment (one port to expose)
+- No CORS configuration needed
+- Lower resource usage (no Node.js in production)
+- Industry-standard pattern for production SPAs
+- Easier reverse proxy configuration
+
+See `cmd/actalog/main.go:251-262` for frontend directory configuration and lines 418-436 for static file serving implementation.
 
 ### Database Migrations
 
@@ -384,12 +408,37 @@ When releasing a new version, update:
 
 ## Development Workflow
 
+### Local Development (Two Separate Servers)
+
+For local development, run frontend and backend separately:
+
 1. **Start backend:** `make run` or `make dev` (with auto-reload)
 2. **Start frontend:** `cd web && npm run dev`
 3. **Access application:**
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost:3000 (Vite dev server with hot reload)
    - Backend API: http://localhost:8080
    - Health check: http://localhost:8080/health
+
+**How it works in development:**
+- Frontend runs on port 3000 with Vite dev server (hot module replacement)
+- Backend runs on port 8080 serving API only
+- Vite proxy forwards `/api` and `/uploads` requests to backend
+- Configured in `web/vite.config.js`
+
+### Production Deployment (Single Server)
+
+In production (Docker), everything runs on a single port:
+
+1. **Build and run:** `docker run -p 8080:8080 ghcr.io/johnzastrow/actalog:<tag>`
+2. **Access application:**
+   - Full application: http://localhost:8080 (frontend + API)
+   - Health check: http://localhost:8080/health
+
+**How it works in production:**
+- Frontend is pre-built to static files during Docker build
+- Backend serves both static files AND API from port 8080
+- No separate Node.js process (lower resource usage)
+- SPA routing handled by serving `index.html` for non-existent paths
 
 ## Documentation Workflow
 

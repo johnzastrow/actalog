@@ -8,13 +8,46 @@
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. Recent releases focus on improving Quick Log UX, template workflows, and cross-database backup/restore with automatic schema evolution handling, enabling seamless migrations between SQLite, PostgreSQL, and MariaDB.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.10.0-beta) introduces **Docker deployment infrastructure** with automatic seed data import, GitHub Container Registry integration, and comprehensive deployment documentation. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
 
 ---
 
 ## Version History & Status
 
-### v0.8.2-beta (Current - Released)
+### v0.10.0-beta (Current - Released)
+**Status:** Docker deployment infrastructure with automatic seed import
+
+**Completed:**
+- ✅ Multi-stage Dockerfile with optimized build process
+- ✅ Three docker-compose configurations (SQLite, PostgreSQL, MariaDB)
+- ✅ GitHub Actions CI/CD workflow for automated image building
+- ✅ Automatic seed data import on first deployment (182 movements, 314 WODs)
+- ✅ Entrypoint script orchestrating app startup and seed import
+- ✅ Environment-based configuration with graceful degradation
+- ✅ Comprehensive Docker and database deployment documentation
+- ✅ GitHub Container Registry integration (ghcr.io)
+
+**Technical Highlights:**
+- Production-ready Docker deployment with multi-database support
+- Automatic seed import using marker file pattern for one-time execution
+- Health checks for container monitoring
+- Non-root container user for security
+- Volume management for persistent data
+- Tag-based versioning with automatic builds
+- Helper scripts for building and pushing images
+- Complete deployment guides (DOCKER.md, DATABASE_DEPLOYMENT.md, TEST.md)
+
+**Use Cases Enabled:**
+- Single-command deployment across all platforms
+- Automatic population of movements and WODs database
+- Seamless GitHub Container Registry integration
+- Production deployments with PostgreSQL or MariaDB
+- Development deployments with SQLite
+
+### v0.9.0-beta (Released)
+**Status:** Intermediate release (features integrated into v0.10.0)
+
+### v0.8.2-beta (Released)
 **Status:** Quick Log template selection bug fixes and UX improvements
 
 **Completed:**
