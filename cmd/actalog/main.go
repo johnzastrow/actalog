@@ -248,6 +248,19 @@ func main() {
 	uploadsDir := http.Dir(uploadsPath)
 	FileServer(r, "/uploads", uploadsDir)
 
+	// Get frontend directory from environment or use default
+	frontendDir := os.Getenv("FRONTEND_DIR")
+	if frontendDir == "" {
+		frontendDir = filepath.Join(workDir, "web", "dist")
+	}
+
+	// Check if frontend directory exists
+	if _, err := os.Stat(frontendDir); err == nil {
+		appLogger.Info("Serving frontend from: %s", frontendDir)
+	} else {
+		appLogger.Info("Frontend directory not found: %s (API-only mode)", frontendDir)
+	}
+
 	// API routes
 	r.Route("/api", func(r chi.Router) {
 		// Version endpoint (public)
@@ -401,6 +414,26 @@ func main() {
 			})
 		})
 	})
+
+	// Serve frontend static files (must be after API routes to allow API to take precedence)
+	// Serve static assets (CSS, JS, images, etc.)
+	if _, err := os.Stat(frontendDir); err == nil {
+		fs := http.FileServer(http.Dir(frontendDir))
+		r.Get("/*", func(w http.ResponseWriter, req *http.Request) {
+			// Build the full file path
+			filePath := filepath.Join(frontendDir, req.URL.Path)
+
+			// Check if the file exists
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				// File doesn't exist, serve index.html for SPA routing
+				http.ServeFile(w, req, filepath.Join(frontendDir, "index.html"))
+				return
+			}
+
+			// File exists, serve it
+			fs.ServeHTTP(w, req)
+		})
+	}
 
 	// Configure HTTP server
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)

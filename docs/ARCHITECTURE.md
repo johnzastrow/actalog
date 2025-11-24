@@ -707,24 +707,93 @@ sequenceDiagram
 
 ## Deployment Architecture
 
+### Production Deployment (Docker)
+
+ActaLog uses a **single-port architecture** for production deployments:
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser[Web Browser]
+        Mobile[Mobile Browser]
+        PWA[Installed PWA]
+    end
+
+    subgraph "Docker Container (Port 8080)"
+        GoApp[Go Application]
+        StaticFiles[Static Files<br>/app/web/dist]
+
+        subgraph "Routes"
+            APIRoutes[/api/* - API Endpoints]
+            Uploads[/uploads/* - User Files]
+            Frontend[/* - Frontend SPA]
+        end
+    end
+
+    subgraph "Data Layer"
+        DB[(Database<br>SQLite/PostgreSQL/MariaDB)]
+        UploadsVol[Uploads Volume]
+        DataVol[Data Volume]
+    end
+
+    Browser --> GoApp
+    Mobile --> GoApp
+    PWA --> GoApp
+
+    GoApp --> APIRoutes
+    GoApp --> Uploads
+    GoApp --> Frontend
+
+    Frontend --> StaticFiles
+    APIRoutes --> DB
+    Uploads --> UploadsVol
+    DB -.-> DataVol
+```
+
+**Key Design Points:**
+
+1. **Single Port (8080)**: All traffic (frontend + backend) served from one port
+2. **Static File Serving**: Go serves pre-built frontend static files from `/app/web/dist`
+3. **Route Priority**: API routes match first, then uploads, then frontend catch-all
+4. **SPA Routing**: Non-existent paths serve `index.html` for Vue Router
+5. **No Node.js in Production**: Frontend built during Docker image creation
+6. **Volume Management**:
+   - `/app/data` - Database files (SQLite) or config
+   - `/app/uploads` - User-uploaded files (avatars, etc.)
+
+**Implementation:** See `cmd/actalog/main.go:418-436` for static file serving logic.
+
+### Multi-Instance Production (Scalable)
+
+For high-availability deployments:
+
 ```mermaid
 graph LR
     subgraph "Production Environment"
         LB[Load Balancer/Nginx]
-        API1[ActaLog API Instance 1]
-        API2[ActaLog API Instance 2]
-        DB[(PostgreSQL)]
-        Cache[(Redis - Future)]
+        App1[ActaLog Container 1<br>Port 8080]
+        App2[ActaLog Container 2<br>Port 8080]
+        DB[(PostgreSQL<br>Shared Database)]
+        Uploads[Shared Uploads<br>NFS/S3]
+        Cache[(Redis<br>Future)]
     end
 
     Client[Clients] --> LB
-    LB --> API1
-    LB --> API2
-    API1 --> DB
-    API2 --> DB
-    API1 -.-> Cache
-    API2 -.-> Cache
+    LB --> App1
+    LB --> App2
+    App1 --> DB
+    App2 --> DB
+    App1 --> Uploads
+    App2 --> Uploads
+    App1 -.-> Cache
+    App2 -.-> Cache
 ```
+
+**Scaling Considerations:**
+- Use PostgreSQL or MariaDB (not SQLite) for shared database
+- Mount shared uploads volume or use object storage (S3)
+- Load balancer handles TLS termination
+- Each container independently serves frontend + API
 
 ## Performance Considerations
 

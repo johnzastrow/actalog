@@ -122,6 +122,44 @@ For the full backlog and lower-priority items see [TODO.md](docs/TODO.md). For r
    - Backend API: `http://localhost:8080`
    - API Health: `http://localhost:8080/health`
 
+### Docker Deployment (Production)
+
+For production deployment using Docker:
+
+1. **Pull the latest image from GitHub Container Registry**
+
+   ```bash
+   docker pull ghcr.io/johnzastrow/actalog:latest
+   ```
+
+2. **Run the container**
+
+   ```bash
+   docker run -d \
+     -p 8080:8080 \
+     -v actalog-data:/app/data \
+     -v actalog-uploads:/app/uploads \
+     --name actalog \
+     ghcr.io/johnzastrow/actalog:latest
+   ```
+
+3. **Access the application**
+
+   - Full application (frontend + API): `http://localhost:8080`
+   - Health check: `http://localhost:8080/health`
+
+**Note:** In production, the Docker container serves both the frontend and backend from a single port (8080). The frontend is pre-built into static files, and the Go backend serves both the API and the static files. This is different from local development where the frontend runs on port 3000.
+
+**Database Options:**
+
+The application supports multiple databases via environment variables:
+
+- **SQLite** (default): File-based, single-container deployment
+- **PostgreSQL**: For production, use with docker-compose
+- **MariaDB/MySQL**: Alternative production database
+
+See `docker/docker-compose.*.yml` for multi-container setups with PostgreSQL or MariaDB.
+
 
 ## License
 
