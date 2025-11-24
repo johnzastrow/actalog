@@ -1,6 +1,6 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.8.2-beta
+**Current Version:** 0.10.0-beta
 **Last Updated:** 2025-01-23
 **Overall Completion:** ~88% of core requirements
 

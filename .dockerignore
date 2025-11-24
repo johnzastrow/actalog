@@ -33,7 +33,7 @@ web/node_modules/
 web/dist/
 web/dev-dist/
 web/.vite/
-web/package-lock.json
+# web/package-lock.json  # Need this for Docker builds
 web/npm-debug.log*
 web/yarn-debug.log*
 web/yarn-error.log*

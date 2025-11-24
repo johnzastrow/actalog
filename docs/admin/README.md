@@ -1,7 +1,7 @@
 # ActaLog - Administrator Documentation
 
-**Version:** 0.8.1-beta
-**Last Updated:** 2025-01-22
+**Version:** 0.10.0-beta
+**Last Updated:** 2025-01-23
 
 This guide provides comprehensive instructions for ActaLog system administrators. It covers user management, system configuration, backup/restore operations, security best practices, and troubleshooting.
 
@@ -1135,6 +1135,6 @@ A: Monitor:
 
 ---
 
-**Document Version:** 0.8.0-beta
-**Last Updated:** 2025-11-22
-**Applicable Versions:** ActaLog 0.8.0-beta and later
+**Document Version:** 0.10.0-beta
+**Last Updated:** 2025-01-23
+**Applicable Versions:** ActaLog 0.10.0-beta and later

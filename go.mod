@@ -1,16 +1,16 @@
 module github.com/johnzastrow/actalog
 
-go 1.24.7
+go 1.24.0
 
 require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.32
-	golang.org/x/crypto v0.43.0
+	golang.org/x/crypto v0.31.0
 )
 
 require (
