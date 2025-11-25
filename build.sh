@@ -1,7 +1,6 @@
 #!/bin/bash
 # Build script for ActaLog Docker image
 # Usage: ./docker/scripts/build.sh [tag]
-# Can be run from anywhere in the repository
 
 set -e
 
@@ -23,22 +22,6 @@ echo -e "${GREEN}   ActaLog Docker Build Script${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
 
-# Find repository root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-
-# Change to repository root
-if [ ! -f "${REPO_ROOT}/docker/Dockerfile" ]; then
-    echo -e "${RED}Error: Could not find repository root${NC}"
-    echo "Script location: ${SCRIPT_DIR}"
-    echo "Expected repo root: ${REPO_ROOT}"
-    echo "docker/Dockerfile not found at expected location"
-    exit 1
-fi
-
-echo -e "${YELLOW}Repository: ${REPO_ROOT}${NC}"
-cd "${REPO_ROOT}"
-
 # Extract version from pkg/version/version.go if available
 if [ -f "pkg/version/version.go" ]; then
     VERSION=$(grep -E "^\s*Major\s*=\s*[0-9]+" pkg/version/version.go | awk '{print $3}')
@@ -53,6 +36,13 @@ echo -e "${YELLOW}Image: ${IMAGE_NAME}${NC}"
 echo -e "${YELLOW}Tag: ${TAG}${NC}"
 echo -e "${YELLOW}Platform: ${PLATFORM}${NC}"
 echo ""
+
+# Check if Dockerfile exists
+if [ ! -f "docker/Dockerfile" ]; then
+    echo -e "${RED}Error: docker/Dockerfile not found${NC}"
+    echo "Make sure you're running this from the project root directory"
+    exit 1
+fi
 
 # Build the image
 echo -e "${GREEN}Building Docker image...${NC}"

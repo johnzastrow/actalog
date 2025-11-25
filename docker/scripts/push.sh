@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Default values
 REGISTRY="ghcr.io"
-IMAGE_NAME="${GITHUB_REPOSITORY:-yourusername/actalog}"
+IMAGE_NAME="${GITHUB_REPOSITORY:-johnzastrow/actalog}"
 TAG="${1:-dev}"
 
 # Print banner
@@ -30,20 +30,54 @@ echo ""
 echo -e "${GREEN}Checking authentication...${NC}"
 if ! docker info 2>/dev/null | grep -q "${REGISTRY}"; then
     echo -e "${YELLOW}Not logged in to ${REGISTRY}${NC}"
-    echo ""
-    echo "To log in, run:"
-    echo -e "  ${YELLOW}echo \$GITHUB_TOKEN | docker login ${REGISTRY} -u \$GITHUB_USERNAME --password-stdin${NC}"
-    echo ""
-    echo "Or use a Personal Access Token:"
-    echo -e "  ${YELLOW}docker login ${REGISTRY}${NC}"
-    echo ""
-    read -p "Do you want to log in now? (y/n) " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        docker login "${REGISTRY}"
+
+    # Try to use GitHub CLI authentication automatically
+    if command -v gh &> /dev/null; then
+        echo -e "${GREEN}Found GitHub CLI (gh), checking authentication...${NC}"
+
+        if gh auth status &> /dev/null; then
+            echo -e "${GREEN}GitHub CLI is authenticated, using token for Docker login...${NC}"
+
+            # Get username from gh
+            GH_USERNAME=$(gh api user --jq '.login' 2>/dev/null)
+
+            if [ -z "$GH_USERNAME" ]; then
+                echo -e "${YELLOW}Could not get GitHub username, using default...${NC}"
+                GH_USERNAME="${USER}"
+            fi
+
+            # Use gh auth token to log in to GHCR
+            if gh auth token | docker login "${REGISTRY}" -u "${GH_USERNAME}" --password-stdin; then
+                echo -e "${GREEN}Successfully logged in to ${REGISTRY} using GitHub CLI token${NC}"
+            else
+                echo -e "${RED}Failed to log in using GitHub CLI token${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${YELLOW}GitHub CLI is not authenticated${NC}"
+            echo -e "Run: ${GREEN}gh auth login${NC}"
+            exit 1
+        fi
     else
-        echo -e "${RED}Aborted${NC}"
-        exit 1
+        # Fall back to manual authentication
+        echo ""
+        echo "GitHub CLI (gh) not found. To install:"
+        echo -e "  ${YELLOW}https://cli.github.com/${NC}"
+        echo ""
+        echo "Or log in manually with a Personal Access Token:"
+        echo -e "  ${YELLOW}docker login ${REGISTRY}${NC}"
+        echo ""
+        echo "Or use environment variables:"
+        echo -e "  ${YELLOW}echo \$GITHUB_TOKEN | docker login ${REGISTRY} -u \$GITHUB_USERNAME --password-stdin${NC}"
+        echo ""
+        read -p "Do you want to log in manually now? (y/n) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            docker login "${REGISTRY}"
+        else
+            echo -e "${RED}Aborted${NC}"
+            exit 1
+        fi
     fi
 fi
 
