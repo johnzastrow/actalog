@@ -105,18 +105,59 @@ docker-compose -f docker/docker-compose.mariadb.yml up -d
 ### Using Build Script (Recommended)
 
 ```bash
-# Build and tag image
+# Build and tag image (can run from anywhere in the repo)
 ./docker/scripts/build.sh v0.10.0
 
-# Push to GitHub Container Registry
+# Or from within the scripts directory
+cd docker/scripts
+./build.sh v0.10.0
+
+# Push to GitHub Container Registry (automatically uses gh CLI auth if available)
 ./docker/scripts/push.sh v0.10.0
 ```
 
-**What the script does:**
+**Note:** Both scripts automatically detect the repository root and change to it, so you can run them from any directory within the repository.
+
+**What the build script does:**
 1. Checks for uncommitted changes (fails if dirty)
 2. Runs multi-stage Docker build
 3. Tags with version and 'latest'
-4. Optionally pushes to ghcr.io
+4. Displays instructions for pushing
+
+**What the push script does:**
+1. Checks if Docker is already logged in to ghcr.io
+2. **Automatically authenticates using `gh` CLI if available** (recommended)
+3. Falls back to manual login if `gh` is not installed/authenticated
+4. Pushes tagged images to GitHub Container Registry
+
+**Automatic Authentication (Recommended):**
+
+If you have the GitHub CLI (`gh`) installed and authenticated, the push script will automatically use your GitHub token:
+
+```bash
+# One-time setup (if not already authenticated)
+gh auth login
+
+# Now push script will use gh token automatically
+./docker/scripts/push.sh v0.10.0
+```
+
+**Manual Authentication (Alternative):**
+
+If `gh` CLI is not available, the script will prompt you to log in manually:
+
+```bash
+# Using Personal Access Token (PAT)
+docker login ghcr.io
+
+# Or using environment variables
+echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+```
+
+**Required GitHub Token Scopes:**
+- `write:packages` - Push images to GHCR
+- `read:packages` - Pull images from GHCR
+- `delete:packages` - Delete image versions (optional)
 
 ### Manual Build
 

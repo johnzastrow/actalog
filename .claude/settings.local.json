@@ -118,7 +118,8 @@
       "Bash(tree:*)",
       "Bash(./docker/scripts/build.sh:*)",
       "Bash(docker:*)",
-      "Bash(sudo usermod:*)"
+      "Bash(sudo usermod:*)",
+      "Bash(bash -c '\nSCRIPT_DIR=\"\"$(cd \"\"$(dirname \"\"${BASH_SOURCE[0]}\"\")\"\" && pwd)\"\"\nREPO_ROOT=\"\"$(cd \"\"${SCRIPT_DIR}/../..\"\" && pwd)\"\"\necho \"\"Script Dir: ${SCRIPT_DIR}\"\"\necho \"\"Repo Root: ${REPO_ROOT}\"\"\necho \"\"Dockerfile exists: $([ -f \"\"${REPO_ROOT}/docker/Dockerfile\"\" ] && echo \"\"yes\"\" || echo \"\"no\"\")\"\"\necho \"\"Version file exists: $([ -f \"\"${REPO_ROOT}/pkg/version/version.go\"\" ] && echo \"\"yes\"\" || echo \"\"no\"\")\"\"\n')"
     ],
     "deny": [],
     "ask": []
