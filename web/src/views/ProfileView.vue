@@ -354,7 +354,6 @@
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation
-      v-model="activeTab"
       grow
       style="position: fixed; bottom: 0; background: white"
       elevation="8"
@@ -395,6 +394,7 @@ import { getProfileImageUrl } from '@/utils/url'
 const router = useRouter()
 const authStore = useAuthStore()
 const activeTab = ref('profile')
+
 
 // Version info
 const appVersion = ref('...')
