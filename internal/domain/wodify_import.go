@@ -34,6 +34,7 @@ type WodifyImportPreview struct {
 	MovementsToCreate     int                       `json:"movements_to_create"`
 	WODsToCreate          int                       `json:"wods_to_create"`
 	UserWorkoutsToCreate  int                       `json:"user_workouts_to_create"`
+	UserWorkoutsToUpdate  int                       `json:"user_workouts_to_update"`
 	PerformancesToCreate  int                       `json:"performances_to_create"`
 	Errors                []WodifyImportError       `json:"errors,omitempty"`
 	WorkoutSummary        []WodifyWorkoutSummary    `json:"workout_summary"`
@@ -56,14 +57,18 @@ type WodifyWorkoutSummary struct {
 	WODCount           int    `json:"wod_count"`
 	HasPRs             bool   `json:"has_prs"`
 	ComponentTypes     string `json:"component_types"`
+	ExistingWorkoutID  *int64 `json:"existing_workout_id,omitempty"`
+	IsUpdate           bool   `json:"is_update"`
 }
 
 // WodifyImportResult represents the result of the import
 type WodifyImportResult struct {
 	WorkoutsCreated     int `json:"workouts_created"`
+	WorkoutsUpdated     int `json:"workouts_updated"`
 	MovementsCreated    int `json:"movements_created"`
 	WODsCreated         int `json:"wods_created"`
 	PerformancesCreated int `json:"performances_created"`
+	PerformancesUpdated int `json:"performances_updated"`
 	PRsFlagged          int `json:"prs_flagged"`
 }
 

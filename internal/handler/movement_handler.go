@@ -7,20 +7,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
+	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
 // MovementHandler handles movement-related endpoints
 type MovementHandler struct {
-	movementRepo domain.MovementRepository
-	logger       *logger.Logger
+	movementRepo    domain.MovementRepository
+	movementService *service.MovementService
+	logger          *logger.Logger
 }
 
 // NewMovementHandler creates a new movement handler
-func NewMovementHandler(movementRepo domain.MovementRepository, l *logger.Logger) *MovementHandler {
+func NewMovementHandler(movementRepo domain.MovementRepository, movementService *service.MovementService, l *logger.Logger) *MovementHandler {
 	return &MovementHandler{
-		movementRepo: movementRepo,
-		logger:       l,
+		movementRepo:    movementRepo,
+		movementService: movementService,
+		logger:          l,
 	}
 }
 
@@ -164,6 +168,18 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Update updates an existing custom movement
 func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID and email from context for audit logging
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
+	// Check if user is admin
+	role, _ := middleware.GetUserRole(r.Context())
+	isAdmin := role == "admin"
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -192,18 +208,27 @@ func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Name:        req.Name,
 		Description: req.Description,
 		Type:        domain.MovementType(req.Type),
-		IsStandard:  false,
 	}
 
 	if h.logger != nil {
 		h.logger.Info("action=update_movement_attempt id=%d name=%s", id, req.Name)
 	}
 
-	if err := h.movementRepo.Update(movement); err != nil {
+	// Use admin update if admin, otherwise regular update
+	if isAdmin {
+		err = h.movementService.UpdateAsAdmin(movement, userID, userEmail)
+	} else {
+		err = h.movementService.Update(movement, userID, userEmail)
+	}
+	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=update_movement outcome=failure id=%d error=%v", id, err)
 		}
-		respondError(w, http.StatusInternalServerError, "Failed to update movement")
+		if err == service.ErrMovementUnauthorized {
+			respondError(w, http.StatusForbidden, "Cannot modify standard movement")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to update movement: "+err.Error())
+		}
 		return
 	}
 
@@ -211,11 +236,25 @@ func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("action=update_movement outcome=success id=%d", id)
 	}
 
-	respondJSON(w, http.StatusOK, movement)
+	// Retrieve updated movement
+	updated, _ := h.movementService.GetByID(id)
+	if updated != nil {
+		respondJSON(w, http.StatusOK, updated)
+	} else {
+		respondJSON(w, http.StatusOK, movement)
+	}
 }
 
 // Delete deletes a custom movement
 func (h *MovementHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID and email from context for audit logging
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -227,11 +266,15 @@ func (h *MovementHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("action=delete_movement_attempt id=%d", id)
 	}
 
-	if err := h.movementRepo.Delete(id); err != nil {
+	if err := h.movementService.Delete(id, userID, userEmail); err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=delete_movement outcome=failure id=%d error=%v", id, err)
 		}
-		respondError(w, http.StatusInternalServerError, "Failed to delete movement")
+		if err == service.ErrMovementUnauthorized {
+			respondError(w, http.StatusForbidden, "Cannot delete standard movement")
+		} else {
+			respondError(w, http.StatusInternalServerError, "Failed to delete movement: "+err.Error())
+		}
 		return
 	}
 

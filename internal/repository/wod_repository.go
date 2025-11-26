@@ -285,6 +285,42 @@ func (r *WODRepository) Update(wod *domain.WOD) error {
 	return nil
 }
 
+// UpdateStandard updates an existing standard WOD (for admin import)
+func (r *WODRepository) UpdateStandard(wod *domain.WOD) error {
+	wod.UpdatedAt = time.Now()
+
+	query := `UPDATE wods
+	          SET name = ?, source = ?, type = ?, regime = ?, score_type = ?, description = ?, url = ?, notes = ?, updated_at = ?
+	          WHERE id = ? AND is_standard = 1`
+
+	result, err := r.db.Exec(query,
+		wod.Name,
+		wod.Source,
+		wod.Type,
+		wod.Regime,
+		wod.ScoreType,
+		wod.Description,
+		wod.URL,
+		wod.Notes,
+		wod.UpdatedAt,
+		wod.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update standard wod: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("standard wod not found")
+	}
+
+	return nil
+}
+
 // Delete deletes a WOD (only for user-created WODs)
 func (r *WODRepository) Delete(id int64) error {
 	query := `DELETE FROM wods WHERE id = ? AND is_standard = 0`

@@ -205,8 +205,15 @@ func (s *ImportService) ConfirmWODImport(csvData io.Reader, userID int64, isAdmi
 					existingWOD.Notes = &row.Notes
 				}
 
-				if err := s.wodRepo.Update(existingWOD); err != nil {
-					return nil, fmt.Errorf("failed to update WOD: %w", err)
+				// Use appropriate update method based on whether WOD is standard
+				var updateErr error
+				if existingWOD.IsStandard {
+					updateErr = s.wodRepo.UpdateStandard(existingWOD)
+				} else {
+					updateErr = s.wodRepo.Update(existingWOD)
+				}
+				if updateErr != nil {
+					return nil, fmt.Errorf("failed to update WOD: %w", updateErr)
 				}
 				preview.UpdatedCount++
 			} else {

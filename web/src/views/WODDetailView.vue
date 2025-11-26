@@ -49,6 +49,17 @@
                 </v-chip>
               </div>
             </div>
+            <!-- Edit Button (visible to admins or WOD owner) -->
+            <v-btn
+              v-if="canEdit"
+              icon
+              variant="text"
+              color="#00bcd4"
+              @click="editWOD"
+            >
+              <v-icon>mdi-pencil</v-icon>
+              <v-tooltip activator="parent" location="bottom">Edit WOD</v-tooltip>
+            </v-btn>
           </div>
         </v-card>
 
@@ -340,13 +351,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
+
+// Computed: can current user edit this WOD?
+const canEdit = computed(() => {
+  if (!wod.value || !authStore.user) return false
+  // Admin can edit any WOD (including standard)
+  if (authStore.user.role === 'admin') return true
+  // Non-standard WOD owned by current user
+  if (!wod.value.is_standard && wod.value.created_by === authStore.user.id) return true
+  return false
+})
 
 const wod = ref(null)
 const loading = ref(false)

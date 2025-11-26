@@ -105,6 +105,7 @@ func main() {
 	userSettingsRepo := repository.NewSQLiteUserSettingsRepository(db)
 	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
+	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -137,6 +138,7 @@ func main() {
 
 	// Initialize services
 	auditLogService := service.NewAuditLogService(auditLogRepo)
+	dataChangeLogService := service.NewDataChangeLogService(dataChangeLogRepo)
 
 	userService := service.NewUserService(
 		userRepo,
@@ -168,7 +170,9 @@ func main() {
 		workoutWODRepo,
 	)
 
-	wodService := service.NewWODService(wodRepo)
+	wodService := service.NewWODService(wodRepo, dataChangeLogService)
+
+	movementService := service.NewMovementService(movementRepo, dataChangeLogService)
 
 	workoutWODService := service.NewWorkoutWODService(
 		workoutWODRepo,
@@ -200,7 +204,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
-	movementHandler := handler.NewMovementHandler(movementRepo, appLogger)
+	movementHandler := handler.NewMovementHandler(movementRepo, movementService, appLogger)
 	workoutTemplateHandler := handler.NewWorkoutTemplateHandler(workoutTemplateService)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, appLogger)
 	wodHandler := handler.NewWODHandler(wodService)
@@ -210,6 +214,7 @@ func main() {
 	performanceHandler := handler.NewPerformanceHandler(movementRepo, wodRepo, userWorkoutMovementRepo, userWorkoutWODRepo, appLogger)
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, userRepo, appLogger)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
+	dataChangeLogHandler := handler.NewDataChangeLogHandler(dataChangeLogService, appLogger)
 	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 	exportHandler := handler.NewExportHandler(exportService)
@@ -237,17 +242,6 @@ func main() {
 		fmt.Fprintf(w, `{"status":"healthy","version":"%s"}`, version.Version())
 	})
 
-	// Root endpoint
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"message":"Welcome to ActaLog API","version":"%s"}`, version.Version())
-	})
-
-	// Static file serving for uploads (avatars, etc.)
-	uploadsDir := http.Dir(uploadsPath)
-	FileServer(r, "/uploads", uploadsDir)
-
 	// Get frontend directory from environment or use default
 	frontendDir := os.Getenv("FRONTEND_DIR")
 	if frontendDir == "" {
@@ -255,11 +249,26 @@ func main() {
 	}
 
 	// Check if frontend directory exists
+	frontendExists := false
 	if _, err := os.Stat(frontendDir); err == nil {
+		frontendExists = true
 		appLogger.Info("Serving frontend from: %s", frontendDir)
 	} else {
 		appLogger.Info("Frontend directory not found: %s (API-only mode)", frontendDir)
 	}
+
+	// Root endpoint - only serve API JSON if no frontend available
+	if !frontendExists {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{"message":"Welcome to ActaLog API","version":"%s"}`, version.Version())
+		})
+	}
+
+	// Static file serving for uploads (avatars, etc.)
+	uploadsDir := http.Dir(uploadsPath)
+	FileServer(r, "/uploads", uploadsDir)
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
@@ -402,6 +411,12 @@ func main() {
 				r.Get("/audit-logs/{id}", auditLogHandler.GetAuditLog)
 				r.Post("/audit-logs/cleanup", auditLogHandler.CleanupOldLogs)
 
+				// Data change log routes (admin only)
+				r.Get("/data-change-logs", dataChangeLogHandler.ListDataChangeLogs)
+				r.Get("/data-change-logs/{id}", dataChangeLogHandler.GetDataChangeLog)
+				r.Get("/data-change-logs/entity/{entity_type}/{entity_id}", dataChangeLogHandler.GetEntityHistory)
+				r.Post("/data-change-logs/cleanup", dataChangeLogHandler.CleanupOldLogs)
+
 				// User management routes (admin only)
 				r.Get("/users", adminUserHandler.ListUsers)
 				r.Post("/users/{id}/unlock", adminUserHandler.UnlockUser)
@@ -417,7 +432,7 @@ func main() {
 
 	// Serve frontend static files (must be after API routes to allow API to take precedence)
 	// Serve static assets (CSS, JS, images, etc.)
-	if _, err := os.Stat(frontendDir); err == nil {
+	if frontendExists {
 		fs := http.FileServer(http.Dir(frontendDir))
 		r.Get("/*", func(w http.ResponseWriter, req *http.Request) {
 			// Build the full file path

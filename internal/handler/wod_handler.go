@@ -373,7 +373,7 @@ func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateWOD updates a custom WOD
+// UpdateWOD updates a custom WOD (or any WOD if admin)
 func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -381,6 +381,13 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+
+	// Extract user email for audit logging
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
+	// Check if user is admin
+	role, _ := middleware.GetUserRole(r.Context())
+	isAdmin := role == "admin"
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -408,8 +415,14 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 		Notes:       req.Notes,
 	}
 
-	if err := h.wodService.Update(wod, userID); err != nil {
-		if err == service.ErrUnauthorized {
+	// Use admin update if user is admin, otherwise regular update
+	if isAdmin {
+		err = h.wodService.UpdateAsAdmin(wod, userID, userEmail)
+	} else {
+		err = h.wodService.Update(wod, userID, userEmail)
+	}
+	if err != nil {
+		if err == service.ErrUnauthorized || err == service.ErrWODUnauthorized || err == service.ErrWODOwnership {
 			respondError(w, http.StatusForbidden, "You don't have permission to update this WOD")
 		} else {
 			respondError(w, http.StatusInternalServerError, "Failed to update WOD: "+err.Error())
@@ -452,6 +465,9 @@ func (h *WODHandler) DeleteWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract user email for audit logging
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -459,7 +475,7 @@ func (h *WODHandler) DeleteWOD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.wodService.Delete(id, userID); err != nil {
+	if err := h.wodService.Delete(id, userID, userEmail); err != nil {
 		if err == service.ErrUnauthorized {
 			respondError(w, http.StatusForbidden, "You don't have permission to delete this WOD")
 		} else {

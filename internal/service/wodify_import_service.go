@@ -53,6 +53,20 @@ func (s *WodifyImportService) PreviewImport(csvData io.Reader, userID int64) (*d
 	// Analyze what needs to be created
 	newMovements, newWODs := s.analyzeNewEntities(rows, userID)
 
+	// Create workout summary with duplicate detection
+	workoutSummary := s.createWorkoutSummary(grouped, userID)
+
+	// Count new vs updates
+	workoutsToCreate := 0
+	workoutsToUpdate := 0
+	for _, ws := range workoutSummary {
+		if ws.IsUpdate {
+			workoutsToUpdate++
+		} else {
+			workoutsToCreate++
+		}
+	}
+
 	// Create preview
 	preview := &domain.WodifyImportPreview{
 		TotalRows:            len(rows) + len(errors),
@@ -61,10 +75,11 @@ func (s *WodifyImportService) PreviewImport(csvData io.Reader, userID int64) (*d
 		UniqueWorkoutDates:   len(grouped),
 		MovementsToCreate:    len(newMovements),
 		WODsToCreate:         len(newWODs),
-		UserWorkoutsToCreate: len(grouped),
+		UserWorkoutsToCreate: workoutsToCreate,
+		UserWorkoutsToUpdate: workoutsToUpdate,
 		PerformancesToCreate: len(rows),
 		Errors:               errors,
-		WorkoutSummary:       s.createWorkoutSummary(grouped),
+		WorkoutSummary:       workoutSummary,
 		NewMovements:         newMovements,
 		NewWODs:              newWODs,
 	}
@@ -269,7 +284,7 @@ func (s *WodifyImportService) analyzeNewEntities(rows []domain.WodifyPerformance
 }
 
 // createWorkoutSummary creates a summary of workouts to be imported
-func (s *WodifyImportService) createWorkoutSummary(grouped []domain.WodifyGroupedWorkout) []domain.WodifyWorkoutSummary {
+func (s *WodifyImportService) createWorkoutSummary(grouped []domain.WodifyGroupedWorkout, userID int64) []domain.WodifyWorkoutSummary {
 	var summary []domain.WodifyWorkoutSummary
 
 	for _, workout := range grouped {
@@ -295,12 +310,23 @@ func (s *WodifyImportService) createWorkoutSummary(grouped []domain.WodifyGroupe
 			typesList = append(typesList, t)
 		}
 
+		// Check if workout already exists for this date
+		var existingID *int64
+		isUpdate := false
+		existingWorkouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, workout.Date, workout.Date.Add(24*time.Hour))
+		if err == nil && len(existingWorkouts) > 0 {
+			existingID = &existingWorkouts[0].ID
+			isUpdate = true
+		}
+
 		summary = append(summary, domain.WodifyWorkoutSummary{
-			Date:           workout.Date.Format("2006-01-02"),
-			MovementCount:  movementCount,
-			WODCount:       wodCount,
-			HasPRs:         hasPRs,
-			ComponentTypes: strings.Join(typesList, ", "),
+			Date:              workout.Date.Format("2006-01-02"),
+			MovementCount:     movementCount,
+			WODCount:          wodCount,
+			HasPRs:            hasPRs,
+			ComponentTypes:    strings.Join(typesList, ", "),
+			ExistingWorkoutID: existingID,
+			IsUpdate:          isUpdate,
 		})
 	}
 
@@ -309,34 +335,57 @@ func (s *WodifyImportService) createWorkoutSummary(grouped []domain.WodifyGroupe
 
 // importWorkout imports a single grouped workout
 func (s *WodifyImportService) importWorkout(workout domain.WodifyGroupedWorkout, userID int64, result *domain.WodifyImportResult) error {
-	// Determine workout type based on predominant component type
-	workoutType := s.determineWorkoutType(workout.Performances)
+	// Check if workout already exists for this date
+	existingWorkouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, workout.Date, workout.Date.Add(24*time.Hour))
 
-	// Create UserWorkout
-	workoutName := fmt.Sprintf("Workout %s", workout.Date.Format("2006-01-02"))
-	userWorkout := &domain.UserWorkout{
-		UserID:      userID,
-		WorkoutDate: workout.Date,
-		WorkoutName: &workoutName,
-		WorkoutType: &workoutType,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	var userWorkoutID int64
+	isUpdate := false
+
+	if err == nil && len(existingWorkouts) > 0 {
+		// Use existing workout
+		userWorkoutID = existingWorkouts[0].ID
+		isUpdate = true
+
+		// Delete existing performances for this workout to replace with new data
+		if err := s.userWorkoutMovementRepo.DeleteByUserWorkoutID(userWorkoutID); err != nil {
+			return fmt.Errorf("failed to delete existing movement performances: %w", err)
+		}
+		if err := s.userWorkoutWODRepo.DeleteByUserWorkoutID(userWorkoutID); err != nil {
+			return fmt.Errorf("failed to delete existing WOD performances: %w", err)
+		}
+
+		result.WorkoutsUpdated++
+	} else {
+		// Determine workout type based on predominant component type
+		workoutType := s.determineWorkoutType(workout.Performances)
+
+		// Create UserWorkout
+		workoutName := fmt.Sprintf("Workout %s", workout.Date.Format("2006-01-02"))
+		userWorkout := &domain.UserWorkout{
+			UserID:      userID,
+			WorkoutDate: workout.Date,
+			WorkoutName: &workoutName,
+			WorkoutType: &workoutType,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+
+		if err := s.userWorkoutRepo.Create(userWorkout); err != nil {
+			return fmt.Errorf("failed to create user workout: %w", err)
+		}
+
+		userWorkoutID = userWorkout.ID
+		result.WorkoutsCreated++
 	}
-
-	if err := s.userWorkoutRepo.Create(userWorkout); err != nil {
-		return fmt.Errorf("failed to create user workout: %w", err)
-	}
-
-	result.WorkoutsCreated++
 
 	// Process each performance
 	for orderIndex, perf := range workout.Performances {
 		if perf.ComponentType == "Metcon" {
-			if err := s.importWODPerformance(userWorkout.ID, userID, perf, orderIndex, result); err != nil {
+			if err := s.importWODPerformance(userWorkoutID, userID, perf, orderIndex, result, isUpdate); err != nil {
 				return fmt.Errorf("failed to import WOD performance: %w", err)
 			}
 		} else {
-			if err := s.importMovementPerformance(userWorkout.ID, userID, perf, orderIndex, result); err != nil {
+			if err := s.importMovementPerformance(userWorkoutID, userID, perf, orderIndex, result, isUpdate); err != nil {
 				return fmt.Errorf("failed to import movement performance: %w", err)
 			}
 		}
@@ -350,7 +399,7 @@ func (s *WodifyImportService) importWorkout(workout domain.WodifyGroupedWorkout,
 }
 
 // importMovementPerformance imports a movement performance
-func (s *WodifyImportService) importMovementPerformance(userWorkoutID, userID int64, perf domain.WodifyPerformanceRow, orderIndex int, result *domain.WodifyImportResult) error {
+func (s *WodifyImportService) importMovementPerformance(userWorkoutID, userID int64, perf domain.WodifyPerformanceRow, orderIndex int, result *domain.WodifyImportResult, isUpdate bool) error {
 	// Get or create movement
 	movement, created, err := s.getOrCreateMovement(perf, userID)
 	if err != nil {
@@ -389,12 +438,16 @@ func (s *WodifyImportService) importMovementPerformance(userWorkoutID, userID in
 		return fmt.Errorf("failed to create user workout movement: %w", err)
 	}
 
-	result.PerformancesCreated++
+	if isUpdate {
+		result.PerformancesUpdated++
+	} else {
+		result.PerformancesCreated++
+	}
 	return nil
 }
 
 // importWODPerformance imports a WOD performance
-func (s *WodifyImportService) importWODPerformance(userWorkoutID, userID int64, perf domain.WodifyPerformanceRow, orderIndex int, result *domain.WodifyImportResult) error {
+func (s *WodifyImportService) importWODPerformance(userWorkoutID, userID int64, perf domain.WodifyPerformanceRow, orderIndex int, result *domain.WodifyImportResult, isUpdate bool) error {
 	// Get or create WOD
 	wod, created, err := s.getOrCreateWOD(perf, userID)
 	if err != nil {
@@ -438,7 +491,11 @@ func (s *WodifyImportService) importWODPerformance(userWorkoutID, userID int64, 
 		return fmt.Errorf("failed to create user workout WOD: %w", err)
 	}
 
-	result.PerformancesCreated++
+	if isUpdate {
+		result.PerformancesUpdated++
+	} else {
+		result.PerformancesCreated++
+	}
 	return nil
 }
 

@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 # Default values
 REGISTRY="ghcr.io"
 IMAGE_NAME="${GITHUB_REPOSITORY:-johnzastrow/actalog}"
-TAG="${1:-dev}"
+TAG="${1:-latest}"
 
 # Print banner
 echo -e "${GREEN}============================================${NC}"

@@ -75,22 +75,44 @@
             </v-card>
           </v-col>
 
-          <!-- System Settings (Placeholder) -->
+          <!-- Audit Logs -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" disabled>
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/audit-logs')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#999" size="32" class="mr-3">mdi-cog</v-icon>
+                <v-icon color="#4caf50" size="32" class="mr-3">mdi-shield-check</v-icon>
                 <div>
-                  <h3 style="color: #999; font-size: 18px; font-weight: 600">System Settings</h3>
-                  <p style="color: #999; font-size: 14px; margin: 0">Configure application settings</p>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Audit Logs</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">View security events</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
-              <p style="color: #999; font-size: 13px">
-                Manage application configuration, email settings, and feature flags.
+              <p style="color: #666; font-size: 13px">
+                Monitor login attempts, password changes, and other security-related events.
               </p>
-              <v-chip size="small" color="#999" class="mt-2">
-                Coming Soon
+              <v-chip size="small" color="#4caf50" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
+          <!-- Data Change Logs -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/data-change-logs')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#2196f3" size="32" class="mr-3">mdi-history</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Data Change Logs</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Track edits and deletions</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                View history of all data changes including before/after values for WODs, movements, and workouts.
+              </p>
+              <v-chip size="small" color="#2196f3" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
               </v-chip>
             </v-card>
           </v-col>

@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   user: {
@@ -33,6 +33,14 @@ const props = defineProps({
 
 // Track image load errors
 const imageLoadError = ref(false)
+
+// Reset error state when profile image changes
+watch(
+  () => props.user?.profile_image,
+  () => {
+    imageLoadError.value = false
+  }
+)
 
 // Handle image load error
 function handleImageError() {

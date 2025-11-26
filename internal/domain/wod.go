@@ -70,6 +70,9 @@ type WODRepository interface {
 	// Update updates an existing WOD (only for user-created WODs)
 	Update(wod *WOD) error
 
+	// UpdateStandard updates an existing standard WOD (for admin import)
+	UpdateStandard(wod *WOD) error
+
 	// Delete deletes a WOD (only for user-created WODs)
 	Delete(id int64) error
 

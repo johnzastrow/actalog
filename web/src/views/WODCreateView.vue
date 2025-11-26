@@ -150,7 +150,7 @@
         </v-btn>
 
         <v-btn
-          v-if="isEditMode"
+          v-if="isEditMode && !wod.is_standard"
           block
           color="#e91e63"
           variant="outlined"
@@ -215,7 +215,8 @@ const wod = ref({
   score_type: 'Time (HH:MM:SS)',
   description: '',
   url: '',
-  notes: ''
+  notes: '',
+  is_standard: false
 })
 
 const saving = ref(false)
@@ -249,7 +250,8 @@ async function loadWOD() {
       score_type: data.score_type || 'Time',
       description: data.description || '',
       url: data.url || '',
-      notes: data.notes || ''
+      notes: data.notes || '',
+      is_standard: data.is_standard || false
     }
   } catch (err) {
     console.error('Failed to load WOD:', err)
