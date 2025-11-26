@@ -1,7 +1,7 @@
 # ActaLog - Administrator Documentation
 
-**Version:** 0.10.0-beta
-**Last Updated:** 2025-01-23
+**Version:** 0.11.0-beta
+**Last Updated:** 2025-11-26
 
 This guide provides comprehensive instructions for ActaLog system administrators. It covers user management, system configuration, backup/restore operations, security best practices, and troubleshooting.
 
@@ -11,12 +11,13 @@ This guide provides comprehensive instructions for ActaLog system administrators
 2. [User Account Management](#user-account-management)
 3. [Database Backup and Restore](#database-backup-and-restore)
 4. [Audit Log Monitoring](#audit-log-monitoring)
-5. [System Configuration](#system-configuration)
-6. [Security Best Practices](#security-best-practices)
-7. [Database Management](#database-management)
-8. [Troubleshooting](#troubleshooting)
-9. [API Reference](#api-reference)
-10. [Admin FAQ](#admin-faq)
+5. [Data Change Logs](#data-change-logs)
+6. [System Configuration](#system-configuration)
+7. [Security Best Practices](#security-best-practices)
+8. [Database Management](#database-management)
+9. [Troubleshooting](#troubleshooting)
+10. [API Reference](#api-reference)
+11. [Admin FAQ](#admin-faq)
 
 ---
 
@@ -28,6 +29,7 @@ Administrators have elevated privileges in ActaLog, including:
 - Full user account management (view, unlock, disable, delete, role changes)
 - Database backup creation and restore capabilities
 - Audit log access and cleanup
+- Data change log monitoring (track WOD/Movement modifications)
 - Manual email verification overrides
 - System data cleanup operations
 - Access to admin-only API endpoints
@@ -43,7 +45,8 @@ Administrators have elevated privileges in ActaLog, including:
 Navigate to **Profile** → **Admin** to access:
 - **Admin Users** - User account management
 - **Backups** - Database backup and restore
-- **Audit Logs** - System activity monitoring
+- **Audit Logs** - System activity monitoring (authentication, admin actions)
+- **Data Change Logs** - Track modifications to WODs, Movements, and other entities
 - **Data Cleanup** - Maintenance operations
 
 ---
@@ -482,6 +485,126 @@ Over time, audit logs can grow large. To clean up old entries:
 - Production systems: 365 days minimum
 - Compliance requirements: Check your industry regulations
 - Security incidents: Preserve logs until investigation complete
+
+---
+
+## Data Change Logs
+
+### What are Data Change Logs?
+
+Data Change Logs provide a complete audit trail for modifications to core application data. Unlike Audit Logs (which track authentication and admin actions), Data Change Logs track changes to:
+- **WODs** (Workouts of the Day) - Create, Update, Delete operations
+- **Movements** - Create, Update, Delete operations
+- **Future:** Other entity types as the system expands
+
+Each log entry captures:
+- **Before/After Values:** Complete JSON snapshots showing exactly what changed
+- **User Context:** Who made the change (user ID, email)
+- **Request Context:** IP address, timestamp
+- **Operation Type:** INSERT, UPDATE, or DELETE
+
+### Accessing Data Change Logs
+
+1. Navigate to **Profile** → **Admin** → **Data Change Logs**
+2. View chronological list of data modifications
+
+### Data Change Log View
+
+The Data Change Logs view provides:
+- **Paginated Table:** Browse through all change logs
+- **Filtering Options:**
+  - **Entity Type:** Filter by wod, movement, etc.
+  - **Operation:** Filter by INSERT, UPDATE, or DELETE
+  - **User Email:** Search by partial email match
+  - **Date Range:** Start and end date filters
+- **Quick Info Columns:**
+  - Entity type and ID
+  - Operation (color-coded: green=INSERT, blue=UPDATE, red=DELETE)
+  - User who made the change
+  - Timestamp
+  - Truncated before/after values
+
+### Viewing Change Details
+
+To see full details of a change:
+
+1. Find the log entry in the table
+2. Click the **Details** button (or the row)
+3. **Details Dialog** shows:
+   - Full before value (JSON formatted)
+   - Full after value (JSON formatted)
+   - For UPDATE operations: Side-by-side comparison
+   - User information and IP address
+   - Exact timestamp
+
+### Understanding Operations
+
+**INSERT Operations:**
+- `before_value`: NULL (no previous data)
+- `after_value`: Complete JSON of new entity
+- Example: User creates a new custom WOD
+
+**UPDATE Operations:**
+- `before_value`: Entity state before modification
+- `after_value`: Entity state after modification
+- Example: User edits a movement's description
+
+**DELETE Operations:**
+- `before_value`: Entity state before deletion
+- `after_value`: NULL (entity removed)
+- Example: User deletes a custom WOD
+
+### Filtering and Search
+
+**By Entity Type:**
+- Select "WOD" to see only WOD changes
+- Select "Movement" to see only Movement changes
+
+**By Operation:**
+- Filter to see only creates, updates, or deletes
+
+**By User Email:**
+- Enter partial email to find changes by specific user
+- Example: "john" finds john@example.com, john.doe@example.com
+
+**By Date Range:**
+- Set start date to see changes after a specific date
+- Set end date to see changes before a specific date
+- Combine for a specific time window
+
+### Data Change Log Cleanup
+
+To manage storage and comply with retention policies:
+
+1. Navigate to **Profile** → **Admin** → **Data Change Logs**
+2. Click **Cleanup** button
+3. Enter retention period in days (e.g., 365 for 1 year)
+4. Click **Confirm**
+5. Logs older than the retention period are permanently deleted
+
+**Recommended Retention:**
+- Development: 30-90 days
+- Production: 365 days minimum
+- Compliance: Check your industry requirements (GDPR, HIPAA, etc.)
+
+### Use Cases
+
+**Security Investigation:**
+- Track who modified or deleted data
+- See exact before/after values for suspicious changes
+- Correlate with IP addresses
+
+**Debugging:**
+- Understand what changed when a user reports an issue
+- Trace data inconsistencies back to the source
+
+**Compliance:**
+- Demonstrate audit trail for regulatory requirements
+- Prove who made changes and when
+
+**Data Recovery:**
+- View before values to understand what was lost in a deletion
+- Reference for manual data restoration if needed
 
 ---
 
@@ -1086,6 +1209,79 @@ Content-Type: application/json
 }
 ```
 
+### Data Change Log Endpoints
+
+#### List Data Change Logs
+```
+GET /api/data-change-logs?entity_type=wod&operation=UPDATE&user_email=john&limit=50&offset=0
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Query Parameters:**
+- `entity_type` - Filter by entity type (wod, movement)
+- `entity_id` - Filter by specific entity ID
+- `operation` - Filter by operation (INSERT, UPDATE, DELETE)
+- `user_id` - Filter by user ID
+- `user_email` - Filter by partial email match
+- `start_date` - Start of date range (YYYY-MM-DD or RFC3339)
+- `end_date` - End of date range (YYYY-MM-DD or RFC3339)
+- `limit` - Maximum results (default: 50)
+- `offset` - Pagination offset
+
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "id": 1,
+      "entity_type": "wod",
+      "entity_id": 42,
+      "operation": "UPDATE",
+      "user_id": 1,
+      "user_email": "admin@example.com",
+      "before_value": "{\"name\":\"Old Name\",\"description\":\"...\"}",
+      "after_value": "{\"name\":\"New Name\",\"description\":\"...\"}",
+      "ip_address": "192.168.1.100",
+      "created_at": "2025-11-26T10:30:00Z"
+    }
+  ],
+  "total": 150,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+#### Get Single Data Change Log
+```
+GET /api/data-change-logs/{id}
+Authorization: Bearer <admin-jwt-token>
+```
+
+#### Get Entity Change History
+```
+GET /api/data-change-logs/entity/{entity_type}/{entity_id}?limit=50&offset=0
+Authorization: Bearer <admin-jwt-token>
+```
+
+#### Clean Up Old Data Change Logs
+```
+POST /api/admin/data-change-logs/cleanup
+Authorization: Bearer <admin-jwt-token>
+Content-Type: application/json
+
+{
+  "retention_days": 365
+}
+```
+
+**Response:**
+```json
+{
+  "deleted_count": 1250,
+  "message": "Old data change logs deleted successfully"
+}
+```
+
 ---
 
 ## Admin FAQ
@@ -1135,6 +1331,6 @@ A: Monitor:
 
 ---
 
-**Document Version:** 0.10.0-beta
-**Last Updated:** 2025-01-23
+**Document Version:** 0.11.0-beta
+**Last Updated:** 2025-11-26
 **Applicable Versions:** ActaLog 0.10.0-beta and later

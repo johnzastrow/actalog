@@ -1,5 +1,59 @@
 # TODO
 
+## v0.11.0-beta Release - COMPLETE ✅ (2025-11-26)
+
+**Status:** Data Change Audit Logging system fully implemented and tested.
+
+### Completed ✅
+- [x] **Data Change Audit Logging System**
+  - [x] Created `data_change_logs` table for tracking entity modifications
+  - [x] Domain model with DataChangeLog and DataChangeLogFilters structs
+  - [x] Repository implementation with multi-database support (SQLite, PostgreSQL, MySQL)
+  - [x] Service layer with logging and filtering capabilities
+  - [x] Integration with WOD service (Create, Update, Delete operations)
+  - [x] Integration with Movement service (Create, Update, Delete operations)
+  - [x] Before/after value capture as JSON for complete audit trail
+  - [x] User context capture (user_id, email, IP address)
+
+- [x] **Admin API Endpoints**
+  - [x] `GET /api/data-change-logs` - List with filters and pagination
+  - [x] `GET /api/data-change-logs/:id` - Get single log entry
+  - [x] `GET /api/data-change-logs/entity/:type/:id` - Get entity history
+  - [x] `POST /api/admin/data-change-logs/cleanup` - Delete old logs with retention
+
+- [x] **Admin UI Implementation**
+  - [x] New `AdminDataChangeLogsView.vue` with comprehensive filtering
+  - [x] Filters: entity type, operation, user email, date range
+  - [x] Paginated data table with before/after value display
+  - [x] Details dialog with diff view for update operations
+  - [x] Color-coded operation chips (INSERT=green, UPDATE=blue, DELETE=red)
+  - [x] Route: `/admin/data-change-logs` with admin-only access
+  - [x] Navigation link added to admin profile page
+
+- [x] **Filter Enhancement**
+  - [x] Added UserEmail filter to domain model
+  - [x] Repository support for partial email match (LIKE query)
+  - [x] Handler support for user_email query parameter
+
+### Technical Details
+- **Build Number**: #63
+- **Files Created**:
+  - `internal/domain/data_change_log.go`
+  - `internal/repository/data_change_log_repository.go`
+  - `internal/service/data_change_log_service.go`
+  - `internal/handler/data_change_log_handler.go`
+  - `web/src/views/AdminDataChangeLogsView.vue`
+  - `migrations/xxx_create_data_change_logs_table.sql`
+- **Files Modified**:
+  - `internal/service/wod_service.go` (logging integration)
+  - `internal/service/movement_service.go` (logging integration)
+  - `internal/handler/routes.go` (new routes)
+  - `web/src/router/index.js` (admin route)
+  - `web/src/views/AdminView.vue` (admin cards)
+  - `web/src/views/ProfileView.vue` (admin navigation link)
+
+---
+
 ## v0.8.2-beta Release - COMPLETE ✅ (2025-01-23)
 
 **Status:** Quick Log template selection bug fixes and UX improvements completed.
@@ -1506,8 +1560,15 @@ See original detailed implementation plan in archived documentation.
 
 ---
 
-**Last Updated:** 2025-01-23
-**Version:** 0.10.0-beta
+**Last Updated:** 2025-11-26
+**Version:** 0.11.0-beta
+
+**v0.11.0-beta Status:**
+- ✅ Data Change Audit Logging system fully implemented
+- ✅ Admin UI for viewing and filtering data change logs
+- ✅ Integration with WOD and Movement services
+- ✅ Before/after value tracking for complete audit trail
+- ✅ Multi-database support (SQLite, PostgreSQL, MariaDB)
 
 **v0.7.5-beta Status:**
 - ✅ Admin User Management Dashboard fully implemented and activated

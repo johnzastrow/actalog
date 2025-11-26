@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0-beta] - 2025-11-26
+
+### Added - Data Change Audit Logs
+
+**Data Change Logging System:**
+- Complete audit trail for data modifications (updates and deletes)
+- Before/after values stored as JSON for full change history
+- Tracks entity type, entity ID, entity name, operation, user, timestamp
+- Optional IP address and user agent capture
+- Automatic integration with WOD and Movement services
+
+**Admin UI for Data Change Logs:**
+- New admin view at `/admin/data-change-logs` for browsing change history
+- Filterable by entity type (WOD, Movement, Workout, etc.)
+- Filterable by operation (Update, Delete)
+- Filterable by user email (partial match)
+- Paginated data table with 50 logs per page
+- Details dialog showing:
+  - Full change metadata (timestamp, entity info, user)
+  - Before/After JSON values in formatted display
+  - Changed fields diff table for updates
+- Color-coded operations (warning for update, error for delete)
+- Color-coded entity types for easy identification
+
+**Navigation Integration:**
+- "Data Change Logs" card added to Admin dashboard
+- Link added to Profile page Administration section for admins
+- Consistent styling with existing admin tools
+
+**Database Migration:**
+- New `data_change_logs` table (migration 0.5.2)
+- Indexes on entity_type, entity_id, user_id, created_at, operation
+- Support for all database drivers (SQLite, PostgreSQL, MySQL)
+
+**API Endpoints:**
+- `GET /api/admin/data-change-logs` - List with filters and pagination
+- `GET /api/admin/data-change-logs/:id` - Get single log entry
+- `GET /api/admin/data-change-logs/entity/:type/:id` - Entity history
+- `POST /api/admin/data-change-logs/cleanup` - Delete old logs
+
+### Technical Details
+- **Build**: #62 → #63
+- **New Files**:
+  - `internal/domain/data_change_log.go` - Domain model and interfaces
+  - `internal/repository/data_change_log_repository.go` - Data access layer
+  - `internal/service/data_change_log_service.go` - Business logic with helper methods
+  - `internal/handler/data_change_log_handler.go` - HTTP handlers
+  - `web/src/views/AdminDataChangeLogsView.vue` - Admin UI component
+- **Modified Files**:
+  - `internal/service/wod_service.go` - Added data change logging
+  - `internal/service/movement_service.go` - Created service with data change logging
+  - `internal/handler/wod_handler.go` - Pass user email to service
+  - `internal/handler/movement_handler.go` - Use new MovementService
+  - `web/src/views/AdminView.vue` - Added Data Change Logs card
+  - `web/src/views/ProfileView.vue` - Added admin link to Data Change Logs
+  - `web/src/router/index.js` - Added route for data-change-logs
+
+### Use Cases Enabled
+- Track who changed what and when across all data types
+- Review before/after values for any modification
+- Audit trail for compliance and accountability
+- Debug data issues by reviewing change history
+- Admin cleanup of old logs to manage storage
+
+---
+
 ## [0.10.0-beta] - 2025-01-23
 
 ### Added - Docker Deployment with Automatic Seed Import
