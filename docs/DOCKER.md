@@ -7,6 +7,7 @@ This guide covers Docker deployment for ActaLog, including the single-port produ
 - [Architecture Overview](#architecture-overview)
 - [Quick Start](#quick-start)
 - [Building Images](#building-images)
+- [Image Labels (OCI Metadata)](#image-labels-oci-metadata)
 - [Deployment Options](#deployment-options)
 - [Configuration](#configuration)
 - [Volumes and Data Persistence](#volumes-and-data-persistence)
@@ -179,6 +180,167 @@ docker build \
   -t actalog:custom \
   -f docker/Dockerfile .
 ```
+
+## Image Labels (OCI Metadata)
+
+The build script automatically adds [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/main/annotations.md) labels to Docker images. These labels provide metadata about the image that can be viewed by users and registries like GitHub Container Registry.
+
+### What Are OCI Labels?
+
+OCI (Open Container Initiative) labels are standardized metadata embedded in Docker images. They help identify:
+- What the image contains and does
+- Who created it and when
+- Where to find documentation and source code
+- Version and licensing information
+
+**GitHub Container Registry Integration:** The `org.opencontainers.image.description` label is automatically displayed on your package page in GHCR, below the package name.
+
+### User-Editable Labels
+
+The build script (`docker/scripts/build.sh`) includes a clearly marked section at the top for customizing image metadata:
+
+```bash
+# ============================================================================
+# USER-EDITABLE LABELS - Customize these for your deployment
+# ============================================================================
+
+# Description: A short text description of the image (max 512 characters)
+# This will appear on the GitHub package page below the package name
+IMAGE_DESCRIPTION="ActaLog - A mobile-first CrossFit workout tracker..."
+
+# Vendor/Organization name
+IMAGE_VENDOR="John Zastrow"
+
+# License identifier (SPDX format recommended)
+IMAGE_LICENSE="MIT"
+
+# Authors (comma-separated if multiple)
+IMAGE_AUTHORS="John Zastrow"
+
+# Documentation URL (optional)
+IMAGE_DOCUMENTATION=""
+```
+
+**To customize:** Edit these variables in `docker/scripts/build.sh` before building your image.
+
+### Dynamic Labels (Auto-Generated)
+
+The following labels are automatically extracted at build time:
+
+| Label | Source | Example Value |
+|-------|--------|---------------|
+| `org.opencontainers.image.version` | `pkg/version/version.go` | `0.11.0-beta+build.71` |
+| `org.opencontainers.image.created` | Build timestamp | `2025-11-26T14:30:00Z` |
+| `org.opencontainers.image.revision` | Git commit hash | `61c7b43...` (full SHA) |
+| `org.opencontainers.image.ref.name` | Git branch | `main` |
+| `org.opencontainers.image.source` | Repository URL | `https://github.com/johnzastrow/actalog` |
+| `build.number` | `pkg/version/version.go` | `71` |
+| `build.git.commit` | Git + dirty check | `61c7b43` or `61c7b43-dirty` |
+| `build.git.branch` | Git branch | `main` |
+
+### Complete Label Reference
+
+| OCI Standard Label | Description |
+|-------------------|-------------|
+| `org.opencontainers.image.title` | Image name ("ActaLog") |
+| `org.opencontainers.image.description` | Short description (max 512 chars) - shown on GHCR |
+| `org.opencontainers.image.version` | Semantic version with build number |
+| `org.opencontainers.image.created` | RFC 3339 timestamp of build |
+| `org.opencontainers.image.revision` | Full git commit SHA |
+| `org.opencontainers.image.source` | URL to source code repository |
+| `org.opencontainers.image.url` | URL to project homepage |
+| `org.opencontainers.image.vendor` | Organization/person name |
+| `org.opencontainers.image.licenses` | SPDX license identifier |
+| `org.opencontainers.image.authors` | Contact information for authors |
+| `org.opencontainers.image.ref.name` | Git reference (branch/tag) |
+| `org.opencontainers.image.base.name` | Base image used (`alpine:latest`) |
+
+### Viewing Image Labels
+
+**View all labels (formatted with jq):**
+```bash
+docker inspect ghcr.io/johnzastrow/actalog:latest \
+  --format '{{json .Config.Labels}}' | jq
+```
+
+**View a specific label:**
+```bash
+docker inspect ghcr.io/johnzastrow/actalog:latest \
+  --format '{{index .Config.Labels "org.opencontainers.image.version"}}'
+```
+
+**Example output:**
+```json
+{
+  "org.opencontainers.image.title": "ActaLog",
+  "org.opencontainers.image.description": "ActaLog - A mobile-first CrossFit workout tracker...",
+  "org.opencontainers.image.version": "0.11.0-beta+build.71",
+  "org.opencontainers.image.created": "2025-11-26T14:30:00Z",
+  "org.opencontainers.image.revision": "61c7b43abc123def456...",
+  "org.opencontainers.image.source": "https://github.com/johnzastrow/actalog",
+  "org.opencontainers.image.vendor": "John Zastrow",
+  "org.opencontainers.image.licenses": "MIT",
+  "org.opencontainers.image.authors": "John Zastrow",
+  "org.opencontainers.image.ref.name": "main",
+  "org.opencontainers.image.base.name": "alpine:latest",
+  "build.number": "71",
+  "build.git.commit": "61c7b43",
+  "build.git.branch": "main"
+}
+```
+
+### Build Script Output
+
+When you run the build script, it displays the metadata being applied:
+
+```
+============================================
+   ActaLog Docker Build Script
+============================================
+
+Repository: /home/user/actalog
+Version: 0.11.0-beta (Build 71)
+Registry: ghcr.io
+Image: johnzastrow/actalog
+Tag: latest
+Platform: linux/amd64
+
+Build Metadata:
+  Git Commit: 61c7b43
+  Git Branch: main
+  Build Date: 2025-11-26T14:30:00Z
+
+Image Labels (edit in script header):
+  Description: ActaLog - A mobile-first CrossFit workout tracker...
+  Vendor: John Zastrow
+  License: MIT
+
+Building Docker image...
+```
+
+### GitHub Container Registry Display
+
+After pushing to GHCR, the `org.opencontainers.image.description` label appears:
+
+1. Go to: `https://github.com/USERNAME/REPO/pkgs/container/actalog`
+2. The description appears below the package name
+3. Version and other metadata may be shown depending on GHCR features
+
+**Note:** It may take a few minutes for GHCR to process and display the label after pushing.
+
+### Custom Labels
+
+You can add additional custom labels by modifying the `docker buildx build` command in `build.sh`:
+
+```bash
+docker buildx build \
+    # ... existing labels ...
+    --label "com.example.custom-label=value" \
+    --label "com.example.environment=production" \
+    # ... rest of command ...
+```
+
+**Naming convention:** Custom labels should use a reverse domain name prefix (e.g., `com.yourcompany.labelname`).
 
 ## Deployment Options
 
