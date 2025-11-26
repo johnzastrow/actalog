@@ -255,6 +255,23 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-file-multiple"
+            @click="$router.push('/admin/user-content')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              User Content
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Manage user-created WODs, movements, workouts
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-history"
             @click="$router.push('/admin/audit-logs')"
             rounded

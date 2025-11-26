@@ -194,6 +194,67 @@ func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *st
 	return s.GetByIDWithDetails(id)
 }
 
+// ListAllUserCreated retrieves all user-created workout templates across all users (admin only)
+func (s *WorkoutTemplateService) ListAllUserCreated(limit, offset int) ([]*domain.Workout, int64, error) {
+	// Get the list
+	workouts, err := s.workoutRepo.ListAllUserCreated(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created workouts: %w", err)
+	}
+
+	// Get the count
+	count, err := s.workoutRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created workouts: %w", err)
+	}
+
+	return workouts, count, nil
+}
+
+// ListAllUserCreatedWithUserInfo retrieves all user-created workout templates with creator info (admin only)
+func (s *WorkoutTemplateService) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, int64, error) {
+	// Get the list with user info
+	workouts, err := s.workoutRepo.ListAllUserCreatedWithUserInfo(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created workouts with user info: %w", err)
+	}
+
+	// Get the count
+	count, err := s.workoutRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created workouts: %w", err)
+	}
+
+	return workouts, count, nil
+}
+
+// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created workout templates with creator info and filters (admin only)
+func (s *WorkoutTemplateService) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
+	// Get the list with user info and filters
+	workouts, count, err := s.workoutRepo.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, creator)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created workouts with filters: %w", err)
+	}
+
+	return workouts, count, nil
+}
+
+// CopyToStandard creates a standard workout template from a user-created one (admin only)
+func (s *WorkoutTemplateService) CopyToStandard(id int64, newName string) (*domain.Workout, error) {
+	// Validate new name
+	if newName == "" {
+		return nil, fmt.Errorf("new name is required")
+	}
+
+	// Copy to standard (including movements and WODs)
+	workout, err := s.workoutRepo.CopyToStandard(id, newName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy workout to standard: %w", err)
+	}
+
+	return workout, nil
+}
+
 // Delete deletes a workout template
 func (s *WorkoutTemplateService) Delete(id, userID int64) error {
 	// Get existing workout to verify ownership

@@ -54,6 +54,27 @@
             </v-card>
           </v-col>
 
+          <!-- User Content Management -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/user-content')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#e91e63" size="32" class="mr-3">mdi-file-multiple</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">User Content</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Manage user-created content</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                View user-created WODs, movements, and workout templates. Promote them to standard items.
+              </p>
+              <v-chip size="small" color="#e91e63" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- Database Backups -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/backups')" style="cursor: pointer">

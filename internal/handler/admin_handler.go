@@ -6,19 +6,26 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
 )
 
 // AdminHandler handles admin-only operations
 type AdminHandler struct {
-	db                 *sql.DB
-	userWorkoutWODRepo domain.UserWorkoutWODRepository
-	wodRepo            domain.WODRepository
-	userRepo           domain.UserRepository
-	logger             *logger.Logger
+	db                      *sql.DB
+	userWorkoutWODRepo      domain.UserWorkoutWODRepository
+	wodRepo                 domain.WODRepository
+	movementRepo            domain.MovementRepository
+	workoutRepo             domain.WorkoutRepository
+	userRepo                domain.UserRepository
+	wodService              *service.WODService
+	movementService         *service.MovementService
+	workoutTemplateService  *service.WorkoutTemplateService
+	logger                  *logger.Logger
 }
 
 // NewAdminHandler creates a new admin handler
@@ -26,15 +33,25 @@ func NewAdminHandler(
 	db *sql.DB,
 	userWorkoutWODRepo domain.UserWorkoutWODRepository,
 	wodRepo domain.WODRepository,
+	movementRepo domain.MovementRepository,
+	workoutRepo domain.WorkoutRepository,
 	userRepo domain.UserRepository,
+	wodService *service.WODService,
+	movementService *service.MovementService,
+	workoutTemplateService *service.WorkoutTemplateService,
 	logger *logger.Logger,
 ) *AdminHandler {
 	return &AdminHandler{
-		db:                 db,
-		userWorkoutWODRepo: userWorkoutWODRepo,
-		wodRepo:            wodRepo,
-		userRepo:           userRepo,
-		logger:             logger,
+		db:                      db,
+		userWorkoutWODRepo:      userWorkoutWODRepo,
+		wodRepo:                 wodRepo,
+		movementRepo:            movementRepo,
+		workoutRepo:             workoutRepo,
+		userRepo:                userRepo,
+		wodService:              wodService,
+		movementService:         movementService,
+		workoutTemplateService:  workoutTemplateService,
+		logger:                  logger,
 	}
 }
 
@@ -368,4 +385,250 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 		"message": "WOD record updated successfully",
 		"id":      id,
 	})
+}
+
+// ========== User-Created Content Management ==========
+
+// CopyToStandardRequest represents the request to copy an item to standard
+type CopyToStandardRequest struct {
+	NewName string `json:"new_name"`
+}
+
+// ListUserCreatedWODs lists all user-created WODs with creator info
+func (h *AdminHandler) ListUserCreatedWODs(w http.ResponseWriter, r *http.Request) {
+	// Parse pagination params
+	limit := 100
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
+		}
+	}
+
+	// Parse filter params
+	search := r.URL.Query().Get("search")
+	scoreType := r.URL.Query().Get("score_type")
+	creator := r.URL.Query().Get("creator")
+
+	wods, count, err := h.wodService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, scoreType, creator)
+	if err != nil {
+		h.logger.Error("Failed to list user-created WODs", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created WODs"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":  wods,
+		"count": count,
+	})
+}
+
+// CopyWODToStandard converts a user-created WOD to become a standard WOD
+func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request) {
+	// Get WOD ID from URL
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		h.logger.Error("Invalid WOD ID", "id", idStr, "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid WOD ID"})
+		return
+	}
+
+	// Parse request body
+	var req CopyToStandardRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Error("Failed to parse request body", "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	// Copy to standard
+	wod, err := h.wodService.CopyToStandard(id, req.NewName)
+	if err != nil {
+		h.logger.Error("Failed to copy WOD to standard", "id", id, "error", err)
+		// Check if it's a duplicate name error
+		if strings.Contains(err.Error(), "already exists") {
+			w.WriteHeader(http.StatusConflict)
+		} else if strings.Contains(err.Error(), "not found") {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	h.logger.Info("Converted WOD to standard", "source_id", id, "new_id", wod.ID, "name", wod.Name)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(wod)
+}
+
+// ListUserCreatedMovements lists all user-created movements with creator info
+func (h *AdminHandler) ListUserCreatedMovements(w http.ResponseWriter, r *http.Request) {
+	// Parse pagination params
+	limit := 100
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
+		}
+	}
+
+	// Parse filter params
+	search := r.URL.Query().Get("search")
+	movementType := r.URL.Query().Get("type")
+	creator := r.URL.Query().Get("creator")
+
+	movements, count, err := h.movementService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, movementType, creator)
+	if err != nil {
+		h.logger.Error("Failed to list user-created movements", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created movements"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":  movements,
+		"count": count,
+	})
+}
+
+// CopyMovementToStandard converts a user-created movement to become a standard movement
+func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Request) {
+	// Get movement ID from URL
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		h.logger.Error("Invalid movement ID", "id", idStr, "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid movement ID"})
+		return
+	}
+
+	// Parse request body
+	var req CopyToStandardRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Error("Failed to parse request body", "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	// Copy to standard
+	movement, err := h.movementService.CopyToStandard(id, req.NewName)
+	if err != nil {
+		h.logger.Error("Failed to copy movement to standard", "id", id, "error", err)
+		// Check if it's a duplicate name error
+		if strings.Contains(err.Error(), "already exists") {
+			w.WriteHeader(http.StatusConflict)
+		} else if strings.Contains(err.Error(), "not found") {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	h.logger.Info("Converted movement to standard", "source_id", id, "new_id", movement.ID, "name", movement.Name)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(movement)
+}
+
+// ListUserCreatedWorkouts lists all user-created workout templates with creator info
+func (h *AdminHandler) ListUserCreatedWorkouts(w http.ResponseWriter, r *http.Request) {
+	// Parse pagination params
+	limit := 100
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
+		}
+	}
+
+	// Parse filter params
+	search := r.URL.Query().Get("search")
+	creator := r.URL.Query().Get("creator")
+
+	workouts, count, err := h.workoutTemplateService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, creator)
+	if err != nil {
+		h.logger.Error("Failed to list user-created workouts", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created workouts"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":  workouts,
+		"count": count,
+	})
+}
+
+// CopyWorkoutToStandard converts a user-created workout to become a standard workout
+func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Request) {
+	// Get workout ID from URL
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		h.logger.Error("Invalid workout ID", "id", idStr, "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid workout ID"})
+		return
+	}
+
+	// Parse request body
+	var req CopyToStandardRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Error("Failed to parse request body", "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	// Copy to standard
+	workout, err := h.workoutTemplateService.CopyToStandard(id, req.NewName)
+	if err != nil {
+		h.logger.Error("Failed to copy workout to standard", "id", id, "error", err)
+		// Check if it's a duplicate name error
+		if strings.Contains(err.Error(), "already exists") {
+			w.WriteHeader(http.StatusConflict)
+		} else if strings.Contains(err.Error(), "not found") {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	h.logger.Info("Converted workout to standard", "source_id", id, "new_id", workout.ID, "name", workout.Name)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(workout)
 }

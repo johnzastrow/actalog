@@ -21,6 +21,13 @@ type WOD struct {
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
+// WODWithCreator extends WOD with creator information (for admin views)
+type WODWithCreator struct {
+	WOD
+	CreatorEmail string `json:"creator_email,omitempty"`
+	CreatorName  string `json:"creator_name,omitempty"`
+}
+
 // UserWorkoutWOD represents a WOD's performance in a logged workout (user_workout_wods table)
 // This stores the actual performance data when a user logs a WOD
 type UserWorkoutWOD struct {
@@ -67,6 +74,18 @@ type WODRepository interface {
 	// ListByUser retrieves all custom WODs created by a specific user with pagination
 	ListByUser(userID int64, limit, offset int) ([]*WOD, error)
 
+	// ListAllUserCreated retrieves all user-created WODs across all users (for admin)
+	ListAllUserCreated(limit, offset int) ([]*WOD, error)
+
+	// ListAllUserCreatedWithUserInfo retrieves all user-created WODs with creator info (for admin)
+	ListAllUserCreatedWithUserInfo(limit, offset int) ([]*WODWithCreator, error)
+
+	// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created WODs with filters (for admin)
+	ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, scoreType, creator string) ([]*WODWithCreator, int64, error)
+
+	// CountAllUserCreated counts all user-created WODs
+	CountAllUserCreated() (int64, error)
+
 	// Update updates an existing WOD (only for user-created WODs)
 	Update(wod *WOD) error
 
@@ -78,6 +97,9 @@ type WODRepository interface {
 
 	// Search searches WODs by name (partial match) with limit
 	Search(query string, limit int) ([]*WOD, error)
+
+	// CopyToStandard creates a standard WOD by copying a user-created one
+	CopyToStandard(id int64, newName string) (*WOD, error)
 }
 
 // UserWorkoutWODRepository defines the interface for user workout WOD performance data

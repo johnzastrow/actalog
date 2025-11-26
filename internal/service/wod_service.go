@@ -412,6 +412,77 @@ func (s *WODService) validateWOD(wod *domain.WOD) error {
 	return nil
 }
 
+// ListAllUserCreated retrieves all user-created WODs across all users (admin only)
+func (s *WODService) ListAllUserCreated(limit, offset int) ([]*domain.WOD, int64, error) {
+	// Get the list
+	wods, err := s.wodRepo.ListAllUserCreated(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created wods: %w", err)
+	}
+
+	// Get the count
+	count, err := s.wodRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created wods: %w", err)
+	}
+
+	return wods, count, nil
+}
+
+// ListAllUserCreatedWithUserInfo retrieves all user-created WODs with creator info (admin only)
+func (s *WODService) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WODWithCreator, int64, error) {
+	// Get the list with user info
+	wods, err := s.wodRepo.ListAllUserCreatedWithUserInfo(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created wods with user info: %w", err)
+	}
+
+	// Get the count
+	count, err := s.wodRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created wods: %w", err)
+	}
+
+	return wods, count, nil
+}
+
+// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created WODs with creator info and filters (admin only)
+func (s *WODService) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, scoreType, creator string) ([]*domain.WODWithCreator, int64, error) {
+	// Get the list with user info and filters
+	wods, count, err := s.wodRepo.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, scoreType, creator)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created wods with filters: %w", err)
+	}
+
+	return wods, count, nil
+}
+
+// CopyToStandard creates a standard WOD from a user-created one (admin only)
+func (s *WODService) CopyToStandard(id int64, newName string) (*domain.WOD, error) {
+	// Validate new name
+	if strings.TrimSpace(newName) == "" {
+		return nil, ErrWODNameRequired
+	}
+
+	// Check if a STANDARD WOD with this name already exists
+	// User-created WODs with the same name are OK - we only prevent duplicate standard WODs
+	existing, err := s.wodRepo.GetByName(newName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check for duplicate WOD name: %w", err)
+	}
+	if existing != nil && existing.IsStandard {
+		return nil, ErrWODDuplicateName
+	}
+
+	// Copy to standard
+	wod, err := s.wodRepo.CopyToStandard(id, newName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy wod to standard: %w", err)
+	}
+
+	return wod, nil
+}
+
 // paginateWODs applies limit and offset to a slice of WODs
 func (s *WODService) paginateWODs(wods []*domain.WOD, limit, offset int) []*domain.WOD {
 	// Set default limit if not provided
