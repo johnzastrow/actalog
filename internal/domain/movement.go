@@ -26,6 +26,13 @@ type Movement struct {
 	UpdatedAt   time.Time    `json:"updated_at" db:"updated_at"`
 }
 
+// MovementWithCreator extends Movement with creator information (for admin views)
+type MovementWithCreator struct {
+	Movement
+	CreatorEmail string `json:"creator_email,omitempty"`
+	CreatorName  string `json:"creator_name,omitempty"`
+}
+
 // WorkoutMovement represents a movement in a workout template (workout_movements table)
 // WorkoutID references a workout template, not a user-specific workout instance
 type WorkoutMovement struct {
@@ -56,9 +63,14 @@ type MovementRepository interface {
 	ListAll() ([]*Movement, error)
 	ListStandard() ([]*Movement, error)
 	ListByUser(userID int64) ([]*Movement, error)
+	ListAllUserCreated() ([]*Movement, error)
+	ListAllUserCreatedWithUserInfo() ([]*MovementWithCreator, error)
+	ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, movementType, creator string) ([]*MovementWithCreator, int64, error)
+	CountAllUserCreated() (int64, error)
 	Update(movement *Movement) error
 	Delete(id int64) error
 	Search(query string, limit int) ([]*Movement, error)
+	CopyToStandard(id int64, newName string) (*Movement, error)
 }
 
 // PersonalRecord represents a user's personal record for a movement

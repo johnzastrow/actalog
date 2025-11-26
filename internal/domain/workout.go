@@ -20,6 +20,13 @@ type Workout struct {
 	WODs      []*WorkoutWODWithDetails `json:"wods,omitempty" db:"-"`      // WODs in this template
 }
 
+// WorkoutWithCreator extends Workout with creator information (for admin views)
+type WorkoutWithCreator struct {
+	Workout
+	CreatorEmail string `json:"creator_email,omitempty"`
+	CreatorName  string `json:"creator_name,omitempty"`
+}
+
 // WorkoutWithUsageStats includes usage statistics for a template
 type WorkoutWithUsageStats struct {
 	Workout
@@ -47,6 +54,18 @@ type WorkoutRepository interface {
 	// ListStandard retrieves all standard (system) workout templates
 	ListStandard(limit, offset int) ([]*Workout, error)
 
+	// ListAllUserCreated retrieves all user-created workout templates (for admin)
+	ListAllUserCreated(limit, offset int) ([]*Workout, error)
+
+	// ListAllUserCreatedWithUserInfo retrieves all user-created workouts with creator info (for admin)
+	ListAllUserCreatedWithUserInfo(limit, offset int) ([]*WorkoutWithCreator, error)
+
+	// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created workouts with filters (for admin)
+	ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*WorkoutWithCreator, int64, error)
+
+	// CountAllUserCreated counts all user-created workout templates
+	CountAllUserCreated() (int64, error)
+
 	// Update updates an existing workout template
 	Update(workout *Workout) error
 
@@ -61,4 +80,7 @@ type WorkoutRepository interface {
 
 	// GetUsageStats gets usage statistics for a template
 	GetUsageStats(workoutID int64) (*WorkoutWithUsageStats, error)
+
+	// CopyToStandard creates a standard workout by copying a user-created one
+	CopyToStandard(id int64, newName string) (*Workout, error)
 }

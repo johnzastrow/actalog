@@ -192,6 +192,77 @@ func (s *MovementService) Delete(id int64, userID int64, userEmail string) error
 	return nil
 }
 
+// ListAllUserCreated retrieves all user-created movements across all users (admin only)
+func (s *MovementService) ListAllUserCreated() ([]*domain.Movement, int64, error) {
+	// Get the list
+	movements, err := s.movementRepo.ListAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created movements: %w", err)
+	}
+
+	// Get the count
+	count, err := s.movementRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created movements: %w", err)
+	}
+
+	return movements, count, nil
+}
+
+// ListAllUserCreatedWithUserInfo retrieves all user-created movements with creator info (admin only)
+func (s *MovementService) ListAllUserCreatedWithUserInfo() ([]*domain.MovementWithCreator, int64, error) {
+	// Get the list with user info
+	movements, err := s.movementRepo.ListAllUserCreatedWithUserInfo()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created movements with user info: %w", err)
+	}
+
+	// Get the count
+	count, err := s.movementRepo.CountAllUserCreated()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count user-created movements: %w", err)
+	}
+
+	return movements, count, nil
+}
+
+// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created movements with creator info and filters (admin only)
+func (s *MovementService) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, movementType, creator string) ([]*domain.MovementWithCreator, int64, error) {
+	// Get the list with user info and filters
+	movements, count, err := s.movementRepo.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, movementType, creator)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list all user-created movements with filters: %w", err)
+	}
+
+	return movements, count, nil
+}
+
+// CopyToStandard creates a standard movement from a user-created one (admin only)
+func (s *MovementService) CopyToStandard(id int64, newName string) (*domain.Movement, error) {
+	// Validate new name
+	if strings.TrimSpace(newName) == "" {
+		return nil, ErrMovementNameRequired
+	}
+
+	// Check if a STANDARD movement with this name already exists
+	// User-created movements with the same name are OK - we only prevent duplicate standard movements
+	existing, err := s.movementRepo.GetByName(newName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check for duplicate movement name: %w", err)
+	}
+	if existing != nil && existing.IsStandard {
+		return nil, fmt.Errorf("standard movement with name '%s' already exists", newName)
+	}
+
+	// Copy to standard
+	movement, err := s.movementRepo.CopyToStandard(id, newName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy movement to standard: %w", err)
+	}
+
+	return movement, nil
+}
+
 // validateMovement validates movement required fields
 func (s *MovementService) validateMovement(movement *domain.Movement) error {
 	if strings.TrimSpace(movement.Name) == "" {

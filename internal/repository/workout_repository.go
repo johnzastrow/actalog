@@ -295,6 +295,169 @@ func (r *WorkoutRepository) Delete(id int64) error {
 	return nil
 }
 
+// ListAllUserCreated retrieves all user-created workout templates (for admin view)
+func (r *WorkoutRepository) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
+	query := `SELECT id, name, notes, created_by, created_at, updated_at
+	          FROM workouts
+	          WHERE created_by IS NOT NULL
+	          ORDER BY name
+	          LIMIT ? OFFSET ?`
+
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all user-created workouts: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanWorkouts(rows)
+}
+
+// ListAllUserCreatedWithUserInfo retrieves all user-created workout templates with creator info (for admin view)
+func (r *WorkoutRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
+	query := `SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
+	          FROM workouts w
+	          LEFT JOIN users u ON w.created_by = u.id
+	          WHERE w.created_by IS NOT NULL
+	          ORDER BY w.name
+	          LIMIT ? OFFSET ?`
+
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all user-created workouts with user info: %w", err)
+	}
+	defer rows.Close()
+
+	var workouts []*domain.WorkoutWithCreator
+	for rows.Next() {
+		w := &domain.WorkoutWithCreator{}
+		var createdBy sql.NullInt64
+		var notes sql.NullString
+
+		err := rows.Scan(
+			&w.ID,
+			&w.Name,
+			&notes,
+			&createdBy,
+			&w.CreatedAt,
+			&w.UpdatedAt,
+			&w.CreatorEmail,
+			&w.CreatorName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if notes.Valid {
+			w.Notes = &notes.String
+		}
+		if createdBy.Valid {
+			w.CreatedBy = &createdBy.Int64
+		}
+
+		workouts = append(workouts, w)
+	}
+
+	return workouts, rows.Err()
+}
+
+// CountAllUserCreated counts all user-created workout templates
+func (r *WorkoutRepository) CountAllUserCreated() (int64, error) {
+	query := `SELECT COUNT(*) FROM workouts WHERE created_by IS NOT NULL`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count user-created workouts: %w", err)
+	}
+	return count, nil
+}
+
+// ListAllUserCreatedWithUserInfoFiltered retrieves all user-created workout templates with creator info and filters (for admin view)
+func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
+	baseQuery := `SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
+	          FROM workouts w
+	          LEFT JOIN users u ON w.created_by = u.id
+	          WHERE w.created_by IS NOT NULL`
+
+	countQuery := `SELECT COUNT(*) FROM workouts w LEFT JOIN users u ON w.created_by = u.id WHERE w.created_by IS NOT NULL`
+
+	var args []interface{}
+	var countArgs []interface{}
+
+	// Apply filters
+	if search != "" {
+		baseQuery += " AND (w.name LIKE ? OR w.notes LIKE ?)"
+		countQuery += " AND (w.name LIKE ? OR w.notes LIKE ?)"
+		searchTerm := "%" + search + "%"
+		args = append(args, searchTerm, searchTerm)
+		countArgs = append(countArgs, searchTerm, searchTerm)
+	}
+	if creator != "" {
+		baseQuery += " AND u.email LIKE ?"
+		countQuery += " AND u.email LIKE ?"
+		creatorTerm := "%" + creator + "%"
+		args = append(args, creatorTerm)
+		countArgs = append(countArgs, creatorTerm)
+	}
+
+	// Get count first
+	var count int64
+	err := r.db.QueryRow(countQuery, countArgs...).Scan(&count)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count filtered workouts: %w", err)
+	}
+
+	// Add ordering and pagination
+	baseQuery += " ORDER BY w.name"
+	if limit > 0 {
+		baseQuery += " LIMIT ?"
+		args = append(args, limit)
+	}
+	if offset > 0 {
+		baseQuery += " OFFSET ?"
+		args = append(args, offset)
+	}
+
+	rows, err := r.db.Query(baseQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list filtered user-created workouts: %w", err)
+	}
+	defer rows.Close()
+
+	var workouts []*domain.WorkoutWithCreator
+	for rows.Next() {
+		w := &domain.WorkoutWithCreator{}
+		var notes sql.NullString
+		var createdBy sql.NullInt64
+
+		err := rows.Scan(
+			&w.ID,
+			&w.Name,
+			&notes,
+			&createdBy,
+			&w.CreatedAt,
+			&w.UpdatedAt,
+			&w.CreatorEmail,
+			&w.CreatorName,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		if notes.Valid {
+			w.Notes = &notes.String
+		}
+		if createdBy.Valid {
+			w.CreatedBy = &createdBy.Int64
+		}
+
+		workouts = append(workouts, w)
+	}
+
+	return workouts, count, rows.Err()
+}
+
 // Search searches workout templates by name
 func (r *WorkoutRepository) Search(query string, limit int) ([]*domain.Workout, error) {
 	searchQuery := `SELECT id, name, notes, created_by, created_at, updated_at
@@ -371,6 +534,93 @@ func (r *WorkoutRepository) GetUsageStats(workoutID int64) (*domain.WorkoutWithU
 	}
 
 	return result, nil
+}
+
+// CopyToStandard creates a standard workout template by copying a user-created one (including movements and WODs)
+func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Workout, error) {
+	// Get the source workout with details
+	source, err := r.GetByIDWithDetails(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get source workout: %w", err)
+	}
+	if source == nil {
+		return nil, fmt.Errorf("source workout not found")
+	}
+
+	// Create a new standard workout
+	now := time.Now()
+	standardWorkout := &domain.Workout{
+		Name:      newName,
+		Notes:     source.Notes,
+		CreatedBy: nil, // Standard workouts have no creator
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	query := `INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+	          VALUES (?, ?, NULL, ?, ?)`
+
+	result, err := r.db.Exec(query,
+		standardWorkout.Name,
+		standardWorkout.Notes,
+		standardWorkout.CreatedAt,
+		standardWorkout.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create standard workout: %w", err)
+	}
+
+	newID, err := result.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get new workout ID: %w", err)
+	}
+	standardWorkout.ID = newID
+
+	// Copy associated movements
+	if len(source.Movements) > 0 {
+		movementQuery := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
+		                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		for _, m := range source.Movements {
+			_, err := r.db.Exec(movementQuery,
+				newID,
+				m.MovementID,
+				m.Weight,
+				m.Sets,
+				m.Reps,
+				m.Time,
+				m.Distance,
+				m.IsRx,
+				false, // is_pr - reset for standard template
+				m.Notes,
+				m.OrderIndex,
+				now,
+				now,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("failed to copy workout movement: %w", err)
+			}
+		}
+	}
+
+	// Copy associated WODs
+	if len(source.WODs) > 0 {
+		wodQuery := `INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
+		             VALUES (?, ?, ?, ?, ?)`
+		for _, w := range source.WODs {
+			_, err := r.db.Exec(wodQuery,
+				newID,
+				w.WODID,
+				w.OrderIndex,
+				now,
+				now,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("failed to copy workout wod: %w", err)
+			}
+		}
+	}
+
+	return standardWorkout, nil
 }
 
 // scanWorkouts scans multiple workout rows
