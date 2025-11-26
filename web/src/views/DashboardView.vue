@@ -94,7 +94,7 @@
             elevation="0"
             rounded
             class="pa-1 text-center"
-            style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); cursor: pointer"
+            style="background: #2C3657; cursor: pointer"
             @click="openQuickLog"
           >
             <v-icon size="28" color="white" class="mb-1">mdi-lightning-bolt</v-icon>
@@ -109,7 +109,7 @@
             elevation="0"
             rounded
             class="pa-1 text-center"
-            style="background: linear-gradient(135deg, #9c27b0 0%, #8e24aa 100%); cursor: pointer"
+            style="background: #2C3657; cursor: pointer"
             @click="$router.push('/workouts/calendar')"
           >
             <v-icon size="28" color="white" class="mb-1">mdi-calendar-month</v-icon>

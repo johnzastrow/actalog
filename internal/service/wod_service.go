@@ -22,13 +22,15 @@ var (
 
 // WODService handles WOD business logic
 type WODService struct {
-	wodRepo domain.WODRepository
+	wodRepo              domain.WODRepository
+	dataChangeLogService *DataChangeLogService
 }
 
 // NewWODService creates a new WOD service
-func NewWODService(wodRepo domain.WODRepository) *WODService {
+func NewWODService(wodRepo domain.WODRepository, dataChangeLogService *DataChangeLogService) *WODService {
 	return &WODService{
-		wodRepo: wodRepo,
+		wodRepo:              wodRepo,
+		dataChangeLogService: dataChangeLogService,
 	}
 }
 
@@ -152,7 +154,7 @@ func (s *WODService) ListAll(userID *int64, limit, offset int) ([]*domain.WOD, e
 }
 
 // Update updates an existing custom WOD with authorization checks
-func (s *WODService) Update(wod *domain.WOD, userID int64) error {
+func (s *WODService) Update(wod *domain.WOD, userID int64, userEmail string) error {
 	// Validate required fields
 	if err := s.validateWOD(wod); err != nil {
 		return err
@@ -202,11 +204,75 @@ func (s *WODService) Update(wod *domain.WOD, userID int64) error {
 		return fmt.Errorf("failed to update wod: %w", err)
 	}
 
+	// Log the change (after successful update)
+	if s.dataChangeLogService != nil {
+		if logErr := s.dataChangeLogService.LogWODUpdate(wod.ID, wod.Name, userID, userEmail, existing, wod, nil, nil); logErr != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("Warning: failed to log WOD update: %v\n", logErr)
+		}
+	}
+
+	return nil
+}
+
+// UpdateAsAdmin updates any WOD (for admin use, can update standard WODs)
+func (s *WODService) UpdateAsAdmin(wod *domain.WOD, userID int64, userEmail string) error {
+	// Validate required fields
+	if err := s.validateWOD(wod); err != nil {
+		return err
+	}
+
+	// Get existing WOD
+	existing, err := s.wodRepo.GetByID(wod.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get wod: %w", err)
+	}
+	if existing == nil {
+		return ErrWODNotFound
+	}
+
+	// Check for duplicate name (if name changed)
+	if existing.Name != wod.Name {
+		duplicate, err := s.wodRepo.GetByName(wod.Name)
+		if err != nil {
+			return fmt.Errorf("failed to check for duplicate WOD name: %w", err)
+		}
+		if duplicate != nil && duplicate.ID != wod.ID {
+			return ErrWODDuplicateName
+		}
+	}
+
+	// Update timestamp
+	wod.UpdatedAt = time.Now()
+
+	// Preserve original creation info
+	wod.IsStandard = existing.IsStandard
+	wod.CreatedBy = existing.CreatedBy
+	wod.CreatedAt = existing.CreatedAt
+
+	// Use appropriate update method based on whether WOD is standard
+	if existing.IsStandard {
+		err = s.wodRepo.UpdateStandard(wod)
+	} else {
+		err = s.wodRepo.Update(wod)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to update wod: %w", err)
+	}
+
+	// Log the change (after successful update)
+	if s.dataChangeLogService != nil {
+		if logErr := s.dataChangeLogService.LogWODUpdate(wod.ID, wod.Name, userID, userEmail, existing, wod, nil, nil); logErr != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("Warning: failed to log WOD update: %v\n", logErr)
+		}
+	}
+
 	return nil
 }
 
 // Delete deletes a custom WOD with authorization checks
-func (s *WODService) Delete(id int64, userID int64) error {
+func (s *WODService) Delete(id int64, userID int64, userEmail string) error {
 	// Get existing WOD
 	wod, err := s.wodRepo.GetByID(id)
 	if err != nil {
@@ -230,6 +296,14 @@ func (s *WODService) Delete(id int64, userID int64) error {
 	err = s.wodRepo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete wod: %w", err)
+	}
+
+	// Log the deletion (after successful delete)
+	if s.dataChangeLogService != nil {
+		if logErr := s.dataChangeLogService.LogWODDelete(id, wod.Name, userID, userEmail, wod, nil, nil); logErr != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("Warning: failed to log WOD delete: %v\n", logErr)
+		}
 	}
 
 	return nil

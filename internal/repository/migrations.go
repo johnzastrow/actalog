@@ -355,6 +355,97 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.5.2",
+		Description: "Add data_change_logs table for audit trail of edits and deletes",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if data_change_logs table exists
+			hasDataChangeLogs, err := checkTableExists(db, driver, "data_change_logs")
+			if err != nil {
+				return fmt.Errorf("failed to check for data_change_logs table: %w", err)
+			}
+
+			if !hasDataChangeLogs {
+				var createDataChangeLogsSQL string
+				switch driver {
+				case "sqlite3":
+					createDataChangeLogsSQL = `
+					CREATE TABLE IF NOT EXISTS data_change_logs (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						entity_type TEXT NOT NULL,
+						entity_id INTEGER NOT NULL,
+						entity_name TEXT NOT NULL,
+						operation TEXT NOT NULL,
+						user_id INTEGER NOT NULL,
+						user_email TEXT NOT NULL,
+						before_values TEXT,
+						after_values TEXT,
+						ip_address TEXT,
+						user_agent TEXT,
+						created_at DATETIME NOT NULL
+					);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_entity ON data_change_logs(entity_type, entity_id);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_user_id ON data_change_logs(user_id);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_created_at ON data_change_logs(created_at);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_operation ON data_change_logs(operation);`
+				case "postgres":
+					createDataChangeLogsSQL = `
+					CREATE TABLE IF NOT EXISTS data_change_logs (
+						id BIGSERIAL PRIMARY KEY,
+						entity_type VARCHAR(50) NOT NULL,
+						entity_id BIGINT NOT NULL,
+						entity_name VARCHAR(255) NOT NULL,
+						operation VARCHAR(20) NOT NULL,
+						user_id BIGINT NOT NULL,
+						user_email VARCHAR(255) NOT NULL,
+						before_values TEXT,
+						after_values TEXT,
+						ip_address VARCHAR(45),
+						user_agent TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+					);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_entity ON data_change_logs(entity_type, entity_id);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_user_id ON data_change_logs(user_id);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_created_at ON data_change_logs(created_at);
+					CREATE INDEX IF NOT EXISTS idx_data_change_logs_operation ON data_change_logs(operation);`
+				case "mysql":
+					createDataChangeLogsSQL = `
+					CREATE TABLE IF NOT EXISTS data_change_logs (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						entity_type VARCHAR(50) NOT NULL,
+						entity_id BIGINT NOT NULL,
+						entity_name VARCHAR(255) NOT NULL,
+						operation VARCHAR(20) NOT NULL,
+						user_id BIGINT NOT NULL,
+						user_email VARCHAR(255) NOT NULL,
+						before_values TEXT,
+						after_values TEXT,
+						ip_address VARCHAR(45),
+						user_agent TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						INDEX idx_data_change_logs_entity (entity_type, entity_id),
+						INDEX idx_data_change_logs_user_id (user_id),
+						INDEX idx_data_change_logs_created_at (created_at),
+						INDEX idx_data_change_logs_operation (operation)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createDataChangeLogsSQL); err != nil {
+					return fmt.Errorf("failed to create data_change_logs table: %w", err)
+				}
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS data_change_logs"); err != nil {
+				return err
+			}
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

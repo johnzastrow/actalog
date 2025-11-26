@@ -277,7 +277,7 @@ func (p *WodifyResultParser) DetermineWODScoreType(resultType string) string {
 	switch resultType {
 	case "Time":
 		return "Time (HH:MM:SS)"
-	case "AMRAP - Rounds and Reps", "AMRAP - Rounds", "AMRAP - Reps":
+	case "AMRAP - Rounds and Reps", "AMRAP - Rounds", "AMRAP - Reps", "Each Round", "Max reps":
 		return "Rounds+Reps"
 	case "Weight":
 		return "Max Weight"

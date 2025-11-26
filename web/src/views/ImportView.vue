@@ -320,6 +320,8 @@
             density="compact"
             class="preview-table"
             :item-value="selectedEntity === 'user_workouts' ? 'workout_number' : 'row_number'"
+            :items-per-page="10"
+            :items-per-page-options="[10, 25, 50, 100]"
           >
             <template #item.row_number="{ item }">
               <v-chip size="x-small" :color="getRowColor(item)">
@@ -346,10 +348,6 @@
               </v-tooltip>
             </template>
           </v-data-table>
-
-          <p v-if="previewData.length > 10" class="text-caption text-center mt-2" style="color: #999">
-            Showing first 10 {{ selectedEntity === 'user_workouts' ? 'workouts' : 'rows' }} of {{ previewData.length }}
-          </p>
         </v-card>
 
         <!-- Action Buttons -->
@@ -447,8 +445,7 @@ const previewData = computed(() => {
   if (!previewResult.value) return []
 
   // For user workouts, use workouts array; for CSV, use rows array
-  const data = previewResult.value.workouts || previewResult.value.rows || []
-  return data.slice(0, 10)
+  return previewResult.value.workouts || previewResult.value.rows || []
 })
 
 const previewHeaders = computed(() => {

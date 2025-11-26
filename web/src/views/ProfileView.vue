@@ -289,6 +289,23 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-file-document-edit"
+            @click="$router.push('/admin/data-change-logs')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Data Change Logs
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Track edits and deletions
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-chart-bar"
             disabled
             rounded
