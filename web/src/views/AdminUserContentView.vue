@@ -593,26 +593,26 @@ const newName = ref('')
 
 // Table Headers
 const wodHeaders = [
+  { title: 'Actions', value: 'actions', sortable: false, width: '100px' },
   { title: 'Name', value: 'name', sortable: false },
   { title: 'Creator', value: 'creator', sortable: false },
   { title: 'Score Type', value: 'score_type', sortable: false },
-  { title: 'Created', value: 'created_at', sortable: false },
-  { title: 'Actions', value: 'actions', sortable: false, align: 'end' }
+  { title: 'Created', value: 'created_at', sortable: false }
 ]
 
 const movementHeaders = [
+  { title: 'Actions', value: 'actions', sortable: false, width: '100px' },
   { title: 'Name', value: 'name', sortable: false },
   { title: 'Creator', value: 'creator', sortable: false },
   { title: 'Type', value: 'type', sortable: false },
-  { title: 'Created', value: 'created_at', sortable: false },
-  { title: 'Actions', value: 'actions', sortable: false, align: 'end' }
+  { title: 'Created', value: 'created_at', sortable: false }
 ]
 
 const workoutHeaders = [
+  { title: 'Actions', value: 'actions', sortable: false, width: '100px' },
   { title: 'Name', value: 'name', sortable: false },
   { title: 'Creator', value: 'creator', sortable: false },
-  { title: 'Created', value: 'created_at', sortable: false },
-  { title: 'Actions', value: 'actions', sortable: false, align: 'end' }
+  { title: 'Created', value: 'created_at', sortable: false }
 ]
 
 // Build query params
