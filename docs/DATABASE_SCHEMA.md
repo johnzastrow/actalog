@@ -13,7 +13,23 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.10.0-beta
+**Current Version:** 0.11.0-beta
+
+## Recent Changes (v0.11.0-beta)
+
+- **Data Change Audit Logging**: Complete audit trail for data modifications
+  - New `data_change_logs` table tracks INSERT, UPDATE, DELETE operations
+  - Captures entity type, entity ID, operation type, before/after values as JSON
+  - Records user ID, email, and IP address for each change
+  - Integrated with WOD and Movement services for automatic logging
+  - Admin-only API endpoints for viewing and filtering logs
+  - Admin UI for browsing, filtering, and inspecting changes
+  - Cleanup endpoint for log retention management
+- **Admin Features**:
+  - New Data Change Logs admin view with filtering by entity type, operation, user email
+  - Paginated data table with before/after value comparison
+  - Details dialog showing diff view for update operations
+  - Quick access from admin profile page
 
 ## Recent Changes (v0.8.1-beta)
 
@@ -95,6 +111,7 @@ erDiagram
     USERS ||--o{ REFRESH_TOKENS : has_sessions
     USERS ||--o{ AUDIT_LOGS : performs_actions
     USERS ||--o{ AUDIT_LOGS : is_target_of
+    USERS ||--o{ DATA_CHANGE_LOGS : makes_changes
 
     WORKOUTS ||--o{ WORKOUT_MOVEMENTS : contains
     WORKOUTS ||--o{ WORKOUT_WODS : includes
@@ -259,6 +276,19 @@ erDiagram
         string ip_address
         string user_agent
         text details
+        timestamp created_at
+    }
+
+    DATA_CHANGE_LOGS {
+        int64 id PK
+        string entity_type
+        int64 entity_id
+        string operation
+        int64 user_id FK
+        string user_email
+        text before_value
+        text after_value
+        string ip_address
         timestamp created_at
     }
 ```
@@ -530,6 +560,47 @@ Stores email verification tokens (separate repository implementation).
 - Tokens expire after 24 hours
 - Single-use tokens
 
+### data_change_logs
+
+Stores audit trail of data modifications for WODs, Movements, and other entities (added v0.11.0).
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique log entry identifier |
+| entity_type | VARCHAR(100) | NOT NULL | Type of entity modified (wod, movement, etc.) |
+| entity_id | BIGINT | NOT NULL | ID of the modified entity |
+| operation | VARCHAR(50) | NOT NULL | Operation type: INSERT, UPDATE, DELETE |
+| user_id | BIGINT | NULL, FOREIGN KEY | Reference to users.id who made the change |
+| user_email | VARCHAR(255) | NULL | Email of user who made the change (denormalized) |
+| before_value | TEXT | NULL | JSON snapshot of entity before change |
+| after_value | TEXT | NULL | JSON snapshot of entity after change |
+| ip_address | VARCHAR(45) | NULL | IP address of the request |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | When the change occurred |
+
+**Indexes:**
+- PRIMARY KEY (id)
+- INDEX idx_data_change_logs_entity (entity_type, entity_id)
+- INDEX idx_data_change_logs_user_id (user_id)
+- INDEX idx_data_change_logs_created_at (created_at)
+- INDEX idx_data_change_logs_operation (operation)
+
+**Foreign Keys:**
+- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+
+**Design Notes:**
+- `before_value` is NULL for INSERT operations
+- `after_value` is NULL for DELETE operations
+- Both `before_value` and `after_value` contain JSON for UPDATE operations
+- `user_email` is denormalized for query convenience and historical accuracy
+- Admin-only access for viewing logs
+- Supports retention-based cleanup via API
+
+**Use Cases:**
+- Audit trail for compliance and security
+- Track who modified what and when
+- Ability to see before/after values for updates
+- Filter by entity type, operation, user, or date range
+
 ## Standard Movements
 
 The application pre-seeds 31 standard CrossFit movements on initialization:
@@ -645,6 +716,21 @@ Database migrations are managed through `internal/repository/migrations.go` and 
 - User profile editing (name, email, birthday)
 - Profile information display
 
+### v0.11.0 - Data Change Audit Logging
+**Description:** Add data_change_logs table for tracking entity modifications
+
+**Changes:**
+- Created `data_change_logs` table with:
+  - id, entity_type, entity_id, operation, user_id, user_email
+  - before_value, after_value (JSON), ip_address, created_at
+
+**Features Enabled:**
+- Complete audit trail for WOD and Movement modifications
+- Before/after value comparison for updates
+- Admin-only access to change history
+- Filtering by entity type, operation, user, date range
+- Log retention management via cleanup API
+
 ## API Endpoints
 
 ### Authentication
@@ -684,6 +770,13 @@ Database migrations are managed through `internal/repository/migrations.go` and 
   - Returns: `best_formula` - Formula used for best 1RM (Actual 1RM, Epley, or Wathan)
 - `GET /api/performance/wods/{id}` - Get WOD performance history
 
+### Data Change Logs (Admin Only)
+- `GET /api/data-change-logs` - List data change logs with pagination and filters
+  - Query params: entity_type, entity_id, operation, user_id, user_email, start_date, end_date, limit, offset
+- `GET /api/data-change-logs/{id}` - Get single data change log entry
+- `GET /api/data-change-logs/entity/{entity_type}/{entity_id}` - Get change history for specific entity
+- `POST /api/admin/data-change-logs/cleanup` - Delete old logs (retention_days parameter)
+
 ## Security Considerations
 
 1. **Password Storage:** Bcrypt hashing with cost factor ≥12
@@ -717,12 +810,15 @@ Potential future schema additions (not yet implemented):
 - **workout_templates** table for pre-defined benchmark WODs (Fran, Murph, etc.)
 - **user_settings** table for preferences (theme, units, notifications)
 - **social features** (followers, activity feed, leaderboards)
-- **audit_logs** table for security and compliance tracking
 - **workout_comments** for notes and reflections over time
+- **scheduled_backups** table for remote backup scheduling
 
 ## Version History
 
-- **v0.3.3-beta** (Current Schema): User profile editing with birthday field
+- **v0.11.0-beta** (Current Schema): Data change audit logging with before/after value tracking
+- **Application v0.10.0-beta**: Docker deployment system and Wodify performance import
+- **Application v0.8.x-beta**: Cross-database backup/restore, PostgreSQL pgx driver migration
+- **v0.3.3-beta**: User profile editing with birthday field
 - **Application v0.7.2-beta**: No schema changes (1RM calculation and display enhancements)
 - **Application v0.7.1-beta**: No schema changes (Wodify import date fixes)
 - **Application v0.4.1-beta**: No schema changes (bug fixes and deployment improvements)

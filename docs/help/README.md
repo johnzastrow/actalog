@@ -1,7 +1,7 @@
 # ActaLog - User Help Documentation
 
-**Version:** 0.10.0-beta
-**Last Updated:** 2025-01-23
+**Version:** 0.11.0-beta
+**Last Updated:** 2025-11-26
 
 Welcome to ActaLog, your mobile-first CrossFit workout tracker! This guide will help you get the most out of the application.
 
@@ -678,6 +678,6 @@ If you need additional assistance:
 
 ---
 
-**Document Version:** 0.10.0-beta
-**Last Updated:** 2025-01-23
+**Document Version:** 0.11.0-beta
+**Last Updated:** 2025-11-26
 **Applicable Versions:** ActaLog 0.10.0-beta and later
