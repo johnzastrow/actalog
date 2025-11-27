@@ -13,7 +13,14 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.11.0-beta
+**Current Version:** 0.12.0-beta
+
+## Recent Changes (v0.12.0-beta)
+
+- **No schema changes** in this release
+- Frontend/PWA enhancements: Mobile overflow fix across 27 views, iOS safe-area handling
+- Docker enhancements: OCI-compliant labels added to build scripts
+- Admin UI: User Content view Actions column moved to first position
 
 ## Recent Changes (v0.11.0-beta)
 
@@ -815,6 +822,7 @@ Potential future schema additions (not yet implemented):
 
 ## Version History
 
+- **Application v0.12.0-beta** (Current): No schema changes (Mobile PWA fixes, Docker OCI labels, Admin UI improvements)
 - **v0.11.0-beta** (Current Schema): Data change audit logging with before/after value tracking
 - **Application v0.10.0-beta**: Docker deployment system and Wodify performance import
 - **Application v0.8.x-beta**: Cross-database backup/restore, PostgreSQL pgx driver migration

@@ -520,6 +520,7 @@ func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 		{"email_verification_tokens", &data.EmailVerificationTokens},
 		{"audit_logs", &data.AuditLogs},
 		{"user_settings", &data.UserSettings},
+		{"data_change_logs", &data.DataChangeLogs},
 	}
 
 	for _, table := range tables {

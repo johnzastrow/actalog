@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-
-    <v-container class="px-3 pb-1 pt-0" style=" margin-bottom: 70px">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
       <!-- Success Alert -->
       <v-alert v-if="importResult" type="success" closable @click:close="resetImport" class="mb-3">
         <strong>Import Complete!</strong><br>
@@ -409,7 +408,7 @@
         <span>Profile</span>
       </v-btn>
     </v-bottom-navigation>
-  </v-container>
+  </div>
 </template>
 
 <script setup>

@@ -35,6 +35,7 @@ type BackupData struct {
 	EmailVerificationTokens []map[string]interface{}     `json:"email_verification_tokens"`
 	AuditLogs               []map[string]interface{}     `json:"audit_logs"`
 	UserSettings            []map[string]interface{}     `json:"user_settings"`
+	DataChangeLogs          []map[string]interface{}     `json:"data_change_logs"`
 }
 
 // BackupService defines the interface for backup/restore operations

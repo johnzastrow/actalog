@@ -106,7 +106,7 @@
       </div>
     </v-snackbar>
 
-    <v-main :style="{ paddingBottom: showBottomNav ? '70px' : '0' }">
+    <v-main :style="mainStyle">
       <router-view />
     </v-main>
 
@@ -188,6 +188,20 @@ const showAppBar = computed(() => {
 const showBottomNav = computed(() => {
   const publicRoutes = ['login', 'register', 'not-found']
   return authStore.isAuthenticated && !publicRoutes.includes(route.name)
+})
+
+// Computed style for v-main to handle safe areas and bottom nav
+const mainStyle = computed(() => {
+  // Bottom nav height (70px) + safe area for devices with home indicator
+  const bottomPadding = showBottomNav.value
+    ? 'calc(70px + env(safe-area-inset-bottom, 0px))'
+    : '0'
+  return {
+    paddingBottom: bottomPadding,
+    minHeight: '100%',
+    maxWidth: '100vw',
+    overflowX: 'hidden'
+  }
 })
 
 // Update current date

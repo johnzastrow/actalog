@@ -1,6 +1,6 @@
 <template>
-  <div style="background: #f5f7fa; min-height: 100vh; overflow-y: auto">
-    <v-container fluid class="pa-4" style="max-height: calc(100vh - 0px); overflow-y: auto">
+  <div class="mobile-view-wrapper">
+    <v-container fluid class="pa-4">
       <div class="d-flex align-center mb-4">
         <v-btn icon @click="$router.back()" class="mr-2">
           <v-icon>mdi-arrow-left</v-icon>

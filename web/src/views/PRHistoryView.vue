@@ -1,5 +1,6 @@
 <template>
-  <v-container class="px-1 pb-1 pt-0" style="margin-top: 5px; margin-bottom: 70px">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
     <!-- Loading State -->
     <v-progress-circular v-if="loading" indeterminate color="#00bcd4" class="mx-auto d-block mt-8" />
 
@@ -82,6 +83,7 @@
       </v-card>
     </div>
   </v-container>
+  </div>
 </template>
 
 <script setup>
