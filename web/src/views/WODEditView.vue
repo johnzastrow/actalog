@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-
-    <v-container class="pa-2" style=" margin-bottom: 70px">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
       <!-- Error/Success Alert -->
       <v-alert
         v-if="successMessage"
@@ -313,7 +312,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script setup>

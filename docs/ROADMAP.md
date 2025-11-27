@@ -1,20 +1,46 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.10.0-beta
-**Last Updated:** 2025-01-23
-**Overall Completion:** ~88% of core requirements
+**Current Version:** 0.12.0-beta
+**Last Updated:** 2025-11-26
+**Overall Completion:** ~90% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.10.0-beta) introduces **Docker deployment infrastructure** with automatic seed data import, GitHub Container Registry integration, and comprehensive deployment documentation. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.0-beta) focuses on **mobile PWA stability** with comprehensive overflow fixes across 27 views, OCI-compliant Docker image labels, and admin UI improvements. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
 
 ---
 
 ## Version History & Status
 
-### v0.10.0-beta (Current - Released)
+### v0.12.0-beta (Current - Released)
+**Status:** Mobile PWA stability and Docker metadata improvements
+
+**Completed:**
+- ✅ Mobile PWA overflow fix across 27 view files
+- ✅ `.mobile-view-wrapper` CSS pattern for consistent mobile layouts
+- ✅ OCI-compliant labels added to Docker build scripts
+- ✅ Admin User Content view Actions column moved to first position
+- ✅ iOS PWA safe-area handling enhanced in App.vue
+
+**Technical Highlights:**
+- Systematic fix for horizontal/vertical overflow on mobile devices
+- Consistent scrolling behavior with fixed header/footer
+- Docker images now include full OCI metadata for registry display
+- Improved mobile UX for admin tables
+
+### v0.11.0-beta (Released)
+**Status:** Data Change Audit Logging system
+
+**Completed:**
+- ✅ Complete audit trail for data modifications
+- ✅ Before/after values stored as JSON
+- ✅ Admin UI for viewing and filtering data change logs
+- ✅ Integration with WOD and Movement services
+- ✅ Multi-database support (SQLite, PostgreSQL, MariaDB)
+
+### v0.10.0-beta (Released)
 **Status:** Docker deployment infrastructure with automatic seed import
 
 **Completed:**

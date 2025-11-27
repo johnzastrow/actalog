@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0-beta] - 2025-11-26
+
+### Fixed - Mobile PWA Layout
+
+**Comprehensive Mobile Overflow Fix:**
+- Systematically fixed horizontal/vertical overflow issues across 27 view files
+- Implemented `.mobile-view-wrapper` CSS pattern for consistent mobile-safe layouts
+- Updated `main.css` with global mobile-safe styles preventing body overflow
+- Enhanced `App.vue` with dynamic safe-area handling for iOS PWA
+- Views updated include:
+  - Dashboard, Profile, Performance, Workouts
+  - WOD/Movement Libraries and Detail views
+  - Log Workout, Quick Log dialogs
+  - Admin views (Users, Backups, Data Cleanup, Data Change Logs, User Content)
+  - Import/Export, PR History, Templates
+  - Auth flows (Login, Register, Forgot/Reset Password)
+- Prevents content from extending beyond viewport on mobile devices
+- Ensures smooth scrolling within content areas
+- Maintains fixed header (56px) and bottom navigation (70px) positioning
+
+### Added - Docker Image Metadata
+
+**OCI Labels for Docker Images:**
+- Added comprehensive OCI-compliant labels to Docker build scripts
+- User-editable metadata section at top of `docker/scripts/build.sh`
+- Labels include:
+  - `org.opencontainers.image.title` - Application name
+  - `org.opencontainers.image.description` - Project description
+  - `org.opencontainers.image.vendor` - Organization/vendor name
+  - `org.opencontainers.image.authors` - Author contact information
+  - `org.opencontainers.image.source` - Repository URL
+  - `org.opencontainers.image.documentation` - Documentation URL
+  - `org.opencontainers.image.licenses` - License type
+  - `org.opencontainers.image.version` - Build version (from tag)
+  - `org.opencontainers.image.created` - Build timestamp (auto-generated)
+- Improves container registry display and image discoverability
+
+### Changed - Admin UI Improvements
+
+**Admin User Content View Enhancement:**
+- Moved Actions column from last to first position in data table
+- Improves mobile usability by placing action buttons immediately visible
+- Consistent with other admin table patterns
+- Delete buttons now accessible without horizontal scrolling
+
+### Technical Details
+- **Build**: #71 → #1 (reset for new minor version)
+- **Version**: 0.11.0-beta → 0.12.0-beta
+- **Files Modified**: 27 Vue view files, App.vue, main.css, build.sh, AdminUserContentView.vue
+
+---
+
 ## [0.11.0-beta] - 2025-11-26
 
 ### Added - Data Change Audit Logs
@@ -1515,6 +1567,6 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.10.0-beta
-**Schema Version:** v0.10.0 (Docker deployment with seed data)
-**Last Updated:** 2025-01-23
+**Current Version:** 0.12.0-beta
+**Schema Version:** v0.11.0 (Data Change Audit Logs)
+**Last Updated:** 2025-11-26

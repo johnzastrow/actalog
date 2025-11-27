@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="pa-0" style="height: 100vh; overflow-y: auto; margin-top: 36px; margin-bottom: 70px; background-color: #f5f7fa;">
+  <div class="mobile-view-wrapper">
     <v-container style="max-width: 600px;" class="py-8">
       <v-card elevation="0" rounded="lg" class="pa-6">
         <!-- Loading State -->
@@ -77,7 +77,7 @@
         </div>
       </v-card>
     </v-container>
-  </v-container>
+  </div>
 </template>
 
 <script setup>

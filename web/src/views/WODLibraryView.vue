@@ -1,6 +1,6 @@
 <template>
-  <div style="background-color: #f5f7fa; min-height: 100vh">
-    <v-container class="pa-2" style="margin-bottom: 70px; overflow-y: auto; max-height: calc(100vh - 70px)">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
       <!-- Search and Filters Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <v-text-field

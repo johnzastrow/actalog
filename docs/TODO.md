@@ -1561,7 +1561,14 @@ See original detailed implementation plan in archived documentation.
 ---
 
 **Last Updated:** 2025-11-26
-**Version:** 0.11.0-beta
+**Version:** 0.12.0-beta
+
+**v0.12.0-beta Status:**
+- ✅ Mobile PWA overflow fix across 27 view files
+- ✅ `.mobile-view-wrapper` CSS pattern for consistent mobile layouts
+- ✅ OCI labels added to Docker build scripts
+- ✅ Admin User Content view improvements (Actions column first)
+- ✅ iOS PWA safe-area handling enhanced
 
 **v0.11.0-beta Status:**
 - ✅ Data Change Audit Logging system fully implemented

@@ -1,9 +1,6 @@
 <template>
-  <v-app>
-
-    <!-- Main Content -->
-    <v-main style="background: #f5f7fa;  margin-bottom: 70px; overflow-y: auto">
-      <v-container fluid class="pa-4">
+  <div class="mobile-view-wrapper">
+    <v-container fluid class="pa-4">
         <!-- Page Title -->
         <div class="mb-4">
           <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600">
@@ -143,7 +140,6 @@
           </p>
         </v-card>
       </v-container>
-    </v-main>
 
     <!-- Edit Dialog -->
     <v-dialog v-model="editDialog" max-width="600">
@@ -266,7 +262,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-app>
+  </div>
 </template>
 
 <script setup>

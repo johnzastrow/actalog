@@ -1,5 +1,6 @@
 <template>
-  <v-container fluid class="pa-4">
+  <div class="mobile-view-wrapper">
+    <v-container fluid class="pa-4">
     <div class="d-flex align-center mb-4">
       <v-btn icon class="mr-2" @click="$router.back()">
         <v-icon>mdi-arrow-left</v-icon>
@@ -296,6 +297,7 @@
       </v-card>
     </v-dialog>
   </v-container>
+  </div>
 </template>
 
 <script setup>

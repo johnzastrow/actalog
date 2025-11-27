@@ -1,9 +1,6 @@
 <template>
-  <v-app>
-
-    <!-- Main Content -->
-    <v-main style="background: #f5f7fa;  margin-bottom: 70px; overflow-y: auto">
-      <v-container fluid class="pa-4">
+  <div class="mobile-view-wrapper">
+    <v-container fluid class="pa-4">
         <!-- Page Title -->
         <div class="mb-4">
           <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600">Administration</h1>
@@ -159,7 +156,6 @@
           </v-col>
         </v-row>
       </v-container>
-    </v-main>
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation fixed style="z-index: 5; height: 70px; box-shadow: 0px -2px 4px rgba(0,0,0,0.1)">
@@ -180,7 +176,7 @@
         <span style="font-size: 11px">Admin</span>
       </v-btn>
     </v-bottom-navigation>
-  </v-app>
+  </div>
 </template>
 
 <script setup>

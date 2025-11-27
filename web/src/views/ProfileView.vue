@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-
-    <v-container class="px-1 pb-1 pt-0" style="margin-bottom: 70px">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
       <!-- Profile Card -->
       <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
         <div class="text-center mb-3">
@@ -397,7 +396,7 @@
         <span style="font-size: 10px">Profile</span>
       </v-btn>
     </v-bottom-navigation>
-  </v-container>
+  </div>
 </template>
 
 <script setup>

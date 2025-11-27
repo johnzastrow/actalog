@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid class="pa-0" style="background-color: #f5f7fa; min-height: 100vh; overflow-y: auto">
-
-    <v-container class="px-3 pb-1 pt-0" style="margin-bottom: 70px">
+  <div class="mobile-view-wrapper">
+    <v-container class="pa-3">
       <!-- Error Alert -->
       <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
         {{ error }}
@@ -699,7 +698,7 @@
         <span style="font-size: 10px">Profile</span>
       </v-btn>
     </v-bottom-navigation>
-  </v-container>
+  </div>
 </template>
 
 <script setup>

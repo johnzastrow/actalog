@@ -13,14 +13,25 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal overflow at the root level */
+  overflow-x: hidden;
+  /* Use dvh for proper mobile viewport handling */
+  height: 100%;
 }
 
 body {
-  min-height: 100vh;
+  /* Use 100% height instead of 100vh to work better with mobile browsers */
+  min-height: 100%;
+  height: 100%;
   color: var(--v-theme-on-background);
   background-color: var(--v-theme-background);
   transition: color 0.3s, background-color 0.3s;
   line-height: 1.6;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  /* Handle safe areas for notched devices */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Typography */
@@ -78,6 +89,112 @@ h6 { font-size: 1rem; font-weight: 500; }
 /* Bottom navigation spacing fix for mobile */
 .v-bottom-navigation {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================
+   Mobile PWA View Wrapper Styles
+   ============================================ */
+
+/* Standard view wrapper - use this class on the root div of each view */
+.mobile-view-wrapper {
+  background: #f5f7fa;
+  min-height: 100%;
+  /* Let the wrapper fill available space but not overflow */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Content container inside view wrapper */
+.mobile-content {
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent text overflow globally */
+.v-card,
+.v-list-item,
+.v-chip,
+.text-body-1,
+.text-body-2,
+.text-caption,
+.text-subtitle-1,
+.text-subtitle-2 {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Handle pre-formatted text that might overflow */
+pre,
+code,
+.pre-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ============================================
+   Mobile Data Table Fixes
+   ============================================ */
+
+/* Make data tables scrollable on mobile */
+.v-data-table {
+  max-width: 100%;
+}
+
+.v-data-table__wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table cells don't force width */
+.v-data-table th,
+.v-data-table td {
+  white-space: nowrap;
+}
+
+/* Allow text wrapping in specific columns */
+.v-data-table .wrap-text {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Mobile-friendly table on small screens */
+@media (max-width: 600px) {
+  /* Reduce table padding on mobile */
+  .v-data-table th,
+  .v-data-table td {
+    padding: 8px 12px !important;
+  }
+
+  /* Make v-container use less padding on mobile */
+  .v-container {
+    padding: 12px !important;
+  }
+
+  /* Reduce card padding on mobile */
+  .v-card-text {
+    padding: 12px !important;
+  }
+
+  .v-card-title {
+    padding: 12px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Stack buttons on mobile if needed */
+  .mobile-stack-buttons {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .mobile-stack-buttons > * {
+    width: 100% !important;
+    min-width: unset !important;
+  }
 }
 
 /* Fade transition */

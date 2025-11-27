@@ -1,5 +1,5 @@
 <template>
-  <div style="background: #f5f7fa; min-height: 100vh; padding-bottom: 70px; margin-top: 56px">
+  <div class="mobile-view-wrapper">
     <!-- Header -->
     <div style="background: #2c3e50; padding: 16px; position: fixed; top: 56px; left: 0; right: 0; z-index: 5">
       <h2 style="color: white; margin: 0; font-size: 1.25rem">Workout Timeline</h2>
