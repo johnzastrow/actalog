@@ -24,6 +24,7 @@ func main() {
 	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
 	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
+	wodRepo := repository.NewWODRepository(db)
 
 	// Initialize service
 	userWorkoutService := service.NewUserWorkoutService(
@@ -32,6 +33,7 @@ func main() {
 		workoutMovementRepo,
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
+		wodRepo,
 	)
 
 	// Run retroactive PR flagging for user ID 1
