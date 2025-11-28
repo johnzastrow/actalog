@@ -552,15 +552,15 @@ func isTableNotExistsError(err error) bool {
 	if err == nil {
 		return false
 	}
-	errMsg := err.Error()
+	errMsg := strings.ToLower(err.Error())
 	// Check for different database drivers' "table does not exist" errors
-	return (err.Error() == "no such table" ||
-		err.Error() == "relation does not exist" ||
-		err.Error() == "Table doesn't exist") ||
-		(len(errMsg) > 0 && (
-			errMsg[:13] == "no such table" ||
-			errMsg[:22] == "relation does not exist" ||
-			errMsg[:20] == "Table doesn't exist"))
+	// SQLite: "no such table: tablename"
+	// PostgreSQL: "relation \"tablename\" does not exist"
+	// MySQL/MariaDB: "Error 1146 (42S02): Table 'db.tablename' doesn't exist"
+	return strings.Contains(errMsg, "no such table") ||
+		strings.Contains(errMsg, "does not exist") ||
+		strings.Contains(errMsg, "doesn't exist") ||
+		strings.Contains(errMsg, "table") && strings.Contains(errMsg, "1146")
 }
 
 // rowsToMaps converts SQL rows to slice of maps

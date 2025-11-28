@@ -121,42 +121,43 @@
       app
       elevation="8"
       bg-color="white"
-      height="70"
+      height="56"
+      class="bottom-nav-compact"
     >
-      <v-btn value="dashboard" to="/dashboard" size="small">
-        <v-icon size="24">mdi-view-dashboard</v-icon>
-        <span class="text-caption">Dashboard</span>
+      <v-btn value="dashboard" to="/dashboard" size="x-small">
+        <v-icon size="20">mdi-view-dashboard</v-icon>
+        <span class="nav-label">Home</span>
       </v-btn>
 
-      <v-btn value="performance" to="/performance" size="small">
-        <v-icon size="24">mdi-chart-line</v-icon>
-        <span class="text-caption">Performance</span>
+      <v-btn value="performance" to="/performance" size="x-small">
+        <v-icon size="20">mdi-chart-line</v-icon>
+        <span class="nav-label">Stats</span>
       </v-btn>
 
       <!-- Center FAB Button -->
       <v-btn
         value="log"
         to="/dashboard?open=quick-log"
-        size="small"
+        size="x-small"
         class="fab-button"
       >
-        <v-avatar color="teal" size="48">
-          <v-icon color="white" size="28">mdi-plus</v-icon>
+        <v-avatar color="teal" size="40">
+          <v-icon color="white" size="24">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>
 
-      <v-btn value="workouts" to="/workouts" size="small">
-        <v-icon size="24">mdi-dumbbell</v-icon>
-        <span class="text-caption">Workouts</span>
+      <v-btn value="workouts" to="/workouts" size="x-small">
+        <v-icon size="20">mdi-dumbbell</v-icon>
+        <span class="nav-label">Log</span>
       </v-btn>
 
-      <v-btn value="profile" to="/profile" size="small">
+      <v-btn value="profile" to="/profile" size="x-small">
         <!-- Show avatar if user has one, otherwise show default icon -->
-        <v-avatar v-if="userAvatar" size="24">
+        <v-avatar v-if="userAvatar" size="20">
           <v-img :src="userAvatar" alt="Profile" />
         </v-avatar>
-        <v-icon v-else size="24" color="#597a6a">mdi-account-circle</v-icon>
-        <span class="text-caption">Profile</span>
+        <v-icon v-else size="20" color="#597a6a">mdi-account-circle</v-icon>
+        <span class="nav-label">Me</span>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
@@ -177,7 +178,15 @@ const networkStore = useNetworkStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
-const userAvatar = ref(null)
+
+// Reactive user avatar - watches auth store for changes
+const userAvatar = computed(() => {
+  const user = authStore.user
+  if (user && user.profile_image) {
+    return user.profile_image
+  }
+  return null
+})
 
 // Show app bar and bottom nav only when authenticated and not on login/register
 const showAppBar = computed(() => {
@@ -192,9 +201,9 @@ const showBottomNav = computed(() => {
 
 // Computed style for v-main to handle safe areas and bottom nav
 const mainStyle = computed(() => {
-  // Bottom nav height (70px) + safe area for devices with home indicator
+  // Bottom nav height (56px) + safe area for devices with home indicator
   const bottomPadding = showBottomNav.value
-    ? 'calc(70px + env(safe-area-inset-bottom, 0px))'
+    ? 'calc(56px + env(safe-area-inset-bottom, 0px))'
     : '0'
   return {
     paddingBottom: bottomPadding,
@@ -226,12 +235,6 @@ onMounted(() => {
 
   // Update date every minute
   setInterval(updateCurrentDate, 60000)
-
-  // Load user avatar if available
-  const user = authStore.user
-  if (user && user.profile_image) {
-    userAvatar.value = user.profile_image
-  }
 
   // Initialize network status listeners
   networkStore.initNetworkListeners()
@@ -321,5 +324,44 @@ p, span, div {
 
 .v-bottom-navigation .v-btn .v-icon {
   margin-bottom: 2px;
+}
+
+/* Compact bottom navigation for mobile */
+.bottom-nav-compact .v-btn {
+  min-width: 50px !important;
+  padding: 4px 2px !important;
+}
+
+.bottom-nav-compact .nav-label {
+  font-size: 9px !important;
+  line-height: 1.1;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bottom-nav-compact .fab-button .v-avatar {
+  top: -4px;
+}
+
+/* Reduce overall app font sizes for mobile */
+@media (max-width: 600px) {
+  .v-card-title {
+    font-size: 16px !important;
+  }
+
+  .v-card-subtitle {
+    font-size: 12px !important;
+  }
+
+  .v-list-item-title {
+    font-size: 14px !important;
+  }
+
+  .v-list-item-subtitle {
+    font-size: 11px !important;
+  }
 }
 </style>
