@@ -557,10 +557,24 @@ func isTableNotExistsError(err error) bool {
 	// SQLite: "no such table: tablename"
 	// PostgreSQL: "relation \"tablename\" does not exist"
 	// MySQL/MariaDB: "Error 1146 (42S02): Table 'db.tablename' doesn't exist"
-	return strings.Contains(errMsg, "no such table") ||
-		strings.Contains(errMsg, "does not exist") ||
-		strings.Contains(errMsg, "doesn't exist") ||
-		strings.Contains(errMsg, "table") && strings.Contains(errMsg, "1146")
+
+	// Check for MySQL error code 1146 (most reliable for MySQL/MariaDB)
+	if strings.Contains(errMsg, "1146") {
+		return true
+	}
+	// Check for SQLite error
+	if strings.Contains(errMsg, "no such table") {
+		return true
+	}
+	// Check for PostgreSQL error
+	if strings.Contains(errMsg, "does not exist") {
+		return true
+	}
+	// Check for various "doesn't exist" patterns (handle different apostrophe encodings)
+	if strings.Contains(errMsg, "doesn't exist") || strings.Contains(errMsg, "doesnt exist") {
+		return true
+	}
+	return false
 }
 
 // rowsToMaps converts SQL rows to slice of maps
