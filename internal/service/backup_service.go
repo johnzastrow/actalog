@@ -934,7 +934,10 @@ func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) 
 		name TEXT NOT NULL,
 		type TEXT NOT NULL,
 		description TEXT,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		is_standard INTEGER NOT NULL DEFAULT 1,
+		created_by_user_id INTEGER,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 	);
 
 	CREATE TABLE wods (
@@ -943,7 +946,10 @@ func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) 
 		type TEXT,
 		score_type TEXT,
 		description TEXT,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		is_standard INTEGER NOT NULL DEFAULT 1,
+		created_by_user_id INTEGER,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 	);
 
 	CREATE TABLE workouts (
@@ -1281,12 +1287,38 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 
 	// Boolean conversion for specific columns
 	booleanColumns := map[string]bool{
-		"is_pr":                true,
-		"is_template":          true,
-		"is_standard":          true,
-		"email_verified":       true,
-		"account_disabled":     true,
+		"is_pr":                 true,
+		"is_template":           true,
+		"is_standard":           true,
+		"email_verified":        true,
+		"account_disabled":      true,
 		"notifications_enabled": true,
+	}
+
+	// Datetime columns that may need conversion
+	datetimeColumns := map[string]bool{
+		"created_at":          true,
+		"updated_at":          true,
+		"last_login_at":       true,
+		"email_verified_at":   true,
+		"locked_at":           true,
+		"locked_until":        true,
+		"disabled_at":         true,
+		"expires_at":          true,
+		"used_at":             true,
+		"revoked_at":          true,
+		"workout_date":        true,
+		"birthday":            true,
+	}
+
+	// Convert datetime values for MySQL (ISO 8601 to MySQL format)
+	if datetimeColumns[columnName] && s.dbDriver == "mysql" {
+		if strVal, ok := val.(string); ok && strVal != "" {
+			converted := s.convertDatetimeForMySQL(strVal)
+			if converted != "" {
+				return converted
+			}
+		}
 	}
 
 	if booleanColumns[columnName] {
@@ -1320,6 +1352,33 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 	}
 
 	return val
+}
+
+// convertDatetimeForMySQL converts various datetime formats to MySQL-compatible format
+func (s *BackupServiceImpl) convertDatetimeForMySQL(dateStr string) string {
+	// Try parsing various formats
+	formats := []string{
+		time.RFC3339Nano,                // 2025-11-26T16:19:14.008192051Z
+		time.RFC3339,                    // 2025-11-26T16:19:14Z
+		"2006-01-02T15:04:05.999999999Z07:00",
+		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02 15:04:05.999999999", // SQLite format with microseconds
+		"2006-01-02 15:04:05",           // Standard MySQL format
+		"2006-01-02",                    // Date only
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			// Return MySQL-compatible format
+			if format == "2006-01-02" {
+				return t.Format("2006-01-02")
+			}
+			return t.Format("2006-01-02 15:04:05")
+		}
+	}
+
+	// If we can't parse it, return as-is and let MySQL handle it
+	return dateStr
 }
 
 // containsString checks if a slice contains a string
