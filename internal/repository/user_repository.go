@@ -21,10 +21,24 @@ func NewSQLiteUserRepository(db *sql.DB) *SQLiteUserRepository {
 
 // Create creates a new user
 func (r *SQLiteUserRepository) Create(user *domain.User) error {
-	query := `
+	query := rebindQuery(`
 		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?)
-	`
+	`)
+
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(
+			query,
+			user.Email,
+			user.PasswordHash,
+			user.Name,
+			user.Role,
+			user.CreatedAt,
+			user.UpdatedAt,
+		).Scan(&user.ID)
+		return err
+	}
 
 	result, err := r.db.Exec(
 		query,
@@ -50,14 +64,14 @@ func (r *SQLiteUserRepository) Create(user *domain.User) error {
 
 // GetByID retrieves a user by ID
 func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, email, password_hash, name, profile_image, role,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
 		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
 		FROM users
 		WHERE id = ?
-	`
+	`)
 
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
@@ -120,14 +134,14 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 
 // GetByEmail retrieves a user by email
 func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, email, password_hash, name, profile_image, role,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
 		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
 		FROM users
 		WHERE email = ?
-	`
+	`)
 
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
@@ -206,13 +220,13 @@ func (r *SQLiteUserRepository) GetByVerificationToken(token string) (*domain.Use
 
 // Update updates a user
 func (r *SQLiteUserRepository) Update(user *domain.User) error {
-	query := `
+	query := rebindQuery(`
 		UPDATE users
 		SET email = ?, name = ?, profile_image = ?, role = ?,
 		    updated_at = ?, last_login_at = ?, password_hash = ?,
 		    email_verified = ?, email_verified_at = ?
 		WHERE id = ?
-	`
+	`)
 
 	var lastLoginAt interface{}
 	if user.LastLoginAt != nil {
@@ -250,21 +264,21 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 
 // UpdatePassword updates only the password for a user
 func (r *SQLiteUserRepository) UpdatePassword(userID int64, hashedPassword string) error {
-	query := `UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`
+	query := rebindQuery(`UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`)
 	_, err := r.db.Exec(query, hashedPassword, time.Now(), userID)
 	return err
 }
 
 // Delete deletes a user
 func (r *SQLiteUserRepository) Delete(id int64) error {
-	query := `DELETE FROM users WHERE id = ?`
+	query := rebindQuery(`DELETE FROM users WHERE id = ?`)
 	_, err := r.db.Exec(query, id)
 	return err
 }
 
 // List retrieves a list of users with pagination
 func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, email, password_hash, name, profile_image, role,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
@@ -272,7 +286,7 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 		FROM users
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
-	`
+	`)
 
 	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
@@ -352,7 +366,7 @@ func (r *SQLiteUserRepository) Count() (int64, error) {
 
 // IncrementFailedAttempts increments the failed login attempts counter
 func (r *SQLiteUserRepository) IncrementFailedAttempts(userID int64) error {
-	query := `UPDATE users SET failed_login_attempts = failed_login_attempts + 1, updated_at = ? WHERE id = ?`
+	query := rebindQuery(`UPDATE users SET failed_login_attempts = failed_login_attempts + 1, updated_at = ? WHERE id = ?`)
 	_, err := r.db.Exec(query, time.Now(), userID)
 	if err != nil {
 		return fmt.Errorf("failed to increment failed attempts: %w", err)
@@ -362,7 +376,7 @@ func (r *SQLiteUserRepository) IncrementFailedAttempts(userID int64) error {
 
 // ResetFailedAttempts resets the failed login attempts counter to zero
 func (r *SQLiteUserRepository) ResetFailedAttempts(userID int64) error {
-	query := `UPDATE users SET failed_login_attempts = 0, updated_at = ? WHERE id = ?`
+	query := rebindQuery(`UPDATE users SET failed_login_attempts = 0, updated_at = ? WHERE id = ?`)
 	_, err := r.db.Exec(query, time.Now(), userID)
 	if err != nil {
 		return fmt.Errorf("failed to reset failed attempts: %w", err)
@@ -375,9 +389,9 @@ func (r *SQLiteUserRepository) LockAccount(userID int64, lockDuration time.Durat
 	now := time.Now()
 	lockedUntil := now.Add(lockDuration)
 
-	query := `UPDATE users
+	query := rebindQuery(`UPDATE users
 		SET locked_at = ?, locked_until = ?, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ?`)
 
 	_, err := r.db.Exec(query, now, lockedUntil, now, userID)
 	if err != nil {
@@ -388,9 +402,9 @@ func (r *SQLiteUserRepository) LockAccount(userID int64, lockDuration time.Durat
 
 // UnlockAccount unlocks a user account and resets failed attempts
 func (r *SQLiteUserRepository) UnlockAccount(userID int64) error {
-	query := `UPDATE users
+	query := rebindQuery(`UPDATE users
 		SET locked_at = NULL, locked_until = NULL, failed_login_attempts = 0, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ?`)
 
 	_, err := r.db.Exec(query, time.Now(), userID)
 	if err != nil {
@@ -402,7 +416,7 @@ func (r *SQLiteUserRepository) UnlockAccount(userID int64) error {
 // IsAccountLocked checks if an account is currently locked
 // Returns: locked (bool), unlock time (*time.Time), error
 func (r *SQLiteUserRepository) IsAccountLocked(userID int64) (bool, *time.Time, error) {
-	query := `SELECT locked_at, locked_until FROM users WHERE id = ?`
+	query := rebindQuery(`SELECT locked_at, locked_until FROM users WHERE id = ?`)
 
 	var lockedAt, lockedUntil *time.Time
 	err := r.db.QueryRow(query, userID).Scan(&lockedAt, &lockedUntil)
@@ -435,9 +449,9 @@ func (r *SQLiteUserRepository) IsAccountLocked(userID int64) (bool, *time.Time, 
 // DisableAccount permanently disables a user account (admin action)
 func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64, reason string) error {
 	now := time.Now()
-	query := `UPDATE users
+	query := rebindQuery(`UPDATE users
 		SET account_disabled = 1, disabled_at = ?, disabled_by_user_id = ?, disable_reason = ?, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ?`)
 
 	reasonPtr := &reason
 	if reason == "" {
@@ -453,9 +467,9 @@ func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64, re
 
 // EnableAccount re-enables a disabled user account (admin action)
 func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
-	query := `UPDATE users
+	query := rebindQuery(`UPDATE users
 		SET account_disabled = 0, disabled_at = NULL, disabled_by_user_id = NULL, disable_reason = NULL, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ?`)
 
 	_, err := r.db.Exec(query, time.Now(), userID)
 	if err != nil {

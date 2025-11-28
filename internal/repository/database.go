@@ -922,6 +922,27 @@ func getTimestampFunc() string {
 	}
 }
 
+// rebindQuery converts ? placeholders to $N for PostgreSQL
+// This allows queries written with ? placeholders to work across all databases
+func rebindQuery(query string) string {
+	if currentDriver != "postgres" {
+		return query
+	}
+
+	// Convert ? to $1, $2, etc for PostgreSQL
+	result := make([]byte, 0, len(query))
+	paramNum := 1
+	for i := 0; i < len(query); i++ {
+		if query[i] == '?' {
+			result = append(result, fmt.Sprintf("$%d", paramNum)...)
+			paramNum++
+		} else {
+			result = append(result, query[i])
+		}
+	}
+	return string(result)
+}
+
 // seedStandardMovements seeds the database with standard CrossFit movements
 func seedStandardMovements(db *sql.DB) error {
 	// Determine target table before querying (migrations may rename it)

@@ -22,7 +22,6 @@ linters:
     - gocyclo       # Check cyclomatic complexity
     - revive        # Fast linter
     - gosec         # Security checker
-    - shadow        # Check for shadowed variables (replaces govet check-shadowing)
     - sqlclosecheck # Check sql.Rows and sql.Stmt are closed
     - noctx         # Find http requests without context
     - bodyclose     # Check HTTP response bodies are closed
