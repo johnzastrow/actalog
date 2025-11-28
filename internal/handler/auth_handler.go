@@ -86,7 +86,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			if h.logger != nil {
 				h.logger.Error("action=register outcome=failure email=%s error=%v", req.Email, err)
 			}
-			respondError(w, http.StatusInternalServerError, "Failed to register user")
+			// Return the actual validation error to help users fix their input
+			respondError(w, http.StatusBadRequest, err.Error())
 		}
 		return
 	}

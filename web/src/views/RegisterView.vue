@@ -21,10 +21,29 @@
               <p class="text-body-1 mb-4">
                 We've sent a verification email to <strong>{{ email }}</strong>
               </p>
-              <p class="text-body-2 text-medium-emphasis mb-6">
+              <p class="text-body-2 text-medium-emphasis mb-4">
                 Please check your email and click the verification link to activate your account.
                 The link will expire in 24 hours.
               </p>
+
+              <!-- Email tip alert -->
+              <v-alert
+                type="info"
+                variant="tonal"
+                class="text-left mb-4"
+                density="compact"
+              >
+                <div class="text-subtitle-2 mb-1">
+                  <v-icon size="small" class="mr-1">mdi-lightbulb-outline</v-icon>
+                  Can't find the email?
+                </div>
+                <ul class="text-body-2 mb-0 pl-4">
+                  <li>Check your <strong>spam</strong> or <strong>junk</strong> folder</li>
+                  <li>The email is sent from <strong>ActaLog</strong></li>
+                  <li>Add our email to your contacts to ensure delivery</li>
+                </ul>
+              </v-alert>
+
               <v-btn color="primary" block @click="router.push('/login')">
                 Go to Login
               </v-btn>
@@ -38,6 +57,18 @@
 
             <!-- Registration Form -->
             <v-form v-else @submit.prevent="handleRegister">
+              <!-- General Error Alert -->
+              <v-alert
+                v-if="generalError"
+                type="error"
+                variant="tonal"
+                closable
+                class="mb-4"
+                @click:close="generalError = ''"
+              >
+                {{ generalError }}
+              </v-alert>
+
               <v-text-field
                 v-model="name"
                 label="Name"
@@ -59,18 +90,23 @@
               <v-text-field
                 v-model="password"
                 label="Password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
+                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="showPassword = !showPassword"
                 required
                 :error-messages="errors.password"
+                hint="Must be at least 8 characters"
                 class="mt-4"
               />
 
               <v-text-field
                 v-model="confirmPassword"
                 label="Confirm Password"
-                type="password"
+                :type="showConfirmPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock-check"
+                :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="showConfirmPassword = !showConfirmPassword"
                 required
                 :error-messages="errors.confirmPassword"
                 class="mt-4"
@@ -114,10 +150,30 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const errors = ref({})
+const generalError = ref('')
 const registrationSuccess = ref(false)
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const handleRegister = async () => {
   errors.value = {}
+  generalError.value = ''
+
+  // Client-side validation
+  if (!name.value.trim()) {
+    errors.value.name = 'Name is required'
+    return
+  }
+
+  if (!email.value.trim()) {
+    errors.value.email = 'Email is required'
+    return
+  }
+
+  if (password.value.length < 8) {
+    errors.value.password = 'Password must be at least 8 characters'
+    return
+  }
 
   if (password.value !== confirmPassword.value) {
     errors.value.confirmPassword = 'Passwords do not match'
@@ -136,7 +192,19 @@ const handleRegister = async () => {
     // Show verification message instead of redirecting
     registrationSuccess.value = true
   } else {
-    errors.value.email = authStore.error || 'Registration failed'
+    // Parse the error message to show it in the right place
+    const errorMsg = authStore.error || 'Registration failed'
+
+    if (errorMsg.toLowerCase().includes('password')) {
+      errors.value.password = errorMsg
+    } else if (errorMsg.toLowerCase().includes('email')) {
+      errors.value.email = errorMsg
+    } else if (errorMsg.toLowerCase().includes('name')) {
+      errors.value.name = errorMsg
+    } else {
+      // Show as general error
+      generalError.value = errorMsg
+    }
   }
 
   loading.value = false
