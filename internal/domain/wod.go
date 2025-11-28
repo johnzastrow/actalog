@@ -6,19 +6,19 @@ import "time"
 // WODs are predefined workouts like "Fran", "Murph", "Helen", etc.
 // Standard WODs are pre-seeded, users can also create custom WODs
 type WOD struct {
-	ID          int64      `json:"id" db:"id"`
-	Name        string     `json:"name" db:"name"`
-	Source      string     `json:"source,omitempty" db:"source"`           // CrossFit, Other Coach, Self-recorded
-	Type        string     `json:"type,omitempty" db:"type"`               // Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created
-	Regime      string     `json:"regime,omitempty" db:"regime"`           // EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills
-	ScoreType   string     `json:"score_type,omitempty" db:"score_type"`   // Time (HH:MM:SS), Rounds+Reps, Max Weight
-	Description string     `json:"description,omitempty" db:"description"` // Full WOD description/instructions
-	URL         *string    `json:"url,omitempty" db:"url"`                 // Optional video or reference URL
-	Notes       *string    `json:"notes,omitempty" db:"notes"`             // Additional notes
-	IsStandard  bool       `json:"is_standard" db:"is_standard"`           // TRUE for pre-seeded WODs, FALSE for user-created
-	CreatedBy   *int64     `json:"created_by,omitempty" db:"created_by"`   // User ID if custom WOD (NULL for standard)
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	ID          int64     `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	Source      string    `json:"source,omitempty" db:"source"`           // CrossFit, Other Coach, Self-recorded
+	Type        string    `json:"type,omitempty" db:"type"`               // Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created
+	Regime      string    `json:"regime,omitempty" db:"regime"`           // EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills
+	ScoreType   string    `json:"score_type,omitempty" db:"score_type"`   // Time (HH:MM:SS), Rounds+Reps, Max Weight
+	Description string    `json:"description,omitempty" db:"description"` // Full WOD description/instructions
+	URL         *string   `json:"url,omitempty" db:"url"`                 // Optional video or reference URL
+	Notes       *string   `json:"notes,omitempty" db:"notes"`             // Additional notes
+	IsStandard  bool      `json:"is_standard" db:"is_standard"`           // TRUE for pre-seeded WODs, FALSE for user-created
+	CreatedBy   *int64    `json:"created_by,omitempty" db:"created_by"`   // User ID if custom WOD (NULL for standard)
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // WODWithCreator extends WOD with creator information (for admin views)
@@ -32,26 +32,26 @@ type WODWithCreator struct {
 // This stores the actual performance data when a user logs a WOD
 type UserWorkoutWOD struct {
 	ID            int64     `json:"id" db:"id"`
-	UserWorkoutID int64     `json:"user_workout_id" db:"user_workout_id"` // References user_workouts (logged workout instance)
-	WODID         int64     `json:"wod_id" db:"wod_id"`                   // References wods table
-	ScoreType     *string   `json:"score_type,omitempty" db:"score_type"` // Time (HH:MM:SS), Rounds+Reps, Max Weight
-	ScoreValue    *string   `json:"score_value,omitempty" db:"score_value"` // Formatted score (e.g., "12:34", "10+15", "225.5")
+	UserWorkoutID int64     `json:"user_workout_id" db:"user_workout_id"`     // References user_workouts (logged workout instance)
+	WODID         int64     `json:"wod_id" db:"wod_id"`                       // References wods table
+	ScoreType     *string   `json:"score_type,omitempty" db:"score_type"`     // Time (HH:MM:SS), Rounds+Reps, Max Weight
+	ScoreValue    *string   `json:"score_value,omitempty" db:"score_value"`   // Formatted score (e.g., "12:34", "10+15", "225.5")
 	TimeSeconds   *int      `json:"time_seconds,omitempty" db:"time_seconds"` // For Time-based WODs
-	Rounds        *int      `json:"rounds,omitempty" db:"rounds"` // For AMRAP WODs
-	Reps          *int      `json:"reps,omitempty" db:"reps"` // Remaining reps in AMRAP
-	Weight        *float64  `json:"weight,omitempty" db:"weight"` // For Max Weight WODs
+	Rounds        *int      `json:"rounds,omitempty" db:"rounds"`             // For AMRAP WODs
+	Reps          *int      `json:"reps,omitempty" db:"reps"`                 // Remaining reps in AMRAP
+	Weight        *float64  `json:"weight,omitempty" db:"weight"`             // For Max Weight WODs
 	Notes         string    `json:"notes,omitempty" db:"notes"`
-	IsPR          bool      `json:"is_pr" db:"is_pr"` // Personal record flag
+	IsPR          bool      `json:"is_pr" db:"is_pr"`             // Personal record flag
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data (loaded via joins)
-	WOD            *WOD      `json:"wod,omitempty" db:"-"`
-	WODName        string    `json:"wod_name,omitempty" db:"-"`        // Flattened for convenience
-	WODType        string    `json:"wod_type,omitempty" db:"-"`        // Flattened for convenience (Benchmark, Hero, Girl, etc.)
-	WODScoreType   string    `json:"wod_score_type,omitempty" db:"-"`  // WOD's defined score_type from wods table
-	WorkoutDate    time.Time `json:"workout_date" db:"-"`              // From user_workouts.workout_date
+	WOD          *WOD      `json:"wod,omitempty" db:"-"`
+	WODName      string    `json:"wod_name,omitempty" db:"-"`       // Flattened for convenience
+	WODType      string    `json:"wod_type,omitempty" db:"-"`       // Flattened for convenience (Benchmark, Hero, Girl, etc.)
+	WODScoreType string    `json:"wod_score_type,omitempty" db:"-"` // WOD's defined score_type from wods table
+	WorkoutDate  time.Time `json:"workout_date" db:"-"`             // From user_workouts.workout_date
 }
 
 // WODRepository defines the interface for WOD data access

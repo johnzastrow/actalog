@@ -20,22 +20,22 @@ type BackupMetadata struct {
 
 // BackupData represents the complete backup data structure
 type BackupData struct {
-	Metadata                BackupMetadata               `json:"metadata"`
-	Users                   []map[string]interface{}     `json:"users"`
-	Movements               []map[string]interface{}     `json:"movements"`
-	WODs                    []map[string]interface{}     `json:"wods"`
-	Workouts                []map[string]interface{}     `json:"workouts"`
-	UserWorkouts            []map[string]interface{}     `json:"user_workouts"`
-	WorkoutMovements        []map[string]interface{}     `json:"workout_movements"`
-	WorkoutWODs             []map[string]interface{}     `json:"workout_wods"`
-	UserWorkoutMovements    []map[string]interface{}     `json:"user_workout_movements"`
-	UserWorkoutWODs         []map[string]interface{}     `json:"user_workout_wods"`
-	RefreshTokens           []map[string]interface{}     `json:"refresh_tokens"`
-	PasswordResets          []map[string]interface{}     `json:"password_resets"`
-	EmailVerificationTokens []map[string]interface{}     `json:"email_verification_tokens"`
-	AuditLogs               []map[string]interface{}     `json:"audit_logs"`
-	UserSettings            []map[string]interface{}     `json:"user_settings"`
-	DataChangeLogs          []map[string]interface{}     `json:"data_change_logs"`
+	Metadata                BackupMetadata           `json:"metadata"`
+	Users                   []map[string]interface{} `json:"users"`
+	Movements               []map[string]interface{} `json:"movements"`
+	WODs                    []map[string]interface{} `json:"wods"`
+	Workouts                []map[string]interface{} `json:"workouts"`
+	UserWorkouts            []map[string]interface{} `json:"user_workouts"`
+	WorkoutMovements        []map[string]interface{} `json:"workout_movements"`
+	WorkoutWODs             []map[string]interface{} `json:"workout_wods"`
+	UserWorkoutMovements    []map[string]interface{} `json:"user_workout_movements"`
+	UserWorkoutWODs         []map[string]interface{} `json:"user_workout_wods"`
+	RefreshTokens           []map[string]interface{} `json:"refresh_tokens"`
+	PasswordResets          []map[string]interface{} `json:"password_resets"`
+	EmailVerificationTokens []map[string]interface{} `json:"email_verification_tokens"`
+	AuditLogs               []map[string]interface{} `json:"audit_logs"`
+	UserSettings            []map[string]interface{} `json:"user_settings"`
+	DataChangeLogs          []map[string]interface{} `json:"data_change_logs"`
 }
 
 // BackupService defines the interface for backup/restore operations

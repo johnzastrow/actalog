@@ -89,13 +89,13 @@ func LoggingMiddleware(log *logger.Logger) func(next http.Handler) http.Handler 
 
 			// Extract user info from context if available
 			userID := "-"
-		userEmail := "-"
+			userEmail := "-"
 			if uid, ok := r.Context().Value("user_id").(int64); ok {
 				userID = strconv.FormatInt(uid, 10)
 			}
 			if email, ok := r.Context().Value("user_email").(string); ok {
 				userEmail = email
-			_ = userEmail // Will use later for detailed logs
+				_ = userEmail // Will use later for detailed logs
 			}
 
 			// Log request start

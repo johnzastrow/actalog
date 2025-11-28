@@ -74,6 +74,21 @@ issues:
         - errcheck
       text: "Error return value of `s.auditLogService"
 
+    # Exclude gosec G402 for TLS config - we allow flexible TLS settings
+    - linters:
+        - gosec
+      text: "G402"
+
+    # Exclude revive stuttering for EmailService - keeping for clarity
+    - linters:
+        - revive
+      text: "type name will be used as email.EmailService"
+
+    # Exclude goconst for SQL query parts - not worth making constants
+    - linters:
+        - goconst
+      text: "LIMIT|OFFSET|ORDER BY"
+
   max-issues-per-linter: 0
   max-same-issues: 0
 

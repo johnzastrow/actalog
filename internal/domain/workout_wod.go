@@ -6,8 +6,8 @@ import "time"
 // A workout template can contain multiple WODs
 type WorkoutWOD struct {
 	ID         int64     `json:"id" db:"id"`
-	WorkoutID  int64     `json:"workout_id" db:"workout_id"` // References workout template
-	WODID      int64     `json:"wod_id" db:"wod_id"`         // References WOD
+	WorkoutID  int64     `json:"workout_id" db:"workout_id"`             // References workout template
+	WODID      int64     `json:"wod_id" db:"wod_id"`                     // References WOD
 	ScoreValue *string   `json:"score_value,omitempty" db:"score_value"` // Actual score when logged (time, rounds+reps, weight)
 	Division   *string   `json:"division,omitempty" db:"division"`       // rx, scaled, beginner
 	IsPR       bool      `json:"is_pr" db:"is_pr"`                       // Personal record flag
@@ -19,11 +19,11 @@ type WorkoutWOD struct {
 // WorkoutWODWithDetails includes WOD details
 type WorkoutWODWithDetails struct {
 	WorkoutWOD
-	WODName        string  `json:"wod_name"`
-	WODType        string  `json:"wod_type"`
-	WODRegime      string  `json:"wod_regime"`
-	WODScoreType   string  `json:"wod_score_type"`
-	WODDescription string  `json:"wod_description"`
+	WODName        string `json:"wod_name"`
+	WODType        string `json:"wod_type"`
+	WODRegime      string `json:"wod_regime"`
+	WODScoreType   string `json:"wod_score_type"`
+	WODDescription string `json:"wod_description"`
 }
 
 // WorkoutWODRepository defines the interface for workout-WOD junction data access

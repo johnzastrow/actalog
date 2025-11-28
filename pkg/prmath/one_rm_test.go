@@ -7,67 +7,67 @@ import (
 
 func TestCalculate1RM(t *testing.T) {
 	tests := []struct {
-		name           string
-		weight         float64
-		reps           int
-		expectedMin    float64
-		expectedMax    float64
+		name            string
+		weight          float64
+		reps            int
+		expectedMin     float64
+		expectedMax     float64
 		expectedFormula Formula
 	}{
 		{
-			name:           "1 rep - actual weight",
-			weight:         225.0,
-			reps:           1,
-			expectedMin:    225.0,
-			expectedMax:    225.0,
+			name:            "1 rep - actual weight",
+			weight:          225.0,
+			reps:            1,
+			expectedMin:     225.0,
+			expectedMax:     225.0,
 			expectedFormula: FormulaActual,
 		},
 		{
-			name:           "5 reps - Epley formula",
-			weight:         200.0,
-			reps:           5,
-			expectedMin:    230.0,
-			expectedMax:    235.0,
+			name:            "5 reps - Epley formula",
+			weight:          200.0,
+			reps:            5,
+			expectedMin:     230.0,
+			expectedMax:     235.0,
 			expectedFormula: FormulaEpley,
 		},
 		{
-			name:           "10 reps - Epley formula",
-			weight:         185.0,
-			reps:           10,
-			expectedMin:    245.0,
-			expectedMax:    250.0,
+			name:            "10 reps - Epley formula",
+			weight:          185.0,
+			reps:            10,
+			expectedMin:     245.0,
+			expectedMax:     250.0,
 			expectedFormula: FormulaEpley,
 		},
 		{
-			name:           "15 reps - Wathan formula",
-			weight:         135.0,
-			reps:           15,
-			expectedMin:    200.0,
-			expectedMax:    210.0,
+			name:            "15 reps - Wathan formula",
+			weight:          135.0,
+			reps:            15,
+			expectedMin:     200.0,
+			expectedMax:     210.0,
 			expectedFormula: FormulaWathan,
 		},
 		{
-			name:           "20 reps - Wathan formula",
-			weight:         115.0,
-			reps:           20,
-			expectedMin:    180.0,
-			expectedMax:    195.0,
+			name:            "20 reps - Wathan formula",
+			weight:          115.0,
+			reps:            20,
+			expectedMin:     180.0,
+			expectedMax:     195.0,
 			expectedFormula: FormulaWathan,
 		},
 		{
-			name:           "zero weight - invalid",
-			weight:         0,
-			reps:           5,
-			expectedMin:    0,
-			expectedMax:    0,
+			name:            "zero weight - invalid",
+			weight:          0,
+			reps:            5,
+			expectedMin:     0,
+			expectedMax:     0,
 			expectedFormula: "",
 		},
 		{
-			name:           "zero reps - invalid",
-			weight:         200.0,
-			reps:           0,
-			expectedMin:    0,
-			expectedMax:    0,
+			name:            "zero reps - invalid",
+			weight:          200.0,
+			reps:            0,
+			expectedMin:     0,
+			expectedMax:     0,
 			expectedFormula: "",
 		},
 	}
@@ -97,7 +97,7 @@ func TestCalculateEpley(t *testing.T) {
 		reps     int
 		expected float64
 	}{
-		{200.0, 5, 233.33}, // 200 * (1 + 5/30) = 233.33
+		{200.0, 5, 233.33},  // 200 * (1 + 5/30) = 233.33
 		{100.0, 10, 133.33}, // 100 * (1 + 10/30) = 133.33
 	}
 
@@ -155,34 +155,34 @@ func TestCalculateAllFormulas(t *testing.T) {
 
 func TestCompareToBaseline(t *testing.T) {
 	tests := []struct {
-		name         string
-		current1RM   float64
-		baseline1RM  float64
-		expectedPct  float64
+		name        string
+		current1RM  float64
+		baseline1RM float64
+		expectedPct float64
 	}{
 		{
-			name:         "10% improvement",
-			current1RM:   220.0,
-			baseline1RM:  200.0,
-			expectedPct:  10.0,
+			name:        "10% improvement",
+			current1RM:  220.0,
+			baseline1RM: 200.0,
+			expectedPct: 10.0,
 		},
 		{
-			name:         "no change",
-			current1RM:   200.0,
-			baseline1RM:  200.0,
-			expectedPct:  0.0,
+			name:        "no change",
+			current1RM:  200.0,
+			baseline1RM: 200.0,
+			expectedPct: 0.0,
 		},
 		{
-			name:         "5% decrease",
-			current1RM:   190.0,
-			baseline1RM:  200.0,
-			expectedPct:  -5.0,
+			name:        "5% decrease",
+			current1RM:  190.0,
+			baseline1RM: 200.0,
+			expectedPct: -5.0,
 		},
 		{
-			name:         "zero baseline - invalid",
-			current1RM:   220.0,
-			baseline1RM:  0,
-			expectedPct:  0.0,
+			name:        "zero baseline - invalid",
+			current1RM:  220.0,
+			baseline1RM: 0,
+			expectedPct: 0.0,
 		},
 	}
 

@@ -6,9 +6,9 @@ import "math"
 type Formula string
 
 const (
-	FormulaActual Formula = "Actual 1RM"           // For 1 rep max
-	FormulaEpley  Formula = "Epley (2-10 reps)"    // For moderate reps
-	FormulaWathan Formula = "Wathan (11+ reps)"    // For higher reps
+	FormulaActual Formula = "Actual 1RM"        // For 1 rep max
+	FormulaEpley  Formula = "Epley (2-10 reps)" // For moderate reps
+	FormulaWathan Formula = "Wathan (11+ reps)" // For higher reps
 )
 
 // Calculate1RM calculates the one-rep max using the hybrid approach
