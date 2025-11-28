@@ -45,6 +45,18 @@
               </div>
             </v-alert>
 
+            <!-- General Error Alert -->
+            <v-alert
+              v-if="generalError"
+              type="error"
+              variant="tonal"
+              closable
+              class="mb-4"
+              @click:close="generalError = ''"
+            >
+              {{ generalError }}
+            </v-alert>
+
             <v-form @submit.prevent="handleLogin">
               <v-text-field
                 v-model="email"
@@ -58,8 +70,10 @@
               <v-text-field
                 v-model="password"
                 label="Password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
+                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="showPassword = !showPassword"
                 required
                 :error-messages="errors.password"
                 class="mt-4"
@@ -116,16 +130,32 @@ const password = ref('')
 const rememberMe = ref(false)
 const loading = ref(false)
 const errors = ref({})
+const generalError = ref('')
 const accountLocked = ref(false)
 const rateLimited = ref(false)
 const errorMessage = ref('')
+const showPassword = ref(false)
 
 const handleLogin = async () => {
   errors.value = {}
+  generalError.value = ''
   accountLocked.value = false
   rateLimited.value = false
   errorMessage.value = ''
   loading.value = true
+
+  // Client-side validation
+  if (!email.value.trim()) {
+    errors.value.email = 'Email is required'
+    loading.value = false
+    return
+  }
+
+  if (!password.value) {
+    errors.value.password = 'Password is required'
+    loading.value = false
+    return
+  }
 
   const success = await authStore.login(email.value, password.value, rememberMe.value)
 
@@ -140,9 +170,12 @@ const handleLogin = async () => {
       accountLocked.value = true
     } else if (error.toLowerCase().includes('too many requests') || error.toLowerCase().includes('rate limit')) {
       rateLimited.value = true
+    } else if (error.toLowerCase().includes('invalid email or password') || error.toLowerCase().includes('invalid credentials')) {
+      // Show on both fields for security (don't reveal which is wrong)
+      generalError.value = 'Invalid email or password. Please check your credentials and try again.'
     } else {
-      // Regular login error
-      errors.value.email = error
+      // Show other errors as general error
+      generalError.value = error
     }
   }
 
