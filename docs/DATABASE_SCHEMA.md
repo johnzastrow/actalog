@@ -13,7 +13,17 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.12.1-beta
+**Current Version:** 0.12.2-beta
+
+## Recent Changes (v0.12.2-beta)
+
+- **No schema changes** in this release
+- **PWA Offline Functionality Fix**: Service worker and offline detection improvements
+  - Fixed service worker caching pattern for API endpoints
+  - Added robust offline detection in axios interceptor
+  - Added user-controlled PWA update mechanism
+  - Added offline save notification system
+- Frontend: New UpdatePrompt component and PWA state management store
 
 ## Recent Changes (v0.12.1-beta)
 

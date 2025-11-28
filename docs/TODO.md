@@ -1,5 +1,49 @@
 # TODO
 
+## v0.12.2-beta Release - COMPLETE ✅ (2025-11-28)
+
+**Status:** PWA offline functionality fix and user-controlled updates.
+
+### Completed ✅
+- [x] **PWA Offline Workout Recording**
+  - [x] Fixed service worker API caching pattern (was `/api/.*/*.json`, now `/api/(workouts|movements|wods|templates)/`)
+  - [x] Added robust offline detection (Network Error, ERR_NETWORK, navigator.onLine, timeout)
+  - [x] Extended offline handling to support PUT requests (workout updates)
+  - [x] Fixed request data parsing for offline sync queue
+  - [x] Added 24-hour cache for API responses when offline
+
+- [x] **User-Controlled PWA Updates**
+  - [x] Replaced disruptive silent auto-reload with user prompt
+  - [x] New `UpdatePrompt.vue` component with "Later" and "Update Now" buttons
+  - [x] New `pwa.js` Pinia store for PWA state management
+  - [x] Users can choose when to apply updates (prevents data loss)
+
+- [x] **Offline Save Notification**
+  - [x] Added "Saved Offline" snackbar notification in App.vue
+  - [x] Custom `offline-save` event dispatch for UI notification
+  - [x] Pending sync count tracking in network store
+
+- [x] **Unit Test Fixes**
+  - [x] Fixed `mockWODRepo.GetByName()` to return `nil, nil` when not found
+  - [x] Updated WOD tests to use `ErrWODOwnership` and `ErrWODUnauthorized`
+  - [x] Added required fields to Update tests (Source, Type, Regime, ScoreType)
+  - [x] Fixed Search test for empty query (returns empty by design)
+
+### Technical Details
+- **Build Number**: #1
+- **Files Created**:
+  - `web/src/components/UpdatePrompt.vue` (PWA update notification)
+  - `web/src/stores/pwa.js` (PWA state management)
+- **Files Modified**:
+  - `web/vite.config.js` (service worker caching patterns)
+  - `web/src/utils/axios.js` (offline detection and sync)
+  - `web/src/App.vue` (offline save notification, update prompt)
+  - `web/src/main.js` (PWA store integration)
+  - `internal/service/test_helpers.go` (mock fixes)
+  - `internal/service/wod_service_test.go` (test corrections)
+
+---
+
 ## v0.12.1-beta Release - COMPLETE ✅ (2025-11-28)
 
 **Status:** MySQL/MariaDB compatibility fix and Docker troubleshooting documentation.
