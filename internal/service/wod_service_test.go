@@ -39,9 +39,9 @@ func TestWODService_CreateWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			err := service.CreateWOD(tt.userID, tt.wod)
+			err := service.Create(tt.wod, tt.userID)
 
 			if tt.expectedError != nil {
 				if !errors.Is(err, tt.expectedError) {
@@ -114,9 +114,9 @@ func TestWODService_GetWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wod, err := service.GetWOD(tt.wodID)
+			wod, err := service.GetByID(tt.wodID)
 
 			if tt.expectedError {
 				if err == nil {
@@ -179,9 +179,9 @@ func TestWODService_GetWODByName(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wod, err := service.GetWODByName(tt.wodName)
+			wod, err := service.GetByName(tt.wodName)
 
 			if tt.expectedError {
 				if err == nil {
@@ -252,9 +252,9 @@ func TestWODService_ListStandardWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wods, err := service.ListStandardWODs()
+			wods, err := service.ListStandard(100, 0)
 
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
@@ -331,9 +331,9 @@ func TestWODService_ListUserWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wods, err := service.ListUserWODs(tt.userID)
+			wods, err := service.ListByUser(tt.userID, 100, 0)
 
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
@@ -404,9 +404,9 @@ func TestWODService_ListAllWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wods, err := service.ListAllWODs(tt.userID)
+			wods, err := service.ListAll(&tt.userID, 100, 0)
 
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
@@ -475,9 +475,9 @@ func TestWODService_SearchWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			wods, err := service.SearchWODs(tt.query)
+			wods, err := service.Search(tt.query, 100)
 
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
@@ -567,9 +567,10 @@ func TestWODService_UpdateWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			err := service.UpdateWOD(tt.wodID, tt.userID, tt.updates)
+			tt.updates.ID = tt.wodID
+			err := service.Update(tt.updates, tt.userID, "test@test.com")
 
 			if tt.expectedError != nil {
 				if !errors.Is(err, tt.expectedError) {
@@ -663,9 +664,9 @@ func TestWODService_DeleteWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo)
+			service := NewWODService(wodRepo, nil)
 
-			err := service.DeleteWOD(tt.wodID, tt.userID)
+			err := service.Delete(tt.wodID, tt.userID, "test@test.com")
 
 			if tt.expectedError != nil {
 				if !errors.Is(err, tt.expectedError) {

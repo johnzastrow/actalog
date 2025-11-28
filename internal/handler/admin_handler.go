@@ -87,7 +87,7 @@ func (h *AdminHandler) DetectWODScoreTypeMismatches(w http.ResponseWriter, r *ht
 
 	rows, err := h.db.Query(query)
 	if err != nil {
-		h.logger.Error("Failed to query WOD records", "error", err)
+		h.logger.Error("Failed to query WOD records: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to query WOD records"})
 		return
@@ -112,7 +112,7 @@ func (h *AdminHandler) DetectWODScoreTypeMismatches(w http.ResponseWriter, r *ht
 
 		err := rows.Scan(&id, &wodID, &timeSeconds, &rounds, &reps, &weight, &wodName, &scoreType, &userEmail, &workoutDate)
 		if err != nil {
-			h.logger.Error("Failed to scan WOD record", "error", err)
+			h.logger.Error("Failed to scan WOD record: %v", err)
 			continue
 		}
 
@@ -161,7 +161,7 @@ func (h *AdminHandler) DetectWODScoreTypeMismatches(w http.ResponseWriter, r *ht
 	}
 
 	if err := rows.Err(); err != nil {
-		h.logger.Error("Error iterating WOD records", "error", err)
+		h.logger.Error("Error iterating WOD records: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Error processing WOD records"})
 		return
@@ -185,7 +185,7 @@ func (h *AdminHandler) FixWODScoreTypeMismatches(w http.ResponseWriter, r *http.
 
 	rows, err := h.db.Query(query)
 	if err != nil {
-		h.logger.Error("Failed to query WOD records", "error", err)
+		h.logger.Error("Failed to query WOD records: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to query WOD records"})
 		return
@@ -207,7 +207,7 @@ func (h *AdminHandler) FixWODScoreTypeMismatches(w http.ResponseWriter, r *http.
 
 		err := rows.Scan(&id, &wodID, &timeSeconds, &rounds, &reps, &weight, &scoreType)
 		if err != nil {
-			h.logger.Error("Failed to scan WOD record", "error", err)
+			h.logger.Error("Failed to scan WOD record: %v", err)
 			continue
 		}
 
@@ -234,7 +234,7 @@ func (h *AdminHandler) FixWODScoreTypeMismatches(w http.ResponseWriter, r *http.
 	}
 
 	if err := rows.Err(); err != nil {
-		h.logger.Error("Error iterating WOD records", "error", err)
+		h.logger.Error("Error iterating WOD records: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Error processing WOD records"})
 		return
@@ -245,13 +245,13 @@ func (h *AdminHandler) FixWODScoreTypeMismatches(w http.ResponseWriter, r *http.
 	for _, id := range idsToDelete {
 		err := h.userWorkoutWODRepo.Delete(id)
 		if err != nil {
-			h.logger.Error("Failed to delete WOD record", "id", id, "error", err)
+			h.logger.Error("Failed to delete WOD record: id=%v error=%v", id, err)
 			continue
 		}
 		deletedCount++
 	}
 
-	h.logger.Info("Deleted mismatched WOD records", "count", deletedCount)
+	h.logger.Info("Deleted mismatched WOD records: count=%v", deletedCount)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -275,7 +275,7 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		h.logger.Error("Invalid record ID", "id", idStr, "error", err)
+		h.logger.Error("Invalid record ID: id=%v error=%v", idStr, err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid record ID"})
 		return
@@ -284,7 +284,7 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	var req UpdateWODRecordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("Failed to parse request body", "error", err)
+		h.logger.Error("Failed to parse request body: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request body"})
 		return
@@ -293,7 +293,7 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	// Get the existing record to find the WOD ID
 	existingRecord, err := h.userWorkoutWODRepo.GetByID(id)
 	if err != nil {
-		h.logger.Error("Failed to get existing WOD record", "id", id, "error", err)
+		h.logger.Error("Failed to get existing WOD record: id=%v error=%v", id, err)
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"message": "WOD record not found"})
 		return
@@ -302,7 +302,7 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	// Get the WOD definition to validate score_type
 	wod, err := h.wodRepo.GetByID(existingRecord.WODID)
 	if err != nil {
-		h.logger.Error("Failed to get WOD definition", "wod_id", existingRecord.WODID, "error", err)
+		h.logger.Error("Failed to get WOD definition: wod_id=%d error=%v", existingRecord.WODID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to get WOD definition"})
 		return
@@ -372,13 +372,13 @@ func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.userWorkoutWODRepo.Update(updatedRecord); err != nil {
-		h.logger.Error("Failed to update WOD record", "id", id, "error", err)
+		h.logger.Error("Failed to update WOD record: id=%v error=%v", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to update WOD record"})
 		return
 	}
 
-	h.logger.Info("Updated WOD record", "id", id, "wod_name", wod.Name, "score_type", scoreType)
+	h.logger.Info("Updated WOD record: id=%v wod_name=%v score_type=%v", id, wod.Name, scoreType)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -417,7 +417,7 @@ func (h *AdminHandler) ListUserCreatedWODs(w http.ResponseWriter, r *http.Reques
 
 	wods, count, err := h.wodService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, scoreType, creator)
 	if err != nil {
-		h.logger.Error("Failed to list user-created WODs", "error", err)
+		h.logger.Error("Failed to list user-created WODs: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created WODs"})
 		return
@@ -436,7 +436,7 @@ func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request)
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		h.logger.Error("Invalid WOD ID", "id", idStr, "error", err)
+		h.logger.Error("Invalid WOD ID: id=%v error=%v", idStr, err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid WOD ID"})
 		return
@@ -445,7 +445,7 @@ func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request)
 	// Parse request body
 	var req CopyToStandardRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("Failed to parse request body", "error", err)
+		h.logger.Error("Failed to parse request body: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
@@ -454,7 +454,7 @@ func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request)
 	// Copy to standard
 	wod, err := h.wodService.CopyToStandard(id, req.NewName)
 	if err != nil {
-		h.logger.Error("Failed to copy WOD to standard", "id", id, "error", err)
+		h.logger.Error("Failed to copy WOD to standard: id=%v error=%v", id, err)
 		// Check if it's a duplicate name error
 		if strings.Contains(err.Error(), "already exists") {
 			w.WriteHeader(http.StatusConflict)
@@ -467,7 +467,7 @@ func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.logger.Info("Converted WOD to standard", "source_id", id, "new_id", wod.ID, "name", wod.Name)
+	h.logger.Info("Converted WOD to standard: source_id=%v new_id=%v name=%v", id, wod.ID, wod.Name)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -497,7 +497,7 @@ func (h *AdminHandler) ListUserCreatedMovements(w http.ResponseWriter, r *http.R
 
 	movements, count, err := h.movementService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, movementType, creator)
 	if err != nil {
-		h.logger.Error("Failed to list user-created movements", "error", err)
+		h.logger.Error("Failed to list user-created movements: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created movements"})
 		return
@@ -516,7 +516,7 @@ func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Req
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		h.logger.Error("Invalid movement ID", "id", idStr, "error", err)
+		h.logger.Error("Invalid movement ID: id=%v error=%v", idStr, err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid movement ID"})
 		return
@@ -525,7 +525,7 @@ func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Req
 	// Parse request body
 	var req CopyToStandardRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("Failed to parse request body", "error", err)
+		h.logger.Error("Failed to parse request body: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
@@ -534,7 +534,7 @@ func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Req
 	// Copy to standard
 	movement, err := h.movementService.CopyToStandard(id, req.NewName)
 	if err != nil {
-		h.logger.Error("Failed to copy movement to standard", "id", id, "error", err)
+		h.logger.Error("Failed to copy movement to standard: id=%v error=%v", id, err)
 		// Check if it's a duplicate name error
 		if strings.Contains(err.Error(), "already exists") {
 			w.WriteHeader(http.StatusConflict)
@@ -547,7 +547,7 @@ func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	h.logger.Info("Converted movement to standard", "source_id", id, "new_id", movement.ID, "name", movement.Name)
+	h.logger.Info("Converted movement to standard: source_id=%v new_id=%v name=%v", id, movement.ID, movement.Name)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -576,7 +576,7 @@ func (h *AdminHandler) ListUserCreatedWorkouts(w http.ResponseWriter, r *http.Re
 
 	workouts, count, err := h.workoutTemplateService.ListAllUserCreatedWithUserInfoFiltered(limit, offset, search, creator)
 	if err != nil {
-		h.logger.Error("Failed to list user-created workouts", "error", err)
+		h.logger.Error("Failed to list user-created workouts: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to list user-created workouts"})
 		return
@@ -595,7 +595,7 @@ func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Requ
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		h.logger.Error("Invalid workout ID", "id", idStr, "error", err)
+		h.logger.Error("Invalid workout ID: id=%v error=%v", idStr, err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid workout ID"})
 		return
@@ -604,7 +604,7 @@ func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Requ
 	// Parse request body
 	var req CopyToStandardRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.logger.Error("Failed to parse request body", "error", err)
+		h.logger.Error("Failed to parse request body: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
@@ -613,7 +613,7 @@ func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Requ
 	// Copy to standard
 	workout, err := h.workoutTemplateService.CopyToStandard(id, req.NewName)
 	if err != nil {
-		h.logger.Error("Failed to copy workout to standard", "id", id, "error", err)
+		h.logger.Error("Failed to copy workout to standard: id=%v error=%v", id, err)
 		// Check if it's a duplicate name error
 		if strings.Contains(err.Error(), "already exists") {
 			w.WriteHeader(http.StatusConflict)
@@ -626,7 +626,7 @@ func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	h.logger.Info("Converted workout to standard", "source_id", id, "new_id", workout.ID, "name", workout.Name)
+	h.logger.Info("Converted workout to standard: source_id=%v new_id=%v name=%v", id, workout.ID, workout.Name)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

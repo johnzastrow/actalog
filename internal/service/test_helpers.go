@@ -268,6 +268,53 @@ func (m *mockWorkoutRepo) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsa
 	}, nil
 }
 
+func (m *mockWorkoutRepo) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
+	var result []*domain.Workout
+	for _, w := range m.workouts {
+		if w.CreatedBy != nil {
+			result = append(result, w)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWorkoutRepo) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
+	return []*domain.WorkoutWithCreator{}, nil
+}
+
+func (m *mockWorkoutRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
+	return []*domain.WorkoutWithCreator{}, 0, nil
+}
+
+func (m *mockWorkoutRepo) CountAllUserCreated() (int64, error) {
+	count := int64(0)
+	for _, w := range m.workouts {
+		if w.CreatedBy != nil {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockWorkoutRepo) CopyToStandard(id int64, newName string) (*domain.Workout, error) {
+	w, err := m.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if w == nil {
+		return nil, sql.ErrNoRows
+	}
+	newWorkout := &domain.Workout{
+		Name:      newName,
+		Notes:     w.Notes,
+		CreatedBy: nil, // Standard workout
+	}
+	if err := m.Create(newWorkout); err != nil {
+		return nil, err
+	}
+	return newWorkout, nil
+}
+
 // Mock WorkoutMovementRepository
 type mockWorkoutMovementRepo struct{}
 
@@ -316,6 +363,96 @@ func (m *mockWorkoutMovementRepo) ListByWorkout(workoutID int64) ([]*domain.Work
 }
 
 func (m *mockWorkoutMovementRepo) DeleteByWorkout(workoutID int64) error {
+	return nil
+}
+
+// Mock UserWorkoutMovementRepository
+type mockUserWorkoutMovementRepo struct{}
+
+func (m *mockUserWorkoutMovementRepo) Create(uwm *domain.UserWorkoutMovement) error {
+	return nil
+}
+
+func (m *mockUserWorkoutMovementRepo) CreateBatch(movements []*domain.UserWorkoutMovement) error {
+	return nil
+}
+
+func (m *mockUserWorkoutMovementRepo) GetByID(id int64) (*domain.UserWorkoutMovement, error) {
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockUserWorkoutMovementRepo) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutMovement, error) {
+	return []*domain.UserWorkoutMovement{}, nil
+}
+
+func (m *mockUserWorkoutMovementRepo) Update(uwm *domain.UserWorkoutMovement) error {
+	return nil
+}
+
+func (m *mockUserWorkoutMovementRepo) Delete(id int64) error {
+	return nil
+}
+
+func (m *mockUserWorkoutMovementRepo) DeleteByUserWorkoutID(userWorkoutID int64) error {
+	return nil
+}
+
+func (m *mockUserWorkoutMovementRepo) GetMaxWeightForMovement(userID, movementID int64) (*float64, error) {
+	return nil, nil
+}
+
+func (m *mockUserWorkoutMovementRepo) GetPRMovements(userID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
+	return []*domain.UserWorkoutMovement{}, nil
+}
+
+func (m *mockUserWorkoutMovementRepo) UpdatePRFlag(id int64, isPR bool) error {
+	return nil
+}
+
+// Mock UserWorkoutWODRepository
+type mockUserWorkoutWODRepo struct{}
+
+func (m *mockUserWorkoutWODRepo) Create(uww *domain.UserWorkoutWOD) error {
+	return nil
+}
+
+func (m *mockUserWorkoutWODRepo) CreateBatch(wods []*domain.UserWorkoutWOD) error {
+	return nil
+}
+
+func (m *mockUserWorkoutWODRepo) GetByID(id int64) (*domain.UserWorkoutWOD, error) {
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockUserWorkoutWODRepo) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutWOD, error) {
+	return []*domain.UserWorkoutWOD{}, nil
+}
+
+func (m *mockUserWorkoutWODRepo) Update(uww *domain.UserWorkoutWOD) error {
+	return nil
+}
+
+func (m *mockUserWorkoutWODRepo) Delete(id int64) error {
+	return nil
+}
+
+func (m *mockUserWorkoutWODRepo) DeleteByUserWorkoutID(userWorkoutID int64) error {
+	return nil
+}
+
+func (m *mockUserWorkoutWODRepo) GetBestTimeForWOD(userID, wodID int64) (*int, error) {
+	return nil, nil
+}
+
+func (m *mockUserWorkoutWODRepo) GetBestRoundsRepsForWOD(userID, wodID int64) (rounds *int, reps *int, err error) {
+	return nil, nil, nil
+}
+
+func (m *mockUserWorkoutWODRepo) GetPRWODs(userID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
+	return []*domain.UserWorkoutWOD{}, nil
+}
+
+func (m *mockUserWorkoutWODRepo) UpdatePRFlag(id int64, isPR bool) error {
 	return nil
 }
 
@@ -379,7 +516,7 @@ func (m *mockWODRepo) GetByName(name string) (*domain.WOD, error) {
 	return nil, sql.ErrNoRows
 }
 
-func (m *mockWODRepo) List(filters map[string]interface{}) ([]*domain.WOD, error) {
+func (m *mockWODRepo) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {
 	var result []*domain.WOD
 	for _, wod := range m.wods {
 		result = append(result, wod)
@@ -387,7 +524,7 @@ func (m *mockWODRepo) List(filters map[string]interface{}) ([]*domain.WOD, error
 	return result, nil
 }
 
-func (m *mockWODRepo) ListStandard() ([]*domain.WOD, error) {
+func (m *mockWODRepo) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 	var result []*domain.WOD
 	for _, wod := range m.wods {
 		if wod.IsStandard {
@@ -397,7 +534,7 @@ func (m *mockWODRepo) ListStandard() ([]*domain.WOD, error) {
 	return result, nil
 }
 
-func (m *mockWODRepo) ListByUser(userID int64) ([]*domain.WOD, error) {
+func (m *mockWODRepo) ListByUser(userID int64, limit, offset int) ([]*domain.WOD, error) {
 	var result []*domain.WOD
 	for _, wod := range m.wods {
 		if wod.CreatedBy != nil && *wod.CreatedBy == userID {
@@ -405,6 +542,45 @@ func (m *mockWODRepo) ListByUser(userID int64) ([]*domain.WOD, error) {
 		}
 	}
 	return result, nil
+}
+
+func (m *mockWODRepo) ListAllUserCreated(limit, offset int) ([]*domain.WOD, error) {
+	var result []*domain.WOD
+	for _, wod := range m.wods {
+		if wod.CreatedBy != nil {
+			result = append(result, wod)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWODRepo) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WODWithCreator, error) {
+	return []*domain.WODWithCreator{}, nil
+}
+
+func (m *mockWODRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, scoreType, creator string) ([]*domain.WODWithCreator, int64, error) {
+	return []*domain.WODWithCreator{}, 0, nil
+}
+
+func (m *mockWODRepo) CountAllUserCreated() (int64, error) {
+	count := int64(0)
+	for _, wod := range m.wods {
+		if wod.CreatedBy != nil {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockWODRepo) UpdateStandard(wod *domain.WOD) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
+	if _, ok := m.wods[wod.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.wods[wod.ID] = wod
+	return nil
 }
 
 func (m *mockWODRepo) Update(wod *domain.WOD) error {
@@ -429,7 +605,7 @@ func (m *mockWODRepo) Delete(id int64) error {
 	return nil
 }
 
-func (m *mockWODRepo) Search(query string) ([]*domain.WOD, error) {
+func (m *mockWODRepo) Search(query string, limit int) ([]*domain.WOD, error) {
 	var result []*domain.WOD
 	for _, wod := range m.wods {
 		// Simple case-insensitive substring match
@@ -438,6 +614,23 @@ func (m *mockWODRepo) Search(query string) ([]*domain.WOD, error) {
 		}
 	}
 	return result, nil
+}
+
+func (m *mockWODRepo) CopyToStandard(id int64, newName string) (*domain.WOD, error) {
+	wod, err := m.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	newWOD := &domain.WOD{
+		Name:       newName,
+		ScoreType:  wod.ScoreType,
+		IsStandard: true,
+		CreatedBy:  nil,
+	}
+	if err := m.Create(newWOD); err != nil {
+		return nil, err
+	}
+	return newWOD, nil
 }
 
 // Helper function for simple case-insensitive string matching

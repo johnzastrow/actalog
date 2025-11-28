@@ -89,6 +89,82 @@ func (m *mockUserRepo) Count() (int64, error) {
 	return int64(len(m.users)), nil
 }
 
+func (m *mockUserRepo) UpdatePassword(userID int64, hashedPassword string) error {
+	if user, ok := m.users[userID]; ok {
+		user.PasswordHash = hashedPassword
+		user.UpdatedAt = time.Now()
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) IncrementFailedAttempts(userID int64) error {
+	if user, ok := m.users[userID]; ok {
+		user.FailedLoginAttempts++
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) ResetFailedAttempts(userID int64) error {
+	if user, ok := m.users[userID]; ok {
+		user.FailedLoginAttempts = 0
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) LockAccount(userID int64, lockDuration time.Duration) error {
+	if user, ok := m.users[userID]; ok {
+		lockTime := time.Now().Add(lockDuration)
+		user.LockedUntil = &lockTime
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) UnlockAccount(userID int64) error {
+	if user, ok := m.users[userID]; ok {
+		user.LockedUntil = nil
+		user.FailedLoginAttempts = 0
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) IsAccountLocked(userID int64) (bool, *time.Time, error) {
+	if user, ok := m.users[userID]; ok {
+		if user.LockedUntil != nil && user.LockedUntil.After(time.Now()) {
+			return true, user.LockedUntil, nil
+		}
+		return false, nil, nil
+	}
+	return false, nil, sql.ErrNoRows
+}
+
+func (m *mockUserRepo) DisableAccount(userID int64, disabledBy int64, reason string) error {
+	if user, ok := m.users[userID]; ok {
+		user.AccountDisabled = true
+		user.DisableReason = &reason
+		user.DisabledByUserID = &disabledBy
+		now := time.Now()
+		user.DisabledAt = &now
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) EnableAccount(userID int64) error {
+	if user, ok := m.users[userID]; ok {
+		user.AccountDisabled = false
+		user.DisableReason = nil
+		user.DisabledByUserID = nil
+		user.DisabledAt = nil
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
 // Mock email service
 type mockEmailService struct {
 	sentEmails []mockEmail
@@ -192,6 +268,7 @@ func newTestUserService(allowRegistration bool) *UserService {
 	return NewUserService(
 		&mockUserRepo{users: make(map[int64]*domain.User), nextID: 0},
 		&mockRefreshTokenRepo{tokens: make(map[string]*domain.RefreshToken)},
+		nil, // no audit log service for tests
 		"test-secret-key",
 		24*time.Hour,
 		7*24*time.Hour, // 7 days refresh token duration
@@ -199,6 +276,8 @@ func newTestUserService(allowRegistration bool) *UserService {
 		&mockEmailService{},
 		"http://localhost:3000",
 		false, // Don't require email verification in tests
+		5,     // max login attempts
+		15*time.Minute, // lockout duration
 	)
 }
 
