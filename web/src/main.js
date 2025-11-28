@@ -4,19 +4,30 @@ import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import { registerSW } from 'virtual:pwa-register'
+import { usePwaStore } from '@/stores/pwa'
 
 import './assets/main.css'
 
-// Register Service Worker for PWA with silent auto-update
-// When a new version is detected, immediately reload the page
+const app = createApp(App)
+const pinia = createPinia()
+
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
+
+// Initialize PWA store (must be after pinia is installed)
+const pwaStore = usePwaStore()
+
+// Register Service Worker for PWA with user-controlled updates
+// Instead of auto-reloading, we notify the user and let them choose when to update
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Silent auto-reload: immediately activate new service worker and reload
-    console.log('New version available, reloading...')
-    updateSW(true)
+    console.log('New version available')
+    pwaStore.setNeedsRefresh(true)
   },
   onOfflineReady() {
     console.log('App ready to work offline')
+    pwaStore.setOfflineReady(true)
   },
   // Check for updates every 60 seconds when the app is open
   onRegisteredSW(swUrl, registration) {
@@ -28,10 +39,7 @@ const updateSW = registerSW({
   }
 })
 
-const app = createApp(App)
-
-app.use(createPinia())
-app.use(router)
-app.use(vuetify)
+// Store the update function so the PWA store can trigger it
+pwaStore.setUpdateFunction(updateSW)
 
 app.mount('#app')

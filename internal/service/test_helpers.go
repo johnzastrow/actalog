@@ -513,7 +513,8 @@ func (m *mockWODRepo) GetByName(name string) (*domain.WOD, error) {
 			return wod, nil
 		}
 	}
-	return nil, sql.ErrNoRows
+	// Return nil, nil when not found (not sql.ErrNoRows) to match repository behavior
+	return nil, nil
 }
 
 func (m *mockWODRepo) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {

@@ -173,21 +173,38 @@ export default defineConfig({
               }
             }
           },
-          {
-            urlPattern: /\/api\/.*\/*.json/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5 // 5 minutes
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              },
-              networkTimeoutSeconds: 10
-            }
+          // Cache API GET requests for offline access
+        {
+          urlPattern: /\/api\/(workouts|movements|wods|templates)/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24 // 24 hours for offline access
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            },
+            networkTimeoutSeconds: 5
           }
+        },
+        // Cache user-specific data with shorter expiration
+        {
+          urlPattern: /\/api\/user/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'user-api-cache',
+            expiration: {
+              maxEntries: 20,
+              maxAgeSeconds: 60 * 30 // 30 minutes
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            },
+            networkTimeoutSeconds: 5
+          }
+        }
         ]
       },
       devOptions: {
