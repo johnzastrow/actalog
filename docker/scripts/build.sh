@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 # ============================================================================
 # Description: A short text description of the image (max 512 characters)
 # This will appear on the GitHub package page below the package name
-IMAGE_DESCRIPTION="ActaLog - A mobile-first CrossFit workout tracker. Track WODs, strength training, personal records, and workout history. Built with Go backend (Chi router, SQLite/PostgreSQL) and Vue.js 3 frontend with Vuetify 3."
+IMAGE_DESCRIPTION="ActaLog - A mobile-first CrossFit workout tracker. Track WODs, strength training, personal records, and workout history. Built with Go backend (Chi router, SQLite/MariaDB/PostgreSQL) and Vue.js 3 frontend with Vuetify 3."
 
 # Vendor/Organization name
 IMAGE_VENDOR="John Zastrow"
