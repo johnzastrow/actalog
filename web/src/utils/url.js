@@ -52,21 +52,10 @@ export function getAssetUrl(path) {
     return path
   }
 
-  // In production, construct full URL
-  // Assumes backend is on the same host, port 8080
-  const protocol = window.location.protocol
-  const hostname = window.location.hostname
-
-  // If accessing via standard HTTP/HTTPS ports, backend is likely on 8080
-  // Otherwise, use the same port as the frontend
-  let port = '8080'
-  if (window.location.port && window.location.port !== '80' && window.location.port !== '443') {
-    // Custom port - backend might be on the same port or a different one
-    // This is configurable via VITE_API_BASE_URL environment variable
-    port = window.location.port
-  }
-
-  return `${protocol}//${hostname}:${port}${path}`
+  // In production, construct full URL using the same host as the frontend
+  // When behind a reverse proxy (nginx/Caddy), use the same protocol/host/port
+  // as the current page - the proxy will route /uploads to the backend
+  return `${window.location.origin}${path}`
 }
 
 /**
