@@ -1,6 +1,6 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.12.1-beta
+**Current Version:** 0.12.2-beta
 **Last Updated:** 2025-11-28
 **Overall Completion:** ~90% of core requirements
 
@@ -8,13 +8,30 @@
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.1-beta) fixes critical **MySQL/MariaDB compatibility issues** with database-agnostic timestamp functions and adds comprehensive **Docker host database troubleshooting documentation**. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.2-beta) fixes critical **PWA offline functionality** with proper service worker caching, robust offline detection, and user-controlled updates. Users can now reliably record workouts offline and choose when to apply PWA updates. The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
 
 ---
 
 ## Version History & Status
 
-### v0.12.1-beta (Current - Released)
+### v0.12.2-beta (Current - Released)
+**Status:** PWA offline functionality fix and user-controlled updates
+
+**Completed:**
+- ✅ Fixed service worker API caching pattern for offline access
+- ✅ Added robust offline detection (multiple error indicators)
+- ✅ Replaced silent auto-reload with user-controlled PWA updates
+- ✅ Added offline save notification snackbar
+- ✅ New UpdatePrompt component and PWA state management store
+- ✅ Fixed WOD service unit tests
+
+**Technical Highlights:**
+- Service worker now correctly caches `/api/workouts`, `/api/movements`, `/api/wods`, `/api/templates`
+- Axios interceptor detects offline via `Network Error`, `ERR_NETWORK`, `navigator.onLine`, and timeout
+- Users see "Update Available" prompt with "Later" and "Update Now" options
+- Workouts saved offline show "Saved Offline" notification
+
+### v0.12.1-beta (Released)
 **Status:** MySQL/MariaDB compatibility fix and Docker troubleshooting documentation
 
 **Completed:**

@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2-beta] - 2025-11-28
+
+### Fixed - PWA Offline Functionality
+
+**Offline Workout Recording:**
+- Fixed service worker API caching pattern (was `/api/.*/*.json`, now correctly caches `/api/workouts`, `/api/movements`, `/api/wods`, `/api/templates`)
+- Added robust offline detection in axios interceptor (checks multiple error indicators: `Network Error`, `ERR_NETWORK`, `navigator.onLine`, timeout)
+- Extended offline handling to support PUT requests (workout updates) in addition to POST
+- Fixed request data parsing for offline sync queue
+
+**User-Controlled PWA Updates:**
+- Replaced disruptive silent auto-reload with user-controlled updates
+- New `UpdatePrompt.vue` component shows "Update Available" snackbar with "Later" and "Update Now" buttons
+- New `pwa.js` Pinia store manages PWA update state
+- Users can choose when to apply updates, preventing data loss during form entry
+
+**Offline Save Notification:**
+- Added "Saved Offline" snackbar notification when workouts are saved locally
+- Dispatches custom `offline-save` event for UI notification
+- Automatically increments pending sync count in network store
+
+### Fixed - Unit Tests
+
+**WOD Service Tests:**
+- Fixed `mockWODRepo.GetByName()` to return `nil, nil` instead of `sql.ErrNoRows` when WOD not found
+- Updated test cases to use correct error types (`ErrWODOwnership`, `ErrWODUnauthorized`)
+- Added required fields (Source, Type, Regime, ScoreType) to Update tests
+- Fixed Search test expectation for empty query (service returns empty by design)
+
+### Technical Details
+- **Build**: #1 (reset for new patch version)
+- **Version**: 0.12.1-beta → 0.12.2-beta
+- **Files Created**:
+  - `web/src/components/UpdatePrompt.vue` (PWA update notification component)
+  - `web/src/stores/pwa.js` (PWA state management)
+- **Files Modified**:
+  - `web/vite.config.js` (service worker caching patterns)
+  - `web/src/utils/axios.js` (offline detection and sync)
+  - `web/src/App.vue` (offline save notification, update prompt)
+  - `web/src/main.js` (PWA store integration)
+  - `internal/service/test_helpers.go` (mock fixes)
+  - `internal/service/wod_service_test.go` (test corrections)
+
+---
+
 ## [0.12.1-beta] - 2025-11-28
 
 ### Fixed - MySQL/MariaDB Compatibility

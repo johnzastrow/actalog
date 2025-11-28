@@ -1,7 +1,7 @@
 # ActaLog - User Help Documentation
 
-**Version:** 0.11.0-beta
-**Last Updated:** 2025-11-26
+**Version:** 0.12.2-beta
+**Last Updated:** 2025-11-28
 
 Welcome to ActaLog, your mobile-first CrossFit workout tracker! This guide will help you get the most out of the application.
 
@@ -456,6 +456,19 @@ Once installed, ActaLog works offline:
 - **View your history** and stats
 - **Workouts sync automatically** when connection returns
 - **Background sync queue** ensures no data is lost
+
+**Offline Notifications:**
+- When you save a workout offline, you'll see a **"Saved Offline"** notification at the top of the screen
+- This confirms your workout was saved locally and will sync when you're back online
+- The app shows a sync indicator when there are pending offline items
+
+### App Updates
+
+ActaLog uses a user-friendly update system:
+- When a new version is available, you'll see an **"Update Available"** notification
+- Click **"Update Now"** to apply the update immediately
+- Click **"Later"** to continue working and update when convenient
+- This prevents losing unsaved data during form entry
 
 ---
 
