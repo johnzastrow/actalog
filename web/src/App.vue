@@ -106,12 +106,41 @@
       </div>
     </v-snackbar>
 
+    <!-- Offline Save Notification -->
+    <v-snackbar
+      v-model="showOfflineSaveNotification"
+      :timeout="4000"
+      location="top"
+      color="info"
+      elevation="8"
+    >
+      <div class="d-flex align-center">
+        <v-icon start>mdi-content-save-outline</v-icon>
+        <div>
+          <strong>Saved Offline</strong>
+          <div class="text-caption">{{ offlineSaveMessage }}</div>
+        </div>
+      </div>
+      <template v-slot:actions>
+        <v-btn
+          variant="text"
+          size="small"
+          @click="showOfflineSaveNotification = false"
+        >
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <v-main :style="mainStyle">
       <router-view />
     </v-main>
 
     <!-- Install Prompt -->
     <InstallPrompt v-if="authStore.isAuthenticated" />
+
+    <!-- PWA Update Prompt -->
+    <UpdatePrompt />
 
     <!-- Bottom Navigation (only show when authenticated) -->
     <v-bottom-navigation
@@ -164,12 +193,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
 import { useNetworkStore } from '@/stores/network'
 import InstallPrompt from '@/components/InstallPrompt.vue'
+import UpdatePrompt from '@/components/UpdatePrompt.vue'
 
 const route = useRoute()
 const theme = useTheme()
@@ -178,6 +208,10 @@ const networkStore = useNetworkStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
+
+// Offline save notification state
+const showOfflineSaveNotification = ref(false)
+const offlineSaveMessage = ref('')
 
 // Reactive user avatar - watches auth store for changes
 const userAvatar = computed(() => {
@@ -224,6 +258,14 @@ function updateCurrentDate() {
   })
 }
 
+// Handle offline save events
+function handleOfflineSave(event) {
+  offlineSaveMessage.value = event.detail?.message || 'Saved offline. Will sync when back online.'
+  showOfflineSaveNotification.value = true
+  // Update pending sync count
+  networkStore.incrementPendingSync()
+}
+
 // Check for user's preferred theme
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
@@ -238,6 +280,13 @@ onMounted(() => {
 
   // Initialize network status listeners
   networkStore.initNetworkListeners()
+
+  // Listen for offline save events
+  window.addEventListener('offline-save', handleOfflineSave)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('offline-save', handleOfflineSave)
 })
 </script>
 
