@@ -264,40 +264,283 @@ docker compose exec actalog sqlite3 /app/data/actalog.db "VACUUM;"
 
 ## External Database (Not in Docker)
 
-To use an existing external database:
+You can use ActaLog with an existing database server running on:
+- **Host machine** (accessed via `host.docker.internal` or host IP)
+- **Another server** on your network (accessed via IP/hostname)
+- **Cloud database** (RDS, Cloud SQL, etc.)
 
-### PostgreSQL External
+This is useful when you:
+- Already have a database server running
+- Want to share a database between multiple applications
+- Need database features not available in containers
+- Prefer to manage the database separately
 
-```yaml
-# docker-compose.external-postgres.yml
-services:
-  actalog:
-    image: ghcr.io/yourusername/actalog:latest
-    environment:
-      - DB_DRIVER=postgres
-      - DB_HOST=192.168.1.100  # External host
-      - DB_PORT=5432
-      - DB_NAME=actalog
-      - DB_USER=actalog
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_SSLMODE=require     # For production
+### Option 1: Using Host Database Server
+
+The Docker container can connect to a database server running on the host machine.
+
+#### MariaDB/MySQL on Host
+
+**1. Configure host database for remote connections:**
+
+Edit MariaDB config (e.g., `/etc/mysql/mariadb.conf.d/50-server.cnf`):
+```ini
+[mysqld]
+bind-address = 0.0.0.0    # Or specific IP
 ```
 
-### MariaDB External
+Restart MariaDB:
+```bash
+sudo systemctl restart mariadb
+```
+
+**2. Create database and user:**
+```sql
+CREATE DATABASE actalog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'actalog'@'%' IDENTIFIED BY 'yourpassword';
+GRANT ALL PRIVILEGES ON actalog.* TO 'actalog'@'%';
+FLUSH PRIVILEGES;
+```
+
+**3. Create docker-compose.yml for external host database:**
 
 ```yaml
-# docker-compose.external-mariadb.yml
+# docker-compose.external-host.yml
+version: '3.8'
+
 services:
   actalog:
     image: ghcr.io/yourusername/actalog:latest
+    container_name: actalog
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
+      # Connect to host database
       - DB_DRIVER=mysql
-      - DB_HOST=192.168.1.101  # External host
+      - DB_HOST=host.docker.internal  # Docker Desktop (Mac/Windows)
+      # - DB_HOST=172.17.0.1          # Linux (default bridge IP)
+      # - DB_HOST=192.168.1.100       # Or use host's actual IP
       - DB_PORT=3306
       - DB_NAME=actalog
       - DB_USER=actalog
       - DB_PASSWORD=${DB_PASSWORD}
+
+      # Application config
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
+
+      # Optional: automatic seed import
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+
+    volumes:
+      - actalog-uploads:/app/uploads
+
+    # No database container needed!
+
+volumes:
+  actalog-uploads:
 ```
+
+**4. Create .env file:**
+```env
+GITHUB_OWNER=yourusername
+TAG=latest
+DB_PASSWORD=yourpassword
+JWT_SECRET=your_secure_random_string_here
+APP_URL=https://al.fluidgrid.site
+CORS_ORIGINS=https://al.fluidgrid.site
+```
+
+**5. Start ActaLog:**
+```bash
+docker compose -f docker-compose.external-host.yml up -d
+```
+
+**6. Verify connection:**
+```bash
+# Check logs for successful database connection
+docker compose logs -f
+
+# Should see:
+# Database initialized successfully
+# Server listening on :8080
+```
+
+#### PostgreSQL on Host
+
+Same process, but with PostgreSQL-specific configuration:
+
+**1. Configure PostgreSQL for remote connections:**
+
+Edit `postgresql.conf`:
+```ini
+listen_addresses = '*'
+```
+
+Edit `pg_hba.conf`:
+```
+# Allow connections from Docker containers
+host    actalog    actalog    172.17.0.0/16    md5
+```
+
+Restart PostgreSQL:
+```bash
+sudo systemctl restart postgresql
+```
+
+**2. Create database and user:**
+```sql
+CREATE DATABASE actalog;
+CREATE USER actalog WITH PASSWORD 'yourpassword';
+GRANT ALL PRIVILEGES ON DATABASE actalog TO actalog;
+```
+
+**3. Update docker-compose.yml:**
+```yaml
+environment:
+  - DB_DRIVER=postgres
+  - DB_HOST=host.docker.internal  # Or host IP
+  - DB_PORT=5432
+  - DB_NAME=actalog
+  - DB_USER=actalog
+  - DB_PASSWORD=${DB_PASSWORD}
+  - DB_SSLMODE=disable  # Or 'require' for production
+```
+
+### Option 2: Using Database on Another Server
+
+If your database is on a different machine on the network:
+
+```yaml
+# docker-compose.external-network.yml
+version: '3.8'
+
+services:
+  actalog:
+    image: ghcr.io/yourusername/actalog:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # MariaDB on network
+      - DB_DRIVER=mysql
+      - DB_HOST=192.168.1.100      # Database server IP
+      - DB_PORT=3306
+      - DB_NAME=actalog
+      - DB_USER=actalog
+      - DB_PASSWORD=${DB_PASSWORD}
+
+      # OR PostgreSQL on network
+      # - DB_DRIVER=postgres
+      # - DB_HOST=db.example.com    # Can use hostname
+      # - DB_PORT=5432
+
+      # App config
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_URL=${APP_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+
+    volumes:
+      - actalog-uploads:/app/uploads
+
+volumes:
+  actalog-uploads:
+```
+
+Ensure the database server:
+- Allows connections from the Docker host IP
+- Has appropriate firewall rules (port 3306/5432 open)
+- Has database and user created with proper permissions
+
+### Troubleshooting External Databases
+
+#### "Connection refused" errors
+
+**Check connectivity from container:**
+```bash
+# Test from within container
+docker exec -it actalog sh
+
+# For MariaDB/MySQL
+apk add mariadb-client
+mysql -h host.docker.internal -u actalog -p actalog
+
+# For PostgreSQL
+apk add postgresql-client
+psql -h host.docker.internal -U actalog -d actalog
+```
+
+**Check from host:**
+```bash
+# Verify database is listening
+sudo netstat -tlnp | grep 3306   # MySQL/MariaDB
+sudo netstat -tlnp | grep 5432   # PostgreSQL
+
+# Test connection from host
+mysql -h 127.0.0.1 -u actalog -p actalog
+psql -h 127.0.0.1 -U actalog -d actalog
+```
+
+#### "host.docker.internal" not resolving (Linux)
+
+On Linux, `host.docker.internal` doesn't work by default. Options:
+
+**Option 1: Use actual host IP**
+```yaml
+- DB_HOST=192.168.1.100  # Replace with your host's IP
+```
+
+**Option 2: Use Docker bridge IP**
+```yaml
+- DB_HOST=172.17.0.1  # Default Docker bridge gateway
+```
+
+**Option 3: Add extra host to docker-compose**
+```yaml
+services:
+  actalog:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DB_HOST=host.docker.internal
+```
+
+#### Permission denied errors
+
+**MariaDB/MySQL:**
+```sql
+-- Check user grants
+SHOW GRANTS FOR 'actalog'@'%';
+
+-- Recreate user if needed
+DROP USER 'actalog'@'%';
+CREATE USER 'actalog'@'%' IDENTIFIED BY 'yourpassword';
+GRANT ALL PRIVILEGES ON actalog.* TO 'actalog'@'%';
+FLUSH PRIVILEGES;
+```
+
+**PostgreSQL:**
+```sql
+-- Check user permissions
+\du actalog
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON DATABASE actalog TO actalog;
+GRANT ALL ON SCHEMA public TO actalog;
+```
+
+### When to Use External vs Containerized Database
+
+| Use External Database When | Use Containerized Database When |
+|---------------------------|--------------------------------|
+| Already have DB server running | Starting fresh deployment |
+| Multiple apps share database | Single application |
+| Need specific DB version/config | Want zero-configuration setup |
+| Manage backups separately | Want Docker-managed volumes |
+| Database on dedicated hardware | All-in-one Docker deployment |
 
 ---
 
