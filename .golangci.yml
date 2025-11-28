@@ -58,6 +58,22 @@ issues:
         - staticcheck
       text: "SA1019:"  # Ignore deprecation warnings for now
 
+    # Exclude unchecked error for defer tx.Rollback() - common Go pattern
+    - linters:
+        - errcheck
+      text: "Error return value of `tx.Rollback` is not checked"
+
+    # Exclude unchecked error for json.Encode in HTTP handlers
+    # Response has started, so error checking has limited value
+    - linters:
+        - errcheck
+      text: "Error return value of `\\(\\*encoding/json.Encoder\\).Encode` is not checked"
+
+    # Exclude unchecked error for audit log calls - fire-and-forget logging
+    - linters:
+        - errcheck
+      text: "Error return value of `s.auditLogService"
+
   max-issues-per-linter: 0
   max-same-issues: 0
 
