@@ -479,7 +479,7 @@ const changePassword = async () => {
 
   try {
     const response = await axios.put('/api/users/password', {
-      current_password: passwordForm.value.currentPassword,
+      old_password: passwordForm.value.currentPassword,
       new_password: passwordForm.value.newPassword
     })
 
