@@ -204,7 +204,29 @@ Additional docs in `docs/`:
 - `ARCHITECTURE.md` - Detailed design patterns
 - `DATABASE_SCHEMA.md` - Complete schema with ERD
 - `CHANGELOG.md` - Version history
-- `TODO.md` - Planned features
+- `TODO.md` - Task tracking (canonical source)
+- `ROADMAP.md` - High-level version planning
+
+## TODO Management
+
+**`docs/TODO.md` is the single source of truth for all task tracking.**
+
+### Guidelines:
+1. **Only track TODOs in `docs/TODO.md`** - Do not create TODO sections in other files
+2. **Active Tasks** - Move items here when starting work
+3. **Backlog** - Planned features with `[HIGH]`, `[MEDIUM]`, `[LOW]` markers
+4. **Known Bugs** - Report with `[BUG]` prefix and reproduction steps
+5. **Completed Releases** - Keep only last 5; older releases are in CHANGELOG.md
+
+### Periodic Cleanup:
+- Archive completed releases older than 5 versions
+- Remove duplicate or obsolete backlog items
+- Update priorities as needed
+
+### File Relationships:
+- `TODO.md` - Active task tracking
+- `CHANGELOG.md` - Release history (do NOT duplicate here)
+- `ROADMAP.md` - High-level planning (do NOT track tasks here)
 
 ## Troubleshooting
 
