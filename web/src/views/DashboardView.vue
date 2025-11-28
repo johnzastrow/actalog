@@ -1,6 +1,7 @@
 <template>
-  <div class="mobile-view-wrapper">
-    <v-container class="pa-3">
+  <PullToRefresh @refresh="handleRefresh">
+    <div class="mobile-view-wrapper">
+      <v-container class="pa-3">
       <!-- Email Verification Alert -->
       <v-alert
         v-if="authStore.user && !authStore.user.email_verified"
@@ -720,7 +721,8 @@
         <span style="font-size: 10px">Profile</span>
       </v-btn>
     </v-bottom-navigation>
-  </div>
+    </div>
+  </PullToRefresh>
 </template>
 
 <script setup>
@@ -729,6 +731,7 @@ import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import PullToRefresh from '@/components/PullToRefresh.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1007,6 +1010,16 @@ async function fetchUserWorkouts() {
     userWorkouts.value = []
   } finally {
     loading.value = false
+  }
+}
+
+// Handle pull-to-refresh
+async function handleRefresh(done) {
+  try {
+    await fetchUserWorkouts()
+  } finally {
+    // Call done callback to stop the refresh animation
+    if (done) done()
   }
 }
 
