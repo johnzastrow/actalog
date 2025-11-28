@@ -191,7 +191,7 @@ After first push, packages are private by default.
 2. Click on `actalog` package
 3. Go to **Package settings**
 4. Scroll to **Danger Zone**
-5. Click **Change visibility** ’ **Public**
+5. Click **Change visibility** ï¿½ **Public**
 
 ---
 
@@ -201,10 +201,10 @@ After first push, packages are private by default.
 
 The GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically builds and pushes Docker images on:
 
-- **Push to `main` or `develop` branches** ’ builds and pushes
-- **Push tags matching `v*`** ’ builds release with semantic versioning
-- **Pull requests to `main`** ’ builds only (no push)
-- **Manual workflow dispatch** ’ build with custom tag
+- **Push to `main` or `develop` branches** ï¿½ builds and pushes
+- **Push tags matching `v*`** ï¿½ builds release with semantic versioning
+- **Pull requests to `main`** ï¿½ builds only (no push)
+- **Manual workflow dispatch** ï¿½ build with custom tag
 
 ### Automatic Tagging Strategy
 
@@ -643,6 +643,93 @@ docker exec actalog ls -la /app/data/
 # For PostgreSQL
 docker exec actalog ping postgres
 docker compose logs postgres
+```
+
+### Connecting to Host Database (MariaDB/MySQL/PostgreSQL)
+
+**Problem:** Container can't connect to database running on the host machine
+
+```
+dial tcp 127.0.0.1:3306: connect: connection refused
+```
+
+This happens because `127.0.0.1` inside a container refers to the container itself, not the host machine.
+
+**Solution for Linux:**
+
+1. Update `docker-compose.yml` to use `host.docker.internal`:
+
+```yaml
+services:
+  actalog:
+    image: ghcr.io/johnzastrow/actalog:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Required for Linux
+    environment:
+      - DB_DRIVER=mysql
+      - DB_HOST=host.docker.internal  # NOT 127.0.0.1
+      - DB_PORT=3306
+      - DB_NAME=acta
+      - DB_USER=acta
+      - DB_PASSWORD=${DB_PASSWORD}
+```
+
+**Alternative:** Use Docker bridge IP (`172.17.0.1`) instead of `host.docker.internal`.
+
+2. **Configure MariaDB/MySQL to accept connections from Docker:**
+
+Check that MariaDB is listening on all interfaces (not just localhost):
+```bash
+sudo grep -E "bind-address|skip-networking" /etc/mysql/mariadb.conf.d/*.cnf
+```
+
+If `bind-address = 127.0.0.1`, change to `bind-address = 0.0.0.0` or comment it out, then restart MariaDB:
+```bash
+sudo systemctl restart mariadb
+```
+
+3. **Grant database user permission to connect from Docker network:**
+
+```sql
+-- For Docker bridge network (most secure)
+GRANT ALL PRIVILEGES ON acta.* TO 'acta'@'172.17.%' IDENTIFIED BY 'your_password';
+FLUSH PRIVILEGES;
+
+-- Or allow from any host (less secure, but easier for testing)
+GRANT ALL PRIVILEGES ON acta.* TO 'acta'@'%' IDENTIFIED BY 'your_password';
+FLUSH PRIVILEGES;
+```
+
+4. **Verify connectivity:**
+
+```bash
+# Restart container
+docker compose down && docker compose up -d
+
+# Check logs
+docker compose logs -f actalog
+
+# Test from inside container
+docker exec -it actalog sh -c "nc -zv host.docker.internal 3306"
+```
+
+**Note for Docker Desktop (Mac/Windows):** The `extra_hosts` directive is not neededâ€”`host.docker.internal` works automatically.
+
+5. **Check firewall rules (if connection times out):**
+
+If the connection times out instead of being refused, a firewall may be blocking Docker's network:
+
+```bash
+# Check UFW status
+sudo ufw status
+
+# Allow MariaDB from Docker network
+sudo ufw allow from 172.17.0.0/16 to any port 3306
+sudo ufw reload
+
+# For PostgreSQL
+sudo ufw allow from 172.17.0.0/16 to any port 5432
+sudo ufw reload
 ```
 
 ### Image Pull Issues

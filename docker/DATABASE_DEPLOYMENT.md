@@ -459,53 +459,133 @@ Ensure the database server:
 
 #### "Connection refused" errors
 
-**Check connectivity from container:**
+This error typically means:
+1. The database isn't listening on the right interface
+2. The container can't reach the host network
+3. Firewall is blocking the connection
+
+**Step 1: Check database is listening on all interfaces (not just localhost)**
+
+For MariaDB/MySQL:
 ```bash
-# Test from within container
-docker exec -it actalog sh
+# Check current bind-address setting
+sudo grep -E "bind-address|skip-networking" /etc/mysql/mariadb.conf.d/*.cnf
 
-# For MariaDB/MySQL
-apk add mariadb-client
-mysql -h host.docker.internal -u actalog -p actalog
+# If it shows bind-address = 127.0.0.1, change to 0.0.0.0
+sudo vim /etc/mysql/mariadb.conf.d/50-server.cnf
+# Set: bind-address = 0.0.0.0
 
-# For PostgreSQL
-apk add postgresql-client
-psql -h host.docker.internal -U actalog -d actalog
+# Restart MariaDB
+sudo systemctl restart mariadb
 ```
 
-**Check from host:**
+For PostgreSQL:
 ```bash
-# Verify database is listening
+# Check postgresql.conf
+sudo grep listen_addresses /etc/postgresql/*/main/postgresql.conf
+# Should be: listen_addresses = '*'
+
+# Check pg_hba.conf allows Docker network
+sudo grep "172.17" /etc/postgresql/*/main/pg_hba.conf
+# Should have: host actalog actalog 172.17.0.0/16 md5
+
+sudo systemctl restart postgresql
+```
+
+**Step 2: Verify database is listening**
+```bash
+# Check if database is listening on all interfaces
 sudo netstat -tlnp | grep 3306   # MySQL/MariaDB
 sudo netstat -tlnp | grep 5432   # PostgreSQL
 
-# Test connection from host
-mysql -h 127.0.0.1 -u actalog -p actalog
-psql -h 127.0.0.1 -U actalog -d actalog
+# Should show 0.0.0.0:3306 (not 127.0.0.1:3306)
+```
+
+**Step 3: Test connectivity from container**
+```bash
+# Test from within container
+docker exec -it actalog sh -c "nc -zv host.docker.internal 3306"
+
+# Or install client tools
+docker exec -it actalog sh
+apk add mariadb-client
+mysql -h host.docker.internal -u actalog -p actalog
 ```
 
 #### "host.docker.internal" not resolving (Linux)
 
-On Linux, `host.docker.internal` doesn't work by default. Options:
+On Linux, `host.docker.internal` doesn't work by default unlike Mac/Windows Docker Desktop.
 
-**Option 1: Use actual host IP**
-```yaml
-- DB_HOST=192.168.1.100  # Replace with your host's IP
-```
-
-**Option 2: Use Docker bridge IP**
-```yaml
-- DB_HOST=172.17.0.1  # Default Docker bridge gateway
-```
-
-**Option 3: Add extra host to docker-compose**
+**Recommended: Add extra_hosts to docker-compose.yml**
 ```yaml
 services:
   actalog:
+    image: ghcr.io/johnzastrow/actalog:latest
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:host-gateway"  # This makes it work on Linux
     environment:
+      - DB_DRIVER=mysql
       - DB_HOST=host.docker.internal
+      - DB_PORT=3306
+      - DB_NAME=acta
+      - DB_USER=acta
+      - DB_PASSWORD=${DB_PASSWORD}
+```
+
+**Alternative 1: Use Docker bridge IP**
+```yaml
+environment:
+  - DB_HOST=172.17.0.1  # Default Docker bridge gateway
+```
+
+**Alternative 2: Use actual host IP**
+```yaml
+environment:
+  - DB_HOST=192.168.1.100  # Replace with your host's actual IP
+```
+
+#### Database user lacks permission from Docker network
+
+The database user may only have permission to connect from localhost, not from the Docker network.
+
+**MariaDB/MySQL - Grant permissions:**
+```sql
+-- For Docker bridge network (more secure)
+GRANT ALL PRIVILEGES ON acta.* TO 'acta'@'172.17.%' IDENTIFIED BY 'your_password';
+FLUSH PRIVILEGES;
+
+-- Or allow from any host (less secure, but easier)
+GRANT ALL PRIVILEGES ON acta.* TO 'acta'@'%' IDENTIFIED BY 'your_password';
+FLUSH PRIVILEGES;
+
+-- Check grants
+SHOW GRANTS FOR 'acta'@'%';
+```
+
+**PostgreSQL - Update pg_hba.conf:**
+```bash
+# Add line to pg_hba.conf
+host    acta    acta    172.17.0.0/16    md5
+
+# Reload PostgreSQL
+sudo systemctl reload postgresql
+```
+
+#### Firewall blocking Docker network (connection times out)
+
+If the connection times out (not refused), the firewall may be blocking Docker's network:
+
+```bash
+# Check UFW status
+sudo ufw status
+
+# Allow MariaDB from Docker network
+sudo ufw allow from 172.17.0.0/16 to any port 3306
+sudo ufw reload
+
+# For PostgreSQL
+sudo ufw allow from 172.17.0.0/16 to any port 5432
+sudo ufw reload
 ```
 
 #### Permission denied errors

@@ -908,6 +908,20 @@ func getPlaceholders(driver string, count int) []string {
 	return placeholders
 }
 
+// getTimestampFunc returns the database-specific function for current timestamp
+func getTimestampFunc() string {
+	switch currentDriver {
+	case "sqlite3":
+		return "datetime('now')"
+	case "postgres":
+		return "CURRENT_TIMESTAMP"
+	case "mysql":
+		return "NOW()"
+	default:
+		return "CURRENT_TIMESTAMP"
+	}
+}
+
 // seedStandardMovements seeds the database with standard CrossFit movements
 func seedStandardMovements(db *sql.DB) error {
 	// Determine target table before querying (migrations may rename it)
@@ -1428,8 +1442,25 @@ func addWorkoutMovementWithTime(db *sql.DB, workoutID, movementID int64, timeSec
 }
 
 func addWorkoutMovementWithDistance(db *sql.DB, workoutID, movementID int64, distance float64, rounds, orderIndex int) error {
-	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, NULL, ?, NULL, NULL, ?, 0, 0, ?, datetime('now'), datetime('now'))`
+	// Get database-specific timestamp function
+	var timestampFunc string
+	switch currentDriver {
+	case "sqlite3":
+		timestampFunc = "datetime('now')"
+	case "postgres":
+		timestampFunc = "CURRENT_TIMESTAMP"
+	case "mysql":
+		timestampFunc = "NOW()"
+	default:
+		timestampFunc = "CURRENT_TIMESTAMP"
+	}
+
+	// Get database-specific placeholders and boolean values
+	ph := getPlaceholders(currentDriver, 5) // workoutID, movementID, rounds, distance, orderIndex
+	boolFalse := getBoolValue(currentDriver, false)
+	query := fmt.Sprintf(`INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, order_index, created_at, updated_at)
+	          VALUES (%s, %s, NULL, %s, NULL, NULL, %s, %s, %s, %s, %s, %s)`,
+		ph[0], ph[1], ph[2], ph[3], boolFalse, boolFalse, ph[4], timestampFunc, timestampFunc)
 	_, err := db.Exec(query, workoutID, movementID, rounds, distance, orderIndex)
 	return err
 }
