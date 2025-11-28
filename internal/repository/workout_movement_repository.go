@@ -23,20 +23,30 @@ func (r *WorkoutMovementRepository) Create(wm *domain.WorkoutMovement) error {
 	wm.CreatedAt = time.Now()
 	wm.UpdatedAt = time.Now()
 
-	query := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	ph := getPlaceholders(currentDriver, 13)
+	query := fmt.Sprintf(`INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)`,
+		ph[0], ph[1], ph[2], ph[3], ph[4], ph[5], ph[6], ph[7], ph[8], ph[9], ph[10], ph[11], ph[12])
 
-	result, err := r.db.Exec(query, wm.WorkoutID, wm.MovementID, wm.Weight, wm.Sets, wm.Reps, wm.Time, wm.Distance, wm.IsRx, wm.IsPR, wm.Notes, wm.OrderIndex, wm.CreatedAt, wm.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create workout movement: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, wm.WorkoutID, wm.MovementID, wm.Weight, wm.Sets, wm.Reps, wm.Time, wm.Distance, wm.IsRx, wm.IsPR, wm.Notes, wm.OrderIndex, wm.CreatedAt, wm.UpdatedAt).Scan(&wm.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create workout movement: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, wm.WorkoutID, wm.MovementID, wm.Weight, wm.Sets, wm.Reps, wm.Time, wm.Distance, wm.IsRx, wm.IsPR, wm.Notes, wm.OrderIndex, wm.CreatedAt, wm.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create workout movement: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get workout movement ID: %w", err)
+		}
+		wm.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get workout movement ID: %w", err)
-	}
-
-	wm.ID = id
 	return nil
 }
 
