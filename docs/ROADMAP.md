@@ -1,20 +1,35 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.12.0-beta
-**Last Updated:** 2025-11-26
+**Current Version:** 0.12.1-beta
+**Last Updated:** 2025-11-28
 **Overall Completion:** ~90% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.0-beta) focuses on **mobile PWA stability** with comprehensive overflow fixes across 27 views, OCI-compliant Docker image labels, and admin UI improvements. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.1-beta) fixes critical **MySQL/MariaDB compatibility issues** with database-agnostic timestamp functions and adds comprehensive **Docker host database troubleshooting documentation**. The application now supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
 
 ---
 
 ## Version History & Status
 
-### v0.12.0-beta (Current - Released)
+### v0.12.1-beta (Current - Released)
+**Status:** MySQL/MariaDB compatibility fix and Docker troubleshooting documentation
+
+**Completed:**
+- ✅ Fixed database-agnostic timestamp functions for MySQL/MariaDB
+- ✅ Fixed hardcoded SQLite `datetime('now')` in refresh token repository
+- ✅ Added `getTimestampFunc()` helper for cross-database timestamp support
+- ✅ Enhanced Docker host database troubleshooting documentation
+- ✅ Added UFW firewall and bind-address configuration guides
+
+**Technical Highlights:**
+- Critical fix for MySQL/MariaDB deployments that were failing on seed data import
+- Comprehensive troubleshooting guide for connecting Docker containers to host databases
+- Firewall configuration for Docker network access (172.17.0.0/16)
+
+### v0.12.0-beta (Released)
 **Status:** Mobile PWA stability and Docker metadata improvements
 
 **Completed:**

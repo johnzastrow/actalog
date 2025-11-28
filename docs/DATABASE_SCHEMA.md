@@ -13,7 +13,16 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.12.0-beta
+**Current Version:** 0.12.1-beta
+
+## Recent Changes (v0.12.1-beta)
+
+- **No schema changes** in this release
+- **MySQL/MariaDB Compatibility Fix**: Database-agnostic timestamp functions
+  - Fixed `addWorkoutMovementWithDistance()` to use `NOW()` for MySQL/MariaDB
+  - Fixed `refresh_token_repository.go` functions with hardcoded SQLite syntax
+  - Added `getTimestampFunc()` helper supporting all database drivers
+- Documentation: Enhanced Docker host database troubleshooting guides
 
 ## Recent Changes (v0.12.0-beta)
 
