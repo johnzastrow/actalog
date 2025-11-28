@@ -3,7 +3,7 @@
     <!-- Top App Bar (only show when authenticated) -->
     <v-app-bar
       v-if="showAppBar"
-      color="#2c3657"
+      color="#2c3e50"
       elevation="0"
       density="comfortable"
       app
