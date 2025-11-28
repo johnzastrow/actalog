@@ -60,8 +60,8 @@
 ### Medium Priority
 
 #### Performance & Analytics
-- [ ] `[MEDIUM]` **Calendar View** - Monthly view with workout dots
-- [ ] `[MEDIUM]` **Timeline View** - Chronological workout history
+- [X] `[MEDIUM]` **Calendar View** - Monthly view with workout dots
+- [X] `[MEDIUM]` **Timeline View** - Chronological workout history
 - [ ] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 

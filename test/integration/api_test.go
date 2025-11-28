@@ -247,11 +247,14 @@ func TestRegistrationAndLogin(t *testing.T) {
 		t.Fatalf("Failed to setup router: %v", err)
 	}
 
+	// Use unique email for this test function
+	testEmail := "reglogin@example.com"
+
 	// Test Registration
 	t.Run("Register User", func(t *testing.T) {
 		body := map[string]string{
 			"name":     "Test User",
-			"email":    "test@example.com",
+			"email":    testEmail,
 			"password": "Password123",
 		}
 		jsonBody, _ := json.Marshal(body)
@@ -282,7 +285,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 	// Test Login
 	t.Run("Login User", func(t *testing.T) {
 		body := map[string]string{
-			"email":    "test@example.com",
+			"email":    testEmail,
 			"password": "Password123",
 		}
 		jsonBody, _ := json.Marshal(body)
@@ -308,7 +311,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 	// Test Login with Invalid Credentials
 	t.Run("Login with Invalid Password", func(t *testing.T) {
 		body := map[string]string{
-			"email":    "test@example.com",
+			"email":    testEmail,
 			"password": "WrongPassword",
 		}
 		jsonBody, _ := json.Marshal(body)
@@ -332,13 +335,16 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 		t.Fatalf("Failed to setup router: %v", err)
 	}
 
+	// Use unique email for this test function
+	testEmail := "workoutpr@example.com"
+
 	// Register and login to get token
 	var token string
 	t.Run("Setup: Register and Login", func(t *testing.T) {
 		// Register
 		regBody := map[string]string{
-			"name":     "Test User",
-			"email":    "test@example.com",
+			"name":     "PR Test User",
+			"email":    testEmail,
 			"password": "Password123",
 		}
 		jsonBody, _ := json.Marshal(regBody)
@@ -347,9 +353,17 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
+		if w.Code != http.StatusCreated {
+			t.Fatalf("Registration failed with status %d: %s", w.Code, w.Body.String())
+		}
+
 		var response map[string]interface{}
 		json.Unmarshal(w.Body.Bytes(), &response)
-		token = response["token"].(string)
+		tokenVal, ok := response["token"]
+		if !ok || tokenVal == nil {
+			t.Fatalf("Expected token in response, got: %v", response)
+		}
+		token = tokenVal.(string)
 	})
 
 	// Test Creating Workout
