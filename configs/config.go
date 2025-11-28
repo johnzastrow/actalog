@@ -56,8 +56,8 @@ type JWTConfig struct {
 // AppConfig holds application-specific configuration
 type AppConfig struct {
 	Name              string
-	Environment       string   // development, staging, production
-	LogLevel          string   // debug, info, warn, error
+	Environment       string // development, staging, production
+	LogLevel          string // debug, info, warn, error
 	CORSOrigins       []string
 	AllowRegistration bool // Allow new user registration after first user
 }
@@ -73,14 +73,14 @@ type LoggingConfig struct {
 
 // EmailConfig holds email/SMTP configuration
 type EmailConfig struct {
-	SMTPHost              string // SMTP server host
-	SMTPPort              int    // SMTP server port (587 for STARTTLS, 465 for TLS, 25 for plain)
-	SMTPUser              string // SMTP username
-	SMTPPassword          string // SMTP password
-	FromAddress           string // From email address
-	FromName              string // From name
-	Enabled               bool   // Enable email sending
-	RequireVerification   bool   // Require email verification for new users
+	SMTPHost            string // SMTP server host
+	SMTPPort            int    // SMTP server port (587 for STARTTLS, 465 for TLS, 25 for plain)
+	SMTPUser            string // SMTP username
+	SMTPPassword        string // SMTP password
+	FromAddress         string // From email address
+	FromName            string // From name
+	Enabled             bool   // Enable email sending
+	RequireVerification bool   // Require email verification for new users
 }
 
 // SecurityConfig holds security-related configuration
@@ -89,7 +89,7 @@ type SecurityConfig struct {
 	AccountLockoutDuration time.Duration // How long to lock account after max attempts
 
 	// Password strength (for future use)
-	MinPasswordLength       int  // Minimum password length
+	MinPasswordLength        int  // Minimum password length
 	RequirePasswordUppercase bool // Require at least one uppercase letter
 	RequirePasswordLowercase bool // Require at least one lowercase letter
 	RequirePasswordNumber    bool // Require at least one number
@@ -135,7 +135,7 @@ func Load() (*Config, error) {
 		Logging: LoggingConfig{
 			Level:      getEnv("LOG_LEVEL", "info"),
 			EnableFile: getEnvBool("LOG_FILE_ENABLED", false),
-			FilePath:   getEnv("LOG_FILE_PATH", ""),    // Empty = auto-detect (./logs/actalog.log)
+			FilePath:   getEnv("LOG_FILE_PATH", ""),       // Empty = auto-detect (./logs/actalog.log)
 			MaxSizeMB:  getEnvInt("LOG_MAX_SIZE_MB", 100), // 100MB default
 			MaxBackups: getEnvInt("LOG_MAX_BACKUPS", 3),   // Keep 3 old files
 		},
@@ -146,12 +146,12 @@ func Load() (*Config, error) {
 			SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
 			FromAddress:         getEnv("EMAIL_FROM", ""),
 			FromName:            getEnv("EMAIL_FROM_NAME", "ActaLog"),
-			Enabled:             getEnvBool("EMAIL_ENABLED", false), // Disabled by default
+			Enabled:             getEnvBool("EMAIL_ENABLED", false),              // Disabled by default
 			RequireVerification: getEnvBool("REQUIRE_EMAIL_VERIFICATION", false), // Disabled by default for testing
 		},
 		Security: SecurityConfig{
-			MaxLoginAttempts:        getEnvInt("MAX_LOGIN_ATTEMPTS", 5),
-			AccountLockoutDuration:  getEnvDuration("ACCOUNT_LOCKOUT_DURATION", 15*time.Minute),
+			MaxLoginAttempts:       getEnvInt("MAX_LOGIN_ATTEMPTS", 5),
+			AccountLockoutDuration: getEnvDuration("ACCOUNT_LOCKOUT_DURATION", 15*time.Minute),
 
 			// Password strength (future use)
 			MinPasswordLength:        getEnvInt("MIN_PASSWORD_LENGTH", 8),

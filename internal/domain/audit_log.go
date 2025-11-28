@@ -4,27 +4,27 @@ import "time"
 
 // AuditLog represents a security or system event that should be tracked
 type AuditLog struct {
-	ID           int64      `json:"id" db:"id"`
-	UserID       *int64     `json:"user_id,omitempty" db:"user_id"`               // User who performed the action (NULL for system)
-	TargetUserID *int64     `json:"target_user_id,omitempty" db:"target_user_id"` // User affected by the action
-	EventType    string     `json:"event_type" db:"event_type"`
-	IPAddress    *string    `json:"ip_address,omitempty" db:"ip_address"`
-	UserAgent    *string    `json:"user_agent,omitempty" db:"user_agent"`
-	Details      *string    `json:"details,omitempty" db:"details"` // JSON string
-	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	ID           int64     `json:"id" db:"id"`
+	UserID       *int64    `json:"user_id,omitempty" db:"user_id"`               // User who performed the action (NULL for system)
+	TargetUserID *int64    `json:"target_user_id,omitempty" db:"target_user_id"` // User affected by the action
+	EventType    string    `json:"event_type" db:"event_type"`
+	IPAddress    *string   `json:"ip_address,omitempty" db:"ip_address"`
+	UserAgent    *string   `json:"user_agent,omitempty" db:"user_agent"`
+	Details      *string   `json:"details,omitempty" db:"details"` // JSON string
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 
 	// These fields are populated via JOIN queries and are not in the audit_logs table
-	UserEmail       *string `json:"user_email,omitempty" db:"user_email"`             // Email of user who performed action
+	UserEmail       *string `json:"user_email,omitempty" db:"user_email"`               // Email of user who performed action
 	TargetUserEmail *string `json:"target_user_email,omitempty" db:"target_user_email"` // Email of affected user
 }
 
 // Audit Event Types
 const (
 	// Authentication Events
-	EventLoginSuccess  = "login_success"
-	EventLoginFailed   = "login_failed"
-	EventLogout        = "logout"
-	EventTokenRefresh  = "token_refresh"
+	EventLoginSuccess = "login_success"
+	EventLoginFailed  = "login_failed"
+	EventLogout       = "logout"
+	EventTokenRefresh = "token_refresh"
 
 	// Account Security Events
 	EventAccountLockedAuto    = "account_locked_auto"    // System locked after failed attempts
@@ -37,9 +37,9 @@ const (
 	EventPasswordReset   = "password_reset"
 
 	// Email Events
-	EventEmailChanged            = "email_changed"
-	EventEmailVerificationSent   = "email_verification_sent"
-	EventEmailVerified           = "email_verified"
+	EventEmailChanged          = "email_changed"
+	EventEmailVerificationSent = "email_verification_sent"
+	EventEmailVerified         = "email_verified"
 
 	// User Management Events
 	EventUserCreated = "user_created"

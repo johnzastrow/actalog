@@ -41,11 +41,11 @@ type Logger struct {
 
 // Config holds logger configuration
 type Config struct {
-	Level       string // "debug", "info", "warn", "error"
-	EnableFile  bool   // Enable file logging
-	FilePath    string // Path to log file (default: ./logs/actalog.log)
-	MaxSizeMB   int    // Max log file size in MB before rotation (default: 100)
-	MaxBackups  int    // Number of old log files to keep (default: 3)
+	Level      string // "debug", "info", "warn", "error"
+	EnableFile bool   // Enable file logging
+	FilePath   string // Path to log file (default: ./logs/actalog.log)
+	MaxSizeMB  int    // Max log file size in MB before rotation (default: 100)
+	MaxBackups int    // Number of old log files to keep (default: 3)
 }
 
 // New creates a new logger with the given configuration

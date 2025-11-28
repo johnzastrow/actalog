@@ -37,8 +37,8 @@ type MovementWithCreator struct {
 // WorkoutID references a workout template, not a user-specific workout instance
 type WorkoutMovement struct {
 	ID         int64     `json:"id" db:"id"`
-	WorkoutID  int64     `json:"workout_id" db:"workout_id"`     // References workout template
-	MovementID int64     `json:"movement_id" db:"movement_id"`   // References movements table
+	WorkoutID  int64     `json:"workout_id" db:"workout_id"`   // References workout template
+	MovementID int64     `json:"movement_id" db:"movement_id"` // References movements table
 	Weight     *float64  `json:"weight,omitempty" db:"weight"` // in lbs or kg
 	Sets       *int      `json:"sets,omitempty" db:"sets"`
 	Reps       *int      `json:"reps,omitempty" db:"reps"`
@@ -76,14 +76,14 @@ type MovementRepository interface {
 // PersonalRecord represents a user's personal record for a movement
 // After v0.4.0, this aggregates data from user_workouts and workout_strength tables
 type PersonalRecord struct {
-	MovementID      int64     `json:"movement_id"`
-	MovementName    string    `json:"movement_name"`
-	MaxWeight       *float64  `json:"max_weight,omitempty"`
-	MaxReps         *int      `json:"max_reps,omitempty"`
-	BestTime        *int      `json:"best_time,omitempty"` // Fastest time in seconds
-	UserWorkoutID   int64     `json:"user_workout_id"`     // References user_workouts table (logged workout instance)
-	WorkoutID       int64     `json:"workout_id"`          // References workout template
-	WorkoutDate     time.Time `json:"workout_date"`        // From user_workouts.workout_date
+	MovementID    int64     `json:"movement_id"`
+	MovementName  string    `json:"movement_name"`
+	MaxWeight     *float64  `json:"max_weight,omitempty"`
+	MaxReps       *int      `json:"max_reps,omitempty"`
+	BestTime      *int      `json:"best_time,omitempty"` // Fastest time in seconds
+	UserWorkoutID int64     `json:"user_workout_id"`     // References user_workouts table (logged workout instance)
+	WorkoutID     int64     `json:"workout_id"`          // References workout template
+	WorkoutDate   time.Time `json:"workout_date"`        // From user_workouts.workout_date
 }
 
 // UserWorkoutMovement represents a movement's performance in a logged workout (user_workout_movements table)
@@ -95,10 +95,10 @@ type UserWorkoutMovement struct {
 	Sets          *int      `json:"sets,omitempty" db:"sets"`
 	Reps          *int      `json:"reps,omitempty" db:"reps"`
 	Weight        *float64  `json:"weight,omitempty" db:"weight"`     // in lbs or kg
-	Time          *int      `json:"time_seconds,omitempty" db:"time"`         // in seconds
+	Time          *int      `json:"time_seconds,omitempty" db:"time"` // in seconds
 	Distance      *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
 	Notes         string    `json:"notes,omitempty" db:"notes"`
-	IsPR          bool      `json:"is_pr" db:"is_pr"` // Personal record flag
+	IsPR          bool      `json:"is_pr" db:"is_pr"`             // Personal record flag
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
