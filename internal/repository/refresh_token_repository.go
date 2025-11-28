@@ -46,11 +46,13 @@ func (r *SQLiteRefreshTokenRepository) Create(token *domain.RefreshToken) error 
 
 // GetByToken retrieves a refresh token by its token string
 func (r *SQLiteRefreshTokenRepository) GetByToken(tokenStr string) (*domain.RefreshToken, error) {
-	query := `
+	timestampFunc := getTimestampFunc()
+	ph := getPlaceholders(currentDriver, 1)
+	query := fmt.Sprintf(`
 		SELECT id, user_id, token, expires_at, created_at, revoked_at, device_info
 		FROM refresh_tokens
-		WHERE token = ? AND revoked_at IS NULL AND expires_at > datetime('now')
-	`
+		WHERE token = %s AND revoked_at IS NULL AND expires_at > %s
+	`, ph[0], timestampFunc)
 
 	token := &domain.RefreshToken{}
 	err := r.db.QueryRow(query, tokenStr).Scan(
@@ -111,11 +113,13 @@ func (r *SQLiteRefreshTokenRepository) GetByUserID(userID int64) ([]*domain.Refr
 
 // Revoke revokes a specific refresh token
 func (r *SQLiteRefreshTokenRepository) Revoke(tokenID int64) error {
-	query := `
+	timestampFunc := getTimestampFunc()
+	ph := getPlaceholders(currentDriver, 1)
+	query := fmt.Sprintf(`
 		UPDATE refresh_tokens
-		SET revoked_at = datetime('now')
-		WHERE id = ?
-	`
+		SET revoked_at = %s
+		WHERE id = %s
+	`, timestampFunc, ph[0])
 
 	_, err := r.db.Exec(query, tokenID)
 	if err != nil {
@@ -127,11 +131,13 @@ func (r *SQLiteRefreshTokenRepository) Revoke(tokenID int64) error {
 
 // RevokeAllForUser revokes all refresh tokens for a user
 func (r *SQLiteRefreshTokenRepository) RevokeAllForUser(userID int64) error {
-	query := `
+	timestampFunc := getTimestampFunc()
+	ph := getPlaceholders(currentDriver, 1)
+	query := fmt.Sprintf(`
 		UPDATE refresh_tokens
-		SET revoked_at = datetime('now')
-		WHERE user_id = ? AND revoked_at IS NULL
-	`
+		SET revoked_at = %s
+		WHERE user_id = %s AND revoked_at IS NULL
+	`, timestampFunc, ph[0])
 
 	_, err := r.db.Exec(query, userID)
 	if err != nil {
@@ -143,10 +149,11 @@ func (r *SQLiteRefreshTokenRepository) RevokeAllForUser(userID int64) error {
 
 // DeleteExpired deletes all expired refresh tokens
 func (r *SQLiteRefreshTokenRepository) DeleteExpired() error {
-	query := `
+	timestampFunc := getTimestampFunc()
+	query := fmt.Sprintf(`
 		DELETE FROM refresh_tokens
-		WHERE expires_at < datetime('now')
-	`
+		WHERE expires_at < %s
+	`, timestampFunc)
 
 	_, err := r.db.Exec(query)
 	if err != nil {
