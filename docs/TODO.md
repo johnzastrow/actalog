@@ -36,7 +36,24 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
-*(none)*
+### CI/Lint Fixes (Deferred)
+
+**Status:** golangci-lint set to `continue-on-error` in `.github/workflows/ci.yml:37`
+
+The following lint issues need to be resolved to re-enable strict linting:
+
+1. **goconst warnings** - Repeated strings in SQL queries (LIMIT, OFFSET, ORDER BY)
+   - Files: `internal/repository/movement_repository.go`, others
+   - Decision: Either make constants or add exclusion
+
+2. **Remaining gofmt issues** - Some files may still have formatting issues
+   - Run: `gofmt -w ./...` and review changes
+
+3. **Other minor issues** - Review full golangci-lint output for any remaining items
+
+**To re-enable strict linting:**
+1. Fix or exclude remaining issues
+2. Remove `continue-on-error: true` from `.github/workflows/ci.yml:37`
 
 ---
 
