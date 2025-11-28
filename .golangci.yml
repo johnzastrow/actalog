@@ -22,7 +22,7 @@ linters:
     - gocyclo       # Check cyclomatic complexity
     - revive        # Fast linter
     - gosec         # Security checker
-    - exportloopref # Check for pointers to enclosing loop variables
+    - shadow        # Check for shadowed variables (replaces govet check-shadowing)
     - sqlclosecheck # Check sql.Rows and sql.Stmt are closed
     - noctx         # Find http requests without context
     - bodyclose     # Check HTTP response bodies are closed
@@ -31,9 +31,6 @@ linters:
 linters-settings:
   gocyclo:
     min-complexity: 15
-
-  govet:
-    check-shadowing: true
 
   gosec:
     excludes:
@@ -66,6 +63,7 @@ issues:
   max-same-issues: 0
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true

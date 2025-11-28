@@ -23,20 +23,30 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 	workout.CreatedAt = time.Now()
 	workout.UpdatedAt = time.Now()
 
-	query := `INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?)`
+	ph := getPlaceholders(currentDriver, 5)
+	query := fmt.Sprintf(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s)`, ph[0], ph[1], ph[2], ph[3], ph[4])
 
-	result, err := r.db.Exec(query, workout.Name, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create workout: %w", err)
+	if currentDriver == "postgres" {
+		// PostgreSQL: use RETURNING to get the ID
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, workout.Name, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt).Scan(&workout.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create workout: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, workout.Name, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create workout: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get workout ID: %w", err)
+		}
+		workout.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get workout ID: %w", err)
-	}
-
-	workout.ID = id
 	return nil
 }
 
