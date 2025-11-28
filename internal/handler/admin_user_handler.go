@@ -45,9 +45,7 @@ func (h *AdminUserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	// Get users
 	users, total, err := h.userService.ListUsers(limit, offset)
 	if err != nil {
-		h.logger.Error("Failed to list users",
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to list users: %v", err)
 		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
 		return
 	}
@@ -82,19 +80,12 @@ func (h *AdminUserHandler) UnlockUser(w http.ResponseWriter, r *http.Request) {
 
 	// Unlock the account
 	if err := h.userService.UnlockAccount(adminUserID, targetUserID); err != nil {
-		h.logger.Error("Failed to unlock user account",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to unlock user account: admin_user_id=%d target_user_id=%d error=%v", adminUserID, targetUserID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.logger.Info("User account unlocked",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-	)
+	h.logger.Info("User account unlocked: admin_user_id=%d target_user_id=%d", adminUserID, targetUserID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -130,20 +121,12 @@ func (h *AdminUserHandler) DisableUser(w http.ResponseWriter, r *http.Request) {
 
 	// Disable the account
 	if err := h.userService.DisableAccount(adminUserID, targetUserID, request.Reason); err != nil {
-		h.logger.Error("Failed to disable user account",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to disable user account: admin_user_id=%d target_user_id=%d error=%v", adminUserID, targetUserID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	h.logger.Info("User account disabled",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-		"reason", request.Reason,
-	)
+	h.logger.Info("User account disabled: admin_user_id=%d target_user_id=%d reason=%s", adminUserID, targetUserID, request.Reason)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -170,19 +153,12 @@ func (h *AdminUserHandler) EnableUser(w http.ResponseWriter, r *http.Request) {
 
 	// Enable the account
 	if err := h.userService.EnableAccount(adminUserID, targetUserID); err != nil {
-		h.logger.Error("Failed to enable user account",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to enable user account: admin_user_id=%d target_user_id=%d error=%v", adminUserID, targetUserID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.logger.Info("User account enabled",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-	)
+	h.logger.Info("User account enabled: admin_user_id=%d target_user_id=%d", adminUserID, targetUserID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -224,21 +200,12 @@ func (h *AdminUserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request
 
 	// Change the role
 	if err := h.userService.ChangeUserRole(adminUserID, targetUserID, request.Role); err != nil {
-		h.logger.Error("Failed to change user role",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"new_role", request.Role,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to change user role: admin_user_id=%d target_user_id=%d new_role=%s error=%v", adminUserID, targetUserID, request.Role, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	h.logger.Info("User role changed",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-		"new_role", request.Role,
-	)
+	h.logger.Info("User role changed: admin_user_id=%d target_user_id=%d new_role=%s", adminUserID, targetUserID, request.Role)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -274,21 +241,12 @@ func (h *AdminUserHandler) ToggleEmailVerification(w http.ResponseWriter, r *htt
 
 	// Toggle email verification
 	if err := h.userService.SetEmailVerification(adminUserID, targetUserID, request.Verified); err != nil {
-		h.logger.Error("Failed to toggle email verification",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"verified", request.Verified,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to toggle email verification: admin_user_id=%d target_user_id=%d verified=%v error=%v", adminUserID, targetUserID, request.Verified, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.logger.Info("Email verification toggled",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-		"verified", request.Verified,
-	)
+	h.logger.Info("Email verification toggled: admin_user_id=%d target_user_id=%d verified=%v", adminUserID, targetUserID, request.Verified)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -309,10 +267,7 @@ func (h *AdminUserHandler) GetUserDetails(w http.ResponseWriter, r *http.Request
 	// Get user with admin details
 	user, err := h.userService.GetUserByIDWithAdminDetails(targetUserID)
 	if err != nil {
-		h.logger.Error("Failed to get user details",
-			"target_user_id", targetUserID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to get user details: target_user_id=%d error=%v", targetUserID, err)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
@@ -340,19 +295,12 @@ func (h *AdminUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the user
 	if err := h.userService.DeleteUser(adminUserID, targetUserID); err != nil {
-		h.logger.Error("Failed to delete user",
-			"admin_user_id", adminUserID,
-			"target_user_id", targetUserID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to delete user: admin_user_id=%d target_user_id=%d error=%v", adminUserID, targetUserID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	h.logger.Info("User deleted",
-		"admin_user_id", adminUserID,
-		"target_user_id", targetUserID,
-	)
+	h.logger.Info("User deleted: admin_user_id=%d target_user_id=%d", adminUserID, targetUserID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{

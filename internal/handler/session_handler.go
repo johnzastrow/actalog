@@ -37,10 +37,7 @@ func (h *SessionHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	// Get all active sessions
 	sessions, err := h.userService.GetActiveSessions(userID)
 	if err != nil {
-		h.logger.Error("Failed to get sessions",
-			"user_id", userID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to get sessions: user_id=%d error=%v", userID, err)
 		http.Error(w, "Failed to retrieve sessions", http.StatusInternalServerError)
 		return
 	}
@@ -70,19 +67,12 @@ func (h *SessionHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 
 	// Revoke the session
 	if err := h.userService.RevokeSession(userID, sessionID); err != nil {
-		h.logger.Error("Failed to revoke session",
-			"user_id", userID,
-			"session_id", sessionID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to revoke session: user_id=%d session_id=%d error=%v", userID, sessionID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	h.logger.Info("Session revoked",
-		"user_id", userID,
-		"session_id", sessionID,
-	)
+	h.logger.Info("Session revoked: user_id=%d session_id=%d", userID, sessionID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -113,17 +103,12 @@ func (h *SessionHandler) RevokeAllSessions(w http.ResponseWriter, r *http.Reques
 	// Note: In a real implementation, you'd track the current session's token ID
 	// For now, we'll just support revoking all
 	if err := h.userService.RevokeAllSessions(userID, exceptTokenID); err != nil {
-		h.logger.Error("Failed to revoke all sessions",
-			"user_id", userID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to revoke all sessions: user_id=%d error=%v", userID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.logger.Info("All sessions revoked",
-		"user_id", userID,
-	)
+	h.logger.Info("All sessions revoked: user_id=%d", userID)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{

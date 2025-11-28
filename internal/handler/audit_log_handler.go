@@ -32,10 +32,7 @@ func (h *AuditLogHandler) GetAuditLog(w http.ResponseWriter, r *http.Request) {
 	// Only admins can access individual audit logs
 	userRole, _ := middleware.GetUserRole(r.Context())
 	if userRole != "admin" {
-		h.logger.Warn("Unauthorized access attempt to audit log",
-			"user_role", userRole,
-			"path", r.URL.Path,
-		)
+		h.logger.Warn("Unauthorized access attempt to audit log: user_role=%s path=%s", userRole, r.URL.Path)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -49,10 +46,7 @@ func (h *AuditLogHandler) GetAuditLog(w http.ResponseWriter, r *http.Request) {
 
 	log, err := h.service.GetByID(id)
 	if err != nil {
-		h.logger.Error("Failed to get audit log",
-			"id", id,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to get audit log: id=%d error=%v", id, err)
 		http.Error(w, "Audit log not found", http.StatusNotFound)
 		return
 	}
@@ -67,9 +61,7 @@ func (h *AuditLogHandler) ListAuditLogs(w http.ResponseWriter, r *http.Request) 
 	// Only admins can list all audit logs
 	userRole, _ := middleware.GetUserRole(r.Context())
 	if userRole != "admin" {
-		h.logger.Warn("Unauthorized access attempt to audit logs list",
-			"user_role", userRole,
-		)
+		h.logger.Warn("Unauthorized access attempt to audit logs list: user_role=%s", userRole)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -141,18 +133,14 @@ func (h *AuditLogHandler) ListAuditLogs(w http.ResponseWriter, r *http.Request) 
 	// Get logs and count
 	logs, err := h.service.List(filters, limit, offset)
 	if err != nil {
-		h.logger.Error("Failed to list audit logs",
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to list audit logs: %v", err)
 		http.Error(w, "Failed to retrieve audit logs", http.StatusInternalServerError)
 		return
 	}
 
 	count, err := h.service.Count(filters)
 	if err != nil {
-		h.logger.Error("Failed to count audit logs",
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to count audit logs: %v", err)
 		// Continue anyway, just set count to 0
 		count = 0
 	}
@@ -197,10 +185,7 @@ func (h *AuditLogHandler) GetMyAuditLogs(w http.ResponseWriter, r *http.Request)
 	// Get logs for current user
 	logs, err := h.service.GetByUserID(userID, limit, offset)
 	if err != nil {
-		h.logger.Error("Failed to get user audit logs",
-			"user_id", userID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to get user audit logs: user_id=%d error=%v", userID, err)
 		http.Error(w, "Failed to retrieve audit logs", http.StatusInternalServerError)
 		return
 	}
@@ -211,10 +196,7 @@ func (h *AuditLogHandler) GetMyAuditLogs(w http.ResponseWriter, r *http.Request)
 	}
 	count, err := h.service.Count(filters)
 	if err != nil {
-		h.logger.Error("Failed to count user audit logs",
-			"user_id", userID,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to count user audit logs: user_id=%d error=%v", userID, err)
 		count = 0
 	}
 
@@ -255,20 +237,13 @@ func (h *AuditLogHandler) CleanupOldLogs(w http.ResponseWriter, r *http.Request)
 
 	deletedCount, err := h.service.CleanupOldLogs(request.RetentionDays)
 	if err != nil {
-		h.logger.Error("Failed to cleanup old audit logs",
-			"retention_days", request.RetentionDays,
-			"error", err.Error(),
-		)
+		h.logger.Error("Failed to cleanup old audit logs: retention_days=%d error=%v", request.RetentionDays, err)
 		http.Error(w, "Failed to cleanup audit logs", http.StatusInternalServerError)
 		return
 	}
 
 	adminUserID, _ := middleware.GetUserID(r.Context())
-	h.logger.Info("Cleaned up old audit logs",
-		"retention_days", request.RetentionDays,
-		"deleted_count", deletedCount,
-		"admin_user_id", adminUserID,
-	)
+	h.logger.Info("Cleaned up old audit logs: retention_days=%d deleted_count=%d admin_user_id=%d", request.RetentionDays, deletedCount, adminUserID)
 
 	response := map[string]interface{}{
 		"deleted_count": deletedCount,

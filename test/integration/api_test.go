@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 // Test helper to set up test router with dependencies
 func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, *sql.DB, int64, error) {
 	// Initialize using the configured test DB driver and DSN (defaults to sqlite in-memory)
-	db, err := repository.InitDatabase(*testDBDriver, *testDSN)
+	db, err := repository.InitDatabase(*testDBDriver, *testDSN, nil)
 	if err != nil {
 		return nil, nil, nil, 0, err
 	}
@@ -149,6 +149,7 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 	userService := service.NewUserService(
 		userRepo,
 		refreshTokenRepo,
+		nil, // no audit log service for tests
 		"test-secret-key",
 		24*time.Hour,
 		7*24*time.Hour,
@@ -156,23 +157,34 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		nil,  // no email service for tests
 		"http://localhost:3000",
 		false, // don't require email verification in tests
+		5,     // max login attempts
+		15*time.Minute, // lockout duration
 	)
 
 	// Initialize handlers
 	// Create a test logger (stdout only) for handlers
 	testLogger, _ := logger.New(logger.Config{Level: "debug", EnableFile: false})
 	authHandler := handler.NewAuthHandler(userService, testLogger)
+
+	// Create additional repositories needed for user workout service
+	movementRepo := repository.NewMovementRepository(db)
+	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
+	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
+	wodRepo := repository.NewWODRepository(db)
+	workoutWODRepo := repository.NewWorkoutWODRepository(db)
+
 	// Create user workout handler
 	userWorkoutService := service.NewUserWorkoutService(
 		repository.NewUserWorkoutRepository(db),
 		workoutRepo,
 		workoutMovementRepo,
+		userWorkoutMovementRepo,
+		userWorkoutWODRepo,
+		wodRepo,
 	)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, testLogger)
 
 	// Create workout service for PR endpoints
-	movementRepo := repository.NewMovementRepository(db)
-	workoutWODRepo := repository.NewWorkoutWODRepository(db)
 	workoutService := service.NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
 
 	// Set up router

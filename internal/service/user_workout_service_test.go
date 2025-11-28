@@ -12,7 +12,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 	tests := []struct {
 		name          string
 		userID        int64
-		workoutID     int64
+		workoutID     *int64
+		workoutName   *string
 		workoutDate   time.Time
 		notes         *string
 		totalTime     *int
@@ -23,7 +24,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 		{
 			name:        "successful workout log",
 			userID:      1,
-			workoutID:   1,
+			workoutID:   int64Ptr(1),
+			workoutName: nil,
 			workoutDate: time.Now(),
 			notes:       stringPtr("Great workout!"),
 			totalTime:   intPtr(1800),
@@ -41,7 +43,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 		{
 			name:        "log standard workout (created_by is null)",
 			userID:      1,
-			workoutID:   2,
+			workoutID:   int64Ptr(2),
+			workoutName: nil,
 			workoutDate: time.Now(),
 			notes:       nil,
 			totalTime:   nil,
@@ -58,7 +61,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 		{
 			name:        "workout template not found",
 			userID:      1,
-			workoutID:   999,
+			workoutID:   int64Ptr(999),
+			workoutName: nil,
 			workoutDate: time.Now(),
 			notes:       nil,
 			totalTime:   nil,
@@ -71,7 +75,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 		{
 			name:        "unauthorized access to another user's workout",
 			userID:      1,
-			workoutID:   3,
+			workoutID:   int64Ptr(3),
+			workoutName: nil,
 			workoutDate: time.Now(),
 			notes:       nil,
 			totalTime:   nil,
@@ -98,11 +103,12 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 				tt.setupMock(workoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo)
+			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo())
 
 			userWorkout, err := service.LogWorkout(
 				tt.userID,
 				tt.workoutID,
+				tt.workoutName,
 				tt.workoutDate,
 				tt.notes,
 				tt.totalTime,
@@ -130,8 +136,8 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 				t.Errorf("expected user ID %d, got %d", tt.userID, userWorkout.UserID)
 			}
 
-			if userWorkout.WorkoutID != tt.workoutID {
-				t.Errorf("expected workout ID %d, got %d", tt.workoutID, userWorkout.WorkoutID)
+			if tt.workoutID != nil && (userWorkout.WorkoutID == nil || *userWorkout.WorkoutID != *tt.workoutID) {
+				t.Errorf("expected workout ID %d, got %v", *tt.workoutID, userWorkout.WorkoutID)
 			}
 		})
 	}
@@ -153,7 +159,7 @@ func TestUserWorkoutService_GetLoggedWorkout(t *testing.T) {
 				m.userWorkouts[1] = &domain.UserWorkout{
 					ID:          1,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -176,7 +182,7 @@ func TestUserWorkoutService_GetLoggedWorkout(t *testing.T) {
 				m.userWorkouts[2] = &domain.UserWorkout{
 					ID:          2,
 					UserID:      2, // Different user
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -194,7 +200,7 @@ func TestUserWorkoutService_GetLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo)
+			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo())
 
 			userWorkout, err := service.GetLoggedWorkout(tt.userWorkoutID, tt.userID)
 
@@ -227,6 +233,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 		name          string
 		userWorkoutID int64
 		userID        int64
+		workoutName   *string
 		notes         *string
 		totalTime     *int
 		workoutType   *string
@@ -237,6 +244,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 			name:          "successful update",
 			userWorkoutID: 1,
 			userID:        1,
+			workoutName:   nil,
 			notes:         stringPtr("Updated notes"),
 			totalTime:     intPtr(2000),
 			workoutType:   stringPtr("strength"),
@@ -244,7 +252,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 				m.userWorkouts[1] = &domain.UserWorkout{
 					ID:          1,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -254,6 +262,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 			name:          "workout not found",
 			userWorkoutID: 999,
 			userID:        1,
+			workoutName:   nil,
 			notes:         stringPtr("Updated notes"),
 			totalTime:     nil,
 			workoutType:   nil,
@@ -266,6 +275,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 			name:          "unauthorized update",
 			userWorkoutID: 2,
 			userID:        1,
+			workoutName:   nil,
 			notes:         stringPtr("Trying to update"),
 			totalTime:     nil,
 			workoutType:   nil,
@@ -273,7 +283,7 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 				m.userWorkouts[2] = &domain.UserWorkout{
 					ID:          2,
 					UserID:      2, // Different user
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -291,11 +301,12 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo)
+			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo())
 
 			err := service.UpdateLoggedWorkout(
 				tt.userWorkoutID,
 				tt.userID,
+				tt.workoutName,
 				tt.notes,
 				tt.totalTime,
 				tt.workoutType,
@@ -341,7 +352,7 @@ func TestUserWorkoutService_DeleteLoggedWorkout(t *testing.T) {
 				m.userWorkouts[1] = &domain.UserWorkout{
 					ID:          1,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -364,7 +375,7 @@ func TestUserWorkoutService_DeleteLoggedWorkout(t *testing.T) {
 				m.userWorkouts[2] = &domain.UserWorkout{
 					ID:          2,
 					UserID:      2, // Different user
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Now(),
 				}
 			},
@@ -382,7 +393,7 @@ func TestUserWorkoutService_DeleteLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo)
+			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo())
 
 			err := service.DeleteLoggedWorkout(tt.userWorkoutID, tt.userID)
 
@@ -424,19 +435,19 @@ func TestUserWorkoutService_GetWorkoutStatsForMonth(t *testing.T) {
 				m.userWorkouts[1] = &domain.UserWorkout{
 					ID:          1,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC),
 				}
 				m.userWorkouts[2] = &domain.UserWorkout{
 					ID:          2,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
 				}
 				m.userWorkouts[3] = &domain.UserWorkout{
 					ID:          3,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Date(2025, 2, 5, 0, 0, 0, 0, time.UTC), // Different month
 				}
 			},
@@ -451,7 +462,7 @@ func TestUserWorkoutService_GetWorkoutStatsForMonth(t *testing.T) {
 				m.userWorkouts[1] = &domain.UserWorkout{
 					ID:          1,
 					UserID:      1,
-					WorkoutID:   1,
+					WorkoutID:   int64Ptr(1),
 					WorkoutDate: time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC),
 				}
 			},
@@ -469,7 +480,7 @@ func TestUserWorkoutService_GetWorkoutStatsForMonth(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo)
+			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo())
 
 			count, err := service.GetWorkoutStatsForMonth(tt.userID, tt.year, tt.month)
 
