@@ -83,8 +83,8 @@ COPY seeds/ /app/seeds/
 COPY docker/scripts/init-seeds.sh /app/scripts/init-seeds.sh
 COPY docker/scripts/entrypoint.sh /app/scripts/entrypoint.sh
 
-# Create directories for uploads and database
-RUN mkdir -p /app/uploads /app/data /app/scripts && \
+# Create directories for uploads, database, and backups
+RUN mkdir -p /app/uploads /app/data /app/backups /app/scripts && \
     chmod +x /app/scripts/init-seeds.sh /app/scripts/entrypoint.sh && \
     chown -R actalog:actalog /app
 

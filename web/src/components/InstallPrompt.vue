@@ -123,6 +123,6 @@ function dismissPrompt() {
 
 <style scoped>
 .install-prompt {
-  margin-bottom: 70px; /* Account for bottom navigation */
+  margin-bottom: 56px; /* Account for bottom navigation */
 }
 </style>
