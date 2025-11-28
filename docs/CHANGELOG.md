@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1-beta] - 2025-11-28
+
+### Fixed - MySQL/MariaDB Compatibility
+
+**Database-Agnostic Timestamp Functions:**
+- Fixed `addWorkoutMovementWithDistance()` to use database-specific timestamp syntax
+- Fixed `refresh_token_repository.go` functions with hardcoded SQLite `datetime('now')`:
+  - `GetByToken()` - Token expiration check
+  - `Revoke()` - Token revocation timestamp
+  - `RevokeAllForUser()` - Bulk revocation timestamp
+  - `DeleteExpired()` - Expired token cleanup
+- Added `getTimestampFunc()` helper for database-agnostic timestamp generation
+- Supports SQLite (`datetime('now')`), PostgreSQL (`CURRENT_TIMESTAMP`), MySQL/MariaDB (`NOW()`)
+
+### Added - Docker Host Database Documentation
+
+**Comprehensive Troubleshooting Guide for External Databases:**
+- `docker/DOCKER.md` - New "Connecting to Host Database" troubleshooting section
+- `docker/DATABASE_DEPLOYMENT.md` - Enhanced external database troubleshooting:
+  - UFW firewall configuration for Docker network access
+  - MariaDB/MySQL bind-address configuration steps
+  - PostgreSQL listen_addresses and pg_hba.conf setup
+  - Database user permission grants for Docker network (172.17.0.0/16)
+  - Linux `extra_hosts: host.docker.internal:host-gateway` configuration
+  - Step-by-step connection refused debugging
+
+### Technical Details
+- **Build**: #4 → #5
+- **Version**: 0.12.0-beta → 0.12.1-beta
+- **Files Modified**:
+  - `internal/repository/database.go` (timestamp helper + fix)
+  - `internal/repository/refresh_token_repository.go` (4 function fixes)
+  - `docker/DOCKER.md` (host database troubleshooting)
+  - `docker/DATABASE_DEPLOYMENT.md` (firewall + connection troubleshooting)
+
+---
+
 ## [0.12.0-beta] - 2025-11-26
 
 ### Fixed - Mobile PWA Layout

@@ -1,5 +1,37 @@
 # TODO
 
+## v0.12.1-beta Release - COMPLETE ✅ (2025-11-28)
+
+**Status:** MySQL/MariaDB compatibility fix and Docker troubleshooting documentation.
+
+### Completed ✅
+- [x] **MySQL/MariaDB Timestamp Compatibility**
+  - [x] Fixed `addWorkoutMovementWithDistance()` with hardcoded SQLite `datetime('now')`
+  - [x] Fixed `GetByToken()` in refresh_token_repository.go
+  - [x] Fixed `Revoke()` in refresh_token_repository.go
+  - [x] Fixed `RevokeAllForUser()` in refresh_token_repository.go
+  - [x] Fixed `DeleteExpired()` in refresh_token_repository.go
+  - [x] Added `getTimestampFunc()` helper for database-specific timestamp syntax
+  - [x] Supports SQLite, PostgreSQL, and MySQL/MariaDB
+
+- [x] **Docker Host Database Documentation**
+  - [x] Added "Connecting to Host Database" section to `docker/DOCKER.md`
+  - [x] Enhanced troubleshooting in `docker/DATABASE_DEPLOYMENT.md`
+  - [x] UFW firewall configuration for Docker network (172.17.0.0/16)
+  - [x] MariaDB bind-address configuration steps
+  - [x] Database user permission grants for Docker network
+  - [x] Linux `extra_hosts: host.docker.internal:host-gateway` configuration
+
+### Technical Details
+- **Build Number**: #5
+- **Files Modified**:
+  - `internal/repository/database.go` (getTimestampFunc helper + fix)
+  - `internal/repository/refresh_token_repository.go` (4 function fixes)
+  - `docker/DOCKER.md` (host database troubleshooting)
+  - `docker/DATABASE_DEPLOYMENT.md` (firewall + connection troubleshooting)
+
+---
+
 ## v0.11.0-beta Release - COMPLETE ✅ (2025-11-26)
 
 **Status:** Data Change Audit Logging system fully implemented and tested.
