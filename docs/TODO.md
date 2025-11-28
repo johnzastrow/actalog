@@ -19,6 +19,10 @@
 6. **Technical Details** - Include file paths and implementation notes for completed work
 7. **Priority Markers** - Use `[HIGH]`, `[MEDIUM]`, `[LOW]` for backlog items
 8. **Bug Format** - `[BUG]` prefix for bug reports
+9. **Code TODOs** - Periodically scan codebase for TODO/FIXME comments:
+   ```bash
+   grep -rn "TODO\|FIXME" --include="*.go" --include="*.vue" --include="*.js" .
+   ```
 
 ### File Relationships:
 - `TODO.md` - Active task tracking (this file)
@@ -89,6 +93,31 @@
 *Report bugs here with reproduction steps.*
 
 *(none currently)*
+
+---
+
+## Code TODOs
+
+*TODOs found in source code comments. These should be addressed or promoted to Backlog.*
+
+### Backend (Go)
+
+| File | Line | Description |
+|------|------|-------------|
+| `internal/service/workout_service.go` | 396 | Add proper authorization through workout template ownership |
+| `internal/service/import_service.go` | 587, 701 | Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange |
+| `internal/handler/movement_handler.go` | 141 | Get user ID from context when auth middleware is added |
+
+### Frontend (Vue)
+
+| File | Line | Description |
+|------|------|-------------|
+| `web/src/views/WorkoutDetailView.vue` | 409 | Implement edit workout functionality |
+| `web/src/views/SettingsView.vue` | 511 | Apply theme change (dark mode toggle) |
+| `web/src/views/SettingsView.vue` | 540 | Implement import functionality |
+| `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
+
+*Last scanned: 2025-11-28*
 
 ---
 
