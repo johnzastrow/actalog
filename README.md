@@ -54,6 +54,10 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 7. Workout templates are composite structures that contain a description and zero or more WODS and zero or more movements. Some are supplied as standard in the app, and users can create their own custom templates. Logging a workout against a template records results against all included WODs and movements and they count toward performance tracking. But the workout is only stored once.
 </p><br>
 
+#### Videos - see the full playlist
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/DfLPpVaMT2g?si=kjJJOvr4Pzjyl_YQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 
 ## Roadmap — Next priorities
 
