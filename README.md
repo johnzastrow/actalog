@@ -56,7 +56,8 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 
 #### Videos - see the full playlist
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DfLPpVaMT2g?si=kjJJOvr4Pzjyl_YQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Intro Video](https://youtu.be/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)]([https://golang.org](https://youtu.be/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi))
+
 
 
 ## Roadmap — Next priorities
