@@ -56,7 +56,7 @@ Retrieved 2025-11-23, License - CC BY-SA 4.0
 
 #### Videos - see the full playlist
 
-[![Intro Video](https://youtu.be/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)]([https://golang.org](https://youtu.be/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi))
+[![Watch the video](https://img.youtube.com/vi/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi/hqdefault.jpg)](https://www.youtube.com/embed/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)
 
 
 
