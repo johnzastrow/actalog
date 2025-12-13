@@ -446,6 +446,101 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.6.0",
+		Description: "Add organizations table and organization_id to users",
+		Up: func(db *sql.DB, driver string) error {
+			var createOrgSQL string
+			var alterUsersSQL string
+
+			switch driver {
+			case "sqlite3":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					name TEXT UNIQUE NOT NULL,
+					description TEXT,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id INTEGER REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			case "postgres":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id BIGSERIAL PRIMARY KEY,
+					name VARCHAR(255) UNIQUE NOT NULL,
+					description TEXT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+				);
+				CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			case "mysql":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					name VARCHAR(255) UNIQUE NOT NULL,
+					description TEXT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_organizations_name (name)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT,
+								ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			// Create organizations table
+			if _, err := db.Exec(createOrgSQL); err != nil {
+				return fmt.Errorf("failed to create organizations table: %w", err)
+			}
+
+			// Check if column already exists before adding
+			hasColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if !hasColumn {
+				if _, err := db.Exec(alterUsersSQL); err != nil {
+					return fmt.Errorf("failed to add organization_id to users: %w", err)
+				}
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop organization_id column from users
+			var dropColumnSQL string
+			switch driver {
+			case "sqlite3":
+				return fmt.Errorf("SQLite does not support dropping columns easily")
+			case "postgres", "mysql":
+				dropColumnSQL = "ALTER TABLE users DROP COLUMN organization_id"
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(dropColumnSQL); err != nil {
+				return err
+			}
+
+			// Drop organizations table
+			if _, err := db.Exec("DROP TABLE IF EXISTS organizations"); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

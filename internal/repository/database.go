@@ -169,6 +169,34 @@ func checkTableExists(db *sql.DB, driver, tableName string) (bool, error) {
 	return true, nil
 }
 
+// checkColumnExists checks if a column exists in a table
+func checkColumnExists(db *sql.DB, driver, tableName, columnName string) (bool, error) {
+	var query string
+	var count int
+
+	switch driver {
+	case "sqlite3":
+		query = `SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?`
+		err := db.QueryRow(query, tableName, columnName).Scan(&count)
+		return count > 0, err
+
+	case "postgres":
+		query = `SELECT COUNT(*) FROM information_schema.columns
+				WHERE table_name = $1 AND column_name = $2`
+		err := db.QueryRow(query, tableName, columnName).Scan(&count)
+		return count > 0, err
+
+	case "mysql":
+		query = `SELECT COUNT(*) FROM information_schema.columns
+				WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?`
+		err := db.QueryRow(query, tableName, columnName).Scan(&count)
+		return count > 0, err
+
+	default:
+		return false, fmt.Errorf("unsupported database driver: %s", driver)
+	}
+}
+
 // createTables creates all necessary database tables using driver-specific SQL
 func createTables(db *sql.DB, driver string) error {
 	var schema string

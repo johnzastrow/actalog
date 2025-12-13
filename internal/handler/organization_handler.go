@@ -1,0 +1,244 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/johnzastrow/actalog/internal/service"
+	"github.com/johnzastrow/actalog/pkg/logger"
+)
+
+type OrganizationHandler struct {
+	orgService *service.OrganizationService
+	logger     *logger.Logger
+}
+
+func NewOrganizationHandler(orgService *service.OrganizationService, logger *logger.Logger) *OrganizationHandler {
+	return &OrganizationHandler{
+		orgService: orgService,
+		logger:     logger,
+	}
+}
+
+// CreateOrganization handles POST /api/admin/organizations
+func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name        string  `json:"name"`
+		Description *string `json:"description"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.Name == "" {
+		respondError(w, http.StatusBadRequest, "Organization name is required")
+		return
+	}
+
+	org, err := h.orgService.Create(req.Name, req.Description)
+	if err != nil {
+		if err == service.ErrOrganizationNameExists {
+			respondError(w, http.StatusConflict, "Organization name already exists")
+			return
+		}
+		h.logger.Error("Failed to create organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to create organization")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, org)
+}
+
+// ListOrganizations handles GET /api/admin/organizations
+func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.Request) {
+	limit := 50
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	offset := 0
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+
+	orgs, total, err := h.orgService.List(limit, offset)
+	if err != nil {
+		h.logger.Error("Failed to list organizations: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to list organizations")
+		return
+	}
+
+	response := map[string]interface{}{
+		"organizations": orgs,
+		"total":         total,
+		"limit":         limit,
+		"offset":        offset,
+	}
+
+	respondJSON(w, http.StatusOK, response)
+}
+
+// GetOrganization handles GET /api/admin/organizations/:id
+func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid organization ID")
+		return
+	}
+
+	org, err := h.orgService.GetByID(id)
+	if err != nil {
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
+			return
+		}
+		h.logger.Error("Failed to get organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get organization")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, org)
+}
+
+// UpdateOrganization handles PUT /api/admin/organizations/:id
+func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid organization ID")
+		return
+	}
+
+	var req struct {
+		Name        string  `json:"name"`
+		Description *string `json:"description"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	org, err := h.orgService.Update(id, req.Name, req.Description)
+	if err != nil {
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
+			return
+		}
+		if err == service.ErrOrganizationNameExists {
+			respondError(w, http.StatusConflict, "Organization name already exists")
+			return
+		}
+		h.logger.Error("Failed to update organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to update organization")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, org)
+}
+
+// DeleteOrganization handles DELETE /api/admin/organizations/:id
+func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid organization ID")
+		return
+	}
+
+	err = h.orgService.Delete(id)
+	if err != nil {
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
+			return
+		}
+		if err == service.ErrOrganizationHasUsers {
+			respondError(w, http.StatusConflict, "Cannot delete organization with assigned users")
+			return
+		}
+		h.logger.Error("Failed to delete organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to delete organization")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Organization deleted successfully",
+	})
+}
+
+// AssignUserToOrganization handles POST /api/admin/users/:id/organization
+func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r *http.Request) {
+	userIDStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	var req struct {
+		OrganizationID int64 `json:"organization_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.OrganizationID == 0 {
+		respondError(w, http.StatusBadRequest, "Organization ID is required")
+		return
+	}
+
+	err = h.orgService.AssignUserToOrganization(userID, req.OrganizationID)
+	if err != nil {
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
+			return
+		}
+		if err == service.ErrUserNotFound {
+			respondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		h.logger.Error("Failed to assign user to organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to assign user")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "User assigned to organization successfully",
+	})
+}
+
+// RemoveUserFromOrganization handles DELETE /api/admin/users/:id/organization
+func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, r *http.Request) {
+	userIDStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	err = h.orgService.RemoveUserFromOrganization(userID)
+	if err != nil {
+		if err == service.ErrUserNotFound {
+			respondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		h.logger.Error("Failed to remove user from organization: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to remove user")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "User removed from organization successfully",
+	})
+}

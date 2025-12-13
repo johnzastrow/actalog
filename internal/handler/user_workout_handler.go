@@ -689,4 +689,26 @@ func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.R
 	})
 }
 
+// GetActiveUsersStats handles GET /api/stats/active-users-this-month
+func (h *UserWorkoutHandler) GetActiveUsersStats(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	stats, err := h.userWorkoutService.GetActiveUsersThisMonth(userID)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("Failed to get active users stats: user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get active users stats")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"users": stats,
+	})
+}
+
 // ErrorResponse represents an error response

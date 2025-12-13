@@ -65,7 +65,7 @@ func (r *SQLiteUserRepository) Create(user *domain.User) error {
 // GetByID retrieves a user by ID
 func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 	query := rebindQuery(`
-		SELECT id, email, password_hash, name, profile_image, role,
+		SELECT id, email, password_hash, name, profile_image, role, organization_id,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
 		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
@@ -75,7 +75,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
-	var disabledByUserID sql.NullInt64
+	var organizationID, disabledByUserID sql.NullInt64
 	var disableReason sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
@@ -85,6 +85,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 		&user.Name,
 		&user.ProfileImage,
 		&user.Role,
+		&organizationID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&lastLoginAt,
@@ -128,6 +129,9 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 	if disableReason.Valid {
 		user.DisableReason = &disableReason.String
 	}
+	if organizationID.Valid {
+		user.OrganizationID = &organizationID.Int64
+	}
 
 	return user, nil
 }
@@ -135,7 +139,7 @@ func (r *SQLiteUserRepository) GetByID(id int64) (*domain.User, error) {
 // GetByEmail retrieves a user by email
 func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 	query := rebindQuery(`
-		SELECT id, email, password_hash, name, profile_image, role,
+		SELECT id, email, password_hash, name, profile_image, role, organization_id,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
 		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
@@ -145,7 +149,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 
 	user := &domain.User{}
 	var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
-	var disabledByUserID sql.NullInt64
+	var organizationID, disabledByUserID sql.NullInt64
 	var disableReason sql.NullString
 
 	err := r.db.QueryRow(query, email).Scan(
@@ -155,6 +159,7 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.Name,
 		&user.ProfileImage,
 		&user.Role,
+		&organizationID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&lastLoginAt,
@@ -197,6 +202,9 @@ func (r *SQLiteUserRepository) GetByEmail(email string) (*domain.User, error) {
 	}
 	if disableReason.Valid {
 		user.DisableReason = &disableReason.String
+	}
+	if organizationID.Valid {
+		user.OrganizationID = &organizationID.Int64
 	}
 
 	return user, nil
@@ -222,7 +230,7 @@ func (r *SQLiteUserRepository) GetByVerificationToken(token string) (*domain.Use
 func (r *SQLiteUserRepository) Update(user *domain.User) error {
 	query := rebindQuery(`
 		UPDATE users
-		SET email = ?, name = ?, profile_image = ?, role = ?,
+		SET email = ?, name = ?, profile_image = ?, role = ?, organization_id = ?,
 		    updated_at = ?, last_login_at = ?, password_hash = ?,
 		    email_verified = ?, email_verified_at = ?
 		WHERE id = ?
@@ -243,6 +251,11 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 		profileImage = *user.ProfileImage
 	}
 
+	var organizationID interface{}
+	if user.OrganizationID != nil {
+		organizationID = *user.OrganizationID
+	}
+
 	user.UpdatedAt = time.Now()
 
 	_, err := r.db.Exec(
@@ -251,6 +264,7 @@ func (r *SQLiteUserRepository) Update(user *domain.User) error {
 		user.Name,
 		profileImage,
 		user.Role,
+		organizationID,
 		user.UpdatedAt,
 		lastLoginAt,
 		user.PasswordHash,
@@ -279,7 +293,7 @@ func (r *SQLiteUserRepository) Delete(id int64) error {
 // List retrieves a list of users with pagination
 func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 	query := rebindQuery(`
-		SELECT id, email, password_hash, name, profile_image, role,
+		SELECT id, email, password_hash, name, profile_image, role, organization_id,
 		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
 		       failed_login_attempts, locked_at, locked_until,
 		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
@@ -298,7 +312,7 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 	for rows.Next() {
 		user := &domain.User{}
 		var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
-		var disabledByUserID sql.NullInt64
+		var organizationID, disabledByUserID sql.NullInt64
 		var disableReason sql.NullString
 
 		err := rows.Scan(
@@ -308,6 +322,7 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 			&user.Name,
 			&user.ProfileImage,
 			&user.Role,
+			&organizationID,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 			&lastLoginAt,
@@ -346,6 +361,9 @@ func (r *SQLiteUserRepository) List(limit, offset int) ([]*domain.User, error) {
 		}
 		if disableReason.Valid {
 			user.DisableReason = &disableReason.String
+		}
+		if organizationID.Valid {
+			user.OrganizationID = &organizationID.Int64
 		}
 
 		users = append(users, user)

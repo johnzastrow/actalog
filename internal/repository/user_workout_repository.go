@@ -587,6 +587,110 @@ func (r *UserWorkoutRepository) GetRecentForUser(userID int64, limit int) ([]*do
 	return workouts, rows.Err()
 }
 
+// GetActiveUsersThisMonth gets current user + 2 random users from same org with workout counts for current month
+func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64, orgID int64) ([]map[string]interface{}, error) {
+	// Get start of current month
+	now := time.Now()
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	nextMonth := firstOfMonth.AddDate(0, 1, 0)
+
+	// Get 2 random other users from same organization with their workout counts
+	query := rebindQuery(`
+		SELECT
+			u.id,
+			u.name,
+			COUNT(uw.id) as workout_count
+		FROM users u
+		LEFT JOIN user_workouts uw ON u.id = uw.user_id
+			AND uw.workout_date >= ?
+			AND uw.workout_date < ?
+		WHERE u.organization_id = ?
+			AND u.id != ?
+		GROUP BY u.id, u.name
+		ORDER BY RANDOM()
+		LIMIT 2
+	`)
+
+	// Adjust RANDOM() for different databases
+	if currentDriver == "mysql" {
+		query = rebindQuery(`
+			SELECT
+				u.id,
+				u.name,
+				COUNT(uw.id) as workout_count
+			FROM users u
+			LEFT JOIN user_workouts uw ON u.id = uw.user_id
+				AND uw.workout_date >= ?
+				AND uw.workout_date < ?
+			WHERE u.organization_id = ?
+				AND u.id != ?
+			GROUP BY u.id, u.name
+			ORDER BY RAND()
+			LIMIT 2
+		`)
+	}
+
+	rows, err := r.db.Query(query, firstOfMonth, nextMonth, orgID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get other active users: %w", err)
+	}
+	defer rows.Close()
+
+	var otherUsers []map[string]interface{}
+	for rows.Next() {
+		var id int64
+		var name string
+		var workoutCount int
+
+		if err := rows.Scan(&id, &name, &workoutCount); err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+
+		otherUsers = append(otherUsers, map[string]interface{}{
+			"id":            id,
+			"name":          name,
+			"workout_count": workoutCount,
+		})
+	}
+
+	// Get current user's workout count
+	currentUserQuery := rebindQuery(`
+		SELECT COUNT(*)
+		FROM user_workouts
+		WHERE user_id = ?
+			AND workout_date >= ?
+			AND workout_date < ?
+	`)
+
+	var currentUserCount int
+	err = r.db.QueryRow(currentUserQuery, userID, firstOfMonth, nextMonth).Scan(&currentUserCount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current user count: %w", err)
+	}
+
+	// Get current user name
+	userQuery := rebindQuery(`SELECT id, name FROM users WHERE id = ?`)
+	var currentUserID int64
+	var currentUserName string
+	err = r.db.QueryRow(userQuery, userID).Scan(&currentUserID, &currentUserName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current user: %w", err)
+	}
+
+	// Build result with current user first
+	result := []map[string]interface{}{
+		{
+			"id":            currentUserID,
+			"name":          currentUserName,
+			"workout_count": currentUserCount,
+			"is_current":    true,
+		},
+	}
+	result = append(result, otherUsers...)
+
+	return result, nil
+}
+
 // scanUserWorkouts scans multiple user workout rows
 func (r *UserWorkoutRepository) scanUserWorkouts(rows *sql.Rows) ([]*domain.UserWorkout, error) {
 	var userWorkouts []*domain.UserWorkout

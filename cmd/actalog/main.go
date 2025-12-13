@@ -106,6 +106,7 @@ func main() {
 	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
 	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
+	orgRepo := repository.NewOrganizationRepository(db)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -182,6 +183,8 @@ func main() {
 
 	userSettingsService := service.NewUserSettingsService(userSettingsRepo)
 
+	orgService := service.NewOrganizationService(orgRepo, userRepo)
+
 	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
 	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 	wodifyImportService := service.NewWodifyImportService(userRepo, movementRepo, wodRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
@@ -221,6 +224,7 @@ func main() {
 	importHandler := handler.NewImportHandler(importService)
 	wodifyImportHandler := handler.NewWodifyImportHandler(wodifyImportService)
 	backupHandler := handler.NewBackupHandler(backupService, auditLogRepo)
+	orgHandler := handler.NewOrganizationHandler(orgService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -373,6 +377,9 @@ func main() {
 			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
 			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
 
+			// Statistics routes (authenticated)
+			r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
+
 			// Export routes (authenticated)
 			r.Get("/export/wods", exportHandler.ExportWODs)
 			r.Get("/export/movements", exportHandler.ExportMovements)
@@ -434,6 +441,17 @@ func main() {
 				r.Post("/user-created/movements/{id}/copy-to-standard", adminHandler.CopyMovementToStandard)
 				r.Get("/user-created/workouts", adminHandler.ListUserCreatedWorkouts)
 				r.Post("/user-created/workouts/{id}/copy-to-standard", adminHandler.CopyWorkoutToStandard)
+
+				// Organization management routes (admin only)
+				r.Post("/organizations", orgHandler.CreateOrganization)
+				r.Get("/organizations", orgHandler.ListOrganizations)
+				r.Get("/organizations/{id}", orgHandler.GetOrganization)
+				r.Put("/organizations/{id}", orgHandler.UpdateOrganization)
+				r.Delete("/organizations/{id}", orgHandler.DeleteOrganization)
+
+				// User-organization assignment (admin only)
+				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)
+				r.Delete("/users/{id}/organization", orgHandler.RemoveUserFromOrganization)
 			})
 		})
 	})
