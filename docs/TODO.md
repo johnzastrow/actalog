@@ -134,6 +134,14 @@ The following lint issues need to be resolved to re-enable strict linting:
 | `web/src/views/SettingsView.vue` | 540 | Implement import functionality |
 | `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
 
+Add scrolling month calendar screen from the profile menu that shows dots for workouts that can be clicked to see workout details. More than one workout per day.
+
+
+Add notifications: notify all users in the gym on the following events: 
+1. What user gets a PR. Show the date, word/movement and Congratulations text
+2. When a user gets 4 or more workouts in a week. Show date, user, workout count and congratulations 
+3. What user Completes a rolling 10 of any type of WOD (hero, girl, etc). For example, every 10 hero wods 
+
 *Last scanned: 2025-11-28*
 
 ---
