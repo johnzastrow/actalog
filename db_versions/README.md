@@ -50,9 +50,16 @@ Sample data can be imported from the MariaDB `acta` database using the export/im
 
 ## Available Snapshots
 
-| Version | File | Description | Date | Records |
-|---------|------|-------------|------|---------|
-| 0.14.0 | `actalog_0.14.0.db` | Subscription billing system | 2024-12-16 | 4 users, 222 movements, 101 WODs, 9 workouts, 407 user_workouts, 4 subscriptions |
+| Version | SQLite | PostgreSQL | MariaDB | Description | Date |
+|---------|--------|------------|---------|-------------|------|
+| 0.14.0 | `actalog_0.14.0.db` | Schema: `actalog_0_14_0` | DB: `actalog_0_14_0` | Subscription billing system | 2024-12-16 |
+
+**Version 0.14.0 Contents:**
+- **SQLite:** 4 users, 222 movements, 101 WODs, 9 workouts, 407 user_workouts, 4 subscriptions
+- **PostgreSQL:** 4 users, 10 movements, 10 WODs, 1 workout, 4 subscriptions, 1 organization
+- **MariaDB:** 4 users, 32 movements, 10 WODs, 4 subscriptions, 1 organization, 4 user-org links
+
+All databases contain the same test users with permanent free subscriptions. See `VERSION_DATABASES.md` for detailed access information.
 
 ## Quick Reference
 
