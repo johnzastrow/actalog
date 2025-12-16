@@ -85,6 +85,9 @@
         </v-form>
       </v-card>
 
+      <!-- Subscription Status Card -->
+      <SubscriptionStatusBadge class="mb-3" />
+
       <!-- Password Change Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Change Password</h2>
@@ -350,10 +353,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSubscriptionStore } from '@/stores/subscription'
 import axios from '@/utils/axios'
+import SubscriptionStatusBadge from '@/components/SubscriptionStatusBadge.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 const activeTab = ref('profile')
 
 // State
@@ -399,6 +405,11 @@ onMounted(() => {
   darkMode.value = localStorage.getItem('darkMode') === 'true'
   notifications.value = localStorage.getItem('notifications') !== 'false'
   weightUnit.value = localStorage.getItem('weightUnit') || 'lbs'
+
+  // Fetch subscription status
+  subscriptionStore.fetchStatus().catch(err => {
+    console.error('Failed to fetch subscription status:', err)
+  })
 })
 
 // Update profile

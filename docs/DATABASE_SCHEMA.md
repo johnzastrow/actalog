@@ -13,7 +13,30 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.12.2-beta
+**Current Version:** 0.14.0-beta
+
+## Recent Changes (v0.14.0-beta)
+
+- **Subscription Billing System**: Dual-level subscription management (user + organization)
+  - New `user_subscriptions` table (15 columns, 4 indexes)
+  - New `organization_subscriptions` table (15 columns, 4 indexes)
+  - Three subscription types: Free, Monthly, Annual
+  - Permanent Free option for founders/staff (never expires)
+  - Flexible access model: users have write access if EITHER personal OR organization subscription active
+  - Manual admin payment control (mark as paid/unpaid)
+  - Immediate read-only mode when expired (no grace period)
+  - HTTP 402 Payment Required for blocked write operations
+  - Read operations (GET) allowed when expired for viewing/exporting
+  - Migration 0.14.0 automatically seeds all existing users with permanent free subscriptions
+  - Complete audit trail for all subscription operations
+  - 10 API endpoints (8 admin, 2 user) for subscription management
+- **Database Version Management**: System for testing migrations across versions
+  - SQLite snapshots: `db_versions/actalog_X.Y.Z.db`
+  - PostgreSQL schemas: `actalog_X_Y_Z` (schema-based versioning)
+  - MariaDB databases: `actalog_X_Y_Z` (database-based versioning)
+  - Automation scripts: `create-db-snapshot.sh`, `verify-version-databases.sh`
+  - Comprehensive documentation: `VERSION_DATABASES.md`, `MIGRATION_TEST_0.14.0.md`
+- **Backward Compatibility**: Zero downtime deployment verified on all 3 database engines
 
 ## Recent Changes (v0.12.2-beta)
 
@@ -626,6 +649,112 @@ Stores audit trail of data modifications for WODs, Movements, and other entities
 - Track who modified what and when
 - Ability to see before/after values for updates
 - Filter by entity type, operation, user, or date range
+
+### user_subscriptions
+
+Stores individual user-level subscription billing information (added v0.14.0).
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique subscription identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| subscription_type | VARCHAR(20) | NOT NULL, CHECK | Subscription type: 'free', 'monthly', 'annual' |
+| status | VARCHAR(20) | NOT NULL, CHECK | Status: 'active', 'expired', 'cancelled' |
+| is_permanent_free | BOOLEAN | NOT NULL, DEFAULT FALSE | Permanent free access (never expires) |
+| start_date | TIMESTAMP | NOT NULL | When subscription started |
+| end_date | TIMESTAMP | NULL | When subscription expires (NULL for permanent free) |
+| last_payment_date | TIMESTAMP | NULL | Last successful payment date |
+| next_billing_date | TIMESTAMP | NULL | Next billing date (NULL for free/permanent) |
+| cancelled_at | TIMESTAMP | NULL | When subscription was cancelled |
+| cancelled_reason | TEXT | NULL | Reason for cancellation |
+| notes | TEXT | NULL | Admin notes about subscription |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+| created_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who created/modified |
+
+**Indexes:**
+- PRIMARY KEY (id)
+- INDEX idx_user_subscriptions_user_id (user_id)
+- INDEX idx_user_subscriptions_status (status)
+- INDEX idx_user_subscriptions_next_billing (next_billing_date)
+
+**Foreign Keys:**
+- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+- FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+
+**Constraints:**
+- CHECK (subscription_type IN ('free', 'monthly', 'annual'))
+- CHECK (status IN ('active', 'expired', 'cancelled'))
+
+**Business Rules:**
+- Users have write access if EITHER personal OR any organization subscription is active
+- Permanent free subscriptions never expire (is_permanent_free = TRUE, end_date = NULL)
+- Monthly subscriptions: end_date = last_payment_date + 30 days
+- Annual subscriptions: end_date = last_payment_date + 365 days
+- Admins manually mark subscriptions as paid (updates last_payment_date, extends end_date)
+- When subscription expires: immediate read-only mode (no grace period)
+- Read-only mode allows: GET requests (view, export, dashboard)
+- Read-only mode blocks: POST/PUT/PATCH/DELETE (returns HTTP 402 Payment Required)
+- All subscription operations are logged to audit_logs
+- Migration 0.14.0 seeds all existing users with permanent free subscriptions
+
+### organization_subscriptions
+
+Stores organization-level subscription billing information (added v0.14.0). Allows gyms/teams to pay for all members.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique subscription identifier |
+| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
+| subscription_type | VARCHAR(20) | NOT NULL, CHECK | Subscription type: 'free', 'monthly', 'annual' |
+| status | VARCHAR(20) | NOT NULL, CHECK | Status: 'active', 'expired', 'cancelled' |
+| is_permanent_free | BOOLEAN | NOT NULL, DEFAULT FALSE | Permanent free access (never expires) |
+| start_date | TIMESTAMP | NOT NULL | When subscription started |
+| end_date | TIMESTAMP | NULL | When subscription expires (NULL for permanent free) |
+| last_payment_date | TIMESTAMP | NULL | Last successful payment date |
+| next_billing_date | TIMESTAMP | NULL | Next billing date (NULL for free/permanent) |
+| cancelled_at | TIMESTAMP | NULL | When subscription was cancelled |
+| cancelled_reason | TEXT | NULL | Reason for cancellation |
+| notes | TEXT | NULL | Admin notes about subscription |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+| created_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who created/modified |
+
+**Indexes:**
+- PRIMARY KEY (id)
+- INDEX idx_org_subscriptions_org_id (organization_id)
+- INDEX idx_org_subscriptions_status (status)
+- INDEX idx_org_subscriptions_next_billing (next_billing_date)
+
+**Foreign Keys:**
+- FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+- FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+
+**Constraints:**
+- CHECK (subscription_type IN ('free', 'monthly', 'annual'))
+- CHECK (status IN ('active', 'expired', 'cancelled'))
+
+**Business Rules:**
+- All members of an organization benefit from organization subscription
+- If any organization a user belongs to has active subscription, user has write access
+- Dual-level access check: CheckUserAccess() returns TRUE if EITHER personal OR organization subscription active
+- Performance optimization: User subscription checked first (single query), organization subscriptions second
+
+**Subscription Access Logic:**
+```
+User has write access if:
+  1. User has active personal subscription (is_permanent_free OR end_date > NOW())
+  OR
+  2. User belongs to ≥1 organization with active subscription
+```
+
+**API Endpoints (v0.14.0):**
+- User: `GET /api/subscriptions/status` - View subscription status
+- Admin: `POST /api/admin/subscriptions/user` - Create user subscription
+- Admin: `POST /api/admin/subscriptions/user/{id}/mark-paid` - Mark as paid
+- Admin: `POST /api/admin/subscriptions/user/{id}/cancel` - Cancel subscription
+- Admin: `GET /api/admin/subscriptions/user/{user_id}` - View subscription history
+- Organization endpoints follow same pattern
 
 ## Standard Movements
 

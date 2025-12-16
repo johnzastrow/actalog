@@ -132,6 +132,9 @@
       </template>
     </v-snackbar>
 
+    <!-- Subscription Expired Banner -->
+    <SubscriptionExpiredBanner v-if="authStore.isAuthenticated" />
+
     <v-main :style="mainStyle">
       <router-view />
     </v-main>

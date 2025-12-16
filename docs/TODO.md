@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-11-28
-> **Current Version:** 0.12.2-beta
+> **Last Updated:** 2024-12-16
+> **Current Version:** 0.14.0-beta
 
 ---
 
@@ -60,6 +60,30 @@ The following lint issues need to be resolved to re-enable strict linting:
 ## Backlog
 
 ### High Priority
+
+#### Subscription System (Backend Complete - v0.14.0)
+- [ ] `[HIGH]` **Frontend Subscription Status Display**
+  - [ ] Add subscription status badge to user profile/settings
+  - [ ] Show expiration date for paid subscriptions
+  - [ ] Display "Permanent Free" badge for permanent users
+  - [ ] Show organization subscriptions the user benefits from
+
+- [ ] `[HIGH]` **Admin Subscription Management UI**
+  - [ ] Admin panel for viewing all user subscriptions
+  - [ ] Admin panel for viewing all organization subscriptions
+  - [ ] Create subscription form (user/org selection, type, permanent free option)
+  - [ ] Mark subscription as paid button/action
+  - [ ] Cancel subscription with reason input
+  - [ ] View subscription history for users and organizations
+  - [ ] List expiring subscriptions (next 30 days)
+  - [ ] List overdue/expired subscriptions
+
+- [ ] `[HIGH]` **Read-Only Mode UI Feedback**
+  - [ ] Graceful handling of HTTP 402 Payment Required responses
+  - [ ] Show "Subscription Expired" banner when in read-only mode
+  - [ ] Disable/hide create/edit buttons when subscription expired
+  - [ ] "Renew Subscription" call-to-action in banner
+  - [ ] Toast notifications explaining why operations are blocked
 
 #### Testing Coverage
 - [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler
@@ -147,6 +171,58 @@ Add notifications: notify all users in the gym on the following events:
 ---
 
 ## Completed Releases
+
+### v0.14.0-beta (2024-12-16)
+
+**Status:** Subscription billing system implementation with dual-level (user + organization) billing.
+
+**Completed:**
+- [x] **Subscription Billing System Backend**
+  - [x] Domain entities (UserSubscription, OrganizationSubscription, SubscriptionAccessResult)
+  - [x] Repository layer (3 repositories: UserSubscription, OrganizationSubscription, SubscriptionAccess)
+  - [x] Service layer (SubscriptionService with admin operations)
+  - [x] Middleware layer (RequireActiveSubscription - read-only enforcement)
+  - [x] Handler layer (10 API endpoints: 8 admin, 2 user)
+  - [x] Route configuration (wired into main.go)
+
+- [x] **Migration 0.14.0**
+  - [x] Create user_subscriptions table (15 columns, 4 indexes)
+  - [x] Create organization_subscriptions table (15 columns, 4 indexes)
+  - [x] Seed existing users with permanent free subscriptions
+  - [x] Multi-database support (SQLite, PostgreSQL, MariaDB)
+
+- [x] **Database Version Management System**
+  - [x] SQLite snapshot: `db_versions/actalog_0.14.0.db` (564 KB)
+  - [x] PostgreSQL schema: `actalog_0_14_0` on 192.168.1.143
+  - [x] MariaDB database: `actalog_0_14_0` on 192.168.1.234
+  - [x] Automation scripts: `create-db-snapshot.sh`, `verify-version-databases.sh`
+  - [x] Documentation: `VERSION_DATABASES.md`, `MIGRATION_TEST_0.14.0.md`
+
+- [x] **Subscription Features**
+  - [x] Three subscription types: Free, Monthly, Annual
+  - [x] Permanent Free option (never expires, for founders/staff)
+  - [x] Dual-level billing (user-level AND organization-level)
+  - [x] Flexible access (access if EITHER personal OR org subscription active)
+  - [x] Manual admin payment control (mark as paid/unpaid)
+  - [x] Immediate read-only mode when expired (no grace period)
+  - [x] HTTP 402 Payment Required for blocked operations
+  - [x] Complete audit trail for all subscription operations
+
+- [x] **Backward Compatibility**
+  - [x] All existing users seeded with permanent free subscriptions
+  - [x] Zero downtime deployment verified
+  - [x] Migration tested on all 3 database engines
+
+**Files Created:** `internal/domain/subscription.go`, `internal/repository/user_subscription_repository.go`, `internal/repository/organization_subscription_repository.go`, `internal/repository/subscription_access_repository.go`, `internal/service/subscription_service.go`, `pkg/middleware/subscription.go`, `internal/handler/subscription_handler.go`, `db_versions/README.md`, `db_versions/VERSION_DATABASES.md`, `db_versions/MIGRATION_TEST_0.14.0.md`, `scripts/create-db-snapshot.sh`, `scripts/verify-version-databases.sh`
+
+**Files Modified:** `internal/repository/migrations.go` (migration 0.14.0), `pkg/version/version.go` (v0.14.0), `cmd/actalog/main.go` (wiring), `internal/domain/audit_log.go` (subscription events), `CLAUDE.md` (version management)
+
+**API Endpoints:**
+- User: `GET /api/subscriptions/status`
+- Admin: `POST /api/admin/subscriptions/user`, `GET /api/admin/subscriptions/user/{user_id}`, `POST /api/admin/subscriptions/user/{id}/mark-paid`, `POST /api/admin/subscriptions/user/{id}/cancel`
+- Admin Org: `POST /api/admin/subscriptions/organization`, `GET /api/admin/subscriptions/organization/{org_id}`, `POST /api/admin/subscriptions/organization/{id}/mark-paid`, `POST /api/admin/subscriptions/organization/{id}/cancel`
+
+---
 
 ### v0.12.2-beta (2025-11-28)
 
