@@ -85,6 +85,41 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [ ] "Renew Subscription" call-to-action in banner
   - [ ] Toast notifications explaining why operations are blocked
 
+
+## Future Enhancements (Post-MVP)
+
+These features can be added after the core frontend is complete:
+
+1. **Stripe Integration** (v0.15.0+)
+   - Replace manual admin control with automated billing webhooks
+   - Credit card payment processing
+   - Automatic subscription renewal
+
+2. **Email Notifications** (v0.15.0+)
+   - Notify users 7/3/1 days before expiration
+   - Notify users when subscription expires
+   - Notify admins of failed payments
+
+3. **Self-Service Portal** (v0.16.0+)
+   - Users can upgrade/downgrade themselves
+   - View payment history
+   - Update payment method
+
+4. **Usage Limits** (v0.16.0+)
+   - Track API usage for free tier
+   - Enforce limits on free subscriptions
+   - Display usage metrics
+
+5. **Bulk Operations** (v0.17.0+)
+   - Admin can bulk-update subscriptions
+   - Bulk extend expiration dates
+   - Bulk cancel subscriptions
+
+6. **Grace Period Configuration** (v0.17.0+)
+   - Make grace period configurable per organization
+   - Different grace periods for different subscription tiers
+
+
 #### Testing Coverage
 - [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler
 - [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
