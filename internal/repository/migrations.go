@@ -541,6 +541,347 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.13.0",
+		Description: "Migrate user-organization relationship from one-to-many to many-to-many",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if user_organizations table already exists
+			hasJunctionTable, err := checkTableExists(db, driver, "user_organizations")
+			if err != nil {
+				return fmt.Errorf("failed to check for user_organizations table: %w", err)
+			}
+
+			if hasJunctionTable {
+				// Table already exists, check if we need to drop old column
+				hasOldColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+				if err != nil {
+					return fmt.Errorf("failed to check for organization_id column: %w", err)
+				}
+
+				if !hasOldColumn {
+					// Migration already complete
+					return nil
+				}
+				// Fall through to drop column
+			} else {
+				// Step 1: Create user_organizations junction table
+				var createJunctionSQL string
+				switch driver {
+				case "sqlite3":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						organization_id INTEGER NOT NULL,
+						role TEXT DEFAULT 'member',
+						joined_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT,
+						UNIQUE(user_id, organization_id)
+					);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);`
+
+				case "postgres":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						organization_id BIGINT NOT NULL,
+						role VARCHAR(50) DEFAULT 'member',
+						joined_at TIMESTAMP NOT NULL,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT,
+						UNIQUE(user_id, organization_id)
+					);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);`
+
+				case "mysql":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						organization_id BIGINT NOT NULL,
+						role VARCHAR(50) DEFAULT 'member',
+						joined_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						INDEX idx_user_orgs_user_id (user_id),
+						INDEX idx_user_orgs_org_id (organization_id),
+						INDEX idx_user_orgs_lookup (user_id, organization_id),
+						UNIQUE KEY unique_user_org (user_id, organization_id),
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createJunctionSQL); err != nil {
+					return fmt.Errorf("failed to create user_organizations table: %w", err)
+				}
+
+				// Step 2: Migrate existing data from users.organization_id to junction table
+				var migrateQuery string
+				now := time.Now()
+
+				switch driver {
+				case "sqlite3", "mysql":
+					migrateQuery = `
+					INSERT INTO user_organizations (user_id, organization_id, role, joined_at, created_at, updated_at)
+					SELECT id, organization_id, 'member', created_at, ?, ?
+					FROM users
+					WHERE organization_id IS NOT NULL`
+					_, err = db.Exec(migrateQuery, now, now)
+
+				case "postgres":
+					migrateQuery = `
+					INSERT INTO user_organizations (user_id, organization_id, role, joined_at, created_at, updated_at)
+					SELECT id, organization_id, 'member', created_at, $1, $2
+					FROM users
+					WHERE organization_id IS NOT NULL`
+					_, err = db.Exec(migrateQuery, now, now)
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if err != nil {
+					return fmt.Errorf("failed to migrate organization data: %w", err)
+				}
+
+				// Step 3: Verify migration
+				var countUsers, countJunction int64
+				var countQuery string
+
+				switch driver {
+				case "sqlite3", "mysql":
+					countQuery = "SELECT COUNT(*) FROM users WHERE organization_id IS NOT NULL"
+				case "postgres":
+					countQuery = "SELECT COUNT(*) FROM users WHERE organization_id IS NOT NULL"
+				}
+
+				if err := db.QueryRow(countQuery).Scan(&countUsers); err != nil {
+					return fmt.Errorf("failed to count users with organizations: %w", err)
+				}
+
+				if err := db.QueryRow("SELECT COUNT(*) FROM user_organizations").Scan(&countJunction); err != nil {
+					return fmt.Errorf("failed to count junction records: %w", err)
+				}
+
+				if countUsers != countJunction {
+					return fmt.Errorf("migration verification failed: expected %d records, got %d", countUsers, countJunction)
+				}
+
+				fmt.Printf("✓ Migrated %d organization assignments to junction table\n", countJunction)
+			}
+
+			// Step 4: Drop organization_id column from users table
+			hasOldColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if hasOldColumn {
+				switch driver {
+				case "sqlite3":
+					// SQLite doesn't support DROP COLUMN, need to rebuild table
+					// Get all columns except organization_id
+					rows, err := db.Query("PRAGMA table_info(users)")
+					if err != nil {
+						return fmt.Errorf("failed to get users table info: %w", err)
+					}
+
+					var columns []string
+					for rows.Next() {
+						var cid int
+						var name, colType string
+						var notnull, pk int
+						var dfltValue sql.NullString
+
+						if err := rows.Scan(&cid, &name, &colType, &notnull, &dfltValue, &pk); err != nil {
+							rows.Close()
+							return fmt.Errorf("failed to scan column info: %w", err)
+						}
+
+						if name != "organization_id" {
+							columns = append(columns, name)
+						}
+					}
+					rows.Close()
+
+					// Build column list for new table
+					columnList := ""
+					for i, col := range columns {
+						if i > 0 {
+							columnList += ", "
+						}
+						columnList += col
+					}
+
+					// Rebuild table without organization_id
+					rebuildSQL := fmt.Sprintf(`
+						BEGIN TRANSACTION;
+
+						CREATE TABLE users_new (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							email TEXT UNIQUE NOT NULL,
+							password_hash TEXT NOT NULL,
+							name TEXT NOT NULL,
+							profile_image TEXT,
+							birthday DATE,
+							role TEXT NOT NULL DEFAULT 'user',
+							email_verified INTEGER NOT NULL DEFAULT 0,
+							email_verified_at DATETIME,
+							verification_token TEXT,
+							verification_token_expires_at DATETIME,
+							reset_token TEXT,
+							reset_token_expires_at DATETIME,
+							failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+							locked_at DATETIME,
+							locked_until DATETIME,
+							account_disabled INTEGER NOT NULL DEFAULT 0,
+							disabled_at DATETIME,
+							disabled_by_user_id INTEGER,
+							disable_reason TEXT,
+							created_at DATETIME NOT NULL,
+							updated_at DATETIME NOT NULL,
+							last_login_at DATETIME,
+							FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+						);
+
+						INSERT INTO users_new (%s)
+						SELECT %s FROM users;
+
+						DROP TABLE users;
+
+						ALTER TABLE users_new RENAME TO users;
+
+						CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+						CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+						COMMIT;
+					`, columnList, columnList)
+
+					if _, err := db.Exec(rebuildSQL); err != nil {
+						return fmt.Errorf("failed to rebuild users table: %w", err)
+					}
+
+				case "postgres":
+					dropColumnSQL := "ALTER TABLE users DROP COLUMN organization_id"
+					if _, err := db.Exec(dropColumnSQL); err != nil {
+						return fmt.Errorf("failed to drop organization_id column: %w", err)
+					}
+
+				case "mysql":
+					// MySQL requires dropping the foreign key constraint first
+					// Find the foreign key constraint name
+					var constraintName sql.NullString
+					err := db.QueryRow(`
+						SELECT CONSTRAINT_NAME
+						FROM information_schema.KEY_COLUMN_USAGE
+						WHERE TABLE_SCHEMA = DATABASE()
+						AND TABLE_NAME = 'users'
+						AND COLUMN_NAME = 'organization_id'
+						AND REFERENCED_TABLE_NAME IS NOT NULL
+					`).Scan(&constraintName)
+
+					if err != nil && err != sql.ErrNoRows {
+						return fmt.Errorf("failed to find foreign key constraint: %w", err)
+					}
+
+					// Drop foreign key if it exists
+					if constraintName.Valid {
+						dropFKSQL := fmt.Sprintf("ALTER TABLE users DROP FOREIGN KEY %s", constraintName.String)
+						if _, err := db.Exec(dropFKSQL); err != nil {
+							return fmt.Errorf("failed to drop foreign key constraint: %w", err)
+						}
+					}
+
+					// Now drop the column
+					dropColumnSQL := "ALTER TABLE users DROP COLUMN organization_id"
+					if _, err := db.Exec(dropColumnSQL); err != nil {
+						return fmt.Errorf("failed to drop organization_id column: %w", err)
+					}
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				fmt.Println("✓ Dropped organization_id column from users table")
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Step 1: Re-add organization_id column to users
+			hasColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if !hasColumn {
+				var addColumnSQL string
+				switch driver {
+				case "sqlite3":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id INTEGER REFERENCES organizations(id) ON DELETE SET NULL`
+				case "postgres":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT REFERENCES organizations(id) ON DELETE SET NULL`
+				case "mysql":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT,
+									ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(addColumnSQL); err != nil {
+					return fmt.Errorf("failed to add organization_id column: %w", err)
+				}
+			}
+
+			// Step 2: Copy data back (takes first organization only)
+			// WARNING: This loses data for users in multiple organizations
+			var copyDataSQL string
+			switch driver {
+			case "sqlite3", "mysql":
+				copyDataSQL = `
+					UPDATE users SET organization_id = (
+						SELECT organization_id FROM user_organizations
+						WHERE user_organizations.user_id = users.id
+						LIMIT 1
+					)`
+			case "postgres":
+				copyDataSQL = `
+					UPDATE users SET organization_id = (
+						SELECT organization_id FROM user_organizations
+						WHERE user_organizations.user_id = users.id
+						LIMIT 1
+					)`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(copyDataSQL); err != nil {
+				return fmt.Errorf("failed to copy organization data back: %w", err)
+			}
+
+			// Step 3: Drop junction table
+			if _, err := db.Exec("DROP TABLE IF EXISTS user_organizations"); err != nil {
+				return fmt.Errorf("failed to drop user_organizations table: %w", err)
+			}
+
+			fmt.Println("⚠️  WARNING: Rollback complete but data loss occurred for users in multiple organizations")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

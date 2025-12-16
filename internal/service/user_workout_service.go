@@ -634,45 +634,8 @@ func (s *UserWorkoutService) ValidateWODScoreTypes(wods []*domain.UserWorkoutWOD
 }
 
 // GetActiveUsersThisMonth gets active users stats for dashboard card
+// Returns current user + 2 random users from shared organizations (or just current user if no orgs)
 func (s *UserWorkoutService) GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error) {
-	// Get current user to check organization
-	user, err := s.userRepo.GetByID(userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-	if user == nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	// If user has no organization, return only their own stats
-	if user.OrganizationID == nil {
-		// Get current month workout count for user
-		now := time.Now()
-		firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-		nextMonth := firstOfMonth.AddDate(0, 1, 0)
-
-		workouts, err := s.userWorkoutRepo.GetByUserID(userID, 10000)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get workouts: %w", err)
-		}
-
-		count := 0
-		for _, w := range workouts {
-			if w.WorkoutDate.After(firstOfMonth) && w.WorkoutDate.Before(nextMonth) {
-				count++
-			}
-		}
-
-		return []map[string]interface{}{
-			{
-				"id":            user.ID,
-				"name":          user.Name,
-				"workout_count": count,
-				"is_current":    true,
-			},
-		}, nil
-	}
-
-	// Get stats for users in same organization
-	return s.userWorkoutRepo.GetActiveUsersThisMonth(userID, *user.OrganizationID)
+	// Repository method handles all logic: finding shared orgs, calculating stats, etc.
+	return s.userWorkoutRepo.GetActiveUsersThisMonth(userID)
 }

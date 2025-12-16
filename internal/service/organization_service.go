@@ -130,18 +130,19 @@ func (s *OrganizationService) Delete(id int64) error {
 		return ErrOrganizationNotFound
 	}
 
-	// TODO: Check if any users are assigned to this organization
-	// This would require adding a method to UserRepository to count users by organization
-	// For now, we'll allow deletion and let the database foreign key handle it (SET NULL)
-
+	// Repository Delete method now checks for users and returns error if any exist (RESTRICT behavior)
 	if err := s.orgRepo.Delete(id); err != nil {
+		// Check if error is due to users being assigned
+		if err.Error() == "cannot delete organization: users are still assigned" {
+			return ErrOrganizationHasUsers
+		}
 		return fmt.Errorf("failed to delete organization: %w", err)
 	}
 
 	return nil
 }
 
-// AssignUserToOrganization assigns a user to an organization
+// AssignUserToOrganization adds a user to an organization (many-to-many)
 func (s *OrganizationService) AssignUserToOrganization(userID, orgID int64) error {
 	// Verify organization exists
 	org, err := s.orgRepo.GetByID(orgID)
@@ -152,7 +153,7 @@ func (s *OrganizationService) AssignUserToOrganization(userID, orgID int64) erro
 		return ErrOrganizationNotFound
 	}
 
-	// Get user
+	// Verify user exists
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -161,19 +162,26 @@ func (s *OrganizationService) AssignUserToOrganization(userID, orgID int64) erro
 		return ErrUserNotFound
 	}
 
-	// Update user's organization
-	user.OrganizationID = &orgID
+	// Check if user is already a member
+	isMember, err := s.orgRepo.IsUserInOrganization(userID, orgID)
+	if err != nil {
+		return fmt.Errorf("failed to check membership: %w", err)
+	}
+	if isMember {
+		return fmt.Errorf("user is already a member of this organization")
+	}
 
-	if err := s.userRepo.Update(user); err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+	// Add user to organization with 'member' role
+	if err := s.orgRepo.AddUserToOrganization(userID, orgID, "member"); err != nil {
+		return fmt.Errorf("failed to add user to organization: %w", err)
 	}
 
 	return nil
 }
 
-// RemoveUserFromOrganization removes a user from their organization
-func (s *OrganizationService) RemoveUserFromOrganization(userID int64) error {
-	// Get user
+// RemoveUserFromOrganization removes a user from a specific organization
+func (s *OrganizationService) RemoveUserFromOrganization(userID, orgID int64) error {
+	// Verify user exists
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -182,12 +190,57 @@ func (s *OrganizationService) RemoveUserFromOrganization(userID int64) error {
 		return ErrUserNotFound
 	}
 
-	// Clear organization
-	user.OrganizationID = nil
+	// Verify organization exists
+	org, err := s.orgRepo.GetByID(orgID)
+	if err != nil {
+		return fmt.Errorf("failed to get organization: %w", err)
+	}
+	if org == nil {
+		return ErrOrganizationNotFound
+	}
 
-	if err := s.userRepo.Update(user); err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
+	// Remove user from organization
+	if err := s.orgRepo.RemoveUserFromOrganization(userID, orgID); err != nil {
+		return fmt.Errorf("failed to remove user from organization: %w", err)
 	}
 
 	return nil
+}
+
+// GetUserOrganizations returns all organizations for a user
+func (s *OrganizationService) GetUserOrganizations(userID int64) ([]*domain.Organization, error) {
+	// Verify user exists
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
+	orgs, err := s.orgRepo.GetUserOrganizations(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user organizations: %w", err)
+	}
+
+	return orgs, nil
+}
+
+// GetOrganizationUsers returns all users in an organization
+func (s *OrganizationService) GetOrganizationUsers(orgID int64) ([]*domain.User, error) {
+	// Verify organization exists
+	org, err := s.orgRepo.GetByID(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get organization: %w", err)
+	}
+	if org == nil {
+		return nil, ErrOrganizationNotFound
+	}
+
+	users, err := s.orgRepo.GetOrganizationUsers(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get organization users: %w", err)
+	}
+
+	return users, nil
 }

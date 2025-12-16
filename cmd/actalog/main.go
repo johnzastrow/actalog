@@ -451,7 +451,9 @@ func main() {
 
 				// User-organization assignment (admin only)
 				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)
-				r.Delete("/users/{id}/organization", orgHandler.RemoveUserFromOrganization)
+				r.Delete("/users/{id}/organization/{org_id}", orgHandler.RemoveUserFromOrganization)
+				r.Get("/users/{id}/organizations", orgHandler.GetUserOrganizations)
+				r.Get("/organizations/{id}/users", orgHandler.GetOrganizationUsers)
 			})
 		})
 	})

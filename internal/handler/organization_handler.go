@@ -218,7 +218,7 @@ func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r 
 	})
 }
 
-// RemoveUserFromOrganization handles DELETE /api/admin/users/:id/organization
+// RemoveUserFromOrganization handles DELETE /api/admin/users/:id/organization/:org_id
 func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
@@ -227,10 +227,21 @@ func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, 
 		return
 	}
 
-	err = h.orgService.RemoveUserFromOrganization(userID)
+	orgIDStr := chi.URLParam(r, "org_id")
+	orgID, err := strconv.ParseInt(orgIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid organization ID")
+		return
+	}
+
+	err = h.orgService.RemoveUserFromOrganization(userID, orgID)
 	if err != nil {
 		if err == service.ErrUserNotFound {
 			respondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
 			return
 		}
 		h.logger.Error("Failed to remove user from organization: %v", err)
@@ -240,5 +251,57 @@ func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, 
 
 	respondJSON(w, http.StatusOK, map[string]string{
 		"message": "User removed from organization successfully",
+	})
+}
+
+// GetUserOrganizations handles GET /api/admin/users/:id/organizations
+func (h *OrganizationHandler) GetUserOrganizations(w http.ResponseWriter, r *http.Request) {
+	userIDStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	orgs, err := h.orgService.GetUserOrganizations(userID)
+	if err != nil {
+		if err == service.ErrUserNotFound {
+			respondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		h.logger.Error("Failed to get user organizations: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get organizations")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"organizations": orgs,
+		"count":         len(orgs),
+	})
+}
+
+// GetOrganizationUsers handles GET /api/admin/organizations/:id/users
+func (h *OrganizationHandler) GetOrganizationUsers(w http.ResponseWriter, r *http.Request) {
+	orgIDStr := chi.URLParam(r, "id")
+	orgID, err := strconv.ParseInt(orgIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid organization ID")
+		return
+	}
+
+	users, err := h.orgService.GetOrganizationUsers(orgID)
+	if err != nil {
+		if err == service.ErrOrganizationNotFound {
+			respondError(w, http.StatusNotFound, "Organization not found")
+			return
+		}
+		h.logger.Error("Failed to get organization users: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get users")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"users": users,
+		"count": len(users),
 	})
 }

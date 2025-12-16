@@ -14,7 +14,6 @@ type User struct {
 	ProfileImage               *string    `json:"profile_image,omitempty" db:"profile_image"`
 	Birthday                   *time.Time `json:"birthday,omitempty" db:"birthday"`
 	Role                       string     `json:"role" db:"role"` // user, admin
-	OrganizationID             *int64     `json:"organization_id,omitempty" db:"organization_id"`
 	EmailVerified              bool       `json:"email_verified" db:"email_verified"`
 	EmailVerifiedAt            *time.Time `json:"email_verified_at,omitempty" db:"email_verified_at"`
 	VerificationToken          *string    `json:"-" db:"verification_token"` // Never serialize verification token

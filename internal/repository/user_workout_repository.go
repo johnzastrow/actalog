@@ -587,14 +587,15 @@ func (r *UserWorkoutRepository) GetRecentForUser(userID int64, limit int) ([]*do
 	return workouts, rows.Err()
 }
 
-// GetActiveUsersThisMonth gets current user + 2 random users from same org with workout counts for current month
-func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64, orgID int64) ([]map[string]interface{}, error) {
+// GetActiveUsersThisMonth gets current user + 2 random users from shared organizations with workout counts for current month
+func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error) {
 	// Get start of current month
 	now := time.Now()
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	nextMonth := firstOfMonth.AddDate(0, 1, 0)
 
 	// Get 2 random other users from same organization with their workout counts
+	// Build query to find users in ANY shared organization
 	query := rebindQuery(`
 		SELECT
 			u.id,
@@ -604,14 +605,19 @@ func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64, orgID int6
 		LEFT JOIN user_workouts uw ON u.id = uw.user_id
 			AND uw.workout_date >= ?
 			AND uw.workout_date < ?
-		WHERE u.organization_id = ?
-			AND u.id != ?
+		WHERE u.id IN (
+			SELECT DISTINCT uo2.user_id
+			FROM user_organizations uo1
+			INNER JOIN user_organizations uo2 ON uo1.organization_id = uo2.organization_id
+			WHERE uo1.user_id = ?
+		)
+		AND u.id != ?
 		GROUP BY u.id, u.name
 		ORDER BY RANDOM()
 		LIMIT 2
 	`)
 
-	// Adjust RANDOM() for different databases
+	// Adjust RANDOM() for MySQL
 	if currentDriver == "mysql" {
 		query = rebindQuery(`
 			SELECT
@@ -622,15 +628,20 @@ func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64, orgID int6
 			LEFT JOIN user_workouts uw ON u.id = uw.user_id
 				AND uw.workout_date >= ?
 				AND uw.workout_date < ?
-			WHERE u.organization_id = ?
-				AND u.id != ?
+			WHERE u.id IN (
+				SELECT DISTINCT uo2.user_id
+				FROM user_organizations uo1
+				INNER JOIN user_organizations uo2 ON uo1.organization_id = uo2.organization_id
+				WHERE uo1.user_id = ?
+			)
+			AND u.id != ?
 			GROUP BY u.id, u.name
 			ORDER BY RAND()
 			LIMIT 2
 		`)
 	}
 
-	rows, err := r.db.Query(query, firstOfMonth, nextMonth, orgID, userID)
+	rows, err := r.db.Query(query, firstOfMonth, nextMonth, userID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get other active users: %w", err)
 	}
