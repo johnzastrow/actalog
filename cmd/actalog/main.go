@@ -108,6 +108,11 @@ func main() {
 	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
 	orgRepo := repository.NewOrganizationRepository(db)
 
+	// Subscription repositories
+	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
+	orgSubscriptionRepo := repository.NewSQLiteOrganizationSubscriptionRepository(db)
+	subscriptionAccessRepo := repository.NewSubscriptionAccessRepository(userSubscriptionRepo, orgSubscriptionRepo, orgRepo)
+
 	// Initialize email service
 	var emailService *email.Service
 	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
@@ -185,6 +190,15 @@ func main() {
 
 	orgService := service.NewOrganizationService(orgRepo, userRepo)
 
+	subscriptionService := service.NewSubscriptionService(
+		userSubscriptionRepo,
+		orgSubscriptionRepo,
+		subscriptionAccessRepo,
+		auditLogRepo,
+		userRepo,
+		orgRepo,
+	)
+
 	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
 	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 	wodifyImportService := service.NewWodifyImportService(userRepo, movementRepo, wodRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
@@ -225,6 +239,7 @@ func main() {
 	wodifyImportHandler := handler.NewWodifyImportHandler(wodifyImportService)
 	backupHandler := handler.NewBackupHandler(backupService, auditLogRepo)
 	orgHandler := handler.NewOrganizationHandler(orgService, appLogger)
+	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -395,6 +410,9 @@ func main() {
 			r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
 			r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
 
+			// Subscription status (user-accessible)
+			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
+
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
@@ -454,6 +472,21 @@ func main() {
 				r.Delete("/users/{id}/organization/{org_id}", orgHandler.RemoveUserFromOrganization)
 				r.Get("/users/{id}/organizations", orgHandler.GetUserOrganizations)
 				r.Get("/organizations/{id}/users", orgHandler.GetOrganizationUsers)
+
+				// Subscription management routes (admin only)
+				r.Route("/subscriptions", func(r chi.Router) {
+					// User subscriptions
+					r.Post("/user", subscriptionHandler.CreateUserSubscription)
+					r.Get("/user/{user_id}", subscriptionHandler.GetUserSubscriptions)
+					r.Post("/user/{id}/mark-paid", subscriptionHandler.MarkUserSubscriptionAsPaid)
+					r.Post("/user/{id}/cancel", subscriptionHandler.CancelUserSubscription)
+
+					// Organization subscriptions
+					r.Post("/organization", subscriptionHandler.CreateOrganizationSubscription)
+					r.Get("/organization/{org_id}", subscriptionHandler.GetOrganizationSubscriptions)
+					r.Post("/organization/{id}/mark-paid", subscriptionHandler.MarkOrganizationSubscriptionAsPaid)
+					r.Post("/organization/{id}/cancel", subscriptionHandler.CancelOrganizationSubscription)
+				})
 			})
 		})
 	})

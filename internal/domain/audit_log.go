@@ -48,6 +48,16 @@ const (
 
 	// Rate Limiting Events
 	EventRateLimitExceeded = "rate_limit_exceeded"
+
+	// Subscription Events
+	EventSubscriptionCreated       = "subscription_created"
+	EventSubscriptionMarkedPaid    = "subscription_marked_paid"
+	EventSubscriptionCancelled     = "subscription_cancelled"
+	EventSubscriptionExpired       = "subscription_expired"
+	EventOrgSubscriptionCreated    = "org_subscription_created"
+	EventOrgSubscriptionMarkedPaid = "org_subscription_marked_paid"
+	EventOrgSubscriptionCancelled  = "org_subscription_cancelled"
+	EventOrgSubscriptionExpired    = "org_subscription_expired"
 )
 
 // AuditLogRepository defines the interface for audit log data access

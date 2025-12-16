@@ -882,6 +882,284 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.14.0",
+		Description: "Add subscription billing system with user and organization subscriptions",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if tables already exist
+			hasUserSubs, err := checkTableExists(db, driver, "user_subscriptions")
+			if err != nil {
+				return fmt.Errorf("failed to check for user_subscriptions table: %w", err)
+			}
+			if hasUserSubs {
+				fmt.Println("✓ user_subscriptions table already exists, skipping creation")
+			}
+
+			hasOrgSubs, err := checkTableExists(db, driver, "organization_subscriptions")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_subscriptions table: %w", err)
+			}
+			if hasOrgSubs {
+				fmt.Println("✓ organization_subscriptions table already exists, skipping creation")
+			}
+
+			// Step 1: Create user_subscriptions table
+			if !hasUserSubs {
+				var createUserSubsSQL string
+				switch driver {
+				case "sqlite3":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free INTEGER NOT NULL DEFAULT 0,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						created_by_user_id INTEGER,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+					CREATE INDEX idx_user_subscriptions_status ON user_subscriptions(status);
+					CREATE INDEX idx_user_subscriptions_next_billing ON user_subscriptions(next_billing_date);
+					`
+				case "postgres":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status VARCHAR(20) NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date TIMESTAMP NOT NULL,
+						end_date TIMESTAMP,
+						last_payment_date TIMESTAMP,
+						next_billing_date TIMESTAMP,
+						cancelled_at TIMESTAMP,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+					CREATE INDEX idx_user_subscriptions_status ON user_subscriptions(status);
+					CREATE INDEX idx_user_subscriptions_next_billing ON user_subscriptions(next_billing_date);
+					`
+				case "mysql":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL,
+						status VARCHAR(20) NOT NULL,
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						INDEX idx_user_subscriptions_user_id (user_id),
+						INDEX idx_user_subscriptions_status (status),
+						INDEX idx_user_subscriptions_next_billing (next_billing_date),
+						CONSTRAINT chk_user_sub_type CHECK (subscription_type IN ('free', 'monthly', 'annual')),
+						CONSTRAINT chk_user_status CHECK (status IN ('active', 'expired', 'cancelled')),
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+					`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createUserSubsSQL); err != nil {
+					return fmt.Errorf("failed to create user_subscriptions table: %w", err)
+				}
+				fmt.Println("✓ Created user_subscriptions table")
+			}
+
+			// Step 2: Create organization_subscriptions table
+			if !hasOrgSubs {
+				var createOrgSubsSQL string
+				switch driver {
+				case "sqlite3":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						organization_id INTEGER NOT NULL,
+						subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free INTEGER NOT NULL DEFAULT 0,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						created_by_user_id INTEGER,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
+					CREATE INDEX idx_org_subscriptions_status ON organization_subscriptions(status);
+					CREATE INDEX idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+					`
+				case "postgres":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id BIGSERIAL PRIMARY KEY,
+						organization_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status VARCHAR(20) NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date TIMESTAMP NOT NULL,
+						end_date TIMESTAMP,
+						last_payment_date TIMESTAMP,
+						next_billing_date TIMESTAMP,
+						cancelled_at TIMESTAMP,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
+					CREATE INDEX idx_org_subscriptions_status ON organization_subscriptions(status);
+					CREATE INDEX idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+					`
+				case "mysql":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						organization_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL,
+						status VARCHAR(20) NOT NULL,
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						INDEX idx_org_subscriptions_org_id (organization_id),
+						INDEX idx_org_subscriptions_status (status),
+						INDEX idx_org_subscriptions_next_billing (next_billing_date),
+						CONSTRAINT chk_org_sub_type CHECK (subscription_type IN ('free', 'monthly', 'annual')),
+						CONSTRAINT chk_org_status CHECK (status IN ('active', 'expired', 'cancelled')),
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+					`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createOrgSubsSQL); err != nil {
+					return fmt.Errorf("failed to create organization_subscriptions table: %w", err)
+				}
+				fmt.Println("✓ Created organization_subscriptions table")
+			}
+
+			// Step 3: Seed existing users with permanent free subscriptions (backward compatibility)
+			// This ensures all existing users maintain full access
+			var seedQuery string
+			now := time.Now()
+
+			switch driver {
+			case "sqlite3":
+				seedQuery = rebindQuery(`
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', 1, ?, ?, ?
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`)
+			case "postgres":
+				seedQuery = `
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', TRUE, $1, $2, $3
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`
+			case "mysql":
+				seedQuery = rebindQuery(`
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', TRUE, ?, ?, ?
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`)
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			result, err := db.Exec(seedQuery, now, now, now)
+			if err != nil {
+				return fmt.Errorf("failed to seed user subscriptions: %w", err)
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				return fmt.Errorf("failed to get rows affected: %w", err)
+			}
+
+			fmt.Printf("✓ Seeded %d existing users with permanent free subscriptions\n", rowsAffected)
+
+			// Step 4: Verify seeding
+			var userCount, subCount int64
+			if err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount); err != nil {
+				return fmt.Errorf("failed to count users: %w", err)
+			}
+			if err := db.QueryRow("SELECT COUNT(*) FROM user_subscriptions").Scan(&subCount); err != nil {
+				return fmt.Errorf("failed to count subscriptions: %w", err)
+			}
+
+			fmt.Printf("✓ Verification: %d users, %d subscriptions\n", userCount, subCount)
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop subscription tables (WARNING: Data loss)
+			if _, err := db.Exec("DROP TABLE IF EXISTS organization_subscriptions"); err != nil {
+				return fmt.Errorf("failed to drop organization_subscriptions: %w", err)
+			}
+			if _, err := db.Exec("DROP TABLE IF EXISTS user_subscriptions"); err != nil {
+				return fmt.Errorf("failed to drop user_subscriptions: %w", err)
+			}
+
+			fmt.Println("⚠️  WARNING: Subscription data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

@@ -145,6 +145,33 @@ migrations/       # Database migrations
 - Fixed header (56px), fixed bottom nav (70px)
 - Content: `margin-top: 56px, margin-bottom: 70px, overflow-y: auto`
 
+## Database Version Management
+
+**Version Snapshots** (`db_versions/`):
+- Keep a SQLite snapshot of each version for migration testing
+- Name format: `actalog_X.Y.Z.db`
+- Populate with sample data from MariaDB `acta` database if needed
+- Commit snapshots to repo for team access (sanitized data only)
+
+**Creating Version Snapshot:**
+```bash
+# After releasing version X.Y.Z
+cp actalog.db db_versions/actalog_X.Y.Z.db
+git add db_versions/actalog_X.Y.Z.db
+git commit -m "Add database snapshot for version X.Y.Z"
+```
+
+**Testing Migrations:**
+```bash
+# Test migration from old version to current
+cp db_versions/actalog_0.13.0.db test_migration.db
+DB_DRIVER=sqlite3 DB_NAME=test_migration.db ./bin/actalog
+# Verify migration succeeded
+sqlite3 test_migration.db "SELECT version FROM schema_migrations ORDER BY applied_at DESC LIMIT 1;"
+```
+
+See `db_versions/README.md` for detailed version management procedures.
+
 ## Testing
 
 ```bash
