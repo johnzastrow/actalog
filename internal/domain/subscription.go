@@ -75,6 +75,7 @@ type UserSubscriptionRepository interface {
 	GetByUserID(userID int64) ([]*UserSubscription, error)
 	Update(sub *UserSubscription) error
 	Delete(id int64) error
+	ListAll() ([]*UserSubscription, error)
 
 	// Admin operations
 	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64) error
@@ -90,6 +91,7 @@ type OrganizationSubscriptionRepository interface {
 	GetByOrganizationID(orgID int64) ([]*OrganizationSubscription, error)
 	Update(sub *OrganizationSubscription) error
 	Delete(id int64) error
+	ListAll() ([]*OrganizationSubscription, error)
 
 	// Admin operations
 	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64) error

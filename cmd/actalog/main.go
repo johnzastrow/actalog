@@ -475,6 +475,10 @@ func main() {
 
 				// Subscription management routes (admin only)
 				r.Route("/subscriptions", func(r chi.Router) {
+					// List all subscriptions (must come before parameterized routes)
+					r.Get("/users", subscriptionHandler.ListAllUserSubscriptions)
+					r.Get("/organizations", subscriptionHandler.ListAllOrganizationSubscriptions)
+
 					// User subscriptions
 					r.Post("/user", subscriptionHandler.CreateUserSubscription)
 					r.Get("/user/{user_id}", subscriptionHandler.GetUserSubscriptions)

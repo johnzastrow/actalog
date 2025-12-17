@@ -447,3 +447,39 @@ func (h *SubscriptionHandler) CancelOrganizationSubscription(w http.ResponseWrit
 		"message": "Subscription cancelled successfully",
 	})
 }
+
+// ListAllUserSubscriptions lists all user subscriptions (admin only)
+func (h *SubscriptionHandler) ListAllUserSubscriptions(w http.ResponseWriter, r *http.Request) {
+	// Get all user subscriptions
+	subscriptions, err := h.subscriptionService.ListAllUserSubscriptions()
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_all_user_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+	})
+}
+
+// ListAllOrganizationSubscriptions lists all organization subscriptions (admin only)
+func (h *SubscriptionHandler) ListAllOrganizationSubscriptions(w http.ResponseWriter, r *http.Request) {
+	// Get all organization subscriptions
+	subscriptions, err := h.subscriptionService.ListAllOrganizationSubscriptions()
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_all_org_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+	})
+}

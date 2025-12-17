@@ -373,3 +373,13 @@ func (s *SubscriptionService) ExpireOverdueSubscriptions() (int, error) {
 	// TODO: Implement background job to check and expire subscriptions
 	return 0, nil
 }
+
+// ListAllUserSubscriptions returns all user subscriptions (admin only)
+func (s *SubscriptionService) ListAllUserSubscriptions() ([]*domain.UserSubscription, error) {
+	return s.userSubRepo.ListAll()
+}
+
+// ListAllOrganizationSubscriptions returns all organization subscriptions (admin only)
+func (s *SubscriptionService) ListAllOrganizationSubscriptions() ([]*domain.OrganizationSubscription, error) {
+	return s.orgSubRepo.ListAll()
+}

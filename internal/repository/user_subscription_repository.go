@@ -406,3 +406,53 @@ func (r *SQLiteUserSubscriptionRepository) Cancel(id int64, reason string, admin
 	_, err := r.db.Exec(query, now, reason, now, adminUserID, id)
 	return err
 }
+
+// ListAll returns all user subscriptions
+func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription, error) {
+	query := rebindQuery(`
+		SELECT
+			id, user_id, subscription_type, status, is_permanent_free,
+			start_date, end_date, last_payment_date, next_billing_date,
+			cancelled_at, cancelled_reason, notes, created_at, updated_at, created_by_user_id
+		FROM user_subscriptions
+		ORDER BY created_at DESC
+	`)
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query user subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	var subscriptions []*domain.UserSubscription
+	for rows.Next() {
+		var sub domain.UserSubscription
+		err := rows.Scan(
+			&sub.ID,
+			&sub.UserID,
+			&sub.SubscriptionType,
+			&sub.Status,
+			&sub.IsPermanentFree,
+			&sub.StartDate,
+			&sub.EndDate,
+			&sub.LastPaymentDate,
+			&sub.NextBillingDate,
+			&sub.CancelledAt,
+			&sub.CancelledReason,
+			&sub.Notes,
+			&sub.CreatedAt,
+			&sub.UpdatedAt,
+			&sub.CreatedByUserID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user subscription: %w", err)
+		}
+		subscriptions = append(subscriptions, &sub)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating user subscriptions: %w", err)
+	}
+
+	return subscriptions, nil
+}
