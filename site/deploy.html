@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deploy — ActaLog</title>
+  <meta name="description" content="Deploy ActaLog quickly using the included Docker Compose stack. Minimal requirements and quickstart commands included.">
+  <meta property="og:title" content="Deploy — ActaLog">
+  <meta property="og:description" content="Deploy ActaLog quickly using the included Docker Compose stack. Minimal requirements and quickstart commands included.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/hero-screenshot.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/vars.css">
+</head>
+<body>
+  <header class="container site-header">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="ActaLog logo">
+      <div>
+        <div style="font-weight:700">ActaLog</div>
+        <div style="font-size:12px;color:var(--color-muted-text)">Self-hostable workout tracker</div>
+      </div>
+    </div>
+    <nav>
+      <a class="btn btn-ghost" href="https://github.com/your/repo">GitHub</a>
+      <a class="btn btn-primary" href="index.html">Home</a>
+      <a class="btn btn-ghost" href="faq.html">FAQ</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section style="padding:20px 0">
+      <h1>Deploy — Quickstart</h1>
+      <p style="color:var(--color-muted-text)">Minimal instructions for deploying ActaLog from this repository using Docker Compose.</p>
+
+      <h2 style="margin-top:18px">Requirements</h2>
+      <ul>
+        <li>Docker 20.10+</li>
+        <li>Docker Compose v2 (or `docker compose` integrated CLI)</li>
+        <li>A Linux VPS, Docker Desktop, or a local machine</li>
+      </ul>
+
+      <h2>Minimal quickstart</h2>
+      <pre style="background:var(--color-muted-1);padding:12px;border-radius:8px"><code>git clone https://github.com/your/repo.git
+cd repo
+docker compose up -d
+</code></pre>
+
+      <h2 style="margin-top:12px">Environment</h2>
+      <p style="color:var(--color-muted-text)">Customize database and mail settings in the repository's `.env` or `docker-compose.override.yml` as needed.</p>
+
+      <h2 style="margin-top:12px">Next steps</h2>
+      <ul>
+        <li>Check logs with <code>docker compose logs -f</code></li>
+        <li>Open the frontend at <code>http://localhost:3000</code> or your configured host</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="container site-footer">
+    <small>© ActaLog — Open source. See the repository for deployment details and docs.</small>
+  </footer>
+</body>
+</html>

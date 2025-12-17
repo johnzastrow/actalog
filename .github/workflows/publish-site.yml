@@ -1,0 +1,30 @@
+name: Publish site to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: publish-site
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload site directory as Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1

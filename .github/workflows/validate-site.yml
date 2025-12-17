@@ -1,0 +1,56 @@
+name: Validate site
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+  push:
+    branches: [ 'main' ]
+    paths:
+      - 'site/**'
+
+jobs:
+  lint-site:
+    name: Lint site (super-linter)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run super-linter on `site/`
+        uses: github/super-linter@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+          VALIDATE_ALL_CODEBASE: false
+          FILTER_REGEX_INCLUDE: '^site/'
+
+  link-check:
+    name: Link check (lychee)
+    runs-on: ubuntu-latest
+    needs: lint-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run lychee link checker against site folder
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: "site --timeout 10"
+
+  seo-check:
+    name: SEO / Open Graph validation
+    runs-on: ubuntu-latest
+    needs: link-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run SEO validator
+        run: |
+          python site/scripts/validate_seo.py
