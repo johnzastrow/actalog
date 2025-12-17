@@ -98,29 +98,52 @@
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
                 </template>
 
-                <template v-slot:item.actions="{ item }">
-                  <v-btn
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    @click="viewSubscriptionDetails(item, 'user')"
-                  ></v-btn>
-                  <v-btn
-                    v-if="item.status === 'active' && !item.is_permanent_free"
-                    icon="mdi-cash"
-                    size="small"
-                    variant="text"
-                    color="success"
-                    @click="openMarkAsPaidDialog(item, 'user')"
-                  ></v-btn>
-                  <v-btn
-                    v-if="item.status === 'active'"
-                    icon="mdi-cancel"
-                    size="small"
-                    variant="text"
-                    color="error"
-                    @click="openCancelDialog(item, 'user')"
-                  ></v-btn>
+                <template v-slot:item.view="{ item }">
+                  <v-tooltip text="View subscription details" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        icon="mdi-eye"
+                        size="small"
+                        variant="text"
+                        @click="viewSubscriptionDetails(item, 'user')"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
+                </template>
+
+                <template v-slot:item.mark_paid="{ item }">
+                  <v-tooltip text="Mark this subscription as paid and extend end date" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        v-if="item.status === 'active' && !item.is_permanent_free"
+                        icon="mdi-cash"
+                        size="small"
+                        variant="text"
+                        color="success"
+                        @click="openMarkAsPaidDialog(item, 'user')"
+                      ></v-btn>
+                      <span v-else class="text-grey">—</span>
+                    </template>
+                  </v-tooltip>
+                </template>
+
+                <template v-slot:item.cancel="{ item }">
+                  <v-tooltip text="Cancel this subscription" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        v-if="item.status === 'active'"
+                        icon="mdi-cancel"
+                        size="small"
+                        variant="text"
+                        color="error"
+                        @click="openCancelDialog(item, 'user')"
+                      ></v-btn>
+                      <span v-else class="text-grey">—</span>
+                    </template>
+                  </v-tooltip>
                 </template>
               </v-data-table>
             </v-card-text>
@@ -213,29 +236,52 @@
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
                 </template>
 
-                <template v-slot:item.actions="{ item }">
-                  <v-btn
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    @click="viewSubscriptionDetails(item, 'organization')"
-                  ></v-btn>
-                  <v-btn
-                    v-if="item.status === 'active' && !item.is_permanent_free"
-                    icon="mdi-cash"
-                    size="small"
-                    variant="text"
-                    color="success"
-                    @click="openMarkAsPaidDialog(item, 'organization')"
-                  ></v-btn>
-                  <v-btn
-                    v-if="item.status === 'active'"
-                    icon="mdi-cancel"
-                    size="small"
-                    variant="text"
-                    color="error"
-                    @click="openCancelDialog(item, 'organization')"
-                  ></v-btn>
+                <template v-slot:item.view="{ item }">
+                  <v-tooltip text="View subscription details" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        icon="mdi-eye"
+                        size="small"
+                        variant="text"
+                        @click="viewSubscriptionDetails(item, 'organization')"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
+                </template>
+
+                <template v-slot:item.mark_paid="{ item }">
+                  <v-tooltip text="Mark this subscription as paid and extend end date" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        v-if="item.status === 'active' && !item.is_permanent_free"
+                        icon="mdi-cash"
+                        size="small"
+                        variant="text"
+                        color="success"
+                        @click="openMarkAsPaidDialog(item, 'organization')"
+                      ></v-btn>
+                      <span v-else class="text-grey">—</span>
+                    </template>
+                  </v-tooltip>
+                </template>
+
+                <template v-slot:item.cancel="{ item }">
+                  <v-tooltip text="Cancel this subscription" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        v-if="item.status === 'active'"
+                        icon="mdi-cancel"
+                        size="small"
+                        variant="text"
+                        color="error"
+                        @click="openCancelDialog(item, 'organization')"
+                      ></v-btn>
+                      <span v-else class="text-grey">—</span>
+                    </template>
+                  </v-tooltip>
                 </template>
               </v-data-table>
             </v-card-text>
@@ -408,7 +454,9 @@ const userSubscriptionHeaders = [
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Start Date', key: 'start_date', sortable: true },
   { title: 'End Date', key: 'end_date', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false }
+  { title: 'View', key: 'view', sortable: false, align: 'center', width: '80px' },
+  { title: 'Mark Paid', key: 'mark_paid', sortable: false, align: 'center', width: '100px' },
+  { title: 'Cancel', key: 'cancel', sortable: false, align: 'center', width: '80px' }
 ]
 
 const orgSubscriptionHeaders = [
@@ -417,7 +465,9 @@ const orgSubscriptionHeaders = [
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Start Date', key: 'start_date', sortable: true },
   { title: 'End Date', key: 'end_date', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false }
+  { title: 'View', key: 'view', sortable: false, align: 'center', width: '80px' },
+  { title: 'Mark Paid', key: 'mark_paid', sortable: false, align: 'center', width: '100px' },
+  { title: 'Cancel', key: 'cancel', sortable: false, align: 'center', width: '80px' }
 ]
 
 // Dialog states
@@ -533,15 +583,13 @@ const overdueSubscriptions = computed(() => {
 async function loadSubscriptions() {
   loading.value = true
   try {
-    // Load user subscriptions (fetch all users and their subscriptions)
-    // For now, we'll need to implement a list endpoint
-    // TODO: Create GET /api/admin/subscriptions/users endpoint
+    // Load user subscriptions
     const userResponse = await axios.get('/api/admin/subscriptions/users')
-    userSubscriptions.value = userResponse.data
+    userSubscriptions.value = userResponse.data.subscriptions || []
 
     // Load organization subscriptions
     const orgResponse = await axios.get('/api/admin/subscriptions/organizations')
-    orgSubscriptions.value = orgResponse.data
+    orgSubscriptions.value = orgResponse.data.subscriptions || []
   } catch (error) {
     console.error('Failed to load subscriptions:', error)
   } finally {

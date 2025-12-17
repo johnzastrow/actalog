@@ -407,15 +407,16 @@ func (r *SQLiteUserSubscriptionRepository) Cancel(id int64, reason string, admin
 	return err
 }
 
-// ListAll returns all user subscriptions
+// ListAll returns all user subscriptions with user details
 func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription, error) {
 	query := rebindQuery(`
 		SELECT
-			id, user_id, subscription_type, status, is_permanent_free,
-			start_date, end_date, last_payment_date, next_billing_date,
-			cancelled_at, cancelled_reason, notes, created_at, updated_at, created_by_user_id
-		FROM user_subscriptions
-		ORDER BY created_at DESC
+			us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+			us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+			us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+		FROM user_subscriptions us
+		LEFT JOIN users u ON us.user_id = u.id
+		ORDER BY us.created_at DESC
 	`)
 
 	rows, err := r.db.Query(query)
@@ -430,6 +431,8 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 		err := rows.Scan(
 			&sub.ID,
 			&sub.UserID,
+			&sub.UserEmail,
+			&sub.UserName,
 			&sub.SubscriptionType,
 			&sub.Status,
 			&sub.IsPermanentFree,

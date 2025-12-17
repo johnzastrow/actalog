@@ -31,6 +31,7 @@ var (
 type UserService struct {
 	userRepo             domain.UserRepository
 	refreshTokenRepo     domain.RefreshTokenRepository
+	userSubRepo          domain.UserSubscriptionRepository
 	auditLogService      *AuditLogService
 	jwtSecret            string
 	jwtExpiration        time.Duration
@@ -50,6 +51,7 @@ type UserService struct {
 func NewUserService(
 	userRepo domain.UserRepository,
 	refreshTokenRepo domain.RefreshTokenRepository,
+	userSubRepo domain.UserSubscriptionRepository,
 	auditLogService *AuditLogService,
 	jwtSecret string,
 	jwtExpiration time.Duration,
@@ -64,6 +66,7 @@ func NewUserService(
 	return &UserService{
 		userRepo:             userRepo,
 		refreshTokenRepo:     refreshTokenRepo,
+		userSubRepo:          userSubRepo,
 		auditLogService:      auditLogService,
 		jwtSecretKey:         jwtSecret,
 		jwtExpiration:        jwtExpiration,
@@ -139,6 +142,24 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 	err = s.userRepo.Create(user)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Create permanent free subscription for new user
+	if s.userSubRepo != nil {
+		subscription := &domain.UserSubscription{
+			UserID:           user.ID,
+			SubscriptionType: domain.SubscriptionTypeFree,
+			Status:           domain.SubscriptionStatusActive,
+			IsPermanentFree:  true,
+			StartDate:        now,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		}
+		err = s.userSubRepo.Create(subscription)
+		if err != nil {
+			// Log error but don't fail registration - admin can create subscription later
+			fmt.Printf("warning: failed to create subscription for user %d: %v\n", user.ID, err)
+		}
 	}
 
 	// Generate verification token if email verification is required

@@ -149,6 +149,7 @@ func main() {
 	userService := service.NewUserService(
 		userRepo,
 		refreshTokenRepo,
+		userSubscriptionRepo,
 		auditLogService,
 		cfg.JWT.SecretKey,
 		cfg.JWT.ExpirationTime,

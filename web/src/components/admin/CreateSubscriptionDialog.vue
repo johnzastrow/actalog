@@ -159,7 +159,7 @@ async function loadUsers() {
   loadingUsers.value = true
   try {
     const response = await axios.get('/api/admin/users')
-    users.value = response.data.users || response.data || []
+    users.value = response.data.users || []
   } catch (err) {
     console.error('Failed to load users:', err)
     error.value = 'Failed to load users'
@@ -172,7 +172,7 @@ async function loadOrganizations() {
   loadingOrgs.value = true
   try {
     const response = await axios.get('/api/admin/organizations')
-    organizations.value = response.data || []
+    organizations.value = response.data.organizations || []
   } catch (err) {
     console.error('Failed to load organizations:', err)
     error.value = 'Failed to load organizations'

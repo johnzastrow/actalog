@@ -24,6 +24,8 @@ const (
 type UserSubscription struct {
 	ID               int64              `json:"id" db:"id"`
 	UserID           int64              `json:"user_id" db:"user_id"`
+	UserEmail        string             `json:"user_email,omitempty" db:"user_email"`        // Joined from users table
+	UserName         string             `json:"user_name,omitempty" db:"user_name"`          // Joined from users table
 	SubscriptionType SubscriptionType   `json:"subscription_type" db:"subscription_type"`
 	Status           SubscriptionStatus `json:"status" db:"status"`
 	IsPermanentFree  bool               `json:"is_permanent_free" db:"is_permanent_free"`
@@ -43,6 +45,7 @@ type UserSubscription struct {
 type OrganizationSubscription struct {
 	ID               int64              `json:"id" db:"id"`
 	OrganizationID   int64              `json:"organization_id" db:"organization_id"`
+	OrganizationName string             `json:"organization_name,omitempty" db:"organization_name"` // Joined from organizations table
 	SubscriptionType SubscriptionType   `json:"subscription_type" db:"subscription_type"`
 	Status           SubscriptionStatus `json:"status" db:"status"`
 	IsPermanentFree  bool               `json:"is_permanent_free" db:"is_permanent_free"`

@@ -407,15 +407,16 @@ func (r *SQLiteOrganizationSubscriptionRepository) Cancel(id int64, reason strin
 	return err
 }
 
-// ListAll returns all organization subscriptions
+// ListAll returns all organization subscriptions with organization details
 func (r *SQLiteOrganizationSubscriptionRepository) ListAll() ([]*domain.OrganizationSubscription, error) {
 	query := rebindQuery(`
 		SELECT
-			id, organization_id, subscription_type, status, is_permanent_free,
-			start_date, end_date, last_payment_date, next_billing_date,
-			cancelled_at, cancelled_reason, notes, created_at, updated_at, created_by_user_id
-		FROM organization_subscriptions
-		ORDER BY created_at DESC
+			os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+			os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+			os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+		FROM organization_subscriptions os
+		LEFT JOIN organizations o ON os.organization_id = o.id
+		ORDER BY os.created_at DESC
 	`)
 
 	rows, err := r.db.Query(query)
@@ -430,6 +431,7 @@ func (r *SQLiteOrganizationSubscriptionRepository) ListAll() ([]*domain.Organiza
 		err := rows.Scan(
 			&sub.ID,
 			&sub.OrganizationID,
+			&sub.OrganizationName,
 			&sub.SubscriptionType,
 			&sub.Status,
 			&sub.IsPermanentFree,
