@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1200,initial-scale=1" />
+    <title>Release Note</title>
+    <style>
+      :root{--bg:#0f1724;--card:#0b1220;--accent:#00bcd4;--muted:#9aa4b2;--text:#e6eef6}
+      html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+      .wrap{width:1200px;height:630px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--bg),#071020);}
+      .card{width:1100px;height:520px;border-radius:20px;padding:40px;box-sizing:border-box;background:linear-gradient(180deg,var(--card),#061019);box-shadow:0 20px 60px rgba(2,6,23,0.6);display:flex;flex-direction:row;gap:28px}
+      .left{width:60%;display:flex;flex-direction:column;justify-content:center}
+      .logo{height:64px;width:64px;border-radius:12px;overflow:hidden;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#022;font-weight:700}
+      .title{color:var(--text);font-size:40px;font-weight:700;margin-top:18px;line-height:1.05}
+      .subtitle{color:var(--muted);margin-top:12px;font-size:18px;max-width:520px}
+      .badge{display:inline-block;margin-top:18px;padding:6px 10px;border-radius:8px;background:rgba(0,188,212,0.12);color:var(--accent);font-weight:600;font-size:14px}
+      .right{width:40%;display:flex;align-items:center;justify-content:center}
+      .meta{color:var(--muted);font-size:14px}
+      .footer{position:absolute;left:40px;bottom:40px;color:var(--muted);font-size:13px}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="left">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="logo">AL</div>
+            <div style="display:flex;flex-direction:column">
+              <div style="color:var(--muted);font-size:12px;font-weight:600">ActaLog</div>
+              <div style="color:var(--muted);font-size:11px;margin-top:2px">Mobile-first fitness tracker</div>
+            </div>
+          </div>
+          <div class="title" id="title">Release Title</div>
+          <div class="subtitle" id="summary">Short summary about the release goes here. Keep it concise and impactful.</div>
+          <div class="badge" id="badge">Release</div>
+        </div>
+        <div class="right">
+          <div style="text-align:center">
+            <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Release date</div>
+            <div style="font-size:28px;color:var(--text);font-weight:700" id="date">2025-01-01</div>
+            <div style="margin-top:16px;color:var(--muted);max-width:220px" id="why">Why it matters: concise 1-line impact statement</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">actalog — open source — docs/CHANGELOG.md</div>
+    <script>
+      // Allow injecting fields via querystring: ?title=...&summary=...&date=...&badge=...
+      const params = new URLSearchParams(location.search);
+      const set = (id,key)=>{ const v=params.get(key); if(v) document.getElementById(id).textContent = decodeURIComponent(v); }
+      set('title','title'); set('summary','summary'); set('date','date'); set('badge','badge'); set('why','why');
+    </script>
+  </body>
+</html>
