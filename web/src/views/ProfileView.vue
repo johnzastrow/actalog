@@ -322,6 +322,40 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-domain"
+            @click="$router.push('/admin/organizations')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Organization Management
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Manage organizations and members
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-credit-card"
+            @click="$router.push('/admin/subscriptions')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Subscription Management
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Manage user and org subscriptions
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-chart-bar"
             disabled
             rounded

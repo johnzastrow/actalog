@@ -7,6 +7,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0-beta] - 2024-12-16
+
+### Added - Subscription Billing System
+
+**Dual-Level Subscription Management:**
+- User-level subscriptions (individual billing)
+- Organization-level subscriptions (gym/team billing)
+- Flexible access model: users have access if EITHER personal OR any organization subscription is active
+- Three subscription types: Free, Monthly, Annual
+- Permanent Free subscriptions for founders/staff (never expire, never need payment)
+- Immediate read-only mode enforcement when subscriptions expire (no grace period)
+
+**Admin Controls:**
+- Manual payment management (admins mark subscriptions as paid/unpaid)
+- Subscription creation, cancellation, and history viewing
+- Complete audit trail for all subscription operations
+- Admin API endpoints for subscription management
+
+**Read-Only Mode:**
+- Users with expired subscriptions can view all data, export data, access dashboard/analytics
+- Write operations blocked (POST/PUT/PATCH/DELETE) return HTTP 402 Payment Required
+- Read operations allowed (GET/HEAD/OPTIONS) for viewing and exporting
+
+**Backward Compatibility:**
+- Migration 0.14.0 automatically seeds all existing users with permanent free subscriptions
+- Zero downtime deployment - no existing users lose access
+- All current users receive `is_permanent_free = TRUE` status
+
+**Database Support:**
+- Multi-database migration tested on SQLite, PostgreSQL, and MariaDB
+- Version snapshots created for all three database engines
+- Database versioning system for testing future migrations
+
+### Technical Implementation
+
+**New Domain Entities:**
+- `UserSubscription` - Individual user subscriptions with 15 fields
+- `OrganizationSubscription` - Organization-level subscriptions
+- `SubscriptionAccessResult` - Access check result with source indication
+
+**Repository Layer:**
+- `UserSubscriptionRepository` - CRUD operations for user subscriptions
+- `OrganizationSubscriptionRepository` - CRUD for organization subscriptions
+- `SubscriptionAccessRepository` - Performance-optimized access checking (< 10ms target)
+
+**Service Layer:**
+- `SubscriptionService` - Business logic for subscription management
+- Admin operations: Create, MarkAsPaid, Cancel
+- User operations: CheckAccess, GetStatus
+
+**Middleware:**
+- `RequireActiveSubscription` - HTTP method-based enforcement
+- Allows GET requests when expired (view/export)
+- Blocks POST/PUT/PATCH/DELETE when expired
+
+**API Endpoints:**
+- `GET /api/subscriptions/status` - User subscription status
+- `POST /api/admin/subscriptions/user` - Create user subscription
+- `POST /api/admin/subscriptions/user/{id}/mark-paid` - Mark as paid
+- `POST /api/admin/subscriptions/user/{id}/cancel` - Cancel subscription
+- `GET /api/admin/subscriptions/user/{user_id}` - View subscription history
+- Organization subscription endpoints (parallel structure)
+
+**Database Version Management:**
+- `db_versions/actalog_0.14.0.db` - SQLite snapshot (564 KB with production-like data)
+- PostgreSQL schema `actalog_0_14_0` on 192.168.1.143
+- MariaDB database `actalog_0_14_0` on 192.168.1.234
+- All version databases contain identical test data with 4 test users
+- Automated scripts: `create-db-snapshot.sh`, `verify-version-databases.sh`
+
+### Files Created (14 files)
+- `internal/domain/subscription.go` (106 lines) - Domain entities and interfaces
+- `internal/repository/user_subscription_repository.go` (441 lines)
+- `internal/repository/organization_subscription_repository.go` (441 lines)
+- `internal/repository/subscription_access_repository.go` (145 lines)
+- `internal/service/subscription_service.go` (368 lines)
+- `pkg/middleware/subscription.go` (81 lines)
+- `internal/handler/subscription_handler.go` (476 lines)
+- `db_versions/README.md` - Version management overview
+- `db_versions/VERSION_DATABASES.md` - Multi-database access guide (284 lines)
+- `db_versions/MIGRATION_TEST_0.14.0.md` - Migration test report
+- `db_versions/actalog_0.14.0.db` - SQLite version snapshot
+- `scripts/create-db-snapshot.sh` - Automated snapshot creation
+- `scripts/verify-version-databases.sh` - Multi-database verification
+- PostgreSQL schema: `actalog_0_14_0` with test data
+- MariaDB database: `actalog_0_14_0` with test data
+
+### Files Modified (5 files)
+- `internal/repository/migrations.go` - Added migration 0.14.0 (lines 885-1162)
+- `pkg/version/version.go` - Updated to 0.14.0, build 24
+- `cmd/actalog/main.go` - Wired repositories, service, handler, routes
+- `internal/domain/audit_log.go` - Added subscription event types
+- `CLAUDE.md` - Added database version management section
+
+### Technical Details
+- **Build**: #24
+- **Version**: 0.12.2-beta → 0.14.0-beta
+- **Migration**: 0.14.0 creates `user_subscriptions` and `organization_subscriptions` tables
+- **Schema**: 15 columns per table, 4 indexes per table for performance
+- **Constraints**: CHECK constraints on subscription_type and status, CASCADE/SET NULL foreign keys
+- **Performance**: Access check optimized for < 10ms per authenticated request
+- **Audit**: All subscription operations logged with admin user ID and details
+
+---
+
 ## [0.12.2-beta] - 2025-11-28
 
 ### Fixed - PWA Offline Functionality

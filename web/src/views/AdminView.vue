@@ -51,6 +51,27 @@
             </v-card>
           </v-col>
 
+          <!-- Organization Management -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/organizations')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#673ab7" size="32" class="mr-3">mdi-domain</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Organizations</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Manage gyms and organizations</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                Create and manage organizations, assign users to gyms and groups.
+              </p>
+              <v-chip size="small" color="#673ab7" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- User Content Management -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/user-content')" style="cursor: pointer">

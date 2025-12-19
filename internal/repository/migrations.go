@@ -446,6 +446,720 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.6.0",
+		Description: "Add organizations table and organization_id to users",
+		Up: func(db *sql.DB, driver string) error {
+			var createOrgSQL string
+			var alterUsersSQL string
+
+			switch driver {
+			case "sqlite3":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					name TEXT UNIQUE NOT NULL,
+					description TEXT,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id INTEGER REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			case "postgres":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id BIGSERIAL PRIMARY KEY,
+					name VARCHAR(255) UNIQUE NOT NULL,
+					description TEXT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+				);
+				CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			case "mysql":
+				createOrgSQL = `
+				CREATE TABLE IF NOT EXISTS organizations (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					name VARCHAR(255) UNIQUE NOT NULL,
+					description TEXT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_organizations_name (name)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+
+				alterUsersSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT,
+								ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL;`
+
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			// Create organizations table
+			if _, err := db.Exec(createOrgSQL); err != nil {
+				return fmt.Errorf("failed to create organizations table: %w", err)
+			}
+
+			// Check if column already exists before adding
+			hasColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if !hasColumn {
+				if _, err := db.Exec(alterUsersSQL); err != nil {
+					return fmt.Errorf("failed to add organization_id to users: %w", err)
+				}
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop organization_id column from users
+			var dropColumnSQL string
+			switch driver {
+			case "sqlite3":
+				return fmt.Errorf("SQLite does not support dropping columns easily")
+			case "postgres", "mysql":
+				dropColumnSQL = "ALTER TABLE users DROP COLUMN organization_id"
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(dropColumnSQL); err != nil {
+				return err
+			}
+
+			// Drop organizations table
+			if _, err := db.Exec("DROP TABLE IF EXISTS organizations"); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	},
+	{
+		Version:     "0.13.0",
+		Description: "Migrate user-organization relationship from one-to-many to many-to-many",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if user_organizations table already exists
+			hasJunctionTable, err := checkTableExists(db, driver, "user_organizations")
+			if err != nil {
+				return fmt.Errorf("failed to check for user_organizations table: %w", err)
+			}
+
+			if hasJunctionTable {
+				// Table already exists, check if we need to drop old column
+				hasOldColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+				if err != nil {
+					return fmt.Errorf("failed to check for organization_id column: %w", err)
+				}
+
+				if !hasOldColumn {
+					// Migration already complete
+					return nil
+				}
+				// Fall through to drop column
+			} else {
+				// Step 1: Create user_organizations junction table
+				var createJunctionSQL string
+				switch driver {
+				case "sqlite3":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						organization_id INTEGER NOT NULL,
+						role TEXT DEFAULT 'member',
+						joined_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT,
+						UNIQUE(user_id, organization_id)
+					);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);`
+
+				case "postgres":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						organization_id BIGINT NOT NULL,
+						role VARCHAR(50) DEFAULT 'member',
+						joined_at TIMESTAMP NOT NULL,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT,
+						UNIQUE(user_id, organization_id)
+					);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
+					CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);`
+
+				case "mysql":
+					createJunctionSQL = `
+					CREATE TABLE IF NOT EXISTS user_organizations (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						organization_id BIGINT NOT NULL,
+						role VARCHAR(50) DEFAULT 'member',
+						joined_at DATETIME NOT NULL,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						INDEX idx_user_orgs_user_id (user_id),
+						INDEX idx_user_orgs_org_id (organization_id),
+						INDEX idx_user_orgs_lookup (user_id, organization_id),
+						UNIQUE KEY unique_user_org (user_id, organization_id),
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createJunctionSQL); err != nil {
+					return fmt.Errorf("failed to create user_organizations table: %w", err)
+				}
+
+				// Step 2: Migrate existing data from users.organization_id to junction table
+				var migrateQuery string
+				now := time.Now()
+
+				switch driver {
+				case "sqlite3", "mysql":
+					migrateQuery = `
+					INSERT INTO user_organizations (user_id, organization_id, role, joined_at, created_at, updated_at)
+					SELECT id, organization_id, 'member', created_at, ?, ?
+					FROM users
+					WHERE organization_id IS NOT NULL`
+					_, err = db.Exec(migrateQuery, now, now)
+
+				case "postgres":
+					migrateQuery = `
+					INSERT INTO user_organizations (user_id, organization_id, role, joined_at, created_at, updated_at)
+					SELECT id, organization_id, 'member', created_at, $1, $2
+					FROM users
+					WHERE organization_id IS NOT NULL`
+					_, err = db.Exec(migrateQuery, now, now)
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if err != nil {
+					return fmt.Errorf("failed to migrate organization data: %w", err)
+				}
+
+				// Step 3: Verify migration
+				var countUsers, countJunction int64
+				var countQuery string
+
+				switch driver {
+				case "sqlite3", "mysql":
+					countQuery = "SELECT COUNT(*) FROM users WHERE organization_id IS NOT NULL"
+				case "postgres":
+					countQuery = "SELECT COUNT(*) FROM users WHERE organization_id IS NOT NULL"
+				}
+
+				if err := db.QueryRow(countQuery).Scan(&countUsers); err != nil {
+					return fmt.Errorf("failed to count users with organizations: %w", err)
+				}
+
+				if err := db.QueryRow("SELECT COUNT(*) FROM user_organizations").Scan(&countJunction); err != nil {
+					return fmt.Errorf("failed to count junction records: %w", err)
+				}
+
+				if countUsers != countJunction {
+					return fmt.Errorf("migration verification failed: expected %d records, got %d", countUsers, countJunction)
+				}
+
+				fmt.Printf("✓ Migrated %d organization assignments to junction table\n", countJunction)
+			}
+
+			// Step 4: Drop organization_id column from users table
+			hasOldColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if hasOldColumn {
+				switch driver {
+				case "sqlite3":
+					// SQLite doesn't support DROP COLUMN, need to rebuild table
+					// Get all columns except organization_id
+					rows, err := db.Query("PRAGMA table_info(users)")
+					if err != nil {
+						return fmt.Errorf("failed to get users table info: %w", err)
+					}
+
+					var columns []string
+					for rows.Next() {
+						var cid int
+						var name, colType string
+						var notnull, pk int
+						var dfltValue sql.NullString
+
+						if err := rows.Scan(&cid, &name, &colType, &notnull, &dfltValue, &pk); err != nil {
+							rows.Close()
+							return fmt.Errorf("failed to scan column info: %w", err)
+						}
+
+						if name != "organization_id" {
+							columns = append(columns, name)
+						}
+					}
+					rows.Close()
+
+					// Build column list for new table
+					columnList := ""
+					for i, col := range columns {
+						if i > 0 {
+							columnList += ", "
+						}
+						columnList += col
+					}
+
+					// Rebuild table without organization_id
+					rebuildSQL := fmt.Sprintf(`
+						BEGIN TRANSACTION;
+
+						CREATE TABLE users_new (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							email TEXT UNIQUE NOT NULL,
+							password_hash TEXT NOT NULL,
+							name TEXT NOT NULL,
+							profile_image TEXT,
+							birthday DATE,
+							role TEXT NOT NULL DEFAULT 'user',
+							email_verified INTEGER NOT NULL DEFAULT 0,
+							email_verified_at DATETIME,
+							verification_token TEXT,
+							verification_token_expires_at DATETIME,
+							reset_token TEXT,
+							reset_token_expires_at DATETIME,
+							failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+							locked_at DATETIME,
+							locked_until DATETIME,
+							account_disabled INTEGER NOT NULL DEFAULT 0,
+							disabled_at DATETIME,
+							disabled_by_user_id INTEGER,
+							disable_reason TEXT,
+							created_at DATETIME NOT NULL,
+							updated_at DATETIME NOT NULL,
+							last_login_at DATETIME,
+							FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+						);
+
+						INSERT INTO users_new (%s)
+						SELECT %s FROM users;
+
+						DROP TABLE users;
+
+						ALTER TABLE users_new RENAME TO users;
+
+						CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+						CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+						COMMIT;
+					`, columnList, columnList)
+
+					if _, err := db.Exec(rebuildSQL); err != nil {
+						return fmt.Errorf("failed to rebuild users table: %w", err)
+					}
+
+				case "postgres":
+					dropColumnSQL := "ALTER TABLE users DROP COLUMN organization_id"
+					if _, err := db.Exec(dropColumnSQL); err != nil {
+						return fmt.Errorf("failed to drop organization_id column: %w", err)
+					}
+
+				case "mysql":
+					// MySQL requires dropping the foreign key constraint first
+					// Find the foreign key constraint name
+					var constraintName sql.NullString
+					err := db.QueryRow(`
+						SELECT CONSTRAINT_NAME
+						FROM information_schema.KEY_COLUMN_USAGE
+						WHERE TABLE_SCHEMA = DATABASE()
+						AND TABLE_NAME = 'users'
+						AND COLUMN_NAME = 'organization_id'
+						AND REFERENCED_TABLE_NAME IS NOT NULL
+					`).Scan(&constraintName)
+
+					if err != nil && err != sql.ErrNoRows {
+						return fmt.Errorf("failed to find foreign key constraint: %w", err)
+					}
+
+					// Drop foreign key if it exists
+					if constraintName.Valid {
+						dropFKSQL := fmt.Sprintf("ALTER TABLE users DROP FOREIGN KEY %s", constraintName.String)
+						if _, err := db.Exec(dropFKSQL); err != nil {
+							return fmt.Errorf("failed to drop foreign key constraint: %w", err)
+						}
+					}
+
+					// Now drop the column
+					dropColumnSQL := "ALTER TABLE users DROP COLUMN organization_id"
+					if _, err := db.Exec(dropColumnSQL); err != nil {
+						return fmt.Errorf("failed to drop organization_id column: %w", err)
+					}
+
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				fmt.Println("✓ Dropped organization_id column from users table")
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Step 1: Re-add organization_id column to users
+			hasColumn, err := checkColumnExists(db, driver, "users", "organization_id")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_id column: %w", err)
+			}
+
+			if !hasColumn {
+				var addColumnSQL string
+				switch driver {
+				case "sqlite3":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id INTEGER REFERENCES organizations(id) ON DELETE SET NULL`
+				case "postgres":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT REFERENCES organizations(id) ON DELETE SET NULL`
+				case "mysql":
+					addColumnSQL = `ALTER TABLE users ADD COLUMN organization_id BIGINT,
+									ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(addColumnSQL); err != nil {
+					return fmt.Errorf("failed to add organization_id column: %w", err)
+				}
+			}
+
+			// Step 2: Copy data back (takes first organization only)
+			// WARNING: This loses data for users in multiple organizations
+			var copyDataSQL string
+			switch driver {
+			case "sqlite3", "mysql":
+				copyDataSQL = `
+					UPDATE users SET organization_id = (
+						SELECT organization_id FROM user_organizations
+						WHERE user_organizations.user_id = users.id
+						LIMIT 1
+					)`
+			case "postgres":
+				copyDataSQL = `
+					UPDATE users SET organization_id = (
+						SELECT organization_id FROM user_organizations
+						WHERE user_organizations.user_id = users.id
+						LIMIT 1
+					)`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(copyDataSQL); err != nil {
+				return fmt.Errorf("failed to copy organization data back: %w", err)
+			}
+
+			// Step 3: Drop junction table
+			if _, err := db.Exec("DROP TABLE IF EXISTS user_organizations"); err != nil {
+				return fmt.Errorf("failed to drop user_organizations table: %w", err)
+			}
+
+			fmt.Println("⚠️  WARNING: Rollback complete but data loss occurred for users in multiple organizations")
+			return nil
+		},
+	},
+	{
+		Version:     "0.14.0",
+		Description: "Add subscription billing system with user and organization subscriptions",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if tables already exist
+			hasUserSubs, err := checkTableExists(db, driver, "user_subscriptions")
+			if err != nil {
+				return fmt.Errorf("failed to check for user_subscriptions table: %w", err)
+			}
+			if hasUserSubs {
+				fmt.Println("✓ user_subscriptions table already exists, skipping creation")
+			}
+
+			hasOrgSubs, err := checkTableExists(db, driver, "organization_subscriptions")
+			if err != nil {
+				return fmt.Errorf("failed to check for organization_subscriptions table: %w", err)
+			}
+			if hasOrgSubs {
+				fmt.Println("✓ organization_subscriptions table already exists, skipping creation")
+			}
+
+			// Step 1: Create user_subscriptions table
+			if !hasUserSubs {
+				var createUserSubsSQL string
+				switch driver {
+				case "sqlite3":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL,
+						subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free INTEGER NOT NULL DEFAULT 0,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						created_by_user_id INTEGER,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+					CREATE INDEX idx_user_subscriptions_status ON user_subscriptions(status);
+					CREATE INDEX idx_user_subscriptions_next_billing ON user_subscriptions(next_billing_date);
+					`
+				case "postgres":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status VARCHAR(20) NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date TIMESTAMP NOT NULL,
+						end_date TIMESTAMP,
+						last_payment_date TIMESTAMP,
+						next_billing_date TIMESTAMP,
+						cancelled_at TIMESTAMP,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+					CREATE INDEX idx_user_subscriptions_status ON user_subscriptions(status);
+					CREATE INDEX idx_user_subscriptions_next_billing ON user_subscriptions(next_billing_date);
+					`
+				case "mysql":
+					createUserSubsSQL = `
+					CREATE TABLE user_subscriptions (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL,
+						status VARCHAR(20) NOT NULL,
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						INDEX idx_user_subscriptions_user_id (user_id),
+						INDEX idx_user_subscriptions_status (status),
+						INDEX idx_user_subscriptions_next_billing (next_billing_date),
+						CONSTRAINT chk_user_sub_type CHECK (subscription_type IN ('free', 'monthly', 'annual')),
+						CONSTRAINT chk_user_status CHECK (status IN ('active', 'expired', 'cancelled')),
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+					`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createUserSubsSQL); err != nil {
+					return fmt.Errorf("failed to create user_subscriptions table: %w", err)
+				}
+				fmt.Println("✓ Created user_subscriptions table")
+			}
+
+			// Step 2: Create organization_subscriptions table
+			if !hasOrgSubs {
+				var createOrgSubsSQL string
+				switch driver {
+				case "sqlite3":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						organization_id INTEGER NOT NULL,
+						subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free INTEGER NOT NULL DEFAULT 0,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL,
+						updated_at DATETIME NOT NULL,
+						created_by_user_id INTEGER,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
+					CREATE INDEX idx_org_subscriptions_status ON organization_subscriptions(status);
+					CREATE INDEX idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+					`
+				case "postgres":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id BIGSERIAL PRIMARY KEY,
+						organization_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+						status VARCHAR(20) NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date TIMESTAMP NOT NULL,
+						end_date TIMESTAMP,
+						last_payment_date TIMESTAMP,
+						next_billing_date TIMESTAMP,
+						cancelled_at TIMESTAMP,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					);
+					CREATE INDEX idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
+					CREATE INDEX idx_org_subscriptions_status ON organization_subscriptions(status);
+					CREATE INDEX idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+					`
+				case "mysql":
+					createOrgSubsSQL = `
+					CREATE TABLE organization_subscriptions (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						organization_id BIGINT NOT NULL,
+						subscription_type VARCHAR(20) NOT NULL,
+						status VARCHAR(20) NOT NULL,
+						is_permanent_free BOOLEAN NOT NULL DEFAULT FALSE,
+						start_date DATETIME NOT NULL,
+						end_date DATETIME,
+						last_payment_date DATETIME,
+						next_billing_date DATETIME,
+						cancelled_at DATETIME,
+						cancelled_reason TEXT,
+						notes TEXT,
+						created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+						created_by_user_id BIGINT,
+						INDEX idx_org_subscriptions_org_id (organization_id),
+						INDEX idx_org_subscriptions_status (status),
+						INDEX idx_org_subscriptions_next_billing (next_billing_date),
+						CONSTRAINT chk_org_sub_type CHECK (subscription_type IN ('free', 'monthly', 'annual')),
+						CONSTRAINT chk_org_status CHECK (status IN ('active', 'expired', 'cancelled')),
+						FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+						FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+					`
+				default:
+					return fmt.Errorf("unsupported database driver: %s", driver)
+				}
+
+				if _, err := db.Exec(createOrgSubsSQL); err != nil {
+					return fmt.Errorf("failed to create organization_subscriptions table: %w", err)
+				}
+				fmt.Println("✓ Created organization_subscriptions table")
+			}
+
+			// Step 3: Seed existing users with permanent free subscriptions (backward compatibility)
+			// This ensures all existing users maintain full access
+			var seedQuery string
+			now := time.Now()
+
+			switch driver {
+			case "sqlite3":
+				seedQuery = rebindQuery(`
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', 1, ?, ?, ?
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`)
+			case "postgres":
+				seedQuery = `
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', TRUE, $1, $2, $3
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`
+			case "mysql":
+				seedQuery = rebindQuery(`
+					INSERT INTO user_subscriptions (user_id, subscription_type, status, is_permanent_free, start_date, created_at, updated_at)
+					SELECT id, 'free', 'active', TRUE, ?, ?, ?
+					FROM users
+					WHERE NOT EXISTS (
+						SELECT 1 FROM user_subscriptions WHERE user_subscriptions.user_id = users.id
+					)
+				`)
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			result, err := db.Exec(seedQuery, now, now, now)
+			if err != nil {
+				return fmt.Errorf("failed to seed user subscriptions: %w", err)
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				return fmt.Errorf("failed to get rows affected: %w", err)
+			}
+
+			fmt.Printf("✓ Seeded %d existing users with permanent free subscriptions\n", rowsAffected)
+
+			// Step 4: Verify seeding
+			var userCount, subCount int64
+			if err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount); err != nil {
+				return fmt.Errorf("failed to count users: %w", err)
+			}
+			if err := db.QueryRow("SELECT COUNT(*) FROM user_subscriptions").Scan(&subCount); err != nil {
+				return fmt.Errorf("failed to count subscriptions: %w", err)
+			}
+
+			fmt.Printf("✓ Verification: %d users, %d subscriptions\n", userCount, subCount)
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop subscription tables (WARNING: Data loss)
+			if _, err := db.Exec("DROP TABLE IF EXISTS organization_subscriptions"); err != nil {
+				return fmt.Errorf("failed to drop organization_subscriptions: %w", err)
+			}
+			if _, err := db.Exec("DROP TABLE IF EXISTS user_subscriptions"); err != nil {
+				return fmt.Errorf("failed to drop user_subscriptions: %w", err)
+			}
+
+			fmt.Println("⚠️  WARNING: Subscription data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

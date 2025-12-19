@@ -225,6 +225,25 @@ instance.interceptors.response.use(
       }
     }
 
+    // Handle 402 Payment Required (subscription expired)
+    if (error.response?.status === 402) {
+      console.log('Subscription expired (HTTP 402), updating subscription store...')
+
+      // Import subscription store dynamically to avoid circular dependencies
+      import('@/stores/subscription').then(({ useSubscriptionStore }) => {
+        const subscriptionStore = useSubscriptionStore()
+        subscriptionStore.setExpired()
+      })
+
+      // Dispatch custom event to notify UI
+      window.dispatchEvent(new CustomEvent('subscription-expired', {
+        detail: {
+          message: error.response?.data?.message || 'Subscription required',
+          url: originalRequest.url
+        }
+      }))
+    }
+
     return Promise.reject(error)
   }
 )

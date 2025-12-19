@@ -172,6 +172,39 @@
         </v-col>
       </v-row>
 
+      <!-- Active Users This Month Card -->
+      <v-row dense class="mb-1" v-if="activeUsersStats.length > 0">
+        <v-col cols="12">
+          <v-card elevation="0" rounded class="pa-2" style="background: white">
+            <div class="text-caption mb-2 font-weight-bold" style="color: #666">
+              <v-icon size="small" color="#00bcd4" class="mr-1">mdi-account-group</v-icon>
+              Active This Month
+            </div>
+            <div v-for="(user, index) in activeUsersStats" :key="user.id" class="mb-2">
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                  <v-avatar size="32" :color="user.is_current ? '#00bcd4' : '#9c27b0'" class="mr-2">
+                    <span class="text-white text-body-2">{{ user.name[0].toUpperCase() }}</span>
+                  </v-avatar>
+                  <div>
+                    <div
+                      class="text-body-2"
+                      :class="{ 'font-weight-bold': user.is_current }"
+                      style="color: #1a1a1a"
+                    >
+                      {{ user.name }}{{ user.is_current ? ' (You)' : '' }}
+                    </div>
+                  </div>
+                </div>
+                <v-chip size="small" :color="user.is_current ? '#00bcd4' : '#9c27b0'" variant="flat">
+                  <span class="text-white font-weight-bold">{{ user.workout_count }}</span>
+                </v-chip>
+              </div>
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+
       <!-- Recent Workouts -->
       <div class="mb-1">
         <div
@@ -712,6 +745,7 @@ const loading = ref(false)
 const userWorkouts = ref([])
 const expandedWorkouts = ref(new Set())
 const showRecentWorkouts = ref(false) // Collapsed by default
+const activeUsersStats = ref([])
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -983,10 +1017,24 @@ async function fetchUserWorkouts() {
   }
 }
 
+async function fetchActiveUsersStats() {
+  try {
+    const response = await axios.get('/api/stats/active-users-this-month')
+    activeUsersStats.value = response.data.users || []
+    console.log('Fetched active users stats:', activeUsersStats.value.length)
+  } catch (err) {
+    console.error('Failed to fetch active users stats:', err)
+    activeUsersStats.value = []
+  }
+}
+
 // Handle pull-to-refresh
 async function handleRefresh(done) {
   try {
-    await fetchUserWorkouts()
+    await Promise.all([
+      fetchUserWorkouts(),
+      fetchActiveUsersStats()
+    ])
   } finally {
     // Call done callback to stop the refresh animation
     if (done) done()
@@ -1250,6 +1298,7 @@ watch(() => route.query.open, (value) => {
 // Load data on mount
 onMounted(() => {
   fetchUserWorkouts()
+  fetchActiveUsersStats()
 })
 </script>
 

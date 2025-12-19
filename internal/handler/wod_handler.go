@@ -66,12 +66,13 @@ type WODResponse struct {
 
 // CreateWOD creates a new custom WOD
 func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
-	// Extract user ID from JWT token in context
+	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	var req CreateWODRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -97,7 +98,7 @@ func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
 		Notes:       req.Notes,
 	}
 
-	if err := h.wodService.Create(wod, userID); err != nil {
+	if err := h.wodService.Create(wod, userID, userEmail); err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to create WOD: "+err.Error())
 		return
 	}

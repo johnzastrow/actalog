@@ -122,6 +122,14 @@ func (h *MovementHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // Create creates a new custom movement
 func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID and email from context for audit logging
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
 	var req struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -138,8 +146,6 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Get user ID from context when auth middleware is added
-	// For now, custom movements without user ID
 	movement := &domain.Movement{
 		Name:        req.Name,
 		Description: req.Description,
@@ -151,7 +157,7 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("action=create_movement_attempt name=%s type=%s", req.Name, req.Type)
 	}
 
-	if err := h.movementRepo.Create(movement); err != nil {
+	if err := h.movementService.Create(movement, userID, userEmail); err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=create_movement outcome=failure name=%s error=%v", req.Name, err)
 		}

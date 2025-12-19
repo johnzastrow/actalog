@@ -1,0 +1,85 @@
+/* CSS variables and minimal utility styles for ActaLog site */
+:root{
+  /* Brand palette (harvested from logo & UI) */
+  --color-primary: #00bcd4; /* teal */
+  --color-accent-pink: #e91e63; /* pink */
+  --color-accent-orange: #ff5722; /* orange */
+  --color-success: #4caf50; /* green */
+  --color-dark: #1a1a1a; /* text */
+  --color-dark-ui: #2c3e50; /* footer/nav accents */
+  --color-bg: #ffffff;
+  --color-muted-1: #f5f7fa;
+  --color-muted-2: #e0e0e0;
+  --color-muted-text: #666666;
+
+  /* Other tokens */
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --shadow-md: 0 10px 30px rgba(2,6,23,0.08);
+  --max-width: 1100px;
+
+  /* Typography */
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Base reset */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:var(--font-sans);background:var(--color-bg);color:var(--color-dark);-webkit-font-smoothing:antialiased}
+
+/* Headings tuned to match the patchmon.net-like feel: larger, tighter tracking */
+h1{font-weight:800;font-size:52px;letter-spacing:-0.01em;margin:0}
+h2{font-weight:700;font-size:28px;margin:0}
+h3{font-weight:600;font-size:18px;margin:0}
+p{font-size:16px;line-height:1.5}
+a{color:var(--color-primary);text-decoration:none}
+
+.container{max-width:var(--max-width);margin:0 auto;padding:40px 20px}
+
+/* Header */
+.site-header{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.site-header .brand{display:flex;align-items:center;gap:12px}
+.brand img{height:40px}
+
+.btn{display:inline-block;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer;border:0}
+.btn-primary{background:var(--color-primary);color:white}
+.btn-ghost{background:transparent;color:var(--color-dark);border:1px solid var(--color-muted-2)}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 480px;gap:36px;align-items:center;padding:56px 18px;position:relative}
+.hero::before{content:'';position:absolute;right:0;top:0;width:480px;height:100%;background:linear-gradient(180deg, rgba(0,188,212,0.06), rgba(233,30,99,0.02));pointer-events:none;border-radius:0 12px 12px 0}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;padding:28px 0}
+  .hero-right{display:block;margin-top:20px}
+  .hero-right .card{height:260px}
+  .hero-right img{height:100%;object-fit:cover}
+}
+
+.hero-left h1{font-size:40px;line-height:1.05;margin:0 0 16px}
+.hero-left p{color:var(--color-muted-text);margin:0 0 24px;font-size:18px}
+.hero-ctas{display:flex;gap:12px}
+
+/* Hero card image */
+.hero-right .card{background:linear-gradient(180deg, #ffffff, #fbfdff);border-radius:var(--radius-lg);box-shadow:0 20px 50px rgba(14,30,37,0.08);overflow:hidden;border:1px solid rgba(10,14,18,0.04);padding:12px}
+.hero-right img{display:block;width:100%;height:100%;object-fit:cover}
+
+/* Feature row */
+.features{display:flex;gap:16px;margin-top:36px}
+.feature{flex:1;background:linear-gradient(180deg,#ffffff,#fbfdff);padding:18px;border-radius:12px;border:1px solid var(--color-muted-2)}
+.feature h3{margin:0 0 8px;color:var(--color-dark)}
+.feature p{margin:0;color:var(--color-muted-text)}
+
+/* Footer */
+.site-footer{padding:28px 0;color:var(--color-muted-text);border-top:1px solid var(--color-muted-2);margin-top:48px}
+
+/* CTA styling to match energetic, modern look */
+.btn-primary{background:linear-gradient(90deg,var(--color-primary),var(--color-accent-pink));box-shadow:0 8px 24px rgba(2,6,23,0.12);border-radius:10px;padding:12px 18px}
+.btn-primary:hover{transform:translateY(-1px)}
+
+/* Slightly lighter container for sections */
+#features, #quick-deploy, #screenshots, #faq{background:transparent;padding:18px 0}
+
+.screenshot-grid .card{padding:6px}
+.screenshot-grid img{width:100%;height:auto;border-radius:8px;display:block}
+
+/* Utility */
+.kicker{color:var(--color-muted-text);text-transform:uppercase;letter-spacing:0.06em;font-size:12px}

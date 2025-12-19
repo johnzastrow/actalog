@@ -106,6 +106,12 @@ func main() {
 	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
 	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
+	orgRepo := repository.NewOrganizationRepository(db)
+
+	// Subscription repositories
+	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
+	orgSubscriptionRepo := repository.NewSQLiteOrganizationSubscriptionRepository(db)
+	subscriptionAccessRepo := repository.NewSubscriptionAccessRepository(userSubscriptionRepo, orgSubscriptionRepo, orgRepo)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -143,6 +149,7 @@ func main() {
 	userService := service.NewUserService(
 		userRepo,
 		refreshTokenRepo,
+		userSubscriptionRepo,
 		auditLogService,
 		cfg.JWT.SecretKey,
 		cfg.JWT.ExpirationTime,
@@ -162,17 +169,19 @@ func main() {
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
+		auditLogRepo,
 	)
 
 	workoutTemplateService := service.NewWorkoutTemplateService(
 		workoutRepo,
 		workoutMovementRepo,
 		workoutWODRepo,
+		auditLogRepo,
 	)
 
-	wodService := service.NewWODService(wodRepo, dataChangeLogService)
+	wodService := service.NewWODService(wodRepo, dataChangeLogService, auditLogRepo)
 
-	movementService := service.NewMovementService(movementRepo, dataChangeLogService)
+	movementService := service.NewMovementService(movementRepo, dataChangeLogService, auditLogRepo)
 
 	workoutWODService := service.NewWorkoutWODService(
 		workoutWODRepo,
@@ -180,7 +189,18 @@ func main() {
 		wodRepo,
 	)
 
-	userSettingsService := service.NewUserSettingsService(userSettingsRepo)
+	userSettingsService := service.NewUserSettingsService(userSettingsRepo, auditLogRepo)
+
+	orgService := service.NewOrganizationService(orgRepo, userRepo, auditLogRepo)
+
+	subscriptionService := service.NewSubscriptionService(
+		userSubscriptionRepo,
+		orgSubscriptionRepo,
+		subscriptionAccessRepo,
+		auditLogRepo,
+		userRepo,
+		orgRepo,
+	)
 
 	exportService := service.NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
 	importService := service.NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
@@ -221,6 +241,8 @@ func main() {
 	importHandler := handler.NewImportHandler(importService)
 	wodifyImportHandler := handler.NewWodifyImportHandler(wodifyImportService)
 	backupHandler := handler.NewBackupHandler(backupService, auditLogRepo)
+	orgHandler := handler.NewOrganizationHandler(orgService, appLogger)
+	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -373,6 +395,9 @@ func main() {
 			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
 			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
 
+			// Statistics routes (authenticated)
+			r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
+
 			// Export routes (authenticated)
 			r.Get("/export/wods", exportHandler.ExportWODs)
 			r.Get("/export/movements", exportHandler.ExportMovements)
@@ -387,6 +412,9 @@ func main() {
 			r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
 			r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
 			r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
+
+			// Subscription status (user-accessible)
+			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
@@ -434,6 +462,40 @@ func main() {
 				r.Post("/user-created/movements/{id}/copy-to-standard", adminHandler.CopyMovementToStandard)
 				r.Get("/user-created/workouts", adminHandler.ListUserCreatedWorkouts)
 				r.Post("/user-created/workouts/{id}/copy-to-standard", adminHandler.CopyWorkoutToStandard)
+
+				// Organization management routes (admin only)
+				r.Post("/organizations", orgHandler.CreateOrganization)
+				r.Get("/organizations", orgHandler.ListOrganizations)
+				r.Get("/organizations/{id}", orgHandler.GetOrganization)
+				r.Put("/organizations/{id}", orgHandler.UpdateOrganization)
+				r.Delete("/organizations/{id}", orgHandler.DeleteOrganization)
+
+				// User-organization assignment (admin only)
+				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)
+				r.Delete("/users/{id}/organization/{org_id}", orgHandler.RemoveUserFromOrganization)
+				r.Get("/users/{id}/organizations", orgHandler.GetUserOrganizations)
+				r.Get("/organizations/{id}/users", orgHandler.GetOrganizationUsers)
+
+				// Subscription management routes (admin only)
+				r.Route("/subscriptions", func(r chi.Router) {
+					// List all subscriptions (must come before parameterized routes)
+					r.Get("/users", subscriptionHandler.ListAllUserSubscriptions)
+					r.Get("/organizations", subscriptionHandler.ListAllOrganizationSubscriptions)
+
+					// User subscriptions
+					r.Post("/user", subscriptionHandler.CreateUserSubscription)
+					r.Get("/user/{user_id}", subscriptionHandler.GetUserSubscriptions)
+					r.Post("/user/{id}/mark-paid", subscriptionHandler.MarkUserSubscriptionAsPaid)
+					r.Post("/user/{id}/cancel", subscriptionHandler.CancelUserSubscription)
+					r.Post("/user/{id}/set-permanent", subscriptionHandler.SetUserSubscriptionPermanent)
+
+					// Organization subscriptions
+					r.Post("/organization", subscriptionHandler.CreateOrganizationSubscription)
+					r.Get("/organization/{org_id}", subscriptionHandler.GetOrganizationSubscriptions)
+					r.Post("/organization/{id}/mark-paid", subscriptionHandler.MarkOrganizationSubscriptionAsPaid)
+					r.Post("/organization/{id}/cancel", subscriptionHandler.CancelOrganizationSubscription)
+					r.Post("/organization/{id}/set-permanent", subscriptionHandler.SetOrganizationSubscriptionPermanent)
+				})
 			})
 		})
 	})

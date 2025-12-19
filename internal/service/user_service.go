@@ -31,6 +31,7 @@ var (
 type UserService struct {
 	userRepo             domain.UserRepository
 	refreshTokenRepo     domain.RefreshTokenRepository
+	userSubRepo          domain.UserSubscriptionRepository
 	auditLogService      *AuditLogService
 	jwtSecret            string
 	jwtExpiration        time.Duration
@@ -50,6 +51,7 @@ type UserService struct {
 func NewUserService(
 	userRepo domain.UserRepository,
 	refreshTokenRepo domain.RefreshTokenRepository,
+	userSubRepo domain.UserSubscriptionRepository,
 	auditLogService *AuditLogService,
 	jwtSecret string,
 	jwtExpiration time.Duration,
@@ -64,6 +66,7 @@ func NewUserService(
 	return &UserService{
 		userRepo:             userRepo,
 		refreshTokenRepo:     refreshTokenRepo,
+		userSubRepo:          userSubRepo,
 		auditLogService:      auditLogService,
 		jwtSecretKey:         jwtSecret,
 		jwtExpiration:        jwtExpiration,
@@ -141,6 +144,24 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
 
+	// Create permanent free subscription for new user
+	if s.userSubRepo != nil {
+		subscription := &domain.UserSubscription{
+			UserID:           user.ID,
+			SubscriptionType: domain.SubscriptionTypeFree,
+			Status:           domain.SubscriptionStatusActive,
+			IsPermanentFree:  true,
+			StartDate:        now,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		}
+		err = s.userSubRepo.Create(subscription)
+		if err != nil {
+			// Log error but don't fail registration - admin can create subscription later
+			fmt.Printf("warning: failed to create subscription for user %d: %v\n", user.ID, err)
+		}
+	}
+
 	// Generate verification token if email verification is required
 	if s.requireVerification && s.emailService != nil {
 		verificationToken, err := generateVerificationToken()
@@ -182,6 +203,17 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 	token, err := auth.GenerateToken(user.ID, user.Email, user.Role, s.jwtSecretKey, s.jwtExpiration)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Audit log for user registration
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+			"name":  user.Name,
+			"role":  user.Role,
+		}
+		// Use nil for userID since user is self-registering
+		s.auditLogService.LogEvent(domain.EventUserCreated, nil, &user.ID, nil, nil, details)
 	}
 
 	// Note: return user with PasswordHash set for tests that validate hashing
@@ -629,6 +661,11 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 		return nil, ErrUserNotFound
 	}
 
+	// Store old values for audit logging
+	oldName := user.Name
+	oldEmail := user.Email
+	oldBirthday := user.Birthday
+
 	// Check if email is being changed
 	if email != "" && email != user.Email {
 		// Check if new email already exists
@@ -670,6 +707,23 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 	err = s.userRepo.Update(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// Audit log the profile update
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"user_id": userID,
+			"email":   user.Email,
+			"changes": map[string]interface{}{
+				"name_old":     oldName,
+				"name_new":     user.Name,
+				"email_old":    oldEmail,
+				"email_new":    user.Email,
+				"birthday_old": oldBirthday,
+				"birthday_new": user.Birthday,
+			},
+		}
+		s.auditLogService.LogEvent(domain.EventProfileUpdated, &userID, &userID, nil, nil, details)
 	}
 
 	// Don't return password hash

@@ -56,4 +56,7 @@ type UserWorkoutRepository interface {
 
 	// GetByUserWorkoutDate checks if a user has already logged a specific workout on a date
 	GetByUserWorkoutDate(userID, workoutID int64, date time.Time) (*UserWorkout, error)
+
+	// GetActiveUsersThisMonth gets current user + 2 random users from shared organizations with workout counts
+	GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error)
 }

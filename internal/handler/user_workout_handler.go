@@ -96,12 +96,13 @@ type UserWorkoutResponse struct {
 
 // LogWorkout logs a workout instance (user performs a workout template)
 func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) {
-	// Extract user ID from JWT token in context
+	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	var req LogWorkoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -178,13 +179,13 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 
 		// Log workout with performance data
 		userWorkout, err = h.userWorkoutService.LogWorkoutWithPerformance(
-			userID, req.WorkoutID, req.WorkoutName, workoutDate,
+			userID, userEmail, req.WorkoutID, req.WorkoutName, workoutDate,
 			req.Notes, req.TotalTime, req.WorkoutType,
 			movements, wods,
 		)
 	} else {
 		// Log workout without performance data
-		userWorkout, err = h.userWorkoutService.LogWorkout(userID, req.WorkoutID, req.WorkoutName, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
+		userWorkout, err = h.userWorkoutService.LogWorkout(userID, userEmail, req.WorkoutID, req.WorkoutName, workoutDate, req.Notes, req.TotalTime, req.WorkoutType)
 	}
 
 	if err != nil {
@@ -395,12 +396,13 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 
 // UpdateLoggedWorkout updates a logged workout
 func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.Request) {
-	// Extract user ID from JWT token in context
+	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -420,7 +422,7 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 		h.logger.Info("action=update_workout_attempt user_id=%d workout_id=%d", userID, id)
 	}
 
-	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, req.WorkoutName, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
+	if err := h.userWorkoutService.UpdateLoggedWorkout(id, userID, userEmail, req.WorkoutName, req.Notes, req.TotalTime, req.WorkoutType); err != nil {
 		switch err {
 		case service.ErrUserWorkoutNotFound:
 			if h.logger != nil {
@@ -524,12 +526,13 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 
 // DeleteLoggedWorkout deletes a logged workout
 func (h *UserWorkoutHandler) DeleteLoggedWorkout(w http.ResponseWriter, r *http.Request) {
-	// Extract user ID from JWT token in context
+	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -542,7 +545,7 @@ func (h *UserWorkoutHandler) DeleteLoggedWorkout(w http.ResponseWriter, r *http.
 		h.logger.Info("action=delete_workout_attempt user_id=%d workout_id=%d", userID, id)
 	}
 
-	if err := h.userWorkoutService.DeleteLoggedWorkout(id, userID); err != nil {
+	if err := h.userWorkoutService.DeleteLoggedWorkout(id, userID, userEmail); err != nil {
 		if err == service.ErrUnauthorized {
 			if h.logger != nil {
 				h.logger.Warn("action=delete_workout outcome=failure user_id=%d workout_id=%d reason=unauthorized", userID, id)
@@ -686,6 +689,28 @@ func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.R
 		"message":          "PRs flagged successfully",
 		"movement_pr_count": movementPRCount,
 		"wod_pr_count":      wodPRCount,
+	})
+}
+
+// GetActiveUsersStats handles GET /api/stats/active-users-this-month
+func (h *UserWorkoutHandler) GetActiveUsersStats(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	stats, err := h.userWorkoutService.GetActiveUsersThisMonth(userID)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("Failed to get active users stats: user_id=%d error=%v", userID, err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get active users stats")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"users": stats,
 	})
 }
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -21,6 +22,7 @@ type UserWorkoutService struct {
 	userWorkoutMovementRepo domain.UserWorkoutMovementRepository
 	userWorkoutWODRepo      domain.UserWorkoutWODRepository
 	wodRepo                 domain.WODRepository
+	auditLogRepo            domain.AuditLogRepository
 }
 
 // NewUseroutService creates a new user workout service
@@ -31,6 +33,7 @@ func NewUserWorkoutService(
 	userWorkoutMovementRepo domain.UserWorkoutMovementRepository,
 	userWorkoutWODRepo domain.UserWorkoutWODRepository,
 	wodRepo domain.WODRepository,
+	auditLogRepo domain.AuditLogRepository,
 ) *UserWorkoutService {
 	return &UserWorkoutService{
 		userWorkoutRepo:         userWorkoutRepo,
@@ -39,11 +42,12 @@ func NewUserWorkoutService(
 		userWorkoutMovementRepo: userWorkoutMovementRepo,
 		userWorkoutWODRepo:      userWorkoutWODRepo,
 		wodRepo:                 wodRepo,
+		auditLogRepo:            auditLogRepo,
 	}
 }
 
 // LogWorkout logs that a user performed a workout (template-based or ad-hoc) on a specific date
-func (s *UserWorkoutService) LogWorkout(userID int64, templateID *int64, workoutName *string, date time.Time, notes *string, totalTime *int, workoutType *string) (*domain.UserWorkout, error) {
+func (s *UserWorkoutService) LogWorkout(userID int64, userEmail string, templateID *int64, workoutName *string, date time.Time, notes *string, totalTime *int, workoutType *string) (*domain.UserWorkout, error) {
 	// If template ID is provided, verify it exists and check authorization
 	if templateID != nil && *templateID != 0 {
 		workout, err := s.workoutRepo.GetByID(*templateID)
@@ -76,12 +80,37 @@ func (s *UserWorkoutService) LogWorkout(userID int64, templateID *int64, workout
 		return nil, fmt.Errorf("failed to log workout: %w", err)
 	}
 
+	// Audit log
+	if s.auditLogRepo != nil {
+		workoutNameStr := "Unnamed"
+		if workoutName != nil {
+			workoutNameStr = *workoutName
+		}
+		details, _ := json.Marshal(map[string]interface{}{
+			"user_workout_id": userWorkout.ID,
+			"workout_name":    workoutNameStr,
+			"workout_date":    date.Format("2006-01-02"),
+			"template_id":     templateID,
+			"logged_by":       userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventUserWorkoutLogged,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	return userWorkout, nil
 }
 
 // LogWorkoutWithPerformance logs a workout with full performance data for movements and WODs
 func (s *UserWorkoutService) LogWorkoutWithPerformance(
 	userID int64,
+	userEmail string,
 	templateID *int64,
 	workoutName *string,
 	date time.Time,
@@ -92,7 +121,7 @@ func (s *UserWorkoutService) LogWorkoutWithPerformance(
 	wods []*domain.UserWorkoutWOD,
 ) (*domain.UserWorkout, error) {
 	// First create the base user workout
-	userWorkout, err := s.LogWorkout(userID, templateID, workoutName, date, notes, totalTime, workoutType)
+	userWorkout, err := s.LogWorkout(userID, userEmail, templateID, workoutName, date, notes, totalTime, workoutType)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +242,7 @@ func (s *UserWorkoutService) ListLoggedWorkoutsByDateRange(userID int64, startDa
 }
 
 // UpdateLoggedWorkout updates a logged workout with authorization check
-func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, workoutName *string, notes *string, totalTime *int, workoutType *string) error {
+func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, userEmail string, workoutName *string, notes *string, totalTime *int, workoutType *string) error {
 	// Get existing logged workout
 	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
 	if err != nil {
@@ -227,6 +256,12 @@ func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, wo
 	if existing.UserID != userID {
 		return ErrUnauthorizedWorkoutAccess
 	}
+
+	// Track old values for audit logging
+	oldWorkoutName := existing.WorkoutName
+	oldNotes := existing.Notes
+	oldTotalTime := existing.TotalTime
+	oldWorkoutType := existing.WorkoutType
 
 	// Update fields
 	if workoutName != nil {
@@ -249,11 +284,44 @@ func (s *UserWorkoutService) UpdateLoggedWorkout(userWorkoutID, userID int64, wo
 	if err != nil {
 		return fmt.Errorf("failed to update logged workout: %w", err)
 	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		workoutNameStr := "Unnamed"
+		if existing.WorkoutName != nil {
+			workoutNameStr = *existing.WorkoutName
+		}
+		details, _ := json.Marshal(map[string]interface{}{
+			"user_workout_id": userWorkoutID,
+			"workout_name":    workoutNameStr,
+			"updated_by":      userEmail,
+			"changes": map[string]interface{}{
+				"workout_name_old": oldWorkoutName,
+				"workout_name_new": existing.WorkoutName,
+				"notes_old":        oldNotes,
+				"notes_new":        existing.Notes,
+				"total_time_old":   oldTotalTime,
+				"total_time_new":   existing.TotalTime,
+				"workout_type_old": oldWorkoutType,
+				"workout_type_new": existing.WorkoutType,
+			},
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventUserWorkoutUpdated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
 // DeleteLoggedWorkout deletes a logged workout with authorization check
-func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) error {
+func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64, userEmail string) error {
 	// Get existing logged workout
 	existing, err := s.userWorkoutRepo.GetByID(userWorkoutID)
 	if err != nil {
@@ -268,11 +336,38 @@ func (s *UserWorkoutService) DeleteLoggedWorkout(userWorkoutID, userID int64) er
 		return ErrUnauthorizedWorkoutAccess
 	}
 
+	// Store details for audit log
+	workoutNameStr := "Unnamed"
+	if existing.WorkoutName != nil {
+		workoutNameStr = *existing.WorkoutName
+	}
+	workoutDate := existing.WorkoutDate
+
 	// Delete logged workout
 	err = s.userWorkoutRepo.Delete(userWorkoutID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete logged workout: %w", err)
 	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"user_workout_id": userWorkoutID,
+			"workout_name":    workoutNameStr,
+			"workout_date":    workoutDate.Format("2006-01-02"),
+			"deleted_by":      userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventUserWorkoutDeleted,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -631,4 +726,11 @@ func (s *UserWorkoutService) ValidateWODScoreTypes(wods []*domain.UserWorkoutWOD
 	}
 
 	return nil
+}
+
+// GetActiveUsersThisMonth gets active users stats for dashboard card
+// Returns current user + 2 random users from shared organizations (or just current user if no orgs)
+func (s *UserWorkoutService) GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error) {
+	// Repository method handles all logic: finding shared orgs, calculating stats, etc.
+	return s.userWorkoutRepo.GetActiveUsersThisMonth(userID)
 }

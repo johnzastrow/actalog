@@ -132,6 +132,9 @@
       </template>
     </v-snackbar>
 
+    <!-- Subscription Expired Banner -->
+    <SubscriptionExpiredBanner v-if="authStore.isAuthenticated" />
+
     <v-main :style="mainStyle">
       <router-view />
     </v-main>
@@ -198,13 +201,16 @@ import { useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
 import { useNetworkStore } from '@/stores/network'
+import { useSubscriptionStore } from '@/stores/subscription'
 import InstallPrompt from '@/components/InstallPrompt.vue'
 import UpdatePrompt from '@/components/UpdatePrompt.vue'
+import SubscriptionExpiredBanner from '@/components/SubscriptionExpiredBanner.vue'
 
 const route = useRoute()
 const theme = useTheme()
 const authStore = useAuthStore()
 const networkStore = useNetworkStore()
+const subscriptionStore = useSubscriptionStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
@@ -266,6 +272,13 @@ function handleOfflineSave(event) {
   networkStore.incrementPendingSync()
 }
 
+// Handle subscription expired events (triggered by axios interceptor)
+function handleSubscriptionExpired(event) {
+  console.log('Subscription expired event received:', event.detail)
+  // The SubscriptionExpiredBanner will automatically show when subscriptionStore.isExpired is true
+  // The axios interceptor already called subscriptionStore.setExpired()
+}
+
 // Check for user's preferred theme
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
@@ -283,10 +296,21 @@ onMounted(() => {
 
   // Listen for offline save events
   window.addEventListener('offline-save', handleOfflineSave)
+
+  // Listen for subscription expired events
+  window.addEventListener('subscription-expired', handleSubscriptionExpired)
+
+  // Fetch subscription status if authenticated
+  if (authStore.isAuthenticated) {
+    subscriptionStore.fetchStatus().catch(err => {
+      console.error('Failed to fetch subscription status on app mount:', err)
+    })
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('offline-save', handleOfflineSave)
+  window.removeEventListener('subscription-expired', handleSubscriptionExpired)
 })
 </script>
 

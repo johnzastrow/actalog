@@ -1,20 +1,50 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.12.2-beta
-**Last Updated:** 2025-11-28
-**Overall Completion:** ~90% of core requirements
+**Current Version:** 0.14.0-beta
+**Last Updated:** 2024-12-16
+**Overall Completion:** ~92% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, and **production-ready multi-database support**. The latest release (v0.12.2-beta) fixes critical **PWA offline functionality** with proper service worker caching, robust offline detection, and user-controlled updates. Users can now reliably record workouts offline and choose when to apply PWA updates. The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, and **subscription billing system**. The latest release (v0.14.0-beta) implements a comprehensive **dual-level subscription billing system** with user-level and organization-level subscriptions, manual admin payment control, immediate read-only mode enforcement when expired, and full backward compatibility (all existing users automatically receive permanent free subscriptions). The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and now includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
 
 ---
 
 ## Version History & Status
 
-### v0.12.2-beta (Current - Released)
+### v0.14.0-beta (Current - Released)
+**Status:** Subscription billing system with dual-level (user + organization) billing
+
+**Completed:**
+- ✅ Complete subscription billing backend implementation (domain, repository, service, middleware, handler layers)
+- ✅ Dual-level billing: user-level AND organization-level subscriptions
+- ✅ Three subscription types: Free, Monthly, Annual + Permanent Free option
+- ✅ Flexible access model: users have access if EITHER personal OR any organization subscription is active
+- ✅ Manual admin payment control (mark subscriptions as paid/unpaid)
+- ✅ Immediate read-only mode when subscriptions expire (no grace period)
+- ✅ HTTP 402 Payment Required for blocked operations (POST/PUT/PATCH/DELETE)
+- ✅ Read operations allowed when expired (GET/HEAD/OPTIONS for viewing/exporting)
+- ✅ Complete audit trail for all subscription operations
+- ✅ Migration 0.14.0 with automatic seeding of existing users (permanent free subscriptions)
+- ✅ Zero downtime backward compatibility verified
+- ✅ Multi-database support tested (SQLite, PostgreSQL, MariaDB)
+- ✅ Database version management system with snapshots for all three engines
+- ✅ Automation scripts for snapshot creation and verification
+- ✅ 10 API endpoints (8 admin, 2 user) for subscription management
+
+**Technical Highlights:**
+- 14 new files created (domain, repositories, service, middleware, handler, documentation, scripts)
+- 5 files modified (migrations, version, main.go, audit_log, CLAUDE.md)
+- Performance-optimized access checking (< 10ms target per authenticated request)
+- Version snapshots: SQLite (564 KB), PostgreSQL schema, MariaDB database
+- Comprehensive documentation: VERSION_DATABASES.md, MIGRATION_TEST_0.14.0.md
+- All existing users seeded with `is_permanent_free = TRUE` for backward compatibility
+
+**Next Phase:** Frontend integration for subscription status display and admin subscription management UI
+
+### v0.12.2-beta (Released)
 **Status:** PWA offline functionality fix and user-controlled updates
 
 **Completed:**
