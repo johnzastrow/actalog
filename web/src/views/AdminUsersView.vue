@@ -119,8 +119,22 @@
             size="small"
             variant="text"
             @click="viewUserDetails(item)"
+            title="View Details"
           >
             <v-icon color="primary">mdi-information-outline</v-icon>
+          </v-btn>
+        </template>
+
+        <!-- Organizations Column -->
+        <template #item.organizations="{ item }">
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            @click="manageOrganizations(item)"
+            title="Manage Organizations"
+          >
+            <v-icon color="info">mdi-domain</v-icon>
           </v-btn>
         </template>
 
@@ -405,6 +419,37 @@
               <v-list-item-subtitle>{{ formatFullDate(userDetails.email_verified_at) }}</v-list-item-subtitle>
             </v-list-item>
           </v-list>
+
+          <!-- Organizations Section -->
+          <v-divider class="my-4" />
+          <div class="px-4">
+            <div class="d-flex align-center mb-3">
+              <v-icon class="mr-2">mdi-domain</v-icon>
+              <span class="text-subtitle-1 font-weight-bold">Organizations</span>
+            </div>
+
+            <div v-if="userDetails.organizations && userDetails.organizations.length > 0">
+              <v-list density="compact">
+                <v-list-item
+                  v-for="org in userDetails.organizations"
+                  :key="org.id"
+                  class="mb-1"
+                  rounded
+                  variant="tonal"
+                >
+                  <template v-slot:prepend>
+                    <v-icon size="small">mdi-domain</v-icon>
+                  </template>
+                  <v-list-item-title>{{ org.name }}</v-list-item-title>
+                  <v-list-item-subtitle v-if="org.description">{{ org.description }}</v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+            </div>
+
+            <v-alert v-else type="info" variant="tonal" density="compact" class="mb-2">
+              This user is not assigned to any organizations
+            </v-alert>
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -412,6 +457,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Manage Organizations Dialog -->
+    <ManageUserOrganizationsDialog
+      v-model="manageOrganizationsDialog"
+      :user="selectedUser"
+      @updated="loadUsers"
+    />
     </v-container>
   </div>
 </template>
@@ -419,6 +471,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from '@/utils/axios'
+import ManageUserOrganizationsDialog from '@/components/admin/ManageUserOrganizationsDialog.vue'
 
 const loading = ref(false)
 const actionLoading = ref(false)
@@ -438,6 +491,7 @@ const selectedUser = ref(null)
 const userDetails = ref(null)
 const disableReason = ref('')
 const newRole = ref('user')
+const manageOrganizationsDialog = ref(false)
 
 const headers = [
   { title: 'User', value: 'email', sortable: false },
@@ -445,6 +499,7 @@ const headers = [
   { title: 'Status', value: 'status', sortable: false },
   { title: 'Last Login', value: 'last_login_at', sortable: false },
   { title: 'Details', value: 'details', sortable: false, align: 'center', width: '80px' },
+  { title: 'Orgs', value: 'organizations', sortable: false, align: 'center', width: '80px' },
   { title: 'Lock', value: 'lock', sortable: false, align: 'center', width: '80px' },
   { title: 'Enable', value: 'enable', sortable: false, align: 'center', width: '80px' },
   { title: 'Email', value: 'email_verify', sortable: false, align: 'center', width: '80px' },
@@ -602,8 +657,16 @@ async function viewUserDetails(user) {
   actionLoading.value = true
   error.value = null
   try {
-    const response = await axios.get(`/api/admin/users/${user.id}`)
-    userDetails.value = response.data
+    // Fetch user details and organizations in parallel
+    const [userResponse, orgsResponse] = await Promise.all([
+      axios.get(`/api/admin/users/${user.id}`),
+      axios.get(`/api/admin/users/${user.id}/organizations`)
+    ])
+
+    userDetails.value = {
+      ...userResponse.data,
+      organizations: orgsResponse.data.organizations || []
+    }
     detailsDialog.value = true
   } catch (e) {
     console.error('Failed to load user details:', e)
@@ -611,6 +674,11 @@ async function viewUserDetails(user) {
   } finally {
     actionLoading.value = false
   }
+}
+
+function manageOrganizations(user) {
+  selectedUser.value = user
+  manageOrganizationsDialog.value = true
 }
 
 async function toggleEmailVerification(user) {

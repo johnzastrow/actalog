@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
+	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
 type OrganizationHandler struct {
@@ -24,6 +25,12 @@ func NewOrganizationHandler(orgService *service.OrganizationService, logger *log
 
 // CreateOrganization handles POST /api/admin/organizations
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	var req struct {
 		Name        string  `json:"name"`
 		Description *string `json:"description"`
@@ -39,7 +46,7 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	org, err := h.orgService.Create(req.Name, req.Description)
+	org, err := h.orgService.Create(adminUserID, req.Name, req.Description)
 	if err != nil {
 		if err == service.ErrOrganizationNameExists {
 			respondError(w, http.StatusConflict, "Organization name already exists")
@@ -111,6 +118,12 @@ func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Req
 
 // UpdateOrganization handles PUT /api/admin/organizations/:id
 func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -128,7 +141,7 @@ func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	org, err := h.orgService.Update(id, req.Name, req.Description)
+	org, err := h.orgService.Update(adminUserID, id, req.Name, req.Description)
 	if err != nil {
 		if err == service.ErrOrganizationNotFound {
 			respondError(w, http.StatusNotFound, "Organization not found")
@@ -148,6 +161,12 @@ func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.
 
 // DeleteOrganization handles DELETE /api/admin/organizations/:id
 func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -155,7 +174,7 @@ func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = h.orgService.Delete(id)
+	err = h.orgService.Delete(adminUserID, id)
 	if err != nil {
 		if err == service.ErrOrganizationNotFound {
 			respondError(w, http.StatusNotFound, "Organization not found")
@@ -177,6 +196,12 @@ func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.
 
 // AssignUserToOrganization handles POST /api/admin/users/:id/organization
 func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	userIDStr := chi.URLParam(r, "id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
@@ -198,7 +223,7 @@ func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	err = h.orgService.AssignUserToOrganization(userID, req.OrganizationID)
+	err = h.orgService.AssignUserToOrganization(adminUserID, userID, req.OrganizationID)
 	if err != nil {
 		if err == service.ErrOrganizationNotFound {
 			respondError(w, http.StatusNotFound, "Organization not found")
@@ -220,6 +245,12 @@ func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r 
 
 // RemoveUserFromOrganization handles DELETE /api/admin/users/:id/organization/:org_id
 func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	userIDStr := chi.URLParam(r, "id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
@@ -234,7 +265,7 @@ func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, 
 		return
 	}
 
-	err = h.orgService.RemoveUserFromOrganization(userID, orgID)
+	err = h.orgService.RemoveUserFromOrganization(adminUserID, userID, orgID)
 	if err != nil {
 		if err == service.ErrUserNotFound {
 			respondError(w, http.StatusNotFound, "User not found")

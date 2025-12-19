@@ -98,6 +98,21 @@
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
                 </template>
 
+                <template v-slot:item.permanent="{ item }">
+                  <v-tooltip :text="item.is_permanent_free ? 'Remove permanent free status' : 'Set as permanent free'" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        :icon="item.is_permanent_free ? 'mdi-star' : 'mdi-star-outline'"
+                        size="small"
+                        variant="text"
+                        :color="item.is_permanent_free ? 'orange' : 'grey'"
+                        @click="togglePermanent(item, 'user')"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
+                </template>
+
                 <template v-slot:item.view="{ item }">
                   <v-tooltip text="View subscription details" location="top">
                     <template v-slot:activator="{ props }">
@@ -234,6 +249,21 @@
 
                 <template v-slot:item.end_date="{ item }">
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
+                </template>
+
+                <template v-slot:item.permanent="{ item }">
+                  <v-tooltip :text="item.is_permanent_free ? 'Remove permanent free status' : 'Set as permanent free'" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        :icon="item.is_permanent_free ? 'mdi-star' : 'mdi-star-outline'"
+                        size="small"
+                        variant="text"
+                        :color="item.is_permanent_free ? 'orange' : 'grey'"
+                        @click="togglePermanent(item, 'organization')"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
                 </template>
 
                 <template v-slot:item.view="{ item }">
@@ -454,6 +484,7 @@ const userSubscriptionHeaders = [
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Start Date', key: 'start_date', sortable: true },
   { title: 'End Date', key: 'end_date', sortable: true },
+  { title: 'Permanent', key: 'permanent', sortable: false, align: 'center', width: '100px' },
   { title: 'View', key: 'view', sortable: false, align: 'center', width: '80px' },
   { title: 'Mark Paid', key: 'mark_paid', sortable: false, align: 'center', width: '100px' },
   { title: 'Cancel', key: 'cancel', sortable: false, align: 'center', width: '80px' }
@@ -465,6 +496,7 @@ const orgSubscriptionHeaders = [
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Start Date', key: 'start_date', sortable: true },
   { title: 'End Date', key: 'end_date', sortable: true },
+  { title: 'Permanent', key: 'permanent', sortable: false, align: 'center', width: '100px' },
   { title: 'View', key: 'view', sortable: false, align: 'center', width: '80px' },
   { title: 'Mark Paid', key: 'mark_paid', sortable: false, align: 'center', width: '100px' },
   { title: 'Cancel', key: 'cancel', sortable: false, align: 'center', width: '80px' }
@@ -645,6 +677,34 @@ function handleMarkedAsPaid() {
 
 function handleCancelled() {
   loadSubscriptions()
+}
+
+async function togglePermanent(subscription, type) {
+  const action = subscription.is_permanent_free ? 'remove permanent free status from' : 'set as permanent free'
+  const confirmMessage = `Are you sure you want to ${action} this subscription?`
+
+  if (!confirm(confirmMessage)) {
+    return
+  }
+
+  loading.value = true
+  try {
+    const endpoint = type === 'user'
+      ? `/api/admin/subscriptions/user/${subscription.id}/set-permanent`
+      : `/api/admin/subscriptions/organization/${subscription.id}/set-permanent`
+
+    await axios.post(endpoint, {
+      is_permanent: !subscription.is_permanent_free
+    })
+
+    // Reload subscriptions to reflect changes
+    await loadSubscriptions()
+  } catch (error) {
+    console.error('Failed to toggle permanent status:', error)
+    alert(error.response?.data?.error || 'Failed to toggle permanent status')
+  } finally {
+    loading.value = false
+  }
 }
 
 function formatDate(dateString) {

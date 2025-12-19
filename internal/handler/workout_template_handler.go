@@ -11,13 +11,13 @@ import (
 )
 
 type WorkoutTemplateService interface {
-	Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Create(userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	GetByID(id int64) (*domain.Workout, error)
 	GetByIDWithDetails(id int64) (*domain.Workout, error)
 	ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error)
 	ListStandard(limit, offset int) ([]*domain.Workout, error)
-	Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
-	Delete(id, userID int64) error
+	Update(id, userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Delete(id, userID int64, userEmail string) error
 }
 
 type WorkoutTemplateHandler struct {
@@ -35,6 +35,7 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	var req struct {
 		Name        string  `json:"name"`
@@ -91,7 +92,7 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Create(userID, req.Name, req.Description, movements, wods)
+	template, err := h.service.Create(userID, userEmail, req.Name, req.Description, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -206,6 +207,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -269,7 +271,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Update(id, userID, req.Name, req.Description, movements, wods)
+	template, err := h.service.Update(id, userID, userEmail, req.Name, req.Description, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -288,6 +290,7 @@ func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.R
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	userEmail, _ := middleware.GetUserEmail(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -296,7 +299,7 @@ func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.service.Delete(id, userID); err != nil {
+	if err := h.service.Delete(id, userID, userEmail); err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}

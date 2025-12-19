@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,18 +13,20 @@ type WorkoutTemplateService struct {
 	workoutRepo         domain.WorkoutRepository
 	workoutMovementRepo domain.WorkoutMovementRepository
 	workoutWODRepo      domain.WorkoutWODRepository
+	auditLogRepo        domain.AuditLogRepository
 }
 
-func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository, workoutWODRepo domain.WorkoutWODRepository) *WorkoutTemplateService {
+func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMovementRepo domain.WorkoutMovementRepository, workoutWODRepo domain.WorkoutWODRepository, auditLogRepo domain.AuditLogRepository) *WorkoutTemplateService {
 	return &WorkoutTemplateService{
 		workoutRepo:         workoutRepo,
 		workoutMovementRepo: workoutMovementRepo,
 		workoutWODRepo:      workoutWODRepo,
+		auditLogRepo:        auditLogRepo,
 	}
 }
 
 // Create creates a new workout template
-func (s *WorkoutTemplateService) Create(userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Create the workout template
 	workout := &domain.Workout{
 		Name:      name,
@@ -73,6 +76,26 @@ func (s *WorkoutTemplateService) Create(userID int64, name string, notes *string
 		}
 	}
 
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"workout_id":      workout.ID,
+			"workout_name":    name,
+			"movement_count":  len(movements),
+			"wod_count":       len(wods),
+			"created_by":      userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWorkoutTemplateCreated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	// Reload with details
 	return s.GetByIDWithDetails(workout.ID)
 }
@@ -120,7 +143,7 @@ func (s *WorkoutTemplateService) ListStandard(limit, offset int) ([]*domain.Work
 }
 
 // Update updates an existing workout template
-func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -134,6 +157,10 @@ func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *st
 	if existing.CreatedBy == nil || *existing.CreatedBy != userID {
 		return nil, fmt.Errorf("you don't have permission to edit this template")
 	}
+
+	// Store old values for audit logging
+	oldName := existing.Name
+	oldNotes := existing.Notes
 
 	// Update the workout
 	existing.Name = name
@@ -188,6 +215,32 @@ func (s *WorkoutTemplateService) Update(id, userID int64, name string, notes *st
 				return nil, fmt.Errorf("failed to add WOD: %w", err)
 			}
 		}
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"workout_id":      id,
+			"workout_name":    name,
+			"movement_count":  len(movements),
+			"wod_count":       len(wods),
+			"updated_by":      userEmail,
+			"changes": map[string]interface{}{
+				"name_old":  oldName,
+				"name_new":  name,
+				"notes_old": oldNotes,
+				"notes_new": notes,
+			},
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWorkoutTemplateUpdated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
 	}
 
 	// Reload with details
@@ -256,7 +309,7 @@ func (s *WorkoutTemplateService) CopyToStandard(id int64, newName string) (*doma
 }
 
 // Delete deletes a workout template
-func (s *WorkoutTemplateService) Delete(id, userID int64) error {
+func (s *WorkoutTemplateService) Delete(id, userID int64, userEmail string) error {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -271,6 +324,9 @@ func (s *WorkoutTemplateService) Delete(id, userID int64) error {
 		return fmt.Errorf("you don't have permission to delete this template")
 	}
 
+	// Store details for audit log
+	workoutName := existing.Name
+
 	// Delete movements first
 	if err := s.workoutMovementRepo.DeleteByWorkoutID(id); err != nil {
 		return fmt.Errorf("failed to delete movements: %w", err)
@@ -279,6 +335,24 @@ func (s *WorkoutTemplateService) Delete(id, userID int64) error {
 	// Delete the workout
 	if err := s.workoutRepo.Delete(id); err != nil {
 		return fmt.Errorf("failed to delete workout template: %w", err)
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"workout_id":   id,
+			"workout_name": workoutName,
+			"deleted_by":   userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWorkoutTemplateDeleted,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
 	}
 
 	return nil

@@ -169,17 +169,19 @@ func main() {
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
+		auditLogRepo,
 	)
 
 	workoutTemplateService := service.NewWorkoutTemplateService(
 		workoutRepo,
 		workoutMovementRepo,
 		workoutWODRepo,
+		auditLogRepo,
 	)
 
-	wodService := service.NewWODService(wodRepo, dataChangeLogService)
+	wodService := service.NewWODService(wodRepo, dataChangeLogService, auditLogRepo)
 
-	movementService := service.NewMovementService(movementRepo, dataChangeLogService)
+	movementService := service.NewMovementService(movementRepo, dataChangeLogService, auditLogRepo)
 
 	workoutWODService := service.NewWorkoutWODService(
 		workoutWODRepo,
@@ -187,9 +189,9 @@ func main() {
 		wodRepo,
 	)
 
-	userSettingsService := service.NewUserSettingsService(userSettingsRepo)
+	userSettingsService := service.NewUserSettingsService(userSettingsRepo, auditLogRepo)
 
-	orgService := service.NewOrganizationService(orgRepo, userRepo)
+	orgService := service.NewOrganizationService(orgRepo, userRepo, auditLogRepo)
 
 	subscriptionService := service.NewSubscriptionService(
 		userSubscriptionRepo,
@@ -485,12 +487,14 @@ func main() {
 					r.Get("/user/{user_id}", subscriptionHandler.GetUserSubscriptions)
 					r.Post("/user/{id}/mark-paid", subscriptionHandler.MarkUserSubscriptionAsPaid)
 					r.Post("/user/{id}/cancel", subscriptionHandler.CancelUserSubscription)
+					r.Post("/user/{id}/set-permanent", subscriptionHandler.SetUserSubscriptionPermanent)
 
 					// Organization subscriptions
 					r.Post("/organization", subscriptionHandler.CreateOrganizationSubscription)
 					r.Get("/organization/{org_id}", subscriptionHandler.GetOrganizationSubscriptions)
 					r.Post("/organization/{id}/mark-paid", subscriptionHandler.MarkOrganizationSubscriptionAsPaid)
 					r.Post("/organization/{id}/cancel", subscriptionHandler.CancelOrganizationSubscription)
+					r.Post("/organization/{id}/set-permanent", subscriptionHandler.SetOrganizationSubscriptionPermanent)
 				})
 			})
 		})

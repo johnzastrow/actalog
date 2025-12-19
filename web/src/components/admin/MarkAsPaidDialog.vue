@@ -33,12 +33,41 @@
             class="mb-3"
           ></v-text-field>
 
+          <!-- Duration Selection -->
+          <v-select
+            v-model="durationType"
+            label="Payment Duration"
+            :items="durationOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="compact"
+            prepend-inner-icon="mdi-calendar-clock"
+            class="mb-3"
+          ></v-select>
+
+          <!-- Custom Duration Input -->
+          <v-text-field
+            v-if="durationType === 'custom'"
+            v-model.number="customDays"
+            label="Duration (days)"
+            type="number"
+            variant="outlined"
+            density="compact"
+            :rules="[v => v > 0 || 'Duration must be greater than 0']"
+            prepend-inner-icon="mdi-counter"
+            hint="Number of days to extend the subscription"
+            persistent-hint
+            class="mb-3"
+          ></v-text-field>
+
           <!-- Calculate new end date -->
           <v-alert v-if="newEndDate" type="success" variant="tonal" density="compact" class="mb-3">
             <div class="text-body-2">
               <strong>New End Date:</strong> {{ formatDate(newEndDate) }}<br>
+              <strong>Duration:</strong> {{ durationDays }} days<br>
               <span class="text-caption">
-                Subscription will be extended based on payment date
+                Subscription will be extended from payment date
               </span>
             </div>
           </v-alert>
@@ -89,22 +118,45 @@ const formRef = ref(null)
 const loading = ref(false)
 const error = ref('')
 const paymentDate = ref('')
+const durationType = ref('default')
+const customDays = ref(30)
 
-// Computed - Calculate new end date based on payment date and subscription type
+// Duration options
+const durationOptions = computed(() => {
+  const defaultDays = props.subscription?.subscription_type === 'monthly' ? 30 : 365
+  const defaultLabel = props.subscription?.subscription_type === 'monthly' ? '1 Month (30 days)' : '1 Year (365 days)'
+
+  return [
+    { label: `Default - ${defaultLabel}`, value: 'default' },
+    { label: '1 Week (7 days)', value: 7 },
+    { label: '2 Weeks (14 days)', value: 14 },
+    { label: '1 Month (30 days)', value: 30 },
+    { label: '2 Months (60 days)', value: 60 },
+    { label: '3 Months (90 days)', value: 90 },
+    { label: '6 Months (180 days)', value: 180 },
+    { label: '1 Year (365 days)', value: 365 },
+    { label: 'Custom...', value: 'custom' }
+  ]
+})
+
+// Computed - Calculate duration in days
+const durationDays = computed(() => {
+  if (durationType.value === 'default') {
+    return props.subscription?.subscription_type === 'monthly' ? 30 : 365
+  } else if (durationType.value === 'custom') {
+    return customDays.value || 30
+  } else {
+    return durationType.value
+  }
+})
+
+// Computed - Calculate new end date based on payment date and duration
 const newEndDate = computed(() => {
   if (!paymentDate.value || !props.subscription) return null
 
   const payment = new Date(paymentDate.value)
   const newEnd = new Date(payment)
-
-  if (props.subscription.subscription_type === 'monthly') {
-    newEnd.setDate(newEnd.getDate() + 30)
-  } else if (props.subscription.subscription_type === 'annual') {
-    newEnd.setFullYear(newEnd.getFullYear() + 1)
-  } else {
-    // Free tier - no extension
-    return null
-  }
+  newEnd.setDate(newEnd.getDate() + durationDays.value)
 
   return newEnd.toISOString()
 })
@@ -115,6 +167,8 @@ watch(() => props.modelValue, (newValue) => {
     // Default to today
     const today = new Date()
     paymentDate.value = today.toISOString().split('T')[0]
+    durationType.value = 'default'
+    customDays.value = 30
     error.value = ''
   }
 })
@@ -132,9 +186,16 @@ async function markAsPaid() {
       ? `/api/admin/subscriptions/user/${props.subscription.id}/mark-paid`
       : `/api/admin/subscriptions/organization/${props.subscription.id}/mark-paid`
 
-    await axios.post(endpoint, {
+    const payload = {
       payment_date: paymentDate.value
-    })
+    }
+
+    // Only send duration_days if not using default
+    if (durationType.value !== 'default') {
+      payload.duration_days = durationDays.value
+    }
+
+    await axios.post(endpoint, payload)
 
     emit('paid')
     emit('update:modelValue', false)

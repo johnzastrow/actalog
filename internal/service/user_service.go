@@ -205,6 +205,17 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 		return nil, "", fmt.Errorf("failed to generate token: %w", err)
 	}
 
+	// Audit log for user registration
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+			"name":  user.Name,
+			"role":  user.Role,
+		}
+		// Use nil for userID since user is self-registering
+		s.auditLogService.LogEvent(domain.EventUserCreated, nil, &user.ID, nil, nil, details)
+	}
+
 	// Note: return user with PasswordHash set for tests that validate hashing
 
 	return user, token, nil
@@ -650,6 +661,11 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 		return nil, ErrUserNotFound
 	}
 
+	// Store old values for audit logging
+	oldName := user.Name
+	oldEmail := user.Email
+	oldBirthday := user.Birthday
+
 	// Check if email is being changed
 	if email != "" && email != user.Email {
 		// Check if new email already exists
@@ -691,6 +707,23 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 	err = s.userRepo.Update(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// Audit log the profile update
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"user_id": userID,
+			"email":   user.Email,
+			"changes": map[string]interface{}{
+				"name_old":     oldName,
+				"name_new":     user.Name,
+				"email_old":    oldEmail,
+				"email_new":    user.Email,
+				"birthday_old": oldBirthday,
+				"birthday_new": user.Birthday,
+			},
+		}
+		s.auditLogService.LogEvent(domain.EventProfileUpdated, &userID, &userID, nil, nil, details)
 	}
 
 	// Don't return password hash

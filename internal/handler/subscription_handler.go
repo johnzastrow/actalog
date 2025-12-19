@@ -238,6 +238,12 @@ func (h *SubscriptionHandler) GetOrganizationSubscriptions(w http.ResponseWriter
 	})
 }
 
+// MarkUserSubscriptionAsPaidRequest represents a request to mark a subscription as paid
+type MarkUserSubscriptionAsPaidRequest struct {
+	PaymentDate  *string `json:"payment_date"`  // Optional: defaults to now
+	DurationDays *int    `json:"duration_days"` // Optional: custom duration in days
+}
+
 // MarkUserSubscriptionAsPaid marks a user subscription as paid (admin only)
 func (h *SubscriptionHandler) MarkUserSubscriptionAsPaid(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
@@ -255,12 +261,20 @@ func (h *SubscriptionHandler) MarkUserSubscriptionAsPaid(w http.ResponseWriter, 
 		return
 	}
 
+	// Parse request body (optional)
+	var req MarkUserSubscriptionAsPaidRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// If body is invalid, use defaults
+		req = MarkUserSubscriptionAsPaidRequest{}
+	}
+
 	if h.logger != nil {
-		h.logger.Info("action=mark_user_subscription_paid admin_id=%d subscription_id=%d", adminUserID, subID)
+		h.logger.Info("action=mark_user_subscription_paid admin_id=%d subscription_id=%d duration_days=%v",
+			adminUserID, subID, req.DurationDays)
 	}
 
 	// Mark as paid
-	err = h.subscriptionService.MarkUserSubscriptionAsPaid(adminUserID, subID)
+	err = h.subscriptionService.MarkUserSubscriptionAsPaid(adminUserID, subID, req.PaymentDate, req.DurationDays)
 	if err != nil {
 		switch err {
 		case service.ErrSubscriptionNotFound:
@@ -304,12 +318,20 @@ func (h *SubscriptionHandler) MarkOrganizationSubscriptionAsPaid(w http.Response
 		return
 	}
 
+	// Parse request body (optional)
+	var req MarkUserSubscriptionAsPaidRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// If body is invalid, use defaults
+		req = MarkUserSubscriptionAsPaidRequest{}
+	}
+
 	if h.logger != nil {
-		h.logger.Info("action=mark_org_subscription_paid admin_id=%d subscription_id=%d", adminUserID, subID)
+		h.logger.Info("action=mark_org_subscription_paid admin_id=%d subscription_id=%d duration_days=%v",
+			adminUserID, subID, req.DurationDays)
 	}
 
 	// Mark as paid
-	err = h.subscriptionService.MarkOrganizationSubscriptionAsPaid(adminUserID, subID)
+	err = h.subscriptionService.MarkOrganizationSubscriptionAsPaid(adminUserID, subID, req.PaymentDate, req.DurationDays)
 	if err != nil {
 		switch err {
 		case service.ErrSubscriptionNotFound:
@@ -392,6 +414,65 @@ func (h *SubscriptionHandler) CancelUserSubscription(w http.ResponseWriter, r *h
 	})
 }
 
+// SetUserSubscriptionPermanentRequest represents a request to set permanent status
+type SetUserSubscriptionPermanentRequest struct {
+	IsPermanent bool `json:"is_permanent"`
+}
+
+// SetUserSubscriptionPermanent sets the permanent free status of a user subscription (admin only)
+func (h *SubscriptionHandler) SetUserSubscriptionPermanent(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Get subscription ID from URL parameter
+	subIDStr := chi.URLParam(r, "id")
+	subID, err := strconv.ParseInt(subIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid subscription ID")
+		return
+	}
+
+	// Parse request body
+	var req SetUserSubscriptionPermanentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=set_user_subscription_permanent admin_id=%d subscription_id=%d is_permanent=%v", adminUserID, subID, req.IsPermanent)
+	}
+
+	// Set permanent status
+	err = h.subscriptionService.SetUserSubscriptionPermanent(adminUserID, subID, req.IsPermanent)
+	if err != nil {
+		switch err {
+		case service.ErrSubscriptionNotFound:
+			respondError(w, http.StatusNotFound, "Subscription not found")
+		case service.ErrCannotModifyOwnSubscription:
+			respondError(w, http.StatusForbidden, "Admins cannot modify their own subscriptions")
+		default:
+			if h.logger != nil {
+				h.logger.Error("action=set_user_subscription_permanent outcome=failure admin_id=%d error=%v", adminUserID, err)
+			}
+			respondError(w, http.StatusInternalServerError, "Failed to update subscription")
+		}
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=set_user_subscription_permanent outcome=success admin_id=%d subscription_id=%d", adminUserID, subID)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Subscription permanent status updated successfully",
+	})
+}
+
 // CancelOrganizationSubscription cancels an organization subscription (admin only)
 func (h *SubscriptionHandler) CancelOrganizationSubscription(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
@@ -445,6 +526,58 @@ func (h *SubscriptionHandler) CancelOrganizationSubscription(w http.ResponseWrit
 
 	respondJSON(w, http.StatusOK, map[string]string{
 		"message": "Subscription cancelled successfully",
+	})
+}
+
+// SetOrganizationSubscriptionPermanent sets the permanent free status of an organization subscription (admin only)
+func (h *SubscriptionHandler) SetOrganizationSubscriptionPermanent(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Get subscription ID from URL parameter
+	subIDStr := chi.URLParam(r, "id")
+	subID, err := strconv.ParseInt(subIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid subscription ID")
+		return
+	}
+
+	// Parse request body
+	var req SetUserSubscriptionPermanentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=set_org_subscription_permanent admin_id=%d subscription_id=%d is_permanent=%v", adminUserID, subID, req.IsPermanent)
+	}
+
+	// Set permanent status
+	err = h.subscriptionService.SetOrganizationSubscriptionPermanent(adminUserID, subID, req.IsPermanent)
+	if err != nil {
+		switch err {
+		case service.ErrSubscriptionNotFound:
+			respondError(w, http.StatusNotFound, "Subscription not found")
+		default:
+			if h.logger != nil {
+				h.logger.Error("action=set_org_subscription_permanent outcome=failure admin_id=%d error=%v", adminUserID, err)
+			}
+			respondError(w, http.StatusInternalServerError, "Failed to update subscription")
+		}
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=set_org_subscription_permanent outcome=success admin_id=%d subscription_id=%d", adminUserID, subID)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Subscription permanent status updated successfully",
 	})
 }
 

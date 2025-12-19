@@ -1,8 +1,10 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
@@ -14,22 +16,25 @@ var (
 )
 
 type OrganizationService struct {
-	orgRepo  domain.OrganizationRepository
-	userRepo domain.UserRepository
+	orgRepo      domain.OrganizationRepository
+	userRepo     domain.UserRepository
+	auditLogRepo domain.AuditLogRepository
 }
 
 func NewOrganizationService(
 	orgRepo domain.OrganizationRepository,
 	userRepo domain.UserRepository,
+	auditLogRepo domain.AuditLogRepository,
 ) *OrganizationService {
 	return &OrganizationService{
-		orgRepo:  orgRepo,
-		userRepo: userRepo,
+		orgRepo:      orgRepo,
+		userRepo:     userRepo,
+		auditLogRepo: auditLogRepo,
 	}
 }
 
 // Create creates a new organization
-func (s *OrganizationService) Create(name string, description *string) (*domain.Organization, error) {
+func (s *OrganizationService) Create(adminUserID int64, name string, description *string) (*domain.Organization, error) {
 	// Validate input
 	if name == "" {
 		return nil, fmt.Errorf("organization name is required")
@@ -52,6 +57,20 @@ func (s *OrganizationService) Create(name string, description *string) (*domain.
 	if err := s.orgRepo.Create(org); err != nil {
 		return nil, fmt.Errorf("failed to create organization: %w", err)
 	}
+
+	// Audit log
+	details, _ := json.Marshal(map[string]interface{}{
+		"organization_id":   org.ID,
+		"organization_name": org.Name,
+		"description":       description,
+	})
+	detailsStr := string(details)
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:    &adminUserID,
+		EventType: domain.EventOrganizationCreated,
+		Details:   &detailsStr,
+		CreatedAt: time.Now(),
+	})
 
 	return org, nil
 }
@@ -88,7 +107,7 @@ func (s *OrganizationService) List(limit, offset int) ([]*domain.Organization, i
 }
 
 // Update updates an organization
-func (s *OrganizationService) Update(id int64, name string, description *string) (*domain.Organization, error) {
+func (s *OrganizationService) Update(adminUserID int64, id int64, name string, description *string) (*domain.Organization, error) {
 	// Get existing organization
 	org, err := s.orgRepo.GetByID(id)
 	if err != nil {
@@ -97,6 +116,11 @@ func (s *OrganizationService) Update(id int64, name string, description *string)
 	if org == nil {
 		return nil, ErrOrganizationNotFound
 	}
+
+	// Track changes for audit log
+	changes := make(map[string]interface{})
+	oldName := org.Name
+	oldDesc := org.Description
 
 	// Check if name is changing and if new name already exists
 	if name != "" && name != org.Name {
@@ -107,20 +131,40 @@ func (s *OrganizationService) Update(id int64, name string, description *string)
 		if existing != nil && existing.ID != id {
 			return nil, ErrOrganizationNameExists
 		}
+		changes["name_old"] = oldName
+		changes["name_new"] = name
 		org.Name = name
 	}
 
+	if (description == nil && oldDesc != nil) || (description != nil && oldDesc == nil) || (description != nil && oldDesc != nil && *description != *oldDesc) {
+		changes["description_old"] = oldDesc
+		changes["description_new"] = description
+	}
 	org.Description = description
 
 	if err := s.orgRepo.Update(org); err != nil {
 		return nil, fmt.Errorf("failed to update organization: %w", err)
 	}
 
+	// Audit log
+	if len(changes) > 0 {
+		changes["organization_id"] = org.ID
+		changes["organization_name"] = org.Name
+		details, _ := json.Marshal(changes)
+		detailsStr := string(details)
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:    &adminUserID,
+			EventType: domain.EventOrganizationUpdated,
+			Details:   &detailsStr,
+			CreatedAt: time.Now(),
+		})
+	}
+
 	return org, nil
 }
 
 // Delete deletes an organization (only if no users are assigned)
-func (s *OrganizationService) Delete(id int64) error {
+func (s *OrganizationService) Delete(adminUserID int64, id int64) error {
 	// Check if organization exists
 	org, err := s.orgRepo.GetByID(id)
 	if err != nil {
@@ -129,6 +173,10 @@ func (s *OrganizationService) Delete(id int64) error {
 	if org == nil {
 		return ErrOrganizationNotFound
 	}
+
+	// Save org details for audit log before deletion
+	orgName := org.Name
+	orgDesc := org.Description
 
 	// Repository Delete method now checks for users and returns error if any exist (RESTRICT behavior)
 	if err := s.orgRepo.Delete(id); err != nil {
@@ -139,11 +187,25 @@ func (s *OrganizationService) Delete(id int64) error {
 		return fmt.Errorf("failed to delete organization: %w", err)
 	}
 
+	// Audit log
+	details, _ := json.Marshal(map[string]interface{}{
+		"organization_id":   id,
+		"organization_name": orgName,
+		"description":       orgDesc,
+	})
+	detailsStr := string(details)
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:    &adminUserID,
+		EventType: domain.EventOrganizationDeleted,
+		Details:   &detailsStr,
+		CreatedAt: time.Now(),
+	})
+
 	return nil
 }
 
 // AssignUserToOrganization adds a user to an organization (many-to-many)
-func (s *OrganizationService) AssignUserToOrganization(userID, orgID int64) error {
+func (s *OrganizationService) AssignUserToOrganization(adminUserID, userID, orgID int64) error {
 	// Verify organization exists
 	org, err := s.orgRepo.GetByID(orgID)
 	if err != nil {
@@ -176,11 +238,29 @@ func (s *OrganizationService) AssignUserToOrganization(userID, orgID int64) erro
 		return fmt.Errorf("failed to add user to organization: %w", err)
 	}
 
+	// Audit log
+	details, _ := json.Marshal(map[string]interface{}{
+		"user_id":           userID,
+		"user_email":        user.Email,
+		"organization_id":   orgID,
+		"organization_name": org.Name,
+		"role":              "member",
+	})
+	detailsStr := string(details)
+	targetUserID := userID
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:       &adminUserID,
+		TargetUserID: &targetUserID,
+		EventType:    domain.EventUserAssignedToOrg,
+		Details:      &detailsStr,
+		CreatedAt:    time.Now(),
+	})
+
 	return nil
 }
 
 // RemoveUserFromOrganization removes a user from a specific organization
-func (s *OrganizationService) RemoveUserFromOrganization(userID, orgID int64) error {
+func (s *OrganizationService) RemoveUserFromOrganization(adminUserID, userID, orgID int64) error {
 	// Verify user exists
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -203,6 +283,23 @@ func (s *OrganizationService) RemoveUserFromOrganization(userID, orgID int64) er
 	if err := s.orgRepo.RemoveUserFromOrganization(userID, orgID); err != nil {
 		return fmt.Errorf("failed to remove user from organization: %w", err)
 	}
+
+	// Audit log
+	details, _ := json.Marshal(map[string]interface{}{
+		"user_id":           userID,
+		"user_email":        user.Email,
+		"organization_id":   orgID,
+		"organization_name": org.Name,
+	})
+	detailsStr := string(details)
+	targetUserID := userID
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:       &adminUserID,
+		TargetUserID: &targetUserID,
+		EventType:    domain.EventUserRemovedFromOrg,
+		Details:      &detailsStr,
+		CreatedAt:    time.Now(),
+	})
 
 	return nil
 }

@@ -81,7 +81,7 @@ type UserSubscriptionRepository interface {
 	ListAll() ([]*UserSubscription, error)
 
 	// Admin operations
-	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64) error
+	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error
 	MarkAsExpired(id int64) error
 	Cancel(id int64, reason string, adminUserID int64) error
 }
@@ -97,7 +97,7 @@ type OrganizationSubscriptionRepository interface {
 	ListAll() ([]*OrganizationSubscription, error)
 
 	// Admin operations
-	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64) error
+	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error
 	MarkAsExpired(id int64) error
 	Cancel(id int64, reason string, adminUserID int64) error
 }

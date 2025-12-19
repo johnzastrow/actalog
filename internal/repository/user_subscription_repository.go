@@ -329,7 +329,8 @@ func (r *SQLiteUserSubscriptionRepository) Delete(id int64) error {
 }
 
 // MarkAsPaid marks a subscription as paid and extends the end_date
-func (r *SQLiteUserSubscriptionRepository) MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64) error {
+// durationDays: optional custom duration in days (nil = use subscription type default)
+func (r *SQLiteUserSubscriptionRepository) MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error {
 	// First, get the subscription to determine the type
 	sub, err := r.GetByID(id)
 	if err != nil {
@@ -339,24 +340,31 @@ func (r *SQLiteUserSubscriptionRepository) MarkAsPaid(id int64, paymentDate time
 		return fmt.Errorf("subscription not found")
 	}
 
-	// Calculate new end_date based on subscription type
+	// Calculate new end_date based on custom duration or subscription type
 	var newEndDate time.Time
 	var newNextBillingDate time.Time
 
-	switch sub.SubscriptionType {
-	case domain.SubscriptionTypeMonthly:
-		// Extend by 30 days from payment date
-		newEndDate = paymentDate.AddDate(0, 0, 30)
+	if durationDays != nil && *durationDays > 0 {
+		// Use custom duration
+		newEndDate = paymentDate.AddDate(0, 0, *durationDays)
 		newNextBillingDate = newEndDate
-	case domain.SubscriptionTypeAnnual:
-		// Extend by 365 days from payment date
-		newEndDate = paymentDate.AddDate(0, 0, 365)
-		newNextBillingDate = newEndDate
-	case domain.SubscriptionTypeFree:
-		// Free subscriptions don't need payment
-		return fmt.Errorf("cannot mark free subscription as paid")
-	default:
-		return fmt.Errorf("unknown subscription type: %s", sub.SubscriptionType)
+	} else {
+		// Use default duration based on subscription type
+		switch sub.SubscriptionType {
+		case domain.SubscriptionTypeMonthly:
+			// Extend by 30 days from payment date
+			newEndDate = paymentDate.AddDate(0, 0, 30)
+			newNextBillingDate = newEndDate
+		case domain.SubscriptionTypeAnnual:
+			// Extend by 365 days from payment date
+			newEndDate = paymentDate.AddDate(0, 0, 365)
+			newNextBillingDate = newEndDate
+		case domain.SubscriptionTypeFree:
+			// Free subscriptions don't need payment
+			return fmt.Errorf("cannot mark free subscription as paid")
+		default:
+			return fmt.Errorf("unknown subscription type: %s", sub.SubscriptionType)
+		}
 	}
 
 	// Update the subscription

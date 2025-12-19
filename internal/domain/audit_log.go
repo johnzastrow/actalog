@@ -42,9 +42,41 @@ const (
 	EventEmailVerified         = "email_verified"
 
 	// User Management Events
-	EventUserCreated = "user_created"
-	EventUserDeleted = "user_deleted"
-	EventRoleChanged = "role_changed" // Admin promoted/demoted user
+	EventUserCreated        = "user_created"
+	EventUserUpdated        = "user_updated"
+	EventUserDeleted        = "user_deleted"
+	EventRoleChanged        = "role_changed" // Admin promoted/demoted user
+	EventProfileUpdated     = "profile_updated"
+	EventUserSettingsUpdate = "user_settings_updated"
+
+	// Organization Events
+	EventOrganizationCreated = "organization_created"
+	EventOrganizationUpdated = "organization_updated"
+	EventOrganizationDeleted = "organization_deleted"
+
+	// User-Organization Events
+	EventUserAssignedToOrg  = "user_assigned_to_organization"
+	EventUserRemovedFromOrg = "user_removed_from_organization"
+
+	// Movement Events
+	EventMovementCreated = "movement_created"
+	EventMovementUpdated = "movement_updated"
+	EventMovementDeleted = "movement_deleted"
+
+	// WOD Events
+	EventWODCreated = "wod_created"
+	EventWODUpdated = "wod_updated"
+	EventWODDeleted = "wod_deleted"
+
+	// Workout Template Events
+	EventWorkoutTemplateCreated = "workout_template_created"
+	EventWorkoutTemplateUpdated = "workout_template_updated"
+	EventWorkoutTemplateDeleted = "workout_template_deleted"
+
+	// User Workout Events (logged workouts)
+	EventUserWorkoutLogged  = "user_workout_logged"
+	EventUserWorkoutUpdated = "user_workout_updated"
+	EventUserWorkoutDeleted = "user_workout_deleted"
 
 	// Rate Limiting Events
 	EventRateLimitExceeded = "rate_limit_exceeded"
@@ -54,10 +86,12 @@ const (
 	EventSubscriptionMarkedPaid    = "subscription_marked_paid"
 	EventSubscriptionCancelled     = "subscription_cancelled"
 	EventSubscriptionExpired       = "subscription_expired"
+	EventSubscriptionUpdated       = "subscription_updated"
 	EventOrgSubscriptionCreated    = "org_subscription_created"
 	EventOrgSubscriptionMarkedPaid = "org_subscription_marked_paid"
 	EventOrgSubscriptionCancelled  = "org_subscription_cancelled"
 	EventOrgSubscriptionExpired    = "org_subscription_expired"
+	EventOrgSubscriptionUpdated    = "org_subscription_updated"
 )
 
 // AuditLogRepository defines the interface for audit log data access

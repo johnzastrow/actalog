@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -24,18 +25,20 @@ var (
 type WODService struct {
 	wodRepo              domain.WODRepository
 	dataChangeLogService *DataChangeLogService
+	auditLogRepo         domain.AuditLogRepository
 }
 
 // NewWODService creates a new WOD service
-func NewWODService(wodRepo domain.WODRepository, dataChangeLogService *DataChangeLogService) *WODService {
+func NewWODService(wodRepo domain.WODRepository, dataChangeLogService *DataChangeLogService, auditLogRepo domain.AuditLogRepository) *WODService {
 	return &WODService{
 		wodRepo:              wodRepo,
 		dataChangeLogService: dataChangeLogService,
+		auditLogRepo:         auditLogRepo,
 	}
 }
 
 // Create creates a new custom WOD with validation
-func (s *WODService) Create(wod *domain.WOD, userID int64) error {
+func (s *WODService) Create(wod *domain.WOD, userID int64, userEmail string) error {
 	// Validate required fields
 	if err := s.validateWOD(wod); err != nil {
 		return err
@@ -61,6 +64,27 @@ func (s *WODService) Create(wod *domain.WOD, userID int64) error {
 	err = s.wodRepo.Create(wod)
 	if err != nil {
 		return fmt.Errorf("failed to create wod: %w", err)
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"wod_id":      wod.ID,
+			"wod_name":    wod.Name,
+			"type":        wod.Type,
+			"source":      wod.Source,
+			"is_standard": wod.IsStandard,
+			"created_by":  userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWODCreated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
 	}
 
 	return nil
@@ -212,6 +236,37 @@ func (s *WODService) Update(wod *domain.WOD, userID int64, userEmail string) err
 		}
 	}
 
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"wod_id":      wod.ID,
+			"wod_name":    wod.Name,
+			"type":        wod.Type,
+			"source":      wod.Source,
+			"is_standard": wod.IsStandard,
+			"updated_by":  userEmail,
+			"changes": map[string]interface{}{
+				"name_old":        existing.Name,
+				"name_new":        wod.Name,
+				"type_old":        existing.Type,
+				"type_new":        wod.Type,
+				"source_old":      existing.Source,
+				"source_new":      wod.Source,
+				"description_old": existing.Description,
+				"description_new": wod.Description,
+			},
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWODUpdated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -268,6 +323,36 @@ func (s *WODService) UpdateAsAdmin(wod *domain.WOD, userID int64, userEmail stri
 		}
 	}
 
+	// Audit log (admin update)
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"wod_id":      wod.ID,
+			"wod_name":    wod.Name,
+			"type":        wod.Type,
+			"source":      wod.Source,
+			"is_standard": wod.IsStandard,
+			"updated_by":  userEmail,
+			"admin_update": true,
+			"changes": map[string]interface{}{
+				"name_old":        existing.Name,
+				"name_new":        wod.Name,
+				"type_old":        existing.Type,
+				"type_new":        wod.Type,
+				"source_old":      existing.Source,
+				"source_new":      wod.Source,
+				"description_old": existing.Description,
+				"description_new": wod.Description,
+			},
+		})
+		detailsStr := string(details)
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:    &userID,
+			EventType: domain.EventWODUpdated,
+			Details:   &detailsStr,
+			CreatedAt: time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -304,6 +389,27 @@ func (s *WODService) Delete(id int64, userID int64, userEmail string) error {
 			// Log error but don't fail the operation
 			fmt.Printf("Warning: failed to log WOD delete: %v\n", logErr)
 		}
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"wod_id":      id,
+			"wod_name":    wod.Name,
+			"type":        wod.Type,
+			"source":      wod.Source,
+			"is_standard": wod.IsStandard,
+			"deleted_by":  userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventWODDeleted,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -20,18 +21,20 @@ var (
 type MovementService struct {
 	movementRepo         domain.MovementRepository
 	dataChangeLogService *DataChangeLogService
+	auditLogRepo         domain.AuditLogRepository
 }
 
 // NewMovementService creates a new movement service
-func NewMovementService(movementRepo domain.MovementRepository, dataChangeLogService *DataChangeLogService) *MovementService {
+func NewMovementService(movementRepo domain.MovementRepository, dataChangeLogService *DataChangeLogService, auditLogRepo domain.AuditLogRepository) *MovementService {
 	return &MovementService{
 		movementRepo:         movementRepo,
 		dataChangeLogService: dataChangeLogService,
+		auditLogRepo:         auditLogRepo,
 	}
 }
 
 // Create creates a new custom movement
-func (s *MovementService) Create(movement *domain.Movement) error {
+func (s *MovementService) Create(movement *domain.Movement, userID int64, userEmail string) error {
 	// Validate required fields
 	if err := s.validateMovement(movement); err != nil {
 		return err
@@ -43,7 +46,31 @@ func (s *MovementService) Create(movement *domain.Movement) error {
 	movement.CreatedAt = now
 	movement.UpdatedAt = now
 
-	return s.movementRepo.Create(movement)
+	if err := s.movementRepo.Create(movement); err != nil {
+		return err
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"movement_id":   movement.ID,
+			"movement_name": movement.Name,
+			"type":          movement.Type,
+			"is_standard":   movement.IsStandard,
+			"created_by":    userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventMovementCreated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
+	return nil
 }
 
 // GetByID retrieves a movement by ID
@@ -122,6 +149,34 @@ func (s *MovementService) Update(movement *domain.Movement, userID int64, userEm
 		}
 	}
 
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"movement_id":   movement.ID,
+			"movement_name": movement.Name,
+			"type":          movement.Type,
+			"is_standard":   movement.IsStandard,
+			"updated_by":    userEmail,
+			"changes": map[string]interface{}{
+				"name_old":        existing.Name,
+				"name_new":        movement.Name,
+				"type_old":        existing.Type,
+				"type_new":        movement.Type,
+				"description_old": existing.Description,
+				"description_new": movement.Description,
+			},
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventMovementUpdated,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -158,6 +213,33 @@ func (s *MovementService) UpdateAsAdmin(movement *domain.Movement, userID int64,
 		}
 	}
 
+	// Audit log (admin update)
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"movement_id":   movement.ID,
+			"movement_name": movement.Name,
+			"type":          movement.Type,
+			"is_standard":   movement.IsStandard,
+			"updated_by":    userEmail,
+			"admin_update":  true,
+			"changes": map[string]interface{}{
+				"name_old":        existing.Name,
+				"name_new":        movement.Name,
+				"type_old":        existing.Type,
+				"type_new":        movement.Type,
+				"description_old": existing.Description,
+				"description_new": movement.Description,
+			},
+		})
+		detailsStr := string(details)
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:    &userID,
+			EventType: domain.EventMovementUpdated,
+			Details:   &detailsStr,
+			CreatedAt: time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -187,6 +269,26 @@ func (s *MovementService) Delete(id int64, userID int64, userEmail string) error
 		if logErr := s.dataChangeLogService.LogMovementDelete(id, existing.Name, userID, userEmail, existing, nil, nil); logErr != nil {
 			fmt.Printf("Warning: failed to log movement delete: %v\n", logErr)
 		}
+	}
+
+	// Audit log
+	if s.auditLogRepo != nil {
+		details, _ := json.Marshal(map[string]interface{}{
+			"movement_id":   id,
+			"movement_name": existing.Name,
+			"type":          existing.Type,
+			"is_standard":   existing.IsStandard,
+			"deleted_by":    userEmail,
+		})
+		detailsStr := string(details)
+		targetUserID := userID
+		_ = s.auditLogRepo.Create(&domain.AuditLog{
+			UserID:       &targetUserID,
+			TargetUserID: &targetUserID,
+			EventType:    domain.EventMovementDeleted,
+			Details:      &detailsStr,
+			CreatedAt:    time.Now(),
+		})
 	}
 
 	return nil

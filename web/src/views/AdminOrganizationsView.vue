@@ -61,10 +61,16 @@
 
           <!-- Actions Column -->
           <template #item.actions="{ item }">
-            <v-btn icon size="small" variant="text" @click="editOrganization(item)">
-              <v-icon color="primary">mdi-pencil</v-icon>
+            <v-btn icon size="small" variant="text" @click="viewOrgDetails(item)" title="View Details">
+              <v-icon color="primary">mdi-information-outline</v-icon>
             </v-btn>
-            <v-btn icon size="small" variant="text" @click="deleteOrganization(item)">
+            <v-btn icon size="small" variant="text" @click="manageUsers(item)" title="Manage Users">
+              <v-icon color="info">mdi-account-multiple</v-icon>
+            </v-btn>
+            <v-btn icon size="small" variant="text" @click="editOrganization(item)" title="Edit">
+              <v-icon color="warning">mdi-pencil</v-icon>
+            </v-btn>
+            <v-btn icon size="small" variant="text" @click="deleteOrganization(item)" title="Delete">
               <v-icon color="error">mdi-delete</v-icon>
             </v-btn>
           </template>
@@ -128,12 +134,96 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Manage Users Dialog -->
+    <ManageOrganizationUsersDialog
+      v-model="manageUsersDialog"
+      :organization="selectedOrganization"
+      @updated="fetchOrganizations"
+    />
+
+    <!-- Organization Details Dialog -->
+    <v-dialog v-model="detailsDialog" max-width="700">
+      <v-card v-if="organizationDetails">
+        <v-card-title class="d-flex align-center">
+          <v-icon class="mr-2">mdi-domain</v-icon>
+          Organization Details
+        </v-card-title>
+        <v-divider />
+        <v-card-text>
+          <v-list>
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Name</v-list-item-title>
+              <v-list-item-subtitle class="mt-1">{{ organizationDetails.name }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="organizationDetails.description">
+              <v-list-item-title class="text-subtitle-2">Description</v-list-item-title>
+              <v-list-item-subtitle class="mt-1">{{ organizationDetails.description }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-title class="text-subtitle-2">Created At</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(organizationDetails.created_at) }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-list-item v-if="organizationDetails.updated_at">
+              <v-list-item-title class="text-subtitle-2">Last Updated</v-list-item-title>
+              <v-list-item-subtitle>{{ formatFullDate(organizationDetails.updated_at) }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+
+          <!-- Users Section -->
+          <v-divider class="my-4" />
+          <div class="px-4">
+            <div class="d-flex align-center mb-3">
+              <v-icon class="mr-2">mdi-account-multiple</v-icon>
+              <span class="text-subtitle-1 font-weight-bold">Users ({{ organizationDetails.users?.length || 0 }})</span>
+            </div>
+
+            <div v-if="organizationDetails.users && organizationDetails.users.length > 0">
+              <v-list density="compact">
+                <v-list-item
+                  v-for="user in organizationDetails.users"
+                  :key="user.id"
+                  class="mb-1"
+                  rounded
+                  variant="tonal"
+                >
+                  <template v-slot:prepend>
+                    <v-avatar color="primary" size="32">
+                      <span class="text-caption">{{ getUserInitials(user) }}</span>
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title>
+                    {{ user.name || user.email }}
+                    <v-chip v-if="user.role === 'admin'" color="error" size="x-small" class="ml-2">
+                      Admin
+                    </v-chip>
+                  </v-list-item-title>
+                  <v-list-item-subtitle>{{ user.email }}</v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+            </div>
+
+            <v-alert v-else type="info" variant="tonal" density="compact" class="mb-2">
+              No users assigned to this organization
+            </v-alert>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="detailsDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import ManageOrganizationUsersDialog from '@/components/admin/ManageOrganizationUsersDialog.vue'
 
 const loading = ref(false)
 const error = ref(null)
@@ -153,6 +243,12 @@ const formData = ref({
 
 const deleteDialog = ref(false)
 const organizationToDelete = ref(null)
+
+const manageUsersDialog = ref(false)
+const selectedOrganization = ref(null)
+
+const detailsDialog = ref(false)
+const organizationDetails = ref(null)
 
 const headers = [
   { title: 'Name', key: 'name', sortable: true },
@@ -239,6 +335,34 @@ async function saveOrganization() {
   }
 }
 
+async function viewOrgDetails(org) {
+  loading.value = true
+  error.value = null
+  try {
+    // Fetch organization details and users in parallel
+    const [orgResponse, usersResponse] = await Promise.all([
+      axios.get(`/api/admin/organizations/${org.id}`),
+      axios.get(`/api/admin/organizations/${org.id}/users`)
+    ])
+
+    organizationDetails.value = {
+      ...orgResponse.data,
+      users: usersResponse.data.users || []
+    }
+    detailsDialog.value = true
+  } catch (err) {
+    console.error('Failed to load organization details:', err)
+    error.value = err.response?.data?.error || 'Failed to load organization details'
+  } finally {
+    loading.value = false
+  }
+}
+
+function manageUsers(org) {
+  selectedOrganization.value = org
+  manageUsersDialog.value = true
+}
+
 function deleteOrganization(org) {
   organizationToDelete.value = org
   deleteDialog.value = true
@@ -271,6 +395,29 @@ function formatDate(dateString) {
     month: 'short',
     day: 'numeric'
   })
+}
+
+function formatFullDate(dateString) {
+  if (!dateString) return 'Never'
+  const date = new Date(dateString)
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function getUserInitials(user) {
+  if (user.name) {
+    const names = user.name.split(' ')
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+    }
+    return names[0][0].toUpperCase()
+  }
+  return user.email[0].toUpperCase()
 }
 
 function previousPage() {

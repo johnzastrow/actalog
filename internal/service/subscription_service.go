@@ -206,7 +206,9 @@ func (s *SubscriptionService) CreateOrganizationSubscription(
 }
 
 // MarkUserSubscriptionAsPaid marks a user subscription as paid (admin only)
-func (s *SubscriptionService) MarkUserSubscriptionAsPaid(adminUserID int64, subscriptionID int64) error {
+// paymentDateStr: optional ISO date string (defaults to now)
+// durationDays: optional custom duration in days (defaults to subscription type)
+func (s *SubscriptionService) MarkUserSubscriptionAsPaid(adminUserID int64, subscriptionID int64, paymentDateStr *string, durationDays *int) error {
 	// Get the subscription
 	sub, err := s.userSubRepo.GetByID(subscriptionID)
 	if err != nil {
@@ -226,28 +228,42 @@ func (s *SubscriptionService) MarkUserSubscriptionAsPaid(adminUserID int64, subs
 		return ErrCannotMarkFreeSubscriptionPaid
 	}
 
-	now := time.Now()
-	err = s.userSubRepo.MarkAsPaid(subscriptionID, now, adminUserID)
+	// Parse payment date or use now
+	paymentDate := time.Now()
+	if paymentDateStr != nil && *paymentDateStr != "" {
+		parsed, err := time.Parse("2006-01-02", *paymentDateStr)
+		if err == nil {
+			paymentDate = parsed
+		}
+	}
+
+	err = s.userSubRepo.MarkAsPaid(subscriptionID, paymentDate, adminUserID, durationDays)
 	if err != nil {
 		return fmt.Errorf("failed to mark subscription as paid: %w", err)
 	}
 
 	// Log to audit trail
-	details := fmt.Sprintf("Marked subscription %d as paid for user %d", subscriptionID, sub.UserID)
+	durationStr := "default"
+	if durationDays != nil {
+		durationStr = fmt.Sprintf("%d days", *durationDays)
+	}
+	details := fmt.Sprintf("Marked subscription %d as paid for user %d (duration: %s)", subscriptionID, sub.UserID, durationStr)
 	targetUserID := sub.UserID
 	s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:       &adminUserID,
 		TargetUserID: &targetUserID,
 		EventType:    domain.EventSubscriptionMarkedPaid,
 		Details:      &details,
-		CreatedAt:    now,
+		CreatedAt:    time.Now(),
 	})
 
 	return nil
 }
 
 // MarkOrganizationSubscriptionAsPaid marks an organization subscription as paid (admin only)
-func (s *SubscriptionService) MarkOrganizationSubscriptionAsPaid(adminUserID int64, subscriptionID int64) error {
+// paymentDateStr: optional ISO date string (defaults to now)
+// durationDays: optional custom duration in days (defaults to subscription type)
+func (s *SubscriptionService) MarkOrganizationSubscriptionAsPaid(adminUserID int64, subscriptionID int64, paymentDateStr *string, durationDays *int) error {
 	// Get the subscription
 	sub, err := s.orgSubRepo.GetByID(subscriptionID)
 	if err != nil {
@@ -262,19 +278,31 @@ func (s *SubscriptionService) MarkOrganizationSubscriptionAsPaid(adminUserID int
 		return ErrCannotMarkFreeSubscriptionPaid
 	}
 
-	now := time.Now()
-	err = s.orgSubRepo.MarkAsPaid(subscriptionID, now, adminUserID)
+	// Parse payment date or use now
+	paymentDate := time.Now()
+	if paymentDateStr != nil && *paymentDateStr != "" {
+		parsed, err := time.Parse("2006-01-02", *paymentDateStr)
+		if err == nil {
+			paymentDate = parsed
+		}
+	}
+
+	err = s.orgSubRepo.MarkAsPaid(subscriptionID, paymentDate, adminUserID, durationDays)
 	if err != nil {
 		return fmt.Errorf("failed to mark subscription as paid: %w", err)
 	}
 
 	// Log to audit trail
-	details := fmt.Sprintf("Marked subscription %d as paid for organization %d", subscriptionID, sub.OrganizationID)
+	durationStr := "default"
+	if durationDays != nil {
+		durationStr = fmt.Sprintf("%d days", *durationDays)
+	}
+	details := fmt.Sprintf("Marked subscription %d as paid for organization %d (duration: %s)", subscriptionID, sub.OrganizationID, durationStr)
 	s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &adminUserID,
 		EventType: domain.EventOrgSubscriptionMarkedPaid,
 		Details:   &details,
-		CreatedAt: now,
+		CreatedAt: time.Now(),
 	})
 
 	return nil
@@ -316,6 +344,49 @@ func (s *SubscriptionService) CancelUserSubscription(adminUserID int64, subscrip
 	return nil
 }
 
+// SetUserSubscriptionPermanent sets the permanent free status of a user subscription (admin only)
+func (s *SubscriptionService) SetUserSubscriptionPermanent(adminUserID int64, subscriptionID int64, isPermanent bool) error {
+	// Get the subscription
+	sub, err := s.userSubRepo.GetByID(subscriptionID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+	if sub == nil {
+		return ErrSubscriptionNotFound
+	}
+
+	// Admins cannot modify their own subscriptions
+	if adminUserID == sub.UserID {
+		return ErrCannotModifyOwnSubscription
+	}
+
+	// Update the permanent status
+	sub.IsPermanentFree = isPermanent
+	sub.UpdatedAt = time.Now()
+
+	err = s.userSubRepo.Update(sub)
+	if err != nil {
+		return fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	// Log to audit trail
+	status := "removed permanent status from"
+	if isPermanent {
+		status = "set permanent status for"
+	}
+	details := fmt.Sprintf("Admin %s subscription %d for user %d", status, subscriptionID, sub.UserID)
+	targetUserID := sub.UserID
+	s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:       &adminUserID,
+		TargetUserID: &targetUserID,
+		EventType:    domain.EventSubscriptionUpdated,
+		Details:      &details,
+		CreatedAt:    time.Now(),
+	})
+
+	return nil
+}
+
 // CancelOrganizationSubscription cancels an organization subscription (admin only)
 func (s *SubscriptionService) CancelOrganizationSubscription(adminUserID int64, subscriptionID int64, reason string) error {
 	// Get the subscription
@@ -340,6 +411,42 @@ func (s *SubscriptionService) CancelOrganizationSubscription(adminUserID int64, 
 		EventType: domain.EventOrgSubscriptionCancelled,
 		Details:   &details,
 		CreatedAt: now,
+	})
+
+	return nil
+}
+
+// SetOrganizationSubscriptionPermanent sets the permanent free status of an organization subscription (admin only)
+func (s *SubscriptionService) SetOrganizationSubscriptionPermanent(adminUserID int64, subscriptionID int64, isPermanent bool) error {
+	// Get the subscription
+	sub, err := s.orgSubRepo.GetByID(subscriptionID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+	if sub == nil {
+		return ErrSubscriptionNotFound
+	}
+
+	// Update the permanent status
+	sub.IsPermanentFree = isPermanent
+	sub.UpdatedAt = time.Now()
+
+	err = s.orgSubRepo.Update(sub)
+	if err != nil {
+		return fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	// Log to audit trail
+	status := "removed permanent status from"
+	if isPermanent {
+		status = "set permanent status for"
+	}
+	details := fmt.Sprintf("Admin %s subscription %d for organization %d", status, subscriptionID, sub.OrganizationID)
+	s.auditLogRepo.Create(&domain.AuditLog{
+		UserID:    &adminUserID,
+		EventType: domain.EventOrgSubscriptionUpdated,
+		Details:   &details,
+		CreatedAt: time.Now(),
 	})
 
 	return nil
