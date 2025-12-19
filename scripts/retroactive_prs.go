@@ -34,6 +34,7 @@ func main() {
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
+		nil, // no audit log repo for script
 	)
 
 	// Run retroactive PR flagging for user ID 1
