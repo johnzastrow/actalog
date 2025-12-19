@@ -82,6 +82,119 @@
         </div>
       </v-card>
 
+      <!-- Subscription Status -->
+      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+        <div class="d-flex align-center justify-space-between mb-2">
+          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Subscription</h2>
+          <v-chip
+            v-if="subscriptionStore.isPermanentFree"
+            size="small"
+            color="purple"
+            variant="flat"
+          >
+            <v-icon start size="x-small">mdi-crown</v-icon>
+            Permanent Free
+          </v-chip>
+          <v-chip
+            v-else-if="subscriptionStore.hasAccess"
+            size="small"
+            :color="getSubscriptionColor(subscriptionStore.subscriptionType)"
+            variant="flat"
+          >
+            <v-icon start size="x-small">mdi-check-circle</v-icon>
+            {{ subscriptionStore.subscriptionTypeLabel }}
+          </v-chip>
+          <v-chip
+            v-else
+            size="small"
+            color="error"
+            variant="flat"
+          >
+            <v-icon start size="x-small">mdi-alert-circle</v-icon>
+            Expired
+          </v-chip>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="subscriptionStore.loading" class="text-center py-2">
+          <v-progress-circular indeterminate color="#00bcd4" size="24" />
+        </div>
+
+        <!-- Subscription Details -->
+        <div v-else-if="subscriptionStore.subscriptionStatus">
+          <!-- User Subscription -->
+          <div v-if="subscriptionStore.userSubscription" class="mb-2">
+            <div class="d-flex align-center justify-space-between">
+              <div class="text-caption" style="color: #999">Status</div>
+              <div class="text-body-2" :style="{ color: subscriptionStore.hasAccess ? '#4caf50' : '#e91e63' }">
+                {{ subscriptionStore.hasAccess ? 'Active' : 'Expired' }}
+              </div>
+            </div>
+
+            <!-- Expiration Date -->
+            <div
+              v-if="subscriptionStore.userSubscription.end_date && !subscriptionStore.isPermanentFree"
+              class="d-flex align-center justify-space-between mt-1"
+            >
+              <div class="text-caption" style="color: #999">
+                {{ subscriptionStore.hasAccess ? 'Expires' : 'Expired' }}
+              </div>
+              <div class="text-body-2" style="color: #1a1a1a">
+                {{ formatDate(subscriptionStore.userSubscription.end_date) }}
+              </div>
+            </div>
+
+            <!-- Next Billing Date -->
+            <div
+              v-if="subscriptionStore.userSubscription.next_billing_date && subscriptionStore.hasAccess"
+              class="d-flex align-center justify-space-between mt-1"
+            >
+              <div class="text-caption" style="color: #999">Next Billing</div>
+              <div class="text-body-2" style="color: #1a1a1a">
+                {{ formatDate(subscriptionStore.userSubscription.next_billing_date) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Organization Subscriptions -->
+          <div v-if="subscriptionStore.orgSubscriptions.length > 0" class="mt-2 pt-2" style="border-top: 1px solid #eee">
+            <div class="text-caption mb-1" style="color: #999">
+              Organization Access
+            </div>
+            <div
+              v-for="orgSub in subscriptionStore.orgSubscriptions"
+              :key="orgSub.id"
+              class="d-flex align-center justify-space-between mb-1"
+            >
+              <div class="text-body-2" style="color: #1a1a1a">
+                {{ orgSub.organization_name }}
+              </div>
+              <v-chip
+                size="x-small"
+                :color="orgSub.status === 'active' ? 'success' : 'error'"
+                variant="flat"
+              >
+                {{ orgSub.status }}
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- Access Source -->
+          <div v-if="subscriptionStore.source !== 'none'" class="mt-2">
+            <div class="text-caption" style="color: #999">
+              Access via: {{ formatSource(subscriptionStore.source) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="subscriptionStore.error" class="text-center py-2">
+          <div class="text-caption" style="color: #e91e63">
+            {{ subscriptionStore.error }}
+          </div>
+        </div>
+      </v-card>
+
       <!-- Stats Summary -->
       <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Workout Summary</h2>
@@ -437,12 +550,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSubscriptionStore } from '@/stores/subscription'
 import axios from '@/utils/axios'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { getProfileImageUrl } from '@/utils/url'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 const activeTab = ref('profile')
 
 
@@ -527,8 +642,38 @@ function formatMemberSince(dateString) {
   return date.toLocaleDateString('en-US', options)
 }
 
+// Format date for subscription display
+function formatDate(dateString) {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  const options = { month: 'short', day: 'numeric', year: 'numeric' }
+  return date.toLocaleDateString('en-US', options)
+}
+
+// Get subscription color based on type
+function getSubscriptionColor(type) {
+  const colorMap = {
+    free: 'grey',
+    monthly: 'blue',
+    annual: 'green'
+  }
+  return colorMap[type] || 'grey'
+}
+
+// Format access source for display
+function formatSource(source) {
+  const sourceMap = {
+    user: 'Personal Subscription',
+    organization: 'Organization Subscription',
+    both: 'Personal & Organization',
+    none: 'No Access'
+  }
+  return sourceMap[source] || source
+}
+
 const handleLogout = () => {
   authStore.logout()
+  subscriptionStore.clear()
   router.push('/login')
 }
 
@@ -626,5 +771,8 @@ async function fetchVersionInfo() {
 onMounted(() => {
   fetchStats()
   fetchVersionInfo()
+  subscriptionStore.fetchStatus().catch(err => {
+    console.error('Failed to fetch subscription status:', err)
+  })
 })
 </script>
