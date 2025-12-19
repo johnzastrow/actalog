@@ -36,6 +36,8 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
+*(No active tasks - all audit logging completed)*
+
 ### CI/Lint Fixes (Deferred)
 
 **Status:** golangci-lint set to `continue-on-error` in `.github/workflows/ci.yml:37`

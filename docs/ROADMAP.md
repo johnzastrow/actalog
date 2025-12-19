@@ -14,7 +14,53 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 
 ## Version History & Status
 
-### v0.14.0-beta (Current - Released)
+### v0.14.1-beta / v0.15.0-beta (In Progress)
+**Status:** Comprehensive audit logging for all data operations
+
+**Completed (Unreleased):**
+- ✅ Audit logging for MovementService (Create, Update, UpdateAsAdmin, Delete)
+- ✅ Audit logging for WODService (Create, Update, UpdateAsAdmin, Delete)
+- ✅ Audit logging for WorkoutTemplateService (Create, Update, Delete)
+- ✅ Audit logging for UserWorkoutService (LogWorkout, LogWorkoutWithPerformance, UpdateLoggedWorkout, DeleteLoggedWorkout)
+- ✅ Audit logging for UserService (UpdateProfile)
+- ✅ Audit logging for UserSettingsService (UpdateSettings)
+- ✅ All handlers updated to extract and pass userEmail for audit logging
+- ✅ All service constructors updated to accept auditLogRepo parameter
+- ✅ Comprehensive audit event constants for all operations
+- ✅ Change tracking with before/after values for updates
+- ✅ User attribution (UserID + TargetUserID) for all audit logs
+- ✅ Admin operation flagging for administrative actions
+
+**Technical Highlights:**
+- Complete audit trail for movements, WODs, workout templates, user workouts, profiles, and settings
+- JSON-encoded audit details with structured change tracking
+- Fire-and-forget pattern (audit failures don't block operations)
+- Conditional logging with nil checks for optional audit repositories
+- 13 files modified across domain, service, and handler layers
+- Build #40 completed successfully
+
+**Coverage:**
+- ✅ Movement CRUD operations
+- ✅ WOD CRUD operations
+- ✅ Workout Template CRUD operations
+- ✅ User Workout operations
+- ✅ User Profile updates
+- ✅ User Settings updates
+- ✅ Organization operations (from v0.14.0)
+- ✅ Subscription operations (from v0.14.0)
+- ✅ User associations (from v0.14.0)
+
+**Architecture Documentation:**
+- Complete audit logging architecture section added to ARCHITECTURE.md
+- Design patterns documented (Service Layer Integration, Conditional Logging, Fire-and-Forget, Change Tracking)
+- Comprehensive event type listing by entity
+- Performance and security considerations documented
+
+**Next Phase:** Version release and frontend subscription UI from v0.14.0 roadmap
+
+---
+
+### v0.14.0-beta (Released)
 **Status:** Subscription billing system with dual-level (user + organization) billing
 
 **Completed:**

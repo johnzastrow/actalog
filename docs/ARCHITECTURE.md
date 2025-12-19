@@ -619,6 +619,196 @@ registerSW({
 - Progressive enhancement for modern browsers
 - No broken functionality in non-PWA browsers
 
+## Audit Logging Architecture
+
+### Comprehensive Audit Trail System
+
+ActaLog implements a complete audit logging system that tracks all data modifications across the application. This provides accountability, compliance support, and troubleshooting capabilities.
+
+### Audit Logging Design Patterns
+
+**1. Service Layer Integration**
+- Audit logging is implemented at the service layer, not in repositories or handlers
+- Every service that modifies data accepts an `auditLogRepo` in its constructor
+- Services inject user context (userID, userEmail) into audit logs
+
+**2. Conditional Logging**
+```go
+if s.auditLogRepo != nil {
+    details, _ := json.Marshal(map[string]interface{}{
+        "entity_id":   entity.ID,
+        "entity_name": entity.Name,
+        "created_by":  userEmail,
+    })
+    detailsStr := string(details)
+    _ = s.auditLogRepo.Create(&domain.AuditLog{
+        UserID:       &userID,
+        TargetUserID: &targetUserID,
+        EventType:    domain.EventEntityCreated,
+        Details:      &detailsStr,
+        CreatedAt:    time.Now(),
+    })
+}
+```
+
+**3. Fire-and-Forget Pattern**
+- Audit log failures never block primary operations
+- Audit logging uses fire-and-forget (errors ignored with `_`)
+- Primary business operations succeed even if audit logging fails
+
+**4. Change Tracking for Updates**
+```go
+// Store old values before update
+oldName := entity.Name
+oldValue := entity.Value
+
+// Perform update
+entity.Name = newName
+entity.Value = newValue
+
+// Log with before/after comparison
+details, _ := json.Marshal(map[string]interface{}{
+    "entity_id": entity.ID,
+    "changes": map[string]interface{}{
+        "name_old":  oldName,
+        "name_new":  entity.Name,
+        "value_old": oldValue,
+        "value_new": entity.Value,
+    },
+})
+```
+
+**5. User Attribution**
+- `UserID`: The user who performed the action
+- `TargetUserID`: The user who was affected by the action (for user management operations)
+- `userEmail`: Stored in details JSON for human-readable logs
+
+**6. Admin Operation Tracking**
+```go
+details, _ := json.Marshal(map[string]interface{}{
+    "entity_id":    entity.ID,
+    "admin_update": true,  // Flag for admin operations
+    "updated_by":   adminEmail,
+})
+```
+
+### Logged Operations by Entity
+
+**Movements**
+- `movement_created` - New movement creation (custom and standard)
+- `movement_updated` - Movement attribute updates
+- `movement_deleted` - Movement deletion
+
+**WODs**
+- `wod_created` - New WOD creation
+- `wod_updated` - WOD attribute updates
+- `wod_deleted` - WOD deletion
+
+**Workout Templates**
+- `workout_template_created` - New template creation with movements/WODs
+- `workout_template_updated` - Template modifications
+- `workout_template_deleted` - Template deletion
+
+**User Workouts**
+- `user_workout_logged` - User logs a workout
+- `user_workout_updated` - User edits a logged workout
+- `user_workout_deleted` - User deletes a workout
+
+**User Management**
+- `profile_updated` - User profile changes (name, email, birthday)
+- `user_settings_updated` - Settings changes (theme, units, preferences)
+- `user_created` - User registration
+- `user_disabled` - User account disabled
+- `user_enabled` - User account enabled
+- `user_role_changed` - Role changes (user ↔ admin)
+- `user_deleted` - User account deletion
+
+**Organizations** (v0.14.0)
+- `organization_created` - Organization creation
+- `organization_updated` - Organization updates
+- `organization_deleted` - Organization deletion
+- `user_organization_added` - User added to organization
+- `user_organization_removed` - User removed from organization
+
+**Subscriptions** (v0.14.0)
+- `subscription_created` - Subscription creation
+- `subscription_cancelled` - Subscription cancellation
+- `subscription_marked_paid` - Payment recorded
+- `subscription_marked_unpaid` - Payment reversed
+
+### Audit Log Data Structure
+
+```go
+type AuditLog struct {
+    ID           int64      `json:"id"`
+    UserID       *int64     `json:"user_id"`        // Who performed action
+    TargetUserID *int64     `json:"target_user_id"` // Who was affected
+    EventType    string     `json:"event_type"`     // Event constant
+    Details      *string    `json:"details"`        // JSON-encoded context
+    CreatedAt    time.Time  `json:"created_at"`     // Timestamp
+}
+```
+
+**Details JSON Schema** (varies by event type):
+```json
+{
+    "entity_id": 123,
+    "entity_name": "Back Squat",
+    "entity_type": "movement",
+    "created_by": "user@example.com",
+    "admin_update": false,
+    "changes": {
+        "name_old": "Back Squat",
+        "name_new": "Barbell Back Squat",
+        "type_old": "weightlifting",
+        "type_new": "weightlifting"
+    }
+}
+```
+
+### Admin Audit Log UI
+
+**Admin Data Change Logs View** (`/admin/data-change-logs`)
+- Filterable by entity type, operation, user email
+- Paginated table showing all audit events
+- Detailed dialog showing full before/after JSON
+- Changed fields diff table for updates
+- Color-coded operations and entity types
+
+**Use Cases:**
+- Compliance and accountability tracking
+- Troubleshooting data issues
+- User action history review
+- Security incident investigation
+- Admin operation auditing
+
+### Performance Considerations
+
+1. **Asynchronous Logging**: Audit logs written synchronously but don't block operations
+2. **No Transactions**: Audit logs in separate operations (may fail independently)
+3. **Indexing**: `audit_logs` table indexed on `event_type`, `user_id`, `target_user_id`, `created_at`
+4. **Cleanup**: Admin API endpoint for deleting old audit logs (retention policy)
+
+### Security Considerations
+
+- Audit logs are immutable once created (no update/delete from application)
+- Only admins can view audit logs via API
+- Sensitive data (passwords) never logged
+- IP addresses optional (privacy consideration)
+- GDPR compliance: Audit logs included in user data exports
+
+### Implementation Checklist
+
+✅ Domain layer: Event type constants defined
+✅ Repository layer: AuditLogRepository implemented for all databases
+✅ Service layer: All CRUD services inject and use auditLogRepo
+✅ Handler layer: All handlers extract userEmail from JWT context
+✅ Initialization: All services initialized with auditLogRepo in main.go
+✅ Admin UI: Complete audit log viewing and filtering interface
+✅ Testing: All services tested with and without audit logging enabled
+
+---
+
 ## Security Architecture
 
 ### Authentication Flow

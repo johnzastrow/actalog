@@ -66,7 +66,10 @@ func (h *SettingsHandler) UpdateSettings(w http.ResponseWriter, r *http.Request)
 		h.logger.Info("action=update_settings_attempt user_id=%d", userID)
 	}
 
-	settings, err := h.settingsService.UpdateSettings(userID, &req)
+	// Extract user email for audit logging
+	userEmail, _ := middleware.GetUserEmail(r.Context())
+
+	settings, err := h.settingsService.UpdateSettings(userID, userEmail, &req)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=update_settings outcome=failure user_id=%d error=%v", userID, err)

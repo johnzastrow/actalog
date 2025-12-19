@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Comprehensive Audit Logging
+- **Complete Audit Trail for All Data Operations**
+  - Added audit logging to MovementService (Create, Update, UpdateAsAdmin, Delete)
+  - Added audit logging to WODService (Create, Update, UpdateAsAdmin, Delete)
+  - Added audit logging to WorkoutTemplateService (Create, Update, Delete)
+  - Added audit logging to UserWorkoutService (LogWorkout, LogWorkoutWithPerformance, UpdateLoggedWorkout, DeleteLoggedWorkout)
+  - Added audit logging to UserService (UpdateProfile)
+  - Added audit logging to UserSettingsService (UpdateSettings)
+
+- **Audit Log Event Types**
+  - Movement events: `movement_created`, `movement_updated`, `movement_deleted`
+  - WOD events: `wod_created`, `wod_updated`, `wod_deleted`
+  - Workout template events: `workout_template_created`, `workout_template_updated`, `workout_template_deleted`
+  - User workout events: `user_workout_logged`, `user_workout_updated`, `user_workout_deleted`
+  - User management events: `profile_updated`, `user_settings_updated`
+
+- **Change Tracking Features**
+  - Before/after values stored for all update operations
+  - JSON-encoded details with full context
+  - User attribution (UserID for performer, TargetUserID for affected user)
+  - Admin operation flags for administrative updates
+  - Timestamp tracking for all operations
+
+### Changed
+- **Service Method Signatures**
+  - All CRUD operations now accept `userID int64` and `userEmail string` parameters
+  - MovementService.Create signature: `Create(movement *domain.Movement, userID int64, userEmail string) error`
+  - WODService methods updated to include userEmail parameter
+  - WorkoutTemplateService methods updated to include userEmail parameter
+  - UserWorkoutService methods updated to include userEmail parameter
+  - UserSettingsService.UpdateSettings signature: `UpdateSettings(userID int64, userEmail string, updates *domain.UserSettings) (*domain.UserSettings, error)`
+
+- **Handler Implementations**
+  - All handlers extract userEmail from JWT context using `middleware.GetUserEmail()`
+  - Handlers pass both userID and userEmail to service methods
+  - Updated: movement_handler.go, wod_handler.go, workout_template_handler.go, user_workout_handler.go, settings_handler.go
+
+- **Service Initialization**
+  - All service constructors updated to accept auditLogRepo parameter
+  - Main.go updated with comprehensive audit log repository injection
+  - MovementService, WODService, WorkoutTemplateService, UserWorkoutService, UserSettingsService all initialized with audit logging
+
+### Technical Details
+- **Build**: #40
+- **Files Modified**:
+  - `internal/domain/audit_log.go` - Added comprehensive event constants
+  - `internal/service/movement_service.go` - Audit logging for all operations
+  - `internal/service/wod_service.go` - Audit logging for all operations
+  - `internal/service/workout_template_service.go` - Audit logging for all operations
+  - `internal/service/user_workout_service.go` - Audit logging for all operations
+  - `internal/service/user_service.go` - Added audit logging to UpdateProfile
+  - `internal/service/user_settings_service.go` - Added audit logging to UpdateSettings
+  - `internal/handler/movement_handler.go` - Extract and pass userEmail
+  - `internal/handler/wod_handler.go` - Extract and pass userEmail
+  - `internal/handler/workout_template_handler.go` - Updated interface and handlers
+  - `internal/handler/user_workout_handler.go` - Extract and pass userEmail
+  - `internal/handler/settings_handler.go` - Extract and pass userEmail
+  - `cmd/actalog/main.go` - Updated service initialization with auditLogRepo
+
+### Audit Logging Patterns
+- **Conditional Logging**: All audit logging uses nil checks (`if s.auditLogRepo != nil`)
+- **JSON Encoding**: Audit details stored as JSON for structured querying
+- **Error Handling**: Audit log failures don't block primary operations (fire-and-forget pattern)
+- **Entity Context**: Each log includes entity type, entity ID, entity name, and user context
+- **Admin Tracking**: Admin operations marked with `admin_update: true` flag
+
+### Coverage
+- ✅ Movement CRUD operations fully logged
+- ✅ WOD CRUD operations fully logged
+- ✅ Workout Template CRUD operations fully logged
+- ✅ User Workout operations fully logged
+- ✅ User Profile updates fully logged
+- ✅ User Settings updates fully logged
+- ✅ Organization operations logged (from v0.14.0)
+- ✅ Subscription operations logged (from v0.14.0)
+- ✅ User associations logged (from v0.14.0)
+
+---
+
 ## [0.14.0-beta] - 2024-12-16
 
 ### Added - Subscription Billing System
