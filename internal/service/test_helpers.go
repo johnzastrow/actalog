@@ -151,6 +151,11 @@ func (m *mockUserWorkoutRepo) GetByUserWorkoutDate(userID, workoutID int64, date
 	return nil, nil
 }
 
+func (m *mockUserWorkoutRepo) GetActiveUsersThisMonth(orgID int64) ([]map[string]interface{}, error) {
+	// For mock purposes, return empty slice
+	return []map[string]interface{}{}, nil
+}
+
 // Mock WorkoutRepository
 type mockWorkoutRepo struct {
 	workouts     map[int64]*domain.Workout
@@ -658,4 +663,735 @@ func toLower(s string) string {
 		}
 	}
 	return string(result)
+}
+
+// Mock UserSubscriptionRepository
+type mockUserSubscriptionRepo struct {
+	subscriptions map[int64]*domain.UserSubscription
+	nextID        int64
+	createError   error
+	getByIDError  error
+	updateError   error
+}
+
+func newMockUserSubscriptionRepo() *mockUserSubscriptionRepo {
+	return &mockUserSubscriptionRepo{
+		subscriptions: make(map[int64]*domain.UserSubscription),
+		nextID:        1,
+	}
+}
+
+func (m *mockUserSubscriptionRepo) Create(sub *domain.UserSubscription) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	sub.ID = m.nextID
+	m.nextID++
+	sub.CreatedAt = time.Now()
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[sub.ID] = sub
+	return nil
+}
+
+func (m *mockUserSubscriptionRepo) GetByID(id int64) (*domain.UserSubscription, error) {
+	if m.getByIDError != nil {
+		return nil, m.getByIDError
+	}
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return sub, nil
+}
+
+func (m *mockUserSubscriptionRepo) GetActiveByUserID(userID int64) (*domain.UserSubscription, error) {
+	for _, sub := range m.subscriptions {
+		if sub.UserID == userID && sub.Status == domain.SubscriptionStatusActive {
+			return sub, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockUserSubscriptionRepo) GetByUserID(userID int64) ([]*domain.UserSubscription, error) {
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		if sub.UserID == userID {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockUserSubscriptionRepo) Update(sub *domain.UserSubscription) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[sub.ID] = sub
+	return nil
+}
+
+func (m *mockUserSubscriptionRepo) Delete(id int64) error {
+	delete(m.subscriptions, id)
+	return nil
+}
+
+func (m *mockUserSubscriptionRepo) ListAll() ([]*domain.UserSubscription, error) {
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		result = append(result, sub)
+	}
+	return result, nil
+}
+
+func (m *mockUserSubscriptionRepo) MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.LastPaymentDate = &paymentDate
+	
+	// Calculate new end date
+	duration := 30 * 24 * time.Hour // Default
+	if sub.SubscriptionType == domain.SubscriptionTypeAnnual {
+		duration = 365 * 24 * time.Hour
+	}
+	if durationDays != nil {
+		duration = time.Duration(*durationDays) * 24 * time.Hour
+	}
+	
+	newEndDate := paymentDate.Add(duration)
+	sub.EndDate = &newEndDate
+	nextBilling := newEndDate
+	sub.NextBillingDate = &nextBilling
+	sub.UpdatedAt = time.Now()
+	
+	m.subscriptions[id] = sub
+	return nil
+}
+
+func (m *mockUserSubscriptionRepo) MarkAsExpired(id int64) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.Status = domain.SubscriptionStatusExpired
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[id] = sub
+	return nil
+}
+
+func (m *mockUserSubscriptionRepo) Cancel(id int64, reason string, adminUserID int64) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.Status = domain.SubscriptionStatusCancelled
+	now := time.Now()
+	sub.CancelledAt = &now
+	sub.CancelledReason = &reason
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[id] = sub
+	return nil
+}
+
+// Mock OrganizationSubscriptionRepository
+type mockOrganizationSubscriptionRepo struct {
+	subscriptions map[int64]*domain.OrganizationSubscription
+	nextID        int64
+	createError   error
+	getByIDError  error
+	updateError   error
+}
+
+func newMockOrganizationSubscriptionRepo() *mockOrganizationSubscriptionRepo {
+	return &mockOrganizationSubscriptionRepo{
+		subscriptions: make(map[int64]*domain.OrganizationSubscription),
+		nextID:        1,
+	}
+}
+
+func (m *mockOrganizationSubscriptionRepo) Create(sub *domain.OrganizationSubscription) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	sub.ID = m.nextID
+	m.nextID++
+	sub.CreatedAt = time.Now()
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[sub.ID] = sub
+	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) GetByID(id int64) (*domain.OrganizationSubscription, error) {
+	if m.getByIDError != nil {
+		return nil, m.getByIDError
+	}
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return sub, nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) GetActiveByOrganizationID(orgID int64) (*domain.OrganizationSubscription, error) {
+	for _, sub := range m.subscriptions {
+		if sub.OrganizationID == orgID && sub.Status == domain.SubscriptionStatusActive {
+			return sub, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) GetByOrganizationID(orgID int64) ([]*domain.OrganizationSubscription, error) {
+	var result []*domain.OrganizationSubscription
+	for _, sub := range m.subscriptions {
+		if sub.OrganizationID == orgID {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) Update(sub *domain.OrganizationSubscription) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[sub.ID] = sub
+	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) Delete(id int64) error {
+	delete(m.subscriptions, id)
+	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) ListAll() ([]*domain.OrganizationSubscription, error) {
+	var result []*domain.OrganizationSubscription
+	for _, sub := range m.subscriptions {
+		result = append(result, sub)
+	}
+	return result, nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.LastPaymentDate = &paymentDate
+	
+	duration := 30 * 24 * time.Hour
+	if sub.SubscriptionType == domain.SubscriptionTypeAnnual {
+		duration = 365 * 24 * time.Hour
+	}
+	if durationDays != nil {
+		duration = time.Duration(*durationDays) * 24 * time.Hour
+	}
+	
+	newEndDate := paymentDate.Add(duration)
+	sub.EndDate = &newEndDate
+	nextBilling := newEndDate
+	sub.NextBillingDate = &nextBilling
+	sub.UpdatedAt = time.Now()
+	
+	m.subscriptions[id] = sub
+	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) MarkAsExpired(id int64) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.Status = domain.SubscriptionStatusExpired
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[id] = sub
+	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) Cancel(id int64, reason string, adminUserID int64) error {
+	sub, ok := m.subscriptions[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	sub.Status = domain.SubscriptionStatusCancelled
+	now := time.Now()
+	sub.CancelledAt = &now
+	sub.CancelledReason = &reason
+	sub.UpdatedAt = time.Now()
+	m.subscriptions[id] = sub
+	return nil
+}
+
+// Mock SubscriptionAccessRepository
+type mockSubscriptionAccessRepo struct {
+	accessResults map[int64]*domain.SubscriptionAccessResult
+}
+
+func newMockSubscriptionAccessRepo() *mockSubscriptionAccessRepo {
+	return &mockSubscriptionAccessRepo{
+		accessResults: make(map[int64]*domain.SubscriptionAccessResult),
+	}
+}
+
+func (m *mockSubscriptionAccessRepo) CheckUserAccess(userID int64) (*domain.SubscriptionAccessResult, error) {
+	result, ok := m.accessResults[userID]
+	if !ok {
+		return &domain.SubscriptionAccessResult{
+			HasAccess:        false,
+			Source:           "none",
+			UserSubscription: nil,
+			OrgSubscriptions: nil,
+		}, nil
+	}
+	return result, nil
+}
+
+// Mock OrganizationRepository
+type mockOrganizationRepo struct {
+	organizations map[int64]*domain.Organization
+	nextID        int64
+}
+
+func newMockOrganizationRepo() *mockOrganizationRepo {
+	return &mockOrganizationRepo{
+		organizations: make(map[int64]*domain.Organization),
+		nextID:        1,
+	}
+}
+
+func (m *mockOrganizationRepo) GetByID(id int64) (*domain.Organization, error) {
+	org, ok := m.organizations[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return org, nil
+}
+
+// Mock AuditLogRepository
+type mockAuditLogRepo struct {
+	logs   []*domain.AuditLog
+	nextID int64
+}
+
+func newMockAuditLogRepo() *mockAuditLogRepo {
+	return &mockAuditLogRepo{
+		logs:   make([]*domain.AuditLog, 0),
+		nextID: 1,
+	}
+}
+
+func (m *mockAuditLogRepo) Create(log *domain.AuditLog) error {
+	log.ID = m.nextID
+	m.nextID++
+	m.logs = append(m.logs, log)
+	return nil
+}
+
+func (m *mockAuditLogRepo) GetByID(id int64) (*domain.AuditLog, error) {
+	for _, log := range m.logs {
+		if log.ID == id {
+			return log, nil
+		}
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockAuditLogRepo) List(filters domain.AuditLogFilters, limit, offset int) ([]*domain.AuditLog, error) {
+	return m.logs, nil
+}
+
+func (m *mockAuditLogRepo) GetByTargetUserID(targetUserID int64, limit, offset int) ([]*domain.AuditLog, error) {
+	var filtered []*domain.AuditLog
+	for _, log := range m.logs {
+		if log.TargetUserID != nil && *log.TargetUserID == targetUserID {
+			filtered = append(filtered, log)
+		}
+	}
+	return filtered, nil
+}
+
+func (m *mockAuditLogRepo) GetByUserID(userID int64, limit, offset int) ([]*domain.AuditLog, error) {
+	var filtered []*domain.AuditLog
+	for _, log := range m.logs {
+		if log.UserID != nil && *log.UserID == userID {
+			filtered = append(filtered, log)
+		}
+	}
+	return filtered, nil
+}
+
+func (m *mockAuditLogRepo) Delete(id int64) error {
+	for i, log := range m.logs {
+		if log.ID == id {
+			m.logs = append(m.logs[:i], m.logs[i+1:]...)
+			return nil
+		}
+	}
+	return sql.ErrNoRows
+}
+
+// Mock UserRepository  
+
+// Mock UserRepository (complete implementation)
+type mockUserRepo struct {
+	users  map[int64]*domain.User
+	nextID int64
+}
+
+func newMockUserRepo() *mockUserRepo {
+	return &mockUserRepo{
+		users:  make(map[int64]*domain.User),
+		nextID: 1,
+	}
+}
+
+func (m *mockUserRepo) Create(user *domain.User) error {
+	m.nextID++
+	user.ID = m.nextID
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+	m.users[user.ID] = user
+	return nil
+}
+
+func (m *mockUserRepo) GetByID(id int64) (*domain.User, error) {
+	user, ok := m.users[id]
+	if !ok {
+		return nil, nil
+	}
+	return user, nil
+}
+
+func (m *mockUserRepo) GetByEmail(email string) (*domain.User, error) {
+	for _, user := range m.users {
+		if user.Email == email {
+			return user, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockUserRepo) GetByResetToken(token string) (*domain.User, error) {
+	for _, user := range m.users {
+		if user.ResetToken != nil && *user.ResetToken == token {
+			return user, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockUserRepo) GetByVerificationToken(token string) (*domain.User, error) {
+	for _, user := range m.users {
+		if user.VerificationToken != nil && *user.VerificationToken == token {
+			return user, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockUserRepo) Update(user *domain.User) error {
+	if _, ok := m.users[user.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	user.UpdatedAt = time.Now()
+	m.users[user.ID] = user
+	return nil
+}
+
+func (m *mockUserRepo) Delete(id int64) error {
+	if _, ok := m.users[id]; !ok {
+		return sql.ErrNoRows
+	}
+	delete(m.users, id)
+	return nil
+}
+
+func (m *mockUserRepo) List(limit, offset int) ([]*domain.User, error) {
+	var users []*domain.User
+	for _, user := range m.users {
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (m *mockUserRepo) CountTotal() (int, error) {
+	return len(m.users), nil
+}
+
+func (m *mockUserRepo) UpdatePassword(userID int64, hashedPassword string) error {
+	if user, ok := m.users[userID]; ok {
+		user.PasswordHash = hashedPassword
+		user.UpdatedAt = time.Now()
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) SetRole(id int64, role string) error {
+	user, ok := m.users[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.Role = role
+	user.UpdatedAt = time.Now()
+	m.users[id] = user
+	return nil
+}
+
+func (m *mockUserRepo) Disable(id int64) error {
+	user, ok := m.users[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	disabled := true
+	user.AccountDisabled = disabled
+	user.UpdatedAt = time.Now()
+	m.users[id] = user
+	return nil
+}
+
+func (m *mockUserRepo) Enable(id int64) error {
+	user, ok := m.users[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	disabled := false
+	user.AccountDisabled = disabled
+	user.UpdatedAt = time.Now()
+	m.users[id] = user
+	return nil
+}
+
+func (m *mockUserRepo) GetLoginAttempts(email string) (int, error) {
+	for _, user := range m.users {
+		if user.Email == email {
+			return user.FailedLoginAttempts, nil
+		}
+	}
+	return 0, nil
+}
+
+func (m *mockUserRepo) IncrementLoginAttempts(email string) error {
+	for _, user := range m.users {
+		if user.Email == email {
+			user.FailedLoginAttempts++
+			return nil
+		}
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockUserRepo) ResetLoginAttempts(email string) error {
+	for _, user := range m.users {
+		if user.Email == email {
+			user.FailedLoginAttempts = 0
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *mockUserRepo) LockAccount(userID int64, duration time.Duration) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	until := time.Now().Add(duration)
+	user.LockedUntil = &until
+	m.users[userID] = user
+	return nil
+}
+
+func (m *mockUserRepo) IsAccountLocked(userID int64) (bool, *time.Time, error) {
+	user, ok := m.users[userID]
+	if !ok {
+		return false, nil, sql.ErrNoRows
+	}
+	if user.LockedUntil != nil && user.LockedUntil.After(time.Now()) {
+		return true, user.LockedUntil, nil
+	}
+	return false, nil, nil
+}
+
+func (m *mockUserRepo) UpdateProfileImage(id int64, imagePath string) error {
+	user, ok := m.users[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.ProfileImage = &imagePath
+	user.UpdatedAt = time.Now()
+	m.users[id] = user
+	return nil
+}
+
+func (m *mockUserRepo) DeleteProfileImage(id int64) error {
+	user, ok := m.users[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.ProfileImage = nil
+	user.UpdatedAt = time.Now()
+	m.users[id] = user
+	return nil
+}
+
+// Add Count method to mockUserRepo
+func (m *mockUserRepo) Count() (int64, error) {
+	return int64(len(m.users)), nil
+}
+
+// Add Count method to mockAuditLogRepo
+func (m *mockAuditLogRepo) Count(filters domain.AuditLogFilters) (int, error) {
+	return len(m.logs), nil
+}
+
+// Add missing methods to mockOrganizationRepo
+func (m *mockOrganizationRepo) Create(org *domain.Organization) error {
+	org.ID = m.nextID
+	m.nextID++
+	m.organizations[org.ID] = org
+	return nil
+}
+
+func (m *mockOrganizationRepo) Update(org *domain.Organization) error {
+	if _, ok := m.organizations[org.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.organizations[org.ID] = org
+	return nil
+}
+
+func (m *mockOrganizationRepo) Delete(id int64) error {
+	delete(m.organizations, id)
+	return nil
+}
+
+func (m *mockOrganizationRepo) List(limit, offset int) ([]*domain.Organization, int64, error) {
+	var result []*domain.Organization
+	for _, org := range m.organizations {
+		result = append(result, org)
+	}
+	return result, int64(len(result)), nil
+}
+
+func (m *mockOrganizationRepo) AddUserToOrganization(userID, orgID int64, role string) error {
+	return nil
+}
+
+func (m *mockOrganizationRepo) RemoveUserFromOrganization(userID, orgID int64) error {
+	return nil
+}
+
+func (m *mockOrganizationRepo) GetUserOrganizations(userID int64) ([]*domain.Organization, error) {
+	return []*domain.Organization{}, nil
+}
+
+func (m *mockOrganizationRepo) GetOrganizationUsers(orgID int64) ([]*domain.User, error) {
+	return []*domain.User{}, nil
+}
+
+func (m *mockOrganizationRepo) IsUserInOrganization(userID, orgID int64) (bool, error) {
+	return false, nil
+}
+
+func (m *mockOrganizationRepo) SetPermanentFree(id int64, isPermanent bool) error {
+	org, ok := m.organizations[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	m.organizations[id] = org
+	return nil
+}
+
+func (m *mockOrganizationRepo) Count() (int64, error) {
+	return int64(len(m.organizations)), nil
+}
+
+// Add DisableAccount and EnableAccount methods to mockUserRepo  
+func (m *mockUserRepo) DisableAccount(userID int64, disabledBy int64, reason string) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.AccountDisabled = true
+	user.DisableReason = &reason
+	user.DisabledByUserID = &disabledBy
+	now := time.Now()
+	user.DisabledAt = &now
+	user.UpdatedAt = time.Now()
+	m.users[userID] = user
+	return nil
+}
+
+func (m *mockUserRepo) EnableAccount(userID int64) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.AccountDisabled = false
+	user.DisableReason = nil
+	user.DisabledByUserID = nil
+	user.DisabledAt = nil
+	user.UpdatedAt = time.Now()
+	m.users[userID] = user
+	return nil
+}
+
+// Add missing methods to mockAuditLogRepo
+func (m *mockAuditLogRepo) DeleteOlderThan(before time.Time) (int, error) {
+	return 0, nil
+}
+
+// Add missing IncrementFailedAttempts to mockUserRepo (different signature than existing)
+func (m *mockUserRepo) IncrementFailedAttempts(userID int64) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.FailedLoginAttempts++
+	m.users[userID] = user
+	return nil
+}
+
+// Add missing methods to mockOrganizationRepo
+func (m *mockOrganizationRepo) GetByName(name string) (*domain.Organization, error) {
+	for _, org := range m.organizations {
+		if org.Name == name {
+			return org, nil
+		}
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockOrganizationRepo) GetUserOrganizationIDs(userID int64) ([]int64, error) {
+	// For mock purposes, return empty slice
+	// Real implementation would query organization membership
+	return []int64{}, nil
+}
+
+// Add missing ResetFailedAttempts to mockUserRepo (different signature)
+func (m *mockUserRepo) ResetFailedAttempts(userID int64) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.FailedLoginAttempts = 0
+	m.users[userID] = user
+	return nil
+}
+
+// Add missing UnlockAccount to mockUserRepo  
+func (m *mockUserRepo) UnlockAccount(userID int64) error {
+	user, ok := m.users[userID]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	user.LockedUntil = nil
+	user.FailedLoginAttempts = 0
+	m.users[userID] = user
+	return nil
 }

@@ -39,9 +39,9 @@ func TestWODService_CreateWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
-			err := service.Create(tt.wod, tt.userID)
+			err := service.Create(tt.wod, tt.userID, "test@example.com")
 
 			if tt.expectedError != nil {
 				if !errors.Is(err, tt.expectedError) {
@@ -114,7 +114,7 @@ func TestWODService_GetWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wod, err := service.GetByID(tt.wodID)
 
@@ -179,7 +179,7 @@ func TestWODService_GetWODByName(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wod, err := service.GetByName(tt.wodName)
 
@@ -252,7 +252,7 @@ func TestWODService_ListStandardWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wods, err := service.ListStandard(100, 0)
 
@@ -331,7 +331,7 @@ func TestWODService_ListUserWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wods, err := service.ListByUser(tt.userID, 100, 0)
 
@@ -404,7 +404,7 @@ func TestWODService_ListAllWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wods, err := service.ListAll(&tt.userID, 100, 0)
 
@@ -475,7 +475,7 @@ func TestWODService_SearchWODs(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			wods, err := service.Search(tt.query, 100)
 
@@ -585,7 +585,7 @@ func TestWODService_UpdateWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			tt.updates.ID = tt.wodID
 			err := service.Update(tt.updates, tt.userID, "test@test.com")
@@ -676,7 +676,7 @@ func TestWODService_DeleteWOD(t *testing.T) {
 				tt.setupMock(wodRepo)
 			}
 
-			service := NewWODService(wodRepo, nil)
+			service := NewWODService(wodRepo, nil, nil)
 
 			err := service.Delete(tt.wodID, tt.userID, "test@test.com")
 

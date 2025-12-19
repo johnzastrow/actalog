@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2024-12-16
+> **Last Updated:** 2025-12-19
 > **Current Version:** 0.14.0-beta
 
 ---
@@ -36,7 +36,83 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
-*(No active tasks - all audit logging completed)*
+### CI/CD Workflow Failures (In Progress)
+
+**Status:** Multiple workflows failing due to test compilation errors and deprecated actions
+
+#### GitHub Actions Status (as of 2025-12-19 17:09 UTC)
+- ❌ **CI Workflow** - Failing (Run #20377062570)
+- ❌ **Publish Site** - Failing (Run #20377062579)
+- ✅ **Docker Build** - Passing
+- ❌ **CI Failure Notify** - Failing (dependency on CI)
+
+#### 1. Integration Tests Compilation Errors (`test/integration/api_test.go`)
+**Status:** Blocking CI pipeline
+
+**Errors:**
+- Line 149-162: `NewUserService` missing `userSubRepo` parameter
+  - Need to add `nil` for userSubRepo before audit log service parameter
+- Line 177-184: `NewUserWorkoutService` missing `auditLogRepo` parameter
+  - Need to add `nil` as 7th parameter
+
+**Impact:** All 3 DB matrix tests failing (SQLite, PostgreSQL, MySQL)
+
+#### 2. GitHub Pages Publish Workflow Failure
+**Status:** Using deprecated GitHub Actions
+
+**Error:**
+```
+This request has been automatically failed because it uses a
+deprecated version of `actions/upload-artifact: v3`
+```
+
+**Files to Update:**
+- `.github/workflows/publish-site.yml` line 25:
+  - Current: `actions/upload-pages-artifact@v1`
+  - Need: `actions/upload-pages-artifact@v3` (or latest)
+- Check if `actions/deploy-pages@v1` also needs update
+
+**Reference:** https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/
+
+#### 3. Unit Test Assertion Failures (Non-blocking)
+
+**Subscription Service Tests** (`internal/service/subscription_service_test.go`)
+**Compilation:** ✅ Fixed
+**Running:** ⚠️ 10/14 tests passing
+
+Failing tests:
+1. **successful_free_subscription_creation** (line 173)
+   - Issue: Test expects EndDate to be set for non-permanent free subscriptions
+   - Location: `subscription_service_test.go:173`
+
+2. **subscription_not_found scenarios** (lines 307, 400)
+   - Issue: Tests expect exact error "subscription not found" but get wrapped error "failed to get subscription: sql: no rows in result set"
+   - Locations: `subscription_service_test.go:307, :400`
+
+3. **organization_already_has_active_subscription** (line 621)
+   - Issue: Test expects wrong error message (says "user already has..." instead of "organization already has...")
+   - Location: `subscription_service_test.go:621`
+
+**Mock Repository Fixes Completed:**
+- ✅ Fixed `mockAuditLogRepo.DeleteOlderThan` signature (time.Time param)
+- ✅ Fixed `mockAuditLogRepo.List` signature (AuditLogFilters param)
+- ✅ Added `mockAuditLogRepo.GetByTargetUserID` method
+- ✅ Added `mockAuditLogRepo.GetByUserID` method
+- ✅ Fixed `mockUserRepo.IsAccountLocked` signature (int64 param, returns bool, *time.Time, error)
+- ✅ Fixed `mockUserRepo.LockAccount` signature (int64, time.Duration params)
+- ✅ Added `mockOrganizationRepo.GetUserOrganizationIDs` method
+- ✅ Fixed `mockOrganizationRepo.List` signature (returns count)
+- ✅ Added `mockUserWorkoutRepo.GetActiveUsersThisMonth` method
+- ✅ Fixed WOD service test calls (added userEmail parameter)
+- ✅ Fixed UserWorkout service test calls (added userEmail parameter)
+- ✅ Fixed UserService test (added userSubRepo parameter)
+
+**Files Modified:**
+- `internal/service/test_helpers.go` - All mock repository fixes
+- `internal/service/subscription_service_test.go` - Comprehensive test suite (created)
+- `internal/service/wod_service_test.go` - Added audit log repo parameter
+- `internal/service/user_workout_service_test.go` - Added audit log repo, userEmail parameters
+- `internal/service/user_service_test.go` - Added userSubRepo parameter
 
 ### CI/Lint Fixes (Deferred)
 
@@ -123,7 +199,10 @@ These features can be added after the core frontend is complete:
 
 
 #### Testing Coverage
-- [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler
+- [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite created (14 test cases)
+  - Files: `internal/service/subscription_service_test.go`
+  - Status: 10/14 passing, minor assertion fixes needed (see Active Tasks)
+- [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
 - [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
 - [ ] `[HIGH]` **Add repository unit tests** - All repository implementations
 

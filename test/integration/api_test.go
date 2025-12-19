@@ -149,6 +149,7 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 	userService := service.NewUserService(
 		userRepo,
 		refreshTokenRepo,
+		nil, // no user subscription repo for tests
 		nil, // no audit log service for tests
 		"test-secret-key",
 		24*time.Hour,
@@ -181,6 +182,7 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
+		nil, // no audit log repo for tests
 	)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, testLogger)
 
