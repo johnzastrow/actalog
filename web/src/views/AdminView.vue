@@ -156,6 +156,48 @@
             </v-card>
           </v-col>
 
+          <!-- Announcements -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/announcements')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#ffc107" size="32" class="mr-3">mdi-bullhorn</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Announcements</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Send notifications to users</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                Send announcements to all users, specific organizations, or selected users with markdown support.
+              </p>
+              <v-chip size="small" color="#ffc107" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
+          <!-- Subscriptions -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/subscriptions')" style="cursor: pointer">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="#00bcd4" size="32" class="mr-3">mdi-currency-usd</v-icon>
+                <div>
+                  <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Subscriptions</h3>
+                  <p style="color: #666; font-size: 14px; margin: 0">Manage user and organization subscriptions</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: #666; font-size: 13px">
+                View and manage all user and organization subscriptions, payments, and billing.
+              </p>
+              <v-chip size="small" color="#00bcd4" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- Reports (Placeholder) -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" disabled>

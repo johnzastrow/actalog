@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -250,5 +251,71 @@ func (h *NotificationHandler) DeleteNotification(w http.ResponseWriter, r *http.
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Notification deleted",
+	})
+}
+// CreateAnnouncement handles POST /api/admin/notifications/announce (admin only)
+func (h *NotificationHandler) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
+	// Get user role from context (set by auth middleware)
+	userRole, ok := middleware.GetUserRole(r.Context())
+	if !ok || userRole != "admin" {
+		respondError(w, http.StatusForbidden, "Admin access required")
+		return
+	}
+
+	// Parse request body
+	var req struct {
+		Title          string   `json:"title"`
+		Message        string   `json:"message"`
+		TargetType     string   `json:"target_type"` // "all", "organization", or "users"
+		TargetIDs      []int64  `json:"target_ids"`  // org IDs or user IDs
+		OrganizationID *int64   `json:"organization_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Title == "" {
+		respondError(w, http.StatusBadRequest, "Title is required")
+		return
+	}
+	if req.Message == "" {
+		respondError(w, http.StatusBadRequest, "Message is required")
+		return
+	}
+	if req.TargetType == "" {
+		respondError(w, http.StatusBadRequest, "Target type is required")
+		return
+	}
+
+	// Validate target type
+	if req.TargetType != "all" && req.TargetType != "organization" && req.TargetType != "users" {
+		respondError(w, http.StatusBadRequest, "Invalid target type (must be 'all', 'organization', or 'users')")
+		return
+	}
+
+	// Validate target IDs for non-"all" target types
+	if req.TargetType != "all" && len(req.TargetIDs) == 0 {
+		respondError(w, http.StatusBadRequest, "Target IDs required for non-'all' target types")
+		return
+	}
+
+	// Create announcement
+	if err := h.notificationService.CreateAnnouncement(req.Title, req.Message, req.TargetType, req.TargetIDs, req.OrganizationID); err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=create_announcement outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to create announcement")
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("action=create_announcement outcome=success target_type=%s title=%s", req.TargetType, req.Title)
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]interface{}{
+		"message": "Announcement created successfully",
 	})
 }

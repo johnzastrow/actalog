@@ -451,6 +451,9 @@ func main() {
 				r.Delete("/backups/{filename}", backupHandler.DeleteBackup)
 				r.Post("/backups/{filename}/restore", backupHandler.RestoreBackup)
 
+				// Announcement routes (admin only)
+				r.Post("/notifications/announce", notificationHandler.CreateAnnouncement)
+
 				// Data cleanup routes
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
 				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)

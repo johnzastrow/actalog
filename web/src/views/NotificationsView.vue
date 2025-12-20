@@ -94,12 +94,12 @@
               </span>
 
               <!-- Notification Message -->
-              <p
+              <div
                 class="text-body-2 mt-1 mb-0"
                 :class="notification.read_at ? 'text-grey-lighten-1' : 'text-grey-darken-1'"
               >
-                {{ notification.message }}
-              </p>
+                <MarkdownRenderer :content="notification.message" />
+              </div>
 
               <!-- Timestamp -->
               <p class="text-caption text-grey mt-1 mb-0">
@@ -161,7 +161,8 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 

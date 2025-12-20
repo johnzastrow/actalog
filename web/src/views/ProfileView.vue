@@ -435,6 +435,23 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-bullhorn"
+            @click="$router.push('/admin/announcements')"
+            rounded
+            style="cursor: pointer"
+          >
+            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+              Announcements
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption" style="color: #999">
+              Send notifications to users
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-domain"
             @click="$router.push('/admin/organizations')"
             rounded

@@ -362,3 +362,65 @@ func (s *NotificationService) CleanupOldNotifications() (int64, error) {
 	ninetyDaysAgo := time.Now().AddDate(0, 0, -90)
 	return s.notificationRepo.DeleteOlderThan(ninetyDaysAgo)
 }
+// CreateAnnouncement creates an announcement notification for selected users
+// targetType can be "all", "organization", or "users"
+// targetIDs is a list of organization IDs or user IDs depending on targetType
+func (s *NotificationService) CreateAnnouncement(title, message, targetType string, targetIDs []int64, organizationID *int64) error {
+	var targetUsers []*domain.User
+	var err error
+
+	switch targetType {
+	case "all":
+		// Get all users (using large limit as workaround for no ListAll method)
+		targetUsers, err = s.userRepo.List(10000, 0)
+		if err != nil {
+			return fmt.Errorf("failed to get all users: %w", err)
+		}
+
+	case "organization":
+		// Get all users in specified organizations
+		for _, orgID := range targetIDs {
+			orgUsers, err := s.orgRepo.GetOrganizationUsers(orgID)
+			if err != nil {
+				return fmt.Errorf("failed to get users for organization %d: %w", orgID, err)
+			}
+			targetUsers = append(targetUsers, orgUsers...)
+		}
+
+	case "users":
+		// Get specific users by ID
+		for _, userID := range targetIDs {
+			user, err := s.userRepo.GetByID(userID)
+			if err != nil {
+				continue // Skip users that don't exist
+			}
+			if user != nil {
+				targetUsers = append(targetUsers, user)
+			}
+		}
+
+	default:
+		return fmt.Errorf("invalid target type: %s", targetType)
+	}
+
+	// Create notification for each target user
+	for _, user := range targetUsers {
+		notification := &domain.Notification{
+			UserID:         user.ID,
+			OrganizationID: organizationID,
+			Type:           "announcement",
+			Title:          title,
+			Message:        message,
+			Data:           "{}", // Empty JSON object to satisfy CHECK constraint
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+
+		if err := s.notificationRepo.Create(notification); err != nil {
+			// Log error but continue with other users
+			fmt.Printf("Failed to create announcement for user %d: %v\n", user.ID, err)
+		}
+	}
+
+	return nil
+}
