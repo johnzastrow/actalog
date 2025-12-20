@@ -26,6 +26,9 @@ func main() {
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
 	wodRepo := repository.NewWODRepository(db)
 
+	// Initialize repositories
+	movementRepo := repository.NewMovementRepository(db)
+
 	// Initialize service
 	userWorkoutService := service.NewUserWorkoutService(
 		userWorkoutRepo,
@@ -34,7 +37,11 @@ func main() {
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
-		nil, // no audit log repo for script
+		nil,          // no audit log repo for script
+		movementRepo, // movement repo for PR detection
+		nil,          // no notification service for script
+		nil,          // no user repo for script
+		nil,          // no org repo for script
 	)
 
 	// Run retroactive PR flagging for user ID 1

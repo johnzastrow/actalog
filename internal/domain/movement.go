@@ -151,6 +151,9 @@ type UserWorkoutMovementRepository interface {
 	// GetMaxWeightForMovement retrieves the maximum weight for a specific movement for a user
 	GetMaxWeightForMovement(userID, movementID int64) (*float64, error)
 
+	// GetAllPerformancesForMovement retrieves all performances for a specific movement for calculating 1RM PRs
+	GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*UserWorkoutMovement, error)
+
 	// GetPRMovements retrieves recent PR-flagged movements for a user
 	GetPRMovements(userID int64, limit int) ([]*UserWorkoutMovement, error)
 

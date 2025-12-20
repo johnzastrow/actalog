@@ -1160,6 +1160,105 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.15.0",
+		Description: "Add notifications table for gym-wide notification system",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if notifications table already exists
+			hasNotifications, err := checkTableExists(db, driver, "notifications")
+			if err != nil {
+				return fmt.Errorf("failed to check for notifications table: %w", err)
+			}
+			if hasNotifications {
+				fmt.Println("✓ notifications table already exists, skipping creation")
+				return nil
+			}
+
+			// Create notifications table
+			var createNotificationsSQL string
+			switch driver {
+			case "sqlite3":
+				createNotificationsSQL = `
+				CREATE TABLE notifications (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					organization_id INTEGER,
+					type TEXT NOT NULL,
+					title TEXT NOT NULL,
+					message TEXT NOT NULL,
+					data TEXT,
+					read_at DATETIME,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+				CREATE INDEX idx_notifications_user_read ON notifications(user_id, read_at);
+				CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+				CREATE INDEX idx_notifications_type ON notifications(type);
+				`
+			case "postgres":
+				createNotificationsSQL = `
+				CREATE TABLE notifications (
+					id BIGSERIAL PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					organization_id BIGINT,
+					type VARCHAR(50) NOT NULL,
+					title VARCHAR(255) NOT NULL,
+					message TEXT NOT NULL,
+					data JSONB,
+					read_at TIMESTAMP,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+				CREATE INDEX idx_notifications_user_read ON notifications(user_id, read_at);
+				CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+				CREATE INDEX idx_notifications_type ON notifications(type);
+				`
+			case "mysql":
+				createNotificationsSQL = `
+				CREATE TABLE notifications (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					organization_id BIGINT,
+					type VARCHAR(50) NOT NULL,
+					title VARCHAR(255) NOT NULL,
+					message TEXT NOT NULL,
+					data JSON,
+					read_at DATETIME,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_notifications_user_id (user_id),
+					INDEX idx_notifications_user_read (user_id, read_at),
+					INDEX idx_notifications_created_at (created_at DESC),
+					INDEX idx_notifications_type (type),
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createNotificationsSQL); err != nil {
+				return fmt.Errorf("failed to create notifications table: %w", err)
+			}
+			fmt.Println("✓ Created notifications table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS notifications"); err != nil {
+				return fmt.Errorf("failed to drop notifications table: %w", err)
+			}
+			fmt.Println("⚠️  WARNING: Notifications data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

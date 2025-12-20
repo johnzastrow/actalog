@@ -43,8 +43,17 @@
         <div class="text-white text-caption mr-2" style="opacity: 0.9">
           {{ currentDate }}
         </div>
-        <!-- Notifications icon -->
-        <v-btn icon="mdi-bell-outline" color="white" variant="text" size="small"></v-btn>
+        <!-- Notifications icon with badge -->
+        <v-btn icon color="white" variant="text" size="small" to="/notifications">
+          <v-badge
+            :content="unreadNotificationCount"
+            :model-value="unreadNotificationCount > 0"
+            color="#ffc107"
+            overlap
+          >
+            <v-icon>mdi-bell-outline</v-icon>
+          </v-badge>
+        </v-btn>
       </template>
     </v-app-bar>
 
@@ -205,6 +214,7 @@ import { useSubscriptionStore } from '@/stores/subscription'
 import InstallPrompt from '@/components/InstallPrompt.vue'
 import UpdatePrompt from '@/components/UpdatePrompt.vue'
 import SubscriptionExpiredBanner from '@/components/SubscriptionExpiredBanner.vue'
+import axios from '@/utils/axios'
 
 const route = useRoute()
 const theme = useTheme()
@@ -214,6 +224,10 @@ const subscriptionStore = useSubscriptionStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
+
+// Notification state
+const unreadNotificationCount = ref(0)
+let notificationPollInterval = null
 
 // Offline save notification state
 const showOfflineSaveNotification = ref(false)
@@ -264,6 +278,36 @@ function updateCurrentDate() {
   })
 }
 
+// Fetch unread notification count
+async function fetchUnreadNotificationCount() {
+  if (!authStore.isAuthenticated) return
+
+  try {
+    const response = await axios.get('/api/notifications/count')
+    unreadNotificationCount.value = response.data.count || 0
+  } catch (error) {
+    // Silently fail - don't disrupt user experience
+    console.error('Failed to fetch notification count:', error)
+  }
+}
+
+// Start polling for notifications
+function startNotificationPolling() {
+  // Fetch immediately
+  fetchUnreadNotificationCount()
+
+  // Then poll every 30 seconds
+  notificationPollInterval = setInterval(fetchUnreadNotificationCount, 30000)
+}
+
+// Stop polling for notifications
+function stopNotificationPolling() {
+  if (notificationPollInterval) {
+    clearInterval(notificationPollInterval)
+    notificationPollInterval = null
+  }
+}
+
 // Handle offline save events
 function handleOfflineSave(event) {
   offlineSaveMessage.value = event.detail?.message || 'Saved offline. Will sync when back online.'
@@ -305,12 +349,16 @@ onMounted(() => {
     subscriptionStore.fetchStatus().catch(err => {
       console.error('Failed to fetch subscription status on app mount:', err)
     })
+
+    // Start polling for notifications
+    startNotificationPolling()
   }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('offline-save', handleOfflineSave)
   window.removeEventListener('subscription-expired', handleSubscriptionExpired)
+  stopNotificationPolling()
 })
 </script>
 

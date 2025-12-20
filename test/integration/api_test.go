@@ -182,7 +182,11 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		userWorkoutMovementRepo,
 		userWorkoutWODRepo,
 		wodRepo,
-		nil, // no audit log repo for tests
+		nil,          // no audit log repo for tests
+		movementRepo, // movement repo for PR notifications
+		nil,          // no notification service for tests
+		userRepo,     // user repo for PR notifications
+		nil,          // no org repo for tests
 	)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, testLogger)
 

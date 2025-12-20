@@ -131,7 +131,7 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutMovement, error) {
 	query := `
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
-		       uwm.notes, uwm.order_index, uwm.created_at, uwm.updated_at,
+		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.id as movement_id, m.name, m.description, m.type, m.is_standard, m.created_by, m.created_at, m.updated_at
 		FROM user_workout_movements uwm
 		JOIN movements m ON uwm.movement_id = m.id
@@ -157,7 +157,7 @@ func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) 
 		var createdBy sql.NullInt64
 
 		err := rows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance,
-			&uwm.Notes, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
+			&uwm.Notes, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
 			&uwm.Movement.ID, &uwm.Movement.Name, &uwm.Movement.Description, &uwm.Movement.Type, &uwm.Movement.IsStandard, &createdBy, &uwm.Movement.CreatedAt, &uwm.Movement.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user workout movement: %w", err)
@@ -276,6 +276,62 @@ func (r *UserWorkoutMovementRepository) GetMaxWeightForMovement(userID, movement
 	}
 
 	return &maxWeight.Float64, nil
+}
+
+// GetAllPerformancesForMovement retrieves all performances for a specific movement for a user
+// Used for calculating the best 1RM. Excludes the current workout if currentWorkoutID is provided.
+func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
+	query := `
+		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
+		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at
+		FROM user_workout_movements uwm
+		INNER JOIN user_workouts uw ON uwm.user_workout_id = uw.id
+		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`
+
+	args := []interface{}{userID, movementID}
+
+	if excludeWorkoutID != nil {
+		query += " AND uwm.user_workout_id != ?"
+		args = append(args, *excludeWorkoutID)
+	}
+
+	query += " ORDER BY uw.workout_date DESC"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query performances: %w", err)
+	}
+	defer rows.Close()
+
+	var performances []*domain.UserWorkoutMovement
+	for rows.Next() {
+		var m domain.UserWorkoutMovement
+		err := rows.Scan(
+			&m.ID,
+			&m.UserWorkoutID,
+			&m.MovementID,
+			&m.Sets,
+			&m.Reps,
+			&m.Weight,
+			&m.Time,
+			&m.Distance,
+			&m.Notes,
+			&m.IsPR,
+			&m.OrderIndex,
+			&m.CreatedAt,
+			&m.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan movement: %w", err)
+		}
+		performances = append(performances, &m)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("row iteration error: %w", err)
+	}
+
+	return performances, nil
 }
 
 // GetPRMovements retrieves recent PR-flagged movements for a user

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/pkg/prmath"
 )
 
 var (
@@ -23,6 +24,10 @@ type UserWorkoutService struct {
 	userWorkoutWODRepo      domain.UserWorkoutWODRepository
 	wodRepo                 domain.WODRepository
 	auditLogRepo            domain.AuditLogRepository
+	movementRepo            domain.MovementRepository
+	notificationService     *NotificationService
+	userRepo                domain.UserRepository
+	orgRepo                 domain.OrganizationRepository
 }
 
 // NewUseroutService creates a new user workout service
@@ -34,6 +39,10 @@ func NewUserWorkoutService(
 	userWorkoutWODRepo domain.UserWorkoutWODRepository,
 	wodRepo domain.WODRepository,
 	auditLogRepo domain.AuditLogRepository,
+	movementRepo domain.MovementRepository,
+	notificationService *NotificationService,
+	userRepo domain.UserRepository,
+	orgRepo domain.OrganizationRepository,
 ) *UserWorkoutService {
 	return &UserWorkoutService{
 		userWorkoutRepo:         userWorkoutRepo,
@@ -43,6 +52,10 @@ func NewUserWorkoutService(
 		userWorkoutWODRepo:      userWorkoutWODRepo,
 		wodRepo:                 wodRepo,
 		auditLogRepo:            auditLogRepo,
+		movementRepo:            movementRepo,
+		notificationService:     notificationService,
+		userRepo:                userRepo,
+		orgRepo:                 orgRepo,
 	}
 }
 
@@ -157,6 +170,91 @@ func (s *UserWorkoutService) LogWorkoutWithPerformance(
 		if err := s.DetectAndFlagWODPRs(userID, wods); err != nil {
 			_ = s.userWorkoutRepo.Delete(userWorkout.ID, userID)
 			return nil, fmt.Errorf("failed to detect WOD PRs: %w", err)
+		}
+	}
+
+	// Send notifications for PRs (if notification service is configured)
+	if s.notificationService != nil && (len(movements) > 0 || len(wods) > 0) {
+		// Get user information for notification
+		user, err := s.userRepo.GetByID(userID)
+		if err == nil && user != nil {
+			// Get user's organization ID (use first organization if user has multiple)
+			orgs, err := s.orgRepo.GetUserOrganizations(userID)
+			var orgID *int64
+			if err == nil && len(orgs) > 0 {
+				orgID = &orgs[0].ID
+			}
+
+			// Notify about movement PRs
+			for _, movement := range movements {
+				if movement.IsPR {
+					// Get movement name from movements table
+					movementName := ""
+					if movement.MovementID != 0 {
+						if m, err := s.movementRepo.GetByID(movement.MovementID); err == nil && m != nil {
+							movementName = m.Name
+						}
+					}
+
+					// Format the PR value
+					value := ""
+					if movement.Weight != nil {
+						value = fmt.Sprintf("%.1f lbs", *movement.Weight)
+					} else if movement.Time != nil {
+						value = fmt.Sprintf("%d seconds", *movement.Time)
+					} else if movement.Distance != nil {
+						value = fmt.Sprintf("%.1f meters", *movement.Distance)
+					}
+
+					if value != "" && movementName != "" {
+						movName := movementName
+						_ = s.notificationService.NotifyPRAchievement(
+							userID,
+							user.Name,
+							&movName,
+							nil,
+							value,
+							orgID,
+						)
+					}
+				}
+			}
+
+			// Notify about WOD PRs
+			for _, wod := range wods {
+				if wod.IsPR {
+					// Get WOD name
+					wodName := ""
+					if wod.WODID != 0 {
+						if w, err := s.wodRepo.GetByID(wod.WODID); err == nil && w != nil {
+							wodName = w.Name
+						}
+					}
+
+					// Format the PR value
+					value := ""
+					if wod.TimeSeconds != nil {
+						minutes := *wod.TimeSeconds / 60
+						seconds := *wod.TimeSeconds % 60
+						value = fmt.Sprintf("%d:%02d", minutes, seconds)
+					} else if wod.Rounds != nil && wod.Reps != nil {
+						value = fmt.Sprintf("%d rounds + %d reps", *wod.Rounds, *wod.Reps)
+					} else if wod.Rounds != nil {
+						value = fmt.Sprintf("%d rounds", *wod.Rounds)
+					}
+
+					if value != "" && wodName != "" {
+						_ = s.notificationService.NotifyPRAchievement(
+							userID,
+							user.Name,
+							nil,
+							&wodName,
+							value,
+							orgID,
+						)
+					}
+				}
+			}
 		}
 	}
 
@@ -454,22 +552,42 @@ func (s *UserWorkoutService) GetWorkoutStatsForMonth(userID int64, year, month i
 	return len(workouts), nil
 }
 
-// DetectAndFlagMovementPRs automatically detects personal records for movements with weight
+// DetectAndFlagMovementPRs automatically detects personal records for movements based on calculated 1RM
 func (s *UserWorkoutService) DetectAndFlagMovementPRs(userID int64, movements []*domain.UserWorkoutMovement) error {
 	for _, m := range movements {
-		// Only check for PRs on movements with weight
-		if m.Weight == nil {
+		// Only check for PRs on movements with weight and reps (need both to calculate 1RM)
+		if m.Weight == nil || m.Reps == nil {
 			continue
 		}
 
-		// Get max weight for this movement for this user
-		maxWeight, err := s.userWorkoutMovementRepo.GetMaxWeightForMovement(userID, m.MovementID)
+		// Calculate 1RM for current performance
+		current1RM, _ := prmath.Calculate1RM(*m.Weight, *m.Reps)
+
+		// Get all previous performances for this movement (excluding current workout)
+		previousPerformances, err := s.userWorkoutMovementRepo.GetAllPerformancesForMovement(userID, m.MovementID, &m.UserWorkoutID)
 		if err != nil {
-			return fmt.Errorf("failed to get max weight for movement %d: %w", m.MovementID, err)
+			return fmt.Errorf("failed to get previous performances for movement %d: %w", m.MovementID, err)
 		}
 
-		// If this is the first time doing this movement, or if weight exceeds previous max, it's a PR
-		if maxWeight == nil || *m.Weight > *maxWeight {
+		// If this is the first time doing this movement, it's a PR
+		if len(previousPerformances) == 0 {
+			m.IsPR = true
+			continue
+		}
+
+		// Calculate 1RM for each previous performance and find the best
+		var best1RM float64
+		for _, prev := range previousPerformances {
+			if prev.Weight != nil && prev.Reps != nil {
+				prevRM, _ := prmath.Calculate1RM(*prev.Weight, *prev.Reps)
+				if prevRM > best1RM {
+					best1RM = prevRM
+				}
+			}
+		}
+
+		// If current 1RM exceeds previous best, it's a PR
+		if current1RM > best1RM {
 			m.IsPR = true
 		}
 	}

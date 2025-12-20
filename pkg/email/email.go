@@ -30,6 +30,7 @@ type Service struct {
 type EmailService interface {
 	SendPasswordResetEmail(to, resetURL string) error
 	SendVerificationEmail(to, verifyURL string) error
+	SendHTMLEmail(to, subject, htmlBody string) error
 }
 
 // NewService creates a new email service
@@ -301,6 +302,18 @@ func (s *Service) SendVerificationEmail(to, verifyURL string) error {
 		To:      []string{to},
 		Subject: subject,
 		Body:    body,
+		IsHTML:  true,
+	})
+}
+
+// SendHTMLEmail sends a generic HTML email
+func (s *Service) SendHTMLEmail(to, subject, htmlBody string) error {
+	s.logger.Printf("[INFO] Preparing HTML email for %s with subject: %s", to, subject)
+
+	return s.Send(Message{
+		To:      []string{to},
+		Subject: subject,
+		Body:    htmlBody,
 		IsHTML:  true,
 	})
 }

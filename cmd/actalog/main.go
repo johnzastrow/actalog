@@ -107,6 +107,7 @@ func main() {
 	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
 	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
 	orgRepo := repository.NewOrganizationRepository(db)
+	notificationRepo := repository.NewNotificationRepository(db)
 
 	// Subscription repositories
 	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
@@ -162,6 +163,14 @@ func main() {
 		cfg.Security.AccountLockoutDuration,
 	)
 
+	notificationService := service.NewNotificationService(
+		notificationRepo,
+		orgRepo,
+		userRepo,
+		userSettingsRepo,
+		emailService,
+	)
+
 	userWorkoutService := service.NewUserWorkoutService(
 		userWorkoutRepo,
 		workoutRepo,
@@ -170,6 +179,10 @@ func main() {
 		userWorkoutWODRepo,
 		wodRepo,
 		auditLogRepo,
+		movementRepo,
+		notificationService,
+		userRepo,
+		orgRepo,
 	)
 
 	workoutTemplateService := service.NewWorkoutTemplateService(
@@ -243,6 +256,7 @@ func main() {
 	backupHandler := handler.NewBackupHandler(backupService, auditLogRepo)
 	orgHandler := handler.NewOrganizationHandler(orgService, appLogger)
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
+	notificationHandler := handler.NewNotificationHandler(notificationService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -354,6 +368,14 @@ func main() {
 			r.Get("/sessions", sessionHandler.ListSessions)
 			r.Delete("/sessions/{id}", sessionHandler.RevokeSession)
 			r.Post("/sessions/revoke-all", sessionHandler.RevokeAllSessions)
+
+			// Notification routes (authenticated)
+			r.Get("/notifications", notificationHandler.ListNotifications)
+			r.Get("/notifications/unread", notificationHandler.ListUnreadNotifications)
+			r.Get("/notifications/count", notificationHandler.GetUnreadCount)
+			r.Put("/notifications/{id}/read", notificationHandler.MarkAsRead)
+			r.Put("/notifications/read-all", notificationHandler.MarkAllAsRead)
+			r.Delete("/notifications/{id}", notificationHandler.DeleteNotification)
 
 			// Workout Template routes (authenticated)
 			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
