@@ -31,6 +31,10 @@ linters-settings:
   gocyclo:
     min-complexity: 15
 
+  goconst:
+    min-len: 3
+    min-occurrences: 10  # Require 10+ occurrences before suggesting constant
+
   gosec:
     excludes:
       - G404  # Allow math/rand for non-crypto use cases
