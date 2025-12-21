@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -212,6 +213,9 @@ func (s *SubscriptionService) MarkUserSubscriptionAsPaid(adminUserID int64, subs
 	// Get the subscription
 	sub, err := s.userSubRepo.GetByID(subscriptionID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrSubscriptionNotFound
+		}
 		return fmt.Errorf("failed to get subscription: %w", err)
 	}
 	if sub == nil {
@@ -313,6 +317,9 @@ func (s *SubscriptionService) CancelUserSubscription(adminUserID int64, subscrip
 	// Get the subscription
 	sub, err := s.userSubRepo.GetByID(subscriptionID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrSubscriptionNotFound
+		}
 		return fmt.Errorf("failed to get subscription: %w", err)
 	}
 	if sub == nil {

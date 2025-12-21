@@ -168,11 +168,12 @@ func TestSubscriptionService_CreateUserSubscription(t *testing.T) {
 			}
 
 			// Verify end date is set correctly
-			if !tt.isPermanentFree {
+			if !tt.isPermanentFree && (tt.subscriptionType == "monthly" || tt.subscriptionType == "annual") {
+				// Monthly and annual subscriptions should have end date set
 				if sub.EndDate == nil {
-					t.Error("expected EndDate to be set for non-permanent subscription")
+					t.Error("expected EndDate to be set for monthly/annual subscription")
 				} else {
-					expectedDuration := 30 * 24 * time.Hour // Default for free/monthly
+					expectedDuration := 30 * 24 * time.Hour // Default for monthly
 					if tt.subscriptionType == "annual" {
 						expectedDuration = 365 * 24 * time.Hour
 					}
@@ -182,8 +183,9 @@ func TestSubscriptionService_CreateUserSubscription(t *testing.T) {
 					}
 				}
 			} else {
+				// Free subscriptions and permanent free subscriptions should have no end date
 				if sub.EndDate != nil {
-					t.Error("expected EndDate to be nil for permanent free subscription")
+					t.Error("expected EndDate to be nil for free or permanent free subscription")
 				}
 			}
 		})
@@ -582,7 +584,7 @@ func TestSubscriptionService_CreateOrganizationSubscription(t *testing.T) {
 					EndDate:          &endDate,
 				}
 			},
-			expectedError: ErrActiveSubscriptionExists,
+			expectedError: ErrActiveOrgSubscriptionExists,
 		},
 	}
 

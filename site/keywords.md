@@ -5,17 +5,17 @@ This file lists candidate keywords and short notes harvested from the repository
 ## Primary keywords
 - actalog (project name)
 - self-hostable
-- self-host
 - open source
 - workout log
-- workout logging
 - workout tracker
 - WOD (workout of the day)
-- WODs
 - CrossFit
 - movements
 - strength movements
 - workout templates
+- functional fitness
+- personal fitness
+- exercise log
 - user workouts
 
 ## Technical / deployment keywords
