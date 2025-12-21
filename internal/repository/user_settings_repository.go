@@ -19,12 +19,12 @@ func NewSQLiteUserSettingsRepository(db *sql.DB) domain.UserSettingsRepository {
 
 // GetByUserID retrieves settings for a specific user
 func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSettings, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, user_id, notification_preferences, data_export_format, theme,
 		       weight_unit, distance_unit, created_at, updated_at
 		FROM user_settings
 		WHERE user_id = ?
-	`
+	`)
 
 	settings := &domain.UserSettings{}
 	err := r.db.QueryRow(query, userID).Scan(
@@ -51,12 +51,12 @@ func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSe
 
 // Create creates new settings for a user
 func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) error {
-	query := `
+	query := rebindQuery(`
 		INSERT INTO user_settings (
 			user_id, notification_preferences, data_export_format, theme,
 			weight_unit, distance_unit, created_at, updated_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`
+	`)
 
 	now := time.Now()
 	settings.CreatedAt = now
@@ -88,12 +88,12 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 
 // Update updates existing user settings
 func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) error {
-	query := `
+	query := rebindQuery(`
 		UPDATE user_settings
 		SET notification_preferences = ?, data_export_format = ?, theme = ?,
 		    weight_unit = ?, distance_unit = ?, updated_at = ?
 		WHERE user_id = ?
-	`
+	`)
 
 	settings.UpdatedAt = time.Now()
 
@@ -113,7 +113,7 @@ func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) err
 
 // Delete removes user settings
 func (r *SQLiteUserSettingsRepository) Delete(userID int64) error {
-	query := `DELETE FROM user_settings WHERE user_id = ?`
+	query := rebindQuery(`DELETE FROM user_settings WHERE user_id = ?`)
 	_, err := r.db.Exec(query, userID)
 	return err
 }

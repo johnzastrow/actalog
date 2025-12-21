@@ -23,8 +23,8 @@ func (r *UserWorkoutMovementRepository) Create(uwm *domain.UserWorkoutMovement) 
 	uwm.CreatedAt = time.Now()
 	uwm.UpdatedAt = time.Now()
 
-	query := `INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	result, err := r.db.Exec(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt)
 	if err != nil {
@@ -52,8 +52,8 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -87,8 +87,8 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 
 // GetByID retrieves a user workout movement by ID
 func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMovement, error) {
-	query := `SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, order_index, created_at, updated_at
-	          FROM user_workout_movements WHERE id = ?`
+	query := rebindQuery(`SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, order_index, created_at, updated_at
+	          FROM user_workout_movements WHERE id = ?`)
 
 	uwm := &domain.UserWorkoutMovement{}
 	var sets sql.NullInt64
@@ -129,14 +129,14 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 
 // GetByUserWorkoutID retrieves all movements for a specific logged workout
 func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutMovement, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
 		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.id as movement_id, m.name, m.description, m.type, m.is_standard, m.created_by, m.created_at, m.updated_at
 		FROM user_workout_movements uwm
 		JOIN movements m ON uwm.movement_id = m.id
 		WHERE uwm.user_workout_id = ?
-		ORDER BY uwm.order_index`
+		ORDER BY uwm.order_index`)
 
 	rows, err := r.db.Query(query, userWorkoutID)
 	if err != nil {
@@ -200,9 +200,9 @@ func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) 
 func (r *UserWorkoutMovementRepository) Update(uwm *domain.UserWorkoutMovement) error {
 	uwm.UpdatedAt = time.Now()
 
-	query := `UPDATE user_workout_movements
+	query := rebindQuery(`UPDATE user_workout_movements
 	          SET sets = ?, reps = ?, weight = ?, time = ?, distance = ?, notes = ?, order_index = ?, updated_at = ?
-	          WHERE id = ?`
+	          WHERE id = ?`)
 
 	result, err := r.db.Exec(query, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.OrderIndex, uwm.UpdatedAt, uwm.ID)
 	if err != nil {
@@ -223,7 +223,7 @@ func (r *UserWorkoutMovementRepository) Update(uwm *domain.UserWorkoutMovement) 
 
 // Delete deletes a user workout movement
 func (r *UserWorkoutMovementRepository) Delete(id int64) error {
-	query := `DELETE FROM user_workout_movements WHERE id = ?`
+	query := rebindQuery(`DELETE FROM user_workout_movements WHERE id = ?`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -244,7 +244,7 @@ func (r *UserWorkoutMovementRepository) Delete(id int64) error {
 
 // DeleteByUserWorkoutID deletes all movements for a logged workout
 func (r *UserWorkoutMovementRepository) DeleteByUserWorkoutID(userWorkoutID int64) error {
-	query := `DELETE FROM user_workout_movements WHERE user_workout_id = ?`
+	query := rebindQuery(`DELETE FROM user_workout_movements WHERE user_workout_id = ?`)
 
 	_, err := r.db.Exec(query, userWorkoutID)
 	if err != nil {
@@ -256,11 +256,11 @@ func (r *UserWorkoutMovementRepository) DeleteByUserWorkoutID(userWorkoutID int6
 
 // GetMaxWeightForMovement retrieves the maximum weight for a specific movement for a user
 func (r *UserWorkoutMovementRepository) GetMaxWeightForMovement(userID, movementID int64) (*float64, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT MAX(uwm.weight)
 		FROM user_workout_movements uwm
 		INNER JOIN user_workouts uw ON uwm.user_workout_id = uw.id
-		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL`
+		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL`)
 
 	var maxWeight sql.NullFloat64
 	err := r.db.QueryRow(query, userID, movementID).Scan(&maxWeight)
@@ -281,12 +281,12 @@ func (r *UserWorkoutMovementRepository) GetMaxWeightForMovement(userID, movement
 // GetAllPerformancesForMovement retrieves all performances for a specific movement for a user
 // Used for calculating the best 1RM. Excludes the current workout if currentWorkoutID is provided.
 func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
 		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at
 		FROM user_workout_movements uwm
 		INNER JOIN user_workouts uw ON uwm.user_workout_id = uw.id
-		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`
+		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`)
 
 	args := []interface{}{userID, movementID}
 
@@ -336,7 +336,7 @@ func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, mo
 
 // GetPRMovements retrieves recent PR-flagged movements for a user
 func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
 		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.name, m.type,
@@ -346,7 +346,7 @@ func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) 
 		JOIN user_workouts uw ON uwm.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uwm.is_pr = 1
 		ORDER BY uw.workout_date DESC, uwm.created_at DESC
-		LIMIT ?`
+		LIMIT ?`)
 
 	rows, err := r.db.Query(query, userID, limit)
 	if err != nil {
@@ -405,7 +405,7 @@ func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) 
 
 // UpdatePRFlag updates the is_pr flag for a user workout movement
 func (r *UserWorkoutMovementRepository) UpdatePRFlag(id int64, isPR bool) error {
-	query := `UPDATE user_workout_movements SET is_pr = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	query := rebindQuery(`UPDATE user_workout_movements SET is_pr = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
 	result, err := r.db.Exec(query, isPR, id)
 	if err != nil {
 		return fmt.Errorf("failed to update PR flag: %w", err)
@@ -425,7 +425,7 @@ func (r *UserWorkoutMovementRepository) UpdatePRFlag(id int64, isPR bool) error 
 
 // GetByUserIDAndMovementID retrieves all movement performance records for a specific user and movement
 func (r *UserWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movementID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.weight, uwm.reps,
 		       uwm.sets, uwm.time, uwm.notes, uwm.is_pr, uwm.order_index,
 		       uwm.created_at, uwm.updated_at,
@@ -436,7 +436,7 @@ func (r *UserWorkoutMovementRepository) GetByUserIDAndMovementID(userID, movemen
 		JOIN user_workouts uw ON uwm.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uwm.movement_id = ?
 		ORDER BY uw.workout_date DESC, uwm.created_at DESC
-		LIMIT ?`
+		LIMIT ?`)
 
 	rows, err := r.db.Query(query, userID, movementID, limit)
 	if err != nil {

@@ -31,8 +31,8 @@ func (r *DataChangeLogRepository) Create(log *domain.DataChangeLog) error {
 
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `INSERT INTO data_change_logs (entity_type, entity_id, entity_name, operation, user_id, user_email, before_values, after_values, ip_address, user_agent, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		query = rebindQuery(`INSERT INTO data_change_logs (entity_type, entity_id, entity_name, operation, user_id, user_email, before_values, after_values, ip_address, user_agent, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 		result, err := r.db.Exec(query, log.EntityType, log.EntityID, log.EntityName, log.Operation, log.UserID, log.UserEmail, log.BeforeValues, log.AfterValues, log.IPAddress, log.UserAgent, log.CreatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create data change log: %w", err)
@@ -44,8 +44,8 @@ func (r *DataChangeLogRepository) Create(log *domain.DataChangeLog) error {
 		log.ID = id
 
 	case "postgres":
-		query = `INSERT INTO data_change_logs (entity_type, entity_id, entity_name, operation, user_id, user_email, before_values, after_values, ip_address, user_agent, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
+		query = rebindQuery(`INSERT INTO data_change_logs (entity_type, entity_id, entity_name, operation, user_id, user_email, before_values, after_values, ip_address, user_agent, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`)
 		err := r.db.QueryRow(query, log.EntityType, log.EntityID, log.EntityName, log.Operation, log.UserID, log.UserEmail, log.BeforeValues, log.AfterValues, log.IPAddress, log.UserAgent, log.CreatedAt).Scan(&log.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create data change log: %w", err)
@@ -60,18 +60,18 @@ func (r *DataChangeLogRepository) Create(log *domain.DataChangeLog) error {
 
 // GetByID retrieves a single data change log by ID
 func (r *DataChangeLogRepository) GetByID(id int64) (*domain.DataChangeLog, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, entity_type, entity_id, entity_name, operation, user_id, user_email,
 			before_values, after_values, ip_address, user_agent, created_at
 		FROM data_change_logs
-		WHERE id = ?`
+		WHERE id = ?`)
 
 	if r.driver == "postgres" {
-		query = `
+		query = rebindQuery(`
 		SELECT id, entity_type, entity_id, entity_name, operation, user_id, user_email,
 			before_values, after_values, ip_address, user_agent, created_at
 		FROM data_change_logs
-		WHERE id = $1`
+		WHERE id = $1`)
 	}
 
 	log := &domain.DataChangeLog{}
@@ -93,11 +93,11 @@ func (r *DataChangeLogRepository) GetByID(id int64) (*domain.DataChangeLog, erro
 
 // List retrieves data change logs with pagination and optional filters
 func (r *DataChangeLogRepository) List(filters domain.DataChangeLogFilters, limit, offset int) ([]*domain.DataChangeLog, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, entity_type, entity_id, entity_name, operation, user_id, user_email,
 			before_values, after_values, ip_address, user_agent, created_at
 		FROM data_change_logs
-		WHERE 1=1`
+		WHERE 1=1`)
 
 	args := []interface{}{}
 	argIndex := 1

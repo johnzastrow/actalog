@@ -24,17 +24,26 @@ func (r *UserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
 	query := rebindQuery(`INSERT INTO user_workouts (user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
-	result, err := r.db.Exec(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create user workout: %w", err)
+	if currentDriver == "postgres" {
+		// PostgreSQL: use RETURNING to get the ID
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt).Scan(&userWorkout.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create user workout: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create user workout: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get user workout ID: %w", err)
+		}
+		userWorkout.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get user workout ID: %w", err)
-	}
-
-	userWorkout.ID = id
 	return nil
 }
 

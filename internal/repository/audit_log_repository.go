@@ -33,8 +33,8 @@ func (r *AuditLogRepository) Create(log *domain.AuditLog) error {
 
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`
+		query = rebindQuery(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)`)
 		err = r.db.QueryRow(query, log.UserID, log.TargetUserID, log.EventType, log.IPAddress, log.UserAgent, log.Details, log.CreatedAt).Scan(&log.ID)
 		if err != nil {
 			// For SQLite/MySQL, INSERT doesn't return ID directly, need to get last insert id
@@ -50,8 +50,8 @@ func (r *AuditLogRepository) Create(log *domain.AuditLog) error {
 		}
 
 	case "postgres":
-		query = `INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+		query = rebindQuery(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`)
 		err = r.db.QueryRow(query, log.UserID, log.TargetUserID, log.EventType, log.IPAddress, log.UserAgent, log.Details, log.CreatedAt).Scan(&log.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create audit log: %w", err)
@@ -66,7 +66,7 @@ func (r *AuditLogRepository) Create(log *domain.AuditLog) error {
 
 // GetByID retrieves a single audit log by ID
 func (r *AuditLogRepository) GetByID(id int64) (*domain.AuditLog, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT
 			al.id, al.user_id, al.target_user_id, al.event_type,
 			al.ip_address, al.user_agent, al.details, al.created_at,
@@ -75,7 +75,7 @@ func (r *AuditLogRepository) GetByID(id int64) (*domain.AuditLog, error) {
 		FROM audit_logs al
 		LEFT JOIN users u1 ON al.user_id = u1.id
 		LEFT JOIN users u2 ON al.target_user_id = u2.id
-		WHERE al.id = ?`
+		WHERE al.id = ?`)
 
 	if r.driver == "postgres" {
 		query = strings.Replace(query, "?", "$1", 1)
@@ -100,7 +100,7 @@ func (r *AuditLogRepository) GetByID(id int64) (*domain.AuditLog, error) {
 
 // List retrieves audit logs with pagination and optional filters
 func (r *AuditLogRepository) List(filters domain.AuditLogFilters, limit, offset int) ([]*domain.AuditLog, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT
 			al.id, al.user_id, al.target_user_id, al.event_type,
 			al.ip_address, al.user_agent, al.details, al.created_at,
@@ -109,7 +109,7 @@ func (r *AuditLogRepository) List(filters domain.AuditLogFilters, limit, offset 
 		FROM audit_logs al
 		LEFT JOIN users u1 ON al.user_id = u1.id
 		LEFT JOIN users u2 ON al.target_user_id = u2.id
-		WHERE 1=1`
+		WHERE 1=1`)
 
 	args := []interface{}{}
 	argIndex := 1

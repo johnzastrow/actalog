@@ -24,8 +24,8 @@ func (r *WODRepository) Create(wod *domain.WOD) error {
 	wod.CreatedAt = time.Now()
 	wod.UpdatedAt = time.Now()
 
-	query := `INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	result, err := r.db.Exec(query,
 		wod.Name,
@@ -56,8 +56,8 @@ func (r *WODRepository) Create(wod *domain.WOD) error {
 
 // GetByID retrieves a WOD by ID
 func (r *WODRepository) GetByID(id int64) (*domain.WOD, error) {
-	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE id = ?`
+	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE id = ?`)
 
 	wod := &domain.WOD{}
 	var url, notes sql.NullString
@@ -100,8 +100,8 @@ func (r *WODRepository) GetByID(id int64) (*domain.WOD, error) {
 
 // GetByName retrieves a WOD by name
 func (r *WODRepository) GetByName(name string) (*domain.WOD, error) {
-	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE name = ?`
+	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE name = ?`)
 
 	wod := &domain.WOD{}
 	var url, notes sql.NullString
@@ -144,8 +144,8 @@ func (r *WODRepository) GetByName(name string) (*domain.WOD, error) {
 
 // List retrieves WODs with optional filtering, limit, and offset
 func (r *WODRepository) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {
-	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE 1=1`
+	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE 1=1`)
 
 	var args []interface{}
 
@@ -200,8 +200,8 @@ func (r *WODRepository) List(filters map[string]interface{}, limit, offset int) 
 
 // ListStandard retrieves all standard (pre-seeded) WODs
 func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
-	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE is_standard = 1 ORDER BY name`
+	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE is_standard = 1 ORDER BY name`)
 
 	var args []interface{}
 
@@ -225,8 +225,8 @@ func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 
 // ListByUser retrieves all custom WODs created by a specific user
 func (r *WODRepository) ListByUser(userID int64, limit, offset int) ([]*domain.WOD, error) {
-	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE created_by = ? ORDER BY name`
+	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE created_by = ? ORDER BY name`)
 
 	var args []interface{}
 	args = append(args, userID)
@@ -253,9 +253,9 @@ func (r *WODRepository) ListByUser(userID int64, limit, offset int) ([]*domain.W
 func (r *WODRepository) Update(wod *domain.WOD) error {
 	wod.UpdatedAt = time.Now()
 
-	query := `UPDATE wods
+	query := rebindQuery(`UPDATE wods
 	          SET name = ?, source = ?, type = ?, regime = ?, score_type = ?, description = ?, url = ?, notes = ?, updated_at = ?
-	          WHERE id = ? AND is_standard = 0`
+	          WHERE id = ? AND is_standard = 0`)
 
 	result, err := r.db.Exec(query,
 		wod.Name,
@@ -289,9 +289,9 @@ func (r *WODRepository) Update(wod *domain.WOD) error {
 func (r *WODRepository) UpdateStandard(wod *domain.WOD) error {
 	wod.UpdatedAt = time.Now()
 
-	query := `UPDATE wods
+	query := rebindQuery(`UPDATE wods
 	          SET name = ?, source = ?, type = ?, regime = ?, score_type = ?, description = ?, url = ?, notes = ?, updated_at = ?
-	          WHERE id = ? AND is_standard = 1`
+	          WHERE id = ? AND is_standard = 1`)
 
 	result, err := r.db.Exec(query,
 		wod.Name,
@@ -323,7 +323,7 @@ func (r *WODRepository) UpdateStandard(wod *domain.WOD) error {
 
 // Delete deletes a WOD (only for user-created WODs)
 func (r *WODRepository) Delete(id int64) error {
-	query := `DELETE FROM wods WHERE id = ? AND is_standard = 0`
+	query := rebindQuery(`DELETE FROM wods WHERE id = ? AND is_standard = 0`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -368,10 +368,10 @@ func (r *WODRepository) Search(query string, limit int) ([]*domain.WOD, error) {
 
 // ListAllUserCreated retrieves all user-created WODs across all users (for admin view)
 func (r *WODRepository) ListAllUserCreated(limit, offset int) ([]*domain.WOD, error) {
-	query := `SELECT w.id, w.name, w.source, w.type, w.regime, w.score_type, w.description, w.url, w.notes, w.is_standard, w.created_by, w.created_at, w.updated_at
+	query := rebindQuery(`SELECT w.id, w.name, w.source, w.type, w.regime, w.score_type, w.description, w.url, w.notes, w.is_standard, w.created_by, w.created_at, w.updated_at
 	          FROM wods w
 	          WHERE w.is_standard = 0
-	          ORDER BY w.name`
+	          ORDER BY w.name`)
 
 	var args []interface{}
 
@@ -395,12 +395,12 @@ func (r *WODRepository) ListAllUserCreated(limit, offset int) ([]*domain.WOD, er
 
 // ListAllUserCreatedWithUserInfo retrieves all user-created WODs with creator info (for admin view)
 func (r *WODRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WODWithCreator, error) {
-	query := `SELECT w.id, w.name, w.source, w.type, w.regime, w.score_type, w.description, w.url, w.notes, w.is_standard, w.created_by, w.created_at, w.updated_at,
+	query := rebindQuery(`SELECT w.id, w.name, w.source, w.type, w.regime, w.score_type, w.description, w.url, w.notes, w.is_standard, w.created_by, w.created_at, w.updated_at,
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM wods w
 	          LEFT JOIN users u ON w.created_by = u.id
 	          WHERE w.is_standard = 0
-	          ORDER BY w.name`
+	          ORDER BY w.name`)
 
 	var args []interface{}
 
@@ -464,7 +464,7 @@ func (r *WODRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*do
 
 // CountAllUserCreated counts all user-created WODs
 func (r *WODRepository) CountAllUserCreated() (int64, error) {
-	query := `SELECT COUNT(*) FROM wods WHERE is_standard = 0`
+	query := rebindQuery(`SELECT COUNT(*) FROM wods WHERE is_standard = 0`)
 	var count int64
 	err := r.db.QueryRow(query).Scan(&count)
 	if err != nil {
@@ -581,10 +581,10 @@ func (r *WODRepository) Count(userID *int64) (int64, error) {
 	var args []interface{}
 
 	if userID != nil {
-		query = `SELECT COUNT(*) FROM wods WHERE created_by = ?`
+		query = rebindQuery(`SELECT COUNT(*) FROM wods WHERE created_by = ?`)
 		args = append(args, *userID)
 	} else {
-		query = `SELECT COUNT(*) FROM wods`
+		query = rebindQuery(`SELECT COUNT(*) FROM wods`)
 	}
 
 	var count int64
@@ -613,7 +613,7 @@ func (r *WODRepository) CopyToStandard(id int64, newName string) (*domain.WOD, e
 
 	// If copying with the same name, convert the source WOD to standard
 	if newName == source.Name {
-		query := `UPDATE wods SET is_standard = 1, created_by = NULL, updated_at = ? WHERE id = ?`
+		query := rebindQuery(`UPDATE wods SET is_standard = 1, created_by = NULL, updated_at = ? WHERE id = ?`)
 		_, err := r.db.Exec(query, now, id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert wod to standard: %w", err)
@@ -653,8 +653,8 @@ func (r *WODRepository) CopyToStandard(id int64, newName string) (*domain.WOD, e
 		UpdatedAt:   now,
 	}
 
-	query := `INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NULL, ?, ?)`
+	query := rebindQuery(`INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NULL, ?, ?)`)
 
 	result, err := r.db.Exec(query,
 		standardWOD.Name,

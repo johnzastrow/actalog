@@ -21,8 +21,8 @@ func (r *WorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
 	workoutWOD.CreatedAt = time.Now()
 	workoutWOD.UpdatedAt = time.Now()
 
-	query := `INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	result, err := r.db.Exec(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *WorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
 
 // GetByID retrieves a workout-WOD by ID
 func (r *WorkoutWODRepository) GetByID(id int64) (*domain.WorkoutWOD, error) {
-	query := `SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE id = ?`
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE id = ?`)
 
 	workoutWOD := &domain.WorkoutWOD{}
 	var scoreValue sql.NullString
@@ -66,7 +66,7 @@ func (r *WorkoutWODRepository) GetByID(id int64) (*domain.WorkoutWOD, error) {
 
 // ListByWorkout retrieves all WODs associated with a workout template
 func (r *WorkoutWODRepository) ListByWorkout(workoutID int64) ([]*domain.WorkoutWOD, error) {
-	query := `SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE workout_id = ? ORDER BY order_index`
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE workout_id = ? ORDER BY order_index`)
 
 	rows, err := r.db.Query(query, workoutID)
 	if err != nil {
@@ -79,7 +79,7 @@ func (r *WorkoutWODRepository) ListByWorkout(workoutID int64) ([]*domain.Workout
 
 // ListByWorkoutWithDetails retrieves WODs with full WOD details
 func (r *WorkoutWODRepository) ListByWorkoutWithDetails(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT
 			ww.id, ww.workout_id, ww.wod_id, ww.score_value, ww.division, ww.is_pr,
 			ww.order_index, ww.created_at, ww.updated_at,
@@ -88,7 +88,7 @@ func (r *WorkoutWODRepository) ListByWorkoutWithDetails(workoutID int64) ([]*dom
 		FROM workout_wods ww
 		JOIN wods w ON ww.wod_id = w.id
 		WHERE ww.workout_id = ?
-		ORDER BY ww.order_index`
+		ORDER BY ww.order_index`)
 
 	rows, err := r.db.Query(query, workoutID)
 	if err != nil {
@@ -103,10 +103,10 @@ func (r *WorkoutWODRepository) ListByWorkoutWithDetails(workoutID int64) ([]*dom
 func (r *WorkoutWODRepository) Update(workoutWOD *domain.WorkoutWOD) error {
 	workoutWOD.UpdatedAt = time.Now()
 
-	query := `UPDATE workout_wods
+	query := rebindQuery(`UPDATE workout_wods
 	          SET score_value = ?, division = ?, is_pr = ?,
 	              order_index = ?, updated_at = ?
-	          WHERE id = ?`
+	          WHERE id = ?`)
 
 	result, err := r.db.Exec(query, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.UpdatedAt, workoutWOD.ID)
 	if err != nil {
@@ -127,7 +127,7 @@ func (r *WorkoutWODRepository) Update(workoutWOD *domain.WorkoutWOD) error {
 
 // Delete deletes a workout-WOD association
 func (r *WorkoutWODRepository) Delete(id int64) error {
-	query := `DELETE FROM workout_wods WHERE id = ?`
+	query := rebindQuery(`DELETE FROM workout_wods WHERE id = ?`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -153,10 +153,10 @@ func (r *WorkoutWODRepository) GetByWorkoutID(workoutID int64) ([]*domain.Workou
 
 // GetByWODID finds which workouts use this WOD
 func (r *WorkoutWODRepository) GetByWODID(wodID int64) ([]*domain.WorkoutWOD, error) {
-	query := `SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at
 	          FROM workout_wods
 	          WHERE wod_id = ?
-	          ORDER BY created_at DESC`
+	          ORDER BY created_at DESC`)
 
 	rows, err := r.db.Query(query, wodID)
 	if err != nil {
@@ -169,7 +169,7 @@ func (r *WorkoutWODRepository) GetByWODID(wodID int64) ([]*domain.WorkoutWOD, er
 
 // DeleteByWorkout deletes all WOD associations for a workout
 func (r *WorkoutWODRepository) DeleteByWorkout(workoutID int64) error {
-	query := `DELETE FROM workout_wods WHERE workout_id = ?`
+	query := rebindQuery(`DELETE FROM workout_wods WHERE workout_id = ?`)
 
 	if _, err := r.db.Exec(query, workoutID); err != nil {
 		return fmt.Errorf("failed to delete workout WODs: %w", err)
@@ -195,8 +195,8 @@ func (r *WorkoutWODRepository) BatchCreate(workoutID int64, wodIDs []int64) erro
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, NULL, NULL, 0, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, NULL, NULL, 0, ?, ?, ?)`)
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -231,7 +231,7 @@ func (r *WorkoutWODRepository) Reorder(workoutID int64, wodIDs []int64) error {
 	}
 	defer tx.Rollback()
 
-	query := `UPDATE workout_wods SET order_index = ?, updated_at = ? WHERE workout_id = ? AND wod_id = ?`
+	query := rebindQuery(`UPDATE workout_wods SET order_index = ?, updated_at = ? WHERE workout_id = ? AND wod_id = ?`)
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -265,7 +265,7 @@ func (r *WorkoutWODRepository) Reorder(workoutID int64, wodIDs []int64) error {
 
 // TogglePR toggles the PR flag for a workout-WOD
 func (r *WorkoutWODRepository) TogglePR(id int64) error {
-	query := `UPDATE workout_wods SET is_pr = NOT is_pr, updated_at = ? WHERE id = ?`
+	query := rebindQuery(`UPDATE workout_wods SET is_pr = NOT is_pr, updated_at = ? WHERE id = ?`)
 
 	result, err := r.db.Exec(query, time.Now(), id)
 	if err != nil {

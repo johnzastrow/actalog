@@ -19,10 +19,10 @@ func NewSQLiteRefreshTokenRepository(db *sql.DB) domain.RefreshTokenRepository {
 
 // Create creates a new refresh token
 func (r *SQLiteRefreshTokenRepository) Create(token *domain.RefreshToken) error {
-	query := `
+	query := rebindQuery(`
 		INSERT INTO refresh_tokens (user_id, token, expires_at, created_at, device_info)
 		VALUES (?, ?, ?, ?, ?)
-	`
+	`)
 
 	result, err := r.db.Exec(query,
 		token.UserID,
@@ -77,12 +77,12 @@ func (r *SQLiteRefreshTokenRepository) GetByToken(tokenStr string) (*domain.Refr
 
 // GetByUserID retrieves all refresh tokens for a user
 func (r *SQLiteRefreshTokenRepository) GetByUserID(userID int64) ([]*domain.RefreshToken, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT id, user_id, token, expires_at, created_at, revoked_at, device_info
 		FROM refresh_tokens
 		WHERE user_id = ? AND revoked_at IS NULL
 		ORDER BY created_at DESC
-	`
+	`)
 
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
@@ -165,7 +165,7 @@ func (r *SQLiteRefreshTokenRepository) DeleteExpired() error {
 
 // Delete deletes a specific refresh token
 func (r *SQLiteRefreshTokenRepository) Delete(tokenID int64) error {
-	query := `DELETE FROM refresh_tokens WHERE id = ?`
+	query := rebindQuery(`DELETE FROM refresh_tokens WHERE id = ?`)
 
 	_, err := r.db.Exec(query, tokenID)
 	if err != nil {

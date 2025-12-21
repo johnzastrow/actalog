@@ -23,8 +23,8 @@ func (r *UserWorkoutWODRepository) Create(uww *domain.UserWorkoutWOD) error {
 	uww.CreatedAt = time.Now()
 	uww.UpdatedAt = time.Now()
 
-	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
 	if err != nil {
@@ -52,8 +52,8 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -87,8 +87,8 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 
 // GetByID retrieves a user workout WOD by ID
 func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, error) {
-	query := `SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, order_index, created_at, updated_at
-	          FROM user_workout_wods WHERE id = ?`
+	query := rebindQuery(`SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, order_index, created_at, updated_at
+	          FROM user_workout_wods WHERE id = ?`)
 
 	uww := &domain.UserWorkoutWOD{}
 	var scoreType sql.NullString
@@ -133,14 +133,14 @@ func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, er
 
 // GetByUserWorkoutID retrieves all WODs for a specific logged workout
 func (r *UserWorkoutWODRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutWOD, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value, uww.time_seconds, uww.rounds, uww.reps, uww.weight,
 		       uww.notes, uww.order_index, uww.created_at, uww.updated_at,
 		       w.id as wod_id, w.name, w.source, w.type, w.regime, w.score_type as wod_score_type, w.description, w.url, w.notes as wod_notes, w.is_standard, w.created_by, w.created_at, w.updated_at
 		FROM user_workout_wods uww
 		JOIN wods w ON uww.wod_id = w.id
 		WHERE uww.user_workout_id = ?
-		ORDER BY uww.order_index`
+		ORDER BY uww.order_index`)
 
 	rows, err := r.db.Query(query, userWorkoutID)
 	if err != nil {
@@ -216,9 +216,9 @@ func (r *UserWorkoutWODRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*d
 func (r *UserWorkoutWODRepository) Update(uww *domain.UserWorkoutWOD) error {
 	uww.UpdatedAt = time.Now()
 
-	query := `UPDATE user_workout_wods
+	query := rebindQuery(`UPDATE user_workout_wods
 	          SET score_type = ?, score_value = ?, time_seconds = ?, rounds = ?, reps = ?, weight = ?, notes = ?, order_index = ?, updated_at = ?
-	          WHERE id = ?`
+	          WHERE id = ?`)
 
 	result, err := r.db.Exec(query, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.OrderIndex, uww.UpdatedAt, uww.ID)
 	if err != nil {
@@ -239,7 +239,7 @@ func (r *UserWorkoutWODRepository) Update(uww *domain.UserWorkoutWOD) error {
 
 // Delete deletes a user workout WOD
 func (r *UserWorkoutWODRepository) Delete(id int64) error {
-	query := `DELETE FROM user_workout_wods WHERE id = ?`
+	query := rebindQuery(`DELETE FROM user_workout_wods WHERE id = ?`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -260,7 +260,7 @@ func (r *UserWorkoutWODRepository) Delete(id int64) error {
 
 // DeleteByUserWorkoutID deletes all WODs for a logged workout
 func (r *UserWorkoutWODRepository) DeleteByUserWorkoutID(userWorkoutID int64) error {
-	query := `DELETE FROM user_workout_wods WHERE user_workout_id = ?`
+	query := rebindQuery(`DELETE FROM user_workout_wods WHERE user_workout_id = ?`)
 
 	_, err := r.db.Exec(query, userWorkoutID)
 	if err != nil {
@@ -272,11 +272,11 @@ func (r *UserWorkoutWODRepository) DeleteByUserWorkoutID(userWorkoutID int64) er
 
 // GetBestTimeForWOD retrieves the fastest time for a specific WOD for a user
 func (r *UserWorkoutWODRepository) GetBestTimeForWOD(userID, wodID int64) (*int, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT MIN(uww.time_seconds)
 		FROM user_workout_wods uww
 		INNER JOIN user_workouts uw ON uww.user_workout_id = uw.id
-		WHERE uw.user_id = ? AND uww.wod_id = ? AND uww.time_seconds IS NOT NULL`
+		WHERE uw.user_id = ? AND uww.wod_id = ? AND uww.time_seconds IS NOT NULL`)
 
 	var bestTime sql.NullInt64
 	err := r.db.QueryRow(query, userID, wodID).Scan(&bestTime)
@@ -298,13 +298,13 @@ func (r *UserWorkoutWODRepository) GetBestTimeForWOD(userID, wodID int64) (*int,
 // GetBestRoundsRepsForWOD retrieves the best rounds+reps for a specific WOD for a user
 // Returns the most rounds, and if tied, the most reps
 func (r *UserWorkoutWODRepository) GetBestRoundsRepsForWOD(userID, wodID int64) (rounds *int, reps *int, err error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uww.rounds, uww.reps
 		FROM user_workout_wods uww
 		INNER JOIN user_workouts uw ON uww.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uww.wod_id = ? AND uww.rounds IS NOT NULL
 		ORDER BY uww.rounds DESC, uww.reps DESC
-		LIMIT 1`
+		LIMIT 1`)
 
 	var roundsVal sql.NullInt64
 	var repsVal sql.NullInt64
@@ -330,7 +330,7 @@ func (r *UserWorkoutWODRepository) GetBestRoundsRepsForWOD(userID, wodID int64) 
 
 // GetPRWODs retrieves recent PR-flagged WODs for a user
 func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value, uww.time_seconds, uww.rounds, uww.reps, uww.weight,
 		       uww.notes, uww.is_pr, uww.order_index, uww.created_at, uww.updated_at,
 		       w.name,
@@ -340,7 +340,7 @@ func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain
 		JOIN user_workouts uw ON uww.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uww.is_pr = 1
 		ORDER BY uw.workout_date DESC, uww.created_at DESC
-		LIMIT ?`
+		LIMIT ?`)
 
 	rows, err := r.db.Query(query, userID, limit)
 	if err != nil {
@@ -403,7 +403,7 @@ func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain
 
 // UpdatePRFlag updates the is_pr flag for a user workout WOD
 func (r *UserWorkoutWODRepository) UpdatePRFlag(id int64, isPR bool) error {
-	query := `UPDATE user_workout_wods SET is_pr = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	query := rebindQuery(`UPDATE user_workout_wods SET is_pr = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
 	result, err := r.db.Exec(query, isPR, id)
 	if err != nil {
 		return fmt.Errorf("failed to update PR flag: %w", err)
@@ -423,7 +423,7 @@ func (r *UserWorkoutWODRepository) UpdatePRFlag(id int64, isPR bool) error {
 
 // GetByUserIDAndWODID retrieves all WOD performance records for a specific user and WOD
 func (r *UserWorkoutWODRepository) GetByUserIDAndWODID(userID, wodID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value,
 		       uww.time_seconds, uww.rounds, uww.reps, uww.weight, uww.notes, uww.is_pr,
 		       uww.order_index, uww.created_at, uww.updated_at,
@@ -434,7 +434,7 @@ func (r *UserWorkoutWODRepository) GetByUserIDAndWODID(userID, wodID int64, limi
 		JOIN user_workouts uw ON uww.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uww.wod_id = ?
 		ORDER BY uw.workout_date DESC, uww.created_at DESC
-		LIMIT ?`
+		LIMIT ?`)
 
 	rows, err := r.db.Query(query, userID, wodID, limit)
 	if err != nil {
