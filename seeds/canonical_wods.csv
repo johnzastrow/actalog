@@ -1,0 +1,201 @@
+name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Fran,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**21-15-9 reps for time:**
+- Thrusters (95/65 lb)
+- Pull-ups",,Classic benchmark - one of the original Girl WODs,TRUE,
+Cindy,CrossFit,Girl,AMRAP,Rounds+Reps,"**20 min AMRAP:**
+- 5 Pull-ups
+- 10 Push-ups
+- 15 Air Squats",,Bodyweight benchmark,TRUE,
+Diane,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**21-15-9 reps for time:**
+- Deadlifts (225/155 lb)
+- Handstand Push-ups",,Heavy deadlifts with gymnastic pressing,TRUE,
+Helen,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**3 rounds for time:**
+- 400m Run
+- 21 Kettlebell Swings (53/35 lb)
+- 12 Pull-ups",,Mixed modal cardio and gymnastics,TRUE,
+Grace,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 30 Clean & Jerks (135/95 lb)",,Pure barbell benchmark,TRUE,
+Isabel,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 30 Snatches (135/95 lb)",,Olympic lifting benchmark,TRUE,
+Annie,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**50-40-30-20-10 reps for time:**
+- Double Unders
+- Sit-ups",,Jump rope and core work,TRUE,
+Nancy,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 400m Run
+- 15 Overhead Squats (95/65 lb)",,Running and overhead squatting,TRUE,
+Karen,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 150 Wall Balls (20/14 lb to 10/9 ft target)",,High volume wall balls,TRUE,
+Jackie,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 1000m Row
+- 50 Thrusters (45/35 lb)
+- 30 Pull-ups",,Mixed modal sprint workout,TRUE,
+Amanda,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**9-7-5 reps for time:**
+- Muscle-ups
+- Squat Snatches (135/95 lb)",,Advanced gymnastics and Olympic lifting,TRUE,
+Lynne,CrossFit,Girl,AMRAP,Rounds+Reps,"**5 rounds for max reps:**
+- Bodyweight Bench Press
+- Pull-ups",,Upper body strength test,TRUE,
+Mary,CrossFit,Girl,AMRAP,Rounds+Reps,"**20 min AMRAP:**
+- 5 Handstand Push-ups
+- 10 Pistol Squats
+- 15 Pull-ups",,Advanced gymnastics benchmark,TRUE,
+Eva,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 800m Run
+- 30 Kettlebell Swings (53/35 lb)
+- 30 Pull-ups",,Long chipper with running,TRUE,
+Kelly,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 400m Run
+- 30 Box Jumps (24/20 in)
+- 30 Wall Balls (20/14 lb)",,Mixed modal endurance workout,TRUE,
+Murph,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**For time (with 20 lb vest):**
+- 1 mile Run
+- 100 Pull-ups
+- 200 Push-ups
+- 300 Air Squats
+- 1 mile Run",,Memorial Day benchmark - honoring Lt. Michael Murphy,TRUE,
+DT,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 12 Deadlifts (155/105 lb)
+- 9 Hang Power Cleans
+- 6 Push Jerks",,Heavy barbell complex,TRUE,
+Filthy Fifty,CrossFit,Benchmark,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 50 Box Jumps (24/20 in)
+- 50 Jumping Pull-ups
+- 50 Kettlebell Swings (35/26 lb)
+- 50 Walking Lunges
+- 50 Knees-to-Elbows
+- 50 Push Press (45/35 lb)
+- 50 Back Extensions
+- 50 Wall Balls (20/14 lb)
+- 50 Burpees
+- 50 Double Unders",,Classic 500 rep chipper,TRUE,
+Fight Gone Bad,CrossFit,Benchmark,AMRAP,Rounds+Reps,"**3 rounds, 1 min each station:**
+- Wall Balls (20/14 lb)
+- SDHP (75/55 lb)
+- Box Jumps (20 in)
+- Push Press (75/55 lb)
+- Row (calories)
+
+*1 min rest between rounds*",,Five station interval workout,TRUE,
+King Kong,CrossFit,Benchmark,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 1 Deadlift (455/315 lb)
+- 2 Muscle-ups
+- 3 Squat Cleans (250/165 lb)
+- 4 Handstand Push-ups
+- 5 rounds",,Heavy and technical movements,TRUE,
+The Seven,CrossFit,Hero,AMRAP,Rounds+Reps,"**7 rounds:**
+- 7 Handstand Push-ups
+- 7 Thrusters (135/95 lb)
+- 7 Knees-to-Elbows
+- 7 Deadlifts (245/165 lb)
+- 7 Burpees
+- 7 Kettlebell Swings (70/53 lb)
+- 7 Pull-ups",,Seven rounds of seven reps - honoring fallen SEAL Team members,TRUE,
+Angie,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 100 Pull-ups
+- 100 Push-ups
+- 100 Sit-ups
+- 100 Air Squats",,Bodyweight benchmark - 400 total reps,TRUE,
+Barbara,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 20 Pull-ups
+- 30 Push-ups
+- 40 Sit-ups
+- 50 Air Squats
+
+*Rest 3 min between rounds*",,Descending rep scheme with rest,TRUE,
+Chelsea,CrossFit,Girl,EMOM,Rounds+Reps,"**30 min EMOM:**
+- 5 Pull-ups
+- 10 Push-ups
+- 15 Air Squats",,High volume bodyweight EMOM,TRUE,
+Elizabeth,CrossFit,Girl,Fastest Time,Time (HH:MM:SS),"**21-15-9 reps for time:**
+- Squat Cleans (135/95 lb)
+- Ring Dips",,Heavy barbell and gymnastics,TRUE,
+JT,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**21-15-9 reps for time:**
+- Handstand Push-ups
+- Ring Dips
+- Push-ups",,Pure pressing volume - honoring Jeffrey Taylor,TRUE,
+Randy,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 75 Power Snatches (75/55 lb)",,High rep snatches - honoring Randy Simmons,TRUE,
+Nate,CrossFit,Hero,AMRAP,Rounds+Reps,"**20 min AMRAP:**
+- 2 Muscle-ups
+- 4 Handstand Push-ups
+- 8 Kettlebell Swings (70/53 lb)",,Advanced gymnastics AMRAP - honoring Nate Hardy,TRUE,
+Jason,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 100 Squats
+- 5 Muscle-ups
+- 75 Squats
+- 10 Muscle-ups
+- 50 Squats
+- 15 Muscle-ups
+- 25 Squats
+- 20 Muscle-ups",,Muscle-up volume - honoring Jason Lewis,TRUE,
+Michael,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**3 rounds for time:**
+- 800m Run
+- 50 Back Extensions
+- 50 Sit-ups",,Running and midline work - honoring Michael McGreevy,TRUE,
+Daniel,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 50 Pull-ups
+- 400m Run
+- 21 Thrusters (95/65 lb)
+- 800m Run
+- 21 Thrusters (95/65 lb)
+- 400m Run
+- 50 Pull-ups",,Long chipper with running - honoring Daniel Cranendonk,TRUE,
+Tommy V,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 21 Thrusters (115/80 lb)
+- 12 Rope Climbs
+- 15 Thrusters
+- 9 Rope Climbs
+- 9 Thrusters
+- 6 Rope Climbs",,Thrusters and rope climbs - honoring Thomas J. Valentine,TRUE,
+Bradley,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 11 Back Squats (225/155 lb)
+- 800m Run",,Heavy squats and running - honoring PFC Bradley Rappuhn,TRUE,
+Roy,CrossFit,Hero,AMRAP,Rounds+Reps,"**5 rounds:**
+- 15 Deadlifts (225/155 lb)
+- 20 Box Jumps (24/20 in)
+- 25 Pull-ups",,Heavy deadlifts - honoring Roy Holbrook,TRUE,
+Garrett,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**3 rounds for time:**
+- 75 Squats
+- 25 Handstand Push-ups
+- 25 L Pull-ups",,High volume gymnastics - honoring Garrett Lawton,TRUE,
+Griff,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**For time:**
+- 800m Run
+- 4 rounds of:
+  - 5 Deadlifts (approximately bodyweight)
+  - 10 Burpees
+- 800m Run",,Running bookends - honoring Travis L. Griffin,TRUE,
+Joshie,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**21-15-9 reps for time:**
+- Overhead Squats (95/65 lb)
+- Ring Dips",,OHS and ring dips - honoring Joshua Hager,TRUE,
+McGhee,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**5 rounds for time:**
+- 5 Deadlifts (275/185 lb)
+- 13 Push-ups
+- 9 Box Jumps (24/20 in)",,Heavy deadlifts - honoring Ryan McGhee,TRUE,
+Nutts,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**10 rounds for time:**
+- 10 Handstand Push-ups
+- 15 Deadlifts (250/175 lb)",,Pressing and heavy deadlifts - honoring Timothy P. Nuttall,TRUE,
+The Chief,CrossFit,Benchmark,AMRAP,Rounds+Reps,"**5 rounds, 3 min AMRAP:**
+- 3 Power Cleans (135/95 lb)
+- 6 Push-ups
+- 9 Air Squats
+
+*Rest 1 min between rounds*",,Interval workout with power cleans,TRUE,
+The Ghost,CrossFit,Hero,AMRAP,Rounds+Reps,"**6 rounds:**
+- 1 min max cal Row
+- 1 min max Burpees
+- 1 min max Double Unders
+
+*Rest 1 min between rounds*",,High intensity intervals - honoring Marc Lee,TRUE,
+Bull,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**2 rounds for time:**
+- 200 Double Unders
+- 50 Overhead Squats (135/95 lb)
+- 50 Pull-ups
+- 1 mile Run",,Long chipper - honoring Mark Carter,TRUE,
+Nick,CrossFit,Hero,Fastest Time,Time (HH:MM:SS),"**10 rounds for time:**
+- 400m Run
+- 15 Parallette Handstand Push-ups
+- 30 Squats",,Running and gymnastics - honoring Nicholas Spehar,TRUE,
+Jack,CrossFit,Hero,AMRAP,Rounds+Reps,"**20 min AMRAP (with 20 lb vest):**
+- 10 Push Press (115/75 lb)
+- 10 Kettlebell Swings (53/35 lb)
+- 10 Box Jumps (24/20 in)",,Weighted vest AMRAP - honoring Jack M. Martin III,TRUE,
