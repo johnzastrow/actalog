@@ -21,8 +21,8 @@ func (r *UserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
 	userWorkout.CreatedAt = time.Now()
 	userWorkout.UpdatedAt = time.Now()
 
-	query := `INSERT INTO user_workouts (user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := rebindQuery(`INSERT INTO user_workouts (user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	result, err := r.db.Exec(query, userWorkout.UserID, userWorkout.WorkoutID, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.CreatedAt, userWorkout.UpdatedAt)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *UserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
 
 // GetByID retrieves a user workout by ID
 func (r *UserWorkoutRepository) GetByID(id int64) (*domain.UserWorkout, error) {
-	query := `SELECT id, user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE id = ?`
+	query := rebindQuery(`SELECT id, user_id, workout_id, workout_name, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE id = ?`)
 
 	userWorkout := &domain.UserWorkout{}
 	var workoutID sql.NullInt64
@@ -101,7 +101,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	if userWorkout.WorkoutID != nil {
 		// Template-based workout - get name from template
 		var workoutNotes sql.NullString
-		query := `SELECT name, notes FROM workouts WHERE id = ?`
+		query := rebindQuery(`SELECT name, notes FROM workouts WHERE id = ?`)
 		if err := r.db.QueryRow(query, *userWorkout.WorkoutID).Scan(&workoutName, &workoutNotes); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, fmt.Errorf("workout template not found")
@@ -390,7 +390,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 
 // ListByUser retrieves all workouts logged by a specific user
 func (r *UserWorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*domain.UserWorkout, error) {
-	query := `SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? ORDER BY workout_date DESC, created_at DESC LIMIT ? OFFSET ?`
+	query := rebindQuery(`SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? ORDER BY workout_date DESC, created_at DESC LIMIT ? OFFSET ?`)
 
 	rows, err := r.db.Query(query, userID, limit, offset)
 	if err != nil {
@@ -424,7 +424,7 @@ func (r *UserWorkoutRepository) ListByUserWithDetails(userID int64, limit, offse
 
 // ListByUserAndDateRange retrieves workouts within a date range
 func (r *UserWorkoutRepository) ListByUserAndDateRange(userID int64, startDate, endDate time.Time) ([]*domain.UserWorkout, error) {
-	query := `SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? AND workout_date >= ? AND workout_date <= ? ORDER BY workout_date DESC`
+	query := rebindQuery(`SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? AND workout_date >= ? AND workout_date <= ? ORDER BY workout_date DESC`)
 
 	rows, err := r.db.Query(query, userID, startDate, endDate)
 	if err != nil {
@@ -439,10 +439,10 @@ func (r *UserWorkoutRepository) ListByUserAndDateRange(userID int64, startDate, 
 func (r *UserWorkoutRepository) Update(userWorkout *domain.UserWorkout) error {
 	userWorkout.UpdatedAt = time.Now()
 
-	query := `UPDATE user_workouts
+	query := rebindQuery(`UPDATE user_workouts
 	          SET workout_name = ?, workout_date = ?, workout_type = ?, total_time = ?,
 	              notes = ?, updated_at = ?
-	          WHERE id = ? AND user_id = ?`
+	          WHERE id = ? AND user_id = ?`)
 
 	result, err := r.db.Exec(query, userWorkout.WorkoutName, userWorkout.WorkoutDate, userWorkout.WorkoutType, userWorkout.TotalTime, userWorkout.Notes, userWorkout.UpdatedAt, userWorkout.ID, userWorkout.UserID)
 	if err != nil {
@@ -463,7 +463,7 @@ func (r *UserWorkoutRepository) Update(userWorkout *domain.UserWorkout) error {
 
 // Delete deletes a user workout
 func (r *UserWorkoutRepository) Delete(id int64, userID int64) error {
-	query := `DELETE FROM user_workouts WHERE id = ? AND user_id = ?`
+	query := rebindQuery(`DELETE FROM user_workouts WHERE id = ? AND user_id = ?`)
 
 	result, err := r.db.Exec(query, id, userID)
 	if err != nil {
@@ -484,7 +484,7 @@ func (r *UserWorkoutRepository) Delete(id int64, userID int64) error {
 
 // GetByUserWorkoutDate checks if a user has already logged a specific workout on a date
 func (r *UserWorkoutRepository) GetByUserWorkoutDate(userID, workoutID int64, date time.Time) (*domain.UserWorkout, error) {
-	query := `SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? AND workout_id = ? AND DATE(workout_date) = DATE(?)`
+	query := rebindQuery(`SELECT id, user_id, workout_id, workout_date, workout_type, total_time, notes, created_at, updated_at FROM user_workouts WHERE user_id = ? AND workout_id = ? AND DATE(workout_date) = DATE(?)`)
 
 	userWorkout := &domain.UserWorkout{}
 	var workoutType sql.NullString
@@ -516,7 +516,7 @@ func (r *UserWorkoutRepository) GetByUserWorkoutDate(userID, workoutID int64, da
 // Count counts total user workouts for a specific user
 func (r *UserWorkoutRepository) Count(userID int64) (int64, error) {
 	var count int64
-	query := `SELECT COUNT(*) FROM user_workouts WHERE user_id = ?`
+	query := rebindQuery(`SELECT COUNT(*) FROM user_workouts WHERE user_id = ?`)
 
 	err := r.db.QueryRow(query, userID).Scan(&count)
 	if err != nil {
@@ -528,14 +528,14 @@ func (r *UserWorkoutRepository) Count(userID int64) (int64, error) {
 
 // GetRecentForUser retrieves recent user workouts with details (for dashboard/activity feed)
 func (r *UserWorkoutRepository) GetRecentForUser(userID int64, limit int) ([]*domain.UserWorkoutWithDetails, error) {
-	query := `SELECT uw.id, uw.user_id, uw.workout_id, uw.workout_date, uw.workout_type, uw.total_time,
+	query := rebindQuery(`SELECT uw.id, uw.user_id, uw.workout_id, uw.workout_date, uw.workout_type, uw.total_time,
 	                 uw.notes, uw.created_at, uw.updated_at,
 	                 w.name as workout_name, w.notes as workout_description
 	          FROM user_workouts uw
 	          JOIN workouts w ON uw.workout_id = w.id
 	          WHERE uw.user_id = ?
 	          ORDER BY uw.workout_date DESC, uw.created_at DESC
-	          LIMIT ?`
+	          LIMIT ?`)
 
 	rows, err := r.db.Query(query, userID, limit)
 	if err != nil {
