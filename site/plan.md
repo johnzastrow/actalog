@@ -2,6 +2,9 @@
 
 Goal: produce a concise, SEO-friendly static site hosted from the repository `site/` directory (GitHub Pages) that advertises ActaLog and helps users self-host and contribute.
 
+The site https://patchmon.net/ provides a good example of a simple static site for an open source project that we'd like to emulate in terms of clarity and focus and design.
+
+
 ## Primary objectives
 - Communicate what ActaLog is and who it's for.
 - Show key features and technical requirements for self-hosting.

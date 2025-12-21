@@ -21,7 +21,7 @@ func SetupTempDB(driver, dsn string) (string, func(), error) {
 	case "postgres":
 		// Replace or add dbname in DSN to connect to postgres admin DB
 		re := regexp.MustCompile(`\bdbname=([^ ]+)`)
-		adminDSN := dsn
+		var adminDSN string
 		if re.MatchString(dsn) {
 			adminDSN = re.ReplaceAllString(dsn, "dbname=postgres")
 		} else {
@@ -49,8 +49,8 @@ func SetupTempDB(driver, dsn string) (string, func(), error) {
 		teardown := func() {
 			// best-effort cleanup: terminate connections and drop DB
 			_ = adminDB.Ping()
-			_, _ = adminDB.Exec("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '" + dbName + "' AND pid <> pg_backend_pid();")
-			_, _ = adminDB.Exec("DROP DATABASE IF EXISTS " + dbName)
+			_, _ = adminDB.Exec(fmt.Sprintf("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s' AND pid <> pg_backend_pid();", dbName))
+			_, _ = adminDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbName))
 			_ = adminDB.Close()
 		}
 

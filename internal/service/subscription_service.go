@@ -120,7 +120,7 @@ func (s *SubscriptionService) CreateUserSubscription(
 	// Log to audit trail
 	details := fmt.Sprintf("Created %s subscription for user %d (permanent_free=%v)", subscriptionType, userID, isPermanentFree)
 	targetUserID := userID
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:       &adminUserID,
 		TargetUserID: &targetUserID,
 		EventType:    domain.EventSubscriptionCreated,
@@ -196,7 +196,7 @@ func (s *SubscriptionService) CreateOrganizationSubscription(
 
 	// Log to audit trail
 	details := fmt.Sprintf("Created %s subscription for organization %d (permanent_free=%v)", subscriptionType, organizationID, isPermanentFree)
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &adminUserID,
 		EventType: domain.EventOrgSubscriptionCreated,
 		Details:   &details,
@@ -253,7 +253,7 @@ func (s *SubscriptionService) MarkUserSubscriptionAsPaid(adminUserID int64, subs
 	}
 	details := fmt.Sprintf("Marked subscription %d as paid for user %d (duration: %s)", subscriptionID, sub.UserID, durationStr)
 	targetUserID := sub.UserID
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:       &adminUserID,
 		TargetUserID: &targetUserID,
 		EventType:    domain.EventSubscriptionMarkedPaid,
@@ -302,7 +302,7 @@ func (s *SubscriptionService) MarkOrganizationSubscriptionAsPaid(adminUserID int
 		durationStr = fmt.Sprintf("%d days", *durationDays)
 	}
 	details := fmt.Sprintf("Marked subscription %d as paid for organization %d (duration: %s)", subscriptionID, sub.OrganizationID, durationStr)
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &adminUserID,
 		EventType: domain.EventOrgSubscriptionMarkedPaid,
 		Details:   &details,
@@ -340,7 +340,7 @@ func (s *SubscriptionService) CancelUserSubscription(adminUserID int64, subscrip
 	now := time.Now()
 	details := fmt.Sprintf("Cancelled subscription %d for user %d (reason: %s)", subscriptionID, sub.UserID, reason)
 	targetUserID := sub.UserID
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:       &adminUserID,
 		TargetUserID: &targetUserID,
 		EventType:    domain.EventSubscriptionCancelled,
@@ -383,7 +383,7 @@ func (s *SubscriptionService) SetUserSubscriptionPermanent(adminUserID int64, su
 	}
 	details := fmt.Sprintf("Admin %s subscription %d for user %d", status, subscriptionID, sub.UserID)
 	targetUserID := sub.UserID
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:       &adminUserID,
 		TargetUserID: &targetUserID,
 		EventType:    domain.EventSubscriptionUpdated,
@@ -413,7 +413,7 @@ func (s *SubscriptionService) CancelOrganizationSubscription(adminUserID int64, 
 	// Log to audit trail
 	now := time.Now()
 	details := fmt.Sprintf("Cancelled subscription %d for organization %d (reason: %s)", subscriptionID, sub.OrganizationID, reason)
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &adminUserID,
 		EventType: domain.EventOrgSubscriptionCancelled,
 		Details:   &details,
@@ -449,7 +449,7 @@ func (s *SubscriptionService) SetOrganizationSubscriptionPermanent(adminUserID i
 		status = "set permanent status for"
 	}
 	details := fmt.Sprintf("Admin %s subscription %d for organization %d", status, subscriptionID, sub.OrganizationID)
-	s.auditLogRepo.Create(&domain.AuditLog{
+	_ = s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &adminUserID,
 		EventType: domain.EventOrgSubscriptionUpdated,
 		Details:   &details,
