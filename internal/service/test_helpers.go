@@ -414,6 +414,10 @@ func (m *mockUserWorkoutMovementRepo) UpdatePRFlag(id int64, isPR bool) error {
 	return nil
 }
 
+func (m *mockUserWorkoutMovementRepo) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
+	return []*domain.UserWorkoutMovement{}, nil
+}
+
 // Mock UserWorkoutWODRepository
 type mockUserWorkoutWODRepo struct{}
 
@@ -1034,7 +1038,66 @@ func (m *mockAuditLogRepo) Delete(id int64) error {
 	return sql.ErrNoRows
 }
 
-// Mock UserRepository  
+// Mock MovementRepository
+type mockMovementRepo struct{}
+
+func (m *mockMovementRepo) Create(movement *domain.Movement) error {
+	return nil
+}
+
+func (m *mockMovementRepo) GetByID(id int64) (*domain.Movement, error) {
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockMovementRepo) GetByName(name string) (*domain.Movement, error) {
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockMovementRepo) ListAll() ([]*domain.Movement, error) {
+	return []*domain.Movement{}, nil
+}
+
+func (m *mockMovementRepo) ListStandard() ([]*domain.Movement, error) {
+	return []*domain.Movement{}, nil
+}
+
+func (m *mockMovementRepo) ListByUser(userID int64) ([]*domain.Movement, error) {
+	return []*domain.Movement{}, nil
+}
+
+func (m *mockMovementRepo) ListAllUserCreated() ([]*domain.Movement, error) {
+	return []*domain.Movement{}, nil
+}
+
+func (m *mockMovementRepo) ListAllUserCreatedWithUserInfo() ([]*domain.MovementWithCreator, error) {
+	return []*domain.MovementWithCreator{}, nil
+}
+
+func (m *mockMovementRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, movementType, creator string) ([]*domain.MovementWithCreator, int64, error) {
+	return []*domain.MovementWithCreator{}, 0, nil
+}
+
+func (m *mockMovementRepo) CountAllUserCreated() (int64, error) {
+	return 0, nil
+}
+
+func (m *mockMovementRepo) Update(movement *domain.Movement) error {
+	return nil
+}
+
+func (m *mockMovementRepo) Delete(id int64) error {
+	return nil
+}
+
+func (m *mockMovementRepo) Search(query string, limit int) ([]*domain.Movement, error) {
+	return []*domain.Movement{}, nil
+}
+
+func (m *mockMovementRepo) CopyToStandard(id int64, newName string) (*domain.Movement, error) {
+	return nil, nil
+}
+
+// Mock UserRepository
 
 // Mock UserRepository (complete implementation)
 type mockUserRepo struct {

@@ -38,6 +38,15 @@ func (m *mockEmailService) SendVerificationEmail(to, verifyURL string) error {
 	return nil
 }
 
+func (m *mockEmailService) SendHTMLEmail(to, subject, htmlBody string) error {
+	m.sentEmails = append(m.sentEmails, mockEmail{
+		to:      to,
+		subject: subject,
+		body:    htmlBody,
+	})
+	return nil
+}
+
 // Mock refresh token repository
 type mockRefreshTokenRepo struct {
 	tokens map[string]*domain.RefreshToken

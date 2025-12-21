@@ -103,7 +103,19 @@ func TestUserWorkoutService_LogWorkout(t *testing.T) {
 				tt.setupMock(workoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo(), nil)
+			service := NewUserWorkoutService(
+				userWorkoutRepo,
+				workoutRepo,
+				workoutMovementRepo,
+				&mockUserWorkoutMovementRepo{},
+				&mockUserWorkoutWODRepo{},
+				newMockWODRepo(),
+				nil, // auditLogRepo
+				&mockMovementRepo{}, // movementRepo
+				nil, // notificationService
+				&mockUserRepo{}, // userRepo
+				nil, // orgRepo
+			)
 
 			userWorkout, err := service.LogWorkout(
 				tt.userID,
@@ -201,7 +213,19 @@ func TestUserWorkoutService_GetLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo(), nil)
+			service := NewUserWorkoutService(
+				userWorkoutRepo,
+				workoutRepo,
+				workoutMovementRepo,
+				&mockUserWorkoutMovementRepo{},
+				&mockUserWorkoutWODRepo{},
+				newMockWODRepo(),
+				nil, // auditLogRepo
+				&mockMovementRepo{}, // movementRepo
+				nil, // notificationService
+				&mockUserRepo{}, // userRepo
+				nil, // orgRepo
+			)
 
 			userWorkout, err := service.GetLoggedWorkout(tt.userWorkoutID, tt.userID)
 
@@ -302,7 +326,19 @@ func TestUserWorkoutService_UpdateLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo(), nil)
+			service := NewUserWorkoutService(
+				userWorkoutRepo,
+				workoutRepo,
+				workoutMovementRepo,
+				&mockUserWorkoutMovementRepo{},
+				&mockUserWorkoutWODRepo{},
+				newMockWODRepo(),
+				nil, // auditLogRepo
+				&mockMovementRepo{}, // movementRepo
+				nil, // notificationService
+				&mockUserRepo{}, // userRepo
+				nil, // orgRepo
+			)
 
 			err := service.UpdateLoggedWorkout(
 				tt.userWorkoutID,
@@ -395,7 +431,19 @@ func TestUserWorkoutService_DeleteLoggedWorkout(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo(), nil)
+			service := NewUserWorkoutService(
+				userWorkoutRepo,
+				workoutRepo,
+				workoutMovementRepo,
+				&mockUserWorkoutMovementRepo{},
+				&mockUserWorkoutWODRepo{},
+				newMockWODRepo(),
+				nil, // auditLogRepo
+				&mockMovementRepo{}, // movementRepo
+				nil, // notificationService
+				&mockUserRepo{}, // userRepo
+				nil, // orgRepo
+			)
 
 			err := service.DeleteLoggedWorkout(tt.userWorkoutID, tt.userID, "test@example.com")
 
@@ -482,7 +530,19 @@ func TestUserWorkoutService_GetWorkoutStatsForMonth(t *testing.T) {
 				tt.setupMock(userWorkoutRepo)
 			}
 
-			service := NewUserWorkoutService(userWorkoutRepo, workoutRepo, workoutMovementRepo, &mockUserWorkoutMovementRepo{}, &mockUserWorkoutWODRepo{}, newMockWODRepo(), nil)
+			service := NewUserWorkoutService(
+				userWorkoutRepo,
+				workoutRepo,
+				workoutMovementRepo,
+				&mockUserWorkoutMovementRepo{},
+				&mockUserWorkoutWODRepo{},
+				newMockWODRepo(),
+				nil, // auditLogRepo
+				&mockMovementRepo{}, // movementRepo
+				nil, // notificationService
+				&mockUserRepo{}, // userRepo
+				nil, // orgRepo
+			)
 
 			count, err := service.GetWorkoutStatsForMonth(tt.userID, tt.year, tt.month)
 
