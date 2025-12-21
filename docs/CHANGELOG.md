@@ -149,6 +149,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ CASCADE DELETE verified
 - ✅ Duplicate like prevention (409 Conflict)
 
+### Fixed - Profile View Workout Summary Statistics
+
+**Bug Fixes:**
+- Fixed Personal Records count showing 0 (was looking for `personal_records` field, API returns `movements`)
+- Now correctly sums `pr_count` from each movement for total PR count
+- Fixed Current Streak calculation with incorrect consecutive day logic
+- Rewrote streak algorithm to properly check for consecutive workout days
+- Added null safety for API responses when no PRs exist
+
+**Streak Calculation Improvements:**
+- Uses unique workout dates (handles multiple workouts per day)
+- Checks if most recent workout is today or yesterday (or streak is broken)
+- Counts backwards through consecutive days correctly
+- Stops at first gap in workout dates
+
+**Files Modified:**
+- `web/src/views/ProfileView.vue:604-673` - Stats fetching and calculation logic
+
+### Added - Workout Summary Time Period Filters
+
+**Time Filter Options:**
+- This Week (Sunday through today)
+- This Month (1st of month through today)
+- This Year (January 1st through today)
+- All Time (no filtering)
+
+**Filtering Behavior:**
+- Total Workouts: Filtered by selected period
+- Personal Records: Filtered by `last_pr_date` from PR movements
+- Current Streak: Always all-time (continuous metric)
+- Custom Templates: Always all-time (cumulative creations)
+
+**UX Features:**
+- Chip-based filter selector above stats
+- Real-time updates when switching periods
+- Default period: "This Month"
+- Reactive updates using Vue watch
+
+**Files Modified:**
+- `web/src/views/ProfileView.vue:198-212, 578, 603-709, 887-890` - Time filter UI and logic
+
+### Fixed - CI Pipeline Compilation Errors
+
+**Test Compilation Fixes:**
+- Fixed `mockEmailService` missing `SendHTMLEmail(to, subject, htmlBody)` method
+- Fixed `NewUserWorkoutService` calls missing 4 parameters in all 5 test cases
+- Added `mockMovementRepo` with 13 methods implementing `MovementRepository` interface
+- Added `GetAllPerformancesForMovement` to `mockUserWorkoutMovementRepo`
+
+**Impact:**
+- ✅ All service tests now compile successfully
+- ✅ Integration tests compile successfully
+- ✅ CI pipeline unblocked for Go compilation step
+- ✅ Database matrix tests (SQLite, PostgreSQL, MySQL) can now run
+
+**Files Modified:**
+- `internal/service/user_service_test.go` - Added SendHTMLEmail mock method
+- `internal/service/user_workout_service_test.go` - Fixed all NewUserWorkoutService calls
+- `internal/service/test_helpers.go` - Added mockMovementRepo and GetAllPerformancesForMovement
+
 ---
 
 ## [0.14.0-beta] - 2024-12-16

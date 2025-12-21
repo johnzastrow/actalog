@@ -36,83 +36,7 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
-### CI/CD Workflow Failures (In Progress)
-
-**Status:** Multiple workflows failing due to test compilation errors and deprecated actions
-
-#### GitHub Actions Status (as of 2025-12-19 17:09 UTC)
-- ❌ **CI Workflow** - Failing (Run #20377062570)
-- ❌ **Publish Site** - Failing (Run #20377062579)
-- ✅ **Docker Build** - Passing
-- ❌ **CI Failure Notify** - Failing (dependency on CI)
-
-#### 1. Integration Tests Compilation Errors (`test/integration/api_test.go`)
-**Status:** Blocking CI pipeline
-
-**Errors:**
-- Line 149-162: `NewUserService` missing `userSubRepo` parameter
-  - Need to add `nil` for userSubRepo before audit log service parameter
-- Line 177-184: `NewUserWorkoutService` missing `auditLogRepo` parameter
-  - Need to add `nil` as 7th parameter
-
-**Impact:** All 3 DB matrix tests failing (SQLite, PostgreSQL, MySQL)
-
-#### 2. GitHub Pages Publish Workflow Failure
-**Status:** Using deprecated GitHub Actions
-
-**Error:**
-```
-This request has been automatically failed because it uses a
-deprecated version of `actions/upload-artifact: v3`
-```
-
-**Files to Update:**
-- `.github/workflows/publish-site.yml` line 25:
-  - Current: `actions/upload-pages-artifact@v1`
-  - Need: `actions/upload-pages-artifact@v3` (or latest)
-- Check if `actions/deploy-pages@v1` also needs update
-
-**Reference:** https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/
-
-#### 3. Unit Test Assertion Failures (Non-blocking)
-
-**Subscription Service Tests** (`internal/service/subscription_service_test.go`)
-**Compilation:** ✅ Fixed
-**Running:** ⚠️ 10/14 tests passing
-
-Failing tests:
-1. **successful_free_subscription_creation** (line 173)
-   - Issue: Test expects EndDate to be set for non-permanent free subscriptions
-   - Location: `subscription_service_test.go:173`
-
-2. **subscription_not_found scenarios** (lines 307, 400)
-   - Issue: Tests expect exact error "subscription not found" but get wrapped error "failed to get subscription: sql: no rows in result set"
-   - Locations: `subscription_service_test.go:307, :400`
-
-3. **organization_already_has_active_subscription** (line 621)
-   - Issue: Test expects wrong error message (says "user already has..." instead of "organization already has...")
-   - Location: `subscription_service_test.go:621`
-
-**Mock Repository Fixes Completed:**
-- ✅ Fixed `mockAuditLogRepo.DeleteOlderThan` signature (time.Time param)
-- ✅ Fixed `mockAuditLogRepo.List` signature (AuditLogFilters param)
-- ✅ Added `mockAuditLogRepo.GetByTargetUserID` method
-- ✅ Added `mockAuditLogRepo.GetByUserID` method
-- ✅ Fixed `mockUserRepo.IsAccountLocked` signature (int64 param, returns bool, *time.Time, error)
-- ✅ Fixed `mockUserRepo.LockAccount` signature (int64, time.Duration params)
-- ✅ Added `mockOrganizationRepo.GetUserOrganizationIDs` method
-- ✅ Fixed `mockOrganizationRepo.List` signature (returns count)
-- ✅ Added `mockUserWorkoutRepo.GetActiveUsersThisMonth` method
-- ✅ Fixed WOD service test calls (added userEmail parameter)
-- ✅ Fixed UserWorkout service test calls (added userEmail parameter)
-- ✅ Fixed UserService test (added userSubRepo parameter)
-
-**Files Modified:**
-- `internal/service/test_helpers.go` - All mock repository fixes
-- `internal/service/subscription_service_test.go` - Comprehensive test suite (created)
-- `internal/service/wod_service_test.go` - Added audit log repo parameter
-- `internal/service/user_workout_service_test.go` - Added audit log repo, userEmail parameters
-- `internal/service/user_service_test.go` - Added userSubRepo parameter
+*(none currently)*
 
 ### CI/Lint Fixes (Deferred)
 
@@ -290,7 +214,7 @@ Add notifications: notify all users in the gym on the following events:
 
 ### v0.16.0-beta (2025-12-20)
 
-**Status:** Notification likes feature with social engagement.
+**Status:** Notification likes, profile stats fixes, time filters, and CI pipeline fixes.
 
 **Completed:**
 - [x] **Notification Likes Feature**
@@ -312,9 +236,29 @@ Add notifications: notify all users in the gym on the following events:
   - [x] "Liked by: " prefix for liker names
   - [x] CASCADE DELETE when notification is deleted
 
-**Files Created:** `internal/domain/notification_like.go`, `internal/repository/notification_like_repository.go`, `internal/service/notification_like_service.go`, `internal/handler/notification_like_handler.go`, `web/src/components/NotificationLikes.vue`, `/tmp/test_notification_likes_final.sh` (testing)
+- [x] **Profile View Workout Summary Fixes**
+  - [x] Fixed Personal Records count (was looking for wrong field)
+  - [x] Fixed streak calculation algorithm (consecutive days logic error)
+  - [x] Added null safety for API responses
+  - [x] Time period filters: This Week, This Month, This Year, All Time
+  - [x] Default period: This Month
+  - [x] Reactive updates with Vue watch
 
-**Files Modified:** `internal/repository/migrations.go` (migration 0.16.0), `internal/domain/notification.go` (MarkAsUnread interface), `internal/repository/notification_repository.go` (MarkAsUnread implementation), `cmd/actalog/main.go` (wiring), `web/src/views/NotificationsView.vue` (integration), `pkg/version/version.go` (v0.16.0), `docs/CHANGELOG.md` (release notes)
+- [x] **CI Pipeline Fixes**
+  - [x] Fixed mockEmailService missing SendHTMLEmail method
+  - [x] Fixed NewUserWorkoutService calls missing 4 parameters in tests
+  - [x] Added mockMovementRepo with 13 methods
+  - [x] Added GetAllPerformancesForMovement to mockUserWorkoutMovementRepo
+  - [x] All service tests now compile successfully
+  - [x] Integration tests compile successfully
+
+**Files Created:** `internal/domain/notification_like.go`, `internal/repository/notification_like_repository.go`, `internal/service/notification_like_service.go`, `internal/handler/notification_like_handler.go`, `web/src/components/NotificationLikes.vue`
+
+**Files Modified:**
+- Notification likes: `internal/repository/migrations.go`, `internal/domain/notification.go`, `internal/repository/notification_repository.go`, `cmd/actalog/main.go`, `web/src/views/NotificationsView.vue`, `pkg/version/version.go`
+- Profile stats: `web/src/views/ProfileView.vue`
+- CI fixes: `internal/service/user_service_test.go`, `internal/service/user_workout_service_test.go`, `internal/service/test_helpers.go`
+- Documentation: `docs/CHANGELOG.md`, `docs/TODO.md`, `docs/ROADMAP.md`, `docs/DATABASE_SCHEMA.md`, `CLAUDE.md`, `web/package.json`
 
 **API Endpoints:**
 - `POST /api/notifications/{id}/like` - Like a notification
