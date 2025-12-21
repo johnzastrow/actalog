@@ -281,12 +281,12 @@ func (r *UserWorkoutMovementRepository) GetMaxWeightForMovement(userID, movement
 // GetAllPerformancesForMovement retrieves all performances for a specific movement for a user
 // Used for calculating the best 1RM. Excludes the current workout if currentWorkoutID is provided.
 func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
-	query := rebindQuery(`
+	query := `
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
 		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at
 		FROM user_workout_movements uwm
 		INNER JOIN user_workouts uw ON uwm.user_workout_id = uw.id
-		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`)
+		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`
 
 	args := []interface{}{userID, movementID}
 
@@ -296,6 +296,7 @@ func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, mo
 	}
 
 	query += " ORDER BY uw.workout_date DESC"
+	query = rebindQuery(query)
 
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
