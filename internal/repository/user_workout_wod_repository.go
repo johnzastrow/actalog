@@ -26,17 +26,26 @@ func (r *UserWorkoutWODRepository) Create(uww *domain.UserWorkoutWOD) error {
 	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
-	result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create user workout WOD: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create user workout WOD: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create user workout WOD: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get user workout WOD ID: %w", err)
+		}
+
+		uww.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get user workout WOD ID: %w", err)
-	}
-
-	uww.ID = id
 	return nil
 }
 
@@ -52,30 +61,48 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 	}
 	defer tx.Rollback()
 
-	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	now := time.Now()
+
+	if currentDriver == "postgres" {
+		// Postgres: use RETURNING id with individual QueryRow calls
+		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`)
+
+		for _, uww := range wods {
+			uww.CreatedAt = now
+			uww.UpdatedAt = now
+
+			err := tx.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
+			if err != nil {
+				return fmt.Errorf("failed to insert user workout WOD: %w", err)
+			}
+		}
+	} else {
+		// SQLite/MySQL: use prepared statement with LastInsertId
+		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
-	stmt, err := tx.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
-
-	now := time.Now()
-	for _, uww := range wods {
-		uww.CreatedAt = now
-		uww.UpdatedAt = now
-
-		result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+		stmt, err := tx.Prepare(query)
 		if err != nil {
-			return fmt.Errorf("failed to insert user workout WOD: %w", err)
+			return fmt.Errorf("failed to prepare statement: %w", err)
 		}
+		defer stmt.Close()
 
-		id, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get user workout WOD ID: %w", err)
+		for _, uww := range wods {
+			uww.CreatedAt = now
+			uww.UpdatedAt = now
+
+			result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+			if err != nil {
+				return fmt.Errorf("failed to insert user workout WOD: %w", err)
+			}
+
+			id, err := result.LastInsertId()
+			if err != nil {
+				return fmt.Errorf("failed to get user workout WOD ID: %w", err)
+			}
+			uww.ID = id
 		}
-		uww.ID = id
 	}
 
 	if err := tx.Commit(); err != nil {

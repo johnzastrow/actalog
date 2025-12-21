@@ -24,17 +24,26 @@ func (r *WorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
 	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 
-	result, err := r.db.Exec(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create workout-WOD: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt).Scan(&workoutWOD.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create workout-WOD: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create workout-WOD: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get workout-WOD ID: %w", err)
+		}
+
+		workoutWOD.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get workout-WOD ID: %w", err)
-	}
-
-	workoutWOD.ID = id
 	return nil
 }
 

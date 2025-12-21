@@ -27,30 +27,52 @@ func (r *WODRepository) Create(wod *domain.WOD) error {
 	query := rebindQuery(`INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
-	result, err := r.db.Exec(query,
-		wod.Name,
-		wod.Source,
-		wod.Type,
-		wod.Regime,
-		wod.ScoreType,
-		wod.Description,
-		wod.URL,
-		wod.Notes,
-		wod.IsStandard,
-		wod.CreatedBy,
-		wod.CreatedAt,
-		wod.UpdatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create wod: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query,
+			wod.Name,
+			wod.Source,
+			wod.Type,
+			wod.Regime,
+			wod.ScoreType,
+			wod.Description,
+			wod.URL,
+			wod.Notes,
+			wod.IsStandard,
+			wod.CreatedBy,
+			wod.CreatedAt,
+			wod.UpdatedAt,
+		).Scan(&wod.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create wod: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query,
+			wod.Name,
+			wod.Source,
+			wod.Type,
+			wod.Regime,
+			wod.ScoreType,
+			wod.Description,
+			wod.URL,
+			wod.Notes,
+			wod.IsStandard,
+			wod.CreatedBy,
+			wod.CreatedAt,
+			wod.UpdatedAt,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create wod: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get wod ID: %w", err)
+		}
+
+		wod.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get wod ID: %w", err)
-	}
-
-	wod.ID = id
 	return nil
 }
 
@@ -656,28 +678,47 @@ func (r *WODRepository) CopyToStandard(id int64, newName string) (*domain.WOD, e
 	query := rebindQuery(`INSERT INTO wods (name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NULL, ?, ?)`)
 
-	result, err := r.db.Exec(query,
-		standardWOD.Name,
-		standardWOD.Source,
-		standardWOD.Type,
-		standardWOD.Regime,
-		standardWOD.ScoreType,
-		standardWOD.Description,
-		standardWOD.URL,
-		standardWOD.Notes,
-		standardWOD.CreatedAt,
-		standardWOD.UpdatedAt,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create standard wod: %w", err)
-	}
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query,
+			standardWOD.Name,
+			standardWOD.Source,
+			standardWOD.Type,
+			standardWOD.Regime,
+			standardWOD.ScoreType,
+			standardWOD.Description,
+			standardWOD.URL,
+			standardWOD.Notes,
+			standardWOD.CreatedAt,
+			standardWOD.UpdatedAt,
+		).Scan(&standardWOD.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard wod: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query,
+			standardWOD.Name,
+			standardWOD.Source,
+			standardWOD.Type,
+			standardWOD.Regime,
+			standardWOD.ScoreType,
+			standardWOD.Description,
+			standardWOD.URL,
+			standardWOD.Notes,
+			standardWOD.CreatedAt,
+			standardWOD.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard wod: %w", err)
+		}
 
-	newID, err := result.LastInsertId()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get new wod ID: %w", err)
-	}
+		newID, err := result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get new wod ID: %w", err)
+		}
 
-	standardWOD.ID = newID
+		standardWOD.ID = newID
+	}
 	return standardWOD, nil
 }
 

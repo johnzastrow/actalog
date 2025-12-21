@@ -573,19 +573,33 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 	query := rebindQuery(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
 	          VALUES (?, ?, NULL, ?, ?)`)
 
-	result, err := r.db.Exec(query,
-		standardWorkout.Name,
-		standardWorkout.Notes,
-		standardWorkout.CreatedAt,
-		standardWorkout.UpdatedAt,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create standard workout: %w", err)
-	}
+	var newID int64
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query,
+			standardWorkout.Name,
+			standardWorkout.Notes,
+			standardWorkout.CreatedAt,
+			standardWorkout.UpdatedAt,
+		).Scan(&newID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard workout: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query,
+			standardWorkout.Name,
+			standardWorkout.Notes,
+			standardWorkout.CreatedAt,
+			standardWorkout.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard workout: %w", err)
+		}
 
-	newID, err := result.LastInsertId()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get new workout ID: %w", err)
+		newID, err = result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get new workout ID: %w", err)
+		}
 	}
 	standardWorkout.ID = newID
 

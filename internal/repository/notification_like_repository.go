@@ -24,16 +24,26 @@ func (r *NotificationLikeRepository) Create(like *domain.NotificationLike) error
 		INSERT INTO notification_likes (notification_id, user_id, created_at)
 		VALUES (?, ?, ?)
 	`)
-	result, err := r.db.Exec(query, like.NotificationID, like.UserID, like.CreatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create notification like: %w", err)
+
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, like.NotificationID, like.UserID, like.CreatedAt).Scan(&like.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create notification like: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, like.NotificationID, like.UserID, like.CreatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create notification like: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return err
+		}
+		like.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-	like.ID = id
 	return nil
 }
 

@@ -27,17 +27,26 @@ func (r *MovementRepository) Create(movement *domain.Movement) error {
 	query := rebindQuery(`INSERT INTO movements (name, description, type, is_standard, created_by, created_at, updated_at)
 	          VALUES (?, ?, ?, ?, ?, ?, ?)`)
 
-	result, err := r.db.Exec(query, movement.Name, movement.Description, movement.Type, movement.IsStandard, movement.CreatedBy, movement.CreatedAt, movement.UpdatedAt)
-	if err != nil {
-		return fmt.Errorf("failed to create movement: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query, movement.Name, movement.Description, movement.Type, movement.IsStandard, movement.CreatedBy, movement.CreatedAt, movement.UpdatedAt).Scan(&movement.ID)
+		if err != nil {
+			return fmt.Errorf("failed to create movement: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query, movement.Name, movement.Description, movement.Type, movement.IsStandard, movement.CreatedBy, movement.CreatedAt, movement.UpdatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to create movement: %w", err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get movement ID: %w", err)
+		}
+
+		movement.ID = id
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to get movement ID: %w", err)
-	}
-
-	movement.ID = id
 	return nil
 }
 
@@ -373,23 +382,38 @@ func (r *MovementRepository) CopyToStandard(id int64, newName string) (*domain.M
 	query := rebindQuery(`INSERT INTO movements (name, description, type, is_standard, created_by, created_at, updated_at)
 	          VALUES (?, ?, ?, 1, NULL, ?, ?)`)
 
-	result, err := r.db.Exec(query,
-		standardMovement.Name,
-		standardMovement.Description,
-		standardMovement.Type,
-		standardMovement.CreatedAt,
-		standardMovement.UpdatedAt,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create standard movement: %w", err)
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(query,
+			standardMovement.Name,
+			standardMovement.Description,
+			standardMovement.Type,
+			standardMovement.CreatedAt,
+			standardMovement.UpdatedAt,
+		).Scan(&standardMovement.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard movement: %w", err)
+		}
+	} else {
+		result, err := r.db.Exec(query,
+			standardMovement.Name,
+			standardMovement.Description,
+			standardMovement.Type,
+			standardMovement.CreatedAt,
+			standardMovement.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create standard movement: %w", err)
+		}
+
+		newID, err := result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get new movement ID: %w", err)
+		}
+
+		standardMovement.ID = newID
 	}
 
-	newID, err := result.LastInsertId()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get new movement ID: %w", err)
-	}
-
-	standardMovement.ID = newID
 	return standardMovement, nil
 }
 

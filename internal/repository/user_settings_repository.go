@@ -62,6 +62,22 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 	settings.CreatedAt = now
 	settings.UpdatedAt = now
 
+	if currentDriver == "postgres" {
+		query += " RETURNING id"
+		err := r.db.QueryRow(
+			query,
+			settings.UserID,
+			settings.NotificationPreferences,
+			settings.DataExportFormat,
+			settings.Theme,
+			settings.WeightUnit,
+			settings.DistanceUnit,
+			settings.CreatedAt,
+			settings.UpdatedAt,
+		).Scan(&settings.ID)
+		return err
+	}
+
 	result, err := r.db.Exec(
 		query,
 		settings.UserID,
