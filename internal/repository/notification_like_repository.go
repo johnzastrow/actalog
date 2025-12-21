@@ -20,10 +20,10 @@ func NewNotificationLikeRepository(db *sql.DB) *NotificationLikeRepository {
 
 // Create adds a like to a notification
 func (r *NotificationLikeRepository) Create(like *domain.NotificationLike) error {
-	query := `
+	query := rebindQuery(`
 		INSERT INTO notification_likes (notification_id, user_id, created_at)
 		VALUES (?, ?, ?)
-	`
+	`)
 	result, err := r.db.Exec(query, like.NotificationID, like.UserID, like.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create notification like: %w", err)
@@ -39,7 +39,7 @@ func (r *NotificationLikeRepository) Create(like *domain.NotificationLike) error
 
 // Delete removes a like
 func (r *NotificationLikeRepository) Delete(notificationID, userID int64) error {
-	query := `DELETE FROM notification_likes WHERE notification_id = ? AND user_id = ?`
+	query := rebindQuery(`DELETE FROM notification_likes WHERE notification_id = ? AND user_id = ?`)
 	_, err := r.db.Exec(query, notificationID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete notification like: %w", err)
@@ -49,13 +49,13 @@ func (r *NotificationLikeRepository) Delete(notificationID, userID int64) error 
 
 // GetByNotificationID returns all likes for a notification with user details
 func (r *NotificationLikeRepository) GetByNotificationID(notificationID int64) ([]*domain.NotificationLike, error) {
-	query := `
+	query := rebindQuery(`
 		SELECT nl.id, nl.notification_id, nl.user_id, nl.created_at, u.name, u.email
 		FROM notification_likes nl
 		JOIN users u ON nl.user_id = u.id
 		WHERE nl.notification_id = ?
 		ORDER BY nl.created_at DESC
-	`
+	`)
 
 	rows, err := r.db.Query(query, notificationID)
 	if err != nil {
@@ -96,7 +96,7 @@ func (r *NotificationLikeRepository) GetByNotificationID(notificationID int64) (
 // GetLikeCount returns the count of likes for a notification
 func (r *NotificationLikeRepository) GetLikeCount(notificationID int64) (int, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM notification_likes WHERE notification_id = ?`
+	query := rebindQuery(`SELECT COUNT(*) FROM notification_likes WHERE notification_id = ?`)
 	err := r.db.QueryRow(query, notificationID).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get like count: %w", err)
@@ -107,7 +107,7 @@ func (r *NotificationLikeRepository) GetLikeCount(notificationID int64) (int, er
 // HasUserLiked checks if a user has liked a notification
 func (r *NotificationLikeRepository) HasUserLiked(notificationID, userID int64) (bool, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM notification_likes WHERE notification_id = ? AND user_id = ?`
+	query := rebindQuery(`SELECT COUNT(*) FROM notification_likes WHERE notification_id = ? AND user_id = ?`)
 	err := r.db.QueryRow(query, notificationID, userID).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if user liked: %w", err)
