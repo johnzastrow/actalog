@@ -86,6 +86,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.0-beta] - 2024-12-20
+
+### Added - Notification Likes Feature
+
+**Social Engagement for Notifications:**
+- Users can "like" any notification (PR achievements, announcements, weekly streaks, WOD milestones)
+- Like count displayed with thumbs up icon next to each notification
+- Names of users who liked displayed as comma-separated list ("Liked by: jcz, John, Mary")
+- Users can like their own notifications
+- **Automatic unread marking**: When someone likes a notification, it marks as unread for the original recipient
+- CASCADE DELETE: Deleting a notification automatically removes all associated likes
+
+**Backend Implementation:**
+- New `notification_likes` table with proper indexes and foreign keys
+- Unique constraint prevents duplicate likes (409 Conflict error returned)
+- Repository layer with JOIN query to fetch likes with user details
+- Service layer handles like/unlike operations and automatic unread marking
+- New `MarkAsUnread` method added to NotificationRepository interface
+
+**API Endpoints:**
+- `POST /api/notifications/{id}/like` - Like a notification
+- `DELETE /api/notifications/{id}/like` - Unlike a notification
+- `GET /api/notifications/{id}/likes` - Get all likes with user details (returns count and array of likes)
+
+**Frontend Component:**
+- `NotificationLikes.vue` component with thumbs up icon
+- Toggle between filled (liked) and outline (not liked) states
+- Real-time like count updates
+- Displays "Liked by: name1, name2, name3" in small grey text
+- Integrates seamlessly into existing NotificationsView
+- Proper authentication using configured axios instance
+
+**Database Migration:**
+- Migration v0.16.0 creates `notification_likes` table
+- Multi-database support: SQLite, PostgreSQL, MySQL
+- Indexes on `notification_id` and `user_id` for performance
+- Unique constraint on `(notification_id, user_id)` pair
+
+**Technical Details:**
+- **Build**: #59
+- **Version**: 0.16.0-beta
+- **Files Created**:
+  - `internal/domain/notification_like.go` - Domain model and repository interface
+  - `internal/repository/notification_like_repository.go` - Data access layer
+  - `internal/service/notification_like_service.go` - Business logic layer
+  - `internal/handler/notification_like_handler.go` - HTTP handlers
+  - `web/src/components/NotificationLikes.vue` - Frontend component
+- **Files Modified**:
+  - `internal/repository/migrations.go` - Added v0.16.0 migration
+  - `internal/domain/notification.go` - Added `MarkAsUnread` method to interface
+  - `internal/repository/notification_repository.go` - Implemented `MarkAsUnread`
+  - `cmd/actalog/main.go` - Wired up dependencies and routes
+  - `web/src/views/NotificationsView.vue` - Integrated NotificationLikes component
+  - `pkg/version/version.go` - Updated to v0.16.0-beta
+
+**Testing:**
+- ✅ Like/unlike operations verified
+- ✅ Like count updates correctly
+- ✅ User details populated via JOIN query
+- ✅ Notifications marked as unread when liked
+- ✅ CASCADE DELETE verified
+- ✅ Duplicate like prevention (409 Conflict)
+
+---
+
 ## [0.14.0-beta] - 2024-12-16
 
 ### Added - Subscription Billing System

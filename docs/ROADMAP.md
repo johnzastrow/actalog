@@ -1,62 +1,70 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.14.0-beta
-**Last Updated:** 2024-12-16
-**Overall Completion:** ~92% of core requirements
+**Current Version:** 0.16.0-beta
+**Last Updated:** 2025-12-20
+**Overall Completion:** ~93% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, and **subscription billing system**. The latest release (v0.14.0-beta) implements a comprehensive **dual-level subscription billing system** with user-level and organization-level subscriptions, manual admin payment control, immediate read-only mode enforcement when expired, and full backward compatibility (all existing users automatically receive permanent free subscriptions). The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and now includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, **subscription billing system**, and **social engagement features**. The latest release (v0.16.0-beta) adds **notification likes** allowing users to celebrate each other's achievements, with only the original recipient seeing the like count and list of likers. Previous releases include v0.15.0 (admin announcements), v0.14.0 (dual-level subscription billing), and v0.10.0 (Docker deployment). The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
 
 ---
 
 ## Version History & Status
 
-### v0.14.1-beta / v0.15.0-beta (In Progress)
-**Status:** Comprehensive audit logging for all data operations
+### v0.16.0-beta (Released)
+**Status:** Notification likes feature with social engagement
 
-**Completed (Unreleased):**
-- ✅ Audit logging for MovementService (Create, Update, UpdateAsAdmin, Delete)
-- ✅ Audit logging for WODService (Create, Update, UpdateAsAdmin, Delete)
-- ✅ Audit logging for WorkoutTemplateService (Create, Update, Delete)
-- ✅ Audit logging for UserWorkoutService (LogWorkout, LogWorkoutWithPerformance, UpdateLoggedWorkout, DeleteLoggedWorkout)
-- ✅ Audit logging for UserService (UpdateProfile)
-- ✅ Audit logging for UserSettingsService (UpdateSettings)
-- ✅ All handlers updated to extract and pass userEmail for audit logging
-- ✅ All service constructors updated to accept auditLogRepo parameter
-- ✅ Comprehensive audit event constants for all operations
-- ✅ Change tracking with before/after values for updates
-- ✅ User attribution (UserID + TargetUserID) for all audit logs
-- ✅ Admin operation flagging for administrative actions
+**Completed:**
+- ✅ Domain layer (NotificationLike entity and repository interface)
+- ✅ Repository layer with JOIN queries for user details
+- ✅ Service layer with LikeNotification marking notifications as unread
+- ✅ Handler layer with like/unlike/get likes endpoints
+- ✅ Frontend NotificationLikes.vue component
+- ✅ Integration into NotificationsView.vue
+- ✅ Database migration 0.16.0 with CASCADE DELETE
+- ✅ Multi-database support (SQLite, PostgreSQL, MariaDB)
+
+**Social Engagement Features:**
+- Users can like any notification (PR achievements, announcements, streaks, milestones)
+- Only original recipient sees like count and list of likers
+- Liking marks notification as unread for recipient
+- Users CAN like their own notifications
+- Display: Thumbs up icon with count, comma-separated liker names with "Liked by: " prefix
+- CASCADE DELETE when notification is deleted
 
 **Technical Highlights:**
-- Complete audit trail for movements, WODs, workout templates, user workouts, profiles, and settings
-- JSON-encoded audit details with structured change tracking
-- Fire-and-forget pattern (audit failures don't block operations)
-- Conditional logging with nil checks for optional audit repositories
-- 13 files modified across domain, service, and handler layers
-- Build #40 completed successfully
+- 5 new files created (domain, repository, service, handler, frontend component)
+- 7 files modified (migrations, domain interface, repository, main.go, view, version, CHANGELOG)
+- 3 API endpoints (POST/DELETE/GET for likes)
+- Complete integration testing with test script
+- Build #59 completed successfully
 
-**Coverage:**
-- ✅ Movement CRUD operations
-- ✅ WOD CRUD operations
-- ✅ Workout Template CRUD operations
-- ✅ User Workout operations
-- ✅ User Profile updates
-- ✅ User Settings updates
-- ✅ Organization operations (from v0.14.0)
-- ✅ Subscription operations (from v0.14.0)
-- ✅ User associations (from v0.14.0)
+**API Endpoints:**
+- `POST /api/notifications/{id}/like` - Like a notification
+- `DELETE /api/notifications/{id}/like` - Unlike a notification
+- `GET /api/notifications/{id}/likes` - Get all likes with user details
 
-**Architecture Documentation:**
-- Complete audit logging architecture section added to ARCHITECTURE.md
-- Design patterns documented (Service Layer Integration, Conditional Logging, Fire-and-Forget, Change Tracking)
-- Comprehensive event type listing by entity
-- Performance and security considerations documented
+---
 
-**Next Phase:** Version release and frontend subscription UI from v0.14.0 roadmap
+### v0.15.0-beta (Released)
+**Status:** Admin announcement system for gym-wide notifications
+
+**Completed:**
+- ✅ Admin-only endpoint for creating announcements
+- ✅ Sends notification to all users in the system
+- ✅ Flexible notification system (PR achievements, announcements, etc.)
+- ✅ Audit trail for all announcement creation
+
+**Technical Highlights:**
+- Admin announcements endpoint added to notification handler
+- Route wiring in main.go
+- Complete audit logging for announcement operations
+
+**API Endpoints:**
+- `POST /api/admin/notifications/announce` - Create announcement for all users (admin only)
 
 ---
 

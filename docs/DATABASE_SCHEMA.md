@@ -13,7 +13,31 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.14.0-beta
+**Current Version:** 0.16.0-beta
+
+## Recent Changes (v0.16.0-beta)
+
+- **Notification Likes Feature**: Social engagement for gym community
+  - New `notification_likes` table (4 columns, 4 indexes + unique constraint)
+  - Columns: `id`, `notification_id`, `user_id`, `created_at`
+  - Foreign keys with CASCADE DELETE to `notifications` and `users`
+  - Unique constraint prevents duplicate likes from same user
+  - Indexes for fast lookup by notification_id and user_id
+  - Migration 0.16.0 creates table structure
+  - API endpoints: POST/DELETE/GET for like/unlike/list likes
+  - Frontend component: NotificationLikes.vue with thumbs up icon
+  - Liking a notification marks it as unread for original recipient
+  - Only recipient sees like count and liker names
+  - Users can like their own notifications
+
+## Recent Changes (v0.15.0-beta)
+
+- **Admin Announcements**: Gym-wide notification system
+  - Admin-only endpoint for creating announcements
+  - Sends notifications to all users in the system
+  - Flexible notification types (PR achievements, announcements, streaks, milestones)
+  - Complete audit trail for announcement operations
+  - API endpoint: POST `/api/admin/notifications/announce`
 
 ## Recent Changes (v0.14.0-beta)
 

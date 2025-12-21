@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-19
-> **Current Version:** 0.14.0-beta
+> **Last Updated:** 2025-12-20
+> **Current Version:** 0.16.0-beta
 
 ---
 
@@ -287,6 +287,61 @@ Add notifications: notify all users in the gym on the following events:
 ---
 
 ## Completed Releases
+
+### v0.16.0-beta (2025-12-20)
+
+**Status:** Notification likes feature with social engagement.
+
+**Completed:**
+- [x] **Notification Likes Feature**
+  - [x] Domain layer (NotificationLike entity and repository interface)
+  - [x] Repository layer with JOIN queries for user details
+  - [x] Service layer with LikeNotification marking notifications as unread
+  - [x] Handler layer with like/unlike/get likes endpoints
+  - [x] Frontend NotificationLikes.vue component
+  - [x] Integration into NotificationsView.vue
+  - [x] Database migration 0.16.0 with CASCADE DELETE
+  - [x] Multi-database support (SQLite, PostgreSQL, MariaDB)
+
+- [x] **Social Engagement Features**
+  - [x] Users can like any notification (PR achievements, announcements, streaks, milestones)
+  - [x] Only original recipient sees like count and list of likers
+  - [x] Liking marks notification as unread for recipient
+  - [x] Users CAN like their own notifications
+  - [x] Display: Thumbs up icon with count, comma-separated liker names
+  - [x] "Liked by: " prefix for liker names
+  - [x] CASCADE DELETE when notification is deleted
+
+**Files Created:** `internal/domain/notification_like.go`, `internal/repository/notification_like_repository.go`, `internal/service/notification_like_service.go`, `internal/handler/notification_like_handler.go`, `web/src/components/NotificationLikes.vue`, `/tmp/test_notification_likes_final.sh` (testing)
+
+**Files Modified:** `internal/repository/migrations.go` (migration 0.16.0), `internal/domain/notification.go` (MarkAsUnread interface), `internal/repository/notification_repository.go` (MarkAsUnread implementation), `cmd/actalog/main.go` (wiring), `web/src/views/NotificationsView.vue` (integration), `pkg/version/version.go` (v0.16.0), `docs/CHANGELOG.md` (release notes)
+
+**API Endpoints:**
+- `POST /api/notifications/{id}/like` - Like a notification
+- `DELETE /api/notifications/{id}/like` - Unlike a notification
+- `GET /api/notifications/{id}/likes` - Get all likes with user details
+
+---
+
+### v0.15.0-beta (2025-12-19)
+
+**Status:** Admin announcement system for gym-wide notifications.
+
+**Completed:**
+- [x] **Admin Announcement Feature**
+  - [x] Admin-only endpoint for creating announcements
+  - [x] Sends notification to all users in the system
+  - [x] Flexible notification system (PR achievements, announcements, etc.)
+  - [x] Audit trail for all announcement creation
+
+**Files Created:** Admin announcement handler endpoint
+
+**Files Modified:** `internal/handler/notification_handler.go` (admin announcement endpoint), `cmd/actalog/main.go` (route wiring)
+
+**API Endpoints:**
+- `POST /api/admin/notifications/announce` - Create announcement for all users (admin only)
+
+---
 
 ### v0.14.0-beta (2024-12-16)
 

@@ -108,6 +108,7 @@ func main() {
 	dataChangeLogRepo := repository.NewDataChangeLogRepository(db, cfg.Database.Driver)
 	orgRepo := repository.NewOrganizationRepository(db)
 	notificationRepo := repository.NewNotificationRepository(db)
+	notificationLikeRepo := repository.NewNotificationLikeRepository(db)
 
 	// Subscription repositories
 	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
@@ -169,6 +170,11 @@ func main() {
 		userRepo,
 		userSettingsRepo,
 		emailService,
+	)
+
+	notificationLikeService := service.NewNotificationLikeService(
+		notificationLikeRepo,
+		notificationRepo,
 	)
 
 	userWorkoutService := service.NewUserWorkoutService(
@@ -257,6 +263,7 @@ func main() {
 	orgHandler := handler.NewOrganizationHandler(orgService, appLogger)
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
 	notificationHandler := handler.NewNotificationHandler(notificationService, appLogger)
+	notificationLikeHandler := handler.NewNotificationLikeHandler(notificationLikeService)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -376,6 +383,11 @@ func main() {
 			r.Put("/notifications/{id}/read", notificationHandler.MarkAsRead)
 			r.Put("/notifications/read-all", notificationHandler.MarkAllAsRead)
 			r.Delete("/notifications/{id}", notificationHandler.DeleteNotification)
+
+			// Notification Like routes (authenticated)
+			r.Post("/notifications/{id}/like", notificationLikeHandler.LikeNotification)
+			r.Delete("/notifications/{id}/like", notificationLikeHandler.UnlikeNotification)
+			r.Get("/notifications/{id}/likes", notificationLikeHandler.GetNotificationLikes)
 
 			// Workout Template routes (authenticated)
 			r.Post("/templates", workoutTemplateHandler.CreateTemplate)

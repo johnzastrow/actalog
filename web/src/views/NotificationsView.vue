@@ -105,6 +105,13 @@
               <p class="text-caption text-grey mt-1 mb-0">
                 {{ formatTimestamp(notification.created_at) }}
               </p>
+
+              <!-- Notification Likes -->
+              <NotificationLikes
+                :notification-id="notification.id"
+                @liked="handleLiked(notification)"
+                @unliked="handleUnliked(notification)"
+              />
             </div>
 
             <!-- Action Menu -->
@@ -163,6 +170,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import NotificationLikes from '@/components/NotificationLikes.vue'
 
 const router = useRouter()
 
@@ -321,6 +329,16 @@ const formatTimestamp = (timestamp) => {
   if (diffDays < 7) return `${diffDays}d ago`
 
   return date.toLocaleDateString()
+}
+
+const handleLiked = (notification) => {
+  // Optionally reload notifications to update unread status
+  // (When someone likes a notification, it marks it unread for the recipient)
+  console.log('Notification liked:', notification.id)
+}
+
+const handleUnliked = (notification) => {
+  console.log('Notification unliked:', notification.id)
 }
 
 // Watchers

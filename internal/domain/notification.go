@@ -45,6 +45,7 @@ type NotificationRepository interface {
 	GetUnreadByUserID(userID int64, limit, offset int) ([]*Notification, error)
 	CountUnreadByUserID(userID int64) (int64, error)
 	MarkAsRead(id int64) error
+	MarkAsUnread(id int64) error
 	MarkAllAsReadForUser(userID int64) error
 	Delete(id int64) error
 	DeleteOlderThan(cutoff time.Time) (int64, error) // Returns count of deleted notifications

@@ -1259,6 +1259,84 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.16.0",
+		Description: "Add notification_likes table for liking notifications",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if notification_likes table already exists
+			hasNotificationLikes, err := checkTableExists(db, driver, "notification_likes")
+			if err != nil {
+				return fmt.Errorf("failed to check for notification_likes table: %w", err)
+			}
+			if hasNotificationLikes {
+				fmt.Println("✓ notification_likes table already exists, skipping creation")
+				return nil
+			}
+
+			// Create notification_likes table
+			var createNotificationLikesSQL string
+			switch driver {
+			case "sqlite3":
+				createNotificationLikesSQL = `
+				CREATE TABLE notification_likes (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					notification_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					created_at DATETIME NOT NULL,
+					FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE (notification_id, user_id)
+				);
+				CREATE INDEX idx_notification_likes_notification_id ON notification_likes(notification_id);
+				CREATE INDEX idx_notification_likes_user_id ON notification_likes(user_id);
+				`
+			case "postgres":
+				createNotificationLikesSQL = `
+				CREATE TABLE notification_likes (
+					id BIGSERIAL PRIMARY KEY,
+					notification_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE (notification_id, user_id)
+				);
+				CREATE INDEX idx_notification_likes_notification_id ON notification_likes(notification_id);
+				CREATE INDEX idx_notification_likes_user_id ON notification_likes(user_id);
+				`
+			case "mysql":
+				createNotificationLikesSQL = `
+				CREATE TABLE notification_likes (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					notification_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					INDEX idx_notification_likes_notification_id (notification_id),
+					INDEX idx_notification_likes_user_id (user_id),
+					UNIQUE KEY unique_user_notification_like (notification_id, user_id),
+					FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createNotificationLikesSQL); err != nil {
+				return fmt.Errorf("failed to create notification_likes table: %w", err)
+			}
+			fmt.Println("✓ Created notification_likes table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS notification_likes"); err != nil {
+				return fmt.Errorf("failed to drop notification_likes table: %w", err)
+			}
+			fmt.Println("⚠️  WARNING: Notification likes data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

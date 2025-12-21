@@ -268,6 +268,32 @@ func (r *NotificationRepository) MarkAsRead(id int64) error {
 	return nil
 }
 
+// MarkAsUnread marks a notification as unread (sets read_at to NULL)
+func (r *NotificationRepository) MarkAsUnread(id int64) error {
+	query := rebindQuery(`
+		UPDATE notifications
+		SET read_at = NULL, updated_at = ?
+		WHERE id = ?
+	`)
+
+	now := time.Now()
+	result, err := r.db.Exec(query, now, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("notification %d not found", id)
+	}
+
+	return nil
+}
+
 // MarkAllAsReadForUser marks all unread notifications as read for a user
 func (r *NotificationRepository) MarkAllAsReadForUser(userID int64) error {
 	query := rebindQuery(`
