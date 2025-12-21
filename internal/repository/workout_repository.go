@@ -52,7 +52,7 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 
 // GetByID retrieves a workout template by ID
 func (r *WorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
-	query := `SELECT id, name, notes, created_by, created_at, updated_at FROM workouts WHERE id = ?`
+	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at FROM workouts WHERE id = ?`)
 
 	workout := &domain.Workout{}
 	var createdBy sql.NullInt64
@@ -88,14 +88,14 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 	}
 
 	// Get movements from workout_movements table with movement details
-	movementsQuery := `
+	movementsQuery := rebindQuery(`
 		SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 		       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
 		       m.name as movement_name, m.type as movement_type
 		FROM workout_movements ws
 		JOIN movements m ON ws.movement_id = m.id
 		WHERE ws.workout_id = ?
-		ORDER BY ws.order_index`
+		ORDER BY ws.order_index`)
 
 	rows, err := r.db.Query(movementsQuery, id)
 	if err != nil {
@@ -159,7 +159,7 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 	workout.Movements = movements
 
 	// Get WODs from workout_wods table with WOD details
-	wodsQuery := `
+	wodsQuery := rebindQuery(`
 		SELECT ww.id, ww.workout_id, ww.wod_id,
 		       ww.order_index, ww.created_at, ww.updated_at,
 		       w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
@@ -167,7 +167,7 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 		FROM workout_wods ww
 		JOIN wods w ON ww.wod_id = w.id
 		WHERE ww.workout_id = ?
-		ORDER BY ww.order_index`
+		ORDER BY ww.order_index`)
 
 	rows, err = r.db.Query(wodsQuery, id)
 	if err != nil {
@@ -216,6 +216,7 @@ func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset i
 	query += ` ORDER BY name LIMIT ? OFFSET ?`
 	args = append(args, limit, offset)
 
+	query = rebindQuery(query)
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list workouts: %w", err)
@@ -227,11 +228,11 @@ func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset i
 
 // ListByUser retrieves all workout templates created by a specific user
 func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
-	query := `SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by = ?
 	          ORDER BY name
-	          LIMIT ? OFFSET ?`
+	          LIMIT ? OFFSET ?`)
 
 	rows, err := r.db.Query(query, userID, limit, offset)
 	if err != nil {
@@ -244,11 +245,11 @@ func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*doma
 
 // ListStandard retrieves all standard (system) workout templates
 func (r *WorkoutRepository) ListStandard(limit, offset int) ([]*domain.Workout, error) {
-	query := `SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by IS NULL
 	          ORDER BY name
-	          LIMIT ? OFFSET ?`
+	          LIMIT ? OFFSET ?`)
 
 	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
@@ -263,9 +264,9 @@ func (r *WorkoutRepository) ListStandard(limit, offset int) ([]*domain.Workout, 
 func (r *WorkoutRepository) Update(workout *domain.Workout) error {
 	workout.UpdatedAt = time.Now()
 
-	query := `UPDATE workouts
+	query := rebindQuery(`UPDATE workouts
 	          SET name = ?, notes = ?, updated_at = ?
-	          WHERE id = ?`
+	          WHERE id = ?`)
 
 	result, err := r.db.Exec(query, workout.Name, workout.Notes, workout.UpdatedAt, workout.ID)
 	if err != nil {
@@ -286,7 +287,7 @@ func (r *WorkoutRepository) Update(workout *domain.Workout) error {
 
 // Delete deletes a workout template
 func (r *WorkoutRepository) Delete(id int64) error {
-	query := `DELETE FROM workouts WHERE id = ?`
+	query := rebindQuery(`DELETE FROM workouts WHERE id = ?`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -307,11 +308,11 @@ func (r *WorkoutRepository) Delete(id int64) error {
 
 // ListAllUserCreated retrieves all user-created workout templates (for admin view)
 func (r *WorkoutRepository) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
-	query := `SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by IS NOT NULL
 	          ORDER BY name
-	          LIMIT ? OFFSET ?`
+	          LIMIT ? OFFSET ?`)
 
 	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
@@ -324,13 +325,13 @@ func (r *WorkoutRepository) ListAllUserCreated(limit, offset int) ([]*domain.Wor
 
 // ListAllUserCreatedWithUserInfo retrieves all user-created workout templates with creator info (for admin view)
 func (r *WorkoutRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
-	query := `SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+	query := rebindQuery(`SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM workouts w
 	          LEFT JOIN users u ON w.created_by = u.id
 	          WHERE w.created_by IS NOT NULL
 	          ORDER BY w.name
-	          LIMIT ? OFFSET ?`
+	          LIMIT ? OFFSET ?`)
 
 	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
@@ -413,6 +414,7 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 
 	// Get count first
 	var count int64
+	countQuery = rebindQuery(countQuery)
 	err := r.db.QueryRow(countQuery, countArgs...).Scan(&count)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count filtered workouts: %w", err)
@@ -429,6 +431,7 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 		args = append(args, offset)
 	}
 
+	baseQuery = rebindQuery(baseQuery)
 	rows, err := r.db.Query(baseQuery, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list filtered user-created workouts: %w", err)
@@ -470,11 +473,11 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 
 // Search searches workout templates by name
 func (r *WorkoutRepository) Search(query string, limit int) ([]*domain.Workout, error) {
-	searchQuery := `SELECT id, name, notes, created_by, created_at, updated_at
+	searchQuery := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
 	                FROM workouts
 	                WHERE name LIKE ?
 	                ORDER BY name
-	                LIMIT ?`
+	                LIMIT ?`)
 
 	rows, err := r.db.Query(searchQuery, "%"+query+"%", limit)
 	if err != nil {
@@ -491,7 +494,7 @@ func (r *WorkoutRepository) Count(userID *int64) (int64, error) {
 	var query string
 
 	if userID != nil {
-		query = `SELECT COUNT(*) FROM workouts WHERE created_by = ?`
+		query = rebindQuery(`SELECT COUNT(*) FROM workouts WHERE created_by = ?`)
 		err := r.db.QueryRow(query, *userID).Scan(&count)
 		if err != nil {
 			return 0, fmt.Errorf("failed to count workouts: %w", err)
@@ -520,14 +523,14 @@ func (r *WorkoutRepository) GetUsageStats(workoutID int64) (*domain.WorkoutWithU
 
 	// Count how many times this template has been used
 	var timesUsed int64
-	countQuery := `SELECT COUNT(*) FROM user_workouts WHERE workout_id = ?`
+	countQuery := rebindQuery(`SELECT COUNT(*) FROM user_workouts WHERE workout_id = ?`)
 	if err := r.db.QueryRow(countQuery, workoutID).Scan(&timesUsed); err != nil {
 		return nil, fmt.Errorf("failed to count usage: %w", err)
 	}
 
 	// Get the most recent usage date
 	var lastUsedAt *time.Time
-	lastUsedQuery := `SELECT MAX(workout_date) FROM user_workouts WHERE workout_id = ?`
+	lastUsedQuery := rebindQuery(`SELECT MAX(workout_date) FROM user_workouts WHERE workout_id = ?`)
 	var nullableLastUsed sql.NullTime
 	if err := r.db.QueryRow(lastUsedQuery, workoutID).Scan(&nullableLastUsed); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("failed to get last usage: %w", err)
@@ -567,8 +570,8 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 		UpdatedAt: now,
 	}
 
-	query := `INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
-	          VALUES (?, ?, NULL, ?, ?)`
+	query := rebindQuery(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+	          VALUES (?, ?, NULL, ?, ?)`)
 
 	result, err := r.db.Exec(query,
 		standardWorkout.Name,
@@ -588,8 +591,8 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 
 	// Copy associated movements
 	if len(source.Movements) > 0 {
-		movementQuery := `INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
-		                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		movementQuery := rebindQuery(`INSERT INTO workout_movements (workout_id, movement_id, weight, sets, reps, time, distance, is_rx, is_pr, notes, order_index, created_at, updated_at)
+		                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 		for _, m := range source.Movements {
 			_, err := r.db.Exec(movementQuery,
 				newID,
@@ -614,8 +617,8 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 
 	// Copy associated WODs
 	if len(source.WODs) > 0 {
-		wodQuery := `INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
-		             VALUES (?, ?, ?, ?, ?)`
+		wodQuery := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, order_index, created_at, updated_at)
+		             VALUES (?, ?, ?, ?, ?)`)
 		for _, w := range source.WODs {
 			_, err := r.db.Exec(wodQuery,
 				newID,
