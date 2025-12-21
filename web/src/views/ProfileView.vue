@@ -608,12 +608,18 @@ async function fetchStats() {
     ])
 
     const userWorkouts = workoutsRes.data.workouts || []
+    const prMovements = prsRes.data.movements || []
+
+    // Calculate total PR count by summing pr_count from each movement
+    const totalPRs = prMovements.reduce((sum, movement) => {
+      return sum + (movement.pr_count || 0)
+    }, 0)
 
     // Calculate stats
     stats.value = {
       totalWorkouts: userWorkouts.length,
       currentStreak: calculateStreak(userWorkouts),
-      personalRecords: (prsRes.data.personal_records || []).length,
+      personalRecords: totalPRs,
       customTemplates: (templatesRes.data.workouts || []).length
     }
   } catch (err) {
@@ -627,24 +633,38 @@ async function fetchStats() {
 function calculateStreak(workouts) {
   if (workouts.length === 0) return 0
 
-  const sortedWorkouts = [...workouts].sort((a, b) =>
-    new Date(b.workout_date) - new Date(a.workout_date)
-  )
+  // Get unique workout dates (in case of multiple workouts per day)
+  const uniqueDates = [...new Set(workouts.map(w => w.workout_date))]
+    .sort((a, b) => new Date(b) - new Date(a))
 
-  let streak = 0
-  let currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  if (uniqueDates.length === 0) return 0
 
-  for (const workout of sortedWorkouts) {
-    const workoutDate = new Date(workout.workout_date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const mostRecent = new Date(uniqueDates[0])
+  mostRecent.setHours(0, 0, 0, 0)
+
+  // Calculate days since most recent workout
+  const daysSinceRecent = Math.floor((today - mostRecent) / (1000 * 60 * 60 * 24))
+
+  // Streak is broken if no workout today or yesterday
+  if (daysSinceRecent > 1) return 0
+
+  // Start counting streak from most recent workout
+  let streak = 1
+  let expectedDate = new Date(mostRecent)
+
+  for (let i = 1; i < uniqueDates.length; i++) {
+    expectedDate.setDate(expectedDate.getDate() - 1)
+    const workoutDate = new Date(uniqueDates[i])
     workoutDate.setHours(0, 0, 0, 0)
 
-    const diffDays = Math.floor((currentDate - workoutDate) / (1000 * 60 * 60 * 24))
-
-    if (diffDays === streak) {
+    // Check if this workout is exactly 1 day before the previous
+    if (workoutDate.getTime() === expectedDate.getTime()) {
       streak++
-      currentDate.setDate(currentDate.getDate() - 1)
-    } else if (diffDays > streak) {
+    } else {
+      // Gap found, streak is broken
       break
     }
   }
