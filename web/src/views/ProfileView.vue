@@ -197,7 +197,19 @@
 
       <!-- Stats Summary -->
       <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Workout Summary</h2>
+        <div class="d-flex align-center justify-space-between mb-2">
+          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Workout Summary</h2>
+        </div>
+
+        <!-- Time Period Filter -->
+        <div class="mb-3">
+          <v-chip-group v-model="selectedPeriod" mandatory color="#00bcd4" density="compact">
+            <v-chip value="week" size="small">This Week</v-chip>
+            <v-chip value="month" size="small">This Month</v-chip>
+            <v-chip value="year" size="small">This Year</v-chip>
+            <v-chip value="all" size="small">All Time</v-chip>
+          </v-chip-group>
+        </div>
 
         <!-- Loading State -->
         <div v-if="loadingStats" class="text-center py-4">
@@ -564,7 +576,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
@@ -588,6 +600,9 @@ const uploadingAvatar = ref(false)
 const deletingAvatar = ref(false)
 const fileInput = ref(null)
 
+// Time period filter
+const selectedPeriod = ref('month')
+
 // Stats
 const stats = ref({
   totalWorkouts: 0,
@@ -595,6 +610,66 @@ const stats = ref({
   personalRecords: 0,
   customTemplates: 0
 })
+
+// Get date range for selected period
+function getDateRange(period) {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  let startDate = new Date(today)
+
+  switch (period) {
+    case 'week':
+      // Start of current week (Sunday)
+      const dayOfWeek = today.getDay()
+      startDate.setDate(today.getDate() - dayOfWeek)
+      break
+    case 'month':
+      // Start of current month
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      break
+    case 'year':
+      // Start of current year
+      startDate = new Date(now.getFullYear(), 0, 1)
+      break
+    case 'all':
+      // No filtering
+      return null
+  }
+
+  return {
+    start: startDate.toISOString().split('T')[0],
+    end: today.toISOString().split('T')[0]
+  }
+}
+
+// Filter workouts by date range
+function filterWorkoutsByPeriod(workouts, period) {
+  if (period === 'all') return workouts
+
+  const range = getDateRange(period)
+  if (!range) return workouts
+
+  return workouts.filter(workout => {
+    const workoutDate = workout.workout_date
+    return workoutDate >= range.start && workoutDate <= range.end
+  })
+}
+
+// Filter PR movements by date range
+function filterPRsByPeriod(prMovements, workouts, period) {
+  if (period === 'all') return prMovements
+  if (!prMovements || prMovements.length === 0) return []
+
+  const range = getDateRange(period)
+  if (!range) return prMovements
+
+  // Filter by last_pr_date
+  return prMovements.filter(movement => {
+    const lastPRDate = movement.last_pr_date
+    if (!lastPRDate) return false
+    return lastPRDate >= range.start && lastPRDate <= range.end
+  })
+}
 
 // Fetch user statistics
 async function fetchStats() {
@@ -607,20 +682,24 @@ async function fetchStats() {
       axios.get('/api/workouts/my-templates').catch(() => ({ data: { workouts: [] } }))
     ])
 
-    const userWorkouts = workoutsRes.data.workouts || []
-    const prMovements = prsRes.data.movements || []
+    const allWorkouts = workoutsRes.data.workouts || []
+    const allPRMovements = prsRes.data.movements || []
+
+    // Filter based on selected period
+    const filteredWorkouts = filterWorkoutsByPeriod(allWorkouts, selectedPeriod.value)
+    const filteredPRs = filterPRsByPeriod(allPRMovements, allWorkouts, selectedPeriod.value)
 
     // Calculate total PR count by summing pr_count from each movement
-    const totalPRs = prMovements.reduce((sum, movement) => {
+    const totalPRs = filteredPRs.reduce((sum, movement) => {
       return sum + (movement.pr_count || 0)
     }, 0)
 
     // Calculate stats
     stats.value = {
-      totalWorkouts: userWorkouts.length,
-      currentStreak: calculateStreak(userWorkouts),
+      totalWorkouts: filteredWorkouts.length,
+      currentStreak: calculateStreak(allWorkouts), // Always use all workouts for streak
       personalRecords: totalPRs,
-      customTemplates: (templatesRes.data.workouts || []).length
+      customTemplates: (templatesRes.data.workouts || []).length // Always show all templates
     }
   } catch (err) {
     console.error('Failed to fetch stats:', err)
@@ -804,6 +883,11 @@ async function fetchVersionInfo() {
     buildNumber.value = 1
   }
 }
+
+// Watch for period changes
+watch(selectedPeriod, () => {
+  fetchStats()
+})
 
 onMounted(() => {
   fetchStats()
