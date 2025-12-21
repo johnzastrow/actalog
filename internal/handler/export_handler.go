@@ -75,7 +75,7 @@ func (h *ExportHandler) ExportWODs(w http.ResponseWriter, r *http.Request) {
 
 	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	_, _ = w.Write(data)
 }
 
 // ExportMovements exports movements to CSV or JSON format
@@ -131,7 +131,7 @@ func (h *ExportHandler) ExportMovements(w http.ResponseWriter, r *http.Request) 
 
 	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	_, _ = w.Write(data)
 }
 
 // Helper function to parse boolean query parameters
@@ -227,5 +227,5 @@ func (h *ExportHandler) ExportUserWorkouts(w http.ResponseWriter, r *http.Reques
 
 	// Write data
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	_, _ = w.Write(data)
 }

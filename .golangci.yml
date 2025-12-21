@@ -87,7 +87,7 @@ issues:
     # Exclude goconst for SQL query parts - not worth making constants
     - linters:
         - goconst
-      text: "LIMIT|OFFSET|ORDER BY"
+      text: "LIMIT|OFFSET|ORDER BY|CURRENT_TIMESTAMP|RETURNING|datetime\\('now'\\)|postgres|AND created_at|AND user_id|ALTER TABLE"
 
   max-issues-per-linter: 0
   max-same-issues: 0
