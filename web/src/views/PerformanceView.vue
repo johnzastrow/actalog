@@ -31,7 +31,7 @@
             <v-list-item v-bind="props" density="compact">
               <template #prepend>
                 <v-icon
-                  :color="item.raw.type === 'movement' ? '#00bcd4' : 'teal'"
+                  :color="item.raw.type === 'movement' ? 'primary' : 'primary'"
                   size="small"
                 >
                   {{ item.raw.type === 'movement' ? 'mdi-dumbbell' : 'mdi-fire' }}
@@ -275,12 +275,9 @@
                 :key="index"
                 elevation="0"
                 rounded="lg"
-                class="mb-2 pa-2"
-                style="background: #f5f7fa; cursor: pointer; transition: all 0.2s ease"
+                class="mb-2 pa-2 performance-card"
                 hover
                 @click="viewWorkout(entry.user_workout_id)"
-                @mouseenter="$event.currentTarget.style.background = '#e8f4f8'"
-                @mouseleave="$event.currentTarget.style.background = '#f5f7fa'"
               >
                 <div class="d-flex align-center">
                   <!-- PR Trophy Icon -->
@@ -334,7 +331,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log Workout
         </v-card-title>
@@ -429,7 +426,7 @@
                   <v-list-item v-bind="props">
                     <template #prepend>
                       <v-icon
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
+                        :color="item.raw.type === 'movement' ? 'primary' : (item.raw.type === 'wod' ? 'primary' : 'secondary')"
                         size="small"
                       >
                         {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : (item.raw.type === 'wod' ? 'mdi-fire' : 'mdi-clipboard-text') }}
@@ -437,7 +434,7 @@
                     </template>
                     <template #append>
                       <v-chip
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
+                        :color="item.raw.type === 'movement' ? 'primary' : (item.raw.type === 'wod' ? 'primary' : 'secondary')"
                         size="x-small"
                         variant="flat"
                         class="text-uppercase"
@@ -463,7 +460,7 @@
             </div>
 
               <!-- Movement Performance Form -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Sets</label>
                   <v-text-field
@@ -534,7 +531,7 @@
               </div>
 
               <!-- WOD Performance Form -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Score Type (from WOD)</label>
                   <v-text-field
@@ -673,7 +670,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">
@@ -1660,3 +1657,15 @@ onBeforeUnmount(() => {
   destroyCharts()
 })
 </script>
+
+<style scoped>
+.performance-card {
+  background-color: rgb(var(--v-theme-background));
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.performance-card:hover {
+  background-color: rgb(var(--v-theme-surface));
+}
+</style>

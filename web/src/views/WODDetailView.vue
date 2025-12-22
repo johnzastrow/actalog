@@ -182,7 +182,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log {{ wod?.name }}
         </v-card-title>
@@ -216,7 +216,7 @@
             </div>
 
             <!-- WOD Performance Form -->
-            <div class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+            <div class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
               <div class="mb-2">
                 <label class="text-caption">Score Type (from WOD)</label>
                 <v-text-field

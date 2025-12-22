@@ -86,7 +86,7 @@
           elevation="0"
           rounded="lg"
           class="pa-3 mb-2"
-          style="background: white; border: 1px solid #e0e0e0"
+          style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0"
           :ripple="true"
           @click="handleWODClick(wod)"
         >
@@ -117,7 +117,7 @@
                   {{ wod.score_type }}
                 </v-chip>
               </div>
-              <p class="text-caption mb-0" style="color: #666; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+              <p class="text-caption mb-0" style="color: rgb(var(--v-theme-on-surface), 0.6); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                 {{ wod.description }}
               </p>
             </div>
@@ -168,7 +168,7 @@
       v-if="!selectionMode"
       v-model="activeNav"
       grow
-      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background: white"
+      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" @click="$router.push('/dashboard')">
@@ -195,7 +195,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log {{ selectedWOD?.name }}
         </v-card-title>
@@ -229,7 +229,7 @@
             </div>
 
             <!-- WOD Performance Form -->
-            <div class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+            <div class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
               <div class="mb-2">
                 <label class="text-caption">Score Type (from WOD)</label>
                 <v-text-field

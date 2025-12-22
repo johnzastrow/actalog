@@ -154,7 +154,7 @@ export default createVuetify({
       variant: 'elevated',
     },
     VBtn: {
-      color: 'teal',
+      color: 'primary',
       elevation: 0,
       rounded: 'sm',
       style: 'text-transform: none;',

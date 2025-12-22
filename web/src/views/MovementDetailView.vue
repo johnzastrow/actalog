@@ -72,7 +72,7 @@
           <!-- Description -->
           <div v-if="parsedData.description" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
-            <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
+            <p class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
               {{ parsedData.description }}
             </p>
           </div>
@@ -104,7 +104,7 @@
           <!-- Coaching Cues -->
           <div v-if="parsedData.coachingCues" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Coaching Cues</p>
-            <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
+            <p class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
               {{ parsedData.coachingCues }}
             </p>
           </div>
@@ -112,7 +112,7 @@
           <!-- Scaling Options -->
           <div v-if="parsedData.scalingOptions" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Scaling/Modifications</p>
-            <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
+            <p class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
               {{ parsedData.scalingOptions }}
             </p>
           </div>
@@ -162,7 +162,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log {{ movement?.name }}
         </v-card-title>
@@ -196,7 +196,7 @@
             </div>
 
             <!-- Movement Performance Form -->
-            <div class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+            <div class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
               <div class="mb-2">
                 <label class="text-caption">Sets</label>
                 <v-text-field

@@ -45,21 +45,21 @@ const renderedHtml = computed(() => {
   font-size: 1.5em;
   font-weight: bold;
   margin: 0.5em 0;
-  color: #1a1a1a;
+  color: rgb(var(--v-theme-on-surface));
 }
 
 .markdown-content :deep(h2) {
   font-size: 1.3em;
   font-weight: bold;
   margin: 0.5em 0;
-  color: #1a1a1a;
+  color: rgb(var(--v-theme-on-surface));
 }
 
 .markdown-content :deep(h3) {
   font-size: 1.1em;
   font-weight: bold;
   margin: 0.5em 0;
-  color: #1a1a1a;
+  color: rgb(var(--v-theme-on-surface));
 }
 
 /* Paragraphs */
@@ -99,12 +99,12 @@ const renderedHtml = computed(() => {
 .markdown-content :deep(pre code) {
   background-color: transparent;
   padding: 0;
-  color: #1a1a1a;
+  color: rgb(var(--v-theme-on-surface));
 }
 
 /* Links */
 .markdown-content :deep(a) {
-  color: #00bcd4;
+  color: rgb(var(--v-theme-primary));
   text-decoration: none;
 }
 
@@ -123,10 +123,10 @@ const renderedHtml = computed(() => {
 
 /* Blockquotes */
 .markdown-content :deep(blockquote) {
-  border-left: 4px solid #00bcd4;
+  border-left: 4px solid rgb(var(--v-theme-primary));
   padding-left: 1em;
   margin: 0.5em 0;
-  color: #666;
+  color: rgb(var(--v-theme-on-surface), 0.6);
   font-style: italic;
 }
 

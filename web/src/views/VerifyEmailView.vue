@@ -15,8 +15,8 @@
         <!-- Success State -->
         <div v-else-if="success" class="text-center py-8">
           <v-icon size="80" color="success" class="mb-4">mdi-check-circle</v-icon>
-          <h2 class="text-h4 mb-3" style="color: #1a1a1a;">Email Verified!</h2>
-          <p class="text-body-1 mb-6" style="color: #666;">
+          <h2 class="text-h4 mb-3" style="color: rgb(var(--v-theme-on-surface));">Email Verified!</h2>
+          <p class="text-body-1 mb-6" style="color: rgb(var(--v-theme-on-surface), 0.6);">
             Your email has been successfully verified. You can now access all features of ActaLog.
           </p>
           <v-btn
@@ -25,7 +25,7 @@
             rounded
             @click="goToLogin"
             class="text-none font-weight-bold"
-            style="color: #1a1a1a;"
+            style="color: rgb(var(--v-theme-on-surface));"
           >
             Go to Login
           </v-btn>
@@ -34,8 +34,8 @@
         <!-- Error State -->
         <div v-else-if="error" class="text-center py-8">
           <v-icon size="80" color="error" class="mb-4">mdi-alert-circle</v-icon>
-          <h2 class="text-h4 mb-3" style="color: #1a1a1a;">Verification Failed</h2>
-          <p class="text-body-1 mb-6" style="color: #666;">
+          <h2 class="text-h4 mb-3" style="color: rgb(var(--v-theme-on-surface));">Verification Failed</h2>
+          <p class="text-body-1 mb-6" style="color: rgb(var(--v-theme-on-surface), 0.6);">
             {{ errorMessage }}
           </p>
 

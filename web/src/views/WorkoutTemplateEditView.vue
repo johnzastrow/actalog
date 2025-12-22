@@ -326,7 +326,7 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h6" style="color: #e91e63">Delete Template?</v-card-title>
+        <v-card-title class="text-h6" style="color: rgb(var(--v-theme-error))">Delete Template?</v-card-title>
         <v-card-text>
           <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ template.name }}"? This action cannot be undone.

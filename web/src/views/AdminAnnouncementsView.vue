@@ -282,6 +282,6 @@ onMounted(() => {
 <style scoped>
 .mobile-view-wrapper {
   min-height: 100vh;
-  background: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
 }
 </style>

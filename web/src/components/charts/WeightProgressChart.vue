@@ -1,7 +1,7 @@
 <template>
-  <v-card elevation="0" rounded="lg" class="pa-4" style="background: white">
+  <v-card elevation="0" rounded="lg" class="pa-4" bg-color="surface">
     <div class="d-flex align-center justify-space-between mb-3">
-      <h3 class="text-h6" style="color: #1a1a1a">Weight Progress</h3>
+      <h3 class="text-h6" style="color: rgb(var(--v-theme-on-surface))">Weight Progress</h3>
       <v-menu>
         <template #activator="{ props }">
           <v-btn
@@ -29,12 +29,12 @@
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
-    <div v-else-if="!selectedMovementId" class="text-center py-8" style="color: #666">
+    <div v-else-if="!selectedMovementId" class="text-center py-8" class="text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-line</v-icon>
       <p class="mt-2">Select a movement to view progress</p>
     </div>
 
-    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" style="color: #666">
+    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" class="text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-line-variant</v-icon>
       <p class="mt-2">No weight data for this movement</p>
     </div>

@@ -70,12 +70,12 @@
             elevation="0"
             rounded="lg"
             class="mb-2 pa-3"
-            style="background: white; cursor: pointer"
+            style="background-color: rgb(var(--v-theme-surface)); cursor: pointer"
             @click="selectWOD(wod)"
           >
             <div class="d-flex align-center mb-2">
               <v-icon
-                :color="wod.is_standard ? '#ffc107' : '#00bcd4'"
+                :color="wod.is_standard ? 'warning' : 'primary'"
                 class="mr-2"
                 size="small"
               >
@@ -276,7 +276,7 @@
             <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               DESCRIPTION
             </div>
-            <div class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
+            <div class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
               {{ selectedWOD.description }}
             </div>
           </div>
@@ -296,7 +296,7 @@
             <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               NOTES
             </div>
-            <div class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
+            <div class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
               {{ selectedWOD.notes }}
             </div>
           </div>
@@ -314,7 +314,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

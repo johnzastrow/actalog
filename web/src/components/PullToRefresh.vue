@@ -163,7 +163,7 @@ defineExpose({
 
 .pull-text {
   font-size: 12px;
-  color: #666;
+  color: rgb(var(--v-theme-on-surface), 0.6);
 }
 
 .pull-content {

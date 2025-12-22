@@ -253,7 +253,7 @@
             elevation="0"
             rounded
             class="mb-1 pa-1"
-            style="background: white; cursor: pointer"
+            style="background-color: rgb(var(--v-theme-surface)); cursor: pointer"
             @click="toggleWorkoutExpand(workout.id)"
           >
             <div class="d-flex align-center mb-1">

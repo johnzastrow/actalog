@@ -189,7 +189,7 @@
 
         <!-- Error State -->
         <div v-else-if="subscriptionStore.error" class="text-center py-2">
-          <div class="text-caption" style="color: #e91e63">
+          <div class="text-caption" style="color: rgb(var(--v-theme-error))">
             {{ subscriptionStore.error }}
           </div>
         </div>
@@ -219,23 +219,23 @@
         <!-- Stats Grid -->
         <v-row v-else dense>
           <v-col cols="6">
-            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
-              <div class="text-h5 font-weight-bold" style="color: #00bcd4">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background-color: rgb(var(--v-theme-background))">
+              <div class="text-h5 font-weight-bold" style="color: rgb(var(--v-theme-primary))">
                 {{ stats.totalWorkouts }}
               </div>
               <div class="text-caption text-medium-emphasis">Total Workouts</div>
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
-              <div class="text-h5 font-weight-bold" style="color: #4caf50">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background-color: rgb(var(--v-theme-background))">
+              <div class="text-h5 font-weight-bold" style="color: rgb(var(--v-theme-success))">
                 {{ stats.currentStreak }}
               </div>
               <div class="text-caption text-medium-emphasis">Day Streak</div>
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background-color: rgb(var(--v-theme-background))">
               <div class="text-h5 font-weight-bold" style="color: #ffc107">
                 {{ stats.personalRecords }}
               </div>
@@ -243,8 +243,8 @@
             </v-card>
           </v-col>
           <v-col cols="6">
-            <v-card elevation="0" rounded class="pa-1 text-center" style="background: #f5f7fa">
-              <div class="text-h5 font-weight-bold" style="color: #e91e63">
+            <v-card elevation="0" rounded class="pa-1 text-center" style="background-color: rgb(var(--v-theme-background))">
+              <div class="text-h5 font-weight-bold" style="color: rgb(var(--v-theme-error))">
                 {{ stats.customTemplates }}
               </div>
               <div class="text-caption text-medium-emphasis">Custom Templates</div>
@@ -536,7 +536,7 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #e91e63">
+            <v-list-item-title class="font-weight-medium" style="color: rgb(var(--v-theme-error))">
               Logout
             </v-list-item-title>
           </v-list-item>
@@ -547,7 +547,7 @@
     <!-- Bottom Navigation -->
     <v-bottom-navigation
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

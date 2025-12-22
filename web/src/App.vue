@@ -52,7 +52,7 @@
           <v-badge
             :content="unreadNotificationCount"
             :model-value="unreadNotificationCount > 0"
-            color="#ffc107"
+            color="warning"
             overlap
           >
             <v-icon>mdi-bell-outline</v-icon>

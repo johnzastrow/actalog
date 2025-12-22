@@ -88,7 +88,7 @@
               :key="index"
               elevation="0"
               class="mb-2 pa-2"
-              style="background: #f5f7fa; border: 1px solid #e0e0e0"
+              style="background-color: rgb(var(--v-theme-background)); border: 1px solid #e0e0e0"
               rounded="lg"
             >
               <div class="d-flex align-center">
@@ -117,12 +117,12 @@
                     <span v-if="movement.weight"> @ {{ movement.weight }}lb</span>
                   </div>
 
-                  <div v-if="movement.time_seconds" class="text-caption mt-1" style="color: #00bcd4">
+                  <div v-if="movement.time_seconds" class="text-caption mt-1" style="color: rgb(var(--v-theme-primary))">
                     <v-icon size="x-small" color="primary">mdi-clock-outline</v-icon>
                     {{ formatTime(movement.time_seconds) }}
                   </div>
 
-                  <div v-if="movement.distance" class="text-caption mt-1" style="color: #00bcd4">
+                  <div v-if="movement.distance" class="text-caption mt-1" style="color: rgb(var(--v-theme-primary))">
                     <v-icon size="x-small" color="primary">mdi-map-marker-distance</v-icon>
                     {{ movement.distance }}{{ movement.distance_unit || 'm' }}
                   </div>
@@ -241,7 +241,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

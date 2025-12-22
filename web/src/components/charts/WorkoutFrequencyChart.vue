@@ -1,7 +1,7 @@
 <template>
-  <v-card elevation="0" rounded="lg" class="pa-4" style="background: white">
+  <v-card elevation="0" rounded="lg" class="pa-4" bg-color="surface">
     <div class="d-flex align-center justify-space-between mb-3">
-      <h3 class="text-h6" style="color: #1a1a1a">Workout Frequency</h3>
+      <h3 class="text-h6" style="color: rgb(var(--v-theme-on-surface))">Workout Frequency</h3>
       <v-btn-toggle v-model="timeRange" mandatory variant="outlined" density="compact">
         <v-btn value="30">30d</v-btn>
         <v-btn value="90">90d</v-btn>
@@ -14,7 +14,7 @@
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
-    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" style="color: #666">
+    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" class="text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-bar</v-icon>
       <p class="mt-2">No workout data available</p>
     </div>
@@ -25,22 +25,22 @@
 
     <div v-if="!loading && chartData.labels.length > 0" class="mt-4 d-flex justify-space-around text-center">
       <div>
-        <div class="text-h6 font-weight-bold" style="color: #00bcd4">
+        <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-primary))">
           {{ totalWorkouts }}
         </div>
-        <div class="text-caption" style="color: #666">Total Workouts</div>
+        <div class="text-caption" class="text-medium-emphasis">Total Workouts</div>
       </div>
       <div>
-        <div class="text-h6 font-weight-bold" style="color: #4caf50">
+        <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-success))">
           {{ averagePerWeek }}
         </div>
-        <div class="text-caption" style="color: #666">Avg/Week</div>
+        <div class="text-caption" class="text-medium-emphasis">Avg/Week</div>
       </div>
       <div>
         <div class="text-h6 font-weight-bold" style="color: #ff9800">
           {{ longestStreak }}
         </div>
-        <div class="text-caption" style="color: #666">Longest Streak</div>
+        <div class="text-caption" class="text-medium-emphasis">Longest Streak</div>
       </div>
     </div>
   </v-card>

@@ -51,7 +51,7 @@
                 Movements
               </div>
               <div v-for="movement in workout.movements" :key="movement.id" class="d-flex align-center mb-1">
-                <v-icon size="small" :color="movement.is_pr ? '#ffc107' : '#00bcd4'" class="mr-1">
+                <v-icon size="small" :color="movement.is_pr ? 'warning' : 'primary'" class="mr-1">
                   {{ movement.is_pr ? 'mdi-trophy' : 'mdi-dumbbell' }}
                 </v-icon>
                 <span class="text-body-2" >
@@ -70,7 +70,7 @@
                 WODs
               </div>
               <div v-for="wod in workout.wods" :key="wod.id" class="d-flex align-center mb-1">
-                <v-icon size="small" :color="wod.is_pr ? '#ffc107' : '#00bcd4'" class="mr-1">
+                <v-icon size="small" :color="wod.is_pr ? 'warning' : 'primary'" class="mr-1">
                   {{ wod.is_pr ? 'mdi-trophy' : 'mdi-run-fast' }}
                 </v-icon>
                 <span class="text-body-2" >

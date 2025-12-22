@@ -196,6 +196,6 @@ function contactAdmin() {
 }
 
 .bg-grey-lighten-4 {
-  background-color: #f5f5f5;
+  background-color: rgb(var(--v-theme-background));
 }
 </style>

@@ -70,8 +70,8 @@
           rounded="lg"
           class="mb-2 pa-3"
           :style="{
-            background: notification.read_at ? '#f5f5f5' : 'white',
-            border: notification.read_at ? 'none' : '1px solid #00bcd4'
+            backgroundColor: notification.read_at ? 'rgb(var(--v-theme-background))' : 'rgb(var(--v-theme-surface))',
+            border: notification.read_at ? 'none' : '1px solid rgb(var(--v-theme-primary))'
           }"
         >
           <div class="d-flex justify-space-between align-start">
@@ -305,13 +305,13 @@ const getNotificationIcon = (type) => {
 const getNotificationColor = (type) => {
   switch (type) {
     case 'pr_achievement':
-      return '#ffc107' // gold
+      return 'warning' // gold/amber
     case 'weekly_streak':
-      return '#ff5722' // orange
+      return 'error' // orange/red
     case 'wod_milestone':
-      return '#00bcd4' // cyan
+      return 'primary' // theme primary
     default:
-      return '#666'
+      return 'grey'
   }
 }
 
@@ -355,6 +355,6 @@ onMounted(() => {
 <style scoped>
 .mobile-view-wrapper {
   min-height: 100vh;
-  background: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+  <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
     <!-- Calendar Header -->
     <div class="d-flex align-center justify-space-between mb-3">
       <v-btn
@@ -28,7 +28,7 @@
         v-for="day in dayLabels"
         :key="day"
         class="flex-grow-1 text-center text-caption font-weight-bold"
-        style="color: #666"
+        class="text-medium-emphasis"
       >
         {{ day }}
       </div>

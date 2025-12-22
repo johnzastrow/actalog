@@ -1,6 +1,6 @@
 <template>
-  <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
-    <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+  <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
+    <h2 class="text-body-1 font-weight-bold mb-3" style="color: rgb(var(--v-theme-on-surface))">
       Workouts in last 7 Days
     </h2>
 
@@ -12,7 +12,7 @@
     <!-- Empty State -->
     <div v-else-if="groupedWorkouts.length === 0" class="text-center pa-4">
       <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
-      <p class="text-body-2 mt-2" style="color: #666">No workouts in the last 7 days</p>
+      <p class="text-body-2 mt-2" class="text-medium-emphasis">No workouts in the last 7 days</p>
       <v-btn
         color="primary"
         size="small"
@@ -33,7 +33,7 @@
         class="mb-3"
       >
         <!-- Date Header -->
-        <div class="text-caption font-weight-bold mb-2" style="color: #666">
+        <div class="text-caption font-weight-bold mb-2" class="text-medium-emphasis">
           {{ formatDateHeader(group.date) }}
         </div>
 
@@ -51,7 +51,7 @@
             <div class="flex-grow-1">
               <!-- Workout Name/Type -->
               <div class="d-flex align-center mb-1">
-                <span class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+                <span class="text-body-2 font-weight-bold" style="color: rgb(var(--v-theme-on-surface))">
                   {{ workout.workout_name || 'Custom Workout' }}
                 </span>
                 <v-chip
@@ -67,7 +67,7 @@
               </div>
 
               <!-- Movement Details with PR indicators -->
-              <div v-if="workout.movements && workout.movements.length > 0" class="text-caption" style="color: #666">
+              <div v-if="workout.movements && workout.movements.length > 0" class="text-caption" class="text-medium-emphasis">
                 <div v-for="(movement, index) in workout.movements.slice(0, 3)" :key="index" class="d-flex align-center">
                   <v-icon v-if="movement.is_pr" color="primary" size="x-small" class="mr-1">mdi-trophy</v-icon>
                   <span>{{ movement.movement?.name || 'Movement' }}</span>
@@ -80,7 +80,7 @@
               </div>
 
               <!-- Time if available -->
-              <div v-if="workout.total_time" class="text-caption mt-1" style="color: #00bcd4">
+              <div v-if="workout.total_time" class="text-caption mt-1" style="color: rgb(var(--v-theme-primary))">
                 <v-icon size="x-small" color="primary">mdi-clock-outline</v-icon>
                 {{ formatTime(workout.total_time) }}
               </div>
@@ -176,7 +176,7 @@ function viewWorkout(workout) {
 }
 
 .workout-card:hover {
-  border-color: #00bcd4 !important;
+  border-color: rgb(var(--v-theme-primary)) !important;
   box-shadow: 0 2px 8px rgba(0, 188, 212, 0.2) !important;
 }
 </style>

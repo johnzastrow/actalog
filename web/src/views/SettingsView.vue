@@ -256,7 +256,7 @@
 
       <!-- Danger Zone Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #e91e63">Danger Zone</h2>
+        <h2 class="text-body-1 font-weight-bold mb-2" style="color: rgb(var(--v-theme-error))">Danger Zone</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-delete-forever"
@@ -264,7 +264,7 @@
             style="cursor: pointer"
             @click="confirmDeleteAccount"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #e91e63">
+            <v-list-item-title class="font-weight-medium" style="color: rgb(var(--v-theme-error))">
               Delete Account
             </v-list-item-title>
             <v-list-item-subtitle class="text-caption text-medium-emphasis">
@@ -288,7 +288,7 @@
     <!-- Delete Account Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h6" style="color: #e91e63">Delete Account?</v-card-title>
+        <v-card-title class="text-h6" style="color: rgb(var(--v-theme-error))">Delete Account?</v-card-title>
         <v-card-text>
           <p class="text-medium-emphasis">
             This action cannot be undone. All your workouts, personal records, and account data will be permanently deleted.
@@ -321,7 +321,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

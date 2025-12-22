@@ -86,10 +86,10 @@
           @dragleave.prevent="dragOver = false"
           @click="$refs.fileInput.click()"
         >
-          <v-icon size="64" :color="selectedFile ? '#00bcd4' : '#ccc'">
+          <v-icon size="64" :color="selectedFile ? 'primary' : '#ccc'">
             {{ selectedFile ? 'mdi-file-check' : 'mdi-cloud-upload' }}
           </v-icon>
-          <p class="text-body-1 font-weight-bold mt-3" :style="{ color: selectedFile ? '#00bcd4' : '#1a1a1a' }">
+          <p class="text-body-1 font-weight-bold mt-3" :style="{ color: selectedFile ? 'rgb(var(--v-theme-primary))' : 'rgb(var(--v-theme-on-surface))' }">
             {{ selectedFile ? selectedFile.name : `Drop ${fileTypeLabel} file here or click to browse` }}
           </p>
           <p v-if="!selectedFile" class="text-caption text-disabled">
@@ -140,7 +140,7 @@
             <v-col cols="6">
               <div class="stat-box">
                 <p class="text-caption text-medium-emphasis">Valid Rows</p>
-                <p class="text-h6 font-weight-bold" style="color: #4caf50">
+                <p class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-success))">
                   {{ previewResult.valid_rows }}
                 </p>
               </div>
@@ -148,7 +148,7 @@
             <v-col cols="6">
               <div class="stat-box">
                 <p class="text-caption text-medium-emphasis">Workout Dates</p>
-                <p class="text-h6 font-weight-bold" style="color: #00bcd4">
+                <p class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-primary))">
                   {{ previewResult.unique_workout_dates }}
                 </p>
               </div>
@@ -156,7 +156,7 @@
             <v-col cols="6">
               <div class="stat-box">
                 <p class="text-caption text-medium-emphasis">Workouts to Create</p>
-                <p class="text-h6 font-weight-bold" style="color: #00bcd4">
+                <p class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-primary))">
                   {{ previewResult.user_workouts_to_create }}
                 </p>
               </div>
@@ -196,7 +196,7 @@
                 <p class="text-caption text-medium-emphasis">
                   {{ selectedEntity === 'user_workouts' ? 'Valid Workouts' : 'Valid Rows' }}
                 </p>
-                <p class="text-h6 font-weight-bold" style="color: #4caf50">
+                <p class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-success))">
                   {{ previewResult.valid_workouts || previewResult.valid_rows }}
                 </p>
               </div>
@@ -282,7 +282,7 @@
         </v-card>
 
         <!-- Wodify Workout Summary -->
-        <v-card v-if="isWodifyImport && previewResult.workout_summary?.length > 0" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
+        <v-card v-if="isWodifyImport && previewResult.workout_summary?.length > 0" elevation="0" rounded="lg" class="pa-4 mb-3" style="background-color: rgb(var(--v-theme-surface)); overflow-x: auto">
           <h3 class="text-body-1 font-weight-bold mb-3" >Workout Summary</h3>
 
           <v-data-table
@@ -310,7 +310,7 @@
         </v-card>
 
         <!-- Standard Preview Table -->
-        <v-card v-if="!isWodifyImport" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
+        <v-card v-if="!isWodifyImport" elevation="0" rounded="lg" class="pa-4 mb-3" style="background-color: rgb(var(--v-theme-surface)); overflow-x: auto">
           <h3 class="text-body-1 font-weight-bold mb-3" >Data Preview</h3>
 
           <v-data-table
@@ -598,14 +598,14 @@ const getRowColor = (item) => {
 }
 
 .upload-zone:hover, .upload-zone.drag-over {
-  border-color: #00bcd4;
-  background: #e0f7fa;
+  border-color: rgb(var(--v-theme-primary));
+  background-color: rgb(var(--v-theme-surface));
 }
 
 .stat-box {
   padding: 12px;
   border-radius: 8px;
-  background: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
   text-align: center;
 }
 

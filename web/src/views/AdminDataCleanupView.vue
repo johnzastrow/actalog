@@ -7,7 +7,7 @@
             <v-icon color="error" size="28" class="mr-2">mdi-database-refresh</v-icon>
             WOD Score Type Cleanup
           </h1>
-          <p style="color: #666; font-size: 14px">
+          <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px">
             Detect and fix WOD performance records that don't match their defined score_type
           </p>
         </div>
@@ -17,7 +17,7 @@
           <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 12px">
             Step 1: Scan for Mismatches
           </h3>
-          <p style="color: #666; font-size: 14px; margin-bottom: 16px">
+          <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin-bottom: 16px">
             Click the button below to scan all WOD performance records and detect entries that don't match their WOD's defined score_type.
           </p>
 
@@ -71,7 +71,7 @@
                   <v-icon color="primary" size="20">mdi-pencil</v-icon>
                 </div>
 
-                <div style="font-size: 13px; color: #666">
+                <div style="font-size: 13px; color: rgb(var(--v-theme-on-surface), 0.6)">
                   <div class="mb-1">
                     <strong>User:</strong> {{ mismatch.user_email }}
                   </div>
@@ -97,7 +97,7 @@
             <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 12px">
               Step 2: Fix Mismatches
             </h3>
-            <p style="color: #666; font-size: 14px; margin-bottom: 16px">
+            <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin-bottom: 16px">
               This will <strong>delete</strong> all {{ mismatches.length }} mismatched record{{ mismatches.length !== 1 ? 's' : '' }} from the database.
               This action cannot be undone.
             </p>
@@ -144,15 +144,15 @@
     <!-- Edit Dialog -->
     <v-dialog v-model="editDialog" max-width="600">
       <v-card>
-        <v-card-title style="background: #00bcd4; color: white">
+        <v-card-title style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-pencil</v-icon>
           Edit WOD Record
         </v-card-title>
         <v-card-text class="pt-4">
           <div v-if="editingMismatch">
             <!-- Record Info -->
-            <div class="mb-4" style="background: #f5f7fa; padding: 12px; border-radius: 8px">
-              <div style="font-size: 14px; color: #666">
+            <div class="mb-4" style="background-color: rgb(var(--v-theme-background)); padding: 12px; border-radius: 8px">
+              <div style="font-size: 14px; color: rgb(var(--v-theme-on-surface), 0.6)">
                 <div><strong>WOD:</strong> {{ editingMismatch.wod_name }}</div>
                 <div><strong>User:</strong> {{ editingMismatch.user_email }}</div>
                 <div><strong>Date:</strong> {{ formatDate(editingMismatch.workout_date) }}</div>
@@ -247,7 +247,7 @@
           Confirm Deletion
         </v-card-title>
         <v-card-text class="pt-4">
-          <p style="font-size: 14px; color: #666">
+          <p style="font-size: 14px; color: rgb(var(--v-theme-on-surface), 0.6)">
             Are you sure you want to delete <strong>{{ mismatches.length }} mismatched record{{ mismatches.length !== 1 ? 's' : '' }}</strong>?
           </p>
           <p style="font-size: 14px; color: #e91e63; margin-top: 12px">

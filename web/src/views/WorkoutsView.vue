@@ -119,12 +119,12 @@
             elevation="0"
             rounded
             class="mb-1 pa-2"
-            style="background: white; cursor: pointer"
+            style="background-color: rgb(var(--v-theme-surface)); cursor: pointer"
             @click="selectTemplate(template)"
           >
             <div class="d-flex align-center mb-1">
               <v-icon
-                :color="template.created_by ? '#00bcd4' : '#ffc107'"
+                :color="template.created_by ? 'primary' : 'warning'"
                 class="mr-2"
                 size="small"
               >
@@ -144,7 +144,7 @@
                 variant="flat"
                 size="small"
                 @click.stop="logWorkoutFromTemplate(template.id)"
-                style="background: teal"
+                style="background-color: rgb(var(--v-theme-primary))"
               >
                 <v-icon color="white">mdi-lightning-bolt</v-icon>
                 <v-tooltip activator="parent" location="top">Quick Log</v-tooltip>
@@ -245,7 +245,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

@@ -36,7 +36,7 @@
               hide-details
               clearable
               auto-select-first
-              style="color: #1a1a1a; font-weight: 500"
+              style="color: rgb(var(--v-theme-on-surface)); font-weight: 500"
               @update:model-value="onTemplateSelected"
             >
               <template #prepend-inner>
@@ -46,7 +46,7 @@
                 <v-list-item v-bind="props" density="compact">
                   <template #prepend>
                     <v-icon
-                      :color="item.raw.created_by ? '#00bcd4' : '#ffc107'"
+                      :color="item.raw.created_by ? 'primary' : 'warning'"
                       size="small"
                     >
                       {{ item.raw.created_by ? 'mdi-account' : 'mdi-star' }}
@@ -77,7 +77,7 @@
               hide-details
               required
               placeholder="e.g., Morning Run, Upper Body, etc."
-              style="color: #1a1a1a; font-weight: 500"
+              style="color: rgb(var(--v-theme-on-surface)); font-weight: 500"
             />
           </v-card>
         </div>
@@ -87,7 +87,7 @@
           v-if="selectedTemplate || (isEditMode && selectedTemplateId)"
           elevation="0"
           class="mb-1 pa-2"
-          style="background: #e3f2fd; border: 2px solid #00bcd4"
+          style="background-color: rgb(var(--v-theme-surface)); border: 2px solid rgb(var(--v-theme-primary))"
         >
           <div class="d-flex align-center mb-2">
             <v-icon color="primary" class="mr-2">mdi-information-outline</v-icon>
@@ -124,7 +124,7 @@
               density="compact"
               hide-details
               required
-              style="color: #1a1a1a; font-weight: 500"
+              style="color: rgb(var(--v-theme-on-surface)); font-weight: 500"
             />
           </v-card>
         </div>
@@ -139,7 +139,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-dumbbell</v-icon>
@@ -231,7 +231,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-flag-checkered</v-icon>
@@ -249,7 +249,7 @@
               hide-details
               readonly
               class="mb-2"
-              style="background: #f5f5f5"
+              style="background-color: rgb(var(--v-theme-background))"
             />
 
             <!-- Time Score -->
@@ -364,7 +364,7 @@
               density="compact"
               hide-details
               placeholder="e.g., 30"
-              style="color: #1a1a1a; font-weight: 500"
+              style="color: rgb(var(--v-theme-on-surface)); font-weight: 500"
             />
           </v-card>
         </div>
@@ -382,7 +382,7 @@
               hide-details
               rows="3"
               placeholder="How did it feel? Any PRs? Modifications?"
-              style="color: #1a1a1a; font-weight: 500"
+              style="color: rgb(var(--v-theme-on-surface)); font-weight: 500"
             />
           </v-card>
         </div>
@@ -410,7 +410,7 @@
           size="large"
           block
           class="mt-1 font-weight-bold"
-          style="text-transform: none; border: 2px dashed #00bcd4"
+          style="text-transform: none; border: 2px dashed rgb(var(--v-theme-primary))"
           @click="$router.push('/workouts')"
         >
           <v-icon start>mdi-view-list</v-icon>
@@ -423,7 +423,7 @@
     <v-bottom-navigation
       v-model="activeTab"
       grow
-      style="position: fixed; bottom: 0; background: white"
+      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" to="/dashboard">

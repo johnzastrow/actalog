@@ -63,7 +63,7 @@
               elevation="0"
               rounded="lg"
               class="mb-3 timeline-card"
-              style="background: white; border-left: 4px solid #00bcd4"
+              style="background-color: rgb(var(--v-theme-surface)); border-left: 4px solid rgb(var(--v-theme-primary))"
               @click="viewWorkout(workout.id)"
             >
               <v-card-text>

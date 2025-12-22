@@ -86,7 +86,7 @@
           elevation="0"
           rounded="lg"
           class="pa-2 mb-2"
-          style="background: white; border: 1px solid #e0e0e0"
+          style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0"
           :ripple="true"
           @click="handleMovementClick(movement)"
         >
@@ -164,7 +164,7 @@
       name="bottom-navigation"
       color="primary"
       grow
-      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background: white"
+      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background-color: rgb(var(--v-theme-surface))"
       elevation="8"
     >
       <v-btn value="dashboard" @click="$router.push('/dashboard')">
@@ -191,7 +191,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" style="background-color: rgb(var(--v-theme-primary)); color: white">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log {{ selectedMovement?.name }}
         </v-card-title>
@@ -225,7 +225,7 @@
             </div>
 
             <!-- Movement Performance Form -->
-            <div class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+            <div class="mt-3 pa-3" style="background-color: rgb(var(--v-theme-background)); border-radius: 8px">
               <div class="mb-2">
                 <label class="text-caption">Sets</label>
                 <v-text-field
