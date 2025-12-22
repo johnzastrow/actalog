@@ -53,7 +53,7 @@
             :class="{ 'v-list-item--active': themeStore.currentTheme === theme.id }"
           >
             <template v-slot:prepend>
-              <v-icon :color="themeStore.currentTheme === theme.id ? 'teal' : ''">
+              <v-icon :color="themeStore.currentTheme === theme.id ? 'primary' : ''">
                 {{ theme.icon }}
               </v-icon>
             </template>
@@ -108,6 +108,6 @@ const closeMenu = () => {
 
 <style scoped>
 .v-list-item--active {
-  background-color: rgba(0, 188, 212, 0.1);
+  background-color: rgb(var(--v-theme-primary), 0.1);
 }
 </style>

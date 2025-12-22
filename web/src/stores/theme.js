@@ -50,10 +50,8 @@ export const useThemeStore = defineStore('theme', () => {
     }
 
     currentTheme.value = themeId
-    // Use proper Vuetify 3 theme API
-    if (vuetifyTheme.global.name) {
-      vuetifyTheme.global.name.value = themeId
-    }
+    // Use Vuetify 3 theme.change() API (replaces deprecated global.name.value assignment)
+    vuetifyTheme.change(themeId)
     localStorage.setItem('actalog-theme', themeId)
   }
 
