@@ -173,13 +173,13 @@ function isToday(day) {
 function getDayColor(day) {
   if (!day) return 'transparent'
   if (day.hasWorkout) return primaryColor.value
-  return '#e0e0e0'
+  return 'transparent'  // No background for non-workout days - better contrast on all themes
 }
 
 function getDayTextColor(day) {
-  if (!day) return '#666'
+  if (!day) return 'rgb(var(--v-theme-on-surface), 0.4)'
   if (day.hasWorkout) return '#ffffff'
-  return '#999'
+  return 'rgb(var(--v-theme-on-surface), 0.5)'  // Theme-aware text color
 }
 
 function previousMonth() {
