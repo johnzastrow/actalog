@@ -99,7 +99,8 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 
 #### Backend Improvements
-- [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB). Determine if there is a way to automatically incorporate new tables or other structures into the backup without manual code changes.
+- [ ] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB). - - [ ] `[HIGH]` Determine if there is a way to automatically incorporate new tables or other structures into the backup without manual code changes. Does the JSON-based approach already handle this? If not, can we make it more dynamic?
+- [ ] `[HIGH]` **Duplicate Record Protection**
   - [ ] All imports should protect against duplicate records (movements, wods, user workouts)
   - [ ] A system restore should be able to detect and handle duplicates gracefully (skip, update, merge, etc), as well import an entire system backup from a prior or current version into a fresh installation of the current version. The goal is to be able to restore a backup from any prior version into the current version without data loss or duplication. Migrations should be applied as needed. The full .zip backup file should be usable for this purpose.
 - [ ] `[HIGH]` **Check for missing indexes** - review all database tables and ensure appropriate indexes exist for performance (especially on foreign keys and commonly queried fields)
@@ -191,15 +192,16 @@ These features can be added after the core frontend is complete:
   - [ ] Backup database before cleanup operation
   - [ ] Audit log of all cleanup operations
 
-### Medium Priority
+### High Priority
 
 #### Documentation & Marketing
-- [ ] `[MEDIUM]` **Enhance App Documentation with Screenshots**
+- [ ] `[High]` **Enhance App Documentation with Screenshots**
+- [ ]  `[High]` Get the static web site generator working and serving public pages
   - [ ] Add more information about features and functions in the app
-  - [ ] Capture screenshots demonstrating all available themes
+  - [ ] Insert place holders for screenshots demonstrating all available themes and major features. Include captions and all marketing text
   - [ ] Show desktop vs mobile responsive views
   - [ ] Document key user flows with visual guides
-  - [ ] Add screenshots to static website/README
+
 
 #### Performance & Analytics
 - [X] `[MEDIUM]` **Calendar View** - Monthly view with workout dots

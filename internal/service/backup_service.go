@@ -1480,8 +1480,10 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 	// Boolean conversion for specific columns
 	booleanColumns := map[string]bool{
 		"is_pr":                 true,
+		"is_rx":                 true,
 		"is_template":           true,
 		"is_standard":           true,
+		"is_permanent_free":     true,
 		"email_verified":        true,
 		"account_disabled":      true,
 		"notifications_enabled": true,
@@ -1489,18 +1491,25 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 
 	// Datetime columns that may need conversion
 	datetimeColumns := map[string]bool{
-		"created_at":        true,
-		"updated_at":        true,
-		"last_login_at":     true,
-		"email_verified_at": true,
-		"locked_at":         true,
-		"locked_until":      true,
-		"disabled_at":       true,
-		"expires_at":        true,
-		"used_at":           true,
-		"revoked_at":        true,
-		"workout_date":      true,
-		"birthday":          true,
+		"created_at":         true,
+		"updated_at":         true,
+		"last_login_at":      true,
+		"email_verified_at":  true,
+		"locked_at":          true,
+		"locked_until":       true,
+		"disabled_at":        true,
+		"expires_at":         true,
+		"used_at":            true,
+		"revoked_at":         true,
+		"workout_date":       true,
+		"birthday":           true,
+		"joined_at":          true,
+		"start_date":         true,
+		"end_date":           true,
+		"last_payment_date":  true,
+		"next_billing_date":  true,
+		"cancelled_at":       true,
+		"read_at":            true,
 	}
 
 	// Convert datetime values for MySQL (ISO 8601 to MySQL format)
