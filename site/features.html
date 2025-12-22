@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ActaLog for Gyms - Manage Your CrossFit Box</title>
-    <meta name="description" content="Run your CrossFit box with ActaLog. Member management, announcements, subscription billing, and performance tracking for gym owners.">
+    <title>ActaLog for Admins - Manage Your CrossFit Community</title>
+    <meta name="description" content="Run your CrossFit community with ActaLog. Member management, announcements, subscription billing, and performance tracking for administrators.">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="ActaLog for Gyms - Manage Your CrossFit Box">
-    <meta property="og:description" content="Run your CrossFit box with ActaLog. Member management, announcements, and performance tracking.">
+    <meta property="og:title" content="ActaLog for Admins - Manage Your CrossFit Community">
+    <meta property="og:description" content="Run your CrossFit community with ActaLog. Member management, announcements, and performance tracking.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://johnzastrow.github.io/actalog/features.html">
     <meta property="og:image" content="assets/hero-screenshot.png">
@@ -47,12 +47,12 @@
     <section class="hero" style="min-height: 50vh;">
         <div class="hero-container">
             <div class="hero-content" style="max-width: 100%;">
-                <div class="hero-badge">FOR GYM OWNERS</div>
+                <div class="hero-badge">FOR ADMINISTRATORS</div>
                 <h1 class="hero-title">
                     <span class="hero-title-line">RUN YOUR</span>
-                    <span class="hero-title-line glow">BOX.</span>
+                    <span class="hero-title-line glow">COMMUNITY.</span>
                 </h1>
-                <p class="hero-subtitle">Everything you need to manage members, track performance, and keep your community engaged. Built by gym owners, for gym owners.</p>
+                <p class="hero-subtitle">Everything you need to manage members, track performance, and keep your community engaged. Built by athletes, for athletes and their communities.</p>
             </div>
         </div>
         <div class="diagonal-divider"></div>
@@ -119,36 +119,102 @@
         </div>
     </section>
 
-    <!-- Announcements Section -->
+    <!-- Notifications & Announcements Section -->
     <section class="tech" id="announcements">
         <div class="tech-container">
             <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
-                    <h2 class="section-title">KEEP YOUR COMMUNITY CONNECTED</h2>
+                    <h2 class="section-title">NOTIFICATIONS & ANNOUNCEMENTS</h2>
                     <div class="section-line"></div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem;">
-                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                <!-- Announcements Feature -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem; margin-bottom: 4rem;">
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2);">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
                             <div style="width: 8px; height: 8px; border-radius: 50%; background: #ffc107;"></div>
                             <span style="color: #ffc107; font-size: 0.9rem; font-weight: 600;">ANNOUNCEMENT</span>
                             <span style="color: #666; font-size: 0.8rem; margin-left: auto;">2 hours ago</span>
                         </div>
                         <h4 style="color: #e0e0e0; font-size: 1.1rem; margin-bottom: 0.75rem;">Holiday Hours Reminder</h4>
-                        <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Hey everyone! Just a reminder that we'll have modified hours next week for the holidays. Check the schedule on the board. See you all at the Christmas Eve WOD!</p>
+                        <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Hey everyone! Just a reminder that we'll have <strong style="color: #ccc;">modified hours</strong> next week for the holidays. Check the <a href="#" style="color: #00bcd4;">schedule here</a>.</p>
+                        <p style="color: #888; font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem;">See you all at the Christmas Eve WOD!</p>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem; color: #666; font-size: 0.85rem;">
                             <span>Sent to: All Members</span>
                         </div>
                     </div>
                     <div>
-                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">BROADCAST TO EVERYONE</h3>
+                        <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">BROADCAST TO YOUR COMMUNITY</h3>
                         <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
-                            Schedule changes, special events, equipment updates &mdash; your members see it all in their notification feed. No more hoping everyone checks the whiteboard.
+                            Schedule changes, special events, equipment updates, competition announcements &mdash; your members see it all in their notification feed. No more hoping everyone checks the whiteboard or reads their email.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                            Announcements go directly to every member's notification inbox within the app. They appear with a timestamp and are accessible from anywhere. Members who miss a day still get the message when they open the app.
                         </p>
                         <p style="color: #888; font-size: 1rem; line-height: 1.7;">
-                            Announcements appear in the app with a timestamp and are accessible from anywhere. Members who miss a day still get the message.
+                            Write announcements with <strong style="color: #ccc;">Markdown formatting</strong> for rich text &mdash; bold, italics, links, and lists. ActaLog supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" style="color: #00bcd4;">standard Markdown syntax</a> so your messages look professional and are easy to read.
                         </p>
+                    </div>
+                </div>
+
+                <!-- Multi-Organization Feature -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                    <div>
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">MULTIPLE ORGANIZATIONS</h3>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                            Athletes aren't limited to a single community. Users can belong to multiple organizations &mdash; their home box, a specialty gym, a competition team, or a remote coaching group.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                            Each organization has its own admins, announcements, and member lists. Athletes see notifications from all their communities in one unified feed, but workouts and PRs belong to the individual &mdash; their data travels with them.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                            Perfect for coaches who work at multiple locations, athletes who travel frequently, or competition teams that span different boxes.
+                        </p>
+                    </div>
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">YOUR ORGANIZATIONS</div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(0, 188, 212, 0.1); border-radius: 8px;">
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: #00bcd4; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: bold;">CF</div>
+                                <div>
+                                    <div style="color: #e0e0e0; font-weight: 600;">CrossFit Downtown</div>
+                                    <div style="color: #666; font-size: 0.85rem;">Primary &bull; Admin</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(255, 193, 7, 0.1); border-radius: 8px;">
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: #ffc107; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: bold;">OL</div>
+                                <div>
+                                    <div style="color: #e0e0e0; font-weight: 600;">Olympic Lifting Club</div>
+                                    <div style="color: #666; font-size: 0.85rem;">Member</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(0, 230, 118, 0.1); border-radius: 8px;">
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: #00e676; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: bold;">CT</div>
+                                <div>
+                                    <div style="color: #e0e0e0; font-weight: 600;">Competition Team 2025</div>
+                                    <div style="color: #666; font-size: 0.85rem;">Athlete</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Types -->
+                <div style="max-width: 900px; margin: 0 auto;">
+                    <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">NOTIFICATION TYPES</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                            <div style="color: #ffc107; font-size: 1.25rem; margin-bottom: 0.5rem;">PR Achievements</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">When you hit a personal record, you get notified. When others hit PRs, you can celebrate with a like.</p>
+                        </div>
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                            <div style="color: #00bcd4; font-size: 1.25rem; margin-bottom: 0.5rem;">Admin Announcements</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Important updates from your organization's admins appear in your notification feed.</p>
+                        </div>
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(0, 230, 118, 0.2);">
+                            <div style="color: #00e676; font-size: 1.25rem; margin-bottom: 0.5rem;">Social Interactions</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Get notified when someone likes your PR or interacts with your achievements.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -215,33 +281,20 @@
         <div class="tech-container">
             <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
-                    <h2 class="section-title">YOUR DATA, YOUR CONTROL</h2>
+                    <h2 class="section-title">IMPORT, EXPORT & DATA CONTROL</h2>
                     <div class="section-line"></div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem;">
+                <!-- Data Ownership -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem; margin-bottom: 4rem;">
                     <div>
                         <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">COMPLETE DATA OWNERSHIP</h3>
                         <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
                             Unlike cloud-only solutions, ActaLog runs on your infrastructure. Your member data never leaves your servers unless you want it to.
                         </p>
                         <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem;">
-                            Full backup and restore capabilities mean you can migrate, archive, or recover data at any time. Export to JSON, backup to ZIP, or replicate across database engines.
+                            Full backup and restore capabilities mean you can migrate, archive, or recover data at any time. The complete database can be backed up with a single click, and restores are just as simple.
                         </p>
-                        <ul style="color: #888; font-size: 1rem; line-height: 2; list-style: none; padding: 0;">
-                            <li style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="color: #00bcd4;">&#10003;</span> Full database backups on demand
-                            </li>
-                            <li style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="color: #00bcd4;">&#10003;</span> CSV import from Wodify and other platforms
-                            </li>
-                            <li style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="color: #00bcd4;">&#10003;</span> JSON export for all user data
-                            </li>
-                            <li style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="color: #00bcd4;">&#10003;</span> Audit logs for compliance requirements
-                            </li>
-                        </ul>
                     </div>
                     <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
                         <div style="text-align: center; padding: 2rem;">
@@ -251,8 +304,93 @@
                             </svg>
                             <h4 style="color: #e0e0e0; font-size: 1.25rem; margin-bottom: 0.75rem;">GDPR & Privacy Ready</h4>
                             <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">
-                                Built with data privacy in mind. Export member data on request, delete records completely, maintain audit trails for compliance.
+                                Export member data on request, delete records completely, maintain audit trails for compliance.
                             </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Capabilities -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 230, 118, 0.2);">
+                        <div style="color: #00e676; font-size: 0.9rem; margin-bottom: 1rem;">IMPORT FORMATS</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(0, 230, 118, 0.1); border-radius: 8px;">
+                                <span style="color: #00e676;">CSV</span>
+                                <span style="color: #888;">Movements, WODs, Workouts</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(0, 230, 118, 0.1); border-radius: 8px;">
+                                <span style="color: #00e676;">JSON</span>
+                                <span style="color: #888;">User workout history</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255, 193, 7, 0.1); border-radius: 8px;">
+                                <span style="color: #ffc107;">Wodify</span>
+                                <span style="color: #888;">Direct performance import</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">EXTENSIVE IMPORT OPTIONS</h3>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                            Migrating from another platform? ActaLog makes it easy. Import your movements, WODs, and workout history from CSV files. Coming from Wodify? We have a dedicated importer that handles their export format directly.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                            Each import type includes a preview step so you can review what will be added before confirming. Duplicate detection prevents accidental data duplication, and you can choose to skip or update existing records.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Export Capabilities -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                    <div>
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">COMPREHENSIVE EXPORTS</h3>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                            Your data should always be accessible. Export movements, WODs, and complete workout histories to CSV or JSON formats. Members can export their own data anytime &mdash; no admin intervention required.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                            Admins can generate full system backups that include the complete database. These backups can be used for disaster recovery, migrating to a new server, or archiving historical data.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                            All exports are timestamped and logged in the audit trail for accountability and compliance tracking.
+                        </p>
+                    </div>
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="color: #00bcd4; font-size: 0.9rem; margin-bottom: 1rem;">EXPORT OPTIONS</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(0, 188, 212, 0.1); border-radius: 8px;">
+                                <span style="color: #00bcd4;">CSV</span>
+                                <span style="color: #888;">Movements, WODs, Templates</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(0, 188, 212, 0.1); border-radius: 8px;">
+                                <span style="color: #00bcd4;">JSON</span>
+                                <span style="color: #888;">Complete user workout data</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255, 107, 53, 0.1); border-radius: 8px;">
+                                <span style="color: #ff6b35;">ZIP</span>
+                                <span style="color: #888;">Full system backup</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Operations -->
+                <div style="max-width: 900px; margin: 0 auto;">
+                    <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">BATCH OPERATIONS</h3>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7; text-align: center; margin-bottom: 2rem;">
+                        Managing a community means working with data at scale. ActaLog provides batch operations for common administrative tasks.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                            <div style="color: #ffc107; font-size: 1.1rem; margin-bottom: 0.5rem;">Bulk User Import</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Import multiple users at once from CSV. Perfect for onboarding a new class or migrating from another system.</p>
+                        </div>
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                            <div style="color: #ffc107; font-size: 1.1rem; margin-bottom: 0.5rem;">Movement Library Seeding</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Import complete movement libraries from CSV. Start with the included 182 movements or add your own custom set.</p>
+                        </div>
+                        <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                            <div style="color: #ffc107; font-size: 1.1rem; margin-bottom: 0.5rem;">WOD Library Loading</div>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Bulk import WODs from CSV with full metadata &mdash; name, description, type, time cap, and movement lists.</p>
                         </div>
                     </div>
                 </div>
@@ -328,7 +466,7 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <div class="footer-logo">ACTALOG</div>
-                    <p class="footer-tagline">Built for CrossFit Boxes</p>
+                    <p class="footer-tagline">Built for CrossFit Communities</p>
                 </div>
 
                 <div class="footer-links">

@@ -57,7 +57,7 @@
                 <span class="logo-text">ACTALOG</span>
             </div>
             <div class="nav-links">
-                <a href="features.html" class="nav-link">FOR GYMS</a>
+                <a href="features.html" class="nav-link">FOR ADMINS</a>
                 <a href="tech.html" class="nav-link">DEVELOPERS</a>
             </div>
         </div>
@@ -128,79 +128,150 @@
     <section class="features" id="features">
         <div class="features-container">
             <div class="section-header">
-                <h2 class="section-title">EVERYTHING YOU NEED TO TRAIN SMARTER</h2>
+                <h2 class="section-title">FOR ATHLETES</h2>
                 <div class="section-line"></div>
             </div>
 
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
+            <!-- PR Detection Feature - Expanded -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                <div>
+                    <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 1rem;">AUTOMATIC PR DETECTION</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        Every time you log a workout, ActaLog analyzes your performance across multiple metrics. Hit a new max weight? Faster time? More reps? We catch it automatically and celebrate with you.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                        PR detection works across weight lifted, time to completion, total reps, and rounds completed. When you beat your previous best, you'll see a notification instantly &mdash; and your fellow athletes can like your achievement to cheer you on.
+                    </p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem;">
+                        <span style="background: rgba(255, 193, 7, 0.2); color: #ffc107; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Weight PRs</span>
+                        <span style="background: rgba(255, 193, 7, 0.2); color: #ffc107; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Time PRs</span>
+                        <span style="background: rgba(255, 193, 7, 0.2); color: #ffc107; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Rep PRs</span>
+                        <span style="background: rgba(255, 193, 7, 0.2); color: #ffc107; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Round PRs</span>
                     </div>
-                    <h3 class="feature-title">AUTOMATIC PR DETECTION</h3>
-                    <p class="feature-description">Hit a new personal record? ActaLog catches it automatically. Weight PRs, time PRs, rep PRs &mdash; we track them all so you never miss a win.</p>
                 </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"/>
-                            <line x1="12" y1="20" x2="12" y2="4"/>
-                            <line x1="6" y1="20" x2="6" y2="14"/>
-                        </svg>
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(255, 193, 7, 0.3);">
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="font-size: 4rem; color: #ffc107; margin-bottom: 0.5rem;">PR!</div>
+                        <div style="color: #e0e0e0; font-size: 1.25rem; margin-bottom: 1rem;">Back Squat</div>
+                        <div style="color: #00bcd4; font-size: 2.5rem; font-weight: bold;">315 lbs</div>
+                        <div style="color: #666; margin-top: 0.5rem;">Previous: 305 lbs (+10 lbs)</div>
                     </div>
-                    <h3 class="feature-title">SEE YOUR PROGRESS</h3>
-                    <p class="feature-description">Beautiful charts show your strength gains over time. Track how much you've lifted, how often you train, and where you're getting stronger.</p>
                 </div>
+            </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
+            <!-- Estimated 1RM Feature -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                    <div style="text-align: center;">
+                        <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">ESTIMATED</div>
+                        <div style="color: #00bcd4; font-size: 3rem; font-weight: bold;">1RM</div>
+                        <div style="color: #e0e0e0; font-size: 2rem; margin: 1rem 0;">365 lbs</div>
+                        <div style="color: #888; font-size: 0.9rem;">Based on: 315 lbs x 5 reps</div>
+                        <div style="color: #666; font-size: 0.85rem; margin-top: 1rem; font-style: italic;">Using Brzycki Formula</div>
                     </div>
-                    <h3 class="feature-title">314 BENCHMARK WODS</h3>
-                    <p class="feature-description">Fran, Grace, Murph, The Open &mdash; they're all here. Pre-loaded with classic CrossFit benchmarks so you can log and compare your times instantly.</p>
                 </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 6v6l4 2"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">LOG IN SECONDS</h3>
-                    <p class="feature-description">Designed for the gym floor. Big buttons, fast logging, no fumbling. Record your workout while you're still catching your breath.</p>
+                <div>
+                    <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 1rem;">ESTIMATED 1RM CALCULATIONS</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        Not every day is a max-out day &mdash; but you still want to know how you're progressing. ActaLog calculates your estimated one-rep max using the industry-standard Brzycki formula based on your working sets.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                        Log a set of 225 lbs for 8 reps, and we'll tell you your estimated 1RM is around 281 lbs. Track these estimates over time to see your true strength progression without the wear and tear of constant max attempts. Your joints will thank you.
+                    </p>
                 </div>
+            </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2"/>
-                            <path d="M3 10h18"/>
-                            <path d="M8 2v4"/>
-                            <path d="M16 2v4"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">CALENDAR VIEW</h3>
-                    <p class="feature-description">See your training at a glance. Workout dots show your consistency. PR badges celebrate your wins. Never wonder "when did I last do that?"</p>
+            <!-- Consistency Tracking Feature -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                <div>
+                    <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 1rem;">BUILD CONSISTENCY</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        The best program is the one you actually follow. ActaLog tracks your training streaks, weekly frequency, and attendance patterns to help you build the habit of showing up.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                        See your current streak displayed prominently on your dashboard. Watch it grow from days to weeks to months. The calendar view shows your training dots at a glance &mdash; gaps become obvious, consistency becomes visual proof of your dedication.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                        Monthly summaries show your total workouts, workout frequency, and how you compare to previous months. Data-driven motivation to keep you coming back.
+                    </p>
                 </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                        </svg>
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 230, 118, 0.2);">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; text-align: center;">
+                        <div>
+                            <div style="color: #00e676; font-size: 2.5rem; font-weight: bold;">23</div>
+                            <div style="color: #666; font-size: 0.9rem;">Day Streak</div>
+                        </div>
+                        <div>
+                            <div style="color: #00bcd4; font-size: 2.5rem; font-weight: bold;">4.2</div>
+                            <div style="color: #666; font-size: 0.9rem;">Avg/Week</div>
+                        </div>
+                        <div>
+                            <div style="color: #ffc107; font-size: 2.5rem; font-weight: bold;">18</div>
+                            <div style="color: #666; font-size: 0.9rem;">This Month</div>
+                        </div>
                     </div>
-                    <h3 class="feature-title">WORKS ANYWHERE</h3>
-                    <p class="feature-description">Install on your phone, tablet, or computer. Works offline when your gym has spotty WiFi. Your workouts sync when you're back online.</p>
+                </div>
+            </div>
+
+            <!-- Pre-loaded Content Feature -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem;">
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                    <div style="display: flex; justify-content: space-around; text-align: center;">
+                        <div>
+                            <div style="color: #00bcd4; font-size: 3rem; font-weight: bold;">314</div>
+                            <div style="color: #888; font-size: 0.9rem;">Benchmark WODs</div>
+                            <div style="color: #666; font-size: 0.8rem; margin-top: 0.25rem;">Girls, Heroes, Open</div>
+                        </div>
+                        <div style="width: 1px; background: rgba(0, 188, 212, 0.3);"></div>
+                        <div>
+                            <div style="color: #ffc107; font-size: 3rem; font-weight: bold;">182</div>
+                            <div style="color: #888; font-size: 0.9rem;">Movements</div>
+                            <div style="color: #666; font-size: 0.8rem; margin-top: 0.25rem;">Lifts, Cardio, Gymnastics</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 1rem;">PRE-LOADED & READY</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        ActaLog comes loaded with 314 benchmark WODs and 182 movements right out of the box. Fran, Grace, Murph, all the Girls, the Heroes, and CrossFit Open workouts from multiple years &mdash; they're all here and ready to log.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                        The movement library includes Olympic lifts like the snatch and clean &amp; jerk, powerlifting staples like squat and deadlift, gymnastics movements like muscle-ups and handstand walks, and cardio options from rowing to running. Each movement is categorized and searchable, so you find what you need instantly.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Create Your Own Feature -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="color: #ff6b35; font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-bottom: 1rem;">CREATE YOUR OWN</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        The pre-loaded library is just the starting point. Create your own WODs, add custom movements, and build workout templates that match exactly how you train.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+                        Invented a new chipper? Add it as a template. Your box has a signature workout? Create it once, log it forever. Custom movements for specialty equipment or unique exercises? Add them to your library.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                        Coaches and admins can create templates for the whole community. Program your daily WOD once, and every member can log it with a single tap. No more copying workout details from the whiteboard &mdash; just tap and go.
+                    </p>
+                </div>
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(255, 107, 53, 0.2);">
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="color: #ff6b35; font-size: 0.9rem; margin-bottom: 0.5rem;">CUSTOM WOD</div>
+                        <div style="color: #e0e0e0; font-size: 1.5rem; font-weight: bold;">"Box Birthday Bash"</div>
+                    </div>
+                    <div style="color: #888; font-size: 0.95rem; line-height: 1.6;">
+                        <div style="margin-bottom: 0.5rem;">For Time:</div>
+                        <div style="padding-left: 1rem;">
+                            <div>21-15-9</div>
+                            <div style="color: #ccc;">Thrusters (95/65)</div>
+                            <div style="color: #ccc;">Box Jumps (24/20)</div>
+                            <div style="color: #ccc;">Toes to Bar</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 107, 53, 0.2); color: #666; font-size: 0.85rem;">
+                        Created by Coach Mike &bull; Used 47 times
+                    </div>
                 </div>
             </div>
         </div>
@@ -287,6 +358,71 @@
         </div>
     </section>
 
+    <!-- Install App Section -->
+    <section class="tech" id="install">
+        <div class="tech-container">
+            <div class="tech-content" style="max-width: 100%;">
+                <div class="section-header">
+                    <h2 class="section-title">INSTALL THE APP</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>ActaLog is a Progressive Web App (PWA). Install it on your phone for a native app experience &mdash; no app store required.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <!-- iOS Instructions -->
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5">
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                            <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin: 0;">iPHONE / iPAD</h3>
+                        </div>
+                        <ol style="color: #ccc; line-height: 2; padding-left: 1.25rem; margin: 0;">
+                            <li>Open ActaLog in <strong style="color: #e0e0e0;">Safari</strong></li>
+                            <li>Tap the <strong style="color: #e0e0e0;">Share</strong> button (square with arrow)</li>
+                            <li>Scroll down and tap <strong style="color: #00bcd4;">"Add to Home Screen"</strong></li>
+                            <li>Tap <strong style="color: #e0e0e0;">Add</strong> to confirm</li>
+                        </ol>
+                        <p style="color: #666; font-size: 0.9rem; margin-top: 1rem; font-style: italic;">
+                            Note: Must use Safari. Chrome and other browsers don't support Add to Home Screen on iOS.
+                        </p>
+                    </div>
+
+                    <!-- Android Instructions -->
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.5">
+                                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                                <line x1="12" y1="18" x2="12" y2="18"/>
+                            </svg>
+                            <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin: 0;">ANDROID</h3>
+                        </div>
+                        <ol style="color: #ccc; line-height: 2; padding-left: 1.25rem; margin: 0;">
+                            <li>Open ActaLog in <strong style="color: #e0e0e0;">Chrome</strong></li>
+                            <li>Tap the <strong style="color: #e0e0e0;">menu</strong> (three dots)</li>
+                            <li>Tap <strong style="color: #00e676;">"Install app"</strong> or <strong style="color: #00e676;">"Add to Home Screen"</strong></li>
+                            <li>Tap <strong style="color: #e0e0e0;">Install</strong> to confirm</li>
+                        </ol>
+                        <p style="color: #666; font-size: 0.9rem; margin-top: 1rem; font-style: italic;">
+                            Chrome may automatically prompt you to install when you visit the app.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p style="color: #888; font-size: 1rem;">
+                        Once installed, ActaLog works offline and launches instantly from your home screen &mdash; just like a native app.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta" id="start">
         <div class="cta-container">
@@ -319,7 +455,7 @@
                 <div class="footer-links">
                     <div class="footer-column">
                         <h4 class="footer-heading">PRODUCT</h4>
-                        <a href="features.html">For Gyms</a>
+                        <a href="features.html">For Admins</a>
                         <a href="#features">Features</a>
                         <a href="#themes">Themes</a>
                     </div>
