@@ -450,15 +450,6 @@ function editMovement(id) {
   router.push(`/movements/${id}/edit`)
 }
 
-// Handle back navigation
-function handleBack() {
-  if (selectionMode.value && route.query.returnPath) {
-    router.push(route.query.returnPath)
-  } else {
-    router.back()
-  }
-}
-
 // Helper functions for Quick Log
 function getTodayDate() {
   const today = new Date()

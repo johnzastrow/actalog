@@ -535,17 +535,6 @@ async function deleteWOD() {
   }
 }
 
-// Handle back navigation
-function handleBack() {
-  if (wod.value.movements.length > 0 || wod.value.name) {
-    if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
-      router.back()
-    }
-  } else {
-    router.back()
-  }
-}
-
 // Initialize
 onMounted(async () => {
   await fetchMovements()

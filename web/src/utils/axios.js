@@ -1,6 +1,5 @@
 import axios from 'axios'
 import {
-  saveWorkoutOffline,
   addToPendingSync,
   syncWithServer,
   getPendingSync

@@ -587,8 +587,6 @@ import { getProfileImageUrl } from '@/utils/url'
 const router = useRouter()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
-const activeTab = ref('profile')
-
 
 // Version info
 const appVersion = ref('...')
@@ -618,11 +616,12 @@ function getDateRange(period) {
   let startDate = new Date(today)
 
   switch (period) {
-    case 'week':
+    case 'week': {
       // Start of current week (Sunday)
       const dayOfWeek = today.getDay()
       startDate.setDate(today.getDate() - dayOfWeek)
       break
+    }
     case 'month':
       // Start of current month
       startDate = new Date(now.getFullYear(), now.getMonth(), 1)

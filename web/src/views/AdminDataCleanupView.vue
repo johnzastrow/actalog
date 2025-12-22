@@ -267,12 +267,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import axios from '@/utils/axios'
-
-const router = useRouter()
-const authStore = useAuthStore()
 
 const scanning = ref(false)
 const fixing = ref(false)
@@ -410,11 +405,6 @@ const saveEdit = async () => {
   } finally {
     saving.value = false
   }
-}
-
-const logout = () => {
-  authStore.logout()
-  router.push('/login')
 }
 </script>
 

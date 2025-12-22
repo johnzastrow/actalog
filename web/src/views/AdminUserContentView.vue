@@ -725,11 +725,6 @@ function resetAndLoadMovements() {
   loadMovements()
 }
 
-function resetAndLoadWorkouts() {
-  workoutOffset.value = 0
-  loadWorkouts()
-}
-
 // Pagination
 function previousWodPage() {
   wodOffset.value = Math.max(0, wodOffset.value - limit)

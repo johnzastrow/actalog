@@ -173,11 +173,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
-
-const router = useRouter()
 
 // State
 const messageTab = ref('edit')

@@ -542,7 +542,7 @@ const exportData = async () => {
     link.click()
     window.URL.revokeObjectURL(url)
     successMessage.value = 'Data exported successfully!'
-  } catch (error) {
+  } catch {
     errors.value.general = 'Failed to export data. Please try again.'
   }
 }
@@ -565,7 +565,7 @@ const deleteAccount = async () => {
     await axios.delete('/api/users/account')
     authStore.logout()
     router.push('/login')
-  } catch (error) {
+  } catch {
     errors.value.general = 'Failed to delete account. Please try again.'
     deleteDialog.value = false
   } finally {

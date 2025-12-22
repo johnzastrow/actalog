@@ -407,11 +407,6 @@ function formatDate(dateString) {
   })
 }
 
-// Edit movement
-function editMovement() {
-  router.push(`/movements/${route.params.id}/edit`)
-}
-
 // Helper functions for Quick Log
 function getTodayDate() {
   const today = new Date()

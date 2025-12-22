@@ -469,7 +469,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import ManageUserOrganizationsDialog from '@/components/admin/ManageUserOrganizationsDialog.vue'
 
@@ -506,15 +506,6 @@ const headers = [
   { title: 'Change Role', value: 'change_role', sortable: false, align: 'center', width: '100px' },
   { title: 'Delete', value: 'delete', sortable: false, align: 'center', width: '80px' }
 ]
-
-const filteredUsers = computed(() => {
-  if (!search.value) return users.value
-  const searchLower = search.value.toLowerCase()
-  return users.value.filter(user =>
-    user.email.toLowerCase().includes(searchLower) ||
-    user.name?.toLowerCase().includes(searchLower)
-  )
-})
 
 function isLocked(user) {
   if (!user.locked_until) return false

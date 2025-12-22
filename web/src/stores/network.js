@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { setupNetworkListeners, getPendingSync } from '@/utils/offlineStorage'
+import { setupNetworkListeners } from '@/utils/offlineStorage'
 import { triggerSync, getPendingSyncCount } from '@/utils/axios'
 
 /**

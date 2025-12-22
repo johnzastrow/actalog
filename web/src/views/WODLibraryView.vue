@@ -401,7 +401,6 @@ const selectionMode = computed(() => route.query.select === 'true')
 
 // Computed properties from store
 const loading = computed(() => wodsStore.loading)
-const error = computed(() => wodsStore.error)
 
 // Filtered WODs
 const filteredWODs = computed(() => {
@@ -458,15 +457,6 @@ function createNewWOD() {
 // Edit WOD
 function editWOD(id) {
   router.push(`/wods/${id}/edit`)
-}
-
-// Handle back navigation
-function handleBack() {
-  if (selectionMode.value && route.query.returnPath) {
-    router.push(route.query.returnPath)
-  } else {
-    router.back()
-  }
 }
 
 // Helper functions for Quick Log

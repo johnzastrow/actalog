@@ -316,7 +316,7 @@ async function loadMovement() {
         const jsonStr = data.description.substring('__STRUCTURED__'.length)
         parsedData = JSON.parse(jsonStr)
       }
-    } catch (e) {
+    } catch {
       // Not structured data, use as plain description
       parsedData.description = data.description || ''
     }

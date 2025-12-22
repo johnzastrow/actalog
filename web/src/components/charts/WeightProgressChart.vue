@@ -40,7 +40,7 @@
     </div>
 
     <div v-else style="position: relative; height: 250px">
-      <line :data="chartData" :options="chartOptions" />
+      <Line :data="chartData" :options="chartOptions" />
     </div>
   </v-card>
 </template>

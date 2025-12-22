@@ -481,13 +481,6 @@ const submitting = ref(false)
 const error = ref(null)
 const success = ref(null)
 
-// Score types for WODs
-const scoreTypes = [
-  { title: 'Time (HH:MM:SS)', value: 'Time' },
-  { title: 'Rounds + Reps', value: 'Rounds+Reps' },
-  { title: 'Max Weight', value: 'Max Weight' }
-]
-
 // Computed selected template
 const selectedTemplate = computed(() => {
   if (!selectedTemplateId.value) return null

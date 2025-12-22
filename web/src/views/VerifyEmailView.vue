@@ -138,7 +138,7 @@ const resendVerification = async () => {
 
   resending.value = true
   try {
-    await axios.post(`${API_URL}/api/auth/resend-verification`, {
+    await axios.post('/api/auth/resend-verification', {
       email: email.value
     })
 

@@ -33,7 +33,9 @@ export default [
       'vue/no-unused-vars': 'error',
       'vue/require-default-prop': 'warn',
       'vue/require-prop-types': 'warn',
-      'vue/component-name-in-template-casing': ['error', 'kebab-case'],
+      'vue/component-name-in-template-casing': 'off',
+      // Allow Vuetify data table slot syntax like #item.column
+      'vue/valid-v-slot': ['error', { allowModifiers: true }],
       'vue/html-self-closing': [
         'error',
         {

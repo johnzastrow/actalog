@@ -179,7 +179,7 @@
               <v-icon size="small" color="primary" class="mr-1">mdi-account-group</v-icon>
               Active This Month
             </div>
-            <div v-for="(user, index) in activeUsersStats" :key="user.id" class="mb-2">
+            <div v-for="user in activeUsersStats" :key="user.id" class="mb-2">
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex align-center">
                   <v-avatar size="32" :color="user.is_current ? 'teal' : 'secondary'" class="mr-2">

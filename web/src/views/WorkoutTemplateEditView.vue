@@ -615,17 +615,6 @@ async function deleteTemplate() {
   }
 }
 
-// Handle back navigation
-function handleBack() {
-  if (template.value.wods.length > 0 || template.value.movements.length > 0 || template.value.name) {
-    if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
-      router.back()
-    }
-  } else {
-    router.back()
-  }
-}
-
 // Initialize
 onMounted(async () => {
   await Promise.all([fetchMovements(), fetchWODs()])

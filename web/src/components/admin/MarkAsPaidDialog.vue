@@ -124,10 +124,10 @@ const customDays = ref(30)
 // Duration options
 const durationOptions = computed(() => {
   const defaultDays = props.subscription?.subscription_type === 'monthly' ? 30 : 365
-  const defaultLabel = props.subscription?.subscription_type === 'monthly' ? '1 Month (30 days)' : '1 Year (365 days)'
+  const defaultPeriod = props.subscription?.subscription_type === 'monthly' ? '1 Month' : '1 Year'
 
   return [
-    { label: `Default - ${defaultLabel}`, value: 'default' },
+    { label: `Default - ${defaultPeriod} (${defaultDays} days)`, value: 'default' },
     { label: '1 Week (7 days)', value: 7 },
     { label: '2 Weeks (14 days)', value: 14 },
     { label: '1 Month (30 days)', value: 30 },

@@ -417,7 +417,7 @@
         @refresh="loadSubscriptions"
       />
 
-      <mark-as-paid-dialog
+      <MarkAsPaidDialog
         v-model="markAsPaidDialog.show"
         :subscription="markAsPaidDialog.subscription"
         :type="markAsPaidDialog.type"

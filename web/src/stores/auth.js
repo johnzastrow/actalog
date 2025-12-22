@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = parsedUser
         // Set default authorization header
         axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-      } catch (e) {
+      } catch {
         logout()
       }
     }
@@ -150,7 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
 
       return true
-    } catch (e) {
+    } catch {
       // Refresh token is invalid or expired, logout
       logout()
       return false

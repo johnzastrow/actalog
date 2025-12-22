@@ -244,18 +244,11 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
 
 const navigateTo = (path) => {
   router.push(path)
-}
-
-const logout = () => {
-  authStore.logout()
-  router.push('/login')
 }
 </script>
 

@@ -167,12 +167,9 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import NotificationLikes from '@/components/NotificationLikes.vue'
-
-const router = useRouter()
 
 // State
 const currentTab = ref('all')
