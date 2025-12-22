@@ -170,12 +170,12 @@
       class="bottom-nav-compact"
     >
       <v-btn value="dashboard" to="/dashboard" size="x-small">
-        <v-icon size="20">mdi-view-dashboard</v-icon>
+        <v-icon size="20" icon="fa:fas fa-house-chimney" />
         <span class="nav-label">Home</span>
       </v-btn>
 
       <v-btn value="performance" to="/performance" size="x-small">
-        <v-icon size="20">mdi-chart-line</v-icon>
+        <v-icon size="20" icon="fa:fas fa-arrow-trend-up" />
         <span class="nav-label">Stats</span>
       </v-btn>
 
@@ -187,12 +187,12 @@
         class="fab-button"
       >
         <v-avatar color="primary" size="40">
-          <v-icon color="white" size="24">mdi-plus</v-icon>
+          <v-icon color="white" size="24" icon="fa:fas fa-plus" />
         </v-avatar>
       </v-btn>
 
       <v-btn value="workouts" to="/workouts" size="x-small">
-        <v-icon size="20">mdi-dumbbell</v-icon>
+        <v-icon size="20" icon="fa:fas fa-person-running" />
         <span class="nav-label">Log</span>
       </v-btn>
 
@@ -201,7 +201,7 @@
         <v-avatar v-if="userAvatar" size="20">
           <v-img :src="userAvatar" alt="Profile" />
         </v-avatar>
-        <v-icon v-else size="20" color="#597a6a">mdi-account-circle</v-icon>
+        <v-icon v-else size="20" color="#597a6a" icon="fa:fas fa-circle-user" />
         <span class="nav-label">Me</span>
       </v-btn>
     </v-bottom-navigation>
