@@ -89,7 +89,7 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 #### Front end Improvements
 - [ ] `[HIGH]` **PWA**
-  - [ ] Icon saved to home screen is fuzzy. Use higher resolution source or SVG if possible.
+  - [x] Icon saved to home screen is fuzzy - regenerated all icons from SVG with full RGBA color
 - [ ] `[HIGH]` **Overall**
   - [ ] Find more attractive icons for the navigation bar
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
