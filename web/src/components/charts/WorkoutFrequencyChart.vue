@@ -37,7 +37,7 @@
         <div class="text-caption" class="text-medium-emphasis">Avg/Week</div>
       </div>
       <div>
-        <div class="text-h6 font-weight-bold" style="color: #ff9800">
+        <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-warning))">
           {{ longestStreak }}
         </div>
         <div class="text-caption" class="text-medium-emphasis">Longest Streak</div>
@@ -48,6 +48,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useTheme } from 'vuetify'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -61,6 +62,14 @@ import {
 import axios from '@/utils/axios'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
+const theme = useTheme()
+
+// Get theme colors as hex values for Chart.js
+const primaryColor = computed(() => {
+  const colors = theme.current.value.colors
+  return colors.primary || '#00bcd4'
+})
 
 const loading = ref(false)
 const workouts = ref([])
@@ -133,8 +142,8 @@ const chartData = computed(() => {
       {
         label: 'Workouts',
         data,
-        backgroundColor: '#00bcd4',
-        borderColor: '#00bcd4',
+        backgroundColor: primaryColor.value,
+        borderColor: primaryColor.value,
         borderWidth: 0,
         borderRadius: 4
       }

@@ -134,7 +134,7 @@
             </div>
 
             <div v-else class="text-center">
-              <div class="font-weight-bold text-h4" style="color: #ffc107">
+              <div class="font-weight-bold text-h4" style="color: rgb(var(--v-theme-warning))">
                 {{ Math.round(best1RM) }}
               </div>
               <div class="text-caption mb-2 text-medium-emphasis">
@@ -306,7 +306,7 @@
                     <div class="text-caption text-medium-emphasis">
                       {{ formatDate(entry.workout_date) }}
                       <span v-if="entry.notes"> • {{ entry.notes }}</span>
-                      <span v-if="entry.calculated_1rm" class="ml-2" style="color: #ffc107">
+                      <span v-if="entry.calculated_1rm" class="ml-2" style="color: rgb(var(--v-theme-warning))">
                         • Est. 1RM: {{ Math.round(entry.calculated_1rm) }} lbs
                       </span>
                     </div>
@@ -701,10 +701,27 @@
 <script setup>
 import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useTheme } from 'vuetify'
 import axios from '@/utils/axios'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
+
+const theme = useTheme()
+
+// Get theme colors as hex values for Chart.js
+const getThemeColor = (colorName) => {
+  const colors = theme.current.value.colors
+  return colors[colorName] || '#000000'
+}
+
+const getThemeColorWithAlpha = (colorName, alpha = 0.1) => {
+  const hex = getThemeColor(colorName).replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -1074,16 +1091,19 @@ function renderMovementChart() {
   const estimated1RMs = data.map(p => p.calculated_1rm || null)
 
   // Build datasets array - always include weight, only add 1RM if we have data
+  const primaryColor = getThemeColor('primary')
+  const warningColor = getThemeColor('warning')
+
   const datasets = [{
     label: 'Weight (lbs)',
     data: weights,
-    borderColor: '#2c3e50',
-    backgroundColor: 'rgba(44, 62, 80, 0.1)',
+    borderColor: primaryColor,
+    backgroundColor: getThemeColorWithAlpha('primary', 0.1),
     tension: 0.4,
     pointRadius: 5,
     pointHoverRadius: 7,
-    pointBackgroundColor: '#2c3e50',
-    pointBorderColor: '#2c3e50',
+    pointBackgroundColor: primaryColor,
+    pointBorderColor: primaryColor,
     fill: true
   }]
 
@@ -1092,13 +1112,13 @@ function renderMovementChart() {
     datasets.push({
       label: 'Estimated 1RM (lbs)',
       data: estimated1RMs,
-      borderColor: '#ffc107',
-      backgroundColor: 'rgba(255, 193, 7, 0.1)',
+      borderColor: warningColor,
+      backgroundColor: getThemeColorWithAlpha('warning', 0.1),
       tension: 0.4,
       pointRadius: 4,
       pointHoverRadius: 6,
-      pointBackgroundColor: '#ffc107',
-      pointBorderColor: '#ffc107',
+      pointBackgroundColor: warningColor,
+      pointBorderColor: warningColor,
       fill: false,
       borderDash: [5, 5] // Dashed line for estimated values
     })

@@ -65,6 +65,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
+
+// Get primary color from theme
+const primaryColor = computed(() => {
+  return theme.current.value.colors.primary || '#00bcd4'
+})
 
 const props = defineProps({
   workoutDates: {
@@ -165,7 +173,7 @@ function isToday(day) {
 
 function getDayColor(day) {
   if (!day) return 'transparent'
-  if (day.hasWorkout) return '#00bcd4'
+  if (day.hasWorkout) return primaryColor.value
   return '#e0e0e0'
 }
 

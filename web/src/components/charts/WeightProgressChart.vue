@@ -47,6 +47,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useTheme } from 'vuetify'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -60,6 +61,28 @@ import {
   Filler
 } from 'chart.js'
 import axios from '@/utils/axios'
+
+const theme = useTheme()
+
+// Get theme colors as hex values for Chart.js
+const primaryColor = computed(() => {
+  const colors = theme.current.value.colors
+  return colors.primary || '#00bcd4'
+})
+
+const warningColor = computed(() => {
+  const colors = theme.current.value.colors
+  return colors.warning || '#ffc107'
+})
+
+const primaryColorWithAlpha = computed(() => {
+  // Convert hex to rgba with 0.1 opacity for fill
+  const hex = primaryColor.value.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.1)`
+})
 
 ChartJS.register(
   CategoryScale,
@@ -107,13 +130,13 @@ const chartData = computed(() => {
       {
         label: 'Weight (lbs)',
         data: weights,
-        borderColor: '#00bcd4',
-        backgroundColor: 'rgba(0, 188, 212, 0.1)',
+        borderColor: primaryColor.value,
+        backgroundColor: primaryColorWithAlpha.value,
         fill: true,
         tension: 0.4,
         pointRadius: weights.map((w, idx) => (isPRs[idx] ? 6 : 4)),
-        pointBackgroundColor: weights.map((w, idx) => (isPRs[idx] ? '#ffc107' : '#00bcd4')),
-        pointBorderColor: weights.map((w, idx) => (isPRs[idx] ? '#ffc107' : '#00bcd4')),
+        pointBackgroundColor: weights.map((w, idx) => (isPRs[idx] ? warningColor.value : primaryColor.value)),
+        pointBorderColor: weights.map((w, idx) => (isPRs[idx] ? warningColor.value : primaryColor.value)),
         pointBorderWidth: 2
       }
     ]
