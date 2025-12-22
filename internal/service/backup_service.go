@@ -521,6 +521,12 @@ func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 		{"audit_logs", &data.AuditLogs},
 		{"user_settings", &data.UserSettings},
 		{"data_change_logs", &data.DataChangeLogs},
+		{"organizations", &data.Organizations},
+		{"user_organizations", &data.UserOrganizations},
+		{"user_subscriptions", &data.UserSubscriptions},
+		{"organization_subscriptions", &data.OrganizationSubscriptions},
+		{"notifications", &data.Notifications},
+		{"notification_likes", &data.NotificationLikes},
 	}
 
 	for _, table := range tables {
@@ -821,7 +827,8 @@ func (s *BackupServiceImpl) createSQLiteDump(backupData *domain.BackupData, outp
 	}
 	defer tx.Rollback()
 
-	// Restore data in correct order
+	// Restore data in correct order (respecting foreign key constraints)
+	// 1. Core tables with no foreign keys first
 	if err := s.restoreTableToSQLite(tx, "users", backupData.Users); err != nil {
 		return fmt.Errorf("failed to restore users: %w", err)
 	}
@@ -834,6 +841,11 @@ func (s *BackupServiceImpl) createSQLiteDump(backupData *domain.BackupData, outp
 	if err := s.restoreTableToSQLite(tx, "workouts", backupData.Workouts); err != nil {
 		return fmt.Errorf("failed to restore workouts: %w", err)
 	}
+	// 2. Organizations (depends on users)
+	if err := s.restoreTableToSQLite(tx, "organizations", backupData.Organizations); err != nil {
+		return fmt.Errorf("failed to restore organizations: %w", err)
+	}
+	// 3. User-related tables
 	if err := s.restoreTableToSQLite(tx, "user_workouts", backupData.UserWorkouts); err != nil {
 		return fmt.Errorf("failed to restore user_workouts: %w", err)
 	}
@@ -863,6 +875,26 @@ func (s *BackupServiceImpl) createSQLiteDump(backupData *domain.BackupData, outp
 	}
 	if err := s.restoreTableToSQLite(tx, "audit_logs", backupData.AuditLogs); err != nil {
 		return fmt.Errorf("failed to restore audit_logs: %w", err)
+	}
+	if err := s.restoreTableToSQLite(tx, "data_change_logs", backupData.DataChangeLogs); err != nil {
+		return fmt.Errorf("failed to restore data_change_logs: %w", err)
+	}
+	// 4. Organization-related tables
+	if err := s.restoreTableToSQLite(tx, "user_organizations", backupData.UserOrganizations); err != nil {
+		return fmt.Errorf("failed to restore user_organizations: %w", err)
+	}
+	if err := s.restoreTableToSQLite(tx, "user_subscriptions", backupData.UserSubscriptions); err != nil {
+		return fmt.Errorf("failed to restore user_subscriptions: %w", err)
+	}
+	if err := s.restoreTableToSQLite(tx, "organization_subscriptions", backupData.OrganizationSubscriptions); err != nil {
+		return fmt.Errorf("failed to restore organization_subscriptions: %w", err)
+	}
+	// 5. Notifications (depends on users and organizations)
+	if err := s.restoreTableToSQLite(tx, "notifications", backupData.Notifications); err != nil {
+		return fmt.Errorf("failed to restore notifications: %w", err)
+	}
+	if err := s.restoreTableToSQLite(tx, "notification_likes", backupData.NotificationLikes); err != nil {
+		return fmt.Errorf("failed to restore notification_likes: %w", err)
 	}
 
 	// Commit transaction
@@ -904,197 +936,312 @@ func (s *BackupServiceImpl) extractSQLiteSchema() (string, error) {
 
 // createSchemaFromData creates SQLite schema by analyzing the backup data structure
 func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) (string, error) {
-	// For PostgreSQL/MySQL, create a basic schema
-	// This is a simplified approach - in production, you might want to query information_schema
+	// Complete SQLite schema matching the actual database structure
 	schema := `
-	CREATE TABLE users (
+	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		email TEXT NOT NULL UNIQUE,
+		email TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
-		role TEXT NOT NULL DEFAULT 'user',
+		name TEXT NOT NULL,
+		profile_image TEXT,
 		birthday DATE,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		last_login_at TIMESTAMP,
+		role TEXT NOT NULL DEFAULT 'user',
 		email_verified INTEGER NOT NULL DEFAULT 0,
-		email_verified_at TIMESTAMP,
+		email_verified_at DATETIME,
 		failed_login_attempts INTEGER NOT NULL DEFAULT 0,
-		locked_at TIMESTAMP,
-		locked_until TIMESTAMP,
+		locked_at DATETIME,
+		locked_until DATETIME,
 		account_disabled INTEGER NOT NULL DEFAULT 0,
-		disabled_at TIMESTAMP,
+		disabled_at DATETIME,
 		disabled_by_user_id INTEGER,
 		disable_reason TEXT,
-		profile_image TEXT
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		last_login_at DATETIME,
+		FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 	);
 
-	CREATE TABLE movements (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		type TEXT NOT NULL,
-		description TEXT,
-		is_standard INTEGER NOT NULL DEFAULT 1,
-		created_by_user_id INTEGER,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
-	);
-
-	CREATE TABLE wods (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		type TEXT,
-		score_type TEXT,
-		description TEXT,
-		is_standard INTEGER NOT NULL DEFAULT 1,
-		created_by_user_id INTEGER,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
-	);
-
-	CREATE TABLE workouts (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		description TEXT,
-		created_by_user_id INTEGER,
-		is_template INTEGER NOT NULL DEFAULT 0,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
-	);
-
-	CREATE TABLE user_workouts (
+	CREATE TABLE IF NOT EXISTS refresh_tokens (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
-		workout_date DATE NOT NULL,
-		notes TEXT,
-		total_time INTEGER,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE workout_movements (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		workout_id INTEGER NOT NULL,
-		movement_id INTEGER NOT NULL,
-		sets INTEGER,
-		reps INTEGER,
-		weight REAL,
-		time INTEGER,
-		distance REAL,
-		notes TEXT,
-		order_index INTEGER NOT NULL DEFAULT 0,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
-		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE workout_wods (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		workout_id INTEGER NOT NULL,
-		wod_id INTEGER NOT NULL,
-		score_type TEXT,
-		score_value TEXT,
-		time_seconds INTEGER,
-		rounds INTEGER,
-		reps INTEGER,
-		weight REAL,
-		notes TEXT,
-		order_index INTEGER NOT NULL DEFAULT 0,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
-		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE user_workout_movements (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_workout_id INTEGER NOT NULL,
-		movement_id INTEGER NOT NULL,
-		sets INTEGER,
-		reps INTEGER,
-		weight REAL,
-		time INTEGER,
-		distance REAL,
-		notes TEXT,
-		is_pr INTEGER NOT NULL DEFAULT 0,
-		order_index INTEGER NOT NULL DEFAULT 0,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
-		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE user_workout_wods (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_workout_id INTEGER NOT NULL,
-		wod_id INTEGER NOT NULL,
-		score_type TEXT,
-		score_value TEXT,
-		time_seconds INTEGER,
-		rounds INTEGER,
-		reps INTEGER,
-		weight REAL,
-		notes TEXT,
-		is_pr INTEGER NOT NULL DEFAULT 0,
-		order_index INTEGER NOT NULL DEFAULT 0,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
-		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE refresh_tokens (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		token TEXT NOT NULL UNIQUE,
-		expires_at TIMESTAMP NOT NULL,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		revoked_at TIMESTAMP,
+		token TEXT UNIQUE NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME NOT NULL,
+		revoked_at DATETIME,
 		device_info TEXT,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
-	CREATE TABLE password_resets (
+	CREATE TABLE IF NOT EXISTS user_settings (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		token TEXT NOT NULL UNIQUE,
-		expires_at TIMESTAMP NOT NULL,
-		used_at TIMESTAMP,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		user_id INTEGER UNIQUE NOT NULL,
+		notification_preferences TEXT,
+		data_export_format TEXT DEFAULT 'json',
+		theme TEXT DEFAULT 'light',
+		weight_unit TEXT DEFAULT 'lbs',
+		distance_unit TEXT DEFAULT 'meters',
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
-	CREATE TABLE email_verification_tokens (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		token TEXT NOT NULL UNIQUE,
-		expires_at TIMESTAMP NOT NULL,
-		used_at TIMESTAMP,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-	);
-
-	CREATE TABLE audit_logs (
+	CREATE TABLE IF NOT EXISTS audit_logs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
+		target_user_id INTEGER,
 		event_type TEXT NOT NULL,
+		ip_address TEXT,
+		user_agent TEXT,
 		details TEXT,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+		created_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+		FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE SET NULL
 	);
 
-	CREATE TABLE user_settings (
+	CREATE TABLE IF NOT EXISTS workouts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL UNIQUE,
-		theme TEXT NOT NULL DEFAULT 'light',
-		notifications_enabled INTEGER NOT NULL DEFAULT 1,
-		units_system TEXT NOT NULL DEFAULT 'imperial',
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		name TEXT NOT NULL,
+		notes TEXT,
+		created_by INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		description TEXT,
+		type TEXT NOT NULL,
+		is_standard INTEGER NOT NULL DEFAULT 0,
+		created_by INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS wods (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		source TEXT,
+		type TEXT,
+		regime TEXT,
+		score_type TEXT,
+		description TEXT,
+		url TEXT,
+		notes TEXT,
+		is_standard INTEGER NOT NULL DEFAULT 0,
+		created_by INTEGER,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS workout_wods (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workout_id INTEGER NOT NULL,
+		wod_id INTEGER NOT NULL,
+		score_value TEXT,
+		division TEXT,
+		is_pr INTEGER NOT NULL DEFAULT 0,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+	);
+
+	CREATE TABLE IF NOT EXISTS user_workouts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		workout_id INTEGER,
+		workout_name TEXT,
+		workout_date DATE NOT NULL,
+		workout_type TEXT,
+		total_time INTEGER,
+		notes TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT
+	);
+
+	CREATE TABLE IF NOT EXISTS user_workout_movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_workout_id INTEGER NOT NULL,
+		movement_id INTEGER NOT NULL,
+		sets INTEGER,
+		reps INTEGER,
+		weight REAL,
+		time INTEGER,
+		distance REAL,
+		notes TEXT,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		is_pr INTEGER NOT NULL DEFAULT 0,
+		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+	);
+
+	CREATE TABLE IF NOT EXISTS user_workout_wods (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_workout_id INTEGER NOT NULL,
+		wod_id INTEGER NOT NULL,
+		score_type TEXT,
+		score_value TEXT,
+		time_seconds INTEGER,
+		rounds INTEGER,
+		reps INTEGER,
+		weight REAL,
+		notes TEXT,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		is_pr INTEGER NOT NULL DEFAULT 0,
+		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
+	);
+
+	CREATE TABLE IF NOT EXISTS workout_movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workout_id INTEGER NOT NULL,
+		movement_id INTEGER NOT NULL,
+		weight REAL,
+		sets INTEGER,
+		reps INTEGER,
+		time INTEGER,
+		distance REAL,
+		is_rx INTEGER NOT NULL DEFAULT 0,
+		is_pr INTEGER NOT NULL DEFAULT 0,
+		notes TEXT,
+		order_index INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+	);
+
+	CREATE TABLE IF NOT EXISTS password_resets (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		token TEXT UNIQUE NOT NULL,
+		expires_at DATETIME NOT NULL,
+		used_at DATETIME,
+		created_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS email_verification_tokens (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		token TEXT UNIQUE NOT NULL,
+		expires_at DATETIME NOT NULL,
+		used_at DATETIME,
+		created_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS data_change_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		entity_type TEXT NOT NULL,
+		entity_id INTEGER NOT NULL,
+		entity_name TEXT NOT NULL,
+		operation TEXT NOT NULL,
+		user_id INTEGER NOT NULL,
+		user_email TEXT NOT NULL,
+		before_values TEXT,
+		after_values TEXT,
+		ip_address TEXT,
+		user_agent TEXT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS organizations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE,
+		description TEXT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS user_organizations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		organization_id INTEGER NOT NULL,
+		role TEXT DEFAULT 'member',
+		joined_at DATETIME NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		UNIQUE (user_id, organization_id)
+	);
+
+	CREATE TABLE IF NOT EXISTS user_subscriptions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		subscription_type TEXT NOT NULL,
+		status TEXT NOT NULL,
+		is_permanent_free INTEGER NOT NULL DEFAULT 0,
+		start_date DATETIME NOT NULL,
+		end_date DATETIME,
+		last_payment_date DATETIME,
+		next_billing_date DATETIME,
+		cancelled_at DATETIME,
+		cancelled_reason TEXT,
+		notes TEXT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		created_by_user_id INTEGER,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS organization_subscriptions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		subscription_type TEXT NOT NULL,
+		status TEXT NOT NULL,
+		is_permanent_free INTEGER NOT NULL DEFAULT 0,
+		start_date DATETIME NOT NULL,
+		end_date DATETIME,
+		last_payment_date DATETIME,
+		next_billing_date DATETIME,
+		cancelled_at DATETIME,
+		cancelled_reason TEXT,
+		notes TEXT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		created_by_user_id INTEGER,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS notifications (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		organization_id INTEGER,
+		type TEXT NOT NULL,
+		title TEXT NOT NULL,
+		message TEXT NOT NULL,
+		data TEXT,
+		read_at DATETIME,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS notification_likes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		notification_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		created_at DATETIME NOT NULL,
+		FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		UNIQUE (notification_id, user_id)
 	);
 	`
 
