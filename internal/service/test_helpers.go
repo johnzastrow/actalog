@@ -755,7 +755,7 @@ func (m *mockUserSubscriptionRepo) MarkAsPaid(id int64, paymentDate time.Time, a
 		return sql.ErrNoRows
 	}
 	sub.LastPaymentDate = &paymentDate
-	
+
 	// Calculate new end date
 	duration := 30 * 24 * time.Hour // Default
 	if sub.SubscriptionType == domain.SubscriptionTypeAnnual {
@@ -764,13 +764,13 @@ func (m *mockUserSubscriptionRepo) MarkAsPaid(id int64, paymentDate time.Time, a
 	if durationDays != nil {
 		duration = time.Duration(*durationDays) * 24 * time.Hour
 	}
-	
+
 	newEndDate := paymentDate.Add(duration)
 	sub.EndDate = &newEndDate
 	nextBilling := newEndDate
 	sub.NextBillingDate = &nextBilling
 	sub.UpdatedAt = time.Now()
-	
+
 	m.subscriptions[id] = sub
 	return nil
 }
@@ -886,7 +886,7 @@ func (m *mockOrganizationSubscriptionRepo) MarkAsPaid(id int64, paymentDate time
 		return sql.ErrNoRows
 	}
 	sub.LastPaymentDate = &paymentDate
-	
+
 	duration := 30 * 24 * time.Hour
 	if sub.SubscriptionType == domain.SubscriptionTypeAnnual {
 		duration = 365 * 24 * time.Hour
@@ -894,13 +894,13 @@ func (m *mockOrganizationSubscriptionRepo) MarkAsPaid(id int64, paymentDate time
 	if durationDays != nil {
 		duration = time.Duration(*durationDays) * 24 * time.Hour
 	}
-	
+
 	newEndDate := paymentDate.Add(duration)
 	sub.EndDate = &newEndDate
 	nextBilling := newEndDate
 	sub.NextBillingDate = &nextBilling
 	sub.UpdatedAt = time.Now()
-	
+
 	m.subscriptions[id] = sub
 	return nil
 }
@@ -1374,7 +1374,7 @@ func (m *mockOrganizationRepo) Count() (int64, error) {
 	return int64(len(m.organizations)), nil
 }
 
-// Add DisableAccount and EnableAccount methods to mockUserRepo  
+// Add DisableAccount and EnableAccount methods to mockUserRepo
 func (m *mockUserRepo) DisableAccount(userID int64, disabledBy int64, reason string) error {
 	user, ok := m.users[userID]
 	if !ok {
@@ -1447,7 +1447,7 @@ func (m *mockUserRepo) ResetFailedAttempts(userID int64) error {
 	return nil
 }
 
-// Add missing UnlockAccount to mockUserRepo  
+// Add missing UnlockAccount to mockUserRepo
 func (m *mockUserRepo) UnlockAccount(userID int64) error {
 	user, ok := m.users[userID]
 	if !ok {

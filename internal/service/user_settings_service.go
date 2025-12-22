@@ -76,8 +76,8 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 	// Audit log the settings update
 	if s.auditLogRepo != nil {
 		details, _ := json.Marshal(map[string]interface{}{
-			"user_id":      userID,
-			"updated_by":   userEmail,
+			"user_id":    userID,
+			"updated_by": userEmail,
 			"changes": map[string]interface{}{
 				"notification_preferences_old": oldNotificationPrefs,
 				"notification_preferences_new": existing.NotificationPreferences,

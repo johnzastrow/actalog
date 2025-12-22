@@ -33,7 +33,7 @@ func NewPerformanceHandler(
 	movementRepo *repository.MovementRepository,
 	wodRepo *repository.WODRepository,
 	userWorkoutMovementRepo *repository.UserWorkoutMovementRepository,
-	userWorkoutWODRepo      *repository.UserWorkoutWODRepository,
+	userWorkoutWODRepo *repository.UserWorkoutWODRepository,
 	logger *logger.Logger,
 ) *PerformanceHandler {
 	return &PerformanceHandler{

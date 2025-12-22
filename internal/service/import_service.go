@@ -42,46 +42,46 @@ func NewImportService(
 
 // WODImportResult represents the result of a WOD import operation
 type WODImportResult struct {
-	TotalRows      int                    `json:"total_rows"`
-	ValidRows      int                    `json:"valid_rows"`
-	InvalidRows    int                    `json:"invalid_rows"`
-	DuplicateRows  int                    `json:"duplicate_rows"`
-	CreatedCount   int                    `json:"created_count"`
-	UpdatedCount   int                    `json:"updated_count"`
-	SkippedCount   int                    `json:"skipped_count"`
-	Rows           []WODImportRow         `json:"rows"`
-	ValidationErrors []string             `json:"validation_errors,omitempty"`
+	TotalRows        int            `json:"total_rows"`
+	ValidRows        int            `json:"valid_rows"`
+	InvalidRows      int            `json:"invalid_rows"`
+	DuplicateRows    int            `json:"duplicate_rows"`
+	CreatedCount     int            `json:"created_count"`
+	UpdatedCount     int            `json:"updated_count"`
+	SkippedCount     int            `json:"skipped_count"`
+	Rows             []WODImportRow `json:"rows"`
+	ValidationErrors []string       `json:"validation_errors,omitempty"`
 }
 
 // WODImportRow represents a single WOD row during import
 type WODImportRow struct {
-	RowNumber       int      `json:"row_number"`
-	Name            string   `json:"name"`
-	Source          string   `json:"source"`
-	Type            string   `json:"type"`
-	Regime          string   `json:"regime"`
-	ScoreType       string   `json:"score_type"`
-	Description     string   `json:"description"`
-	URL             string   `json:"url"`
-	Notes           string   `json:"notes"`
-	IsStandard      bool     `json:"is_standard"`
-	CreatedByEmail  string   `json:"created_by_email"`
-	IsValid         bool     `json:"is_valid"`
-	IsDuplicate     bool     `json:"is_duplicate"`
-	Errors          []string `json:"errors,omitempty"`
+	RowNumber      int      `json:"row_number"`
+	Name           string   `json:"name"`
+	Source         string   `json:"source"`
+	Type           string   `json:"type"`
+	Regime         string   `json:"regime"`
+	ScoreType      string   `json:"score_type"`
+	Description    string   `json:"description"`
+	URL            string   `json:"url"`
+	Notes          string   `json:"notes"`
+	IsStandard     bool     `json:"is_standard"`
+	CreatedByEmail string   `json:"created_by_email"`
+	IsValid        bool     `json:"is_valid"`
+	IsDuplicate    bool     `json:"is_duplicate"`
+	Errors         []string `json:"errors,omitempty"`
 }
 
 // MovementImportResult represents the result of a movement import operation
 type MovementImportResult struct {
-	TotalRows        int                    `json:"total_rows"`
-	ValidRows        int                    `json:"valid_rows"`
-	InvalidRows      int                    `json:"invalid_rows"`
-	DuplicateRows    int                    `json:"duplicate_rows"`
-	CreatedCount     int                    `json:"created_count"`
-	UpdatedCount     int                    `json:"updated_count"`
-	SkippedCount     int                    `json:"skipped_count"`
-	Rows             []MovementImportRow    `json:"rows"`
-	ValidationErrors []string               `json:"validation_errors,omitempty"`
+	TotalRows        int                 `json:"total_rows"`
+	ValidRows        int                 `json:"valid_rows"`
+	InvalidRows      int                 `json:"invalid_rows"`
+	DuplicateRows    int                 `json:"duplicate_rows"`
+	CreatedCount     int                 `json:"created_count"`
+	UpdatedCount     int                 `json:"updated_count"`
+	SkippedCount     int                 `json:"skipped_count"`
+	Rows             []MovementImportRow `json:"rows"`
+	ValidationErrors []string            `json:"validation_errors,omitempty"`
 }
 
 // MovementImportRow represents a single movement row during import
@@ -99,10 +99,10 @@ type MovementImportRow struct {
 
 // Valid enum values for WODs
 var (
-	validSources    = []string{"CrossFit", "Other Coach", "Self-recorded"}
-	validTypes      = []string{"Benchmark", "Hero", "Girl", "Notables", "Games", "Endurance", "Self-created"}
-	validRegimes    = []string{"EMOM", "AMRAP", "Fastest Time", "Slowest Round", "Get Stronger", "Skills"}
-	validScoreTypes = []string{"Time (HH:MM:SS)", "Rounds+Reps", "Max Weight"}
+	validSources       = []string{"CrossFit", "Other Coach", "Self-recorded"}
+	validTypes         = []string{"Benchmark", "Hero", "Girl", "Notables", "Games", "Endurance", "Self-created"}
+	validRegimes       = []string{"EMOM", "AMRAP", "Fastest Time", "Slowest Round", "Get Stronger", "Skills"}
+	validScoreTypes    = []string{"Time (HH:MM:SS)", "Rounds+Reps", "Max Weight"}
 	validMovementTypes = []string{"weightlifting", "bodyweight", "cardio", "gymnastics"}
 )
 
@@ -532,16 +532,16 @@ func contains(slice []string, item string) bool {
 
 // UserWorkoutImportResult represents the result of a user workout import operation
 type UserWorkoutImportResult struct {
-	TotalWorkouts    int      `json:"total_workouts"`
-	ValidWorkouts    int      `json:"valid_workouts"`
-	InvalidWorkouts  int      `json:"invalid_workouts"`
-	DuplicateWorkouts int     `json:"duplicate_workouts"`
-	CreatedCount     int      `json:"created_count"`
-	UpdatedCount     int      `json:"updated_count"`
-	SkippedCount     int      `json:"skipped_count"`
-	MovementsCreated int      `json:"movements_created"`
-	WODsCreated      int      `json:"wods_created"`
-	Errors           []string `json:"errors,omitempty"`
+	TotalWorkouts     int      `json:"total_workouts"`
+	ValidWorkouts     int      `json:"valid_workouts"`
+	InvalidWorkouts   int      `json:"invalid_workouts"`
+	DuplicateWorkouts int      `json:"duplicate_workouts"`
+	CreatedCount      int      `json:"created_count"`
+	UpdatedCount      int      `json:"updated_count"`
+	SkippedCount      int      `json:"skipped_count"`
+	MovementsCreated  int      `json:"movements_created"`
+	WODsCreated       int      `json:"wods_created"`
+	Errors            []string `json:"errors,omitempty"`
 }
 
 // PreviewUserWorkoutImport validates and previews user workout JSON import
@@ -554,13 +554,13 @@ func (s *ImportService) PreviewUserWorkoutImport(jsonData []byte, userID int64) 
 			TotalCount int    `json:"total_count"`
 		} `json:"export_metadata"`
 		UserWorkouts []struct {
-			WorkoutDate string                       `json:"workout_date"`
-			WorkoutType *string                      `json:"workout_type,omitempty"`
-			WorkoutName *string                      `json:"workout_name,omitempty"`
-			TotalTime   *int                         `json:"total_time,omitempty"`
-			Notes       *string                      `json:"notes,omitempty"`
-			Movements   []map[string]interface{}     `json:"movements,omitempty"`
-			WODs        []map[string]interface{}     `json:"wods,omitempty"`
+			WorkoutDate string                   `json:"workout_date"`
+			WorkoutType *string                  `json:"workout_type,omitempty"`
+			WorkoutName *string                  `json:"workout_name,omitempty"`
+			TotalTime   *int                     `json:"total_time,omitempty"`
+			Notes       *string                  `json:"notes,omitempty"`
+			Movements   []map[string]interface{} `json:"movements,omitempty"`
+			WODs        []map[string]interface{} `json:"wods,omitempty"`
 		} `json:"user_workouts"`
 	}
 

@@ -79,11 +79,11 @@ func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, no
 	// Audit log
 	if s.auditLogRepo != nil {
 		details, _ := json.Marshal(map[string]interface{}{
-			"workout_id":      workout.ID,
-			"workout_name":    name,
-			"movement_count":  len(movements),
-			"wod_count":       len(wods),
-			"created_by":      userEmail,
+			"workout_id":     workout.ID,
+			"workout_name":   name,
+			"movement_count": len(movements),
+			"wod_count":      len(wods),
+			"created_by":     userEmail,
 		})
 		detailsStr := string(details)
 		targetUserID := userID
@@ -220,11 +220,11 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 	// Audit log
 	if s.auditLogRepo != nil {
 		details, _ := json.Marshal(map[string]interface{}{
-			"workout_id":      id,
-			"workout_name":    name,
-			"movement_count":  len(movements),
-			"wod_count":       len(wods),
-			"updated_by":      userEmail,
+			"workout_id":     id,
+			"workout_name":   name,
+			"movement_count": len(movements),
+			"wod_count":      len(wods),
+			"updated_by":     userEmail,
 			"changes": map[string]interface{}{
 				"name_old":  oldName,
 				"name_new":  name,

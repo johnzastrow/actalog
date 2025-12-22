@@ -42,11 +42,11 @@ type UserWorkoutExport struct {
 
 // ExportMetadata contains information about the export
 type ExportMetadata struct {
-	UserEmail   string     `json:"user_email"`
-	ExportDate  time.Time  `json:"export_date"`
-	DateRange   *DateRange `json:"date_range,omitempty"`
-	Version     string     `json:"version"`
-	TotalCount  int        `json:"total_count"`
+	UserEmail  string     `json:"user_email"`
+	ExportDate time.Time  `json:"export_date"`
+	DateRange  *DateRange `json:"date_range,omitempty"`
+	Version    string     `json:"version"`
+	TotalCount int        `json:"total_count"`
 }
 
 // DateRange represents a date range filter
@@ -57,13 +57,13 @@ type DateRange struct {
 
 // UserWorkoutExportItem represents a single workout in the export
 type UserWorkoutExportItem struct {
-	WorkoutDate string                       `json:"workout_date"`
-	WorkoutType *string                      `json:"workout_type,omitempty"`
-	WorkoutName *string                      `json:"workout_name,omitempty"`
-	TotalTime   *int                         `json:"total_time,omitempty"`
-	Notes       *string                      `json:"notes,omitempty"`
-	Movements   []MovementPerformanceExport  `json:"movements,omitempty"`
-	WODs        []WODPerformanceExport       `json:"wods,omitempty"`
+	WorkoutDate string                      `json:"workout_date"`
+	WorkoutType *string                     `json:"workout_type,omitempty"`
+	WorkoutName *string                     `json:"workout_name,omitempty"`
+	TotalTime   *int                        `json:"total_time,omitempty"`
+	Notes       *string                     `json:"notes,omitempty"`
+	Movements   []MovementPerformanceExport `json:"movements,omitempty"`
+	WODs        []WODPerformanceExport      `json:"wods,omitempty"`
 }
 
 // MovementPerformanceExport represents movement performance data
@@ -82,17 +82,17 @@ type MovementPerformanceExport struct {
 
 // WODPerformanceExport represents WOD performance data
 type WODPerformanceExport struct {
-	WODName      string   `json:"wod_name"`
-	WODType      string   `json:"wod_type"`
-	ScoreType    *string  `json:"score_type,omitempty"`
-	ScoreValue   *string  `json:"score_value,omitempty"`
-	TimeSeconds  *int     `json:"time_seconds,omitempty"`
-	Rounds       *int     `json:"rounds,omitempty"`
-	Reps         *int     `json:"reps,omitempty"`
-	Weight       *float64 `json:"weight,omitempty"`
-	Notes        string   `json:"notes,omitempty"`
-	IsPR         bool     `json:"is_pr"`
-	OrderIndex   int      `json:"order_index"`
+	WODName     string   `json:"wod_name"`
+	WODType     string   `json:"wod_type"`
+	ScoreType   *string  `json:"score_type,omitempty"`
+	ScoreValue  *string  `json:"score_value,omitempty"`
+	TimeSeconds *int     `json:"time_seconds,omitempty"`
+	Rounds      *int     `json:"rounds,omitempty"`
+	Reps        *int     `json:"reps,omitempty"`
+	Weight      *float64 `json:"weight,omitempty"`
+	Notes       string   `json:"notes,omitempty"`
+	IsPR        bool     `json:"is_pr"`
+	OrderIndex  int      `json:"order_index"`
 }
 
 // ExportWODsToCSV exports WODs to CSV format
@@ -606,19 +606,19 @@ func (s *ExportService) ExportUserWorkoutsToCSV(userID int64, startDate, endDate
 				workoutName,
 				totalTime,
 				workoutNotes,
-				"movement",                     // performance_type
-				perfMovement.MovementName,      // entity_name
-				perfMovement.MovementType,      // entity_type
-				formatInt(perfMovement.Sets),   // sets
-				formatInt(perfMovement.Reps),   // reps
-				formatFloat(perfMovement.Weight), // weight
-				formatInt(perfMovement.Time),   // time_seconds
-				formatFloat(perfMovement.Distance), // distance
-				"",                             // rounds (n/a for movements)
-				"",                             // score_type (n/a for movements)
-				"",                             // score_value (n/a for movements)
+				"movement",                            // performance_type
+				perfMovement.MovementName,             // entity_name
+				perfMovement.MovementType,             // entity_type
+				formatInt(perfMovement.Sets),          // sets
+				formatInt(perfMovement.Reps),          // reps
+				formatFloat(perfMovement.Weight),      // weight
+				formatInt(perfMovement.Time),          // time_seconds
+				formatFloat(perfMovement.Distance),    // distance
+				"",                                    // rounds (n/a for movements)
+				"",                                    // score_type (n/a for movements)
+				"",                                    // score_value (n/a for movements)
 				strconv.FormatBool(perfMovement.IsPR), // is_pr
-				perfMovement.Notes,             // performance_notes
+				perfMovement.Notes,                    // performance_notes
 				strconv.Itoa(perfMovement.OrderIndex), // order_index
 			}
 			if err := writer.Write(row); err != nil {
@@ -634,19 +634,19 @@ func (s *ExportService) ExportUserWorkoutsToCSV(userID int64, startDate, endDate
 				workoutName,
 				totalTime,
 				workoutNotes,
-				"wod",                          // performance_type
-				perfWOD.WODName,                // entity_name
-				perfWOD.WODType,                // entity_type
-				"",                             // sets (n/a for WODs)
-				formatInt(perfWOD.Reps),        // reps
-				formatFloat(perfWOD.Weight),    // weight
-				formatInt(perfWOD.TimeSeconds), // time_seconds
-				"",                             // distance (n/a for WODs)
-				formatInt(perfWOD.Rounds),      // rounds
-				formatString(perfWOD.ScoreType), // score_type
+				"wod",                            // performance_type
+				perfWOD.WODName,                  // entity_name
+				perfWOD.WODType,                  // entity_type
+				"",                               // sets (n/a for WODs)
+				formatInt(perfWOD.Reps),          // reps
+				formatFloat(perfWOD.Weight),      // weight
+				formatInt(perfWOD.TimeSeconds),   // time_seconds
+				"",                               // distance (n/a for WODs)
+				formatInt(perfWOD.Rounds),        // rounds
+				formatString(perfWOD.ScoreType),  // score_type
 				formatString(perfWOD.ScoreValue), // score_value
 				strconv.FormatBool(perfWOD.IsPR), // is_pr
-				perfWOD.Notes,                  // performance_notes
+				perfWOD.Notes,                    // performance_notes
 				strconv.Itoa(perfWOD.OrderIndex), // order_index
 			}
 			if err := writer.Write(row); err != nil {
@@ -662,20 +662,20 @@ func (s *ExportService) ExportUserWorkoutsToCSV(userID int64, startDate, endDate
 				workoutName,
 				totalTime,
 				workoutNotes,
-				"",  // performance_type
-				"",  // entity_name
-				"",  // entity_type
-				"",  // sets
-				"",  // reps
-				"",  // weight
-				"",  // time_seconds
-				"",  // distance
-				"",  // rounds
-				"",  // score_type
-				"",  // score_value
-				"",  // is_pr
-				"",  // performance_notes
-				"",  // order_index
+				"", // performance_type
+				"", // entity_name
+				"", // entity_type
+				"", // sets
+				"", // reps
+				"", // weight
+				"", // time_seconds
+				"", // distance
+				"", // rounds
+				"", // score_type
+				"", // score_value
+				"", // is_pr
+				"", // performance_notes
+				"", // order_index
 			}
 			if err := writer.Write(row); err != nil {
 				return nil, fmt.Errorf("failed to write workout row: %w", err)

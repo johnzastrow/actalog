@@ -46,7 +46,7 @@ type MovementPerformance struct {
 	Sets       *int     `json:"sets,omitempty"`
 	Reps       *int     `json:"reps,omitempty"`
 	Weight     *float64 `json:"weight,omitempty"`
-	Time       *int     `json:"time,omitempty"`       // in seconds
+	Time       *int     `json:"time,omitempty"` // in seconds
 	Distance   *float64 `json:"distance,omitempty"`
 	Notes      string   `json:"notes,omitempty"`
 	OrderIndex int      `json:"order_index"`
@@ -67,19 +67,19 @@ type WODPerformance struct {
 
 // UpdateLoggedWorkoutRequest represents a request to update a logged workout
 type UpdateLoggedWorkoutRequest struct {
-	WorkoutName *string                `json:"workout_name,omitempty"` // For ad-hoc workouts
-	WorkoutType *string                `json:"workout_type,omitempty"`
-	TotalTime   *int                   `json:"total_time,omitempty"`
-	Notes       *string                `json:"notes,omitempty"`
-	Movements   []MovementPerformance  `json:"movements,omitempty"`
-	WODs        []WODPerformance       `json:"wods,omitempty"`
+	WorkoutName *string               `json:"workout_name,omitempty"` // For ad-hoc workouts
+	WorkoutType *string               `json:"workout_type,omitempty"`
+	TotalTime   *int                  `json:"total_time,omitempty"`
+	Notes       *string               `json:"notes,omitempty"`
+	Movements   []MovementPerformance `json:"movements,omitempty"`
+	WODs        []WODPerformance      `json:"wods,omitempty"`
 }
 
 // UserWorkoutResponse represents a logged workout instance
 type UserWorkoutResponse struct {
 	ID                   int64                           `json:"id"`
 	UserID               int64                           `json:"user_id"`
-	WorkoutID            *int64                          `json:"workout_id,omitempty"`         // Nullable for ad-hoc workouts
+	WorkoutID            *int64                          `json:"workout_id,omitempty"` // Nullable for ad-hoc workouts
 	WorkoutName          string                          `json:"workout_name"`
 	WorkoutDate          string                          `json:"workout_date"`
 	WorkoutType          *string                         `json:"workout_type,omitempty"`
@@ -87,8 +87,8 @@ type UserWorkoutResponse struct {
 	Notes                *string                         `json:"notes,omitempty"`
 	CreatedAt            string                          `json:"created_at"`
 	UpdatedAt            string                          `json:"updated_at"`
-	Movements            []*domain.WorkoutMovement       `json:"movements,omitempty"`       // Template movements
-	WODs                 []*domain.WorkoutWODWithDetails `json:"wods,omitempty"`            // Template WODs
+	Movements            []*domain.WorkoutMovement       `json:"movements,omitempty"`             // Template movements
+	WODs                 []*domain.WorkoutWODWithDetails `json:"wods,omitempty"`                  // Template WODs
 	PerformanceMovements []*domain.UserWorkoutMovement   `json:"performance_movements,omitempty"` // Actual performance
 	PerformanceWODs      []*domain.UserWorkoutWOD        `json:"performance_wods,omitempty"`      // Actual performance
 	WorkoutNotes         *string                         `json:"workout_notes,omitempty"`
@@ -686,7 +686,7 @@ func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.R
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"message":          "PRs flagged successfully",
+		"message":           "PRs flagged successfully",
 		"movement_pr_count": movementPRCount,
 		"wod_pr_count":      wodPRCount,
 	})

@@ -3,7 +3,7 @@
     <!-- Top App Bar (only show when authenticated) -->
     <v-app-bar
       v-if="showAppBar"
-      color="#2c3e50"
+      color="primary"
       elevation="0"
       density="comfortable"
       app
@@ -165,7 +165,7 @@
       grow
       app
       elevation="8"
-      bg-color="white"
+      bg-color="surface"
       height="56"
       class="bottom-nav-compact"
     >
@@ -380,7 +380,7 @@ onBeforeUnmount(() => {
 body {
   margin: 0;
   padding: 0;
-  background-color: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
 }
 
 /* Typography - optimized for mobile */

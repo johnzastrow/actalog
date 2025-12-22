@@ -362,6 +362,7 @@ func (s *NotificationService) CleanupOldNotifications() (int64, error) {
 	ninetyDaysAgo := time.Now().AddDate(0, 0, -90)
 	return s.notificationRepo.DeleteOlderThan(ninetyDaysAgo)
 }
+
 // CreateAnnouncement creates an announcement notification for selected users
 // targetType can be "all", "organization", or "users"
 // targetIDs is a list of organization IDs or user IDs depending on targetType

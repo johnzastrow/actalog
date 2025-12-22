@@ -19,13 +19,13 @@ import (
 
 // BackupServiceImpl implements domain.BackupService
 type BackupServiceImpl struct {
-	db             *sql.DB
-	dbDriver       string
-	dbName         string
-	backupDir      string
-	uploadsDir     string
-	userRepo       domain.UserRepository
-	auditLogRepo   domain.AuditLogRepository
+	db           *sql.DB
+	dbDriver     string
+	dbName       string
+	backupDir    string
+	uploadsDir   string
+	userRepo     domain.UserRepository
+	auditLogRepo domain.AuditLogRepository
 }
 
 // NewBackupService creates a new backup service
@@ -1244,20 +1244,20 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 
 	// List of tables with auto-increment id columns
 	tablesWithSequences := map[string]bool{
-		"users":                      true,
-		"movements":                  true,
-		"wods":                       true,
-		"workouts":                   true,
-		"user_workouts":              true,
-		"workout_movements":          true,
-		"workout_wods":               true,
-		"user_workout_movements":     true,
-		"user_workout_wods":          true,
-		"refresh_tokens":             true,
-		"password_resets":            true,
-		"email_verification_tokens":  true,
-		"audit_logs":                 true,
-		"user_settings":              true,
+		"users":                     true,
+		"movements":                 true,
+		"wods":                      true,
+		"workouts":                  true,
+		"user_workouts":             true,
+		"workout_movements":         true,
+		"workout_wods":              true,
+		"user_workout_movements":    true,
+		"user_workout_wods":         true,
+		"refresh_tokens":            true,
+		"password_resets":           true,
+		"email_verification_tokens": true,
+		"audit_logs":                true,
+		"user_settings":             true,
 	}
 
 	if !tablesWithSequences[tableName] {
@@ -1297,18 +1297,18 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 
 	// Datetime columns that may need conversion
 	datetimeColumns := map[string]bool{
-		"created_at":          true,
-		"updated_at":          true,
-		"last_login_at":       true,
-		"email_verified_at":   true,
-		"locked_at":           true,
-		"locked_until":        true,
-		"disabled_at":         true,
-		"expires_at":          true,
-		"used_at":             true,
-		"revoked_at":          true,
-		"workout_date":        true,
-		"birthday":            true,
+		"created_at":        true,
+		"updated_at":        true,
+		"last_login_at":     true,
+		"email_verified_at": true,
+		"locked_at":         true,
+		"locked_until":      true,
+		"disabled_at":       true,
+		"expires_at":        true,
+		"used_at":           true,
+		"revoked_at":        true,
+		"workout_date":      true,
+		"birthday":          true,
 	}
 
 	// Convert datetime values for MySQL (ISO 8601 to MySQL format)
@@ -1358,8 +1358,8 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 func (s *BackupServiceImpl) convertDatetimeForMySQL(dateStr string) string {
 	// Try parsing various formats
 	formats := []string{
-		time.RFC3339Nano,                // 2025-11-26T16:19:14.008192051Z
-		time.RFC3339,                    // 2025-11-26T16:19:14Z
+		time.RFC3339Nano, // 2025-11-26T16:19:14.008192051Z
+		time.RFC3339,     // 2025-11-26T16:19:14Z
 		"2006-01-02T15:04:05.999999999Z07:00",
 		"2006-01-02T15:04:05Z07:00",
 		"2006-01-02 15:04:05.999999999", // SQLite format with microseconds

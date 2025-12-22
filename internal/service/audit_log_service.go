@@ -137,8 +137,8 @@ func (s *AuditLogService) LogAccountLocked(targetUserID int64, email, ipAddress,
 // LogAccountUnlocked logs when an admin unlocks an account
 func (s *AuditLogService) LogAccountUnlocked(adminUserID, targetUserID int64, adminEmail, targetEmail string) error {
 	details := map[string]interface{}{
-		"target_email":       targetEmail,
-		"unlocked_by_admin":  adminEmail,
+		"target_email":        targetEmail,
+		"unlocked_by_admin":   adminEmail,
 		"unlocked_by_user_id": adminUserID,
 	}
 	return s.LogEvent(domain.EventAccountUnlockedAdmin, &adminUserID, &targetUserID, nil, nil, details)
@@ -147,10 +147,10 @@ func (s *AuditLogService) LogAccountUnlocked(adminUserID, targetUserID int64, ad
 // LogAccountDisabled logs when an admin disables an account
 func (s *AuditLogService) LogAccountDisabled(adminUserID, targetUserID int64, adminEmail, targetEmail, reason string) error {
 	details := map[string]interface{}{
-		"target_email":      targetEmail,
-		"disabled_by_admin": adminEmail,
+		"target_email":        targetEmail,
+		"disabled_by_admin":   adminEmail,
 		"disabled_by_user_id": adminUserID,
-		"reason":            reason,
+		"reason":              reason,
 	}
 	return s.LogEvent(domain.EventAccountDisabled, &adminUserID, &targetUserID, nil, nil, details)
 }
@@ -158,8 +158,8 @@ func (s *AuditLogService) LogAccountDisabled(adminUserID, targetUserID int64, ad
 // LogAccountEnabled logs when an admin enables an account
 func (s *AuditLogService) LogAccountEnabled(adminUserID, targetUserID int64, adminEmail, targetEmail string) error {
 	details := map[string]interface{}{
-		"target_email":     targetEmail,
-		"enabled_by_admin": adminEmail,
+		"target_email":       targetEmail,
+		"enabled_by_admin":   adminEmail,
 		"enabled_by_user_id": adminUserID,
 	}
 	return s.LogEvent(domain.EventAccountEnabled, &adminUserID, &targetUserID, nil, nil, details)
@@ -198,11 +198,11 @@ func (s *AuditLogService) LogEmailVerified(userID int64, email string) error {
 // LogRoleChanged logs when an admin changes a user's role
 func (s *AuditLogService) LogRoleChanged(adminUserID, targetUserID int64, adminEmail, targetEmail, oldRole, newRole string) error {
 	details := map[string]interface{}{
-		"target_email":    targetEmail,
-		"changed_by_admin": adminEmail,
+		"target_email":       targetEmail,
+		"changed_by_admin":   adminEmail,
 		"changed_by_user_id": adminUserID,
-		"old_role":        oldRole,
-		"new_role":        newRole,
+		"old_role":           oldRole,
+		"new_role":           newRole,
 	}
 	return s.LogEvent(domain.EventRoleChanged, &adminUserID, &targetUserID, nil, nil, details)
 }

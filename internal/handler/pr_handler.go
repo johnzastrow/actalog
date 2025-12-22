@@ -26,37 +26,37 @@ func NewPRHandler(db *sql.DB, l *logger.Logger) *PRHandler {
 
 // PersonalRecord represents a unified PR from either movements or WODs
 type PersonalRecord struct {
-	Type           string   `json:"type"` // "movement" or "wod"
-	ID             int64    `json:"id"`
-	UserWorkoutID  int64    `json:"user_workout_id"`
-	WorkoutDate    string   `json:"workout_date"`
-	Name           string   `json:"name"`          // Movement name or WOD name
-	MovementType   *string  `json:"movement_type,omitempty"` // For movements: weightlifting, gymnastics, etc.
-	Weight         *float64 `json:"weight,omitempty"`        // For movements (actual weight lifted)
-	Sets           *int     `json:"sets,omitempty"`          // For movements
-	Reps           *int     `json:"reps,omitempty"`          // For movements
-	Time           *int     `json:"time,omitempty"`          // For movements (seconds) OR WOD time
-	Distance       *float64 `json:"distance,omitempty"`      // For movements
-	Calculated1RM  *float64 `json:"calculated_1rm,omitempty"` // Calculated one-rep max for movements
-	Formula        *string  `json:"formula,omitempty"`       // Which formula was used (e.g., "Epley (2-10 reps)")
-	ScoreValue     *string  `json:"score_value,omitempty"`   // For WODs
-	Division       *string  `json:"division,omitempty"`      // For WODs (rx, scaled, etc.)
-	WODType        *string  `json:"wod_type,omitempty"`      // For WODs
-	WODScoreType   *string  `json:"wod_score_type,omitempty"` // For WODs
+	Type          string   `json:"type"` // "movement" or "wod"
+	ID            int64    `json:"id"`
+	UserWorkoutID int64    `json:"user_workout_id"`
+	WorkoutDate   string   `json:"workout_date"`
+	Name          string   `json:"name"`                     // Movement name or WOD name
+	MovementType  *string  `json:"movement_type,omitempty"`  // For movements: weightlifting, gymnastics, etc.
+	Weight        *float64 `json:"weight,omitempty"`         // For movements (actual weight lifted)
+	Sets          *int     `json:"sets,omitempty"`           // For movements
+	Reps          *int     `json:"reps,omitempty"`           // For movements
+	Time          *int     `json:"time,omitempty"`           // For movements (seconds) OR WOD time
+	Distance      *float64 `json:"distance,omitempty"`       // For movements
+	Calculated1RM *float64 `json:"calculated_1rm,omitempty"` // Calculated one-rep max for movements
+	Formula       *string  `json:"formula,omitempty"`        // Which formula was used (e.g., "Epley (2-10 reps)")
+	ScoreValue    *string  `json:"score_value,omitempty"`    // For WODs
+	Division      *string  `json:"division,omitempty"`       // For WODs (rx, scaled, etc.)
+	WODType       *string  `json:"wod_type,omitempty"`       // For WODs
+	WODScoreType  *string  `json:"wod_score_type,omitempty"` // For WODs
 }
 
 // MovementPRSummary represents PR summary for a specific movement
 type MovementPRSummary struct {
-	MovementID    int64    `json:"movement_id"`
-	MovementName  string   `json:"movement_name"`
-	MovementType  string   `json:"movement_type"`
-	PRCount       int      `json:"pr_count"`
-	Best1RM       *float64 `json:"best_1rm,omitempty"`        // Highest calculated 1RM
-	BestFormula   *string  `json:"best_formula,omitempty"`    // Formula used for best 1RM
-	BestWeight    *float64 `json:"best_weight,omitempty"`     // Actual weight lifted for best PR
-	BestSets      *int     `json:"best_sets,omitempty"`       // Sets for best PR
-	BestReps      *int     `json:"best_reps,omitempty"`       // Reps for best PR
-	LastPRDate    string   `json:"last_pr_date"`
+	MovementID   int64    `json:"movement_id"`
+	MovementName string   `json:"movement_name"`
+	MovementType string   `json:"movement_type"`
+	PRCount      int      `json:"pr_count"`
+	Best1RM      *float64 `json:"best_1rm,omitempty"`     // Highest calculated 1RM
+	BestFormula  *string  `json:"best_formula,omitempty"` // Formula used for best 1RM
+	BestWeight   *float64 `json:"best_weight,omitempty"`  // Actual weight lifted for best PR
+	BestSets     *int     `json:"best_sets,omitempty"`    // Sets for best PR
+	BestReps     *int     `json:"best_reps,omitempty"`    // Reps for best PR
+	LastPRDate   string   `json:"last_pr_date"`
 }
 
 // GetPersonalRecords retrieves all PRs for the authenticated user

@@ -146,7 +146,9 @@ func checkTableExists(db *sql.DB, driver, tableName string) (bool, error) {
 		result = &name
 
 	case "postgres":
-		query = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name=$1"
+		// Use CURRENT_SCHEMA() to check the active search_path instead of hardcoding 'public'
+		// This allows migrations to work correctly with custom PostgreSQL schemas
+		query = "SELECT table_name FROM information_schema.tables WHERE table_schema=CURRENT_SCHEMA() AND table_name=$1"
 		var name string
 		result = &name
 
@@ -181,8 +183,9 @@ func checkColumnExists(db *sql.DB, driver, tableName, columnName string) (bool, 
 		return count > 0, err
 
 	case "postgres":
+		// Filter by CURRENT_SCHEMA() to avoid matching columns from other schemas
 		query = `SELECT COUNT(*) FROM information_schema.columns
-				WHERE table_name = $1 AND column_name = $2`
+				WHERE table_schema = CURRENT_SCHEMA() AND table_name = $1 AND column_name = $2`
 		err := db.QueryRow(query, tableName, columnName).Scan(&count)
 		return count > 0, err
 
@@ -1086,7 +1089,7 @@ func seedStandardWODs(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to check for existing WODs: %w", err)
 	}
-	
+
 	if count > 0 {
 		return nil // Already seeded
 	}
@@ -1233,7 +1236,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to check for existing workout templates: %w", err)
 	}
-	
+
 	if count > 0 {
 		return nil // Already seeded
 	}
@@ -1243,13 +1246,13 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Get movement IDs
 	backSquatID, err := getMovementIDByName(db, "Back Squat")
 	if err != nil {
 		return err
 	}
-	
+
 	// Add movements to workout
 	if err := addWorkoutMovement(db, workoutID, backSquatID, 225.0, 5, 5, 0); err != nil {
 		return err
@@ -1260,7 +1263,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	cleanID, err := getMovementIDByName(db, "Clean")
 	if err != nil {
 		return err
@@ -1269,7 +1272,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err := addWorkoutMovement(db, workoutID, cleanID, 135.0, 5, 3, 0); err != nil {
 		return err
 	}
@@ -1282,7 +1285,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	pullupID, err := getMovementIDByName(db, "Pull-up")
 	if err != nil {
 		return err
@@ -1295,7 +1298,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err := addWorkoutMovement(db, workoutID, pullupID, 0, 5, 10, 0); err != nil {
 		return err
 	}
@@ -1311,7 +1314,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	runID, err := getMovementIDByName(db, "Run")
 	if err != nil {
 		return err
@@ -1324,7 +1327,7 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Time in seconds (20 minutes = 1200 seconds)
 	if err := addWorkoutMovementWithTime(db, workoutID, runID, 1200, 0); err != nil {
 		return err
@@ -1341,24 +1344,24 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Get Fran WOD ID
 	franWODID, err := getWODIDByName(db, "Fran")
 	if err != nil {
 		return err
 	}
-	
+
 	// Link WOD to workout
 	if err := addWorkoutWOD(db, workoutID, franWODID, 0); err != nil {
 		return err
 	}
-	
+
 	// Add movements for Fran
 	thrusterID, err := getMovementIDByName(db, "Thruster")
 	if err != nil {
 		return err
 	}
-	
+
 	// Fran: 21-15-9 (we'll represent as 3 rounds, 7 reps average for simplicity)
 	if err := addWorkoutMovement(db, workoutID, thrusterID, 95.0, 3, 15, 0); err != nil {
 		return err
@@ -1372,21 +1375,21 @@ func seedWorkoutTemplates(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	
+
 	helenWODID, err := getWODIDByName(db, "Helen")
 	if err != nil {
 		return err
 	}
-	
+
 	if err := addWorkoutWOD(db, workoutID, helenWODID, 0); err != nil {
 		return err
 	}
-	
+
 	kbSwingID, err := getMovementIDByName(db, "Kettlebell Swing")
 	if err != nil {
 		return err
 	}
-	
+
 	// Helen movements
 	if err := addWorkoutMovementWithDistance(db, workoutID, runID, 400.0, 3, 0); err != nil {
 		return err

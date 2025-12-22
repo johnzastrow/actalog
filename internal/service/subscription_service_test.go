@@ -10,14 +10,14 @@ import (
 
 func TestSubscriptionService_CreateUserSubscription(t *testing.T) {
 	tests := []struct {
-		name              string
-		adminUserID       int64
-		targetUserID      int64
-		subscriptionType  string
-		isPermanentFree   bool
-		notes             string
-		setupMock         func(*mockUserSubscriptionRepo, *mockUserRepo)
-		expectedError     error
+		name             string
+		adminUserID      int64
+		targetUserID     int64
+		subscriptionType string
+		isPermanentFree  bool
+		notes            string
+		setupMock        func(*mockUserSubscriptionRepo, *mockUserRepo)
+		expectedError    error
 	}{
 		{
 			name:             "successful free subscription creation",
@@ -194,13 +194,13 @@ func TestSubscriptionService_CreateUserSubscription(t *testing.T) {
 
 func TestSubscriptionService_MarkUserSubscriptionAsPaid(t *testing.T) {
 	tests := []struct {
-		name          string
+		name           string
 		subscriptionID int64
-		adminUserID   int64
-		paymentDate   time.Time
-		durationDays  *int
-		setupMock     func(*mockUserSubscriptionRepo)
-		expectedError error
+		adminUserID    int64
+		paymentDate    time.Time
+		durationDays   *int
+		setupMock      func(*mockUserSubscriptionRepo)
+		expectedError  error
 	}{
 		{
 			name:           "successful payment marking with default duration",
@@ -426,9 +426,9 @@ func TestSubscriptionService_CancelUserSubscription(t *testing.T) {
 
 func TestSubscriptionService_GetUserSubscriptionStatus(t *testing.T) {
 	tests := []struct {
-		name             string
-		userID           int64
-		setupMock        func(*mockSubscriptionAccessRepo)
+		name              string
+		userID            int64
+		setupMock         func(*mockSubscriptionAccessRepo)
 		expectedHasAccess bool
 		expectedSource    string
 	}{

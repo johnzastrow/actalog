@@ -1,0 +1,4457 @@
+{
+  "export_metadata": {
+    "user_email": "br8kwall@gmail.com",
+    "export_date": "2025-12-22T03:20:12.631403626Z",
+    "version": "0.5.1",
+    "total_count": 208
+  },
+  "user_workouts": [
+    {
+      "workout_date": "2025-12-21",
+      "workout_name": "Quick Log Sun, Dec 21, 2025",
+      "total_time": 3240,
+      "notes": "Bench Press 1x2\n\nRPE: 8\n\nOut of Hibernation\n\nScore Rounds and Reps\n\nRX\n\nAMRAP 15\n\n100ft Bear Crawl\n\n20 Burpees\n\n20 Toes to Places or Tuck Ups\n\n20 Plate Ground to Overhead (Athlete Choice)\n\n(Score is Rounds + Reps)\n\nSCORE = Rounds and Reps\n\nWOD TYPE: EFFORT\n\nIntended Stimulus: 2-3 Rounds\n\nRPE: 7"
+    },
+    {
+      "workout_date": "2025-12-20",
+      "workout_name": "Quick Log Sat, Dec 20, 2025",
+      "total_time": 3420,
+      "notes": "Leg Daze\n\nScore Time\n\nRX\n\n2 Rounds for Time\n\n50 /60 Cal Bike\n\n50 DB Farmer Step-Ups (35/50#) (20/24\")\n\n25 Box Jumps (24/30\")\n\n(Score is Time)\n\nINTERMEDIATE\n\n2 Rounds for Time\n\n40/50 Cal Bike\n\n40 DB Farmer Step-Ups (20/35#)|(20/24\")\n\n25 Box Jumps (20/24\")\n\nFOUNDATIONS\n\nAMRAP or 2 Rounds for Time\n\n30/40 Cal Bike\n\n30 DB Farmer Step-Ups (up to 15/20#)|(up 16\")\n\n20 Box/Plate Jumps/Steps (up to 16\")\n\nSCORE = Time\n\nWOD TYPE: GRIND\n\nIntended Stimulus: 25-29 minutes\n\nRPE: 8\n\nPartner Workout Option\n\nIN TEAMS OF 2...\n\nScore Time\n\n2 ROUNDS FOR TIME*\n\n85/100 Cal Bike**\n\n80 DB Farmer Step-Ups (Athlete Choice)\n\n50 Box Jumps (Athlete Choice)\n\n*P1 works while P2 rests. Split work as needed.\n\n(Score is Time)"
+    },
+    {
+      "workout_date": "2025-12-19",
+      "workout_name": "Friday Workout",
+      "wods": [
+        {
+          "wod_name": "Amanda",
+          "wod_type": "",
+          "time_seconds": 315,
+          "notes": "35# db, jumping pull up ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-12-19",
+      "workout_name": "Quick Log Fri, Dec 19, 2025",
+      "total_time": 3360,
+      "notes": "Snatch 1x1\n\n*Option for Squat or Power. Start Light and build to Moderate-Heavy.\n\n(Score is Weight)\n\nRPE: 7\n\nAmanda\n\nRX:\n\nFor time\n\n9-7-5\n\nRing Muscle-Up\n\nSquat Snatch (95/135#)\n\nINTERMEDIATE:\n\nFor time\n\n9-7-5\n\nBurpee Pull-Up\n\nPower Snatch (85/115#)\n\nFOUNDATIONS / CORE:\n\nFor time\n\n9-7-5\n\nLow Bear Burpee Ring Row\n\nHang Power Snatch (up to 45/75#)\n\nScore Time\n\nSCORE = Time\n\nWOD TYPE: EFFORT\n\nIntended Stimulus: 5-10 minutes\n\nRPE: 8"
+    },
+    {
+      "workout_date": "2025-12-17",
+      "workout_name": "Quick Log Wed, Dec 17, 2025",
+      "total_time": 3360,
+      "notes": "Score Checkmark\n\nEVERY 1:30 x 6 SETS\n\n:10 Top of the Ring Hold\n\n:10 Bottom of the Ring Hold\n\n5 Ring Dips\n\nor...\n\n:10 Top of the Push-Ups Hold\n\n:10 Bottom of the Push-Up Hold\n\n5 Hand Release Push-Ups\n\n*Option to do on an elevated bar\n\n-Rest w/ Time Remaining-\n\n(No Measure)\n\nRPE: 6\n\nWalk King\n\nScore Time\n\nRX\n\nFOR TIME\n\n80/100 Cal Row\n\n50 Walking Lunges\n\n75 KB Swings (35/53#)\n\n50 Walking Lunges\n\n50 Hand Release Push-Ups\n\n50 Walking Lunges\n\n25 Front Squats (95/135#)\n\n50 Walking Lunges\n\n(Score is Time)\n\nINTERMEDIATE\n\nFOR TIME\n\n70/80 Cal Row\n\n40 Walking Lunges\n\n75 KB Swings (26/35#)\n\n40 Walking Lunges\n\n50 Push-Ups\n\n40 Walking Lunges\n\n25 Front Squats (65/95#)\n\n40 Walking Lunges\n\nFOUNDATIONS\n\nAMRAP or 2 Rounds of:\n\n30 Cal Row\n\n20 Lunges\n\n30 KB Swings (up to 26#)\n\n20 Lunges\n\n20 Elevated Push-Ups\n\n20 Lunges\n\n10 Front Squats (up to 35/45#)\n\n20 Lunges\n\nSCORE = Time\n\nWOD TYPE:GRIND\n\nIntended Stimulus: 22-24 Minutes\n\nRPE: 8"
+    },
+    {
+      "workout_date": "2025-12-14",
+      "workout_name": "Quick Log Sun, Dec 14, 2025",
+      "total_time": 3360,
+      "notes": "Rowing to Cal-iforni-up\n\nScore Rounds and Reps\n\n100/120 Cal Row\n\nAMRAP w/ Time Remaining...\n\n25 Sit-Ups or Leg Rainbow\n\n20 Air Squats\n\n15 Slam Balls (Athlete Choice)\n\n(Score is Rounds + Reps)\n\nSCORE = Reps\n\nWOD TYPE: HEAVY\n\nIntended Stimulus: 5-12 Reps / Round\n\nRPE: 8\n\nFinisher - All\n\n6 SETS (:20 ON/ :10 OFF)\n\nNo Measure\n\nMOVT 1 - Single DB Curls\n\nMOVT 2 - DB Overhead Tricep Extension\n\n*1 SET = MOVT 1+ MOVT 2.\n\n(No Measure)"
+    },
+    {
+      "workout_date": "2025-12-13",
+      "workout_name": "Saturday Workout",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 165,
+          "notes": "Knee was feeling broken ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-12-13",
+      "workout_name": "Saturday CFY Quick Log Sat, Dec 13, 2025",
+      "total_time": 3360,
+      "notes": "### Back Squat 5x5\n\n*Keep weight Moderate across all sets.\n\nRemember Reading Tempo...\n\n* 1st Number is 'Down Portion'\n\n* 2nd Number is 'Down Position'\n\n* 3rd Number is 'Up Portion'\n\n* 4th Number is 'Up Position'\n\n(Score is Weight)\n\n### Eleven Las Vegas\n\n* Score Rounds and Reps\n\nRX\n\nAMRAP 11\n\n4 DB Front Squats (35/50#)\n\n6 DB Goblet Lunges\n\n8 Box Jumps (20/24\")\n\nINTERMEDIATE\n\nAMRAP 11\n\n4 DB Front Squats (20/35#)\n\n6 DB Goblet Lunges\n\n8 Box Jumps (16/20\")\n\n(Score is Rounds + Reps)\n\nFOUNDATIONS\n\nAMRAP 11\n\n4 DB Front Squats (up to 20#)\n\n6 DB Goblet Lunges\n\n8 Box Jumps / Steps (up to 16\")\n\n(Score is Rounds + Reps)\n\nSCORE = Rounds and Reps\n\nWOD TYPE: EFFORT\n\nIntended Stimulus: 9-12 rounds\n\nRPE: 7"
+    },
+    {
+      "workout_date": "2025-12-12",
+      "workout_name": "CFY Quick Log Fri, Dec 12, 2025",
+      "total_time": 3360,
+      "notes": "4 SETS\n\nScore Weight\n\n10/10\n\nLandmine Press*\n\n*Keep Weight Moderate across all sets.\n\n(Score is Weight)\n\nRPE: 6\n\nThe Present Tens\n\nScore Rounds and Reps\n\nRX\n\n2 Sets\n\nAMRAP x 8 MINUTES*\n\n10 Strict Pull-Ups\n\n10 Ring Dips\n\n10 Alt. DB Farmer Box Step-Ups (35/50#)(20/24\")\n\n-Rest 1:30 b/t Sets-\n\n*Pick up where you left off.\n\n(Score is Total Rounds + Reps)\n\nINTERMEDIATE\n\nAMRAP x 8 MINUTES*\n\n10 Vertical Ring Rows\n\n10 Dips**\n\n10 Alt. DB Farmer Box Step-Ups (20/35#)(16/20\")\n\n-Rest 1:30 b/t Sets-\n\n*Pick up where you left off.\n\n**Option for Bench, box, or rings.\n\n(Score is Total Rounds + Reps)\n\nFOUNDATIONS\n\nAMRAP x 8 MINUTES*\n\n10 Ring Rows\n\n10 Dips**\n\n10 Alt. DB Farmer Box Step-Ups (up to 20#) (up to 16\")\n\n-Rest 1:30 b/t Sets-\n\n*Pick up where you left off.\n\n**Option for Bench, box, or rings.\n\n(Score is Total Rounds + Reps)\n\nSCORE = Rounds and Reps\n\nWOD TYPE: EFFORT\n\nIntended Stimulus: 4-6 Rounds\n\nRPE: 8"
+    },
+    {
+      "workout_date": "2025-12-08",
+      "workout_name": "Monday Workout - Favoriate Candy",
+      "wods": [
+        {
+          "wod_name": "Favorite Candy",
+          "wod_type": "",
+          "rounds": 2,
+          "reps": 30,
+          "notes": "I am super human ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-12-07",
+      "workout_name": "Bomber",
+      "total_time": 2700,
+      "notes": "It was all a PR",
+      "movements": [
+        {
+          "movement_name": "American Kettlebell Swing",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 20,
+          "time_seconds": 600,
+          "notes": "This is just recording the movement. It's often best to record a custom WOD if you want to be prescribed",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Chest-to-Bar Pull-up",
+          "movement_type": "gymnastics",
+          "sets": 2,
+          "reps": 20,
+          "time_seconds": 600,
+          "notes": "Couldn't do 30",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Fran",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "00:10:10",
+          "time_seconds": 610,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-29",
+      "workout_name": "Even escence Quick Log Sat, Nov 29, 2025",
+      "notes": "great!",
+      "wods": [
+        {
+          "wod_name": "Even-esence",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "rounds": 11,
+          "reps": 12,
+          "notes": "25 lbs / pull ups",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-29",
+      "workout_name": "Saturday my wod Workout",
+      "wods": [
+        {
+          "wod_name": "MyWod",
+          "wod_type": "",
+          "time_seconds": 60,
+          "notes": "Great!",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-29",
+      "workout_name": "Saturday bench Workout",
+      "total_time": 720,
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 6,
+          "weight": 160,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-28",
+      "workout_name": "Heart breaker",
+      "total_time": 5400,
+      "movements": [
+        {
+          "movement_name": "Air Squat",
+          "movement_type": "bodyweight",
+          "sets": 1,
+          "reps": 300,
+          "notes": "Burns",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Bar Muscle-up",
+          "movement_type": "gymnastics",
+          "reps": 20,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "DT",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "00:45:12",
+          "time_seconds": 2712,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-28",
+      "workout_name": "Example Annie",
+      "total_time": 1500,
+      "notes": "Testing",
+      "wods": [
+        {
+          "wod_name": "Annie",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "time_seconds": 720,
+          "notes": "Blazing!",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-28",
+      "workout_name": "Offline Quick Log Fri, Nov 28, 2025",
+      "total_time": 4020
+    },
+    {
+      "workout_date": "2025-11-26",
+      "workout_name": "Thanksgiving turducken ",
+      "notes": "Not good. Took a lot of time off",
+      "wods": [
+        {
+          "wod_name": "Turducken",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "00:16:42",
+          "time_seconds": 1002,
+          "notes": "65 pounds dead lift, 12 pound wall ball",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-11-26",
+      "workout_name": "Turducken",
+      "total_time": 1200,
+      "notes": "Turducken\n\nFor Time\n\n20 Deadlifts\n\n30 Pulls\n\n20 Deadlifts\n\n40 Wall Balls\n\n30 Pulls\n\n20 Deadlifts\n\n50 Box Jumps\n\n40 Wall Balls\n\n30 Pulls\n\n20 Deadlifts\n\nRX:\n\nDeadlift (135/185#)\n\nWallBall (14/20#)\n\nPull-Ups\n\nINTERMEDIATE:\n\nDeadlift (95/135#)\n\nWallBall (10/14#)\n\nVertical Ring Rows\n\nFOUNDATIONS:\n\nDeadlift (up 55/75#)\n\nWallBall Thruster (10#)\n\nRing Rows\n\n*The first of three Turkey Day Workouts this week!\n\n(Score is Time)\n\nSCORE = Time\n\nWOD TYPE: EFFORT\n\nIntended Stimulus: 16-22 minutes\n\nRPE: 9"
+    },
+    {
+      "workout_date": "2025-10-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-10-10",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 1,
+          "weight": 175,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-09-26",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-09-26",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-09-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-09-24",
+      "movements": [
+        {
+          "movement_name": "Power Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-09-12",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-09-12",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-08-27",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-08-27",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 3,
+          "weight": 95,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-08-26",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-08-26",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 145,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-03-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-03-07",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 145,
+          "notes": "Part of E3mom",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-01-16",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2025-01-16",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "14:00",
+          "time_seconds": 840,
+          "notes": "Rows #30",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2025-01-03",
+      "workout_type": "strength",
+      "workout_name": "Workout 2025-01-03",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 165,
+          "notes": "Could have done 170. Lots of warm up before.",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-12-16",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-12-16",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 4,
+          "weight": 160,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:30",
+          "time_seconds": 510,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-12-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-12-08",
+      "wods": [
+        {
+          "wod_name": "Fight Gone Bad",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "195 reps",
+          "reps": 195,
+          "notes": "Rx weighted but steps",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-12-05",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-12-05",
+      "wods": [
+        {
+          "wod_name": "Fight Gone Bad",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "244 reps",
+          "reps": 244,
+          "notes": "14# wb, 55#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-12-04",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-12-04",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 165,
+          "notes": "After building up",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "03:48",
+          "time_seconds": 228,
+          "notes": "95# some ring rows",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-10-02",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-10-02",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 265,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-09-26",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-09-26",
+      "wods": [
+        {
+          "wod_name": "Barbell Complex",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "95 lbs",
+          "weight": 95,
+          "notes": "Stopped increasing as back was twinged ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-09-23",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-09-23",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 0,
+          "reps": 0,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-09-16",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-09-16",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 7,
+          "weight": 130,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-08-22",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-08-22",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 125,
+          "notes": "8 at 145",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-08-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-08-13",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 185,
+          "notes": "Felt good despite hiking. Maybe 190",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-07-29",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-07-29",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 235,
+          "notes": "Part of lighter strength",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-06-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-06-21",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 2,
+          "weight": 165,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-06-18",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-06-18",
+      "wods": [
+        {
+          "wod_name": "Grace",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "02:57",
+          "time_seconds": 177,
+          "notes": "75#, try 85 next time ",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Barbell Complex",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "115 lbs",
+          "weight": 115,
+          "notes": "3 push + 1 split",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-06-12",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-06-12",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 2,
+          "weight": 105,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CAP 240614",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "13:04",
+          "time_seconds": 784,
+          "notes": "Bar only",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-04-22",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-04-22",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 235,
+          "notes": "Part of lighter strength ",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 205,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CAP 240428",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "06:30",
+          "time_seconds": 390,
+          "notes": "Scaled pistils, 65#",
+          "is_pr": false,
+          "order_index": 2
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-04-03",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-04-03",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "125 lbs",
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-03-29",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-03-29",
+      "wods": [
+        {
+          "wod_name": "CrossFit Games Open 17.1",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "19:45",
+          "time_seconds": 1185,
+          "notes": "30# box step overs ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-03-25",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-03-25",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 195,
+          "notes": "After building for 4 sets, then 3x at 195. Probably couldn’t do more ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-03-15",
+      "workout_type": "strength",
+      "workout_name": "Workout 2024-03-15",
+      "movements": [
+        {
+          "movement_name": "Push Jerk",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 140,
+          "notes": "Solid",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-03-06",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-03-06",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "135 lbs",
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "12:40",
+          "time_seconds": 760,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2024-02-20",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2024-02-20",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 265,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "One Bite at a Time",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "11:18",
+          "time_seconds": 678,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-10-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-10-18",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 5,
+          "weight": 215,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-09-14",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-09-14",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 5,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-07-06",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-07-06",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 215,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-06-06",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-06-06",
+      "wods": [
+        {
+          "wod_name": "CAP 230605",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "notes": "Rowing ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-04-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-04-24",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 5,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Single Arm Dumbbell Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 5,
+          "weight": 30,
+          "notes": "Each arm, really 25 on left",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-04-15",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-04-15",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 4,
+          "weight": 235,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-04-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-04-13",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 7,
+          "weight": 185,
+          "notes": "Final set was actually 195",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 215,
+          "notes": "Why not?",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-04-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-04-10",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 7,
+          "weight": 75,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-03-13",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-03-13",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 145,
+          "notes": "Bonus for 155",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CAP230319",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "10 rounds + 6 reps",
+          "rounds": 10,
+          "reps": 6,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-03-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-03-07",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 135,
+          "notes": "Could have done 140 probably ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Jump the Shart",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "notes": "54# step overs ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-02-28",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-02-28",
+      "wods": [
+        {
+          "wod_name": "CAP 230228",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "21:24",
+          "time_seconds": 1284,
+          "notes": "35# db, knees and some T2b",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-02-20",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-02-20",
+      "wods": [
+        {
+          "wod_name": "CrossFit Games Open 23.1 Scaled (Ages 16-54)",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "165 reps",
+          "reps": 165,
+          "notes": "95# clean knee raises 14# ball ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-02-17",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-02-17",
+      "movements": [
+        {
+          "movement_name": "Power Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 125,
+          "notes": "Ugly ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Bear Necessities",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "notes": "85#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-02-16",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-02-16",
+      "wods": [
+        {
+          "wod_name": "CAP 230215",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "145 lbs",
+          "weight": 145,
+          "notes": "30# db, 2k row warm up sub 8:50. Just did 145 for all",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-02-15",
+      "workout_type": "strength",
+      "workout_name": "Workout 2023-02-15",
+      "movements": [
+        {
+          "movement_name": "Paused Bench",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 125,
+          "notes": "Slow down, 3 secs at bottom ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CrossFit Games Open 12.1",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "69 reps",
+          "reps": 69,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-01-10",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-01-10",
+      "wods": [
+        {
+          "wod_name": "011023",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "4 rounds + 20 reps",
+          "rounds": 4,
+          "reps": 20,
+          "notes": "75#, steps",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-01-09",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-01-09",
+      "movements": [
+        {
+          "movement_name": "Thruster",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 115,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CF Open 17.5",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "14:04",
+          "time_seconds": 844,
+          "notes": "65# singles",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2023-01-03",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2023-01-03",
+      "wods": [
+        {
+          "wod_name": "DB Burpee DLs and Rowing",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "22:00",
+          "time_seconds": 1320,
+          "notes": "35#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-12-23",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-12-23",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 165,
+          "notes": "Bonus round at 185",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-12-21",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-12-21",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 20,
+          "weight": 175,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CAP 221219",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "16:50",
+          "time_seconds": 1010,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-12-05",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-12-05",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 15,
+          "weight": 165,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-11-30",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-11-30",
+      "movements": [
+        {
+          "movement_name": "Bent Over Row",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 125,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "CAP221204",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:37",
+          "time_seconds": 517,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-11-11",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-11-11",
+      "movements": [
+        {
+          "movement_name": "Push Jerk",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 12,
+          "weight": 75,
+          "notes": "Plus 18 other reps at 75#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-11-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-11-08",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "45:00",
+          "time_seconds": 2700,
+          "notes": "569 reps with 20# at 20”",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-11-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-11-07",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 12,
+          "weight": 155,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-10-22",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-10-22",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "12:35",
+          "time_seconds": 755,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-10-17",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-10-17",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 235,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:06",
+          "time_seconds": 486,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-08-22",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-08-22",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 5,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-07-25",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-07-25",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 6,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-06-01",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-06-01",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 1,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-04-11",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-04-11",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 145,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-04-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-04-01",
+      "movements": [
+        {
+          "movement_name": "Clean and Jerk",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 135,
+          "notes": "Mostly squat clean",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "06:30",
+          "time_seconds": 390,
+          "notes": "115# ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-29",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-29",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "23:10",
+          "time_seconds": 1390,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-28",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-28",
+      "movements": [
+        {
+          "movement_name": "Back Rack Lunge",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 145,
+          "notes": "failed at 155",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Karen",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "07:17",
+          "time_seconds": 437,
+          "notes": "14#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-23",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-23",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 135,
+          "notes": "Could have done 140",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "07:30",
+          "time_seconds": 450,
+          "notes": "75# ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-03-21",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 215,
+          "notes": "Last reps at 225",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-17",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-17",
+      "movements": [
+        {
+          "movement_name": "Squat Clean",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "115 lbs",
+          "weight": 115,
+          "notes": "Did 120 but no form ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-16",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-03-16",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 90,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-09",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-03-09",
+      "movements": [
+        {
+          "movement_name": "Squat Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-08",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 4,
+          "weight": 140,
+          "notes": "Did 5 reps often ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "13:00",
+          "time_seconds": 780,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-07",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-07",
+      "wods": [
+        {
+          "wod_name": "CrossFit Games Open 22.2 Scaled (Ages 16-54)",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "10:00",
+          "time_seconds": 600,
+          "notes": "90 reps @ 175",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-02",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-03-02",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 200,
+          "notes": "4 sets at 195. Then 2 sets at 215. Final bonus set at 220",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "5 rounds + 10 reps",
+          "rounds": 5,
+          "reps": 10,
+          "notes": "Pike PU from box",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-03-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-03-01",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "4 rounds + 3 reps",
+          "rounds": 4,
+          "reps": 3,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-02-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-02-21",
+      "movements": [
+        {
+          "movement_name": "Power Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 125,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-02-07",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-02-07",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "09:15",
+          "time_seconds": 555,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-02-02",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-02-02",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "23:19",
+          "time_seconds": 1399,
+          "notes": "Row at home ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-02-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-02-01",
+      "movements": [
+        {
+          "movement_name": "Hang Power Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 65,
+          "notes": "Form work with Sarah ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "32 reps",
+          "reps": 32,
+          "notes": "65 to 95 focusing on form",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-01-31",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-01-31",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "22:47",
+          "time_seconds": 1367,
+          "notes": "Dumbbell thrusters, knee raises, rowing ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-01-27",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-01-27",
+      "movements": [
+        {
+          "movement_name": "Push Jerk",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 115,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "09:42",
+          "time_seconds": 582,
+          "notes": "75#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-01-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-01-24",
+      "movements": [
+        {
+          "movement_name": "Hang Power Snatch",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-01-12",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2022-01-12",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "11 reps",
+          "reps": 11,
+          "notes": "#115 squat cleans. Rowed 2k plus push ups and pull ups instead of burpees ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2022-01-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2022-01-10",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 175,
+          "notes": "Final reps were at #185",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "9 rounds + 0 reps",
+          "rounds": 9,
+          "reps": 0,
+          "notes": "#53 , step ups with #10 dumbbell ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-11-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-11-10",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 170,
+          "notes": "Amrap",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-11-04",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-11-04",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 5,
+          "weight": 95,
+          "notes": "At SE",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-10-12",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-10-12",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 165,
+          "notes": "4x 155",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 4,
+          "weight": 155,
+          "notes": " ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-08-30",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-08-30",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 160,
+          "notes": "2 x 155 was easy. failed at 165",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-08-14",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-08-14",
+      "wods": [
+        {
+          "wod_name": "2k Row",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:49",
+          "time_seconds": 529,
+          "notes": "At home ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-08-09",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-08-09",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 2,
+          "weight": 205,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-08-04",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-08-04",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 2,
+          "weight": 285,
+          "notes": "With belt ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "04:29",
+          "time_seconds": 269,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-07-21",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-07-21",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "4 rounds + 15 reps",
+          "rounds": 4,
+          "reps": 15,
+          "notes": "Pike on box ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-07-19",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-07-19",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 275,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:30",
+          "time_seconds": 510,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-07-15",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-07-15",
+      "movements": [
+        {
+          "movement_name": "Power Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-07-14",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-07-14",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 145,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-25",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-06-25",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 6,
+          "weight": 235,
+          "is_pr": false,
+          "order_index": 2
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "4 reps",
+          "reps": 4,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "02:15",
+          "time_seconds": 135,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-06-21",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 8,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-15",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-06-15",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "7 rounds + 11 reps",
+          "rounds": 7,
+          "reps": 11,
+          "notes": "35 lbs ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-09",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-06-09",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 100,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Bench press double arm with two DB",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 100,
+          "notes": "50# dumbbells ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-02",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-06-02",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 205,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "3 rounds + 20 reps",
+          "rounds": 3,
+          "reps": 20,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-06-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-06-01",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 12,
+          "weight": 70,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "3 rounds + 19 reps",
+          "rounds": 3,
+          "reps": 19,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-31",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-31",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "39:44",
+          "time_seconds": 2384,
+          "notes": "Half Murph with Marisa. She waited for me ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-25",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-25",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "5 rounds + 0 reps",
+          "rounds": 5,
+          "reps": 0,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-24",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-24",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 12,
+          "weight": 185,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "07:21",
+          "time_seconds": 441,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-19",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-19",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "4 rounds + 0 reps",
+          "rounds": 4,
+          "reps": 0,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-05-18",
+      "movements": [
+        {
+          "movement_name": "Push Jerk",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 120,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-17",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-17",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "120 lbs",
+          "weight": 120,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "07:45",
+          "time_seconds": 465,
+          "notes": "75 #",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-12",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-05-12",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 205,
+          "notes": "2x2x2x2 at 185#. PR for me ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "10:02",
+          "time_seconds": 602,
+          "notes": "At 95 pounds for the squats limited by ability to clean and get overhead ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-05-10",
+      "movements": [
+        {
+          "movement_name": "Squat Clean",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 2,
+          "weight": 95,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Squat Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2021-05-08",
+      "wods": [
+        {
+          "wod_name": "Grace",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "03:48",
+          "time_seconds": 228,
+          "notes": "'@75#",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Annie",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "09:20",
+          "time_seconds": 560,
+          "notes": "sinkles",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2021-05-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2021-05-07",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 2,
+          "weight": 215,
+          "notes": "Light to start back",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-08-24",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 185,
+          "notes": "Might’ve done 190",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-20",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-08-20",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "18:03",
+          "time_seconds": 1083,
+          "notes": "75# was all I had ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-08-18",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 90,
+          "notes": "Could not do more weight ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-08-08",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "19:05",
+          "time_seconds": 1145,
+          "notes": "135# 25# shoulder presses ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-05",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-08-05",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 4,
+          "weight": 215,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "7 rounds + 3 reps",
+          "rounds": 7,
+          "reps": 3,
+          "notes": "95#.  That was max",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-04",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-08-04",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "19:15",
+          "time_seconds": 1155,
+          "notes": "10lb ball, step ups, shoulder pretty good considering yesterday ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-03",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-08-03",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 3,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 3,
+          "weight": 115,
+          "notes": "Could’ve done 120 maybe ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-08-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-08-01",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "95 lbs",
+          "weight": 95,
+          "notes": "Max weight possible. Maybe a bit more early in the workout . Shoulder and arms felt okay, ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-31",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-31",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 6,
+          "weight": 155,
+          "notes": "Could’ve 165 maybe ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "2 rounds + 9 reps",
+          "rounds": 2,
+          "reps": 9,
+          "notes": "55 lbs. no shoulder pain. Elbows though. Form crappy ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-29",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-29",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "13:00",
+          "time_seconds": 780,
+          "notes": "25lb snatches. Elbows hurt",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-23",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-23",
+      "movements": [
+        {
+          "movement_name": "Push Jerk",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 105,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "12:00",
+          "time_seconds": 720,
+          "notes": "All the reps, strap and inverted pull ups, jumps and step overs. So almost cheated the whole thing ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-22",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-07-22",
+      "movements": [
+        {
+          "movement_name": "Back Rack Lunge",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 105,
+          "notes": "Knee pain ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-15",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-15",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 125,
+          "notes": "No shoulder pain yet",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "26 reps",
+          "reps": 26,
+          "notes": "Cals on the bike only",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-06",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-06",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 165,
+          "notes": "A few warm ups at same weight ",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "notes": "Biking ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-07-01",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-07-01",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 255,
+          "notes": "After 5x5x3x3x1 and a long time off",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "12:00",
+          "time_seconds": 720,
+          "notes": "Just practicing adding results ",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-03-03",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-03-03",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 0,
+          "notes": "Did toes to rig due to shoulder ",
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 3,
+          "weight": 255,
+          "is_pr": false,
+          "order_index": 2
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "3 rounds + 4 reps",
+          "rounds": 3,
+          "reps": 4,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-03-02",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2020-03-02",
+      "movements": [
+        {
+          "movement_name": "Overhead Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 65,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "12:58",
+          "time_seconds": 778,
+          "notes": "55# OHS and FS, 53# KB",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-25",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-25",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 85,
+          "notes": "3 sets @ 85#, 2 @ 65#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-18",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 3,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-17",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-17",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 205,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 235,
+          "is_pr": false,
+          "order_index": 3
+        },
+        {
+          "movement_name": "Power Snatch",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 75,
+          "notes": "Plus overhead squat",
+          "is_pr": false,
+          "order_index": 4
+        },
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 115,
+          "notes": "Could have done 120",
+          "is_pr": false,
+          "order_index": 5
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Fran",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "05:30",
+          "time_seconds": 330,
+          "notes": "55# + jumping pull ups. Failed  2/3 way through due to sick?",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "wod_name": "Grace",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "03:13",
+          "time_seconds": 193,
+          "notes": "75#",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-13",
+      "movements": [
+        {
+          "movement_name": "Bear Complex",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-10",
+      "movements": [
+        {
+          "movement_name": "Clean",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 115,
+          "notes": "Could have done 120",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-02-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-02-07",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 3,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2020-01-08",
+      "workout_type": "strength",
+      "workout_name": "Workout 2020-01-08",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 8,
+          "reps": 1,
+          "weight": 70,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-12-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-12-18",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 5,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-12-02",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-12-02",
+      "movements": [
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 95,
+          "notes": "From the rack",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-10-28",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-10-28",
+      "movements": [
+        {
+          "movement_name": "Sumo Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 275,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-10-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-10-24",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-10-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-10-21",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 170,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-09-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-09-13",
+      "movements": [
+        {
+          "movement_name": "Clean and Jerk",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 1,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-08-28",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-08-28",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 55,
+          "reps": 5,
+          "weight": 105,
+          "notes": "From the rig",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-07-29",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-07-29",
+      "movements": [
+        {
+          "movement_name": "Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 75,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-07-17",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-07-17",
+      "movements": [
+        {
+          "movement_name": "Clean",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 95,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-06-21",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-06-21",
+      "movements": [
+        {
+          "movement_name": "Thruster",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 85,
+          "notes": "85 x 3 could do 90#",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-05-04",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2019-05-04",
+      "wods": [
+        {
+          "wod_name": "Kelly",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "26:45",
+          "time_seconds": 1605,
+          "notes": "Did balls first",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-04-02",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-04-02",
+      "movements": [
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 95,
+          "notes": "Part of WOD",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-03-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-03-13",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-02-07",
+      "workout_type": "strength",
+      "workout_name": "Workout 2019-02-07",
+      "movements": [
+        {
+          "movement_name": "Push Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 95,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2019-01-30",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2019-01-30",
+      "wods": [
+        {
+          "wod_name": "Blue Chip",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "06:08",
+          "time_seconds": 368,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-28",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2018-12-28",
+      "wods": [
+        {
+          "wod_name": "Sled Push max wt 8 seconds ",
+          "wod_type": "",
+          "score_type": "Max Weight",
+          "score_value": "195 lbs",
+          "weight": 195,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-27",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-27",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 185,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Front Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-20",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-20",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 225,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-18",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "2k Row",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:40",
+          "time_seconds": 520,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-17",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-17",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-13",
+      "movements": [
+        {
+          "movement_name": "Slow/Pause Snatch",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 35,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "That Sit",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "175 reps",
+          "reps": 175,
+          "notes": "4 rounds 30 secs each",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-12-11",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-12-11",
+      "movements": [
+        {
+          "movement_name": "Pull-ups",
+          "movement_type": "gymnastics",
+          "sets": 3,
+          "reps": 9,
+          "notes": "With assistance band ",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Box Squat (Loaded)",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 185,
+          "notes": "small box + 45",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-27",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-27",
+      "movements": [
+        {
+          "movement_name": "Box Squat (Loaded)",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 4,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-26",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-26",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 2,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Barbell Good Mornings",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 90,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-20",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-20",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 6,
+          "weight": 145,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-19",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-19",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-13",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 2,
+          "reps": 6,
+          "weight": 145,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-06",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-06",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 125,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-05",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-05",
+      "movements": [
+        {
+          "movement_name": "Barbell Good Mornings",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-11-01",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-11-01",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 175,
+          "notes": "31x1;off one plate",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Landmine Press (Standing) ",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 6,
+          "weight": 132.5,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-22",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-22",
+      "movements": [
+        {
+          "movement_name": "Snatch Grip RDL",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 115,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-18",
+      "movements": [
+        {
+          "movement_name": "1 + 1/2(x2) Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 145,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Landmine Press (Standing) ",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 6,
+          "weight": 125,
+          "is_pr": false,
+          "order_index": 2
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "07:30",
+          "time_seconds": 450,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-15",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-15",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 15,
+          "notes": "3 down 1 hold",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-11",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-11",
+      "movements": [
+        {
+          "movement_name": "1 + 1/2(x2) Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Close-Grip Floor Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 120,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-09",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-09",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 100,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-10-04",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-10-04",
+      "movements": [
+        {
+          "movement_name": "1 + 1/2(x2) Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 5,
+          "weight": 115,
+          "notes": "elevated",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Close-Grip Floor Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 110,
+          "notes": "030",
+          "is_pr": false,
+          "order_index": 2
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "09:30",
+          "time_seconds": 570,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-27",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-27",
+      "movements": [
+        {
+          "movement_name": "1 + 1/2(x2) Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 5,
+          "weight": 135,
+          "notes": "elevated",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Close-Grip Floor Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 6,
+          "weight": 100,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-25",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-25",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 115,
+          "notes": "32x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-18",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-18",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 110,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-13",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 100,
+          "notes": "work on glutes",
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Close-Grip Floor Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 110,
+          "notes": "030",
+          "is_pr": false,
+          "order_index": 2
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "50 reps",
+          "reps": 50,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-11",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-11",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 115,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-09-10",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 10,
+          "weight": 105,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2018-09-08",
+      "wods": [
+        {
+          "wod_name": "10 min Row MAX Calories",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-04",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2018-09-04",
+      "movements": [
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 155,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "2k Row",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "08:38",
+          "time_seconds": 518,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-09-03",
+      "workout_type": "gymnastics",
+      "workout_name": "Workout 2018-09-03",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 1,
+          "weight": 180,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Plank Hold",
+          "movement_type": "gymnastics",
+          "sets": 1,
+          "reps": 0,
+          "notes": "Right",
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Plank Hold",
+          "movement_type": "gymnastics",
+          "sets": 1,
+          "reps": 0,
+          "notes": "Left",
+          "is_pr": false,
+          "order_index": 2
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-08-27",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-08-27",
+      "movements": [
+        {
+          "movement_name": "DB Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 20,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-08-20",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-08-20",
+      "movements": [
+        {
+          "movement_name": "Barbell RDL (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 3,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Trap Bar Deadlift (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "DB Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 15,
+          "is_pr": false,
+          "order_index": 3
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-08-13",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-08-13",
+      "movements": [
+        {
+          "movement_name": "Barbell RDL (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 85,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Close Grip Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 4,
+          "weight": 115,
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Trap Bar Deadlift (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 185,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "DB Shoulder Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 10,
+          "weight": 20,
+          "is_pr": false,
+          "order_index": 3
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-08-08",
+      "workout_type": "metcon",
+      "workout_name": "Workout 2018-08-08",
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "score_value": "43:37",
+          "time_seconds": 2617,
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-08-06",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-08-06",
+      "movements": [
+        {
+          "movement_name": "Close Grip Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 4,
+          "weight": 105,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Trap Bar Deadlift (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 165,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-07-30",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-07-30",
+      "movements": [
+        {
+          "movement_name": "DB Superman's",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 8,
+          "weight": 5,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Close Grip Bench Press",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 6,
+          "weight": 75,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "1/2 Kneeling Landmine Press",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 6,
+          "weight": 10,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "Trap Bar Deadlift (DF)",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 135,
+          "is_pr": false,
+          "order_index": 3
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-07-24",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-07-24",
+      "movements": [
+        {
+          "movement_name": "Rack Pull Ups",
+          "movement_type": "gymnastics",
+          "sets": 3,
+          "reps": 8,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "T Bar Rows",
+          "movement_type": "weightlifting",
+          "sets": 0,
+          "reps": 0,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Box Squat (Loaded)",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 6,
+          "weight": 105,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "Front Foot Elevated Reverse Lunge",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 10,
+          "is_pr": false,
+          "order_index": 3
+        },
+        {
+          "movement_name": "Russian Ab Twist",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 30,
+          "weight": 14,
+          "is_pr": false,
+          "order_index": 4
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-07-19",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-07-19",
+      "movements": [
+        {
+          "movement_name": "Deadlift",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 8,
+          "weight": 0,
+          "notes": "125lb Trap Bar",
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Sled Drag",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 40,
+          "weight": 60,
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "OH Tricep Extensions",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 10,
+          "weight": 30,
+          "is_pr": false,
+          "order_index": 2
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-07-17",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-07-17",
+      "movements": [
+        {
+          "movement_name": "Box Squat (Loaded)",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 8,
+          "weight": 95,
+          "notes": "31x1",
+          "is_pr": false,
+          "order_index": 0
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-07-10",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-07-10",
+      "movements": [
+        {
+          "movement_name": "Rack Pull Ups",
+          "movement_type": "gymnastics",
+          "sets": 3,
+          "reps": 8,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "T Bar Rows",
+          "movement_type": "weightlifting",
+          "sets": 1,
+          "reps": 8,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "Box Squat (Loaded)",
+          "movement_type": "weightlifting",
+          "sets": 5,
+          "reps": 8,
+          "weight": 90,
+          "notes": "small box and 25",
+          "is_pr": false,
+          "order_index": 3
+        },
+        {
+          "movement_name": "Front Foot Elevated Reverse Lunge",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 4
+        },
+        {
+          "movement_name": "Russian Ab Twist",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 20,
+          "weight": 20,
+          "is_pr": false,
+          "order_index": 5
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": "Metcon",
+          "wod_type": "",
+          "score_type": "Rounds+Reps",
+          "score_value": "0 rounds",
+          "rounds": 0,
+          "is_pr": false,
+          "order_index": 1
+        }
+      ]
+    },
+    {
+      "workout_date": "2018-05-30",
+      "workout_type": "strength",
+      "workout_name": "Workout 2018-05-30",
+      "movements": [
+        {
+          "movement_name": "Back Squat",
+          "movement_type": "weightlifting",
+          "sets": 4,
+          "reps": 4,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 0
+        },
+        {
+          "movement_name": "Barbell Bridge",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 6,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 1
+        },
+        {
+          "movement_name": "Squat Jumps",
+          "movement_type": "gymnastics",
+          "sets": 3,
+          "reps": 0,
+          "is_pr": false,
+          "order_index": 2
+        },
+        {
+          "movement_name": "Side-To-Side Plank",
+          "movement_type": "gymnastics",
+          "sets": 3,
+          "reps": 0,
+          "is_pr": false,
+          "order_index": 4
+        },
+        {
+          "movement_name": "Landmine Meadows Row",
+          "movement_type": "weightlifting",
+          "sets": 3,
+          "reps": 8,
+          "weight": 0,
+          "is_pr": false,
+          "order_index": 5
+        }
+      ],
+      "wods": [
+        {
+          "wod_name": " AirDyne Tabata",
+          "wod_type": "",
+          "score_type": "Time (HH:MM:SS)",
+          "is_pr": false,
+          "order_index": 3
+        }
+      ]
+    }
+  ]
+}

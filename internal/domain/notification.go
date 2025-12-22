@@ -7,9 +7,9 @@ import (
 
 // Notification types
 const (
-	NotificationTypePRAchievement  = "pr_achievement"
-	NotificationTypeWeeklyStreak   = "weekly_streak"
-	NotificationTypeWODMilestone   = "wod_milestone"
+	NotificationTypePRAchievement = "pr_achievement"
+	NotificationTypeWeeklyStreak  = "weekly_streak"
+	NotificationTypeWODMilestone  = "wod_milestone"
 )
 
 // Notification represents a notification to a user
@@ -32,8 +32,8 @@ type NotificationData struct {
 	AchievingUserName string  `json:"achieving_user_name,omitempty"`
 	MovementName      *string `json:"movement_name,omitempty"`
 	WODName           *string `json:"wod_name,omitempty"`
-	Value             *string `json:"value,omitempty"` // Weight, time, rounds, etc.
-	Count             *int    `json:"count,omitempty"` // For streaks and milestones
+	Value             *string `json:"value,omitempty"`    // Weight, time, rounds, etc.
+	Count             *int    `json:"count,omitempty"`    // For streaks and milestones
 	WODType           *string `json:"wod_type,omitempty"` // hero, girl, games
 }
 

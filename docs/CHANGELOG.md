@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - PostgreSQL Schema Migration Support
+- **Critical Fix: PostgreSQL Custom Schema Support**
+  - Fixed `checkTableExists()` to use `CURRENT_SCHEMA()` instead of hardcoded 'public'
+  - Fixed `checkColumnExists()` to filter by `CURRENT_SCHEMA()` to avoid false positives
+  - **Impact**: Migrations now work correctly with custom PostgreSQL schemas (e.g., `DB_SCHEMA=actalog`)
+  - **Root Cause**: Previous code hardcoded `table_schema='public'` which failed for non-public schemas
+  - **Behavior Before Fix**:
+    - Migration checks would fail to find existing tables in custom schemas
+    - Would attempt to re-create tables, causing "table already exists" errors
+    - Required manual database rebuild when using custom PostgreSQL schemas
+  - **Behavior After Fix**:
+    - Automatic schema detection using active `search_path`
+    - Migrations work seamlessly across all database engines and schemas
+    - No manual intervention needed for schema migrations
+  - Files Modified: `internal/repository/database.go` (lines 137-200)
+  - Build: #60
+
 ### Added - Comprehensive Audit Logging
 - **Complete Audit Trail for All Data Operations**
   - Added audit logging to MovementService (Create, Update, UpdateAsAdmin, Delete)

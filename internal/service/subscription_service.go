@@ -10,21 +10,21 @@ import (
 )
 
 var (
-	ErrSubscriptionNotFound          = errors.New("subscription not found")
-	ErrCannotModifyOwnSubscription   = errors.New("admins cannot modify their own subscriptions")
-	ErrActiveSubscriptionExists      = errors.New("user already has an active subscription")
-	ErrActiveOrgSubscriptionExists   = errors.New("organization already has an active subscription")
+	ErrSubscriptionNotFound           = errors.New("subscription not found")
+	ErrCannotModifyOwnSubscription    = errors.New("admins cannot modify their own subscriptions")
+	ErrActiveSubscriptionExists       = errors.New("user already has an active subscription")
+	ErrActiveOrgSubscriptionExists    = errors.New("organization already has an active subscription")
 	ErrCannotMarkFreeSubscriptionPaid = errors.New("cannot mark free subscription as paid")
 )
 
 // SubscriptionService handles subscription-related business logic
 type SubscriptionService struct {
-	userSubRepo   domain.UserSubscriptionRepository
-	orgSubRepo    domain.OrganizationSubscriptionRepository
-	accessRepo    domain.SubscriptionAccessRepository
-	auditLogRepo  domain.AuditLogRepository
-	userRepo      domain.UserRepository
-	orgRepo       domain.OrganizationRepository
+	userSubRepo  domain.UserSubscriptionRepository
+	orgSubRepo   domain.OrganizationSubscriptionRepository
+	accessRepo   domain.SubscriptionAccessRepository
+	auditLogRepo domain.AuditLogRepository
+	userRepo     domain.UserRepository
+	orgRepo      domain.OrganizationRepository
 }
 
 // NewSubscriptionService creates a new subscription service

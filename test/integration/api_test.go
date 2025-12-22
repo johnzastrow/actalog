@@ -157,8 +157,8 @@ func setupTestRouter(t *testing.T) (*chi.Mux, *repository.SQLiteUserRepository, 
 		true, // allow registration
 		nil,  // no email service for tests
 		"http://localhost:3000",
-		false, // don't require email verification in tests
-		5,     // max login attempts
+		false,          // don't require email verification in tests
+		5,              // max login attempts
 		15*time.Minute, // lockout duration
 	)
 

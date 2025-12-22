@@ -129,8 +129,8 @@ func newTestUserService(allowRegistration bool) *UserService {
 		allowRegistration,
 		&mockEmailService{},
 		"http://localhost:3000",
-		false, // Don't require email verification in tests
-		5,     // max login attempts
+		false,          // Don't require email verification in tests
+		5,              // max login attempts
 		15*time.Minute, // lockout duration
 	)
 }

@@ -16,16 +16,16 @@ import (
 
 // AdminHandler handles admin-only operations
 type AdminHandler struct {
-	db                      *sql.DB
-	userWorkoutWODRepo      domain.UserWorkoutWODRepository
-	wodRepo                 domain.WODRepository
-	movementRepo            domain.MovementRepository
-	workoutRepo             domain.WorkoutRepository
-	userRepo                domain.UserRepository
-	wodService              *service.WODService
-	movementService         *service.MovementService
-	workoutTemplateService  *service.WorkoutTemplateService
-	logger                  *logger.Logger
+	db                     *sql.DB
+	userWorkoutWODRepo     domain.UserWorkoutWODRepository
+	wodRepo                domain.WODRepository
+	movementRepo           domain.MovementRepository
+	workoutRepo            domain.WorkoutRepository
+	userRepo               domain.UserRepository
+	wodService             *service.WODService
+	movementService        *service.MovementService
+	workoutTemplateService *service.WorkoutTemplateService
+	logger                 *logger.Logger
 }
 
 // NewAdminHandler creates a new admin handler
@@ -42,32 +42,32 @@ func NewAdminHandler(
 	logger *logger.Logger,
 ) *AdminHandler {
 	return &AdminHandler{
-		db:                      db,
-		userWorkoutWODRepo:      userWorkoutWODRepo,
-		wodRepo:                 wodRepo,
-		movementRepo:            movementRepo,
-		workoutRepo:             workoutRepo,
-		userRepo:                userRepo,
-		wodService:              wodService,
-		movementService:         movementService,
-		workoutTemplateService:  workoutTemplateService,
-		logger:                  logger,
+		db:                     db,
+		userWorkoutWODRepo:     userWorkoutWODRepo,
+		wodRepo:                wodRepo,
+		movementRepo:           movementRepo,
+		workoutRepo:            workoutRepo,
+		userRepo:               userRepo,
+		wodService:             wodService,
+		movementService:        movementService,
+		workoutTemplateService: workoutTemplateService,
+		logger:                 logger,
 	}
 }
 
 // WODMismatch represents a WOD score_type mismatch
 type WODMismatch struct {
-	ID               int64   `json:"id"`
-	WODID            int64   `json:"wod_id"`
-	WODName          string  `json:"wod_name"`
-	UserEmail        string  `json:"user_email"`
-	WorkoutDate      string  `json:"workout_date"`
-	ExpectedScoreType string `json:"expected_score_type"`
-	Issue            string  `json:"issue"`
-	TimeSeconds      *int    `json:"time_seconds,omitempty"`
-	Rounds           *int    `json:"rounds,omitempty"`
-	Reps             *int    `json:"reps,omitempty"`
-	Weight           *float64 `json:"weight,omitempty"`
+	ID                int64    `json:"id"`
+	WODID             int64    `json:"wod_id"`
+	WODName           string   `json:"wod_name"`
+	UserEmail         string   `json:"user_email"`
+	WorkoutDate       string   `json:"workout_date"`
+	ExpectedScoreType string   `json:"expected_score_type"`
+	Issue             string   `json:"issue"`
+	TimeSeconds       *int     `json:"time_seconds,omitempty"`
+	Rounds            *int     `json:"rounds,omitempty"`
+	Reps              *int     `json:"reps,omitempty"`
+	Weight            *float64 `json:"weight,omitempty"`
 }
 
 // DetectWODScoreTypeMismatches detects WOD records that don't match their score_type

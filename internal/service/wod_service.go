@@ -326,12 +326,12 @@ func (s *WODService) UpdateAsAdmin(wod *domain.WOD, userID int64, userEmail stri
 	// Audit log (admin update)
 	if s.auditLogRepo != nil {
 		details, _ := json.Marshal(map[string]interface{}{
-			"wod_id":      wod.ID,
-			"wod_name":    wod.Name,
-			"type":        wod.Type,
-			"source":      wod.Source,
-			"is_standard": wod.IsStandard,
-			"updated_by":  userEmail,
+			"wod_id":       wod.ID,
+			"wod_name":     wod.Name,
+			"type":         wod.Type,
+			"source":       wod.Source,
+			"is_standard":  wod.IsStandard,
+			"updated_by":   userEmail,
 			"admin_update": true,
 			"changes": map[string]interface{}{
 				"name_old":        existing.Name,

@@ -43,8 +43,8 @@ type UserService struct {
 	requireVerification  bool   // Require email verification for new users
 
 	// Security configuration
-	maxLoginAttempts  int
-	lockoutDuration   time.Duration
+	maxLoginAttempts int
+	lockoutDuration  time.Duration
 }
 
 // NewUserService creates a new user service
@@ -1123,7 +1123,7 @@ func (s *UserService) RevokeAllSessions(userID int64, exceptTokenID *int64) erro
 	// Log the event
 	if s.auditLogService != nil {
 		details := map[string]interface{}{
-			"user_email": user.Email,
+			"user_email":  user.Email,
 			"revoked_all": exceptTokenID == nil,
 		}
 		if exceptTokenID != nil {

@@ -253,6 +253,7 @@ func (h *NotificationHandler) DeleteNotification(w http.ResponseWriter, r *http.
 		"message": "Notification deleted",
 	})
 }
+
 // CreateAnnouncement handles POST /api/admin/notifications/announce (admin only)
 func (h *NotificationHandler) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
 	// Get user role from context (set by auth middleware)
@@ -264,11 +265,11 @@ func (h *NotificationHandler) CreateAnnouncement(w http.ResponseWriter, r *http.
 
 	// Parse request body
 	var req struct {
-		Title          string   `json:"title"`
-		Message        string   `json:"message"`
-		TargetType     string   `json:"target_type"` // "all", "organization", or "users"
-		TargetIDs      []int64  `json:"target_ids"`  // org IDs or user IDs
-		OrganizationID *int64   `json:"organization_id"`
+		Title          string  `json:"title"`
+		Message        string  `json:"message"`
+		TargetType     string  `json:"target_type"` // "all", "organization", or "users"
+		TargetIDs      []int64 `json:"target_ids"`  // org IDs or user IDs
+		OrganizationID *int64  `json:"organization_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
