@@ -129,6 +129,31 @@ const sunsetTheme = {
   }
 }
 
+// Sunrise Theme - Inspired by beach sunrise with purple clouds, golden horizon, coral sky
+const sunriseTheme = {
+  dark: false,
+  colors: {
+    primary: '#7B5D7F',      // Muted purple from sky/clouds
+    secondary: '#E8842A',    // Golden orange from horizon
+    accent: '#D4637A',       // Coral pink from clouds
+    teal: '#00bcd4',
+    error: '#D4637A',
+    warning: '#F5A623',      // Amber gold
+    info: '#3D4F6F',         // Deep blue-purple from ocean
+    success: '#66BB6A',
+    background: '#FFF8F5',   // Warm cream with pink tint
+    surface: '#FFFFFF',
+    'on-primary': '#FFFFFF',
+    'on-secondary': '#FFFFFF',
+    'on-accent': '#FFFFFF',
+    'on-teal': '#FFFFFF',
+    'on-background': '#3D4F6F',
+    'on-surface': '#3D4F6F',
+    gold: '#F5A623',
+    border: '#E8D4CF',       // Warm pink-tinged border
+  }
+}
+
 export default createVuetify({
   components,
   directives,
@@ -140,6 +165,7 @@ export default createVuetify({
       brutalist: brutalistTheme,
       ocean: oceanTheme,
       sunset: sunsetTheme,
+      sunrise: sunriseTheme,
     },
     variations: {
       colors: ['primary', 'secondary', 'accent'],

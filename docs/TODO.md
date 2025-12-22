@@ -93,7 +93,7 @@ The following lint issues need to be resolved to re-enable strict linting:
 - [ ] `[HIGH]` **Overall**
   - [ ] Find more attractive icons for the navigation bar
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
-  - [ ] Develop a theme called "Sunrise" based on colors from the image in /home/jcz/Github/actionlog/design/At sunset time/scenic-view-sea-against-sky-sunset_1048944-21907405.jpg
+  - [x] Develop a theme called "Sunrise" based on colors from sunset image (added to vuetify.js and theme.js)
   - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue) 
 
 
