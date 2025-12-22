@@ -404,11 +404,8 @@ function getMovementTypeIcon(type) {
   return icons[type?.toLowerCase()] || 'mdi-weight-lifter'
 }
 
-// Edit workout
+// Edit workout - navigates to log view with edit mode
 function editWorkout() {
-  // TODO: Implement edit workout functionality
-  // For now, navigate to log workout with pre-filled data
-  console.log('Edit workout:', workoutId.value)
   router.push(`/workouts/log?edit=${workoutId.value}`)
 }
 

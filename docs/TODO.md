@@ -88,14 +88,28 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [ ] Toast notifications explaining why operations are blocked
 
 #### Front end Improvements
-- [ ] `[HIGH]` **PWA**
+- [x] `[HIGH]` **PWA**
   - [x] Icon saved to home screen is fuzzy - regenerated all icons from SVG with full RGBA color
-- [ ] `[HIGH]` **Overall**
-  - [ ] Find more attractive icons for the navigation bar
+- [x] `[HIGH]` **Overall**
+  - [x] Find more attractive icons for the navigation bar - replaced with Font Awesome icons (fa-house-chimney, fa-arrow-trend-up, fa-person-running, fa-circle-user)
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
   - [x] Develop a theme called "Sunrise" based on colors from sunset image (added to vuetify.js and theme.js)
   - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue) 
+  - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others. 
 
+
+#### Backend Improvements
+- [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB). Determine if there is a way to automatically incorporate new tables or other structures into the backup without manual code changes.
+  - [ ] All imports should protect against duplicate records (movements, wods, user workouts)
+  - [ ] A system restore should be able to detect and handle duplicates gracefully (skip, update, merge, etc), as well import an entire system backup from a prior or current version into a fresh installation of the current version. The goal is to be able to restore a backup from any prior version into the current version without data loss or duplication. Migrations should be applied as needed. The full .zip backup file should be usable for this purpose.
+- [ ] `[HIGH]` **Check for missing indexes** - review all database tables and ensure appropriate indexes exist for performance (especially on foreign keys and commonly queried fields)
+- [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
+- [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
+- [ ] `[HIGH]` **Error Handling Consistency** - ensure all handlers and services have consistent error handling and return appropriate HTTP status codes
+- [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
+- [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
+- [ ] `[HIGH]` **Implement Rate Limiting** - add rate limiting middleware to protect against abuse (especially for public endpoints)
+- [ ] 
 
 ## Future Enhancements (Post-MVP)
 
@@ -240,9 +254,6 @@ These features can be added after the core frontend is complete:
 
 | File | Line | Description |
 |------|------|-------------|
-| `web/src/views/WorkoutDetailView.vue` | 409 | Implement edit workout functionality |
-| `web/src/views/SettingsView.vue` | 511 | Apply theme change (dark mode toggle) |
-| `web/src/views/SettingsView.vue` | 540 | Implement import functionality |
 | `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
 
 *Last scanned: 2025-12-22*

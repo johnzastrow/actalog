@@ -757,7 +757,9 @@ async function loadWorkoutForEdit(workoutId) {
     // Load WOD performance data
     if (workout.performance_wods && workout.performance_wods.length > 0) {
       wodPerformance.value = workout.performance_wods.map((w, index) => {
-        const timeMinutes = w.time_seconds ? Math.floor(w.time_seconds / 60) : null
+        // Convert total seconds to hours, minutes, seconds
+        const timeHours = w.time_seconds ? Math.floor(w.time_seconds / 3600) : null
+        const timeMinutes = w.time_seconds ? Math.floor((w.time_seconds % 3600) / 60) : null
         const timeSeconds = w.time_seconds ? w.time_seconds % 60 : null
 
         return {
@@ -765,6 +767,7 @@ async function loadWorkoutForEdit(workoutId) {
           wod_name: w.wod?.name || 'Unknown WOD', // Store the name for display
           score_type: w.score_type,
           score_value: w.score_value,
+          time_hours: timeHours,
           time_minutes: timeMinutes,
           time_seconds: timeSeconds,
           rounds: w.rounds,
