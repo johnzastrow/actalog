@@ -27,8 +27,7 @@
       <div
         v-for="day in dayLabels"
         :key="day"
-        class="flex-grow-1 text-center text-caption font-weight-bold"
-        class="text-medium-emphasis"
+        class="flex-grow-1 text-center text-caption font-weight-bold text-medium-emphasis"
       >
         {{ day }}
       </div>
