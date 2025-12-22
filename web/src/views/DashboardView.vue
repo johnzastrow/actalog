@@ -151,11 +151,16 @@
               >
                 <v-avatar
                   size="24"
-                  :color="day.hasWorkout ? 'teal' : 'surface-variant'"
+                  :color="day.hasWorkout ? 'primary' : 'transparent'"
+                  :style="day.hasWorkout ? {} : { border: '2px solid rgb(var(--v-theme-on-surface), 0.3)' }"
+                  class="d-flex align-center justify-center"
                 >
                   <span
-                    class="text-caption font-weight-bold"
-                    :class="day.hasWorkout ? 'text-white' : 'text-medium-emphasis'"
+                    class="text-caption font-weight-bold d-flex align-center justify-center"
+                    :style="[
+                      { width: '100%', height: '100%', lineHeight: '1' },
+                      day.hasWorkout ? { color: 'white' } : { color: 'rgb(var(--v-theme-on-surface), 0.6)' }
+                    ]"
                   >
                     {{ day.letter }}
                   </span>
