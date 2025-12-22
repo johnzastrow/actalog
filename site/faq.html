@@ -1,53 +1,285 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FAQ — ActaLog</title>
-  <meta name="description" content="Common questions about running and self-hosting ActaLog, supported databases, seeds, and contribution guidance.">
-  <meta property="og:title" content="FAQ — ActaLog">
-  <meta property="og:description" content="Common questions about running and self-hosting ActaLog, supported databases, seeds, and contribution guidance.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/hero-screenshot.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/vars.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - ActaLog</title>
+    <meta name="description" content="Common questions about running and self-hosting ActaLog. Database support, seeds, contributions, and more.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="FAQ - ActaLog">
+    <meta property="og:description" content="Common questions about running and self-hosting ActaLog, supported databases, seeds, and contribution guidance.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://johnzastrow.github.io/actalog/faq.html">
+    <meta property="og:image" content="assets/hero-screenshot.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .faq-item {
+            background: rgba(15, 29, 46, 0.8);
+            border: 1px solid rgba(0, 188, 212, 0.2);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        .faq-question:hover {
+            background: rgba(0, 188, 212, 0.1);
+        }
+        .faq-question h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.25rem;
+            color: #e0e0e0;
+            margin: 0;
+        }
+        .faq-icon {
+            color: #00bcd4;
+            transition: transform 0.3s ease;
+        }
+        .faq-item.open .faq-icon {
+            transform: rotate(45deg);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        .faq-item.open .faq-answer {
+            max-height: 500px;
+            padding: 0 1.5rem 1.5rem;
+        }
+        .faq-answer p {
+            color: #888;
+            line-height: 1.7;
+            margin: 0;
+        }
+        .faq-answer code {
+            color: #00bcd4;
+            background: rgba(0, 188, 212, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
-  <header class="container site-header">
-    <div class="brand">
-      <img src="assets/logo.svg" alt="ActaLog logo">
-      <div>
-        <div style="font-weight:700">ActaLog</div>
-        <div style="font-size:12px;color:var(--color-muted-text)">Self-hostable workout tracker</div>
-      </div>
-    </div>
-    <nav>
-      <a class="btn btn-ghost" href="https://github.com/johnzastrow/actalog">GitHub</a>
-      <a class="btn btn-primary" href="index.html">Home</a>
-      <a class="btn btn-ghost" href="deploy.html">Deploy</a>
+    <!-- Noise Texture Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-text">ACTALOG</span>
+            </a>
+            <div class="nav-links">
+                <a href="features.html" class="nav-link">FOR GYMS</a>
+                <a href="tech.html" class="nav-link">DEVELOPERS</a>
+            </div>
+        </div>
     </nav>
-  </header>
 
-  <main class="container">
-    <section style="padding:20px 0">
-      <h1>FAQ</h1>
-
-      <h2>Can I use PostgreSQL or MariaDB?</h2>
-      <p>Yes — the project supports PostgreSQL and MariaDB. Configure your database settings via environment variables or the <code>docker-compose.override.yml</code>.</p>
-
-      <h2>Where are sample CSVs and seeds?</h2>
-      <p>See the <code>seeds/</code> and <code>imports/</code> directories in the repository for <code>movements.csv</code> and <code>crossfit_wods.csv</code> examples.</p>
-
-      <h2>How do I contribute?</h2>
-      <p>Open issues and PRs on the repository. See contribution guidelines in the repo <code>CONTRIBUTING.md</code> (if present).</p>
+    <!-- Hero Section -->
+    <section class="hero" style="min-height: auto; padding: 8rem 0 4rem;">
+        <div class="hero-container">
+            <div class="hero-content" style="max-width: 100%;">
+                <div class="hero-badge">HELP CENTER</div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">FREQUENTLY</span>
+                    <span class="hero-title-line glow">ASKED</span>
+                </h1>
+                <p class="hero-subtitle">Common questions about self-hosting, databases, configuration, and contributing to ActaLog.</p>
+            </div>
+        </div>
+        <div class="diagonal-divider"></div>
     </section>
-  </main>
 
-  <footer class="container site-footer">
-    <small>© ActaLog — Open source. See the repository for deployment details and docs.</small>
-  </footer>
+    <!-- FAQ Section -->
+    <section class="features">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">TECHNICAL QUESTIONS</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>CAN I USE POSTGRESQL OR MARIADB?</h3>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes! ActaLog supports SQLite (default), PostgreSQL, and MySQL/MariaDB. Configure your database by setting <code>DB_DRIVER</code> in your environment variables or <code>docker-compose.override.yml</code>. PostgreSQL is recommended for production deployments.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>WHERE ARE THE SAMPLE CSVS AND SEEDS?</h3>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Check the <code>seeds/</code> and <code>imports/</code> directories in the repository. You'll find <code>movements.csv</code> with 182 CrossFit movements and <code>wods.csv</code> with 314 benchmark workouts ready to import.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>CAN I SELF-HOST ON A SMALL VPS?</h3>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Absolutely. ActaLog is lightweight and runs on a single-node Docker Compose stack. A $5/month VPS with 1GB RAM is plenty for small gyms. SQLite keeps things simple, or use PostgreSQL/MariaDB for larger deployments.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>IS THERE A DEMO AVAILABLE?</h3>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Not currently hosted publicly. The easiest way to try ActaLog is to run the Docker Compose stack locally. It takes about 2 minutes to get running. See the <a href="deploy.html" style="color: #00bcd4;">Deploy Guide</a> for quick start instructions.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h3>HOW DO I BACK UP MY DATA?</h3>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>ActaLog includes built-in backup functionality in the admin panel. You can also export your data as JSON/CSV. For SQLite, back up the database file directly. For PostgreSQL/MariaDB, use standard database backup tools.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contributing Section -->
+    <section class="tech">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">CONTRIBUTING</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div style="max-width: 800px; margin: 2rem auto 0;">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <h3>HOW DO I CONTRIBUTE?</h3>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Open issues and PRs on the <a href="https://github.com/johnzastrow/actalog" style="color: #00bcd4;" target="_blank">GitHub repository</a>. Bug reports, feature requests, and documentation improvements are all welcome. See <code>CONTRIBUTING.md</code> in the repo for guidelines.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <h3>WHAT'S THE TECH STACK?</h3>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Backend: Go 1.21+ with Chi router using Clean Architecture. Frontend: Vue.js 3 with Vuetify 3 and Pinia for state. Database: SQLite, PostgreSQL, or MySQL/MariaDB. See the <a href="tech.html" style="color: #00bcd4;">Tech Docs</a> for architecture details.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <h3>WHAT LICENSE IS THIS UNDER?</h3>
+                            <span class="faq-icon">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>ActaLog is open source under the MIT License. You're free to use, modify, and distribute it for personal or commercial purposes. See the <code>LICENSE</code> file in the repository for full details.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2 class="cta-title">STILL HAVE QUESTIONS?</h2>
+            <p class="cta-subtitle">Open an issue on GitHub or check out the documentation.</p>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/johnzastrow/actalog/issues/new" class="btn btn-primary btn-large" target="_blank">
+                    <span>ASK A QUESTION</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="tech.html" class="btn btn-secondary btn-large">
+                    <span>VIEW TECH DOCS</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">ACTALOG</div>
+                    <p class="footer-tagline">Track Your CrossFit Journey</p>
+                </div>
+
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">PRODUCT</h4>
+                        <a href="index.html">Home</a>
+                        <a href="features.html">For Gyms</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">DEVELOPERS</h4>
+                        <a href="tech.html">Tech Docs</a>
+                        <a href="deploy.html">Deploy</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">GITHUB</h4>
+                        <a href="https://github.com/johnzastrow/actalog" target="_blank">Repository</a>
+                        <a href="https://github.com/johnzastrow/actalog/issues" target="_blank">Issues</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function toggleFaq(element) {
+            const item = element.parentElement;
+            item.classList.toggle('open');
+        }
+    </script>
 </body>
 </html>

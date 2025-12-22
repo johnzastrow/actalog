@@ -1,67 +1,253 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Deploy — ActaLog</title>
-  <meta name="description" content="Deploy ActaLog quickly using the included Docker Compose stack. Minimal requirements and quickstart commands included.">
-  <meta property="og:title" content="Deploy — ActaLog">
-  <meta property="og:description" content="Deploy ActaLog quickly using the included Docker Compose stack. Minimal requirements and quickstart commands included.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/hero-screenshot.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/vars.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy ActaLog - Self-Host Your Workout Tracker</title>
+    <meta name="description" content="Deploy ActaLog quickly using Docker Compose. Minimal requirements, simple setup, and full control over your data.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Deploy ActaLog - Self-Host Your Workout Tracker">
+    <meta property="og:description" content="Deploy ActaLog quickly using Docker Compose. Minimal requirements and quickstart commands included.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://johnzastrow.github.io/actalog/deploy.html">
+    <meta property="og:image" content="assets/hero-screenshot.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="container site-header">
-    <div class="brand">
-      <img src="assets/logo.svg" alt="ActaLog logo">
-      <div>
-        <div style="font-weight:700">ActaLog</div>
-        <div style="font-size:12px;color:var(--color-muted-text)">Self-hostable workout tracker</div>
-      </div>
-    </div>
-    <nav>
-      <a class="btn btn-ghost" href="https://github.com/johnzastrow/actalog">GitHub</a>
-      <a class="btn btn-primary" href="index.html">Home</a>
-      <a class="btn btn-ghost" href="faq.html">FAQ</a>
+    <!-- Noise Texture Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-text">ACTALOG</span>
+            </a>
+            <div class="nav-links">
+                <a href="features.html" class="nav-link">FOR GYMS</a>
+                <a href="tech.html" class="nav-link">DEVELOPERS</a>
+            </div>
+        </div>
     </nav>
-  </header>
 
-  <main class="container">
-    <section style="padding:20px 0">
-      <h1>Deploy — Quickstart</h1>
-      <p style="color:var(--color-muted-text)">Minimal instructions for deploying ActaLog from this repository using Docker Compose.</p>
-
-      <h2 style="margin-top:18px">Requirements</h2>
-      <ul>
-        <li>Docker 20.10+</li>
-        <li>Docker Compose v2 (or `docker compose` integrated CLI)</li>
-        <li>A Linux VPS, Docker Desktop, or a local machine</li>
-      </ul>
-
-      <h2>Minimal quickstart</h2>
-      <pre style="background:var(--color-muted-1);padding:12px;border-radius:8px"><code>git clone https://github.com/johnzastrow/actalog.git
-cd actalog
-docker compose up -d
-</code></pre>
-
-      <h2 style="margin-top:12px">Environment</h2>
-      <p style="color:var(--color-muted-text)">Customize database and mail settings in the repository's `.env` or `docker-compose.override.yml` as needed.</p>
-
-      <h2 style="margin-top:12px">Next steps</h2>
-      <ul>
-        <li>Check logs with <code>docker compose logs -f</code></li>
-        <li>Open the frontend at <code>http://localhost:3000</code> or your configured host</li>
-      </ul>
+    <!-- Hero Section -->
+    <section class="hero" style="min-height: auto; padding: 8rem 0 4rem;">
+        <div class="hero-container">
+            <div class="hero-content" style="max-width: 100%;">
+                <div class="hero-badge">DEPLOYMENT GUIDE</div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">DEPLOY IN</span>
+                    <span class="hero-title-line glow">MINUTES</span>
+                </h1>
+                <p class="hero-subtitle">Get ActaLog running on your own server with Docker Compose. Full control, your data, your infrastructure.</p>
+            </div>
+        </div>
+        <div class="diagonal-divider"></div>
     </section>
-  </main>
 
-  <footer class="container site-footer">
-    <small>© ActaLog — Open source. See the repository for deployment details and docs.</small>
-  </footer>
+    <!-- Requirements Section -->
+    <section class="features">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">REQUIREMENTS</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">DOCKER 20.10+</h3>
+                    <p class="feature-description">Modern Docker with BuildKit support for optimal builds.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">DOCKER COMPOSE V2</h3>
+                    <p class="feature-description">Use the integrated <code style="color: #00bcd4;">docker compose</code> CLI.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">LINUX / DOCKER DESKTOP</h3>
+                    <p class="feature-description">Any Linux VPS, Docker Desktop, or local dev machine.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quickstart Section -->
+    <section class="tech">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">QUICKSTART</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>Three commands to get ActaLog running:</p>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">BASH</span>
+                    </div>
+                    <pre><code><span class="code-comment"># Clone the repository</span>
+git clone https://github.com/johnzastrow/actalog.git
+cd actalog
+
+<span class="code-comment"># Start with Docker Compose</span>
+docker compose up -d</code></pre>
+                </div>
+
+                <p style="color: #888; margin-top: 1.5rem;">That's it. ActaLog is now running at <code style="color: #00bcd4;">http://localhost:8080</code></p>
+            </div>
+        </div>
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
+    <!-- Configuration Section -->
+    <section class="features">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">CONFIGURATION</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="feature-card" style="margin-bottom: 1.5rem;">
+                    <h3 class="feature-title">ENVIRONMENT VARIABLES</h3>
+                    <p class="feature-description">Customize database and mail settings in <code style="color: #00bcd4;">.env</code> or <code style="color: #00bcd4;">docker-compose.override.yml</code></p>
+                </div>
+
+                <div class="feature-card" style="margin-bottom: 1.5rem;">
+                    <h3 class="feature-title">DATABASE OPTIONS</h3>
+                    <p class="feature-description">SQLite (default), PostgreSQL, or MySQL/MariaDB. Set <code style="color: #00bcd4;">DB_DRIVER</code> in your environment.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3 class="feature-title">PRODUCTION SETTINGS</h3>
+                    <p class="feature-description">Change <code style="color: #00bcd4;">JWT_SECRET</code> and configure <code style="color: #00bcd4;">CORS_ORIGINS</code> for your domain.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Next Steps Section -->
+    <section class="tech">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">NEXT STEPS</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div style="display: grid; gap: 1rem; max-width: 600px; margin: 2rem auto 0;">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(15, 29, 46, 0.8); border-radius: 8px; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <span style="color: #00bcd4; font-family: 'JetBrains Mono', monospace;">01</span>
+                        <span style="color: #e0e0e0;">Check logs: <code style="color: #00bcd4;">docker compose logs -f</code></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(15, 29, 46, 0.8); border-radius: 8px; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <span style="color: #00bcd4; font-family: 'JetBrains Mono', monospace;">02</span>
+                        <span style="color: #e0e0e0;">Open the app at your configured host</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(15, 29, 46, 0.8); border-radius: 8px; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <span style="color: #00bcd4; font-family: 'JetBrains Mono', monospace;">03</span>
+                        <span style="color: #e0e0e0;">Register the first user (becomes admin)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(15, 29, 46, 0.8); border-radius: 8px; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <span style="color: #00bcd4; font-family: 'JetBrains Mono', monospace;">04</span>
+                        <span style="color: #e0e0e0;">Import seed data from <code style="color: #00bcd4;">seeds/</code> directory</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2 class="cta-title">NEED MORE DETAILS?</h2>
+            <p class="cta-subtitle">Check out the full documentation and architecture guide.</p>
+
+            <div class="cta-buttons">
+                <a href="tech.html" class="btn btn-primary btn-large">
+                    <span>TECH DOCS</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/johnzastrow/actalog" class="btn btn-secondary btn-large" target="_blank">
+                    <span>VIEW ON GITHUB</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">ACTALOG</div>
+                    <p class="footer-tagline">Track Your CrossFit Journey</p>
+                </div>
+
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">PRODUCT</h4>
+                        <a href="index.html">Home</a>
+                        <a href="features.html">For Gyms</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">DEVELOPERS</h4>
+                        <a href="tech.html">Tech Docs</a>
+                        <a href="faq.html">FAQ</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">GITHUB</h4>
+                        <a href="https://github.com/johnzastrow/actalog" target="_blank">Repository</a>
+                        <a href="https://github.com/johnzastrow/actalog/issues" target="_blank">Issues</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
