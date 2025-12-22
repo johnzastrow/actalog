@@ -43,6 +43,10 @@
         <div class="text-white text-caption mr-2" style="opacity: 0.9">
           {{ currentDate }}
         </div>
+
+        <!-- Theme Switcher -->
+        <ThemeSwitcher class="mr-1" />
+
         <!-- Notifications icon with badge -->
         <v-btn icon color="white" variant="text" size="small" to="/notifications">
           <v-badge
@@ -214,6 +218,7 @@ import { useSubscriptionStore } from '@/stores/subscription'
 import InstallPrompt from '@/components/InstallPrompt.vue'
 import UpdatePrompt from '@/components/UpdatePrompt.vue'
 import SubscriptionExpiredBanner from '@/components/SubscriptionExpiredBanner.vue'
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
 import axios from '@/utils/axios'
 
 const route = useRoute()
