@@ -130,14 +130,14 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	// Get movements from workout_movements table with movement details (only for template-based workouts)
 	var movements []*domain.WorkoutMovement
 	if userWorkout.WorkoutID != nil {
-		movementsQuery := `
+		movementsQuery := rebindQuery(`
 			SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
 				   ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
 				   m.name as movement_name, m.type as movement_type
 			FROM workout_movements ws
 			JOIN movements m ON ws.movement_id = m.id
 			WHERE ws.workout_id = ?
-			ORDER BY ws.order_index`
+			ORDER BY ws.order_index`)
 
 		rows, err := r.db.Query(movementsQuery, *userWorkout.WorkoutID)
 		if err != nil {
@@ -201,7 +201,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	// Get WODs from workout_wods table with WOD details (only for template-based workouts)
 	var wods []*domain.WorkoutWODWithDetails
 	if userWorkout.WorkoutID != nil {
-		wodsQuery := `
+		wodsQuery := rebindQuery(`
 			SELECT ww.id, ww.workout_id, ww.wod_id,
 				   ww.order_index, ww.created_at, ww.updated_at,
 				   w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
@@ -209,7 +209,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 			FROM workout_wods ww
 			JOIN wods w ON ww.wod_id = w.id
 			WHERE ww.workout_id = ?
-			ORDER BY ww.order_index`
+			ORDER BY ww.order_index`)
 
 		rows, err := r.db.Query(wodsQuery, *userWorkout.WorkoutID)
 		if err != nil {
@@ -235,14 +235,14 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	}
 
 	// Get actual performance movements from user_workout_movements table
-	perfMovementsQuery := `
+	perfMovementsQuery := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight,
 		       uwm.time, uwm.distance, uwm.notes, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.name as movement_name, m.type as movement_type
 		FROM user_workout_movements uwm
 		JOIN movements m ON uwm.movement_id = m.id
 		WHERE uwm.user_workout_id = ?
-		ORDER BY uwm.order_index`
+		ORDER BY uwm.order_index`)
 
 	perfMovRows, err := r.db.Query(perfMovementsQuery, id)
 	if err != nil {
@@ -306,7 +306,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 	}
 
 	// Get actual performance WODs from user_workout_wods table
-	perfWODsQuery := `
+	perfWODsQuery := rebindQuery(`
 		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value,
 		       uww.time_seconds, uww.rounds, uww.reps, uww.weight, uww.notes,
 		       uww.order_index, uww.created_at, uww.updated_at,
@@ -314,7 +314,7 @@ func (r *UserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*dom
 		FROM user_workout_wods uww
 		JOIN wods w ON uww.wod_id = w.id
 		WHERE uww.user_workout_id = ?
-		ORDER BY uww.order_index`
+		ORDER BY uww.order_index`)
 
 	perfWODRows, err := r.db.Query(perfWODsQuery, id)
 	if err != nil {
