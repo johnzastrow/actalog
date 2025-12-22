@@ -56,6 +56,9 @@ logs/
 uploads/
 tmp/
 temp/
+# All files found in design/At sunset time/
+design/At sunset time/*
+
 
 # Frontend
 node_modules/
