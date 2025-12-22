@@ -74,16 +74,16 @@ h6 { font-size: 1rem; font-weight: 500; }
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(var(--v-theme-on-surface), 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: rgba(var(--v-theme-on-surface), 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(var(--v-theme-on-surface), 0.5);
 }
 
 /* Bottom navigation spacing fix for mobile */
@@ -97,7 +97,7 @@ h6 { font-size: 1rem; font-weight: 500; }
 
 /* Standard view wrapper - use this class on the root div of each view */
 .mobile-view-wrapper {
-  background: #f5f7fa;
+  background: rgb(var(--v-theme-background));
   min-height: 100%;
   /* Let the wrapper fill available space but not overflow */
   max-width: 100vw;

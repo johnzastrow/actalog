@@ -8,7 +8,7 @@
     class="install-prompt"
   >
     <div class="d-flex align-center">
-      <v-icon start size="large" color="#00bcd4">mdi-cellphone-arrow-down</v-icon>
+      <v-icon start size="large" color="teal">mdi-cellphone-arrow-down</v-icon>
       <div>
         <strong style="color: white">Install ActaLog</strong>
         <div class="text-caption" style="color: rgba(255, 255, 255, 0.8)">
@@ -28,7 +28,7 @@
       <v-btn
         variant="flat"
         size="small"
-        color="#00bcd4"
+        color="teal"
         @click="installApp"
       >
         Install

@@ -12,17 +12,17 @@
 
       <!-- Selected Day Workouts -->
       <div v-if="selectedDate" class="mt-4">
-        <h3 class="text-h6 mb-3" style="color: #1a1a1a">
+        <h3 class="text-h6 mb-3" >
           {{ formatSelectedDate(selectedDate) }}
         </h3>
 
         <div v-if="loadingDayWorkouts" class="text-center py-8">
-          <v-progress-circular indeterminate color="#00bcd4"></v-progress-circular>
+          <v-progress-circular indeterminate color="teal"></v-progress-circular>
         </div>
 
         <div v-else-if="selectedDayWorkouts.length === 0" class="text-center py-8">
-          <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
-          <p class="mt-2" style="color: #666">No workouts on this day</p>
+          <v-icon size="48" color="surface-variant">mdi-calendar-blank</v-icon>
+          <p class="mt-2 text-medium-emphasis">No workouts on this day</p>
         </div>
 
         <v-card
@@ -32,31 +32,31 @@
           elevation="0"
           rounded="lg"
           class="mb-3"
-          style="background: white"
+          bg-color="surface"
           @click="viewWorkout(workout.id)"
         >
           <v-card-text>
             <div class="d-flex justify-space-between align-center mb-2">
-              <div class="text-subtitle-1 font-weight-medium" style="color: #1a1a1a">
+              <div class="text-subtitle-1 font-weight-medium" >
                 {{ workout.workout_name || workout.template_name || 'Workout' }}
               </div>
-              <v-chip v-if="workout.workout_type" size="small" color="#00bcd4" text-color="white">
+              <v-chip v-if="workout.workout_type" size="small" color="teal" text-color="white">
                 {{ workout.workout_type }}
               </v-chip>
             </div>
 
             <!-- Movements -->
             <div v-if="workout.movements && workout.movements.length > 0" class="mb-2">
-              <div class="text-caption font-weight-medium mb-1" style="color: #666">
+              <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
                 Movements
               </div>
               <div v-for="movement in workout.movements" :key="movement.id" class="d-flex align-center mb-1">
                 <v-icon size="small" :color="movement.is_pr ? '#ffc107' : '#00bcd4'" class="mr-1">
                   {{ movement.is_pr ? 'mdi-trophy' : 'mdi-dumbbell' }}
                 </v-icon>
-                <span class="text-body-2" style="color: #1a1a1a">
+                <span class="text-body-2" >
                   {{ movement.movement_name }}
-                  <span v-if="movement.sets" style="color: #666">
+                  <span v-if="movement.sets" class="text-medium-emphasis">
                     - {{ movement.sets }}x{{ movement.reps }}
                     <span v-if="movement.weight">@ {{ movement.weight }}lbs</span>
                   </span>
@@ -66,16 +66,16 @@
 
             <!-- WODs -->
             <div v-if="workout.wods && workout.wods.length > 0">
-              <div class="text-caption font-weight-medium mb-1" style="color: #666">
+              <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
                 WODs
               </div>
               <div v-for="wod in workout.wods" :key="wod.id" class="d-flex align-center mb-1">
                 <v-icon size="small" :color="wod.is_pr ? '#ffc107' : '#00bcd4'" class="mr-1">
                   {{ wod.is_pr ? 'mdi-trophy' : 'mdi-run-fast' }}
                 </v-icon>
-                <span class="text-body-2" style="color: #1a1a1a">
+                <span class="text-body-2" >
                   {{ wod.wod_name }}
-                  <span v-if="wod.score_value" style="color: #666">
+                  <span v-if="wod.score_value" class="text-medium-emphasis">
                     - {{ wod.score_value }}
                   </span>
                 </span>
@@ -84,7 +84,7 @@
 
             <!-- Notes -->
             <div v-if="workout.notes" class="mt-2">
-              <div class="text-caption" style="color: #999">{{ workout.notes }}</div>
+              <div class="text-caption text-disabled">{{ workout.notes }}</div>
             </div>
           </v-card-text>
         </v-card>

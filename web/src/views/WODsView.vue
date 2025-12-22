@@ -12,7 +12,7 @@
       </v-alert>
 
       <!-- Tabs for Standard vs Custom WODs -->
-      <v-tabs v-model="activeWODTab" color="#00bcd4" class="mb-3" grow>
+      <v-tabs v-model="activeWODTab" color="teal" class="mb-3" grow>
         <v-tab value="standard">
           <v-icon start>mdi-star</v-icon>
           Standard
@@ -26,7 +26,7 @@
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="#00bcd4" size="64" />
+          <v-progress-circular indeterminate color="teal" size="64" />
           <p class="mt-4 text-medium-emphasis">Loading WODs...</p>
         </div>
 
@@ -36,13 +36,13 @@
           elevation="0"
           rounded="lg"
           class="pa-8 text-center"
-          style="background: white"
+          bg-color="surface"
         >
-          <v-icon size="64" color="#ccc">mdi-fire</v-icon>
-          <p class="text-h6 mt-4" style="color: #2c3e50">
+          <v-icon size="64" color="surface-variant">mdi-fire</v-icon>
+          <p class="text-h6 mt-4 text-high-emphasis">
             {{ activeWODTab === 'standard' ? 'No standard WODs found' : 'No custom WODs yet' }}
           </p>
-          <p class="text-body-2" style="color: #666">
+          <p class="text-body-2 text-medium-emphasis">
             {{
               activeWODTab === 'standard'
                 ? 'Standard CrossFit benchmarks will be seeded on first use'
@@ -51,7 +51,7 @@
           </p>
           <v-btn
             v-if="activeWODTab === 'custom'"
-            color="#00bcd4"
+            color="teal"
             class="mt-4"
             prepend-icon="mdi-plus"
             @click="$router.push('/wods/create')"
@@ -82,10 +82,10 @@
                 {{ wod.is_standard ? 'mdi-star' : 'mdi-account' }}
               </v-icon>
               <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-1" style="color: #1a1a1a">
+                <div class="font-weight-bold text-body-1" >
                   {{ wod.name }}
                 </div>
-                <div v-if="wod.type" class="text-caption" style="color: #666">
+                <div v-if="wod.type" class="text-caption text-medium-emphasis">
                   {{ formatWODType(wod.type) }}
                   <span v-if="wod.regime"> • {{ formatRegime(wod.regime) }}</span>
                 </div>
@@ -93,7 +93,7 @@
             </div>
 
             <!-- WOD Description -->
-            <div v-if="wod.description" class="ml-7 mb-2 text-caption" style="color: #666">
+            <div v-if="wod.description" class="ml-7 mb-2 text-caption text-medium-emphasis">
               {{ truncateText(wod.description, 120) }}
             </div>
 
@@ -230,7 +230,7 @@
             Cancel
           </v-btn>
           <v-btn
-            color="#00bcd4"
+            color="teal"
             :loading="creating"
             @click="saveWOD"
             style="text-transform: none"
@@ -254,7 +254,7 @@
             <v-chip v-if="selectedWOD.type" color="teal" class="mr-2">
               {{ formatWODType(selectedWOD.type) }}
             </v-chip>
-            <v-chip v-if="selectedWOD.regime" color="#00bcd4">
+            <v-chip v-if="selectedWOD.regime" color="teal">
               {{ formatRegime(selectedWOD.regime) }}
             </v-chip>
           </div>
@@ -273,7 +273,7 @@
 
           <!-- Description -->
           <div v-if="selectedWOD.description" class="mb-3">
-            <div class="text-caption font-weight-bold mb-1" style="color: #666">
+            <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               DESCRIPTION
             </div>
             <div class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
@@ -283,7 +283,7 @@
 
           <!-- Reference URL -->
           <div v-if="selectedWOD.url" class="mb-3">
-            <div class="text-caption font-weight-bold mb-1" style="color: #666">
+            <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               REFERENCE
             </div>
             <a :href="selectedWOD.url" target="_blank" rel="noopener noreferrer" class="text-body-2">
@@ -293,7 +293,7 @@
 
           <!-- Notes -->
           <div v-if="selectedWOD.notes" class="mb-3">
-            <div class="text-caption font-weight-bold mb-1" style="color: #666">
+            <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               NOTES
             </div>
             <div class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">

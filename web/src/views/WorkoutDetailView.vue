@@ -4,7 +4,7 @@
       <!-- Back Button -->
       <v-btn
         variant="text"
-        color="#00bcd4"
+        color="teal"
         class="mb-2"
         @click="router.back()"
       >
@@ -14,8 +14,8 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="64" />
-        <p class="mt-4 text-body-2" style="color: #666">Loading workout...</p>
+        <v-progress-circular indeterminate color="teal" size="64" />
+        <p class="mt-4 text-body-2 text-medium-emphasis">Loading workout...</p>
       </div>
 
       <!-- Error State -->
@@ -26,14 +26,14 @@
       <!-- Workout Details -->
       <div v-else-if="workout">
         <!-- Workout Header Card -->
-        <v-card elevation="0" rounded="lg" class="mb-2 pa-2" style="background: white">
+        <v-card elevation="0" rounded="lg" class="mb-2 pa-2" bg-color="surface">
           <div class="d-flex align-center mb-2">
-            <v-icon color="#00bcd4" size="32" class="mr-2">mdi-dumbbell</v-icon>
+            <v-icon color="teal" size="32" class="mr-2">mdi-dumbbell</v-icon>
             <div class="flex-grow-1">
-              <h2 class="text-h5 font-weight-bold" style="color: #1a1a1a">
+              <h2 class="text-h5 font-weight-bold" >
                 {{ workout.workout_name || 'Custom Workout' }}
               </h2>
-              <div class="text-caption" style="color: #666">
+              <div class="text-caption text-medium-emphasis">
                 {{ formatDate(workout.workout_date) }}
               </div>
             </div>
@@ -49,7 +49,7 @@
 
           <!-- Total Time -->
           <div v-if="workout.total_time" class="mt-3">
-            <v-chip color="#00bcd4" variant="outlined" size="small">
+            <v-chip color="teal" variant="outlined" size="small">
               <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
               {{ formatTime(workout.total_time) }}
             </v-chip>
@@ -57,12 +57,12 @@
         </v-card>
 
         <!-- Notes Section -->
-        <v-card v-if="workout.notes" elevation="0" rounded="lg" class="mb-2 pa-2" style="background: white">
+        <v-card v-if="workout.notes" elevation="0" rounded="lg" class="mb-2 pa-2" bg-color="surface">
           <div class="d-flex align-center mb-2">
-            <v-icon color="#00bcd4" size="small" class="mr-2">mdi-note-text</v-icon>
-            <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Notes</h3>
+            <v-icon color="teal" size="small" class="mr-2">mdi-note-text</v-icon>
+            <h3 class="text-body-1 font-weight-bold" >Notes</h3>
           </div>
-          <div class="text-body-2" style="color: #666">
+          <div class="text-body-2 text-medium-emphasis">
             <MarkdownRenderer :content="workout.notes" />
           </div>
         </v-card>
@@ -73,11 +73,11 @@
           elevation="0"
           rounded="lg"
           class="mb-2 pa-2"
-          style="background: white"
+          bg-color="surface"
         >
           <div class="d-flex align-center mb-3">
-            <v-icon color="#00bcd4" size="small" class="mr-2">mdi-weight-lifter</v-icon>
-            <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">
+            <v-icon color="teal" size="small" class="mr-2">mdi-weight-lifter</v-icon>
+            <h3 class="text-body-1 font-weight-bold" >
               Movements ({{ workout.performance_movements.length }})
             </h3>
           </div>
@@ -94,7 +94,7 @@
               <div class="d-flex align-center">
                 <div class="flex-grow-1">
                   <div class="d-flex align-center mb-1">
-                    <span class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+                    <span class="text-body-2 font-weight-bold" >
                       {{ movement.movement?.name || 'Unknown Movement' }}
                     </span>
                     <v-chip
@@ -110,7 +110,7 @@
                   </div>
 
                   <!-- Movement Details -->
-                  <div class="text-caption" style="color: #666">
+                  <div class="text-caption text-medium-emphasis">
                     <span v-if="movement.sets">{{ movement.sets }} sets</span>
                     <span v-if="movement.sets && movement.reps"> × </span>
                     <span v-if="movement.reps">{{ movement.reps }} reps</span>
@@ -118,12 +118,12 @@
                   </div>
 
                   <div v-if="movement.time_seconds" class="text-caption mt-1" style="color: #00bcd4">
-                    <v-icon size="x-small" color="#00bcd4">mdi-clock-outline</v-icon>
+                    <v-icon size="x-small" color="teal">mdi-clock-outline</v-icon>
                     {{ formatTime(movement.time_seconds) }}
                   </div>
 
                   <div v-if="movement.distance" class="text-caption mt-1" style="color: #00bcd4">
-                    <v-icon size="x-small" color="#00bcd4">mdi-map-marker-distance</v-icon>
+                    <v-icon size="x-small" color="teal">mdi-map-marker-distance</v-icon>
                     {{ movement.distance }}{{ movement.distance_unit || 'm' }}
                   </div>
 
@@ -150,11 +150,11 @@
           elevation="0"
           rounded="lg"
           class="mb-2 pa-2"
-          style="background: white"
+          bg-color="surface"
         >
           <div class="d-flex align-center mb-3">
             <v-icon color="teal" size="small" class="mr-2">mdi-fire</v-icon>
-            <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">
+            <h3 class="text-body-1 font-weight-bold" >
               WODs ({{ workout.performance_wods.length }})
             </h3>
           </div>
@@ -168,10 +168,10 @@
               style="background: #fff8e1; border: 1px solid #ffc107"
               rounded="lg"
             >
-              <div class="font-weight-bold text-body-2 mb-1" style="color: #1a1a1a">
+              <div class="font-weight-bold text-body-2 mb-1" >
                 {{ wod.wod?.name || 'Custom WOD' }}
               </div>
-              <div v-if="wod.score_value" class="text-caption" style="color: #666">
+              <div v-if="wod.score_value" class="text-caption text-medium-emphasis">
                 Score: {{ wod.score_value }}
               </div>
               <div v-if="wod.rounds" class="text-caption mt-1" style="color: #f57c00">
@@ -195,10 +195,10 @@
           elevation="0"
           rounded="lg"
           class="pa-6 text-center"
-          style="background: white"
+          bg-color="surface"
         >
-          <v-icon size="64" color="#ccc">mdi-clipboard-text-outline</v-icon>
-          <p class="text-body-1 mt-2" style="color: #666">
+          <v-icon size="64" color="surface-variant">mdi-clipboard-text-outline</v-icon>
+          <p class="text-body-1 mt-2 text-medium-emphasis">
             No movements or WODs logged for this workout
           </p>
         </v-card>
@@ -208,7 +208,7 @@
           <v-col cols="6">
             <v-btn
               block
-              color="#00bcd4"
+              color="teal"
               variant="flat"
               size="large"
               rounded="lg"

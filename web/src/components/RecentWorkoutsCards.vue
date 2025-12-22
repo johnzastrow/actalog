@@ -6,7 +6,7 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center pa-4">
-      <v-progress-circular indeterminate color="#00bcd4" size="48" />
+      <v-progress-circular indeterminate color="teal" size="48" />
     </div>
 
     <!-- Empty State -->
@@ -14,7 +14,7 @@
       <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
       <p class="text-body-2 mt-2" style="color: #666">No workouts in the last 7 days</p>
       <v-btn
-        color="#00bcd4"
+        color="teal"
         size="small"
         to="/workouts/log"
         rounded="lg"
@@ -81,7 +81,7 @@
 
               <!-- Time if available -->
               <div v-if="workout.total_time" class="text-caption mt-1" style="color: #00bcd4">
-                <v-icon size="x-small" color="#00bcd4">mdi-clock-outline</v-icon>
+                <v-icon size="x-small" color="teal">mdi-clock-outline</v-icon>
                 {{ formatTime(workout.total_time) }}
               </div>
             </div>

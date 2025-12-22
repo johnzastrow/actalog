@@ -4,7 +4,7 @@
       <!-- Back Button -->
       <v-btn
         variant="text"
-        color="#00bcd4"
+        color="teal"
         class="mb-2"
         @click="router.back()"
       >
@@ -14,8 +14,8 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="48" />
-        <p class="text-body-2 mt-3" style="color: #666">Loading movement...</p>
+        <v-progress-circular indeterminate color="teal" size="48" />
+        <p class="text-body-2 mt-3 text-medium-emphasis">Loading movement...</p>
       </div>
 
       <!-- Error State -->
@@ -26,13 +26,13 @@
       <!-- Movement Details -->
       <div v-else-if="movement">
         <!-- Header Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
           <div class="d-flex align-center mb-3">
             <v-icon :color="getMovementTypeColor(movement.type)" size="48" class="mr-3">
               {{ getMovementTypeIcon(movement.type) }}
             </v-icon>
             <div style="flex: 1">
-              <h1 class="text-h5 font-weight-bold" style="color: #1a1a1a">
+              <h1 class="text-h5 font-weight-bold" >
                 {{ movement.name }}
               </h1>
               <div class="d-flex align-center gap-2 mt-1">
@@ -63,15 +63,15 @@
         </v-btn>
 
         <!-- Details Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-            <v-icon color="#00bcd4" size="small" class="mr-1">mdi-information</v-icon>
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >
+            <v-icon color="teal" size="small" class="mr-1">mdi-information</v-icon>
             Information
           </h2>
 
           <!-- Description -->
           <div v-if="parsedData.description" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Description</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
             <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
               {{ parsedData.description }}
             </p>
@@ -79,7 +79,7 @@
 
           <!-- Difficulty -->
           <div v-if="parsedData.difficulty" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Difficulty Level</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Difficulty Level</p>
             <v-chip size="small" :color="getDifficultyColor(parsedData.difficulty)">
               {{ parsedData.difficulty }}
             </v-chip>
@@ -87,23 +87,23 @@
 
           <!-- Equipment -->
           <div v-if="parsedData.equipment" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Equipment Required</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Equipment Required</p>
+            <p class="text-body-2" >
               {{ parsedData.equipment }}
             </p>
           </div>
 
           <!-- Primary Muscles -->
           <div v-if="parsedData.primaryMuscles" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Primary Muscle Groups</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Primary Muscle Groups</p>
+            <p class="text-body-2" >
               {{ parsedData.primaryMuscles }}
             </p>
           </div>
 
           <!-- Coaching Cues -->
           <div v-if="parsedData.coachingCues" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Coaching Cues</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Coaching Cues</p>
             <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
               {{ parsedData.coachingCues }}
             </p>
@@ -111,7 +111,7 @@
 
           <!-- Scaling Options -->
           <div v-if="parsedData.scalingOptions" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Scaling/Modifications</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Scaling/Modifications</p>
             <p class="text-body-2" style="color: #1a1a1a; white-space: pre-wrap">
               {{ parsedData.scalingOptions }}
             </p>
@@ -119,11 +119,11 @@
 
           <!-- Video URL -->
           <div v-if="parsedData.videoUrl">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Video Tutorial</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Video Tutorial</p>
             <v-btn
               :href="parsedData.videoUrl"
               target="_blank"
-              color="#00bcd4"
+              color="teal"
               variant="outlined"
               prepend-icon="mdi-play-circle"
               size="small"
@@ -136,22 +136,22 @@
         </v-card>
 
         <!-- Metadata Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-            <v-icon color="#00bcd4" size="small" class="mr-1">mdi-clock</v-icon>
+        <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >
+            <v-icon color="teal" size="small" class="mr-1">mdi-clock</v-icon>
             Metadata
           </h2>
 
           <div class="mb-2">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Created</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Created</p>
+            <p class="text-body-2" >
               {{ formatDate(movement.created_at) }}
             </p>
           </div>
 
           <div>
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Last Updated</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Last Updated</p>
+            <p class="text-body-2" >
               {{ formatDate(movement.updated_at) }}
             </p>
           </div>
@@ -171,7 +171,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Date *</label>
+              <label class="text-caption font-weight-bold d-block" >Date *</label>
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
@@ -184,7 +184,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Workout Name *</label>
+              <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
                 variant="outlined"

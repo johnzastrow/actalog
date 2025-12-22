@@ -13,7 +13,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" @click="navigateTo('/admin/data-cleanup')">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#00bcd4" size="32" class="mr-3">mdi-database-refresh</v-icon>
+                <v-icon color="teal" size="32" class="mr-3">mdi-database-refresh</v-icon>
                 <div>
                   <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600">Data Cleanup</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Fix WOD score_type mismatches</p>
@@ -23,7 +23,7 @@
               <p style="color: #666; font-size: 13px">
                 Detect and correct WOD performance records that don't match their defined score_type.
               </p>
-              <v-chip size="small" color="#00bcd4" class="mt-2">
+              <v-chip size="small" color="teal" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -34,7 +34,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/users')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#9c27b0" size="32" class="mr-3">mdi-account-multiple</v-icon>
+                <v-icon color="secondary" size="32" class="mr-3">mdi-account-multiple</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">User Management</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Manage user accounts</p>
@@ -44,7 +44,7 @@
               <p style="color: #666; font-size: 13px">
                 View, edit, and manage user accounts and permissions.
               </p>
-              <v-chip size="small" color="#9c27b0" class="mt-2">
+              <v-chip size="small" color="secondary" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -55,7 +55,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/organizations')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#673ab7" size="32" class="mr-3">mdi-domain</v-icon>
+                <v-icon color="accent" size="32" class="mr-3">mdi-domain</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Organizations</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Manage gyms and organizations</p>
@@ -65,7 +65,7 @@
               <p style="color: #666; font-size: 13px">
                 Create and manage organizations, assign users to gyms and groups.
               </p>
-              <v-chip size="small" color="#673ab7" class="mt-2">
+              <v-chip size="small" color="accent" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -76,7 +76,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/user-content')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#e91e63" size="32" class="mr-3">mdi-file-multiple</v-icon>
+                <v-icon color="error" size="32" class="mr-3">mdi-file-multiple</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">User Content</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Manage user-created content</p>
@@ -86,7 +86,7 @@
               <p style="color: #666; font-size: 13px">
                 View user-created WODs, movements, and workout templates. Promote them to standard items.
               </p>
-              <v-chip size="small" color="#e91e63" class="mt-2">
+              <v-chip size="small" color="error" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -97,7 +97,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/backups')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#ff9800" size="32" class="mr-3">mdi-database-export</v-icon>
+                <v-icon color="warning" size="32" class="mr-3">mdi-database-export</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Database Backups</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Create and restore database backups</p>
@@ -107,7 +107,7 @@
               <p style="color: #666; font-size: 13px">
                 Protect your data with full database backups. Create, download, and restore backups.
               </p>
-              <v-chip size="small" color="#ff9800" class="mt-2">
+              <v-chip size="small" color="warning" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -118,7 +118,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/audit-logs')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#4caf50" size="32" class="mr-3">mdi-shield-check</v-icon>
+                <v-icon color="success" size="32" class="mr-3">mdi-shield-check</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Audit Logs</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">View security events</p>
@@ -128,7 +128,7 @@
               <p style="color: #666; font-size: 13px">
                 Monitor login attempts, password changes, and other security-related events.
               </p>
-              <v-chip size="small" color="#4caf50" class="mt-2">
+              <v-chip size="small" color="success" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -139,7 +139,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/data-change-logs')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#2196f3" size="32" class="mr-3">mdi-history</v-icon>
+                <v-icon color="info" size="32" class="mr-3">mdi-history</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Data Change Logs</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Track edits and deletions</p>
@@ -149,7 +149,7 @@
               <p style="color: #666; font-size: 13px">
                 View history of all data changes including before/after values for WODs, movements, and workouts.
               </p>
-              <v-chip size="small" color="#2196f3" class="mt-2">
+              <v-chip size="small" color="info" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -160,7 +160,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/announcements')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#ffc107" size="32" class="mr-3">mdi-bullhorn</v-icon>
+                <v-icon color="warning" size="32" class="mr-3">mdi-bullhorn</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Announcements</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Send notifications to users</p>
@@ -170,7 +170,7 @@
               <p style="color: #666; font-size: 13px">
                 Send announcements to all users, specific organizations, or selected users with markdown support.
               </p>
-              <v-chip size="small" color="#ffc107" class="mt-2">
+              <v-chip size="small" color="warning" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -181,7 +181,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/subscriptions')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#00bcd4" size="32" class="mr-3">mdi-currency-usd</v-icon>
+                <v-icon color="teal" size="32" class="mr-3">mdi-currency-usd</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Subscriptions</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Manage user and organization subscriptions</p>
@@ -191,7 +191,7 @@
               <p style="color: #666; font-size: 13px">
                 View and manage all user and organization subscriptions, payments, and billing.
               </p>
-              <v-chip size="small" color="#00bcd4" class="mt-2">
+              <v-chip size="small" color="teal" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -234,7 +234,7 @@
         <v-icon size="20">mdi-chart-line</v-icon>
         <span style="font-size: 9px">Stats</span>
       </v-btn>
-      <v-btn to="/admin" style="flex: 1" color="#00bcd4">
+      <v-btn to="/admin" style="flex: 1" color="teal">
         <v-icon size="20">mdi-shield-account</v-icon>
         <span style="font-size: 9px">Admin</span>
       </v-btn>

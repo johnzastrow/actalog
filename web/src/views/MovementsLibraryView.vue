@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Search and Filters Card -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
         <v-text-field
           v-model="searchQuery"
           label="Search movements"
@@ -15,14 +15,14 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+            <v-icon color="teal" size="small">mdi-magnify</v-icon>
           </template>
         </v-text-field>
 
         <v-chip-group
           v-model="selectedType"
           selected-class="text-white"
-          color="#00bcd4"
+          color="teal"
           class="mt-2"
           mandatory
         >
@@ -47,8 +47,8 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="48" />
-        <p class="text-body-2 mt-3" style="color: #666">Loading movements...</p>
+        <v-progress-circular indeterminate color="teal" size="48" />
+        <p class="text-body-2 mt-3 text-medium-emphasis">Loading movements...</p>
       </div>
 
       <!-- Empty State -->
@@ -57,16 +57,16 @@
         elevation="0"
         rounded="lg"
         class="pa-6 text-center"
-        style="background: white"
+        bg-color="surface"
       >
-        <v-icon size="64" color="#ccc">mdi-dumbbell</v-icon>
-        <p class="text-h6 mt-3" style="color: #666">No movements found</p>
-        <p class="text-body-2" style="color: #999">
+        <v-icon size="64" color="surface-variant">mdi-dumbbell</v-icon>
+        <p class="text-h6 mt-3 text-medium-emphasis">No movements found</p>
+        <p class="text-body-2 text-disabled">
           {{ searchQuery ? 'Try adjusting your search' : 'Create your first movement to get started' }}
         </p>
         <v-btn
           v-if="!searchQuery"
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           class="mt-4"
@@ -96,7 +96,7 @@
             </v-icon>
             <div style="flex: 1">
               <div class="d-flex align-center">
-                <span class="text-body-1 font-weight-bold" style="color: #1a1a1a">
+                <span class="text-body-1 font-weight-bold" >
                   {{ movement.name }}
                 </span>
                 <v-chip
@@ -108,7 +108,7 @@
                   Custom
                 </v-chip>
               </div>
-              <p class="text-caption mb-0" style="color: #666">
+              <p class="text-caption mb-0 text-medium-emphasis">
                 {{ movement.description }}
               </p>
               <v-chip size="x-small" :color="getMovementTypeColor(movement.type)" class="mt-1" variant="outlined">
@@ -116,7 +116,7 @@
               </v-chip>
             </div>
             <div v-if="selectionMode">
-              <v-icon color="#00bcd4">mdi-chevron-right</v-icon>
+              <v-icon color="teal">mdi-chevron-right</v-icon>
             </div>
             <div v-else class="d-flex gap-1">
               <v-btn
@@ -134,7 +134,7 @@
                 icon="mdi-pencil"
                 size="small"
                 variant="text"
-                color="#00bcd4"
+                color="teal"
                 @click.stop="editMovement(movement.id)"
               >
                 <v-icon>mdi-pencil</v-icon>
@@ -162,7 +162,7 @@
       v-if="!selectionMode"
       v-model="activeNav"
       name="bottom-navigation"
-      color="#00bcd4"
+      color="teal"
       grow
       style="position: fixed; bottom: 0; width: 100%; z-index: 5; background: white"
       elevation="8"
@@ -200,7 +200,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Date *</label>
+              <label class="text-caption font-weight-bold d-block" >Date *</label>
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
@@ -213,7 +213,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Workout Name *</label>
+              <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
                 variant="outlined"

@@ -138,6 +138,36 @@ These features can be added after the core frontend is complete:
   - [ ] Duplicate detection by email
   - [ ] Welcome emails with password reset
 
+- [ ] `[HIGH]` **Improved Duplicate Record Detection During Imports**
+  - [ ] Trap duplicate movements during import (check by name/description)
+  - [ ] Trap duplicate WODs during import (check by name/source)
+  - [ ] Trap duplicate user workouts during import (check by date/template/user)
+  - [ ] Enhanced preview workflow showing detected duplicates with options:
+    - Skip duplicates (keep existing)
+    - Update duplicates (overwrite existing)
+    - Import as new (allow duplicates)
+  - [ ] Detailed duplicate report in preview response
+  - [ ] Frontend UI to review and select action for each duplicate
+  - [ ] Batch duplicate resolution (apply same action to all)
+
+- [ ] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure**
+  - [ ] Create admin tool to scan for existing duplicates in database
+  - [ ] Detect duplicate movements (same name, same user)
+  - [ ] Detect duplicate WODs (same name, same source)
+  - [ ] Detect duplicate user workouts (same user, same date, same template)
+  - [ ] Generate duplicate report with:
+    - Count of duplicates per table
+    - List of duplicate records with IDs
+    - References/dependencies (what's using each record)
+  - [ ] Safe merge/cleanup procedure:
+    - Preview which records will be kept vs deleted
+    - Automatically update foreign key references
+    - Preserve data integrity (don't break relationships)
+  - [ ] Admin UI to review and approve cleanup
+  - [ ] Dry-run mode (show what would happen without doing it)
+  - [ ] Backup database before cleanup operation
+  - [ ] Audit log of all cleanup operations
+
 ### Medium Priority
 
 #### Performance & Analytics

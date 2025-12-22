@@ -9,8 +9,8 @@
         {{ error }}
       </v-alert>
 
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">WOD Details</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >WOD Details</h2>
 
         <v-text-field
           v-model="wod.name"
@@ -25,7 +25,7 @@
           autofocus
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-fire</v-icon>
+            <v-icon color="teal" size="small">mdi-fire</v-icon>
           </template>
         </v-text-field>
 
@@ -41,7 +41,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-source-branch</v-icon>
+            <v-icon color="teal" size="small">mdi-source-branch</v-icon>
           </template>
         </v-select>
 
@@ -55,7 +55,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tag</v-icon>
+            <v-icon color="teal" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -69,7 +69,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-clock-outline</v-icon>
+            <v-icon color="teal" size="small">mdi-clock-outline</v-icon>
           </template>
         </v-select>
 
@@ -83,7 +83,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-trophy</v-icon>
+            <v-icon color="teal" size="small">mdi-trophy</v-icon>
           </template>
         </v-select>
 
@@ -100,7 +100,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+            <v-icon color="teal" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
 
@@ -114,7 +114,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-video</v-icon>
+            <v-icon color="teal" size="small">mdi-video</v-icon>
           </template>
         </v-text-field>
 
@@ -129,15 +129,15 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-note</v-icon>
+            <v-icon color="teal" size="small">mdi-note</v-icon>
           </template>
         </v-textarea>
       </v-card>
 
-      <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           :loading="saving"
@@ -151,7 +151,7 @@
         <v-btn
           v-if="isEditMode && !wod.is_standard"
           block
-          color="#e91e63"
+          color="error"
           variant="outlined"
           size="large"
           rounded="lg"
@@ -182,14 +182,14 @@
       <v-card>
         <v-card-title class="text-h6" style="color: #e91e63">Delete WOD?</v-card-title>
         <v-card-text>
-          <p style="color: #666">
+          <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ wod.name }}"? This action cannot be undone.
           </p>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="#e91e63" variant="flat" :loading="deleting" @click="deleteWOD">
+          <v-btn color="error" variant="flat" :loading="deleting" @click="deleteWOD">
             Delete
           </v-btn>
         </v-card-actions>

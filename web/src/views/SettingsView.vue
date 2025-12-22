@@ -23,8 +23,8 @@
       </v-alert>
 
       <!-- Profile Information Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Profile Information</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Profile Information</h2>
         <v-form @submit.prevent="updateProfile">
           <v-text-field
             v-model="profileForm.name"
@@ -36,7 +36,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-account</v-icon>
+              <v-icon color="teal" size="small">mdi-account</v-icon>
             </template>
           </v-text-field>
 
@@ -53,7 +53,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-email</v-icon>
+              <v-icon color="teal" size="small">mdi-email</v-icon>
             </template>
           </v-text-field>
 
@@ -68,13 +68,13 @@
             class="mb-3"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-cake-variant</v-icon>
+              <v-icon color="teal" size="small">mdi-cake-variant</v-icon>
             </template>
           </v-text-field>
 
           <v-btn
             type="submit"
-            color="#00bcd4"
+            color="teal"
             block
             rounded="lg"
             :loading="loading"
@@ -89,8 +89,8 @@
       <SubscriptionStatusBadge class="mb-3" />
 
       <!-- Password Change Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Change Password</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Change Password</h2>
         <v-form @submit.prevent="changePassword">
           <v-text-field
             v-model="passwordForm.currentPassword"
@@ -103,7 +103,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-lock</v-icon>
+              <v-icon color="teal" size="small">mdi-lock</v-icon>
             </template>
           </v-text-field>
 
@@ -120,7 +120,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-lock-outline</v-icon>
+              <v-icon color="teal" size="small">mdi-lock-outline</v-icon>
             </template>
           </v-text-field>
 
@@ -135,13 +135,13 @@
             class="mb-3"
           >
             <template #prepend-inner>
-              <v-icon color="#00bcd4" size="small">mdi-lock-check</v-icon>
+              <v-icon color="teal" size="small">mdi-lock-check</v-icon>
             </template>
           </v-text-field>
 
           <v-btn
             type="submit"
-            color="#00bcd4"
+            color="teal"
             block
             rounded="lg"
             :loading="passwordLoading"
@@ -153,20 +153,20 @@
       </v-card>
 
       <!-- Preferences Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Preferences</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Preferences</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item>
             <template #prepend>
-              <v-icon color="#00bcd4">mdi-theme-light-dark</v-icon>
+              <v-icon color="teal">mdi-theme-light-dark</v-icon>
             </template>
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Dark Mode
             </v-list-item-title>
             <template #append>
               <v-switch
                 v-model="darkMode"
-                color="#00bcd4"
+                color="teal"
                 hide-details
                 density="compact"
                 @change="saveDarkMode"
@@ -176,15 +176,15 @@
 
           <v-list-item>
             <template #prepend>
-              <v-icon color="#00bcd4">mdi-bell</v-icon>
+              <v-icon color="teal">mdi-bell</v-icon>
             </template>
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Notifications
             </v-list-item-title>
             <template #append>
               <v-switch
                 v-model="notifications"
-                color="#00bcd4"
+                color="teal"
                 hide-details
                 density="compact"
                 @change="saveNotifications"
@@ -194,9 +194,9 @@
 
           <v-list-item>
             <template #prepend>
-              <v-icon color="#00bcd4">mdi-weight</v-icon>
+              <v-icon color="teal">mdi-weight</v-icon>
             </template>
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Weight Unit
             </v-list-item-title>
             <template #append>
@@ -215,8 +215,8 @@
       </v-card>
 
       <!-- Data Management Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-2" style="color: #1a1a1a">Data Management</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-2" >Data Management</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-download"
@@ -224,14 +224,14 @@
             style="cursor: pointer"
             @click="exportData"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Export Data
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #666">
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
               Download your workout history
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -241,21 +241,21 @@
             style="cursor: pointer"
             @click="importData"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Import Data
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #666">
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
               Restore from backup
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
         </v-list>
       </v-card>
 
       <!-- Danger Zone Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-2" style="color: #e91e63">Danger Zone</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
@@ -267,7 +267,7 @@
             <v-list-item-title class="font-weight-medium" style="color: #e91e63">
               Delete Account
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #666">
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
               Permanently delete your account and all data
             </v-list-item-subtitle>
           </v-list-item>
@@ -275,11 +275,11 @@
       </v-card>
 
       <!-- App Info Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 text-center" style="background: white">
-        <div class="text-caption" style="color: #999">
+      <v-card elevation="0" rounded="lg" class="pa-3 text-center" bg-color="surface">
+        <div class="text-caption text-disabled">
           ActaLog v0.4.0-beta
         </div>
-        <div class="text-caption mt-1" style="color: #999">
+        <div class="text-caption mt-1 text-disabled">
           © 2025 ActaLog. All rights reserved.
         </div>
       </v-card>
@@ -290,7 +290,7 @@
       <v-card>
         <v-card-title class="text-h6" style="color: #e91e63">Delete Account?</v-card-title>
         <v-card-text>
-          <p style="color: #666">
+          <p class="text-medium-emphasis">
             This action cannot be undone. All your workouts, personal records, and account data will be permanently deleted.
           </p>
           <v-text-field
@@ -305,7 +305,7 @@
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
           <v-btn
-            color="#e91e63"
+            color="error"
             variant="flat"
             :disabled="deleteConfirmation !== 'DELETE'"
             :loading="deleteLoading"

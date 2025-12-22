@@ -27,12 +27,12 @@
       </v-alert>
 
       <!-- Step 1: Entity Type Selection -->
-      <v-card v-if="!previewResult" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-        <h2 class="text-h6 font-weight-bold mb-3" style="color: #1a1a1a">1. Select Data Type</h2>
+      <v-card v-if="!previewResult" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+        <h2 class="text-h6 font-weight-bold mb-3" >1. Select Data Type</h2>
 
         <v-btn-toggle
           v-model="selectedEntity"
-          color="#00bcd4"
+          color="teal"
           variant="outlined"
           mandatory
           class="mb-4"
@@ -73,8 +73,8 @@
       </v-card>
 
       <!-- Step 2: File Upload -->
-      <v-card v-if="!previewResult" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-        <h2 class="text-h6 font-weight-bold mb-3" style="color: #1a1a1a">
+      <v-card v-if="!previewResult" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+        <h2 class="text-h6 font-weight-bold mb-3" >
           2. Upload {{ selectedEntity === 'user_workouts' ? 'JSON' : 'CSV' }} File
         </h2>
 
@@ -92,7 +92,7 @@
           <p class="text-body-1 font-weight-bold mt-3" :style="{ color: selectedFile ? '#00bcd4' : '#1a1a1a' }">
             {{ selectedFile ? selectedFile.name : `Drop ${fileTypeLabel} file here or click to browse` }}
           </p>
-          <p v-if="!selectedFile" class="text-caption" style="color: #999">
+          <p v-if="!selectedFile" class="text-caption text-disabled">
             Maximum file size: 10MB
           </p>
           <input
@@ -108,7 +108,7 @@
           v-if="selectedFile"
           block
           size="large"
-          color="#00bcd4"
+          color="teal"
           rounded="lg"
           elevation="2"
           :loading="uploading"
@@ -124,22 +124,22 @@
       <!-- Step 3: Preview Results -->
       <template v-if="previewResult">
         <!-- Summary Card -->
-        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-          <h2 class="text-h6 font-weight-bold mb-3" style="color: #1a1a1a">3. Preview Results</h2>
+        <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+          <h2 class="text-h6 font-weight-bold mb-3" >3. Preview Results</h2>
 
           <!-- Wodify Import Stats -->
           <v-row v-if="isWodifyImport" dense>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">Total Rows</p>
-                <p class="text-h6 font-weight-bold" style="color: #1a1a1a">
+                <p class="text-caption text-medium-emphasis">Total Rows</p>
+                <p class="text-h6 font-weight-bold" >
                   {{ previewResult.total_rows }}
                 </p>
               </div>
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">Valid Rows</p>
+                <p class="text-caption text-medium-emphasis">Valid Rows</p>
                 <p class="text-h6 font-weight-bold" style="color: #4caf50">
                   {{ previewResult.valid_rows }}
                 </p>
@@ -147,7 +147,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">Workout Dates</p>
+                <p class="text-caption text-medium-emphasis">Workout Dates</p>
                 <p class="text-h6 font-weight-bold" style="color: #00bcd4">
                   {{ previewResult.unique_workout_dates }}
                 </p>
@@ -155,7 +155,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">Workouts to Create</p>
+                <p class="text-caption text-medium-emphasis">Workouts to Create</p>
                 <p class="text-h6 font-weight-bold" style="color: #00bcd4">
                   {{ previewResult.user_workouts_to_create }}
                 </p>
@@ -163,7 +163,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">New Movements</p>
+                <p class="text-caption text-medium-emphasis">New Movements</p>
                 <p class="text-h6 font-weight-bold" style="color: #ff9800">
                   {{ previewResult.movements_to_create }}
                 </p>
@@ -171,7 +171,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">New WODs</p>
+                <p class="text-caption text-medium-emphasis">New WODs</p>
                 <p class="text-h6 font-weight-bold" style="color: #ff9800">
                   {{ previewResult.wods_to_create }}
                 </p>
@@ -183,17 +183,17 @@
           <v-row v-else dense>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">
+                <p class="text-caption text-medium-emphasis">
                   {{ selectedEntity === 'user_workouts' ? 'Total Workouts' : 'Total Rows' }}
                 </p>
-                <p class="text-h6 font-weight-bold" style="color: #1a1a1a">
+                <p class="text-h6 font-weight-bold" >
                   {{ previewResult.total_workouts || previewResult.total_rows }}
                 </p>
               </div>
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">
+                <p class="text-caption text-medium-emphasis">
                   {{ selectedEntity === 'user_workouts' ? 'Valid Workouts' : 'Valid Rows' }}
                 </p>
                 <p class="text-h6 font-weight-bold" style="color: #4caf50">
@@ -203,7 +203,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">
+                <p class="text-caption text-medium-emphasis">
                   {{ selectedEntity === 'user_workouts' ? 'Invalid Workouts' : 'Invalid Rows' }}
                 </p>
                 <p class="text-h6 font-weight-bold" style="color: #f44336">
@@ -213,7 +213,7 @@
             </v-col>
             <v-col cols="6">
               <div class="stat-box">
-                <p class="text-caption" style="color: #666">Duplicates</p>
+                <p class="text-caption text-medium-emphasis">Duplicates</p>
                 <p class="text-h6 font-weight-bold" style="color: #ff9800">
                   {{ previewResult.duplicate_workouts || previewResult.duplicate_rows }}
                 </p>
@@ -223,36 +223,36 @@
         </v-card>
 
         <!-- Import Options -->
-        <v-card v-if="selectedEntity !== 'user_workouts' && selectedEntity !== 'wodify'" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Import Options</h3>
+        <v-card v-if="selectedEntity !== 'user_workouts' && selectedEntity !== 'wodify'" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+          <h3 class="text-body-1 font-weight-bold mb-3" >Import Options</h3>
 
           <v-radio-group v-model="duplicateHandling" density="compact">
             <v-radio
               value="skip"
               label="Skip duplicates (only import new records)"
-              color="#00bcd4"
+              color="teal"
             />
             <v-radio
               value="update"
               label="Update duplicates (overwrite existing records)"
-              color="#00bcd4"
+              color="teal"
             />
             <v-radio
               value="cancel"
               label="Cancel import if duplicates found"
-              color="#00bcd4"
+              color="teal"
             />
           </v-radio-group>
         </v-card>
 
         <!-- User Workouts Import Options -->
-        <v-card v-if="selectedEntity === 'user_workouts'" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Import Options</h3>
+        <v-card v-if="selectedEntity === 'user_workouts'" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+          <h3 class="text-body-1 font-weight-bold mb-3" >Import Options</h3>
 
           <v-checkbox
             v-model="skipDuplicates"
             label="Skip duplicate workouts (based on workout date and WOD)"
-            color="#00bcd4"
+            color="teal"
             density="compact"
             hide-details
           />
@@ -263,19 +263,19 @@
         </v-card>
 
         <!-- Wodify New Entities -->
-        <v-card v-if="isWodifyImport && (previewResult.new_movements?.length > 0 || previewResult.new_wods?.length > 0)" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
-          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">New Entities to Create</h3>
+        <v-card v-if="isWodifyImport && (previewResult.new_movements?.length > 0 || previewResult.new_wods?.length > 0)" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
+          <h3 class="text-body-1 font-weight-bold mb-3" >New Entities to Create</h3>
 
           <div v-if="previewResult.new_movements?.length > 0" class="mb-3">
-            <p class="text-caption font-weight-bold mb-2" style="color: #666">Movements ({{ previewResult.new_movements.length }})</p>
-            <v-chip v-for="(movement, idx) in previewResult.new_movements" :key="'movement-' + idx" size="small" class="ma-1" color="#00bcd4">
+            <p class="text-caption font-weight-bold mb-2 text-medium-emphasis">Movements ({{ previewResult.new_movements.length }})</p>
+            <v-chip v-for="(movement, idx) in previewResult.new_movements" :key="'movement-' + idx" size="small" class="ma-1" color="teal">
               {{ movement }}
             </v-chip>
           </div>
 
           <div v-if="previewResult.new_wods?.length > 0">
-            <p class="text-caption font-weight-bold mb-2" style="color: #666">WODs ({{ previewResult.new_wods.length }})</p>
-            <v-chip v-for="(wod, idx) in previewResult.new_wods" :key="'wod-' + idx" size="small" class="ma-1" color="#ff9800">
+            <p class="text-caption font-weight-bold mb-2 text-medium-emphasis">WODs ({{ previewResult.new_wods.length }})</p>
+            <v-chip v-for="(wod, idx) in previewResult.new_wods" :key="'wod-' + idx" size="small" class="ma-1" color="warning">
               {{ wod }}
             </v-chip>
           </div>
@@ -283,7 +283,7 @@
 
         <!-- Wodify Workout Summary -->
         <v-card v-if="isWodifyImport && previewResult.workout_summary?.length > 0" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
-          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Workout Summary</h3>
+          <h3 class="text-body-1 font-weight-bold mb-3" >Workout Summary</h3>
 
           <v-data-table
             :headers="[
@@ -300,18 +300,18 @@
           >
             <template #item.has_prs="{ item }">
               <v-icon v-if="item.has_prs" color="gold" size="small">mdi-trophy</v-icon>
-              <span v-else class="text-caption" style="color: #999">—</span>
+              <span v-else class="text-caption text-disabled">—</span>
             </template>
           </v-data-table>
 
-          <p v-if="previewResult.workout_summary.length > 10" class="text-caption text-center mt-2" style="color: #999">
+          <p v-if="previewResult.workout_summary.length > 10" class="text-caption text-center mt-2 text-disabled">
             Showing first 10 workouts of {{ previewResult.workout_summary.length }}
           </p>
         </v-card>
 
         <!-- Standard Preview Table -->
         <v-card v-if="!isWodifyImport" elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white; overflow-x: auto">
-          <h3 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Data Preview</h3>
+          <h3 class="text-body-1 font-weight-bold mb-3" >Data Preview</h3>
 
           <v-data-table
             :headers="previewHeaders"
@@ -356,7 +356,7 @@
               block
               size="large"
               variant="outlined"
-              color="#666"
+              color="medium-emphasis"
               rounded="lg"
               class="font-weight-bold"
               style="text-transform: none"
@@ -369,7 +369,7 @@
             <v-btn
               block
               size="large"
-              color="#4caf50"
+              color="success"
               rounded="lg"
               elevation="2"
               :disabled="(previewResult.valid_workouts || previewResult.valid_rows || 0) === 0"

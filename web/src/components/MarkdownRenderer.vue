@@ -80,7 +80,7 @@ const renderedHtml = computed(() => {
 
 /* Code */
 .markdown-content :deep(code) {
-  background-color: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
@@ -89,7 +89,7 @@ const renderedHtml = computed(() => {
 }
 
 .markdown-content :deep(pre) {
-  background-color: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
   padding: 1em;
   border-radius: 5px;
   overflow-x: auto;
@@ -152,7 +152,7 @@ const renderedHtml = computed(() => {
 }
 
 .markdown-content :deep(th) {
-  background-color: #f5f7fa;
+  background-color: rgb(var(--v-theme-background));
   font-weight: bold;
 }
 </style>

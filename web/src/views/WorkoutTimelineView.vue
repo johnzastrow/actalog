@@ -8,7 +8,7 @@
     <!-- Content (with padding for fixed header) -->
     <div style="padding: 72px 16px 16px 16px; overflow-y: auto">
       <!-- Filters -->
-      <v-card elevation="0" rounded="lg" class="mb-3 pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="mb-3 pa-3" bg-color="surface">
         <div class="d-flex align-center gap-2">
           <v-select
             v-model="filterType"
@@ -35,13 +35,13 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4"></v-progress-circular>
+        <v-progress-circular indeterminate color="teal"></v-progress-circular>
       </div>
 
       <!-- Empty State -->
       <div v-else-if="filteredWorkouts.length === 0" class="text-center py-8">
-        <v-icon size="64" color="#ccc">mdi-timeline-clock-outline</v-icon>
-        <p class="mt-3" style="color: #666">No workouts found</p>
+        <v-icon size="64" color="surface-variant">mdi-timeline-clock-outline</v-icon>
+        <p class="mt-3 text-medium-emphasis">No workouts found</p>
       </div>
 
       <!-- Timeline -->
@@ -49,7 +49,7 @@
         <div v-for="(group, date) in groupedWorkouts" :key="date" class="mb-4">
           <!-- Date Header -->
           <div class="d-flex align-center mb-2">
-            <div class="text-subtitle-2 font-weight-bold" style="color: #666">
+            <div class="text-subtitle-2 font-weight-bold text-medium-emphasis">
               {{ formatDate(date) }}
             </div>
             <v-divider class="ml-3"></v-divider>
@@ -68,25 +68,25 @@
             >
               <v-card-text>
                 <div class="d-flex justify-space-between align-center mb-2">
-                  <div class="text-subtitle-1 font-weight-medium" style="color: #1a1a1a">
+                  <div class="text-subtitle-1 font-weight-medium" >
                     {{ workout.workout_name || workout.template_name || 'Workout' }}
                   </div>
-                  <v-chip v-if="workout.workout_type" size="small" color="#00bcd4" text-color="white">
+                  <v-chip v-if="workout.workout_type" size="small" color="teal" text-color="white">
                     {{ workout.workout_type }}
                   </v-chip>
                 </div>
 
                 <!-- Total Time -->
                 <div v-if="workout.total_time" class="d-flex align-center mb-2">
-                  <v-icon size="small" color="#666" class="mr-1">mdi-clock-outline</v-icon>
-                  <span class="text-body-2" style="color: #666">
+                  <v-icon size="small" color="medium-emphasis" class="mr-1">mdi-clock-outline</v-icon>
+                  <span class="text-body-2 text-medium-emphasis">
                     {{ formatTime(workout.total_time) }}
                   </span>
                 </div>
 
                 <!-- Movements -->
                 <div v-if="workout.movements && workout.movements.length > 0" class="mb-2">
-                  <div class="text-caption font-weight-medium mb-1" style="color: #666">
+                  <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
                     Movements ({{ workout.movements.length }})
                   </div>
                   <div class="d-flex flex-wrap gap-1">
@@ -104,7 +104,7 @@
                       v-if="workout.movements.length > 3"
                       size="small"
                       color="#e0e0e0"
-                      text-color="#666"
+                      text-color="medium-emphasis"
                     >
                       +{{ workout.movements.length - 3 }} more
                     </v-chip>
@@ -113,7 +113,7 @@
 
                 <!-- WODs -->
                 <div v-if="workout.wods && workout.wods.length > 0">
-                  <div class="text-caption font-weight-medium mb-1" style="color: #666">
+                  <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
                     WODs
                   </div>
                   <div class="d-flex flex-wrap gap-1">
@@ -132,7 +132,7 @@
 
                 <!-- Notes Preview -->
                 <div v-if="workout.notes" class="mt-2">
-                  <div class="text-caption" style="color: #999">
+                  <div class="text-caption text-disabled">
                     {{ truncateNotes(workout.notes) }}
                   </div>
                 </div>

@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Search and Filters Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
         <v-text-field
           v-model="searchQuery"
           label="Search WODs"
@@ -15,14 +15,14 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+            <v-icon color="teal" size="small">mdi-magnify</v-icon>
           </template>
         </v-text-field>
 
         <v-chip-group
           v-model="selectedType"
           selected-class="text-white"
-          color="#00bcd4"
+          color="teal"
           class="mt-2"
           mandatory
         >
@@ -47,8 +47,8 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="48" />
-        <p class="text-body-2 mt-3" style="color: #666">Loading WODs...</p>
+        <v-progress-circular indeterminate color="teal" size="48" />
+        <p class="text-body-2 mt-3 text-medium-emphasis">Loading WODs...</p>
       </div>
 
       <!-- Empty State -->
@@ -57,16 +57,16 @@
         elevation="0"
         rounded="lg"
         class="pa-6 text-center"
-        style="background: white"
+        bg-color="surface"
       >
-        <v-icon size="64" color="#ccc">mdi-fire</v-icon>
-        <p class="text-h6 mt-3" style="color: #666">No WODs found</p>
-        <p class="text-body-2" style="color: #999">
+        <v-icon size="64" color="surface-variant">mdi-fire</v-icon>
+        <p class="text-h6 mt-3 text-medium-emphasis">No WODs found</p>
+        <p class="text-body-2 text-disabled">
           {{ searchQuery ? 'Try adjusting your search' : 'Create your first WOD to get started' }}
         </p>
         <v-btn
           v-if="!searchQuery"
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           class="mt-4"
@@ -94,7 +94,7 @@
             <v-icon color="#ff5722" class="mr-3" size="32">mdi-fire</v-icon>
             <div style="flex: 1">
               <div class="d-flex align-center mb-1">
-                <span class="text-body-1 font-weight-bold" style="color: #1a1a1a">
+                <span class="text-body-1 font-weight-bold" >
                   {{ wod.name }}
                 </span>
                 <v-chip
@@ -107,13 +107,13 @@
                 </v-chip>
               </div>
               <div class="d-flex flex-wrap gap-1 mb-1">
-                <v-chip size="x-small" color="#9c27b0" variant="outlined">
+                <v-chip size="x-small" color="secondary" variant="outlined">
                   {{ wod.type }}
                 </v-chip>
-                <v-chip size="x-small" color="#00bcd4" variant="outlined">
+                <v-chip size="x-small" color="teal" variant="outlined">
                   {{ wod.regime }}
                 </v-chip>
-                <v-chip size="x-small" color="#4caf50" variant="outlined">
+                <v-chip size="x-small" color="success" variant="outlined">
                   {{ wod.score_type }}
                 </v-chip>
               </div>
@@ -122,7 +122,7 @@
               </p>
             </div>
             <div v-if="selectionMode">
-              <v-icon color="#00bcd4">mdi-chevron-right</v-icon>
+              <v-icon color="teal">mdi-chevron-right</v-icon>
             </div>
             <div v-else class="d-flex gap-1">
               <v-btn
@@ -140,7 +140,7 @@
                 icon="mdi-pencil"
                 size="small"
                 variant="text"
-                color="#00bcd4"
+                color="teal"
                 @click.stop="editWOD(wod.id)"
               >
                 <v-icon>mdi-pencil</v-icon>
@@ -204,7 +204,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Date *</label>
+              <label class="text-caption font-weight-bold d-block" >Date *</label>
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
@@ -217,7 +217,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Workout Name *</label>
+              <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
                 variant="outlined"
@@ -238,7 +238,7 @@
                   density="compact"
                   hide-details
                   readonly
-                  bg-color="#e0e0e0"
+                  bg-color="surface-variant"
                 />
               </div>
 

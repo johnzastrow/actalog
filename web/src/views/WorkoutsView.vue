@@ -7,7 +7,7 @@
       </v-alert>
 
       <!-- Tabs for Standard vs Custom Templates -->
-      <v-tabs v-model="activeTemplateTab" color="#00bcd4" class="mb-3" grow>
+      <v-tabs v-model="activeTemplateTab" color="teal" class="mb-3" grow>
         <v-tab value="standard">
           <v-icon start>mdi-star</v-icon>
           Standard
@@ -19,14 +19,14 @@
       </v-tabs>
 
       <!-- Quick Links -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <h3 class="text-body-2 font-weight-bold mb-1" style="color: #666">Quick Links</h3>
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
+        <h3 class="text-body-2 font-weight-bold mb-1 text-medium-emphasis">Quick Links</h3>
         <v-row dense>
           <v-col cols="6">
             <v-btn
               block
               variant="outlined"
-              color="#00bcd4"
+              color="teal"
               rounded
               style="text-transform: none"
               @click="$router.push('/wods')"
@@ -39,7 +39,7 @@
             <v-btn
               block
               variant="outlined"
-              color="#00bcd4"
+              color="teal"
               rounded
               style="text-transform: none"
               @click="$router.push('/movements')"
@@ -57,11 +57,11 @@
         elevation="0"
         rounded
         class="pa-2 mb-1"
-        style="background: white"
+        bg-color="surface"
       >
         <v-btn
           block
-          color="#00bcd4"
+          color="teal"
           variant="flat"
           prepend-icon="mdi-plus"
           @click="$router.push('/workouts/templates/create')"
@@ -75,7 +75,7 @@
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="#00bcd4" size="64" />
+          <v-progress-circular indeterminate color="teal" size="64" />
           <p class="mt-4 text-medium-emphasis">Loading templates...</p>
         </div>
 
@@ -85,13 +85,13 @@
           elevation="0"
           rounded
           class="pa-3 text-center"
-          style="background: white"
+          bg-color="surface"
         >
-          <v-icon size="64" color="#ccc">mdi-clipboard-text-outline</v-icon>
-          <p class="text-h6 mt-4" style="color: #2c3e50">
+          <v-icon size="64" color="surface-variant">mdi-clipboard-text-outline</v-icon>
+          <p class="text-h6 mt-4 text-high-emphasis">
             {{ activeTemplateTab === 'standard' ? 'No standard templates found' : 'No custom templates yet' }}
           </p>
-          <p class="text-body-2" style="color: #666">
+          <p class="text-body-2 text-medium-emphasis">
             {{
               activeTemplateTab === 'standard'
                 ? 'Standard templates will be seeded on first use'
@@ -100,7 +100,7 @@
           </p>
           <v-btn
             v-if="activeTemplateTab === 'custom'"
-            color="#00bcd4"
+            color="teal"
             class="mt-4"
             prepend-icon="mdi-plus"
             @click="$router.push('/workouts/templates/create')"
@@ -131,10 +131,10 @@
                 {{ template.created_by ? 'mdi-account' : 'mdi-star' }}
               </v-icon>
               <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-1" style="color: #1a1a1a">
+                <div class="font-weight-bold text-body-1" >
                   {{ template.name }}
                 </div>
-                <div v-if="template.notes" class="text-caption" style="color: #666">
+                <div v-if="template.notes" class="text-caption text-medium-emphasis">
                   {{ truncateText(template.notes, 60) }}
                 </div>
               </div>
@@ -230,7 +230,7 @@
             Cancel
           </v-btn>
           <v-btn
-            color="#00bcd4"
+            color="teal"
             :loading="creating"
             @click="createTemplate"
             style="text-transform: none"

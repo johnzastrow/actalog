@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Profile Card -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
         <div class="text-center mb-3">
           <!-- Avatar with Upload -->
           <div style="position: relative; display: inline-block">
@@ -10,7 +10,7 @@
             <v-btn
               icon
               size="small"
-              color="#00bcd4"
+              color="teal"
               style="position: absolute; bottom: 0; right: 0"
               @click="openFileDialog"
               :loading="uploadingAvatar"
@@ -28,17 +28,17 @@
             @change="handleFileSelect"
           />
 
-          <h2 class="text-h6 mt-3 font-weight-bold" style="color: #1a1a1a">
+          <h2 class="text-h6 mt-3 font-weight-bold" >
             {{ user?.name || 'User' }}
           </h2>
-          <p class="text-body-2" style="color: #666">{{ user?.email || 'email@example.com' }}</p>
+          <p class="text-body-2 text-medium-emphasis">{{ user?.email || 'email@example.com' }}</p>
 
           <!-- Delete Avatar Button (only if avatar exists) -->
           <v-btn
             v-if="user?.profile_image"
             size="x-small"
             variant="text"
-            color="#e91e63"
+            color="error"
             class="mt-2"
             @click="deleteAvatar"
             :loading="deletingAvatar"
@@ -50,7 +50,7 @@
           <v-chip
             v-if="user?.role === 'admin'"
             size="small"
-            color="#e91e63"
+            color="error"
             class="mt-2"
           >
             <v-icon start size="x-small">mdi-shield-crown</v-icon>
@@ -59,23 +59,23 @@
         </div>
 
         <!-- Member Since -->
-        <div v-if="user?.created_at" class="text-center text-caption" style="color: #999">
+        <div v-if="user?.created_at" class="text-center text-caption text-disabled">
           Member since {{ formatMemberSince(user.created_at) }}
         </div>
       </v-card>
 
       <!-- Version Info -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
         <div class="d-flex align-center justify-space-between">
           <div>
-            <div class="text-caption" style="color: #999">Version</div>
-            <div class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+            <div class="text-caption text-disabled">Version</div>
+            <div class="text-body-2 font-weight-bold" >
               {{ appVersion }}
             </div>
           </div>
           <div class="text-right">
-            <div class="text-caption" style="color: #999">Build</div>
-            <div class="text-body-2 font-weight-bold" style="color: #1a1a1a">
+            <div class="text-caption text-disabled">Build</div>
+            <div class="text-body-2 font-weight-bold" >
               #{{ buildNumber }}
             </div>
           </div>
@@ -83,9 +83,9 @@
       </v-card>
 
       <!-- Subscription Status -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
         <div class="d-flex align-center justify-space-between mb-2">
-          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Subscription</h2>
+          <h2 class="text-body-1 font-weight-bold" >Subscription</h2>
           <v-chip
             v-if="subscriptionStore.isPermanentFree"
             size="small"
@@ -117,7 +117,7 @@
 
         <!-- Loading State -->
         <div v-if="subscriptionStore.loading" class="text-center py-2">
-          <v-progress-circular indeterminate color="#00bcd4" size="24" />
+          <v-progress-circular indeterminate color="teal" size="24" />
         </div>
 
         <!-- Subscription Details -->
@@ -125,7 +125,7 @@
           <!-- User Subscription -->
           <div v-if="subscriptionStore.userSubscription" class="mb-2">
             <div class="d-flex align-center justify-space-between">
-              <div class="text-caption" style="color: #999">Status</div>
+              <div class="text-caption text-disabled">Status</div>
               <div class="text-body-2" :style="{ color: subscriptionStore.hasAccess ? '#4caf50' : '#e91e63' }">
                 {{ subscriptionStore.hasAccess ? 'Active' : 'Expired' }}
               </div>
@@ -136,10 +136,10 @@
               v-if="subscriptionStore.userSubscription.end_date && !subscriptionStore.isPermanentFree"
               class="d-flex align-center justify-space-between mt-1"
             >
-              <div class="text-caption" style="color: #999">
+              <div class="text-caption text-disabled">
                 {{ subscriptionStore.hasAccess ? 'Expires' : 'Expired' }}
               </div>
-              <div class="text-body-2" style="color: #1a1a1a">
+              <div class="text-body-2" >
                 {{ formatDate(subscriptionStore.userSubscription.end_date) }}
               </div>
             </div>
@@ -149,8 +149,8 @@
               v-if="subscriptionStore.userSubscription.next_billing_date && subscriptionStore.hasAccess"
               class="d-flex align-center justify-space-between mt-1"
             >
-              <div class="text-caption" style="color: #999">Next Billing</div>
-              <div class="text-body-2" style="color: #1a1a1a">
+              <div class="text-caption text-disabled">Next Billing</div>
+              <div class="text-body-2" >
                 {{ formatDate(subscriptionStore.userSubscription.next_billing_date) }}
               </div>
             </div>
@@ -158,7 +158,7 @@
 
           <!-- Organization Subscriptions -->
           <div v-if="subscriptionStore.orgSubscriptions.length > 0" class="mt-2 pt-2" style="border-top: 1px solid #eee">
-            <div class="text-caption mb-1" style="color: #999">
+            <div class="text-caption mb-1 text-disabled">
               Organization Access
             </div>
             <div
@@ -166,7 +166,7 @@
               :key="orgSub.id"
               class="d-flex align-center justify-space-between mb-1"
             >
-              <div class="text-body-2" style="color: #1a1a1a">
+              <div class="text-body-2" >
                 {{ orgSub.organization_name }}
               </div>
               <v-chip
@@ -181,7 +181,7 @@
 
           <!-- Access Source -->
           <div v-if="subscriptionStore.source !== 'none'" class="mt-2">
-            <div class="text-caption" style="color: #999">
+            <div class="text-caption text-disabled">
               Access via: {{ formatSource(subscriptionStore.source) }}
             </div>
           </div>
@@ -196,14 +196,14 @@
       </v-card>
 
       <!-- Stats Summary -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
         <div class="d-flex align-center justify-space-between mb-2">
-          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Workout Summary</h2>
+          <h2 class="text-body-1 font-weight-bold" >Workout Summary</h2>
         </div>
 
         <!-- Time Period Filter -->
         <div class="mb-3">
-          <v-chip-group v-model="selectedPeriod" mandatory color="#00bcd4" density="compact">
+          <v-chip-group v-model="selectedPeriod" mandatory color="teal" density="compact">
             <v-chip value="week" size="small">This Week</v-chip>
             <v-chip value="month" size="small">This Month</v-chip>
             <v-chip value="year" size="small">This Year</v-chip>
@@ -213,7 +213,7 @@
 
         <!-- Loading State -->
         <div v-if="loadingStats" class="text-center py-4">
-          <v-progress-circular indeterminate color="#00bcd4" size="32" />
+          <v-progress-circular indeterminate color="teal" size="32" />
         </div>
 
         <!-- Stats Grid -->
@@ -223,7 +223,7 @@
               <div class="text-h5 font-weight-bold" style="color: #00bcd4">
                 {{ stats.totalWorkouts }}
               </div>
-              <div class="text-caption" style="color: #666">Total Workouts</div>
+              <div class="text-caption text-medium-emphasis">Total Workouts</div>
             </v-card>
           </v-col>
           <v-col cols="6">
@@ -231,7 +231,7 @@
               <div class="text-h5 font-weight-bold" style="color: #4caf50">
                 {{ stats.currentStreak }}
               </div>
-              <div class="text-caption" style="color: #666">Day Streak</div>
+              <div class="text-caption text-medium-emphasis">Day Streak</div>
             </v-card>
           </v-col>
           <v-col cols="6">
@@ -239,7 +239,7 @@
               <div class="text-h5 font-weight-bold" style="color: #ffc107">
                 {{ stats.personalRecords }}
               </div>
-              <div class="text-caption" style="color: #666">Personal Records</div>
+              <div class="text-caption text-medium-emphasis">Personal Records</div>
             </v-card>
           </v-col>
           <v-col cols="6">
@@ -247,15 +247,15 @@
               <div class="text-h5 font-weight-bold" style="color: #e91e63">
                 {{ stats.customTemplates }}
               </div>
-              <div class="text-caption" style="color: #666">Custom Templates</div>
+              <div class="text-caption text-medium-emphasis">Custom Templates</div>
             </v-card>
           </v-col>
         </v-row>
       </v-card>
 
       <!-- Quick Actions -->
-      <v-card elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Quick Actions</h2>
+      <v-card elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-1" >Quick Actions</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-dumbbell"
@@ -263,11 +263,11 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               My Templates
             </v-list-item-title>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -277,11 +277,11 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Benchmark WODs
             </v-list-item-title>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -291,11 +291,11 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Personal Records
             </v-list-item-title>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -307,14 +307,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Export Data
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Download WODs and Movements as CSV
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -324,23 +324,23 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Import Data
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Upload WODs and Movements from CSV
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
         </v-list>
       </v-card>
 
       <!-- Administration (Admin Only) -->
-      <v-card v-if="user?.role === 'admin'" elevation="0" rounded class="pa-2 mb-1" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">
-          <v-icon color="#e91e63" size="small" class="mr-1">mdi-shield-crown</v-icon>
+      <v-card v-if="user?.role === 'admin'" elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-1" >
+          <v-icon color="error" size="small" class="mr-1">mdi-shield-crown</v-icon>
           Administration
         </h2>
         <v-list bg-color="transparent" density="compact">
@@ -350,14 +350,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Data Cleanup
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Fix WOD score_type mismatches
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -367,14 +367,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               User Management
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Manage accounts and permissions
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -384,14 +384,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               User Content
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Manage user-created WODs, movements, workouts
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -401,14 +401,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Audit Logs
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               View security events and activity
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -418,14 +418,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Database Backups
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Create and restore backups
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -435,14 +435,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Data Change Logs
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Track edits and deletions
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -452,14 +452,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Announcements
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Send notifications to users
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -469,14 +469,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Organization Management
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Manage organizations and members
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -486,14 +486,14 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Subscription Management
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Manage user and org subscriptions
             </v-list-item-subtitle>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
@@ -502,10 +502,10 @@
             disabled
             rounded
           >
-            <v-list-item-title class="font-weight-medium" style="color: #999">
+            <v-list-item-title class="font-weight-medium text-disabled">
               System Reports
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption" style="color: #999">
+            <v-list-item-subtitle class="text-caption text-disabled">
               Coming soon
             </v-list-item-subtitle>
           </v-list-item>
@@ -513,8 +513,8 @@
       </v-card>
 
       <!-- Account Actions -->
-      <v-card elevation="0" rounded class="pa-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-1" style="color: #1a1a1a">Account</h2>
+      <v-card elevation="0" rounded class="pa-2" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-1" >Account</h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-cog"
@@ -522,11 +522,11 @@
             rounded
             style="cursor: pointer"
           >
-            <v-list-item-title class="font-weight-medium" style="color: #1a1a1a">
+            <v-list-item-title class="font-weight-medium" >
               Settings
             </v-list-item-title>
             <template #append>
-              <v-icon color="#ccc" size="small">mdi-chevron-right</v-icon>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 

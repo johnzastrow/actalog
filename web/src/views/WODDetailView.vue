@@ -4,7 +4,7 @@
       <!-- Back Button -->
       <v-btn
         variant="text"
-        color="#00bcd4"
+        color="teal"
         class="mb-2"
         @click="router.back()"
       >
@@ -14,8 +14,8 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="48" />
-        <p class="text-body-2 mt-3" style="color: #666">Loading WOD...</p>
+        <v-progress-circular indeterminate color="teal" size="48" />
+        <p class="text-body-2 mt-3 text-medium-emphasis">Loading WOD...</p>
       </div>
 
       <!-- Error State -->
@@ -26,21 +26,21 @@
       <!-- WOD Details -->
       <div v-else-if="wod">
         <!-- Header Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
           <div class="d-flex align-center mb-3">
             <v-icon color="#ff5722" size="48" class="mr-3">mdi-fire</v-icon>
             <div style="flex: 1">
-              <h1 class="text-h5 font-weight-bold" style="color: #1a1a1a">
+              <h1 class="text-h5 font-weight-bold" >
                 {{ wod.name }}
               </h1>
               <div class="d-flex align-center flex-wrap gap-2 mt-2">
-                <v-chip size="small" color="#9c27b0" variant="flat">
+                <v-chip size="small" color="secondary" variant="flat">
                   {{ wod.type }}
                 </v-chip>
-                <v-chip size="small" color="#00bcd4" variant="flat">
+                <v-chip size="small" color="teal" variant="flat">
                   {{ wod.regime }}
                 </v-chip>
-                <v-chip size="small" color="#4caf50" variant="flat">
+                <v-chip size="small" color="success" variant="flat">
                   {{ wod.score_type }}
                 </v-chip>
                 <v-chip v-if="!wod.is_standard" size="small" color="teal">
@@ -53,7 +53,7 @@
               v-if="canEdit"
               icon
               variant="text"
-              color="#00bcd4"
+              color="teal"
               @click="editWOD"
             >
               <v-icon>mdi-pencil</v-icon>
@@ -78,43 +78,43 @@
         </v-btn>
 
         <!-- Details Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-            <v-icon color="#00bcd4" size="small" class="mr-1">mdi-information</v-icon>
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >
+            <v-icon color="teal" size="small" class="mr-1">mdi-information</v-icon>
             Workout Details
           </h2>
 
           <!-- Source -->
           <div class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Source</p>
-            <v-chip size="small" color="#2196f3" variant="outlined">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Source</p>
+            <v-chip size="small" color="info" variant="outlined">
               {{ wod.source }}
             </v-chip>
           </div>
 
           <!-- Description with markdown -->
           <div v-if="wod.description" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Description</p>
-            <div class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
+            <div class="text-body-2" >
               <MarkdownRenderer :content="wod.description" />
             </div>
           </div>
 
           <!-- Notes with markdown -->
           <div v-if="wod.notes" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Notes</p>
-            <div class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
+            <div class="text-body-2" >
               <MarkdownRenderer :content="wod.notes" />
             </div>
           </div>
 
           <!-- Video URL -->
           <div v-if="wod.url">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Video</p>
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Video</p>
             <v-btn
               :href="wod.url"
               target="_blank"
-              color="#00bcd4"
+              color="teal"
               variant="outlined"
               prepend-icon="mdi-play-circle"
               size="small"
@@ -127,51 +127,51 @@
         </v-card>
 
         <!-- Workout Type Info Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-            <v-icon color="#00bcd4" size="small" class="mr-1">mdi-tag</v-icon>
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >
+            <v-icon color="teal" size="small" class="mr-1">mdi-tag</v-icon>
             Workout Classification
           </h2>
 
           <div class="mb-2">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Type</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Type</p>
+            <p class="text-body-2" >
               {{ wod.type }}
             </p>
           </div>
 
           <div class="mb-2">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Regime</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Regime</p>
+            <p class="text-body-2" >
               {{ wod.regime }}
             </p>
           </div>
 
           <div>
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Score Type</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Score Type</p>
+            <p class="text-body-2" >
               {{ wod.score_type }}
             </p>
           </div>
         </v-card>
 
         <!-- Metadata Card -->
-        <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-            <v-icon color="#00bcd4" size="small" class="mr-1">mdi-clock</v-icon>
+        <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >
+            <v-icon color="teal" size="small" class="mr-1">mdi-clock</v-icon>
             Metadata
           </h2>
 
           <div class="mb-2">
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Created</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Created</p>
+            <p class="text-body-2" >
               {{ formatDate(wod.created_at) }}
             </p>
           </div>
 
           <div>
-            <p class="text-caption font-weight-bold mb-1" style="color: #666">Last Updated</p>
-            <p class="text-body-2" style="color: #1a1a1a">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Last Updated</p>
+            <p class="text-body-2" >
               {{ formatDate(wod.updated_at) }}
             </p>
           </div>
@@ -191,7 +191,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Date *</label>
+              <label class="text-caption font-weight-bold d-block" >Date *</label>
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
@@ -204,7 +204,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">Workout Name *</label>
+              <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
                 variant="outlined"
@@ -225,7 +225,7 @@
                   density="compact"
                   hide-details
                   readonly
-                  bg-color="#e0e0e0"
+                  bg-color="surface-variant"
                 />
               </div>
 

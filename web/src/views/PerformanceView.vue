@@ -7,7 +7,7 @@
       </v-alert>
 
       <!-- Unified Search (Movements + WODs) -->
-      <v-card elevation="2" class="pa-3 mb-3" style="background: white">
+      <v-card elevation="2" class="pa-3 mb-3" bg-color="surface">
         <v-autocomplete
           v-model="selectedItem"
           :items="searchResults"
@@ -25,7 +25,7 @@
           @update:model-value="handleSelection"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+            <v-icon color="teal" size="small">mdi-magnify</v-icon>
           </template>
           <template #item="{ props, item }">
             <v-list-item v-bind="props" density="compact">
@@ -49,10 +49,10 @@
       </v-card>
 
       <!-- Empty State - Prompt to Search -->
-      <v-card v-if="!selectedItem" elevation="0" rounded="lg" class="pa-6 mb-3 text-center" style="background: white">
-        <v-icon size="64" color="#ccc">mdi-chart-line-variant</v-icon>
-        <h2 class="text-h6 font-weight-bold mt-3" style="color: #1a1a1a">Track Your Performance</h2>
-        <p class="text-body-2 mt-2" style="color: #666">
+      <v-card v-if="!selectedItem" elevation="0" rounded="lg" class="pa-6 mb-3 text-center" bg-color="surface">
+        <v-icon size="64" color="surface-variant">mdi-chart-line-variant</v-icon>
+        <h2 class="text-h6 font-weight-bold mt-3" >Track Your Performance</h2>
+        <p class="text-body-2 mt-2 text-medium-emphasis">
           Search for a movement or WOD above to view your progress, PRs, and performance history
         </p>
       </v-card>
@@ -77,18 +77,18 @@
         <!-- MOVEMENT-SPECIFIC CONTENT -->
         <template v-if="selectedItem.type === 'movement'">
           <!-- Heaviest Lifts (Top 3 Maxes) -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+            <h2 class="text-body-1 font-weight-bold mb-3" >
               <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
               Heaviest Lifts
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+              <v-progress-circular indeterminate color="teal" size="32" />
             </div>
 
             <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
-              <p class="text-caption" style="color: #999">No performance data yet</p>
+              <p class="text-caption text-disabled">No performance data yet</p>
             </div>
 
             <div v-else>
@@ -103,13 +103,13 @@
                     >
                       #{{ index + 1 }}
                     </v-chip>
-                    <div class="font-weight-bold text-h6" style="color: #1a1a1a">
+                    <div class="font-weight-bold text-h6" >
                       {{ lift.weight }}
                     </div>
-                    <div class="text-caption" style="color: #666">
+                    <div class="text-caption text-medium-emphasis">
                       lbs
                     </div>
-                    <div v-if="lift.reps" class="text-caption" style="color: #999">
+                    <div v-if="lift.reps" class="text-caption text-disabled">
                       {{ lift.reps }} reps
                     </div>
                   </div>
@@ -119,25 +119,25 @@
           </v-card>
 
           <!-- Best Estimated 1RM -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
-              <v-icon color="#ffc107" size="small" class="mr-1">mdi-arm-flex</v-icon>
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+            <h2 class="text-body-1 font-weight-bold mb-3" >
+              <v-icon color="warning" size="small" class="mr-1">mdi-arm-flex</v-icon>
               Best Estimated 1RM
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+              <v-progress-circular indeterminate color="teal" size="32" />
             </div>
 
             <div v-else-if="!best1RM" class="text-center py-4">
-              <p class="text-caption" style="color: #999">No weight/reps data available</p>
+              <p class="text-caption text-disabled">No weight/reps data available</p>
             </div>
 
             <div v-else class="text-center">
               <div class="font-weight-bold text-h4" style="color: #ffc107">
                 {{ Math.round(best1RM) }}
               </div>
-              <div class="text-caption mb-2" style="color: #666">
+              <div class="text-caption mb-2 text-medium-emphasis">
                 lbs (estimated)
               </div>
               <v-chip
@@ -153,7 +153,7 @@
           </v-card>
 
           <!-- Rep Scheme Dropdown Filter -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
             <v-select
               v-model="selectedRepScheme"
               :items="repSchemes"
@@ -165,21 +165,21 @@
               @update:model-value="filterChart"
             >
               <template #prepend-inner>
-                <v-icon color="#00bcd4" size="small">mdi-filter</v-icon>
+                <v-icon color="teal" size="small">mdi-filter</v-icon>
               </template>
             </v-select>
           </v-card>
 
           <!-- Performance Chart -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance Chart</h2>
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+            <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+              <v-progress-circular indeterminate color="teal" size="32" />
             </div>
 
             <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
-              <p class="text-caption" style="color: #999">No data for selected filter</p>
+              <p class="text-caption text-disabled">No data for selected filter</p>
             </div>
 
             <div v-else style="height: 250px; position: relative; width: 100%">
@@ -191,18 +191,18 @@
         <!-- WOD-SPECIFIC CONTENT -->
         <template v-if="selectedItem.type === 'wod'">
           <!-- Best WOD Performances (Top 3) -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+            <h2 class="text-body-1 font-weight-bold mb-3" >
               <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
               Best Performances
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+              <v-progress-circular indeterminate color="teal" size="32" />
             </div>
 
             <div v-else-if="bestWODPerformances.length === 0" class="text-center py-4">
-              <p class="text-caption" style="color: #999">No performance data yet</p>
+              <p class="text-caption text-disabled">No performance data yet</p>
             </div>
 
             <div v-else>
@@ -217,10 +217,10 @@
                     >
                       #{{ index + 1 }}
                     </v-chip>
-                    <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                    <div class="font-weight-bold text-body-2" >
                       {{ formatWODScore(perf) }}
                     </div>
-                    <div class="text-caption" style="color: #666">
+                    <div class="text-caption text-medium-emphasis">
                       {{ formatDate(perf.workout_date) }}
                     </div>
                   </div>
@@ -230,15 +230,15 @@
           </v-card>
 
           <!-- WOD Performance Chart -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-            <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance Chart</h2>
+          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+            <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="#00bcd4" size="32" />
+              <v-progress-circular indeterminate color="teal" size="32" />
             </div>
 
             <div v-else-if="wodPerformanceData.length === 0" class="text-center py-4">
-              <p class="text-caption" style="color: #999">No performance data yet</p>
+              <p class="text-caption text-disabled">No performance data yet</p>
             </div>
 
             <div v-else style="height: 250px; position: relative; width: 100%">
@@ -248,17 +248,17 @@
         </template>
 
         <!-- Performance History (Grouped by Year) -->
-        <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-          <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Performance History</h2>
+        <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+          <h2 class="text-body-1 font-weight-bold mb-3" >Performance History</h2>
 
           <div v-if="loadingPerformance" class="text-center py-4">
-            <v-progress-circular indeterminate color="#00bcd4" size="32" />
+            <v-progress-circular indeterminate color="teal" size="32" />
           </div>
 
           <div v-else-if="Object.keys(groupedHistory).length === 0" class="text-center py-4">
-            <v-icon size="48" color="#ccc">mdi-history</v-icon>
-            <p class="text-body-2 mt-2" style="color: #666">No history yet</p>
-            <p class="text-caption" style="color: #999">
+            <v-icon size="48" color="surface-variant">mdi-history</v-icon>
+            <p class="text-body-2 mt-2 text-medium-emphasis">No history yet</p>
+            <p class="text-caption text-disabled">
               Start logging workouts with {{ selectedItem.name }} to track your progress
             </p>
           </div>
@@ -266,7 +266,7 @@
           <!-- History Grouped by Year -->
           <div v-else>
             <div v-for="(entries, year) in groupedHistory" :key="year" class="mb-4">
-              <v-chip size="small" color="#00bcd4" label class="mb-2">
+              <v-chip size="small" color="teal" label class="mb-2">
                 {{ year }}
               </v-chip>
 
@@ -288,7 +288,7 @@
 
                   <div class="flex-grow-1">
                     <!-- Movement Performance Display -->
-                    <div v-if="selectedItem.type === 'movement'" class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                    <div v-if="selectedItem.type === 'movement'" class="font-weight-bold text-body-2" >
                       <span v-if="entry.sets && entry.reps && entry.weight">
                         {{ entry.sets }} × {{ entry.reps }} @ {{ entry.weight }} lbs
                       </span>
@@ -302,11 +302,11 @@
                     </div>
 
                     <!-- WOD Performance Display -->
-                    <div v-if="selectedItem.type === 'wod'" class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                    <div v-if="selectedItem.type === 'wod'" class="font-weight-bold text-body-2" >
                       {{ formatWODScore(entry) }}
                     </div>
 
-                    <div class="text-caption" style="color: #666">
+                    <div class="text-caption text-medium-emphasis">
                       {{ formatDate(entry.workout_date) }}
                       <span v-if="entry.notes"> • {{ entry.notes }}</span>
                       <span v-if="entry.calculated_1rm" class="ml-2" style="color: #ffc107">
@@ -343,7 +343,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Date *
               </label>
               <v-text-field
@@ -359,7 +359,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Workout Name *
               </label>
               <v-text-field
@@ -374,7 +374,7 @@
 
             <!-- Total Time -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Total Time (minutes)
               </label>
               <v-text-field
@@ -390,7 +390,7 @@
 
             <!-- Notes -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Notes
               </label>
               <v-textarea
@@ -405,7 +405,7 @@
 
             <!-- Unified Search for Movement/WOD -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Add Performance Data (Optional)
               </label>
               <v-autocomplete
@@ -423,7 +423,7 @@
                 placeholder="Search for movement or WOD..."
               >
                 <template #prepend-inner>
-                  <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
                 </template>
                 <template #item="{ props, item }">
                   <v-list-item v-bind="props">
@@ -453,10 +453,10 @@
             <!-- Template Info Display -->
             <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3" style="background: #f3e5f5; border-radius: 8px; border: 1px solid #9c27b0">
               <div class="d-flex align-center mb-2">
-                <v-icon color="#9c27b0" size="small" class="mr-2">mdi-clipboard-text</v-icon>
+                <v-icon color="secondary" size="small" class="mr-2">mdi-clipboard-text</v-icon>
                 <span class="text-caption font-weight-bold" style="color: #9c27b0">Workout Template Selected</span>
               </div>
-              <p class="text-caption mb-0" style="color: #666">
+              <p class="text-caption mb-0 text-medium-emphasis">
                 This will create a workout based on the "{{ quickLogData.selectedItem.name }}" template.
                 Template details will be included automatically.
               </p>
@@ -543,7 +543,7 @@
                     density="compact"
                     hide-details
                     readonly
-                    bg-color="#e0e0e0"
+                    bg-color="surface-variant"
                   />
                 </div>
                 <!-- Time-based WOD fields -->

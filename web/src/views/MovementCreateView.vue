@@ -23,8 +23,8 @@
       </v-alert>
 
       <!-- Basic Information Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Basic Information</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Basic Information</h2>
 
         <v-text-field
           v-model="movement.name"
@@ -39,7 +39,7 @@
           autofocus
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-dumbbell</v-icon>
+            <v-icon color="teal" size="small">mdi-dumbbell</v-icon>
           </template>
         </v-text-field>
 
@@ -55,7 +55,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tag</v-icon>
+            <v-icon color="teal" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -70,7 +70,7 @@
           clearable
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-signal</v-icon>
+            <v-icon color="teal" size="small">mdi-signal</v-icon>
           </template>
         </v-select>
 
@@ -84,7 +84,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tools</v-icon>
+            <v-icon color="teal" size="small">mdi-tools</v-icon>
           </template>
         </v-text-field>
 
@@ -98,7 +98,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-arm-flex</v-icon>
+            <v-icon color="teal" size="small">mdi-arm-flex</v-icon>
           </template>
         </v-text-field>
 
@@ -116,8 +116,8 @@
       </v-card>
 
       <!-- Description & Instructions Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Description & Instructions</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Description & Instructions</h2>
 
         <v-textarea
           v-model="movement.description"
@@ -132,7 +132,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+            <v-icon color="teal" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
 
@@ -148,7 +148,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-comment-text</v-icon>
+            <v-icon color="teal" size="small">mdi-comment-text</v-icon>
           </template>
         </v-textarea>
 
@@ -163,7 +163,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-video</v-icon>
+            <v-icon color="teal" size="small">mdi-video</v-icon>
           </template>
         </v-text-field>
 
@@ -178,16 +178,16 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-stairs</v-icon>
+            <v-icon color="teal" size="small">mdi-stairs</v-icon>
           </template>
         </v-textarea>
       </v-card>
 
       <!-- Actions Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           :loading="saving"
@@ -201,7 +201,7 @@
         <v-btn
           v-if="isEditMode"
           block
-          color="#e91e63"
+          color="error"
           variant="outlined"
           size="large"
           rounded="lg"
@@ -233,7 +233,7 @@
       <v-card>
         <v-card-title class="text-h6" style="color: #e91e63">Delete Movement?</v-card-title>
         <v-card-text>
-          <p style="color: #666">
+          <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ movement.name }}"? This action cannot be undone.
           </p>
         </v-card-text>
@@ -241,7 +241,7 @@
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
           <v-btn
-            color="#e91e63"
+            color="error"
             variant="flat"
             :loading="deleting"
             @click="deleteMovement"

@@ -32,27 +32,27 @@
       <!-- Stats Cards -->
       <v-row dense class="mb-1">
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="#00bcd4" size="28" class="mr-2">mdi-dumbbell</v-icon>
+              <v-icon color="teal" size="28" class="mr-2">mdi-dumbbell</v-icon>
               <div>
-                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                <div class="text-h5 font-weight-bold" >
                   {{ totalWorkouts }}
                 </div>
-                <div class="text-caption" style="color: #666">Total Workouts</div>
+                <div class="text-caption text-medium-emphasis">Total Workouts</div>
               </div>
             </div>
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
               <v-icon color="teal" size="28" class="mr-2">mdi-calendar-month</v-icon>
               <div>
-                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                <div class="text-h5 font-weight-bold" >
                   {{ monthWorkouts }}
                 </div>
-                <div class="text-caption" style="color: #666">This Month</div>
+                <div class="text-caption text-medium-emphasis">This Month</div>
               </div>
             </div>
           </v-card>
@@ -61,27 +61,27 @@
 
       <v-row dense class="mb-1">
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="#4caf50" size="28" class="mr-2">mdi-fire</v-icon>
+              <v-icon color="success" size="28" class="mr-2">mdi-fire</v-icon>
               <div>
-                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                <div class="text-h5 font-weight-bold" >
                   {{ currentStreak }}
                 </div>
-                <div class="text-caption" style="color: #666">Day Streak</div>
+                <div class="text-caption text-medium-emphasis">Day Streak</div>
               </div>
             </div>
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="#e91e63" size="28" class="mr-2">mdi-clock-outline</v-icon>
+              <v-icon color="error" size="28" class="mr-2">mdi-clock-outline</v-icon>
               <div>
-                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                <div class="text-h5 font-weight-bold" >
                   {{ avgTimePerWorkout }}m
                 </div>
-                <div class="text-caption" style="color: #666">Avg Time</div>
+                <div class="text-caption text-medium-emphasis">Avg Time</div>
               </div>
             </div>
           </v-card>
@@ -95,12 +95,13 @@
             elevation="0"
             rounded
             class="pa-1 text-center"
-            style="background: #2C3657; cursor: pointer"
+            bg-color="primary"
+            style="cursor: pointer"
             @click="openQuickLog"
           >
-            <v-icon size="28" color="white" class="mb-1">mdi-lightning-bolt</v-icon>
-            <div class="text-body-2 font-weight-bold text-white">Quick Log</div>
-            <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
+            <v-icon size="28" class="mb-1">mdi-lightning-bolt</v-icon>
+            <div class="text-body-2 font-weight-bold">Quick Log</div>
+            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
               Fast entry
             </div>
           </v-card>
@@ -110,12 +111,13 @@
             elevation="0"
             rounded
             class="pa-1 text-center"
-            style="background: #2C3657; cursor: pointer"
+            bg-color="primary"
+            style="cursor: pointer"
             @click="$router.push('/workouts/calendar')"
           >
-            <v-icon size="28" color="white" class="mb-1">mdi-calendar-month</v-icon>
-            <div class="text-body-2 font-weight-bold text-white">Calendar</div>
-            <div class="text-caption text-white" style="opacity: 0.9; font-size: 9px">
+            <v-icon size="28" class="mb-1">mdi-calendar-month</v-icon>
+            <div class="text-body-2 font-weight-bold">Calendar</div>
+            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
               View by date
             </div>
           </v-card>
@@ -125,21 +127,21 @@
       <!-- Additional Stats -->
       <v-row dense class="mb-1">
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="#9c27b0" size="28" class="mr-2">mdi-chart-timeline-variant</v-icon>
+              <v-icon color="secondary" size="28" class="mr-2">mdi-chart-timeline-variant</v-icon>
               <div>
-                <div class="text-h5 font-weight-bold" style="color: #1a1a1a">
+                <div class="text-h5 font-weight-bold" >
                   {{ avgWorkoutsPerWeek }}
                 </div>
-                <div class="text-caption" style="color: #666">Avg Wrk/Week ({{ new Date().getFullYear() }})</div>
+                <div class="text-caption text-medium-emphasis">Avg Wrk/Week ({{ new Date().getFullYear() }})</div>
               </div>
             </div>
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card elevation="0" rounded class="pa-2" style="background: white">
-            <div class="text-caption mb-1" style="color: #666; text-align: center">This Week</div>
+          <v-card elevation="0" rounded class="pa-2" bg-color="surface">
+            <div class="text-caption mb-1 text-medium-emphasis" style="text-align: center">This Week</div>
             <div class="d-flex justify-space-around">
               <div
                 v-for="(day, index) in weekDays"
@@ -147,25 +149,17 @@
                 class="text-center"
                 style="flex: 1"
               >
-                <div
-                  :style="{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    margin: '0 auto',
-                    background: day.hasWorkout ? '#00bcd4' : '#e0e0e0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }"
+                <v-avatar
+                  size="24"
+                  :color="day.hasWorkout ? 'teal' : 'surface-variant'"
                 >
                   <span
                     class="text-caption font-weight-bold"
-                    :style="{ color: day.hasWorkout ? 'white' : '#999' }"
+                    :class="day.hasWorkout ? 'text-white' : 'text-medium-emphasis'"
                   >
                     {{ day.letter }}
                   </span>
-                </div>
+                </v-avatar>
               </div>
             </div>
           </v-card>
@@ -175,28 +169,28 @@
       <!-- Active Users This Month Card -->
       <v-row dense class="mb-1" v-if="activeUsersStats.length > 0">
         <v-col cols="12">
-          <v-card elevation="0" rounded class="pa-2" style="background: white">
-            <div class="text-caption mb-2 font-weight-bold" style="color: #666">
-              <v-icon size="small" color="#00bcd4" class="mr-1">mdi-account-group</v-icon>
+          <v-card elevation="0" rounded class="pa-2" bg-color="surface">
+            <div class="text-caption mb-2 font-weight-bold text-medium-emphasis">
+              <v-icon size="small" color="teal" class="mr-1">mdi-account-group</v-icon>
               Active This Month
             </div>
             <div v-for="(user, index) in activeUsersStats" :key="user.id" class="mb-2">
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex align-center">
-                  <v-avatar size="32" :color="user.is_current ? '#00bcd4' : '#9c27b0'" class="mr-2">
+                  <v-avatar size="32" :color="user.is_current ? 'teal' : 'secondary'" class="mr-2">
                     <span class="text-white text-body-2">{{ user.name[0].toUpperCase() }}</span>
                   </v-avatar>
                   <div>
                     <div
                       class="text-body-2"
                       :class="{ 'font-weight-bold': user.is_current }"
-                      style="color: #1a1a1a"
+                      
                     >
                       {{ user.name }}{{ user.is_current ? ' (You)' : '' }}
                     </div>
                   </div>
                 </div>
-                <v-chip size="small" :color="user.is_current ? '#00bcd4' : '#9c27b0'" variant="flat">
+                <v-chip size="small" :color="user.is_current ? 'teal' : 'secondary'" variant="flat">
                   <span class="text-white font-weight-bold">{{ user.workout_count }}</span>
                 </v-chip>
               </div>
@@ -213,15 +207,15 @@
           @click="showRecentWorkouts = !showRecentWorkouts"
         >
           <div class="d-flex align-center">
-            <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Last 30 Days</h3>
-            <v-icon size="small" class="ml-1" color="#666">
+            <h3 class="text-body-1 font-weight-bold" >Last 30 Days</h3>
+            <v-icon size="small" class="ml-1" color="medium-emphasis">
               {{ showRecentWorkouts ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
             </v-icon>
           </div>
           <v-btn
             size="x-small"
             variant="text"
-            color="#00bcd4"
+            color="teal"
             style="text-transform: none; font-size: 11px"
             @click.stop="$router.push('/workouts')"
           >
@@ -232,8 +226,8 @@
         <div v-if="showRecentWorkouts">
           <!-- Loading State -->
           <div v-if="loading" class="text-center py-8">
-            <v-progress-circular indeterminate color="#00bcd4" size="48" />
-            <p class="mt-2 text-caption" style="color: #666">Loading workouts...</p>
+            <v-progress-circular indeterminate color="teal" size="48" />
+            <p class="mt-2 text-caption text-medium-emphasis">Loading workouts...</p>
           </div>
 
           <!-- Empty State -->
@@ -242,11 +236,11 @@
             elevation="0"
             rounded
             class="pa-2 text-center"
-            style="background: white"
+            bg-color="surface"
           >
-            <v-icon size="48" color="#ccc">mdi-clipboard-text-outline</v-icon>
-            <p class="text-body-2 mt-1 mb-0" style="color: #2c3e50">No workouts logged yet</p>
-            <p class="text-caption mb-0" style="color: #666">
+            <v-icon size="48" color="surface-variant">mdi-clipboard-text-outline</v-icon>
+            <p class="text-body-2 mt-1 mb-0 text-high-emphasis">No workouts logged yet</p>
+            <p class="text-caption mb-0 text-medium-emphasis">
               Start tracking your fitness journey today!
             </p>
           </v-card>
@@ -263,17 +257,17 @@
             @click="toggleWorkoutExpand(workout.id)"
           >
             <div class="d-flex align-center mb-1">
-              <v-icon color="#00bcd4" class="mr-2" size="x-small">mdi-dumbbell</v-icon>
+              <v-icon color="teal" class="mr-2" size="x-small">mdi-dumbbell</v-icon>
               <div class="flex-grow-1">
-                <div class="font-weight-bold text-body-2" style="color: #1a1a1a">
+                <div class="font-weight-bold text-body-2" >
                   {{ workout.workout_name || 'Workout' }}
                 </div>
-                <div style="color: #666; font-size: 11px">
+                <div class="text-medium-emphasis" style="font-size: 11px">
                   {{ formatDate(workout.workout_date) }}
                   <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
                 </div>
               </div>
-              <v-icon color="#00bcd4" size="x-small">
+              <v-icon color="teal" size="x-small">
                 {{ expandedWorkouts.has(workout.id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
             </div>
@@ -282,8 +276,8 @@
             <div v-if="!expandedWorkouts.has(workout.id)">
               <!-- Display movement performance (first 2 only) -->
               <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
-                <div v-for="(perf, index) in workout.performance_movements.slice(0, 2)" :key="index" class="text-caption mb-1" style="color: #666">
-                  <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                <div v-for="(perf, index) in workout.performance_movements.slice(0, 2)" :key="index" class="text-caption mb-1 text-medium-emphasis">
+                  <v-icon size="small" color="teal">mdi-weight-lifter</v-icon>
                   <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
                   <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
                   <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
@@ -293,14 +287,14 @@
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
-                <div v-if="workout.performance_movements.length > 2" class="text-caption ml-7" style="color: #999">
+                <div v-if="workout.performance_movements.length > 2" class="text-caption ml-7 text-disabled">
                   +{{ workout.performance_movements.length - 2 }} more...
                 </div>
               </div>
 
               <!-- Display WOD performance (first 1 only) -->
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
-                <div v-for="(perf, index) in workout.performance_wods.slice(0, 1)" :key="index" class="text-caption mb-1" style="color: #666">
+                <div v-for="(perf, index) in workout.performance_wods.slice(0, 1)" :key="index" class="text-caption mb-1 text-medium-emphasis">
                   <v-icon size="small" color="teal">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
@@ -312,13 +306,13 @@
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
-                <div v-if="workout.performance_wods.length > 1" class="text-caption ml-7" style="color: #999">
+                <div v-if="workout.performance_wods.length > 1" class="text-caption ml-7 text-disabled">
                   +{{ workout.performance_wods.length - 1 }} more...
                 </div>
               </div>
 
               <!-- Notes preview -->
-              <div v-if="workout.notes" class="ml-7 mt-2 text-caption" style="color: #666">
+              <div v-if="workout.notes" class="ml-7 mt-2 text-caption text-medium-emphasis">
                 📝 {{ truncateText(workout.notes, 80) }}
               </div>
             </div>
@@ -327,9 +321,9 @@
             <div v-else>
               <!-- Display ALL movement performances -->
               <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
-                <div class="text-caption font-weight-bold mb-1" style="color: #1a1a1a">Movements:</div>
-                <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1 ml-2" style="color: #666">
-                  <v-icon size="small" color="#00bcd4">mdi-weight-lifter</v-icon>
+                <div class="text-caption font-weight-bold mb-1" >Movements:</div>
+                <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1 ml-2 text-medium-emphasis">
+                  <v-icon size="small" color="teal">mdi-weight-lifter</v-icon>
                   <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
                   <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
                   <span v-if="perf.sets"> × {{ perf.sets }} sets</span>
@@ -344,8 +338,8 @@
 
               <!-- Display ALL WOD performances -->
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
-                <div class="text-caption font-weight-bold mb-1" style="color: #1a1a1a">WODs:</div>
-                <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1 ml-2" style="color: #666">
+                <div class="text-caption font-weight-bold mb-1" >WODs:</div>
+                <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1 ml-2 text-medium-emphasis">
                   <v-icon size="small" color="teal">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> Time: {{ formatTime(perf.time_seconds) }}</span>
@@ -360,8 +354,8 @@
               </div>
 
               <!-- Full notes with markdown rendering -->
-              <div v-if="workout.notes" class="ml-7 mt-2 text-caption" style="color: #666">
-                <div class="font-weight-bold mb-1" style="color: #1a1a1a">Notes:</div>
+              <div v-if="workout.notes" class="ml-7 mt-2 text-caption text-medium-emphasis">
+                <div class="font-weight-bold mb-1" >Notes:</div>
                 <div class="ml-2">
                   <MarkdownRenderer :content="workout.notes" />
                 </div>
@@ -371,7 +365,7 @@
               <div class="ml-7 mt-3 d-flex gap-2">
                 <v-btn
                   size="small"
-                  color="#00bcd4"
+                  color="teal"
                   variant="outlined"
                   @click.stop="viewWorkout(workout.id)"
                 >
@@ -389,7 +383,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" style="background: #00bcd4; color: white">
+        <v-card-title class="text-h6 font-weight-bold" bg-color="teal">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log Workout
         </v-card-title>
@@ -398,7 +392,7 @@
           <v-form ref="quickLogForm" @submit.prevent="submitQuickLog">
             <!-- Date -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Date *
               </label>
               <v-text-field
@@ -414,7 +408,7 @@
 
             <!-- Workout Name -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Workout Name *
               </label>
               <v-text-field
@@ -429,7 +423,7 @@
 
             <!-- Total Time -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Total Time (minutes)
               </label>
               <v-text-field
@@ -445,7 +439,7 @@
 
             <!-- Notes -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Notes
               </label>
               <v-textarea
@@ -460,7 +454,7 @@
 
             <!-- Unified Search for Movement/WOD -->
             <div class="mb-1">
-              <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+              <label class="text-caption font-weight-bold d-block" >
                 Add Performance Data (Optional)
               </label>
               <v-autocomplete
@@ -477,13 +471,13 @@
                 placeholder="Search for movement or WOD..."
               >
                 <template #prepend-inner>
-                  <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
                 </template>
                 <template #item="{ props, item }">
                   <v-list-item v-bind="props">
                     <template #prepend>
                       <v-icon
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
+                        :color="item.raw.type === 'movement' ? 'teal' : (item.raw.type === 'wod' ? 'teal' : 'secondary')"
                         size="small"
                       >
                         {{ item.raw.type === 'movement' ? 'mdi-weight-lifter' : (item.raw.type === 'wod' ? 'mdi-fire' : 'mdi-clipboard-text') }}
@@ -491,7 +485,7 @@
                     </template>
                     <template #append>
                       <v-chip
-                        :color="item.raw.type === 'movement' ? '#00bcd4' : (item.raw.type === 'wod' ? 'teal' : '#9c27b0')"
+                        :color="item.raw.type === 'movement' ? 'teal' : (item.raw.type === 'wod' ? 'teal' : 'secondary')"
                         size="x-small"
                         variant="flat"
                         class="text-uppercase"
@@ -505,7 +499,7 @@
             </div>
 
               <!-- Movement Performance Form -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'movement'" class="mt-3 pa-3" bg-color="surface-variant" style="; border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Sets</label>
                   <v-text-field
@@ -576,7 +570,7 @@
               </div>
 
               <!-- WOD Performance Form -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" style="background: #f5f5f5; border-radius: 8px">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'wod'" class="mt-3 pa-3" bg-color="surface-variant" style="; border-radius: 8px">
                 <div class="mb-2">
                   <label class="text-caption">Score Type (from WOD)</label>
                   <v-text-field
@@ -585,7 +579,7 @@
                     density="compact"
                     hide-details
                     readonly
-                    bg-color="#e0e0e0"
+                    bg-color="surface"
                   />
                 </div>
                 <!-- Time-based WOD fields -->
@@ -688,15 +682,15 @@
               </div>
 
               <!-- Template Info -->
-              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3" style="background: #fff3e0; border-radius: 8px; border: 1px solid #ff9800">
+              <div v-if="quickLogData.selectedItem && quickLogData.selectedItem.type === 'template'" class="mt-3 pa-3 border-warning" bg-color="warning-lighten-4" style="border-radius: 8px">
                 <div class="d-flex align-center mb-2">
-                  <v-icon color="#ff9800" size="small" class="mr-2">mdi-information</v-icon>
-                  <span class="text-caption font-weight-bold" style="color: #ff9800">Template Selected</span>
+                  <v-icon color="warning" size="small" class="mr-2">mdi-information</v-icon>
+                  <span class="text-caption font-weight-bold text-warning">Template Selected</span>
                 </div>
-                <p class="text-caption mb-1" style="color: #666">
+                <p class="text-caption mb-1 text-medium-emphasis">
                   Clicking "Log Workout" will take you to the full workout logging page with the "{{ quickLogData.selectedItem.name }}" template pre-loaded.
                 </p>
-                <p class="text-caption mb-0" style="color: #f57c00; font-weight: 500">
+                <p class="text-caption mb-0 text-warning font-weight-medium">
                   ⚠️ Only the date will be preserved. Notes, workout name, and total time entered here will not be carried over.
                 </p>
               </div>

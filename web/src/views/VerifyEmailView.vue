@@ -6,7 +6,7 @@
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular
             indeterminate
-            color="#00bcd4"
+            color="teal"
             size="64"
           ></v-progress-circular>
           <p class="mt-4 text-h6">Verifying your email...</p>
@@ -51,7 +51,7 @@
               :disabled="resending"
             ></v-text-field>
             <v-btn
-              color="#00bcd4"
+              color="teal"
               size="large"
               rounded
               @click="resendVerification"
@@ -66,7 +66,7 @@
 
           <v-btn
             variant="outlined"
-            color="#00bcd4"
+            color="teal"
             size="large"
             rounded
             @click="goToLogin"
@@ -162,6 +162,6 @@ const goToLogin = () => {
 
 <style scoped>
 .v-card {
-  background-color: white;
+  background-color: rgb(var(--v-theme-surface));
 }
 </style>

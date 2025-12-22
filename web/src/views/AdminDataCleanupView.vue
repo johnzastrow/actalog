@@ -4,7 +4,7 @@
         <!-- Page Title -->
         <div class="mb-4">
           <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600">
-            <v-icon color="#e91e63" size="28" class="mr-2">mdi-database-refresh</v-icon>
+            <v-icon color="error" size="28" class="mr-2">mdi-database-refresh</v-icon>
             WOD Score Type Cleanup
           </h1>
           <p style="color: #666; font-size: 14px">
@@ -22,7 +22,7 @@
           </p>
 
           <v-btn
-            color="#00bcd4"
+            color="teal"
             size="large"
             :loading="scanning"
             :disabled="scanning || fixing"
@@ -65,10 +65,10 @@
               >
                 <div class="d-flex align-center mb-2">
                   <v-icon color="teal" size="20" class="mr-2">mdi-alert-circle</v-icon>
-                  <strong style="color: #2c3e50">{{ mismatch.wod_name }}</strong>
-                  <v-chip size="x-small" color="#666" class="ml-2">ID: {{ mismatch.id }}</v-chip>
+                  <strong class="text-high-emphasis">{{ mismatch.wod_name }}</strong>
+                  <v-chip size="x-small" color="medium-emphasis" class="ml-2">ID: {{ mismatch.id }}</v-chip>
                   <v-spacer></v-spacer>
-                  <v-icon color="#00bcd4" size="20">mdi-pencil</v-icon>
+                  <v-icon color="teal" size="20">mdi-pencil</v-icon>
                 </div>
 
                 <div style="font-size: 13px; color: #666">
@@ -80,7 +80,7 @@
                   </div>
                   <div class="mb-1">
                     <strong>Expected Score Type:</strong>
-                    <v-chip size="x-small" color="#00bcd4" class="ml-1">{{ mismatch.expected_score_type }}</v-chip>
+                    <v-chip size="x-small" color="teal" class="ml-1">{{ mismatch.expected_score_type }}</v-chip>
                   </div>
                   <div class="mb-1">
                     <strong>Issue:</strong> {{ mismatch.issue }}
@@ -103,7 +103,7 @@
             </p>
 
             <v-btn
-              color="#e91e63"
+              color="error"
               size="large"
               :loading="fixing"
               :disabled="scanning || fixing"
@@ -124,7 +124,7 @@
         <!-- Info Card -->
         <v-card elevation="0" rounded="lg" class="pa-4" style="background: #e3f2fd">
           <h3 style="color: #1976d2; font-size: 16px; font-weight: 600; margin-bottom: 8px">
-            <v-icon color="#1976d2" size="20" class="mr-1">mdi-information</v-icon>
+            <v-icon color="info" size="20" class="mr-1">mdi-information</v-icon>
             About This Tool
           </h3>
           <p style="color: #1565c0; font-size: 13px; margin-bottom: 8px">
@@ -156,13 +156,13 @@
                 <div><strong>WOD:</strong> {{ editingMismatch.wod_name }}</div>
                 <div><strong>User:</strong> {{ editingMismatch.user_email }}</div>
                 <div><strong>Date:</strong> {{ formatDate(editingMismatch.workout_date) }}</div>
-                <div><strong>Expected Score Type:</strong> <v-chip size="x-small" color="#00bcd4">{{ editingMismatch.expected_score_type }}</v-chip></div>
+                <div><strong>Expected Score Type:</strong> <v-chip size="x-small" color="teal">{{ editingMismatch.expected_score_type }}</v-chip></div>
               </div>
             </div>
 
             <!-- Edit Form Fields -->
             <div v-if="editingMismatch.expected_score_type === 'Time (HH:MM:SS)'">
-              <h4 class="mb-2" style="color: #2c3e50">Time-based WOD</h4>
+              <h4 class="mb-2 text-high-emphasis">Time-based WOD</h4>
               <v-text-field
                 v-model.number="editForm.time_minutes"
                 label="Minutes"
@@ -185,7 +185,7 @@
             </div>
 
             <div v-else-if="editingMismatch.expected_score_type === 'Rounds+Reps'">
-              <h4 class="mb-2" style="color: #2c3e50">Rounds+Reps WOD</h4>
+              <h4 class="mb-2 text-high-emphasis">Rounds+Reps WOD</h4>
               <v-text-field
                 v-model.number="editForm.rounds"
                 label="Rounds"
@@ -207,7 +207,7 @@
             </div>
 
             <div v-else-if="editingMismatch.expected_score_type === 'Max Weight'">
-              <h4 class="mb-2" style="color: #2c3e50">Max Weight WOD</h4>
+              <h4 class="mb-2 text-high-emphasis">Max Weight WOD</h4>
               <v-text-field
                 v-model.number="editForm.weight"
                 label="Weight (lbs)"
@@ -234,7 +234,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="editDialog = false" variant="text">Cancel</v-btn>
-          <v-btn @click="saveEdit" color="#00bcd4" variant="flat" :loading="saving">Save Changes</v-btn>
+          <v-btn @click="saveEdit" color="teal" variant="flat" :loading="saving">Save Changes</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -251,14 +251,14 @@
             Are you sure you want to delete <strong>{{ mismatches.length }} mismatched record{{ mismatches.length !== 1 ? 's' : '' }}</strong>?
           </p>
           <p style="font-size: 14px; color: #e91e63; margin-top: 12px">
-            <v-icon color="#e91e63" size="18">mdi-alert-circle</v-icon>
+            <v-icon color="error" size="18">mdi-alert-circle</v-icon>
             This action cannot be undone.
           </p>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="confirmDialog = false" variant="text">Cancel</v-btn>
-          <v-btn @click="fixMismatches" color="#e91e63" variant="flat">Delete Records</v-btn>
+          <v-btn @click="fixMismatches" color="error" variant="flat">Delete Records</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

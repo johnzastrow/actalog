@@ -36,8 +36,8 @@
       </v-alert>
 
       <!-- Basic Information Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Movement Details</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Movement Details</h2>
 
         <v-text-field
           v-model="movement.name"
@@ -51,7 +51,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-dumbbell</v-icon>
+            <v-icon color="teal" size="small">mdi-dumbbell</v-icon>
           </template>
         </v-text-field>
 
@@ -65,7 +65,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tag</v-icon>
+            <v-icon color="teal" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -79,7 +79,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-arm-flex</v-icon>
+            <v-icon color="teal" size="small">mdi-arm-flex</v-icon>
           </template>
         </v-select>
 
@@ -94,7 +94,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+            <v-icon color="teal" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
 
@@ -103,7 +103,7 @@
             <v-switch
               v-model="movement.is_weighted"
               label="Weighted Movement"
-              color="#00bcd4"
+              color="teal"
               density="compact"
               hide-details
             />
@@ -112,7 +112,7 @@
             <v-switch
               v-model="movement.is_timed"
               label="Timed Movement"
-              color="#00bcd4"
+              color="teal"
               density="compact"
               hide-details
             />
@@ -121,8 +121,8 @@
       </v-card>
 
       <!-- Video/Image Card (Optional) -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Media (Optional)</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Media (Optional)</h2>
 
         <v-text-field
           v-model="movement.video_url"
@@ -134,7 +134,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-video</v-icon>
+            <v-icon color="teal" size="small">mdi-video</v-icon>
           </template>
         </v-text-field>
 
@@ -147,14 +147,14 @@
           rounded="lg"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-image</v-icon>
+            <v-icon color="teal" size="small">mdi-image</v-icon>
           </template>
         </v-text-field>
       </v-card>
 
       <!-- Equipment Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Equipment</h2>
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Equipment</h2>
 
         <v-combobox
           v-model="movement.equipment"
@@ -169,7 +169,7 @@
           closable-chips
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tools</v-icon>
+            <v-icon color="teal" size="small">mdi-tools</v-icon>
           </template>
         </v-combobox>
       </v-card>
@@ -180,10 +180,10 @@
         elevation="0"
         rounded="lg"
         class="pa-3 mb-3"
-        style="background: white"
+        bg-color="surface"
       >
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">Standard Weights (Optional)</h2>
-        <p class="text-caption mb-3" style="color: #666">
+        <h2 class="text-body-1 font-weight-bold mb-3" >Standard Weights (Optional)</h2>
+        <p class="text-caption mb-3 text-medium-emphasis">
           Define typical RX and scaled weights for this movement
         </p>
 
@@ -239,10 +239,10 @@
       </v-card>
 
       <!-- Actions Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           :loading="saving"
@@ -256,7 +256,7 @@
         <v-btn
           v-if="isEditMode && movement.is_custom"
           block
-          color="#e91e63"
+          color="error"
           variant="outlined"
           size="large"
           rounded="lg"
@@ -287,10 +287,10 @@
       <v-card>
         <v-card-title class="text-h6" style="color: #e91e63">Delete Movement?</v-card-title>
         <v-card-text>
-          <p style="color: #666">
+          <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ movement.name }}"? This action cannot be undone.
           </p>
-          <p class="text-caption mt-2" style="color: #999">
+          <p class="text-caption mt-2 text-disabled">
             Note: This will not delete historical workout data using this movement.
           </p>
         </v-card-text>
@@ -298,7 +298,7 @@
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
           <v-btn
-            color="#e91e63"
+            color="error"
             variant="flat"
             :loading="deleting"
             @click="deleteMovement"

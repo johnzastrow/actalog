@@ -23,8 +23,8 @@
       </v-alert>
 
       <!-- Basic Information Card -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
-        <h2 class="text-body-1 font-weight-bold mb-3" style="color: #1a1a1a">WOD Details</h2>
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3" >WOD Details</h2>
 
         <v-text-field
           v-model="wod.name"
@@ -38,7 +38,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-fire</v-icon>
+            <v-icon color="teal" size="small">mdi-fire</v-icon>
           </template>
         </v-text-field>
 
@@ -52,7 +52,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-tag</v-icon>
+            <v-icon color="teal" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -66,7 +66,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-trophy</v-icon>
+            <v-icon color="teal" size="small">mdi-trophy</v-icon>
           </template>
         </v-select>
 
@@ -102,7 +102,7 @@
         <v-switch
           v-model="wod.is_benchmark"
           label="Benchmark WOD"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           hide-details
           class="mb-2"
@@ -119,18 +119,18 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-text</v-icon>
+            <v-icon color="teal" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
       </v-card>
 
       <!-- Movements Card -->
-      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
         <div class="d-flex align-center justify-space-between mb-3">
-          <h2 class="text-body-1 font-weight-bold" style="color: #1a1a1a">WOD Movements</h2>
+          <h2 class="text-body-1 font-weight-bold" >WOD Movements</h2>
           <v-btn
             size="small"
-            color="#00bcd4"
+            color="teal"
             prepend-icon="mdi-plus"
             @click="addMovement"
             style="text-transform: none"
@@ -141,9 +141,9 @@
 
         <!-- Empty State -->
         <div v-if="wod.movements.length === 0" class="text-center py-4">
-          <v-icon size="48" color="#ccc">mdi-dumbbell</v-icon>
-          <p class="text-body-2 mt-2" style="color: #666">No movements added yet</p>
-          <p class="text-caption" style="color: #999">Tap "Add Movement" to get started</p>
+          <v-icon size="48" color="surface-variant">mdi-dumbbell</v-icon>
+          <p class="text-body-2 mt-2 text-medium-emphasis">No movements added yet</p>
+          <p class="text-caption text-disabled">Tap "Add Movement" to get started</p>
         </div>
 
         <!-- Movements List -->
@@ -157,14 +157,14 @@
             style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="#00bcd4" class="mr-2">mdi-drag-vertical</v-icon>
-              <span class="font-weight-bold text-body-2" style="color: #666">#{{ index + 1 }}</span>
+              <v-icon color="teal" class="mr-2">mdi-drag-vertical</v-icon>
+              <span class="font-weight-bold text-body-2 text-medium-emphasis">#{{ index + 1 }}</span>
               <v-spacer />
               <v-btn
                 icon="mdi-delete"
                 size="small"
                 variant="text"
-                color="#e91e63"
+                color="error"
                 @click="removeMovement(index)"
               />
             </div>
@@ -184,7 +184,7 @@
               class="mb-2"
             >
               <template #prepend-inner>
-                <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                <v-icon color="teal" size="small">mdi-magnify</v-icon>
               </template>
             </v-autocomplete>
 
@@ -257,10 +257,10 @@
       </v-card>
 
       <!-- Actions Card -->
-      <v-card elevation="0" rounded="lg" class="pa-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="#00bcd4"
+          color="teal"
           size="large"
           rounded="lg"
           :loading="saving"
@@ -274,7 +274,7 @@
         <v-btn
           v-if="isEditMode"
           block
-          color="#e91e63"
+          color="error"
           variant="outlined"
           size="large"
           rounded="lg"
@@ -294,7 +294,7 @@
       <v-card>
         <v-card-title class="text-h6" style="color: #e91e63">Delete WOD?</v-card-title>
         <v-card-text>
-          <p style="color: #666">
+          <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ wod.name }}"? This action cannot be undone.
           </p>
         </v-card-text>
@@ -302,7 +302,7 @@
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
           <v-btn
-            color="#e91e63"
+            color="error"
             variant="flat"
             :loading="deleting"
             @click="deleteWOD"

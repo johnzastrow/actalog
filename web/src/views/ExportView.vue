@@ -12,27 +12,27 @@
       </v-alert>
 
       <!-- Info Card -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-2">
-          <v-icon color="#00bcd4" size="small" class="mr-2">mdi-information</v-icon>
-          <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">About Data Export</h3>
+          <v-icon color="teal" size="small" class="mr-2">mdi-information</v-icon>
+          <h3 class="text-body-1 font-weight-bold" >About Data Export</h3>
         </div>
-        <p class="text-body-2 mb-0" style="color: #666">
+        <p class="text-body-2 mb-0 text-medium-emphasis">
           Export your data for backup, analysis, or migration. All data types support both CSV and JSON formats.
         </p>
       </v-card>
 
       <!-- WODs Export Section -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-3">
           <v-icon color="teal" class="mr-2">mdi-fire</v-icon>
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Export WODs</h2>
+          <h2 class="text-h6 font-weight-bold" >Export WODs</h2>
         </div>
 
         <v-checkbox
           v-model="exportOptions.wods.includeStandard"
           label="Include standard WODs (Fran, Murph, etc.)"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           hide-details
         />
@@ -40,7 +40,7 @@
         <v-checkbox
           v-model="exportOptions.wods.includeCustom"
           label="Include my custom WODs"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           hide-details
           class="mt-2"
@@ -79,16 +79,16 @@
       </v-card>
 
       <!-- Movements Export Section -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-3">
-          <v-icon color="#00bcd4" class="mr-2">mdi-dumbbell</v-icon>
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Export Movements</h2>
+          <v-icon color="teal" class="mr-2">mdi-dumbbell</v-icon>
+          <h2 class="text-h6 font-weight-bold" >Export Movements</h2>
         </div>
 
         <v-checkbox
           v-model="exportOptions.movements.includeStandard"
           label="Include standard movements (Back Squat, Deadlift, etc.)"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           hide-details
         />
@@ -96,7 +96,7 @@
         <v-checkbox
           v-model="exportOptions.movements.includeCustom"
           label="Include my custom movements"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           hide-details
           class="mt-2"
@@ -105,7 +105,7 @@
         <div class="d-flex mt-4" style="gap: 16px">
           <v-btn
             size="small"
-            color="#00bcd4"
+            color="teal"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
@@ -119,7 +119,7 @@
           </v-btn>
           <v-btn
             size="small"
-            color="#00bcd4"
+            color="teal"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
@@ -135,13 +135,13 @@
       </v-card>
 
       <!-- User Workouts Export Section -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-3">
-          <v-icon color="#4caf50" class="mr-2">mdi-clipboard-text</v-icon>
-          <h2 class="text-h6 font-weight-bold" style="color: #1a1a1a">Export User Workouts</h2>
+          <v-icon color="success" class="mr-2">mdi-clipboard-text</v-icon>
+          <h2 class="text-h6 font-weight-bold" >Export User Workouts</h2>
         </div>
 
-        <p class="text-body-2 mb-3" style="color: #666">
+        <p class="text-body-2 mb-3 text-medium-emphasis">
           Export your workout history with full details (movements, WODs, performance data) in JSON format.
           Optionally filter by date range.
         </p>
@@ -150,7 +150,7 @@
           v-model="exportOptions.userWorkouts.startDate"
           label="Start Date (optional)"
           type="date"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           variant="outlined"
           hide-details
@@ -161,7 +161,7 @@
           v-model="exportOptions.userWorkouts.endDate"
           label="End Date (optional)"
           type="date"
-          color="#00bcd4"
+          color="teal"
           density="compact"
           variant="outlined"
           hide-details
@@ -175,7 +175,7 @@
         <div class="d-flex mt-2" style="gap: 16px">
           <v-btn
             size="small"
-            color="#4caf50"
+            color="success"
             rounded="lg"
             elevation="2"
             :disabled="!!dateRangeError"
@@ -189,7 +189,7 @@
           </v-btn>
           <v-btn
             size="small"
-            color="#4caf50"
+            color="success"
             rounded="lg"
             elevation="2"
             :disabled="!!dateRangeError"
@@ -205,23 +205,23 @@
       </v-card>
 
       <!-- Export Format Info -->
-      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" style="background: white">
+      <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-2">
-          <v-icon color="#00bcd4" size="small" class="mr-2">mdi-information</v-icon>
-          <h3 class="text-body-1 font-weight-bold" style="color: #1a1a1a">Export Formats</h3>
+          <v-icon color="teal" size="small" class="mr-2">mdi-information</v-icon>
+          <h3 class="text-body-1 font-weight-bold" >Export Formats</h3>
         </div>
-        <p class="text-body-2 mb-2" style="color: #666">
+        <p class="text-body-2 mb-2 text-medium-emphasis">
           <strong>CSV Format:</strong> All data types can be exported as CSV files that can be opened in Excel, Google Sheets, or any spreadsheet application. Best for simple data analysis and sharing.
         </p>
-        <p class="text-caption mb-2" style="color: #999">
+        <p class="text-caption mb-2 text-disabled">
           <strong>WODs CSV:</strong> name, source, type, regime, score_type, description, url, notes, is_standard, created_by_email<br>
           <strong>Movements CSV:</strong> name, type, description, is_standard, created_by_email<br>
           <strong>User Workouts CSV:</strong> workout_date, workout_name, notes, movements, WODs, performance details (flattened)
         </p>
-        <p class="text-body-2 mb-1 mt-2" style="color: #666">
+        <p class="text-body-2 mb-1 mt-2 text-medium-emphasis">
           <strong>JSON Format:</strong> All data types can be exported as JSON with complete structured data. Best for backups, migrations, or programmatic access.
         </p>
-        <p class="text-caption mb-0" style="color: #999">
+        <p class="text-caption mb-0 text-disabled">
           <strong>WODs/Movements JSON:</strong> Complete entity definitions with all fields and metadata<br>
           <strong>User Workouts JSON:</strong> Full workout history with nested movements, WODs, sets, and performance details
         </p>

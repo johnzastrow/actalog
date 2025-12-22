@@ -2,11 +2,11 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
     <!-- Loading State -->
-    <v-progress-circular v-if="loading" indeterminate color="#00bcd4" class="mx-auto d-block mt-8" />
+    <v-progress-circular v-if="loading" indeterminate color="teal" class="mx-auto d-block mt-8" />
 
     <div v-else>
       <!-- Search Box -->
-      <v-card elevation="0" rounded class="pa-1 mb-2" style="background: white">
+      <v-card elevation="0" rounded class="pa-1 mb-2" bg-color="surface">
         <v-text-field
           v-model="searchQuery"
           placeholder="Search for a personal record..."
@@ -16,27 +16,27 @@
           rounded
         >
           <template #prepend-inner>
-            <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+            <v-icon color="teal" size="small">mdi-magnify</v-icon>
           </template>
         </v-text-field>
       </v-card>
 
       <!-- PR Movements -->
       <div v-for="(group, movementName) in groupedMovementPRs" :key="movementName">
-        <v-card elevation="0" rounded class="pa-2 mb-2" style="background: white">
+        <v-card elevation="0" rounded class="pa-2 mb-2" bg-color="surface">
           <!-- Movement Header -->
           <div class="d-flex align-center mb-1">
             <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
-            <h3 class="text-body-1 font-weight-bold" style="color: #2c3e50">{{ movementName }}</h3>
+            <h3 class="text-body-1 font-weight-bold text-high-emphasis">{{ movementName }}</h3>
           </div>
 
           <!-- PR Entries for this Movement -->
           <div v-for="pr in group" :key="pr.id" class="mb-1 pa-1" style="border-left: 3px solid #ffc107; padding-left: 8px">
             <div class="d-flex justify-space-between align-center">
               <div>
-                <span class="text-caption" style="color: #666">{{ formatDate(pr.workout_date) }}</span>
+                <span class="text-caption text-medium-emphasis">{{ formatDate(pr.workout_date) }}</span>
               </div>
-              <div class="text-body-2 font-weight-medium" style="color: #2c3e50">
+              <div class="text-body-2 font-weight-medium text-high-emphasis">
                 {{ formatPerformance(pr) }}
               </div>
             </div>
@@ -46,20 +46,20 @@
 
       <!-- PR WODs -->
       <div v-for="(group, wodName) in groupedWODPRs" :key="wodName">
-        <v-card elevation="0" rounded class="pa-2 mb-2" style="background: white">
+        <v-card elevation="0" rounded class="pa-2 mb-2" bg-color="surface">
           <!-- WOD Header -->
           <div class="d-flex align-center mb-1">
             <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
-            <h3 class="text-body-1 font-weight-bold" style="color: #2c3e50">{{ wodName }}</h3>
+            <h3 class="text-body-1 font-weight-bold text-high-emphasis">{{ wodName }}</h3>
           </div>
 
           <!-- PR Entries for this WOD -->
           <div v-for="pr in group" :key="pr.id" class="mb-1 pa-1" style="border-left: 3px solid #ffc107; padding-left: 8px">
             <div class="d-flex justify-space-between align-center">
               <div>
-                <span class="text-caption" style="color: #666">{{ formatDate(pr.workout_date) }}</span>
+                <span class="text-caption text-medium-emphasis">{{ formatDate(pr.workout_date) }}</span>
               </div>
-              <div class="text-body-2 font-weight-medium" style="color: #2c3e50">
+              <div class="text-body-2 font-weight-medium text-high-emphasis">
                 {{ formatWODPerformance(pr) }}
               </div>
             </div>
@@ -73,11 +73,11 @@
         elevation="0"
         rounded
         class="pa-2 text-center mt-4"
-        style="background: white"
+        bg-color="surface"
       >
-        <v-icon size="48" color="#ccc">mdi-trophy-outline</v-icon>
-        <p class="text-body-1 mt-1 mb-0" style="color: #2c3e50">No Personal Records Yet</p>
-        <p class="text-body-2 mb-0" style="color: #666">
+        <v-icon size="48" color="surface-variant">mdi-trophy-outline</v-icon>
+        <p class="text-body-1 mt-1 mb-0 text-high-emphasis">No Personal Records Yet</p>
+        <p class="text-body-2 mb-0 text-medium-emphasis">
           Keep logging workouts to set new PRs!
         </p>
       </v-card>

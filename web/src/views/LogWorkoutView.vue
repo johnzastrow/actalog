@@ -13,17 +13,17 @@
 
       <!-- Loading State -->
       <div v-if="loadingWorkout" class="text-center py-8">
-        <v-progress-circular indeterminate color="#00bcd4" size="64" />
-        <p class="mt-4 text-body-2" style="color: #666">Loading workout data...</p>
+        <v-progress-circular indeterminate color="teal" size="64" />
+        <p class="mt-4 text-body-2 text-medium-emphasis">Loading workout data...</p>
       </div>
 
       <v-form v-else @submit.prevent="logWorkout">
         <!-- Select Workout Template -->
         <div v-if="!isEditMode" class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Workout Template *
           </label>
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <v-autocomplete
               v-model="selectedTemplateId"
               :items="workoutTemplates"
@@ -40,7 +40,7 @@
               @update:model-value="onTemplateSelected"
             >
               <template #prepend-inner>
-                <v-icon color="#00bcd4" size="small">mdi-magnify</v-icon>
+                <v-icon color="teal" size="small">mdi-magnify</v-icon>
               </template>
               <template #item="{ props, item }">
                 <v-list-item v-bind="props" density="compact">
@@ -66,10 +66,10 @@
 
         <!-- Edit Workout Name (for ad-hoc workouts only) -->
         <div v-if="isEditMode && !selectedTemplateId" class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Workout Name *
           </label>
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <v-text-field
               v-model="workoutName"
               variant="plain"
@@ -90,16 +90,16 @@
           style="background: #e3f2fd; border: 2px solid #00bcd4"
         >
           <div class="d-flex align-center mb-2">
-            <v-icon color="#00bcd4" class="mr-2">mdi-information-outline</v-icon>
-            <span class="font-weight-bold" style="color: #1a1a1a">
+            <v-icon color="teal" class="mr-2">mdi-information-outline</v-icon>
+            <span class="font-weight-bold" >
               {{ workoutName || selectedTemplate?.name }}
             </span>
           </div>
-          <div v-if="selectedTemplate?.notes" class="text-caption" style="color: #666">
+          <div v-if="selectedTemplate?.notes" class="text-caption text-medium-emphasis">
             {{ selectedTemplate.notes }}
           </div>
           <div v-if="(selectedTemplate?.movements && selectedTemplate.movements.length > 0) || movementPerformance.length > 0" class="mt-2">
-            <v-chip size="x-small" color="#00bcd4" class="mr-1">
+            <v-chip size="x-small" color="teal" class="mr-1">
               {{ selectedTemplate?.movements?.length || movementPerformance.length }} movement(s)
             </v-chip>
           </div>
@@ -112,10 +112,10 @@
 
         <!-- Workout Date -->
         <div class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Workout Date *
           </label>
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <v-text-field
               v-model="workoutDate"
               type="date"
@@ -131,7 +131,7 @@
 
         <!-- Movement Performance (if template has movements OR if editing and has movements) -->
         <div v-if="shouldShowMovements" class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Movement Performance ({{ movementPerformance.length }} movements)
           </label>
           <v-card
@@ -142,8 +142,8 @@
             style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="#00bcd4" size="small" class="mr-2">mdi-dumbbell</v-icon>
-              <span class="font-weight-bold text-body-2" style="color: #1a1a1a">
+              <v-icon color="teal" size="small" class="mr-2">mdi-dumbbell</v-icon>
+              <span class="font-weight-bold text-body-2" >
                 {{ getMovementName(movement.movement_id) }}
               </span>
             </div>
@@ -223,7 +223,7 @@
 
         <!-- WOD Performance (if template has WODs OR if editing and has WODs) -->
         <div v-if="shouldShowWODs" class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             WOD Performance ({{ wodPerformance.length }} WODs)
           </label>
           <v-card
@@ -235,7 +235,7 @@
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="teal" size="small" class="mr-2">mdi-flag-checkered</v-icon>
-              <span class="font-weight-bold text-body-2" style="color: #1a1a1a">
+              <span class="font-weight-bold text-body-2" >
                 {{ getWODName(wod.wod_id) }}
               </span>
             </div>
@@ -351,10 +351,10 @@
 
         <!-- Total Time -->
         <div class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Total Time (minutes)
           </label>
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <v-text-field
               v-model.number="totalTimeMinutes"
               type="number"
@@ -371,10 +371,10 @@
 
         <!-- Notes -->
         <div class="mb-1">
-          <label class="text-caption font-weight-bold d-block" style="color: #1a1a1a">
+          <label class="text-caption font-weight-bold d-block" >
             Overall Notes
           </label>
-          <v-card elevation="0" rounded class="pa-1" style="background: white">
+          <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <v-textarea
               v-model="notes"
               variant="plain"
@@ -390,7 +390,7 @@
         <!-- Submit Button -->
         <v-btn
           type="submit"
-          color="#00bcd4"
+          color="teal"
           size="large"
           block
           :loading="submitting"
@@ -406,7 +406,7 @@
         <v-btn
           v-if="!isEditMode && !route.query.template"
           variant="outlined"
-          color="#00bcd4"
+          color="teal"
           size="large"
           block
           class="mt-1 font-weight-bold"
