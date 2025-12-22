@@ -391,6 +391,13 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 
 	// Delete all existing data (in reverse order of foreign keys)
 	tables := []string{
+		// Child tables first (depend on other tables)
+		"notification_likes",
+		"notifications",
+		"organization_subscriptions",
+		"user_subscriptions",
+		"user_organizations",
+		"data_change_logs",
 		"user_workout_wods",
 		"user_workout_movements",
 		"workout_wods",
@@ -399,6 +406,7 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 		"workouts",
 		"wods",
 		"movements",
+		"organizations",
 		"email_verification_tokens",
 		"password_resets",
 		"refresh_tokens",
@@ -422,7 +430,8 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 		}
 	}
 
-	// Restore data (in correct order for foreign keys)
+	// Restore data (in correct order for foreign keys - parent tables first)
+	// 1. Core tables with no foreign key dependencies
 	if err := s.restoreTable(tx, "users", backupData.Users); err != nil {
 		return fmt.Errorf("failed to restore users: %w", err)
 	}
@@ -435,6 +444,11 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	if err := s.restoreTable(tx, "workouts", backupData.Workouts); err != nil {
 		return fmt.Errorf("failed to restore workouts: %w", err)
 	}
+	if err := s.restoreTable(tx, "organizations", backupData.Organizations); err != nil {
+		return fmt.Errorf("failed to restore organizations: %w", err)
+	}
+
+	// 2. Tables depending on core tables
 	if err := s.restoreTable(tx, "user_workouts", backupData.UserWorkouts); err != nil {
 		return fmt.Errorf("failed to restore user_workouts: %w", err)
 	}
@@ -450,6 +464,8 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	if err := s.restoreTable(tx, "user_workout_wods", backupData.UserWorkoutWODs); err != nil {
 		return fmt.Errorf("failed to restore user_workout_wods: %w", err)
 	}
+
+	// 3. User-related tables
 	if err := s.restoreTable(tx, "refresh_tokens", backupData.RefreshTokens); err != nil {
 		return fmt.Errorf("failed to restore refresh_tokens: %w", err)
 	}
@@ -464,6 +480,28 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	}
 	if err := s.restoreTable(tx, "audit_logs", backupData.AuditLogs); err != nil {
 		return fmt.Errorf("failed to restore audit_logs: %w", err)
+	}
+	if err := s.restoreTable(tx, "data_change_logs", backupData.DataChangeLogs); err != nil {
+		return fmt.Errorf("failed to restore data_change_logs: %w", err)
+	}
+
+	// 4. Organization-related tables
+	if err := s.restoreTable(tx, "user_organizations", backupData.UserOrganizations); err != nil {
+		return fmt.Errorf("failed to restore user_organizations: %w", err)
+	}
+	if err := s.restoreTable(tx, "user_subscriptions", backupData.UserSubscriptions); err != nil {
+		return fmt.Errorf("failed to restore user_subscriptions: %w", err)
+	}
+	if err := s.restoreTable(tx, "organization_subscriptions", backupData.OrganizationSubscriptions); err != nil {
+		return fmt.Errorf("failed to restore organization_subscriptions: %w", err)
+	}
+
+	// 5. Notification tables (depend on users and organizations)
+	if err := s.restoreTable(tx, "notifications", backupData.Notifications); err != nil {
+		return fmt.Errorf("failed to restore notifications: %w", err)
+	}
+	if err := s.restoreTable(tx, "notification_likes", backupData.NotificationLikes); err != nil {
+		return fmt.Errorf("failed to restore notification_likes: %w", err)
 	}
 
 	// Commit transaction
@@ -1405,6 +1443,13 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 		"email_verification_tokens": true,
 		"audit_logs":                true,
 		"user_settings":             true,
+		"data_change_logs":          true,
+		"organizations":             true,
+		"user_organizations":        true,
+		"user_subscriptions":        true,
+		"organization_subscriptions": true,
+		"notifications":             true,
+		"notification_likes":        true,
 	}
 
 	if !tablesWithSequences[tableName] {
