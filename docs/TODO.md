@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-20
+> **Last Updated:** 2025-12-22
 > **Current Version:** 0.16.0-beta
 
 ---
@@ -87,6 +87,15 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [ ] "Renew Subscription" call-to-action in banner
   - [ ] Toast notifications explaining why operations are blocked
 
+#### Front end Improvements
+- [ ] `[HIGH]` **PWA**
+  - [ ] Icon saved to home screen is fuzzy. Use higher resolution source or SVG if possible.
+- [ ] `[HIGH]` **Overall**
+  - [ ] Find more attractive icons for the navigation bar
+  - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
+  - [ ] Develop a theme called "Sunrise" based on colors from the image in /home/jcz/Github/actionlog/design/At sunset time/scenic-view-sea-against-sky-sunset_1048944-21907405.jpg
+  - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue) 
+
 
 ## Future Enhancements (Post-MVP)
 
@@ -170,6 +179,14 @@ These features can be added after the core frontend is complete:
 
 ### Medium Priority
 
+#### Documentation & Marketing
+- [ ] `[MEDIUM]` **Enhance App Documentation with Screenshots**
+  - [ ] Add more information about features and functions in the app
+  - [ ] Capture screenshots demonstrating all available themes
+  - [ ] Show desktop vs mobile responsive views
+  - [ ] Document key user flows with visual guides
+  - [ ] Add screenshots to static website/README
+
 #### Performance & Analytics
 - [X] `[MEDIUM]` **Calendar View** - Monthly view with workout dots
 - [X] `[MEDIUM]` **Timeline View** - Chronological workout history
@@ -228,15 +245,9 @@ These features can be added after the core frontend is complete:
 | `web/src/views/SettingsView.vue` | 540 | Implement import functionality |
 | `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
 
-Add scrolling month calendar screen from the profile menu that shows dots for workouts that can be clicked to see workout details. More than one workout per day.
+*Last scanned: 2025-12-22*
 
-
-Add notifications: notify all users in the gym on the following events: 
-1. What user gets a PR. Show the date, word/movement and Congratulations text
-2. When a user gets 4 or more workouts in a week. Show date, user, workout count and congratulations 
-3. What user Completes a rolling 10 of any type of WOD (hero, girl, etc). For example, every 10 hero wods 
-
-*Last scanned: 2025-11-28*
+**Note:** Calendar view (WorkoutCalendarView.vue) and PR notification system are implemented.
 
 ---
 

@@ -212,20 +212,11 @@
           @click="showRecentWorkouts = !showRecentWorkouts"
         >
           <div class="d-flex align-center">
-            <h3 class="text-body-1 font-weight-bold" >Last 30 Days</h3>
+            <h3 class="text-body-1 font-weight-bold">Last 30 Days</h3>
             <v-icon size="small" class="ml-1" color="medium-emphasis">
               {{ showRecentWorkouts ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
             </v-icon>
           </div>
-          <v-btn
-            size="x-small"
-            variant="text"
-            color="primary"
-            style="text-transform: none; font-size: 11px"
-            @click.stop="$router.push('/workouts')"
-          >
-            View All
-          </v-btn>
         </div>
 
         <div v-if="showRecentWorkouts">
