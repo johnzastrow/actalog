@@ -155,25 +155,66 @@
       <!-- Preferences Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-3" >Preferences</h2>
-        <v-list bg-color="transparent" density="compact">
-          <v-list-item>
+
+        <!-- Theme Selection -->
+        <div class="mb-3">
+          <div class="d-flex align-center mb-2">
+            <v-icon color="primary" class="mr-2">mdi-palette</v-icon>
+            <span class="font-weight-medium">Theme</span>
+          </div>
+
+          <!-- System Preference Toggle -->
+          <v-list-item density="compact" class="px-0 mb-1">
             <template #prepend>
-              <v-icon color="primary">mdi-theme-light-dark</v-icon>
+              <v-icon size="small">mdi-brightness-auto</v-icon>
             </template>
-            <v-list-item-title class="font-weight-medium" >
-              Dark Mode
-            </v-list-item-title>
+            <v-list-item-title class="text-body-2">Use System Theme</v-list-item-title>
             <template #append>
               <v-switch
-                v-model="darkMode"
+                v-model="themeStore.useSystemPreference"
                 color="primary"
                 hide-details
                 density="compact"
-                @change="saveDarkMode"
+                @update:model-value="themeStore.setUseSystemPreference"
               />
             </template>
           </v-list-item>
 
+          <!-- Theme Grid -->
+          <v-row dense class="mt-1">
+            <v-col
+              v-for="theme in themeStore.availableThemes"
+              :key="theme.id"
+              cols="6"
+            >
+              <v-card
+                :color="themeStore.currentTheme === theme.id ? 'primary' : 'surface-variant'"
+                :variant="themeStore.currentTheme === theme.id ? 'flat' : 'outlined'"
+                :disabled="themeStore.useSystemPreference"
+                class="pa-2 text-center"
+                style="cursor: pointer"
+                @click="themeStore.setTheme(theme.id)"
+              >
+                <v-icon
+                  :color="themeStore.currentTheme === theme.id ? 'white' : ''"
+                  size="20"
+                >
+                  {{ theme.icon }}
+                </v-icon>
+                <div
+                  class="text-caption mt-1"
+                  :class="themeStore.currentTheme === theme.id ? 'text-white' : ''"
+                >
+                  {{ theme.name }}
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </div>
+
+        <v-divider class="mb-3" />
+
+        <v-list bg-color="transparent" density="compact">
           <v-list-item>
             <template #prepend>
               <v-icon color="primary">mdi-bell</v-icon>
@@ -354,16 +395,17 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
+import { useThemeStore } from '@/stores/theme'
 import axios from '@/utils/axios'
 import SubscriptionStatusBadge from '@/components/SubscriptionStatusBadge.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
+const themeStore = useThemeStore()
 const activeTab = ref('profile')
 
 // State
-const darkMode = ref(false)
 const notifications = ref(true)
 const weightUnit = ref('lbs')
 
@@ -402,7 +444,6 @@ onMounted(() => {
   }
 
   // Load preferences from localStorage
-  darkMode.value = localStorage.getItem('darkMode') === 'true'
   notifications.value = localStorage.getItem('notifications') !== 'false'
   weightUnit.value = localStorage.getItem('weightUnit') || 'lbs'
 
@@ -517,11 +558,6 @@ const changePassword = async () => {
 }
 
 // Save preferences
-const saveDarkMode = () => {
-  localStorage.setItem('darkMode', darkMode.value.toString())
-  // TODO: Apply theme change
-}
-
 const saveNotifications = () => {
   localStorage.setItem('notifications', notifications.value.toString())
 }
