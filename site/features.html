@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - ActaLog | CrossFit Workout Tracker</title>
+    <meta name="description" content="Explore ActaLog's powerful features: PR tracking, workout templates, performance analytics, 6 themes, PWA offline support, and multi-database deployment.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Features - ActaLog | CrossFit Workout Tracker">
+    <meta property="og:description" content="Explore ActaLog's powerful features: PR tracking, workout templates, performance analytics, 6 themes, PWA offline support, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://johnzastrow.github.io/actalog/features.html">
+    <meta property="og:image" content="assets/hero-screenshot.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Noise Texture Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-text">ACTALOG</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="#core" class="nav-link">FEATURES</a>
+                <a href="https://github.com/johnzastrow/actalog" class="nav-link" target="_blank">GITHUB</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" style="min-height: 50vh;">
+        <div class="hero-container">
+            <div class="hero-content" style="max-width: 100%;">
+                <div class="hero-badge">FEATURES</div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">BUILT FOR</span>
+                    <span class="hero-title-line glow">ATHLETES.</span>
+                </h1>
+                <p class="hero-subtitle">Everything you need to track, analyze, and improve your CrossFit performance. Mobile-first. Open source. Self-hosted.</p>
+            </div>
+        </div>
+        <div class="diagonal-divider"></div>
+    </section>
+
+    <!-- Core Features Section -->
+    <section class="features" id="core">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">CORE FEATURES</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AUTOMATIC PR DETECTION</h3>
+                    <p class="feature-description">ActaLog automatically detects personal records using the Epley formula for 1RM calculations. Get notified when you crush a new PR for weight, time, or AMRAP workouts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">314 BENCHMARK WODS</h3>
+                    <p class="feature-description">Pre-loaded with 314 classic CrossFit benchmark workouts including The Girls, Heroes, and Open workouts. Create custom templates or modify existing ones.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">PERFORMANCE ANALYTICS</h3>
+                    <p class="feature-description">Visualize your progress with interactive charts. Track movement volume, workout frequency, strength gains over time, and identify trends in your training.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <path d="M3 10h18"/>
+                            <path d="M8 2v4"/>
+                            <path d="M16 2v4"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">CALENDAR & TIMELINE</h3>
+                    <p class="feature-description">Monthly calendar view shows workout dots at a glance. Timeline view provides chronological workout history with full details and PR badges.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">QUICK LOG</h3>
+                    <p class="feature-description">One-tap workout logging from templates. Designed for gym use with large touch targets. Log your workout in seconds, not minutes.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">182 MOVEMENTS</h3>
+                    <p class="feature-description">Comprehensive movement library with 182 exercises categorized by type. Track performance across Olympic lifts, gymnastics, cardio, and accessory work.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Themes Section -->
+    <section class="tech" id="themes">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">6 BEAUTIFUL THEMES</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>Customize your experience with 6 professionally designed themes. From clean light modes to dramatic dark themes inspired by athletic brutalism.</p>
+                </div>
+
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-label">LIGHT</div>
+                        <div class="tech-value">Clean, professional default</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">DARK</div>
+                        <div class="tech-value">Easy on the eyes, gym-ready</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">BRUTALIST</div>
+                        <div class="tech-value">Bold cyan and gold, high contrast</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">OCEAN</div>
+                        <div class="tech-value">Calming teal and aqua tones</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">SUNSET</div>
+                        <div class="tech-value">Warm amber and orange hues</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">SUNRISE</div>
+                        <div class="tech-value">Purple clouds, coral sky, golden horizon</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
+    <!-- PWA & Offline Section -->
+    <section class="features" id="pwa">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">MOBILE-FIRST PWA</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">INSTALL ON ANY DEVICE</h3>
+                    <p class="feature-description">Progressive Web App works like a native app. Install directly to your home screen on iOS, Android, or desktop. No app store required.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"/>
+                            <path d="M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">OFFLINE RECORDING</h3>
+                    <p class="feature-description">Record workouts without internet. Data syncs automatically when you're back online. Perfect for gyms with poor connectivity.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">INSTANT UPDATES</h3>
+                    <p class="feature-description">User-controlled update prompts. No surprise reloads during your workout. Update when you're ready.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Control Section -->
+    <section class="tech" id="data">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">YOUR DATA, YOUR CONTROL</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>Self-host on your own infrastructure. Import from other platforms. Export anytime. No vendor lock-in.</p>
+                </div>
+
+                <div class="tech-features">
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Wodify CSV Import</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Full Database Backup/Restore</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>JSON Export for All Data</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Movement & WOD Seed Data</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>SQLite / PostgreSQL / MySQL</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Docker Deployment Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-visual">
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="code-title">docker-compose.yml</div>
+                    </div>
+                    <div class="code-content">
+                        <code><span class="code-comment"># Quick deploy with Docker</span>
+<span class="code-keyword">services</span>:
+  <span class="code-function">actalog</span>:
+    image: ghcr.io/johnzastrow/actalog:latest
+    ports:
+      - "<span class="code-string">8080:8080</span>"
+    environment:
+      - DB_DRIVER=<span class="code-string">sqlite3</span>
+      - DB_NAME=<span class="code-string">actalog.db</span>
+    volumes:
+      - ./data:/app/data</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
+    <!-- Admin Features Section -->
+    <section class="features" id="admin">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">ADMIN & GYM FEATURES</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">MULTI-USER SUPPORT</h3>
+                    <p class="feature-description">User registration with email verification. Role-based access control. Admin and user roles with appropriate permissions.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">ANNOUNCEMENTS</h3>
+                    <p class="feature-description">Admin broadcast system for gym-wide notifications. Keep members informed about schedule changes, events, and achievements.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AUDIT LOGGING</h3>
+                    <p class="feature-description">Complete audit trail for data modifications. Track who changed what and when. Essential for gym management compliance.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                            <line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">SUBSCRIPTION BILLING</h3>
+                    <p class="feature-description">Built-in subscription management for gym billing. User and organization-level subscriptions. Manual admin control with full audit trail.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">BACKUP & RESTORE</h3>
+                    <p class="feature-description">Full system backup and restore. Includes database dump, user data, and settings. Restore across different database engines.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            <polyline points="2 17 12 22 22 17"/>
+                            <polyline points="2 12 12 17 22 12"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">ORGANIZATION SUPPORT</h3>
+                    <p class="feature-description">Create organizations for gyms or teams. Organization-level subscriptions cover all members. Perfect for box owners.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2 class="cta-title">START TRACKING TODAY</h2>
+            <p class="cta-subtitle">Open source. Self-hosted. Your data under your control.</p>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary btn-large" target="_blank">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>VIEW ON GITHUB</span>
+                </a>
+                <a href="index.html" class="btn btn-secondary btn-large">
+                    <span>BACK TO HOME</span>
+                </a>
+            </div>
+
+            <div class="cta-meta">
+                <div class="cta-meta-item">
+                    <span class="cta-meta-label">License:</span>
+                    <span class="cta-meta-value">MIT</span>
+                </div>
+                <div class="cta-meta-divider">&bull;</div>
+                <div class="cta-meta-item">
+                    <span class="cta-meta-label">Version:</span>
+                    <span class="cta-meta-value">0.16.0-beta</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">ACTALOG</div>
+                    <p class="footer-tagline">Elite CrossFit Performance Tracker</p>
+                </div>
+
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">PROJECT</h4>
+                        <a href="https://github.com/johnzastrow/actalog" target="_blank">GitHub</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/README.md" target="_blank">Documentation</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">Changelog</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">RESOURCES</h4>
+                        <a href="https://github.com/johnzastrow/actalog#quick-start" target="_blank">Quick Start</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/ROADMAP.md" target="_blank">Roadmap</a>
+                        <a href="https://github.com/johnzastrow/actalog/issues" target="_blank">Issues</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">COMMUNITY</h4>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Report Bug</a>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Request Feature</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/LICENSE" target="_blank">MIT License</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
+                <p class="footer-credits">Designed with athletic brutalism in mind.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

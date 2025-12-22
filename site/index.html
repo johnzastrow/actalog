@@ -25,6 +25,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ActaLog",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web, iOS, Android (PWA)",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "description": "Mobile-first CrossFit workout tracker. Track PRs, analyze performance, log WODs. Open source and self-hostable.",
+        "url": "https://johnzastrow.github.io/actalog/",
+        "downloadUrl": "https://github.com/johnzastrow/actalog",
+        "softwareVersion": "0.16.0-beta",
+        "author": {
+            "@type": "Person",
+            "name": "John Zastrow",
+            "url": "https://github.com/johnzastrow"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "keywords": ["crossfit", "workout tracker", "WOD", "fitness", "self-hosted", "open source", "PWA", "PR tracking"]
+    }
+    </script>
 </head>
 <body>
     <!-- Noise Texture Overlay -->
@@ -37,7 +64,7 @@
                 <span class="logo-text">ACTALOG</span>
             </div>
             <div class="nav-links">
-                <a href="#features" class="nav-link">FEATURES</a>
+                <a href="features.html" class="nav-link">FEATURES</a>
                 <a href="#tech" class="nav-link">TECH</a>
                 <a href="https://github.com/johnzastrow/actalog" class="nav-link" target="_blank">GITHUB</a>
             </div>

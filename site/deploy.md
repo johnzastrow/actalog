@@ -10,8 +10,8 @@ This page contains a minimal quickstart for deploying ActaLog from the repositor
 ## Minimal quickstart
 ```bash
 # clone the repo
-git clone https://github.com/your/repo.git
-cd repo
+git clone https://github.com/johnzastrow/actalog.git
+cd actalog
 
 # bring up the stack
 docker compose up -d

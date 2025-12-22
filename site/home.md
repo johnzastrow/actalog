@@ -25,7 +25,7 @@
 
 Open-source workout tracker built for CrossFit, strength training, and gym owners. Keep your data private, deploy quickly with Docker, and use it as a Progressive Web App.
 
-[Deploy with Docker](deploy.md) · [Read the docs](https://github.com/your/repo)
+[Deploy with Docker](deploy.md) · [Read the docs](https://github.com/johnzastrow/actalog)
 
 ---
 
