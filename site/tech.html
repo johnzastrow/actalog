@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActaLog for Developers - Open Source CrossFit Tracker</title>
+    <meta name="description" content="Self-host ActaLog with Docker. Built with Go, Vue.js, and your choice of SQLite, PostgreSQL, or MySQL. MIT licensed and fully open source.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="ActaLog for Developers - Open Source CrossFit Tracker">
+    <meta property="og:description" content="Self-host ActaLog with Docker. Built with Go and Vue.js. MIT licensed.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://johnzastrow.github.io/actalog/tech.html">
+    <meta property="og:image" content="assets/hero-screenshot.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Noise Texture Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-text">ACTALOG</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="features.html" class="nav-link">FOR GYMS</a>
+                <a href="https://github.com/johnzastrow/actalog" class="nav-link" target="_blank">GITHUB</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" style="min-height: 50vh;">
+        <div class="hero-container">
+            <div class="hero-content" style="max-width: 100%;">
+                <div class="hero-badge">OPEN SOURCE</div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">BUILT FOR</span>
+                    <span class="hero-title-line glow">DEVELOPERS.</span>
+                </h1>
+                <p class="hero-subtitle">Self-host on your own infrastructure. Full control over your data. MIT licensed and ready to deploy.</p>
+
+                <!-- CTAs -->
+                <div class="hero-ctas">
+                    <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>VIEW ON GITHUB</span>
+                    </a>
+                    <a href="https://github.com/johnzastrow/actalog#quick-start" class="btn btn-secondary" target="_blank">
+                        <span>QUICK START</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="diagonal-divider"></div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="tech" id="stack">
+        <div class="tech-container">
+            <div class="tech-content">
+                <div class="section-header">
+                    <h2 class="section-title">ENGINEERED FOR SCALE</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>Built with production-grade architecture. Clean separation, comprehensive testing, multi-database support.</p>
+                </div>
+
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-label">BACKEND</div>
+                        <div class="tech-value">Go 1.21+ / Chi Router</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">FRONTEND</div>
+                        <div class="tech-value">Vue.js 3 / Vuetify 3</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">DATABASE</div>
+                        <div class="tech-value">SQLite / PostgreSQL / MySQL</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">ARCHITECTURE</div>
+                        <div class="tech-value">Clean Architecture / DDD</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">DEPLOYMENT</div>
+                        <div class="tech-value">Docker / GitHub Actions CI/CD</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">LICENSE</div>
+                        <div class="tech-value">MIT - Fully Open Source</div>
+                    </div>
+                </div>
+
+                <div class="tech-features">
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>JWT Authentication</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Clean Architecture Layers</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Comprehensive Test Coverage</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Database Migrations</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Multi-Database Support</span>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="check-icon">&#10003;</div>
+                        <span>Production Docker Images</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-visual">
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="code-title">main.go</div>
+                    </div>
+                    <div class="code-content">
+                        <code><span class="code-comment">// Clean Architecture in action</span>
+<span class="code-keyword">func</span> <span class="code-function">main</span>() {
+    <span class="code-comment">// Repository layer</span>
+    workoutRepo := repository.<span class="code-function">NewWorkoutRepository</span>(db)
+
+    <span class="code-comment">// Service layer</span>
+    workoutSvc := service.<span class="code-function">NewWorkoutService</span>(workoutRepo)
+
+    <span class="code-comment">// Handler layer</span>
+    handler.<span class="code-function">RegisterWorkoutRoutes</span>(router, workoutSvc)
+}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagonal Divider -->
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="features" id="quickstart">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">DEPLOY IN MINUTES</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="code-block" style="margin-bottom: 2rem;">
+                    <div class="code-header">
+                        <div class="code-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="code-title">terminal</div>
+                    </div>
+                    <div class="code-content">
+                        <code><span class="code-comment"># Clone the repository</span>
+git clone https://github.com/johnzastrow/actalog.git
+cd actalog
+
+<span class="code-comment"># Start with Docker Compose</span>
+docker compose up -d
+
+<span class="code-comment"># Or use the pre-built image</span>
+docker pull ghcr.io/johnzastrow/actalog:latest</code>
+                    </div>
+                </div>
+
+                <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="feature-card">
+                        <h3 class="feature-title">SQLITE</h3>
+                        <p class="feature-description">Zero configuration. Perfect for development and small deployments. Just set DB_DRIVER=sqlite3.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="feature-title">POSTGRESQL</h3>
+                        <p class="feature-description">Production recommended. Full-featured with excellent performance. Scales with your needs.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="feature-title">MYSQL/MARIADB</h3>
+                        <p class="feature-description">Full MySQL and MariaDB support. Use your existing infrastructure.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section class="tech" id="architecture">
+        <div class="tech-container">
+            <div class="tech-content" style="max-width: 100%;">
+                <div class="section-header">
+                    <h2 class="section-title">CLEAN ARCHITECTURE</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="tech-description">
+                    <p>Strict layer separation makes the codebase maintainable and testable. Each layer has a single responsibility.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border-left: 4px solid #00bcd4;">
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 0.5rem;">DOMAIN LAYER</h3>
+                        <p style="color: #888; font-size: 0.9rem; margin-bottom: 0.5rem;">internal/domain/</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">Entities and repository interfaces. Zero external dependencies. The core of your business logic.</p>
+                    </div>
+
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border-left: 4px solid #ffc107;">
+                        <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 0.5rem;">REPOSITORY LAYER</h3>
+                        <p style="color: #888; font-size: 0.9rem; margin-bottom: 0.5rem;">internal/repository/</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">Data access implementations. Database-agnostic interfaces allow swapping backends easily.</p>
+                    </div>
+
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border-left: 4px solid #00e676;">
+                        <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 0.5rem;">SERVICE LAYER</h3>
+                        <p style="color: #888; font-size: 0.9rem; margin-bottom: 0.5rem;">internal/service/</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">Business logic and use cases. Orchestrates repositories and enforces business rules.</p>
+                    </div>
+
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 12px; padding: 1.5rem; border-left: 4px solid #ff6b35;">
+                        <h3 style="color: #ff6b35; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 0.5rem;">HANDLER LAYER</h3>
+                        <p style="color: #888; font-size: 0.9rem; margin-bottom: 0.5rem;">internal/handler/</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">HTTP handlers and API endpoints. Input validation, response formatting, and error handling.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="diagonal-divider diagonal-divider-reverse"></div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" data-target="0.16">0.0</div>
+                    <div class="stat-label">CURRENT VERSION</div>
+                    <div class="stat-sublabel">Beta Release</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">DATABASE ENGINES</div>
+                    <div class="stat-sublabel">SQLite / PostgreSQL / MySQL</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="100">0</div>
+                    <div class="stat-label">% OPEN SOURCE</div>
+                    <div class="stat-sublabel">MIT Licensed</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section class="features" id="api">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">REST API</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <p style="text-align: center; color: #888; max-width: 700px; margin: 0 auto 2rem; font-size: 1.1rem;">
+                Well-documented REST API with JWT authentication. Build integrations, mobile apps, or custom dashboards.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3 class="feature-title">AUTHENTICATION</h3>
+                    <p class="feature-description">JWT-based auth with refresh tokens. User registration, login, password reset, and email verification.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">WORKOUTS</h3>
+                    <p class="feature-description">CRUD operations for workouts, templates, and movements. Automatic PR detection on create/update.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">ANALYTICS</h3>
+                    <p class="feature-description">Performance endpoints for charts, PR history, movement stats, and workout summaries.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">IMPORT/EXPORT</h3>
+                    <p class="feature-description">CSV import from Wodify. JSON export for all data. Full database backup and restore.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">ADMIN</h3>
+                    <p class="feature-description">User management, announcements, audit logs, and subscription management endpoints.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">WEBHOOKS</h3>
+                    <p class="feature-description">Notification system for PRs, achievements, and admin announcements. Extensible for integrations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2 class="cta-title">READY TO SELF-HOST?</h2>
+            <p class="cta-subtitle">Clone the repo, run docker compose, and you're up in minutes.</p>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary btn-large" target="_blank">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>GITHUB REPOSITORY</span>
+                </a>
+                <a href="https://github.com/johnzastrow/actalog#quick-start" class="btn btn-secondary btn-large" target="_blank">
+                    <span>DOCUMENTATION</span>
+                </a>
+            </div>
+
+            <div class="cta-meta">
+                <div class="cta-meta-item">
+                    <span class="cta-meta-label">License:</span>
+                    <span class="cta-meta-value">MIT</span>
+                </div>
+                <div class="cta-meta-divider">&bull;</div>
+                <div class="cta-meta-item">
+                    <span class="cta-meta-label">Version:</span>
+                    <span class="cta-meta-value">0.16.0-beta</span>
+                </div>
+                <div class="cta-meta-divider">&bull;</div>
+                <div class="cta-meta-item">
+                    <span class="cta-meta-label">Made with:</span>
+                    <span class="cta-meta-value">Go + Vue.js</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">ACTALOG</div>
+                    <p class="footer-tagline">Open Source CrossFit Tracker</p>
+                </div>
+
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">PROJECT</h4>
+                        <a href="https://github.com/johnzastrow/actalog" target="_blank">GitHub</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/README.md" target="_blank">Documentation</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">Changelog</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">RESOURCES</h4>
+                        <a href="https://github.com/johnzastrow/actalog#quick-start" target="_blank">Quick Start</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/ROADMAP.md" target="_blank">Roadmap</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/ARCHITECTURE.md" target="_blank">Architecture</a>
+                    </div>
+
+                    <div class="footer-column">
+                        <h4 class="footer-heading">COMMUNITY</h4>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Report Bug</a>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Request Feature</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/LICENSE" target="_blank">MIT License</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

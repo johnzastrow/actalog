@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Features - ActaLog | CrossFit Workout Tracker</title>
-    <meta name="description" content="Explore ActaLog's powerful features: PR tracking, workout templates, performance analytics, 6 themes, PWA offline support, and multi-database deployment.">
+    <title>ActaLog for Gyms - Manage Your CrossFit Box</title>
+    <meta name="description" content="Run your CrossFit box with ActaLog. Member management, announcements, subscription billing, and performance tracking for gym owners.">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Features - ActaLog | CrossFit Workout Tracker">
-    <meta property="og:description" content="Explore ActaLog's powerful features: PR tracking, workout templates, performance analytics, 6 themes, PWA offline support, and more.">
+    <meta property="og:title" content="ActaLog for Gyms - Manage Your CrossFit Box">
+    <meta property="og:description" content="Run your CrossFit box with ActaLog. Member management, announcements, and performance tracking.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://johnzastrow.github.io/actalog/features.html">
     <meta property="og:image" content="assets/hero-screenshot.png">
@@ -38,8 +38,7 @@
             </div>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">HOME</a>
-                <a href="#core" class="nav-link">FEATURES</a>
-                <a href="https://github.com/johnzastrow/actalog" class="nav-link" target="_blank">GITHUB</a>
+                <a href="tech.html" class="nav-link">DEVELOPERS</a>
             </div>
         </div>
     </nav>
@@ -48,137 +47,108 @@
     <section class="hero" style="min-height: 50vh;">
         <div class="hero-container">
             <div class="hero-content" style="max-width: 100%;">
-                <div class="hero-badge">FEATURES</div>
+                <div class="hero-badge">FOR GYM OWNERS</div>
                 <h1 class="hero-title">
-                    <span class="hero-title-line">BUILT FOR</span>
-                    <span class="hero-title-line glow">ATHLETES.</span>
+                    <span class="hero-title-line">RUN YOUR</span>
+                    <span class="hero-title-line glow">BOX.</span>
                 </h1>
-                <p class="hero-subtitle">Everything you need to track, analyze, and improve your CrossFit performance. Mobile-first. Open source. Self-hosted.</p>
+                <p class="hero-subtitle">Everything you need to manage members, track performance, and keep your community engaged. Built by gym owners, for gym owners.</p>
             </div>
         </div>
         <div class="diagonal-divider"></div>
     </section>
 
-    <!-- Core Features Section -->
-    <section class="features" id="core">
+    <!-- Member Management Section -->
+    <section class="features" id="members">
         <div class="features-container">
             <div class="section-header">
-                <h2 class="section-title">CORE FEATURES</h2>
+                <h2 class="section-title">MEMBER MANAGEMENT</h2>
                 <div class="section-line"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 3rem;">
+                <div>
+                    <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">KNOW YOUR ATHLETES</h3>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        Your members are more than just names on a roster. ActaLog gives you visibility into their training journey &mdash; who's showing up consistently, who's hitting PRs, and who might need a little extra motivation.
+                    </p>
+                    <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                        With role-based access control, you decide who sees what. Coaches can view member progress without accessing billing. Admins have full control. Members see only their own data.
+                    </p>
+                </div>
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: #00bcd4; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: bold;">JD</div>
+                        <div>
+                            <div style="color: #e0e0e0; font-weight: 600;">Jane Doe</div>
+                            <div style="color: #666; font-size: 0.9rem;">Member since 2023</div>
+                        </div>
+                        <div style="margin-left: auto; color: #00e676; font-size: 0.9rem;">Active</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                        <div>
+                            <div style="color: #00bcd4; font-size: 1.5rem; font-weight: bold;">47</div>
+                            <div style="color: #666; font-size: 0.8rem;">Workouts</div>
+                        </div>
+                        <div>
+                            <div style="color: #ffc107; font-size: 1.5rem; font-weight: bold;">12</div>
+                            <div style="color: #666; font-size: 0.8rem;">PRs</div>
+                        </div>
+                        <div>
+                            <div style="color: #00e676; font-size: 1.5rem; font-weight: bold;">85%</div>
+                            <div style="color: #666; font-size: 0.8rem;">Attendance</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">AUTOMATIC PR DETECTION</h3>
-                    <p class="feature-description">ActaLog automatically detects personal records using the Epley formula for 1RM calculations. Get notified when you crush a new PR for weight, time, or AMRAP workouts.</p>
+                    <h3 class="feature-title">USER REGISTRATION</h3>
+                    <p class="feature-description">Email verification, secure password management, and optional admin approval for new signups.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">314 BENCHMARK WODS</h3>
-                    <p class="feature-description">Pre-loaded with 314 classic CrossFit benchmark workouts including The Girls, Heroes, and Open workouts. Create custom templates or modify existing ones.</p>
+                    <h3 class="feature-title">ROLE-BASED ACCESS</h3>
+                    <p class="feature-description">Admin, coach, and member roles. Control who can view, edit, and manage different parts of the system.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"/>
-                            <line x1="12" y1="20" x2="12" y2="4"/>
-                            <line x1="6" y1="20" x2="6" y2="14"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">PERFORMANCE ANALYTICS</h3>
-                    <p class="feature-description">Visualize your progress with interactive charts. Track movement volume, workout frequency, strength gains over time, and identify trends in your training.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2"/>
-                            <path d="M3 10h18"/>
-                            <path d="M8 2v4"/>
-                            <path d="M16 2v4"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">CALENDAR & TIMELINE</h3>
-                    <p class="feature-description">Monthly calendar view shows workout dots at a glance. Timeline view provides chronological workout history with full details and PR badges.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 6v6l4 2"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">QUICK LOG</h3>
-                    <p class="feature-description">One-tap workout logging from templates. Designed for gym use with large touch targets. Log your workout in seconds, not minutes.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                            <path d="M2 17l10 5 10-5"/>
-                            <path d="M2 12l10 5 10-5"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">182 MOVEMENTS</h3>
-                    <p class="feature-description">Comprehensive movement library with 182 exercises categorized by type. Track performance across Olympic lifts, gymnastics, cardio, and accessory work.</p>
+                    <h3 class="feature-title">MEMBER PROFILES</h3>
+                    <p class="feature-description">Track workout history, PRs, attendance patterns, and subscription status for every member.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Themes Section -->
-    <section class="tech" id="themes">
+    <!-- Announcements Section -->
+    <section class="tech" id="announcements">
         <div class="tech-container">
-            <div class="tech-content">
+            <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
-                    <h2 class="section-title">6 BEAUTIFUL THEMES</h2>
+                    <h2 class="section-title">KEEP YOUR COMMUNITY CONNECTED</h2>
                     <div class="section-line"></div>
                 </div>
 
-                <div class="tech-description">
-                    <p>Customize your experience with 6 professionally designed themes. From clean light modes to dramatic dark themes inspired by athletic brutalism.</p>
-                </div>
-
-                <div class="tech-stack">
-                    <div class="tech-item">
-                        <div class="tech-label">LIGHT</div>
-                        <div class="tech-value">Clean, professional default</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem;">
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #ffc107;"></div>
+                            <span style="color: #ffc107; font-size: 0.9rem; font-weight: 600;">ANNOUNCEMENT</span>
+                            <span style="color: #666; font-size: 0.8rem; margin-left: auto;">2 hours ago</span>
+                        </div>
+                        <h4 style="color: #e0e0e0; font-size: 1.1rem; margin-bottom: 0.75rem;">Holiday Hours Reminder</h4>
+                        <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">Hey everyone! Just a reminder that we'll have modified hours next week for the holidays. Check the schedule on the board. See you all at the Christmas Eve WOD!</p>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem; color: #666; font-size: 0.85rem;">
+                            <span>Sent to: All Members</span>
+                        </div>
                     </div>
-                    <div class="tech-item">
-                        <div class="tech-label">DARK</div>
-                        <div class="tech-value">Easy on the eyes, gym-ready</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">BRUTALIST</div>
-                        <div class="tech-value">Bold cyan and gold, high contrast</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">OCEAN</div>
-                        <div class="tech-value">Calming teal and aqua tones</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">SUNSET</div>
-                        <div class="tech-value">Warm amber and orange hues</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">SUNRISE</div>
-                        <div class="tech-value">Purple clouds, coral sky, golden horizon</div>
+                    <div>
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">BROADCAST TO EVERYONE</h3>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                            Schedule changes, special events, equipment updates &mdash; your members see it all in their notification feed. No more hoping everyone checks the whiteboard.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7;">
+                            Announcements appear in the app with a timestamp and are accessible from anywhere. Members who miss a day still get the message.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -186,113 +156,104 @@
         <div class="diagonal-divider diagonal-divider-reverse"></div>
     </section>
 
-    <!-- PWA & Offline Section -->
-    <section class="features" id="pwa">
+    <!-- Subscription Billing Section -->
+    <section class="features" id="billing">
         <div class="features-container">
             <div class="section-header">
-                <h2 class="section-title">MOBILE-FIRST PWA</h2>
+                <h2 class="section-title">SUBSCRIPTION MANAGEMENT</h2>
                 <div class="section-line"></div>
             </div>
 
-            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                        </svg>
+            <div style="max-width: 900px; margin: 0 auto;">
+                <p style="color: #ccc; font-size: 1.15rem; line-height: 1.8; margin-bottom: 2rem; text-align: center;">
+                    ActaLog includes a flexible subscription system designed for CrossFit boxes. Manage individual memberships or organization-wide access with manual admin control.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">INDIVIDUAL SUBSCRIPTIONS</h3>
+                        <p style="color: #888; line-height: 1.7;">
+                            Perfect for drop-in athletes or remote members. Create monthly or annual subscriptions for individual users. Track payment status and expiration dates.
+                        </p>
                     </div>
-                    <h3 class="feature-title">INSTALL ON ANY DEVICE</h3>
-                    <p class="feature-description">Progressive Web App works like a native app. Install directly to your home screen on iOS, Android, or desktop. No app store required.</p>
+
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                        <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">ORGANIZATION SUBSCRIPTIONS</h3>
+                        <p style="color: #888; line-height: 1.7;">
+                            One subscription covers all members of an organization. Ideal for boxes that want to provide app access as part of their membership package.
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 230, 118, 0.2);">
+                        <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">PERMANENT FREE ACCESS</h3>
+                        <p style="color: #888; line-height: 1.7;">
+                            Grant permanent access to founders, staff, or special members. No expiration, no recurring billing &mdash; just full access forever.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 4v6h-6"/>
-                            <path d="M1 20v-6h6"/>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                        </svg>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3 class="feature-title">MANUAL CONTROL</h3>
+                        <p class="feature-description">Mark payments as received, extend subscriptions, or cancel access. You're in control of the billing relationship.</p>
                     </div>
-                    <h3 class="feature-title">OFFLINE RECORDING</h3>
-                    <p class="feature-description">Record workouts without internet. Data syncs automatically when you're back online. Perfect for gyms with poor connectivity.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
+                    <div class="feature-card">
+                        <h3 class="feature-title">READ-ONLY MODE</h3>
+                        <p class="feature-description">Expired subscriptions automatically enter read-only mode. Members can view their history but can't log new workouts.</p>
                     </div>
-                    <h3 class="feature-title">INSTANT UPDATES</h3>
-                    <p class="feature-description">User-controlled update prompts. No surprise reloads during your workout. Update when you're ready.</p>
+                    <div class="feature-card">
+                        <h3 class="feature-title">AUDIT TRAIL</h3>
+                        <p class="feature-description">Every subscription change is logged. Know who made changes and when for full accountability.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Data Control Section -->
+    <!-- Data & Privacy Section -->
     <section class="tech" id="data">
         <div class="tech-container">
-            <div class="tech-content">
+            <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
                     <h2 class="section-title">YOUR DATA, YOUR CONTROL</h2>
                     <div class="section-line"></div>
                 </div>
 
-                <div class="tech-description">
-                    <p>Self-host on your own infrastructure. Import from other platforms. Export anytime. No vendor lock-in.</p>
-                </div>
-
-                <div class="tech-features">
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>Wodify CSV Import</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem;">
+                    <div>
+                        <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.75rem; margin-bottom: 1rem;">COMPLETE DATA OWNERSHIP</h3>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                            Unlike cloud-only solutions, ActaLog runs on your infrastructure. Your member data never leaves your servers unless you want it to.
+                        </p>
+                        <p style="color: #888; font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem;">
+                            Full backup and restore capabilities mean you can migrate, archive, or recover data at any time. Export to JSON, backup to ZIP, or replicate across database engines.
+                        </p>
+                        <ul style="color: #888; font-size: 1rem; line-height: 2; list-style: none; padding: 0;">
+                            <li style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: #00bcd4;">&#10003;</span> Full database backups on demand
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: #00bcd4;">&#10003;</span> CSV import from Wodify and other platforms
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: #00bcd4;">&#10003;</span> JSON export for all user data
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: #00bcd4;">&#10003;</span> Audit logs for compliance requirements
+                            </li>
+                        </ul>
                     </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>Full Database Backup/Restore</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>JSON Export for All Data</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>Movement & WOD Seed Data</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>SQLite / PostgreSQL / MySQL</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">&#10003;</div>
-                        <span>Docker Deployment Ready</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tech-visual">
-                <div class="code-block">
-                    <div class="code-header">
-                        <div class="code-dots">
-                            <span></span><span></span><span></span>
+                    <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 2rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                        <div style="text-align: center; padding: 2rem;">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" style="margin-bottom: 1.5rem;">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <polyline points="9 12 11 14 15 10"/>
+                            </svg>
+                            <h4 style="color: #e0e0e0; font-size: 1.25rem; margin-bottom: 0.75rem;">GDPR & Privacy Ready</h4>
+                            <p style="color: #888; font-size: 0.95rem; line-height: 1.6;">
+                                Built with data privacy in mind. Export member data on request, delete records completely, maintain audit trails for compliance.
+                            </p>
                         </div>
-                        <div class="code-title">docker-compose.yml</div>
-                    </div>
-                    <div class="code-content">
-                        <code><span class="code-comment"># Quick deploy with Docker</span>
-<span class="code-keyword">services</span>:
-  <span class="code-function">actalog</span>:
-    image: ghcr.io/johnzastrow/actalog:latest
-    ports:
-      - "<span class="code-string">8080:8080</span>"
-    environment:
-      - DB_DRIVER=<span class="code-string">sqlite3</span>
-      - DB_NAME=<span class="code-string">actalog.db</span>
-    volumes:
-      - ./data:/app/data</code>
                     </div>
                 </div>
             </div>
@@ -300,86 +261,42 @@
         <div class="diagonal-divider diagonal-divider-reverse"></div>
     </section>
 
-    <!-- Admin Features Section -->
-    <section class="features" id="admin">
+    <!-- Performance Tracking Section -->
+    <section class="features" id="performance">
         <div class="features-container">
             <div class="section-header">
-                <h2 class="section-title">ADMIN & GYM FEATURES</h2>
+                <h2 class="section-title">CELEBRATE YOUR ATHLETES</h2>
                 <div class="section-line"></div>
             </div>
 
+            <p style="color: #ccc; font-size: 1.15rem; line-height: 1.8; margin-bottom: 2rem; text-align: center; max-width: 800px; margin-left: auto; margin-right: auto;">
+                When a member hits a PR, they get a notification. When that notification gets likes from other members, they know the community is cheering for them. Small touches that build big culture.
+            </p>
+
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">MULTI-USER SUPPORT</h3>
-                    <p class="feature-description">User registration with email verification. Role-based access control. Admin and user roles with appropriate permissions.</p>
+                    <h3 class="feature-title">PR NOTIFICATIONS</h3>
+                    <p class="feature-description">Automatic notifications when members hit personal records. Celebrate wins in real-time, not just on the whiteboard.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">ANNOUNCEMENTS</h3>
-                    <p class="feature-description">Admin broadcast system for gym-wide notifications. Keep members informed about schedule changes, events, and achievements.</p>
+                    <h3 class="feature-title">SOCIAL LIKES</h3>
+                    <p class="feature-description">Members can like each other's achievements. Build community and friendly competition through recognition.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">AUDIT LOGGING</h3>
-                    <p class="feature-description">Complete audit trail for data modifications. Track who changed what and when. Essential for gym management compliance.</p>
+                    <h3 class="feature-title">STREAK TRACKING</h3>
+                    <p class="feature-description">Track consecutive training days. Gamify consistency and help members build the habit of showing up.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                            <line x1="1" y1="10" x2="23" y2="10"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">SUBSCRIPTION BILLING</h3>
-                    <p class="feature-description">Built-in subscription management for gym billing. User and organization-level subscriptions. Manual admin control with full audit trail.</p>
+                    <h3 class="feature-title">MOVEMENT LIBRARY</h3>
+                    <p class="feature-description">182 movements categorized and ready. Olympic lifts, gymnastics, cardio, and accessories all organized.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">BACKUP & RESTORE</h3>
-                    <p class="feature-description">Full system backup and restore. Includes database dump, user data, and settings. Restore across different database engines.</p>
+                    <h3 class="feature-title">WOD TEMPLATES</h3>
+                    <p class="feature-description">314 benchmark WODs pre-loaded. The Girls, Heroes, Open workouts &mdash; all ready to program and track.</p>
                 </div>
-
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                            <polyline points="2 17 12 22 22 17"/>
-                            <polyline points="2 12 12 17 22 12"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">ORGANIZATION SUPPORT</h3>
-                    <p class="feature-description">Create organizations for gyms or teams. Organization-level subscriptions cover all members. Perfect for box owners.</p>
+                    <h3 class="feature-title">CUSTOM WORKOUTS</h3>
+                    <p class="feature-description">Create your own templates for daily programming. Members log your WODs with a single tap.</p>
                 </div>
             </div>
         </div>
@@ -388,31 +305,19 @@
     <!-- CTA Section -->
     <section class="cta">
         <div class="cta-container">
-            <h2 class="cta-title">START TRACKING TODAY</h2>
-            <p class="cta-subtitle">Open source. Self-hosted. Your data under your control.</p>
+            <h2 class="cta-title">READY TO UPGRADE YOUR BOX?</h2>
+            <p class="cta-subtitle">Give your members the tools they deserve. Run it on your terms.</p>
 
             <div class="cta-buttons">
-                <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary btn-large" target="_blank">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                <a href="tech.html" class="btn btn-primary btn-large">
+                    <span>SEE THE TECH</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
-                    <span>VIEW ON GITHUB</span>
                 </a>
                 <a href="index.html" class="btn btn-secondary btn-large">
                     <span>BACK TO HOME</span>
                 </a>
-            </div>
-
-            <div class="cta-meta">
-                <div class="cta-meta-item">
-                    <span class="cta-meta-label">License:</span>
-                    <span class="cta-meta-value">MIT</span>
-                </div>
-                <div class="cta-meta-divider">&bull;</div>
-                <div class="cta-meta-item">
-                    <span class="cta-meta-label">Version:</span>
-                    <span class="cta-meta-value">0.16.0-beta</span>
-                </div>
             </div>
         </div>
     </section>
@@ -423,36 +328,33 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <div class="footer-logo">ACTALOG</div>
-                    <p class="footer-tagline">Elite CrossFit Performance Tracker</p>
+                    <p class="footer-tagline">Built for CrossFit Boxes</p>
                 </div>
 
                 <div class="footer-links">
                     <div class="footer-column">
-                        <h4 class="footer-heading">PROJECT</h4>
-                        <a href="https://github.com/johnzastrow/actalog" target="_blank">GitHub</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/README.md" target="_blank">Documentation</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">Changelog</a>
+                        <h4 class="footer-heading">PRODUCT</h4>
+                        <a href="index.html">For Athletes</a>
+                        <a href="#members">Member Management</a>
+                        <a href="#billing">Subscriptions</a>
                     </div>
 
                     <div class="footer-column">
                         <h4 class="footer-heading">RESOURCES</h4>
-                        <a href="https://github.com/johnzastrow/actalog#quick-start" target="_blank">Quick Start</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/ROADMAP.md" target="_blank">Roadmap</a>
-                        <a href="https://github.com/johnzastrow/actalog/issues" target="_blank">Issues</a>
+                        <a href="tech.html">For Developers</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">What's New</a>
                     </div>
 
                     <div class="footer-column">
-                        <h4 class="footer-heading">COMMUNITY</h4>
-                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Report Bug</a>
+                        <h4 class="footer-heading">SUPPORT</h4>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Get Help</a>
                         <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Request Feature</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/LICENSE" target="_blank">MIT License</a>
                     </div>
                 </div>
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
-                <p class="footer-credits">Designed with athletic brutalism in mind.</p>
+                <p>&copy; 2025 ActaLog. Made for athletes, by athletes.</p>
             </div>
         </div>
     </footer>

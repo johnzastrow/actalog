@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ActaLog - Elite CrossFit Performance Tracker</title>
-    <meta name="description" content="Mobile-first CrossFit workout tracker. Track PRs, analyze performance, dominate your training.">
+    <title>ActaLog - Track Your CrossFit Journey</title>
+    <meta name="description" content="The workout tracker built for CrossFit athletes. Log WODs, track PRs, visualize your progress. Available on any device.">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="ActaLog - Elite CrossFit Performance Tracker">
-    <meta property="og:description" content="Mobile-first CrossFit workout tracker. Track PRs, analyze performance, dominate your training.">
+    <meta property="og:title" content="ActaLog - Track Your CrossFit Journey">
+    <meta property="og:description" content="The workout tracker built for CrossFit athletes. Log WODs, track PRs, visualize your progress.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://johnzastrow.github.io/actalog/">
     <meta property="og:image" content="assets/hero-screenshot.png">
@@ -39,17 +39,10 @@
             "price": "0",
             "priceCurrency": "USD"
         },
-        "description": "Mobile-first CrossFit workout tracker. Track PRs, analyze performance, log WODs. Open source and self-hostable.",
+        "description": "Mobile-first CrossFit workout tracker. Track PRs, analyze performance, log WODs.",
         "url": "https://johnzastrow.github.io/actalog/",
-        "downloadUrl": "https://github.com/johnzastrow/actalog",
         "softwareVersion": "0.16.0-beta",
-        "author": {
-            "@type": "Person",
-            "name": "John Zastrow",
-            "url": "https://github.com/johnzastrow"
-        },
-        "license": "https://opensource.org/licenses/MIT",
-        "keywords": ["crossfit", "workout tracker", "WOD", "fitness", "self-hosted", "open source", "PWA", "PR tracking"]
+        "keywords": ["crossfit", "workout tracker", "WOD", "fitness", "PWA", "PR tracking"]
     }
     </script>
 </head>
@@ -64,9 +57,8 @@
                 <span class="logo-text">ACTALOG</span>
             </div>
             <div class="nav-links">
-                <a href="features.html" class="nav-link">FEATURES</a>
-                <a href="#tech" class="nav-link">TECH</a>
-                <a href="https://github.com/johnzastrow/actalog" class="nav-link" target="_blank">GITHUB</a>
+                <a href="features.html" class="nav-link">FOR GYMS</a>
+                <a href="tech.html" class="nav-link">DEVELOPERS</a>
             </div>
         </div>
     </nav>
@@ -75,13 +67,13 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <div class="hero-badge">OPEN SOURCE</div>
+                <div class="hero-badge">YOUR FITNESS JOURNEY</div>
                 <h1 class="hero-title">
                     <span class="hero-title-line">TRACK.</span>
                     <span class="hero-title-line">ANALYZE.</span>
                     <span class="hero-title-line glow">DOMINATE.</span>
                 </h1>
-                <p class="hero-subtitle">Elite mobile-first workout tracker for CrossFit athletes. Log WODs, crush PRs, visualize progress.</p>
+                <p class="hero-subtitle">The workout tracker built for CrossFit athletes. Log your WODs, crush PRs, and watch your progress unfold.</p>
 
                 <!-- Animated Metrics -->
                 <div class="hero-metrics">
@@ -96,21 +88,21 @@
                     </div>
                     <div class="metric-divider"></div>
                     <div class="metric">
-                        <div class="metric-value" data-target="100">0</div>
-                        <div class="metric-label">% OPEN SOURCE</div>
+                        <div class="metric-value" data-target="6">0</div>
+                        <div class="metric-label">THEMES</div>
                     </div>
                 </div>
 
                 <!-- CTAs -->
                 <div class="hero-ctas">
-                    <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary" target="_blank">
-                        <span>VIEW ON GITHUB</span>
+                    <a href="#start" class="btn btn-primary">
+                        <span>GET STARTED</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
                     </a>
-                    <a href="https://github.com/johnzastrow/actalog#quick-start" class="btn btn-secondary" target="_blank">
-                        <span>QUICK START</span>
+                    <a href="#screenshots" class="btn btn-secondary">
+                        <span>SEE IT IN ACTION</span>
                     </a>
                 </div>
             </div>
@@ -119,7 +111,9 @@
             <div class="hero-visual">
                 <div class="mockup-container">
                     <div class="mockup-phone">
-                        <div class="mockup-screen"></div>
+                        <div class="mockup-screen">
+                            <img src="assets/hero-screenshot.svg" alt="ActaLog Dashboard" style="width: 100%; height: 100%; object-fit: cover; border-radius: 24px;">
+                        </div>
                     </div>
                     <div class="mockup-glow"></div>
                 </div>
@@ -134,7 +128,7 @@
     <section class="features" id="features">
         <div class="features-container">
             <div class="section-header">
-                <h2 class="section-title">BUILT FOR PERFORMANCE</h2>
+                <h2 class="section-title">EVERYTHING YOU NEED TO TRAIN SMARTER</h2>
                 <div class="section-line"></div>
             </div>
 
@@ -145,8 +139,8 @@
                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">PR TRACKING</h3>
-                    <p class="feature-description">Automatic personal record detection for weight, time, and AMRAP workouts. Watch your numbers climb.</p>
+                    <h3 class="feature-title">AUTOMATIC PR DETECTION</h3>
+                    <p class="feature-description">Hit a new personal record? ActaLog catches it automatically. Weight PRs, time PRs, rep PRs &mdash; we track them all so you never miss a win.</p>
                 </div>
 
                 <div class="feature-card">
@@ -157,8 +151,8 @@
                             <line x1="6" y1="20" x2="6" y2="14"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">PERFORMANCE ANALYTICS</h3>
-                    <p class="feature-description">Visualize your progress with charts and graphs. Track movement volume, workout frequency, strength gains.</p>
+                    <h3 class="feature-title">SEE YOUR PROGRESS</h3>
+                    <p class="feature-description">Beautiful charts show your strength gains over time. Track how much you've lifted, how often you train, and where you're getting stronger.</p>
                 </div>
 
                 <div class="feature-card">
@@ -170,8 +164,8 @@
                             <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">WORKOUT TEMPLATES</h3>
-                    <p class="feature-description">314 benchmark WODs pre-loaded. Create custom templates. Log once, track everything.</p>
+                    <h3 class="feature-title">314 BENCHMARK WODS</h3>
+                    <p class="feature-description">Fran, Grace, Murph, The Open &mdash; they're all here. Pre-loaded with classic CrossFit benchmarks so you can log and compare your times instantly.</p>
                 </div>
 
                 <div class="feature-card">
@@ -181,132 +175,70 @@
                             <path d="M12 6v6l4 2"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">QUICK LOG</h3>
-                    <p class="feature-description">One-tap logging from templates. Mobile-optimized for gym use. No friction, just results.</p>
+                    <h3 class="feature-title">LOG IN SECONDS</h3>
+                    <p class="feature-description">Designed for the gym floor. Big buttons, fast logging, no fumbling. Record your workout while you're still catching your breath.</p>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <path d="M3 10h18"/>
+                            <path d="M8 2v4"/>
+                            <path d="M16 2v4"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">IMPORT/EXPORT</h3>
-                    <p class="feature-description">Wodify CSV import. Full database backup/restore. Your data, your control.</p>
+                    <h3 class="feature-title">CALENDAR VIEW</h3>
+                    <p class="feature-description">See your training at a glance. Workout dots show your consistency. PR badges celebrate your wins. Never wonder "when did I last do that?"</p>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-                            <line x1="7" y1="2" x2="7" y2="22"/>
-                            <line x1="17" y1="2" x2="17" y2="22"/>
-                            <line x1="2" y1="12" x2="22" y2="12"/>
-                            <line x1="2" y1="7" x2="7" y2="7"/>
-                            <line x1="2" y1="17" x2="7" y2="17"/>
-                            <line x1="17" y1="17" x2="22" y2="17"/>
-                            <line x1="17" y1="7" x2="22" y2="7"/>
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">PROGRESSIVE WEB APP</h3>
-                    <p class="feature-description">Install on any device. Offline support. Works like a native app. No app store required.</p>
+                    <h3 class="feature-title">WORKS ANYWHERE</h3>
+                    <p class="feature-description">Install on your phone, tablet, or computer. Works offline when your gym has spotty WiFi. Your workouts sync when you're back online.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Tech Stack Section -->
-    <section class="tech" id="tech">
+    <!-- Screenshots Section -->
+    <section class="tech" id="screenshots">
         <div class="tech-container">
-            <div class="tech-content">
+            <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
-                    <h2 class="section-title">ENGINEERED FOR SCALE</h2>
+                    <h2 class="section-title">SEE IT IN ACTION</h2>
                     <div class="section-line"></div>
                 </div>
 
                 <div class="tech-description">
-                    <p>Built with production-grade architecture. Clean separation, comprehensive testing, multi-database support.</p>
-                </div>
-
-                <div class="tech-stack">
-                    <div class="tech-item">
-                        <div class="tech-label">BACKEND</div>
-                        <div class="tech-value">Go 1.21+ / Chi Router</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">FRONTEND</div>
-                        <div class="tech-value">Vue.js 3 / Vuetify 3</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">DATABASE</div>
-                        <div class="tech-value">SQLite / PostgreSQL / MySQL</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">ARCHITECTURE</div>
-                        <div class="tech-value">Clean Architecture / DDD</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">DEPLOYMENT</div>
-                        <div class="tech-value">Docker / GitHub Actions CI/CD</div>
-                    </div>
-                    <div class="tech-item">
-                        <div class="tech-label">LICENSE</div>
-                        <div class="tech-value">MIT - Fully Open Source</div>
-                    </div>
-                </div>
-
-                <div class="tech-features">
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>JWT Authentication</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>Clean Architecture Layers</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>Comprehensive Test Coverage</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>Database Migrations</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>Multi-Database Support</span>
-                    </div>
-                    <div class="tech-feature">
-                        <div class="check-icon">✓</div>
-                        <span>Production Docker Images</span>
-                    </div>
+                    <p>A clean, focused interface designed for athletes. No clutter, no distractions &mdash; just the tools you need to track your training.</p>
                 </div>
             </div>
+        </div>
 
-            <div class="tech-visual">
-                <div class="code-block">
-                    <div class="code-header">
-                        <div class="code-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <div class="code-title">main.go</div>
-                    </div>
-                    <div class="code-content">
-                        <code><span class="code-comment">// Clean Architecture in action</span>
-<span class="code-keyword">func</span> <span class="code-function">main</span>() {
-    <span class="code-comment">// Repository layer</span>
-    workoutRepo := repository.<span class="code-function">NewWorkoutRepository</span>(db)
+        <!-- Screenshot Gallery -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 2rem; max-width: 1200px; margin: 0 auto;">
+            <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                <img src="assets/screenshot-1.svg" alt="Performance Analytics" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin: 1rem 0 0.5rem;">PERFORMANCE ANALYTICS</h3>
+                <p style="color: #888; font-size: 0.9rem;">Track your PRs, view progress charts, and see your top lifts at a glance.</p>
+            </div>
 
-    <span class="code-comment">// Service layer</span>
-    workoutSvc := service.<span class="code-function">NewWorkoutService</span>(workoutRepo)
+            <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                <img src="assets/screenshot-2.svg" alt="WOD Library" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin: 1rem 0 0.5rem;">WOD LIBRARY</h3>
+                <p style="color: #888; font-size: 0.9rem;">314 benchmark workouts ready to log. Filter by type: Girls, Heroes, Open, AMRAP.</p>
+            </div>
 
-    <span class="code-comment">// Handler layer</span>
-    handler.<span class="code-function">RegisterWorkoutRoutes</span>(router, workoutSvc)
-}</code>
-                    </div>
-                </div>
+            <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1rem; border: 1px solid rgba(0, 188, 212, 0.2);">
+                <img src="assets/screenshot-3.svg" alt="Calendar View" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; margin: 1rem 0 0.5rem;">CALENDAR VIEW</h3>
+                <p style="color: #888; font-size: 0.9rem;">Your training month at a glance. Workout dots, PR badges, and daily summaries.</p>
             </div>
         </div>
 
@@ -314,62 +246,63 @@
         <div class="diagonal-divider diagonal-divider-reverse"></div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="stats">
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number" data-target="0.16">0.0</div>
-                    <div class="stat-label">CURRENT VERSION</div>
-                    <div class="stat-sublabel">Beta Release</div>
+    <!-- Themes Section -->
+    <section class="features" id="themes">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">MAKE IT YOURS</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <p style="text-align: center; color: #888; max-width: 600px; margin: 0 auto 3rem; font-size: 1.1rem;">
+                Choose a theme that matches your style. From clean and minimal to bold and intense.
+            </p>
+
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #fff 50%, #f5f5f5 50%); margin: 0 auto 1rem; border: 3px solid #00bcd4;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">LIGHT</h3>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">3</div>
-                    <div class="stat-label">DATABASE ENGINES</div>
-                    <div class="stat-sublabel">SQLite / PostgreSQL / MySQL</div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2a2a2a 50%, #1a1a1a 50%); margin: 0 auto 1rem; border: 3px solid #00bcd4;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">DARK</h3>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="93">0</div>
-                    <div class="stat-label">% CORE COMPLETE</div>
-                    <div class="stat-sublabel">Production Ready</div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #00bcd4 50%, #0a1628 50%); margin: 0 auto 1rem; border: 3px solid #ffc107;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">BRUTALIST</h3>
+                </div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #006d77 50%, #83c5be 50%); margin: 0 auto 1rem; border: 3px solid #00bcd4;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">OCEAN</h3>
+                </div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #f77f00 50%, #fcbf49 50%); margin: 0 auto 1rem; border: 3px solid #d62828;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">SUNSET</h3>
+                </div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #7B5D7F 50%, #D4637A 50%); margin: 0 auto 1rem; border: 3px solid #E8842A;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem;">SUNRISE</h3>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="cta">
+    <section class="cta" id="start">
         <div class="cta-container">
-            <h2 class="cta-title">READY TO ELEVATE YOUR TRAINING?</h2>
-            <p class="cta-subtitle">Open source. Self-hosted. Your data under your control.</p>
+            <h2 class="cta-title">READY TO TRACK YOUR TRAINING?</h2>
+            <p class="cta-subtitle">Join athletes who take their training seriously. Start logging your workouts today.</p>
 
             <div class="cta-buttons">
-                <a href="https://github.com/johnzastrow/actalog" class="btn btn-primary btn-large" target="_blank">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                <a href="features.html" class="btn btn-primary btn-large">
+                    <span>LEARN MORE</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
-                    <span>GITHUB REPOSITORY</span>
                 </a>
-                <a href="https://github.com/johnzastrow/actalog#quick-start" class="btn btn-secondary btn-large" target="_blank">
-                    <span>DOCUMENTATION</span>
+                <a href="tech.html" class="btn btn-secondary btn-large">
+                    <span>FOR DEVELOPERS</span>
                 </a>
-            </div>
-
-            <div class="cta-meta">
-                <div class="cta-meta-item">
-                    <span class="cta-meta-label">License:</span>
-                    <span class="cta-meta-value">MIT</span>
-                </div>
-                <div class="cta-meta-divider">•</div>
-                <div class="cta-meta-item">
-                    <span class="cta-meta-label">Version:</span>
-                    <span class="cta-meta-value">0.16.0-beta</span>
-                </div>
-                <div class="cta-meta-divider">•</div>
-                <div class="cta-meta-item">
-                    <span class="cta-meta-label">Made with:</span>
-                    <span class="cta-meta-value">Go + Vue.js</span>
-                </div>
             </div>
         </div>
     </section>
@@ -380,36 +313,33 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <div class="footer-logo">ACTALOG</div>
-                    <p class="footer-tagline">Elite CrossFit Performance Tracker</p>
+                    <p class="footer-tagline">Track Your CrossFit Journey</p>
                 </div>
 
                 <div class="footer-links">
                     <div class="footer-column">
-                        <h4 class="footer-heading">PROJECT</h4>
-                        <a href="https://github.com/johnzastrow/actalog" target="_blank">GitHub</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/README.md" target="_blank">Documentation</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">Changelog</a>
+                        <h4 class="footer-heading">PRODUCT</h4>
+                        <a href="features.html">For Gyms</a>
+                        <a href="#features">Features</a>
+                        <a href="#themes">Themes</a>
                     </div>
 
                     <div class="footer-column">
                         <h4 class="footer-heading">RESOURCES</h4>
-                        <a href="https://github.com/johnzastrow/actalog#quick-start" target="_blank">Quick Start</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/ROADMAP.md" target="_blank">Roadmap</a>
-                        <a href="https://github.com/johnzastrow/actalog/issues" target="_blank">Issues</a>
+                        <a href="tech.html">For Developers</a>
+                        <a href="https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md" target="_blank">What's New</a>
                     </div>
 
                     <div class="footer-column">
-                        <h4 class="footer-heading">COMMUNITY</h4>
-                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Report Bug</a>
+                        <h4 class="footer-heading">SUPPORT</h4>
+                        <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Get Help</a>
                         <a href="https://github.com/johnzastrow/actalog/issues/new" target="_blank">Request Feature</a>
-                        <a href="https://github.com/johnzastrow/actalog/blob/main/LICENSE" target="_blank">MIT License</a>
                     </div>
                 </div>
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2025 ActaLog. Open source under MIT License.</p>
-                <p class="footer-credits">Designed with athletic brutalism in mind.</p>
+                <p>&copy; 2025 ActaLog. Made for athletes, by athletes.</p>
             </div>
         </div>
     </footer>
