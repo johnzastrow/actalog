@@ -38,7 +38,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-dumbbell</v-icon>
+            <v-icon color="primary" size="small">mdi-dumbbell</v-icon>
           </template>
         </v-text-field>
 
@@ -53,7 +53,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-text</v-icon>
+            <v-icon color="primary" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
       </v-card>
@@ -75,7 +75,7 @@
             </v-btn>
             <v-btn
               size="small"
-              color="teal"
+              color="primary"
               prepend-icon="mdi-plus"
               @click="addMovement"
               style="text-transform: none"
@@ -103,7 +103,7 @@
             style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="teal" class="mr-2">mdi-drag-vertical</v-icon>
+              <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
               <span class="font-weight-bold text-body-2 text-medium-emphasis">#{{ index + 1 }}</span>
               <v-spacer />
               <v-btn
@@ -130,7 +130,7 @@
               class="mb-2"
             >
               <template #prepend-inner>
-                <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                <v-icon color="primary" size="small">mdi-magnify</v-icon>
               </template>
             </v-autocomplete>
 
@@ -206,7 +206,7 @@
             </v-btn>
             <v-btn
               size="small"
-              color="teal"
+              color="primary"
               prepend-icon="mdi-plus"
               @click="addWOD"
               style="text-transform: none"
@@ -234,7 +234,7 @@
             style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="teal" class="mr-2">mdi-drag-vertical</v-icon>
+              <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
               <span class="font-weight-bold text-body-2 text-medium-emphasis">#{{ index + 1 }}</span>
               <v-spacer />
               <v-btn
@@ -261,12 +261,12 @@
               class="mb-2"
             >
               <template #prepend-inner>
-                <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                <v-icon color="primary" size="small">mdi-magnify</v-icon>
               </template>
               <template #item="{ props, item }">
                 <v-list-item v-bind="props">
                   <template #prepend>
-                    <v-icon color="teal" size="small">mdi-fire</v-icon>
+                    <v-icon color="primary" size="small">mdi-fire</v-icon>
                   </template>
                   <template #subtitle>
                     <span class="text-caption">{{ item.raw.type }} - {{ item.raw.regime }}</span>
@@ -294,7 +294,7 @@
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="teal"
+          color="primary"
           size="large"
           rounded="lg"
           :loading="saving"

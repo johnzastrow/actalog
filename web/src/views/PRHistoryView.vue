@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
     <!-- Loading State -->
-    <v-progress-circular v-if="loading" indeterminate color="teal" class="mx-auto d-block mt-8" />
+    <v-progress-circular v-if="loading" indeterminate color="primary" class="mx-auto d-block mt-8" />
 
     <div v-else>
       <!-- Search Box -->
@@ -16,7 +16,7 @@
           rounded
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-magnify</v-icon>
+            <v-icon color="primary" size="small">mdi-magnify</v-icon>
           </template>
         </v-text-field>
       </v-card>
@@ -26,7 +26,7 @@
         <v-card elevation="0" rounded class="pa-2 mb-2" bg-color="surface">
           <!-- Movement Header -->
           <div class="d-flex align-center mb-1">
-            <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
+            <v-icon color="primary" class="mr-2">mdi-trophy</v-icon>
             <h3 class="text-body-1 font-weight-bold text-high-emphasis">{{ movementName }}</h3>
           </div>
 
@@ -49,7 +49,7 @@
         <v-card elevation="0" rounded class="pa-2 mb-2" bg-color="surface">
           <!-- WOD Header -->
           <div class="d-flex align-center mb-1">
-            <v-icon color="teal" class="mr-2">mdi-trophy</v-icon>
+            <v-icon color="primary" class="mr-2">mdi-trophy</v-icon>
             <h3 class="text-body-1 font-weight-bold text-high-emphasis">{{ wodName }}</h3>
           </div>
 

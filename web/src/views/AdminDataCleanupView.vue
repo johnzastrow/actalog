@@ -22,7 +22,7 @@
           </p>
 
           <v-btn
-            color="teal"
+            color="primary"
             size="large"
             :loading="scanning"
             :disabled="scanning || fixing"
@@ -64,11 +64,11 @@
                 @click="openEditDialog(mismatch)"
               >
                 <div class="d-flex align-center mb-2">
-                  <v-icon color="teal" size="20" class="mr-2">mdi-alert-circle</v-icon>
+                  <v-icon color="primary" size="20" class="mr-2">mdi-alert-circle</v-icon>
                   <strong class="text-high-emphasis">{{ mismatch.wod_name }}</strong>
                   <v-chip size="x-small" color="medium-emphasis" class="ml-2">ID: {{ mismatch.id }}</v-chip>
                   <v-spacer></v-spacer>
-                  <v-icon color="teal" size="20">mdi-pencil</v-icon>
+                  <v-icon color="primary" size="20">mdi-pencil</v-icon>
                 </div>
 
                 <div style="font-size: 13px; color: #666">
@@ -80,7 +80,7 @@
                   </div>
                   <div class="mb-1">
                     <strong>Expected Score Type:</strong>
-                    <v-chip size="x-small" color="teal" class="ml-1">{{ mismatch.expected_score_type }}</v-chip>
+                    <v-chip size="x-small" color="primary" class="ml-1">{{ mismatch.expected_score_type }}</v-chip>
                   </div>
                   <div class="mb-1">
                     <strong>Issue:</strong> {{ mismatch.issue }}
@@ -156,7 +156,7 @@
                 <div><strong>WOD:</strong> {{ editingMismatch.wod_name }}</div>
                 <div><strong>User:</strong> {{ editingMismatch.user_email }}</div>
                 <div><strong>Date:</strong> {{ formatDate(editingMismatch.workout_date) }}</div>
-                <div><strong>Expected Score Type:</strong> <v-chip size="x-small" color="teal">{{ editingMismatch.expected_score_type }}</v-chip></div>
+                <div><strong>Expected Score Type:</strong> <v-chip size="x-small" color="primary">{{ editingMismatch.expected_score_type }}</v-chip></div>
               </div>
             </div>
 
@@ -234,7 +234,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="editDialog = false" variant="text">Cancel</v-btn>
-          <v-btn @click="saveEdit" color="teal" variant="flat" :loading="saving">Save Changes</v-btn>
+          <v-btn @click="saveEdit" color="primary" variant="flat" :loading="saving">Save Changes</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

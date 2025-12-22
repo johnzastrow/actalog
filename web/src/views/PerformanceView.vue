@@ -25,7 +25,7 @@
           @update:model-value="handleSelection"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-magnify</v-icon>
+            <v-icon color="primary" size="small">mdi-magnify</v-icon>
           </template>
           <template #item="{ props, item }">
             <v-list-item v-bind="props" density="compact">
@@ -63,7 +63,7 @@
         <v-btn
           block
           size="large"
-          color="teal"
+          color="primary"
           rounded="lg"
           elevation="2"
           class="mb-3 font-weight-bold"
@@ -79,12 +79,12 @@
           <!-- Heaviest Lifts (Top 3 Maxes) -->
           <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
             <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
+              <v-icon color="primary" size="small" class="mr-1">mdi-trophy</v-icon>
               Heaviest Lifts
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="teal" size="32" />
+              <v-progress-circular indeterminate color="primary" size="32" />
             </div>
 
             <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
@@ -126,7 +126,7 @@
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="teal" size="32" />
+              <v-progress-circular indeterminate color="primary" size="32" />
             </div>
 
             <div v-else-if="!best1RM" class="text-center py-4">
@@ -165,7 +165,7 @@
               @update:model-value="filterChart"
             >
               <template #prepend-inner>
-                <v-icon color="teal" size="small">mdi-filter</v-icon>
+                <v-icon color="primary" size="small">mdi-filter</v-icon>
               </template>
             </v-select>
           </v-card>
@@ -175,7 +175,7 @@
             <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="teal" size="32" />
+              <v-progress-circular indeterminate color="primary" size="32" />
             </div>
 
             <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
@@ -193,12 +193,12 @@
           <!-- Best WOD Performances (Top 3) -->
           <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
             <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="teal" size="small" class="mr-1">mdi-trophy</v-icon>
+              <v-icon color="primary" size="small" class="mr-1">mdi-trophy</v-icon>
               Best Performances
             </h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="teal" size="32" />
+              <v-progress-circular indeterminate color="primary" size="32" />
             </div>
 
             <div v-else-if="bestWODPerformances.length === 0" class="text-center py-4">
@@ -234,7 +234,7 @@
             <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
 
             <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="teal" size="32" />
+              <v-progress-circular indeterminate color="primary" size="32" />
             </div>
 
             <div v-else-if="wodPerformanceData.length === 0" class="text-center py-4">
@@ -252,7 +252,7 @@
           <h2 class="text-body-1 font-weight-bold mb-3" >Performance History</h2>
 
           <div v-if="loadingPerformance" class="text-center py-4">
-            <v-progress-circular indeterminate color="teal" size="32" />
+            <v-progress-circular indeterminate color="primary" size="32" />
           </div>
 
           <div v-else-if="Object.keys(groupedHistory).length === 0" class="text-center py-4">
@@ -266,7 +266,7 @@
           <!-- History Grouped by Year -->
           <div v-else>
             <div v-for="(entries, year) in groupedHistory" :key="year" class="mb-4">
-              <v-chip size="small" color="teal" label class="mb-2">
+              <v-chip size="small" color="primary" label class="mb-2">
                 {{ year }}
               </v-chip>
 
@@ -284,7 +284,7 @@
               >
                 <div class="d-flex align-center">
                   <!-- PR Trophy Icon -->
-                  <v-icon v-if="entry.is_pr" color="teal" size="small" class="mr-2">mdi-trophy</v-icon>
+                  <v-icon v-if="entry.is_pr" color="primary" size="small" class="mr-2">mdi-trophy</v-icon>
 
                   <div class="flex-grow-1">
                     <!-- Movement Performance Display -->
@@ -319,7 +319,7 @@
                   <v-chip
                     v-if="entry.is_pr"
                     size="x-small"
-                    color="teal"
+                    color="primary"
                     class="ml-2"
                   >
                     PR
@@ -423,7 +423,7 @@
                 placeholder="Search for movement or WOD..."
               >
                 <template #prepend-inner>
-                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                  <v-icon color="primary" size="small">mdi-magnify</v-icon>
                 </template>
                 <template #item="{ props, item }">
                   <v-list-item v-bind="props">
@@ -656,7 +656,7 @@
           </v-btn>
           <v-spacer />
           <v-btn
-            color="teal"
+            color="primary"
             variant="elevated"
             :loading="quickLogSubmitting"
             :disabled="!quickLogData.name || !quickLogData.date"
@@ -685,7 +685,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

@@ -14,7 +14,7 @@
       <!-- Info Card -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-2">
-          <v-icon color="teal" size="small" class="mr-2">mdi-information</v-icon>
+          <v-icon color="primary" size="small" class="mr-2">mdi-information</v-icon>
           <h3 class="text-body-1 font-weight-bold" >About Data Export</h3>
         </div>
         <p class="text-body-2 mb-0 text-medium-emphasis">
@@ -25,14 +25,14 @@
       <!-- WODs Export Section -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-3">
-          <v-icon color="teal" class="mr-2">mdi-fire</v-icon>
+          <v-icon color="primary" class="mr-2">mdi-fire</v-icon>
           <h2 class="text-h6 font-weight-bold" >Export WODs</h2>
         </div>
 
         <v-checkbox
           v-model="exportOptions.wods.includeStandard"
           label="Include standard WODs (Fran, Murph, etc.)"
-          color="teal"
+          color="primary"
           density="compact"
           hide-details
         />
@@ -40,7 +40,7 @@
         <v-checkbox
           v-model="exportOptions.wods.includeCustom"
           label="Include my custom WODs"
-          color="teal"
+          color="primary"
           density="compact"
           hide-details
           class="mt-2"
@@ -49,7 +49,7 @@
         <div class="d-flex mt-4" style="gap: 16px">
           <v-btn
             size="small"
-            color="teal"
+            color="primary"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.wods.includeStandard && !exportOptions.wods.includeCustom"
@@ -63,7 +63,7 @@
           </v-btn>
           <v-btn
             size="small"
-            color="teal"
+            color="primary"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.wods.includeStandard && !exportOptions.wods.includeCustom"
@@ -81,14 +81,14 @@
       <!-- Movements Export Section -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-3">
-          <v-icon color="teal" class="mr-2">mdi-dumbbell</v-icon>
+          <v-icon color="primary" class="mr-2">mdi-dumbbell</v-icon>
           <h2 class="text-h6 font-weight-bold" >Export Movements</h2>
         </div>
 
         <v-checkbox
           v-model="exportOptions.movements.includeStandard"
           label="Include standard movements (Back Squat, Deadlift, etc.)"
-          color="teal"
+          color="primary"
           density="compact"
           hide-details
         />
@@ -96,7 +96,7 @@
         <v-checkbox
           v-model="exportOptions.movements.includeCustom"
           label="Include my custom movements"
-          color="teal"
+          color="primary"
           density="compact"
           hide-details
           class="mt-2"
@@ -105,7 +105,7 @@
         <div class="d-flex mt-4" style="gap: 16px">
           <v-btn
             size="small"
-            color="teal"
+            color="primary"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
@@ -119,7 +119,7 @@
           </v-btn>
           <v-btn
             size="small"
-            color="teal"
+            color="primary"
             rounded="lg"
             elevation="2"
             :disabled="!exportOptions.movements.includeStandard && !exportOptions.movements.includeCustom"
@@ -150,7 +150,7 @@
           v-model="exportOptions.userWorkouts.startDate"
           label="Start Date (optional)"
           type="date"
-          color="teal"
+          color="primary"
           density="compact"
           variant="outlined"
           hide-details
@@ -161,7 +161,7 @@
           v-model="exportOptions.userWorkouts.endDate"
           label="End Date (optional)"
           type="date"
-          color="teal"
+          color="primary"
           density="compact"
           variant="outlined"
           hide-details
@@ -207,7 +207,7 @@
       <!-- Export Format Info -->
       <v-card elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <div class="d-flex align-center mb-2">
-          <v-icon color="teal" size="small" class="mr-2">mdi-information</v-icon>
+          <v-icon color="primary" size="small" class="mr-2">mdi-information</v-icon>
           <h3 class="text-body-1 font-weight-bold" >Export Formats</h3>
         </div>
         <p class="text-body-2 mb-2 text-medium-emphasis">

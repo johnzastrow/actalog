@@ -6,7 +6,7 @@
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular
             indeterminate
-            color="teal"
+            color="primary"
             size="64"
           ></v-progress-circular>
           <p class="mt-4 text-h6">Verifying your email...</p>
@@ -20,7 +20,7 @@
             Your email has been successfully verified. You can now access all features of ActaLog.
           </p>
           <v-btn
-            color="teal"
+            color="primary"
             size="large"
             rounded
             @click="goToLogin"
@@ -51,7 +51,7 @@
               :disabled="resending"
             ></v-text-field>
             <v-btn
-              color="teal"
+              color="primary"
               size="large"
               rounded
               @click="resendVerification"
@@ -66,7 +66,7 @@
 
           <v-btn
             variant="outlined"
-            color="teal"
+            color="primary"
             size="large"
             rounded
             @click="goToLogin"

@@ -186,7 +186,7 @@
         size="x-small"
         class="fab-button"
       >
-        <v-avatar color="teal" size="40">
+        <v-avatar color="primary" size="40">
           <v-icon color="white" size="24">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

@@ -46,7 +46,7 @@
 
             <!-- Message with Tabs for Edit/Preview -->
             <v-card variant="outlined" class="mb-4">
-              <v-tabs v-model="messageTab" color="teal">
+              <v-tabs v-model="messageTab" color="primary">
                 <v-tab value="edit">
                   <v-icon class="mr-2">mdi-pencil</v-icon>
                   Edit

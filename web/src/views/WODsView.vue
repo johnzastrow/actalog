@@ -12,7 +12,7 @@
       </v-alert>
 
       <!-- Tabs for Standard vs Custom WODs -->
-      <v-tabs v-model="activeWODTab" color="teal" class="mb-3" grow>
+      <v-tabs v-model="activeWODTab" color="primary" class="mb-3" grow>
         <v-tab value="standard">
           <v-icon start>mdi-star</v-icon>
           Standard
@@ -26,7 +26,7 @@
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="teal" size="64" />
+          <v-progress-circular indeterminate color="primary" size="64" />
           <p class="mt-4 text-medium-emphasis">Loading WODs...</p>
         </div>
 
@@ -51,7 +51,7 @@
           </p>
           <v-btn
             v-if="activeWODTab === 'custom'"
-            color="teal"
+            color="primary"
             class="mt-4"
             prepend-icon="mdi-plus"
             @click="$router.push('/wods/create')"
@@ -230,7 +230,7 @@
             Cancel
           </v-btn>
           <v-btn
-            color="teal"
+            color="primary"
             :loading="creating"
             @click="saveWOD"
             style="text-transform: none"
@@ -251,10 +251,10 @@
         <v-card-text class="pt-4">
           <!-- WOD Type and Regime -->
           <div v-if="selectedWOD.type || selectedWOD.regime" class="mb-3">
-            <v-chip v-if="selectedWOD.type" color="teal" class="mr-2">
+            <v-chip v-if="selectedWOD.type" color="primary" class="mr-2">
               {{ formatWODType(selectedWOD.type) }}
             </v-chip>
-            <v-chip v-if="selectedWOD.regime" color="teal">
+            <v-chip v-if="selectedWOD.regime" color="primary">
               {{ formatRegime(selectedWOD.regime) }}
             </v-chip>
           </div>
@@ -326,7 +326,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

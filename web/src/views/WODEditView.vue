@@ -38,7 +38,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-fire</v-icon>
+            <v-icon color="primary" size="small">mdi-fire</v-icon>
           </template>
         </v-text-field>
 
@@ -52,7 +52,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-tag</v-icon>
+            <v-icon color="primary" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -66,7 +66,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-trophy</v-icon>
+            <v-icon color="primary" size="small">mdi-trophy</v-icon>
           </template>
         </v-select>
 
@@ -102,7 +102,7 @@
         <v-switch
           v-model="wod.is_benchmark"
           label="Benchmark WOD"
-          color="teal"
+          color="primary"
           density="compact"
           hide-details
           class="mb-2"
@@ -119,7 +119,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-text</v-icon>
+            <v-icon color="primary" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
       </v-card>
@@ -130,7 +130,7 @@
           <h2 class="text-body-1 font-weight-bold" >WOD Movements</h2>
           <v-btn
             size="small"
-            color="teal"
+            color="primary"
             prepend-icon="mdi-plus"
             @click="addMovement"
             style="text-transform: none"
@@ -157,7 +157,7 @@
             style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="teal" class="mr-2">mdi-drag-vertical</v-icon>
+              <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
               <span class="font-weight-bold text-body-2 text-medium-emphasis">#{{ index + 1 }}</span>
               <v-spacer />
               <v-btn
@@ -184,7 +184,7 @@
               class="mb-2"
             >
               <template #prepend-inner>
-                <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                <v-icon color="primary" size="small">mdi-magnify</v-icon>
               </template>
             </v-autocomplete>
 
@@ -260,7 +260,7 @@
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="teal"
+          color="primary"
           size="large"
           rounded="lg"
           :loading="saving"

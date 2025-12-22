@@ -4,7 +4,7 @@
       <!-- Back Button -->
       <v-btn
         variant="text"
-        color="teal"
+        color="primary"
         class="mb-2"
         @click="router.back()"
       >
@@ -14,7 +14,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="teal" size="48" />
+        <v-progress-circular indeterminate color="primary" size="48" />
         <p class="text-body-2 mt-3 text-medium-emphasis">Loading movement...</p>
       </div>
 
@@ -39,7 +39,7 @@
                 <v-chip size="small" :color="getMovementTypeColor(movement.type)" variant="flat">
                   {{ capitalizeFirst(movement.type) }}
                 </v-chip>
-                <v-chip v-if="!movement.is_standard" size="small" color="teal">
+                <v-chip v-if="!movement.is_standard" size="small" color="primary">
                   Custom
                 </v-chip>
               </div>
@@ -51,7 +51,7 @@
         <v-btn
           block
           size="large"
-          color="teal"
+          color="primary"
           rounded="lg"
           elevation="2"
           class="mb-3 font-weight-bold"
@@ -65,7 +65,7 @@
         <!-- Details Card -->
         <v-card elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
           <h2 class="text-body-1 font-weight-bold mb-3" >
-            <v-icon color="teal" size="small" class="mr-1">mdi-information</v-icon>
+            <v-icon color="primary" size="small" class="mr-1">mdi-information</v-icon>
             Information
           </h2>
 
@@ -123,7 +123,7 @@
             <v-btn
               :href="parsedData.videoUrl"
               target="_blank"
-              color="teal"
+              color="primary"
               variant="outlined"
               prepend-icon="mdi-play-circle"
               size="small"
@@ -138,7 +138,7 @@
         <!-- Metadata Card -->
         <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
           <h2 class="text-body-1 font-weight-bold mb-3" >
-            <v-icon color="teal" size="small" class="mr-1">mdi-clock</v-icon>
+            <v-icon color="primary" size="small" class="mr-1">mdi-clock</v-icon>
             Metadata
           </h2>
 
@@ -272,7 +272,7 @@
           <v-btn variant="text" @click="closeQuickLog">Cancel</v-btn>
           <v-spacer />
           <v-btn
-            color="teal"
+            color="primary"
             variant="elevated"
             :loading="quickLogSubmitting"
             :disabled="!quickLogData.name || !quickLogData.date"

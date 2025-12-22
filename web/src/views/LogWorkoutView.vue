@@ -13,7 +13,7 @@
 
       <!-- Loading State -->
       <div v-if="loadingWorkout" class="text-center py-8">
-        <v-progress-circular indeterminate color="teal" size="64" />
+        <v-progress-circular indeterminate color="primary" size="64" />
         <p class="mt-4 text-body-2 text-medium-emphasis">Loading workout data...</p>
       </div>
 
@@ -40,7 +40,7 @@
               @update:model-value="onTemplateSelected"
             >
               <template #prepend-inner>
-                <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                <v-icon color="primary" size="small">mdi-magnify</v-icon>
               </template>
               <template #item="{ props, item }">
                 <v-list-item v-bind="props" density="compact">
@@ -90,7 +90,7 @@
           style="background: #e3f2fd; border: 2px solid #00bcd4"
         >
           <div class="d-flex align-center mb-2">
-            <v-icon color="teal" class="mr-2">mdi-information-outline</v-icon>
+            <v-icon color="primary" class="mr-2">mdi-information-outline</v-icon>
             <span class="font-weight-bold" >
               {{ workoutName || selectedTemplate?.name }}
             </span>
@@ -99,12 +99,12 @@
             {{ selectedTemplate.notes }}
           </div>
           <div v-if="(selectedTemplate?.movements && selectedTemplate.movements.length > 0) || movementPerformance.length > 0" class="mt-2">
-            <v-chip size="x-small" color="teal" class="mr-1">
+            <v-chip size="x-small" color="primary" class="mr-1">
               {{ selectedTemplate?.movements?.length || movementPerformance.length }} movement(s)
             </v-chip>
           </div>
           <div v-if="(selectedTemplate?.wods && selectedTemplate.wods.length > 0) || wodPerformance.length > 0" class="mt-1">
-            <v-chip size="x-small" color="teal" class="mr-1">
+            <v-chip size="x-small" color="primary" class="mr-1">
               {{ selectedTemplate?.wods?.length || wodPerformance.length }} WOD(s)
             </v-chip>
           </div>
@@ -142,7 +142,7 @@
             style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="teal" size="small" class="mr-2">mdi-dumbbell</v-icon>
+              <v-icon color="primary" size="small" class="mr-2">mdi-dumbbell</v-icon>
               <span class="font-weight-bold text-body-2" >
                 {{ getMovementName(movement.movement_id) }}
               </span>
@@ -234,7 +234,7 @@
             style="background: white; border: 1px solid #e0e0e0; border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
-              <v-icon color="teal" size="small" class="mr-2">mdi-flag-checkered</v-icon>
+              <v-icon color="primary" size="small" class="mr-2">mdi-flag-checkered</v-icon>
               <span class="font-weight-bold text-body-2" >
                 {{ getWODName(wod.wod_id) }}
               </span>
@@ -390,7 +390,7 @@
         <!-- Submit Button -->
         <v-btn
           type="submit"
-          color="teal"
+          color="primary"
           size="large"
           block
           :loading="submitting"
@@ -406,7 +406,7 @@
         <v-btn
           v-if="!isEditMode && !route.query.template"
           variant="outlined"
-          color="teal"
+          color="primary"
           size="large"
           block
           class="mt-1 font-weight-bold"
@@ -435,7 +435,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

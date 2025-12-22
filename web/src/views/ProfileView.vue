@@ -10,7 +10,7 @@
             <v-btn
               icon
               size="small"
-              color="teal"
+              color="primary"
               style="position: absolute; bottom: 0; right: 0"
               @click="openFileDialog"
               :loading="uploadingAvatar"
@@ -117,7 +117,7 @@
 
         <!-- Loading State -->
         <div v-if="subscriptionStore.loading" class="text-center py-2">
-          <v-progress-circular indeterminate color="teal" size="24" />
+          <v-progress-circular indeterminate color="primary" size="24" />
         </div>
 
         <!-- Subscription Details -->
@@ -203,7 +203,7 @@
 
         <!-- Time Period Filter -->
         <div class="mb-3">
-          <v-chip-group v-model="selectedPeriod" mandatory color="teal" density="compact">
+          <v-chip-group v-model="selectedPeriod" mandatory color="primary" density="compact">
             <v-chip value="week" size="small">This Week</v-chip>
             <v-chip value="month" size="small">This Month</v-chip>
             <v-chip value="year" size="small">This Year</v-chip>
@@ -213,7 +213,7 @@
 
         <!-- Loading State -->
         <div v-if="loadingStats" class="text-center py-4">
-          <v-progress-circular indeterminate color="teal" size="32" />
+          <v-progress-circular indeterminate color="primary" size="32" />
         </div>
 
         <!-- Stats Grid -->
@@ -559,7 +559,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

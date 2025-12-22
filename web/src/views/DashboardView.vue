@@ -34,7 +34,7 @@
         <v-col cols="6">
           <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="teal" size="28" class="mr-2">mdi-dumbbell</v-icon>
+              <v-icon color="primary" size="28" class="mr-2">mdi-dumbbell</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" >
                   {{ totalWorkouts }}
@@ -47,7 +47,7 @@
         <v-col cols="6">
           <v-card elevation="0" rounded class="pa-1" bg-color="surface">
             <div class="d-flex align-center">
-              <v-icon color="teal" size="28" class="mr-2">mdi-calendar-month</v-icon>
+              <v-icon color="primary" size="28" class="mr-2">mdi-calendar-month</v-icon>
               <div>
                 <div class="text-h5 font-weight-bold" >
                   {{ monthWorkouts }}
@@ -171,7 +171,7 @@
         <v-col cols="12">
           <v-card elevation="0" rounded class="pa-2" bg-color="surface">
             <div class="text-caption mb-2 font-weight-bold text-medium-emphasis">
-              <v-icon size="small" color="teal" class="mr-1">mdi-account-group</v-icon>
+              <v-icon size="small" color="primary" class="mr-1">mdi-account-group</v-icon>
               Active This Month
             </div>
             <div v-for="(user, index) in activeUsersStats" :key="user.id" class="mb-2">
@@ -215,7 +215,7 @@
           <v-btn
             size="x-small"
             variant="text"
-            color="teal"
+            color="primary"
             style="text-transform: none; font-size: 11px"
             @click.stop="$router.push('/workouts')"
           >
@@ -226,7 +226,7 @@
         <div v-if="showRecentWorkouts">
           <!-- Loading State -->
           <div v-if="loading" class="text-center py-8">
-            <v-progress-circular indeterminate color="teal" size="48" />
+            <v-progress-circular indeterminate color="primary" size="48" />
             <p class="mt-2 text-caption text-medium-emphasis">Loading workouts...</p>
           </div>
 
@@ -257,7 +257,7 @@
             @click="toggleWorkoutExpand(workout.id)"
           >
             <div class="d-flex align-center mb-1">
-              <v-icon color="teal" class="mr-2" size="x-small">mdi-dumbbell</v-icon>
+              <v-icon color="primary" class="mr-2" size="x-small">mdi-dumbbell</v-icon>
               <div class="flex-grow-1">
                 <div class="font-weight-bold text-body-2" >
                   {{ workout.workout_name || 'Workout' }}
@@ -267,7 +267,7 @@
                   <span v-if="workout.total_time"> • {{ formatTime(workout.total_time) }}</span>
                 </div>
               </div>
-              <v-icon color="teal" size="x-small">
+              <v-icon color="primary" size="x-small">
                 {{ expandedWorkouts.has(workout.id) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
               </v-icon>
             </div>
@@ -277,13 +277,13 @@
               <!-- Display movement performance (first 2 only) -->
               <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
                 <div v-for="(perf, index) in workout.performance_movements.slice(0, 2)" :key="index" class="text-caption mb-1 text-medium-emphasis">
-                  <v-icon size="small" color="teal">mdi-weight-lifter</v-icon>
+                  <v-icon size="small" color="primary">mdi-weight-lifter</v-icon>
                   <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
                   <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
                   <span v-if="perf.sets"> {{ perf.sets }}x</span><span v-if="perf.reps">{{ perf.reps }}</span>
                   <span v-if="perf.distance"> {{ perf.distance }}m</span>
                   <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
-                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="primary" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -295,14 +295,14 @@
               <!-- Display WOD performance (first 1 only) -->
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
                 <div v-for="(perf, index) in workout.performance_wods.slice(0, 1)" :key="index" class="text-caption mb-1 text-medium-emphasis">
-                  <v-icon size="small" color="teal">mdi-fire</v-icon>
+                  <v-icon size="small" color="primary">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> {{ formatTime(perf.time_seconds) }}</span>
                   <span v-if="perf.rounds && perf.reps"> {{ perf.rounds }}+{{ perf.reps }}</span>
                   <span v-else-if="perf.rounds"> {{ perf.rounds }} rounds</span>
                   <span v-else-if="perf.reps"> {{ perf.reps }} reps</span>
                   <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
-                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="primary" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -323,14 +323,14 @@
               <div v-if="workout.performance_movements && workout.performance_movements.length > 0" class="ml-7 mt-2">
                 <div class="text-caption font-weight-bold mb-1" >Movements:</div>
                 <div v-for="(perf, index) in workout.performance_movements" :key="index" class="text-caption mb-1 ml-2 text-medium-emphasis">
-                  <v-icon size="small" color="teal">mdi-weight-lifter</v-icon>
+                  <v-icon size="small" color="primary">mdi-weight-lifter</v-icon>
                   <strong>{{ perf.movement?.name || 'Movement' }}:</strong>
                   <span v-if="perf.weight"> {{ perf.weight }}lbs</span>
                   <span v-if="perf.sets"> × {{ perf.sets }} sets</span>
                   <span v-if="perf.reps"> × {{ perf.reps }} reps</span>
                   <span v-if="perf.distance"> × {{ perf.distance }}m</span>
                   <span v-if="perf.time_seconds"> in {{ formatTime(perf.time_seconds) }}</span>
-                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="primary" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -340,14 +340,14 @@
               <div v-if="workout.performance_wods && workout.performance_wods.length > 0" class="ml-7 mt-2">
                 <div class="text-caption font-weight-bold mb-1" >WODs:</div>
                 <div v-for="(perf, index) in workout.performance_wods" :key="index" class="text-caption mb-1 ml-2 text-medium-emphasis">
-                  <v-icon size="small" color="teal">mdi-fire</v-icon>
+                  <v-icon size="small" color="primary">mdi-fire</v-icon>
                   <strong>{{ perf.wod?.name || 'WOD' }}:</strong>
                   <span v-if="perf.time_seconds"> Time: {{ formatTime(perf.time_seconds) }}</span>
                   <span v-if="perf.rounds && perf.reps"> Score: {{ perf.rounds }}+{{ perf.reps }}</span>
                   <span v-else-if="perf.rounds"> Rounds: {{ perf.rounds }}</span>
                   <span v-else-if="perf.reps"> Reps: {{ perf.reps }}</span>
                   <span v-if="perf.score_value"> ({{ perf.score_value }})</span>
-                  <v-chip v-if="perf.is_pr" color="teal" size="x-small" class="ml-2" variant="flat">
+                  <v-chip v-if="perf.is_pr" color="primary" size="x-small" class="ml-2" variant="flat">
                     <v-icon size="x-small" start>mdi-trophy</v-icon>PR
                   </v-chip>
                 </div>
@@ -365,7 +365,7 @@
               <div class="ml-7 mt-3 d-flex gap-2">
                 <v-btn
                   size="small"
-                  color="teal"
+                  color="primary"
                   variant="outlined"
                   @click.stop="viewWorkout(workout.id)"
                 >
@@ -383,7 +383,7 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" bg-color="teal">
+        <v-card-title class="text-h6 font-weight-bold" bg-color="primary">
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
           Quick Log Workout
         </v-card-title>
@@ -471,7 +471,7 @@
                 placeholder="Search for movement or WOD..."
               >
                 <template #prepend-inner>
-                  <v-icon color="teal" size="small">mdi-magnify</v-icon>
+                  <v-icon color="primary" size="small">mdi-magnify</v-icon>
                 </template>
                 <template #item="{ props, item }">
                   <v-list-item v-bind="props">
@@ -706,7 +706,7 @@
           </v-btn>
           <v-spacer />
           <v-btn
-            color="teal"
+            color="primary"
             variant="elevated"
             :loading="quickLogSubmitting"
             :disabled="!quickLogData.name || !quickLogData.date"

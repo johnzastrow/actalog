@@ -36,7 +36,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-account</v-icon>
+              <v-icon color="primary" size="small">mdi-account</v-icon>
             </template>
           </v-text-field>
 
@@ -53,7 +53,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-email</v-icon>
+              <v-icon color="primary" size="small">mdi-email</v-icon>
             </template>
           </v-text-field>
 
@@ -68,13 +68,13 @@
             class="mb-3"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-cake-variant</v-icon>
+              <v-icon color="primary" size="small">mdi-cake-variant</v-icon>
             </template>
           </v-text-field>
 
           <v-btn
             type="submit"
-            color="teal"
+            color="primary"
             block
             rounded="lg"
             :loading="loading"
@@ -103,7 +103,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-lock</v-icon>
+              <v-icon color="primary" size="small">mdi-lock</v-icon>
             </template>
           </v-text-field>
 
@@ -120,7 +120,7 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-lock-outline</v-icon>
+              <v-icon color="primary" size="small">mdi-lock-outline</v-icon>
             </template>
           </v-text-field>
 
@@ -135,13 +135,13 @@
             class="mb-3"
           >
             <template #prepend-inner>
-              <v-icon color="teal" size="small">mdi-lock-check</v-icon>
+              <v-icon color="primary" size="small">mdi-lock-check</v-icon>
             </template>
           </v-text-field>
 
           <v-btn
             type="submit"
-            color="teal"
+            color="primary"
             block
             rounded="lg"
             :loading="passwordLoading"
@@ -158,7 +158,7 @@
         <v-list bg-color="transparent" density="compact">
           <v-list-item>
             <template #prepend>
-              <v-icon color="teal">mdi-theme-light-dark</v-icon>
+              <v-icon color="primary">mdi-theme-light-dark</v-icon>
             </template>
             <v-list-item-title class="font-weight-medium" >
               Dark Mode
@@ -166,7 +166,7 @@
             <template #append>
               <v-switch
                 v-model="darkMode"
-                color="teal"
+                color="primary"
                 hide-details
                 density="compact"
                 @change="saveDarkMode"
@@ -176,7 +176,7 @@
 
           <v-list-item>
             <template #prepend>
-              <v-icon color="teal">mdi-bell</v-icon>
+              <v-icon color="primary">mdi-bell</v-icon>
             </template>
             <v-list-item-title class="font-weight-medium" >
               Notifications
@@ -184,7 +184,7 @@
             <template #append>
               <v-switch
                 v-model="notifications"
-                color="teal"
+                color="primary"
                 hide-details
                 density="compact"
                 @change="saveNotifications"
@@ -194,7 +194,7 @@
 
           <v-list-item>
             <template #prepend>
-              <v-icon color="teal">mdi-weight</v-icon>
+              <v-icon color="primary">mdi-weight</v-icon>
             </template>
             <v-list-item-title class="font-weight-medium" >
               Weight Unit
@@ -333,7 +333,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

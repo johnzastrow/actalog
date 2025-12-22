@@ -4,7 +4,7 @@
       <!-- Back Button -->
       <v-btn
         variant="text"
-        color="teal"
+        color="primary"
         class="mb-2"
         @click="router.back()"
       >
@@ -14,7 +14,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="teal" size="64" />
+        <v-progress-circular indeterminate color="primary" size="64" />
         <p class="mt-4 text-body-2 text-medium-emphasis">Loading workout...</p>
       </div>
 
@@ -28,7 +28,7 @@
         <!-- Workout Header Card -->
         <v-card elevation="0" rounded="lg" class="mb-2 pa-2" bg-color="surface">
           <div class="d-flex align-center mb-2">
-            <v-icon color="teal" size="32" class="mr-2">mdi-dumbbell</v-icon>
+            <v-icon color="primary" size="32" class="mr-2">mdi-dumbbell</v-icon>
             <div class="flex-grow-1">
               <h2 class="text-h5 font-weight-bold" >
                 {{ workout.workout_name || 'Custom Workout' }}
@@ -39,7 +39,7 @@
             </div>
             <v-chip
               v-if="hasPR"
-              color="teal"
+              color="primary"
               size="small"
             >
               <v-icon size="small" class="mr-1">mdi-trophy</v-icon>
@@ -49,7 +49,7 @@
 
           <!-- Total Time -->
           <div v-if="workout.total_time" class="mt-3">
-            <v-chip color="teal" variant="outlined" size="small">
+            <v-chip color="primary" variant="outlined" size="small">
               <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
               {{ formatTime(workout.total_time) }}
             </v-chip>
@@ -59,7 +59,7 @@
         <!-- Notes Section -->
         <v-card v-if="workout.notes" elevation="0" rounded="lg" class="mb-2 pa-2" bg-color="surface">
           <div class="d-flex align-center mb-2">
-            <v-icon color="teal" size="small" class="mr-2">mdi-note-text</v-icon>
+            <v-icon color="primary" size="small" class="mr-2">mdi-note-text</v-icon>
             <h3 class="text-body-1 font-weight-bold" >Notes</h3>
           </div>
           <div class="text-body-2 text-medium-emphasis">
@@ -76,7 +76,7 @@
           bg-color="surface"
         >
           <div class="d-flex align-center mb-3">
-            <v-icon color="teal" size="small" class="mr-2">mdi-weight-lifter</v-icon>
+            <v-icon color="primary" size="small" class="mr-2">mdi-weight-lifter</v-icon>
             <h3 class="text-body-1 font-weight-bold" >
               Movements ({{ workout.performance_movements.length }})
             </h3>
@@ -99,7 +99,7 @@
                     </span>
                     <v-chip
                       v-if="movement.is_pr"
-                      color="teal"
+                      color="primary"
                       size="x-small"
                       class="ml-2"
                       style="height: 18px"
@@ -118,12 +118,12 @@
                   </div>
 
                   <div v-if="movement.time_seconds" class="text-caption mt-1" style="color: #00bcd4">
-                    <v-icon size="x-small" color="teal">mdi-clock-outline</v-icon>
+                    <v-icon size="x-small" color="primary">mdi-clock-outline</v-icon>
                     {{ formatTime(movement.time_seconds) }}
                   </div>
 
                   <div v-if="movement.distance" class="text-caption mt-1" style="color: #00bcd4">
-                    <v-icon size="x-small" color="teal">mdi-map-marker-distance</v-icon>
+                    <v-icon size="x-small" color="primary">mdi-map-marker-distance</v-icon>
                     {{ movement.distance }}{{ movement.distance_unit || 'm' }}
                   </div>
 
@@ -153,7 +153,7 @@
           bg-color="surface"
         >
           <div class="d-flex align-center mb-3">
-            <v-icon color="teal" size="small" class="mr-2">mdi-fire</v-icon>
+            <v-icon color="primary" size="small" class="mr-2">mdi-fire</v-icon>
             <h3 class="text-body-1 font-weight-bold" >
               WODs ({{ workout.performance_wods.length }})
             </h3>
@@ -208,7 +208,7 @@
           <v-col cols="6">
             <v-btn
               block
-              color="teal"
+              color="primary"
               variant="flat"
               size="large"
               rounded="lg"
@@ -253,7 +253,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

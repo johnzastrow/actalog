@@ -35,7 +35,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="teal"></v-progress-circular>
+        <v-progress-circular indeterminate color="primary"></v-progress-circular>
       </div>
 
       <!-- Empty State -->
@@ -71,7 +71,7 @@
                   <div class="text-subtitle-1 font-weight-medium" >
                     {{ workout.workout_name || workout.template_name || 'Workout' }}
                   </div>
-                  <v-chip v-if="workout.workout_type" size="small" color="teal" text-color="white">
+                  <v-chip v-if="workout.workout_type" size="small" color="primary" text-color="white">
                     {{ workout.workout_type }}
                   </v-chip>
                 </div>

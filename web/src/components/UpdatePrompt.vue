@@ -8,7 +8,7 @@
     class="update-prompt"
   >
     <div class="d-flex align-center">
-      <v-icon start size="large" color="teal">mdi-update</v-icon>
+      <v-icon start size="large" color="primary">mdi-update</v-icon>
       <div>
         <strong style="color: white">Update Available</strong>
         <div class="text-caption" style="color: rgba(255, 255, 255, 0.8)">
@@ -28,7 +28,7 @@
       <v-btn
         variant="flat"
         size="small"
-        color="teal"
+        color="primary"
         @click="applyUpdate"
         :loading="isUpdating"
       >

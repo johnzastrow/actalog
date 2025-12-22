@@ -7,7 +7,7 @@
       </v-alert>
 
       <!-- Tabs for Standard vs Custom Templates -->
-      <v-tabs v-model="activeTemplateTab" color="teal" class="mb-3" grow>
+      <v-tabs v-model="activeTemplateTab" color="primary" class="mb-3" grow>
         <v-tab value="standard">
           <v-icon start>mdi-star</v-icon>
           Standard
@@ -26,7 +26,7 @@
             <v-btn
               block
               variant="outlined"
-              color="teal"
+              color="primary"
               rounded
               style="text-transform: none"
               @click="$router.push('/wods')"
@@ -39,7 +39,7 @@
             <v-btn
               block
               variant="outlined"
-              color="teal"
+              color="primary"
               rounded
               style="text-transform: none"
               @click="$router.push('/movements')"
@@ -61,7 +61,7 @@
       >
         <v-btn
           block
-          color="teal"
+          color="primary"
           variant="flat"
           prepend-icon="mdi-plus"
           @click="$router.push('/workouts/templates/create')"
@@ -75,7 +75,7 @@
       <div>
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
-          <v-progress-circular indeterminate color="teal" size="64" />
+          <v-progress-circular indeterminate color="primary" size="64" />
           <p class="mt-4 text-medium-emphasis">Loading templates...</p>
         </div>
 
@@ -100,7 +100,7 @@
           </p>
           <v-btn
             v-if="activeTemplateTab === 'custom'"
-            color="teal"
+            color="primary"
             class="mt-4"
             prepend-icon="mdi-plus"
             @click="$router.push('/workouts/templates/create')"
@@ -140,7 +140,7 @@
               </div>
               <v-btn
                 icon="mdi-lightning-bolt"
-                color="teal"
+                color="primary"
                 variant="flat"
                 size="small"
                 @click.stop="logWorkoutFromTemplate(template.id)"
@@ -230,7 +230,7 @@
             Cancel
           </v-btn>
           <v-btn
-            color="teal"
+            color="primary"
             :loading="creating"
             @click="createTemplate"
             style="text-transform: none"
@@ -257,7 +257,7 @@
         <span style="font-size: 10px">Performance</span>
       </v-btn>
       <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="teal" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
           <v-icon color="white" size="32">mdi-plus</v-icon>
         </v-avatar>
       </v-btn>

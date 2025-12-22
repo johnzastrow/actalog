@@ -51,7 +51,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-dumbbell</v-icon>
+            <v-icon color="primary" size="small">mdi-dumbbell</v-icon>
           </template>
         </v-text-field>
 
@@ -65,7 +65,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-tag</v-icon>
+            <v-icon color="primary" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -79,7 +79,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-arm-flex</v-icon>
+            <v-icon color="primary" size="small">mdi-arm-flex</v-icon>
           </template>
         </v-select>
 
@@ -94,7 +94,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-text</v-icon>
+            <v-icon color="primary" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
 
@@ -103,7 +103,7 @@
             <v-switch
               v-model="movement.is_weighted"
               label="Weighted Movement"
-              color="teal"
+              color="primary"
               density="compact"
               hide-details
             />
@@ -112,7 +112,7 @@
             <v-switch
               v-model="movement.is_timed"
               label="Timed Movement"
-              color="teal"
+              color="primary"
               density="compact"
               hide-details
             />
@@ -134,7 +134,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-video</v-icon>
+            <v-icon color="primary" size="small">mdi-video</v-icon>
           </template>
         </v-text-field>
 
@@ -147,7 +147,7 @@
           rounded="lg"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-image</v-icon>
+            <v-icon color="primary" size="small">mdi-image</v-icon>
           </template>
         </v-text-field>
       </v-card>
@@ -169,7 +169,7 @@
           closable-chips
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-tools</v-icon>
+            <v-icon color="primary" size="small">mdi-tools</v-icon>
           </template>
         </v-combobox>
       </v-card>
@@ -242,7 +242,7 @@
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="teal"
+          color="primary"
           size="large"
           rounded="lg"
           :loading="saving"

@@ -25,7 +25,7 @@
           autofocus
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-fire</v-icon>
+            <v-icon color="primary" size="small">mdi-fire</v-icon>
           </template>
         </v-text-field>
 
@@ -41,7 +41,7 @@
           required
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-source-branch</v-icon>
+            <v-icon color="primary" size="small">mdi-source-branch</v-icon>
           </template>
         </v-select>
 
@@ -55,7 +55,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-tag</v-icon>
+            <v-icon color="primary" size="small">mdi-tag</v-icon>
           </template>
         </v-select>
 
@@ -69,7 +69,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-clock-outline</v-icon>
+            <v-icon color="primary" size="small">mdi-clock-outline</v-icon>
           </template>
         </v-select>
 
@@ -83,7 +83,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-trophy</v-icon>
+            <v-icon color="primary" size="small">mdi-trophy</v-icon>
           </template>
         </v-select>
 
@@ -100,7 +100,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-text</v-icon>
+            <v-icon color="primary" size="small">mdi-text</v-icon>
           </template>
         </v-textarea>
 
@@ -114,7 +114,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-video</v-icon>
+            <v-icon color="primary" size="small">mdi-video</v-icon>
           </template>
         </v-text-field>
 
@@ -129,7 +129,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-note</v-icon>
+            <v-icon color="primary" size="small">mdi-note</v-icon>
           </template>
         </v-textarea>
       </v-card>
@@ -137,7 +137,7 @@
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
           block
-          color="teal"
+          color="primary"
           size="large"
           rounded="lg"
           :loading="saving"

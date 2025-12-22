@@ -6,7 +6,7 @@
         <h1 class="text-h6 font-weight-bold">Notifications</h1>
         <v-btn
           v-if="notifications.length > 0"
-          color="teal"
+          color="primary"
           variant="text"
           size="small"
           @click="markAllAsRead"
@@ -20,7 +20,7 @@
       <!-- Filter Tabs -->
       <v-tabs
         v-model="currentTab"
-        color="teal"
+        color="primary"
         class="mb-3"
       >
         <v-tab value="all">All</v-tab>
@@ -50,7 +50,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-6">
-        <v-progress-circular indeterminate color="teal" />
+        <v-progress-circular indeterminate color="primary" />
       </div>
 
       <!-- Empty State -->
@@ -150,7 +150,7 @@
         <v-btn
           v-if="hasMore"
           block
-          color="teal"
+          color="primary"
           variant="outlined"
           rounded="lg"
           class="mt-3"

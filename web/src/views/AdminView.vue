@@ -13,7 +13,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" @click="navigateTo('/admin/data-cleanup')">
               <div class="d-flex align-center mb-3">
-                <v-icon color="teal" size="32" class="mr-3">mdi-database-refresh</v-icon>
+                <v-icon color="primary" size="32" class="mr-3">mdi-database-refresh</v-icon>
                 <div>
                   <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600">Data Cleanup</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Fix WOD score_type mismatches</p>
@@ -23,7 +23,7 @@
               <p style="color: #666; font-size: 13px">
                 Detect and correct WOD performance records that don't match their defined score_type.
               </p>
-              <v-chip size="small" color="teal" class="mt-2">
+              <v-chip size="small" color="primary" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -181,7 +181,7 @@
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/subscriptions')" style="cursor: pointer">
               <div class="d-flex align-center mb-3">
-                <v-icon color="teal" size="32" class="mr-3">mdi-currency-usd</v-icon>
+                <v-icon color="primary" size="32" class="mr-3">mdi-currency-usd</v-icon>
                 <div>
                   <h3 style="color: #1a1a1a; font-size: 18px; font-weight: 600">Subscriptions</h3>
                   <p style="color: #666; font-size: 14px; margin: 0">Manage user and organization subscriptions</p>
@@ -191,7 +191,7 @@
               <p style="color: #666; font-size: 13px">
                 View and manage all user and organization subscriptions, payments, and billing.
               </p>
-              <v-chip size="small" color="teal" class="mt-2">
+              <v-chip size="small" color="primary" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
                 Open Tool
               </v-chip>
@@ -234,7 +234,7 @@
         <v-icon size="20">mdi-chart-line</v-icon>
         <span style="font-size: 9px">Stats</span>
       </v-btn>
-      <v-btn to="/admin" style="flex: 1" color="teal">
+      <v-btn to="/admin" style="flex: 1" color="primary">
         <v-icon size="20">mdi-shield-account</v-icon>
         <span style="font-size: 9px">Admin</span>
       </v-btn>

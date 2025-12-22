@@ -11,7 +11,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-8">
-      <v-progress-circular indeterminate color="teal"></v-progress-circular>
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
     <div v-else-if="chartData.labels.length === 0" class="text-center py-8" style="color: #666">

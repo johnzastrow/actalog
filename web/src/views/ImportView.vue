@@ -32,7 +32,7 @@
 
         <v-btn-toggle
           v-model="selectedEntity"
-          color="teal"
+          color="primary"
           variant="outlined"
           mandatory
           class="mb-4"
@@ -108,7 +108,7 @@
           v-if="selectedFile"
           block
           size="large"
-          color="teal"
+          color="primary"
           rounded="lg"
           elevation="2"
           :loading="uploading"
@@ -230,17 +230,17 @@
             <v-radio
               value="skip"
               label="Skip duplicates (only import new records)"
-              color="teal"
+              color="primary"
             />
             <v-radio
               value="update"
               label="Update duplicates (overwrite existing records)"
-              color="teal"
+              color="primary"
             />
             <v-radio
               value="cancel"
               label="Cancel import if duplicates found"
-              color="teal"
+              color="primary"
             />
           </v-radio-group>
         </v-card>
@@ -252,7 +252,7 @@
           <v-checkbox
             v-model="skipDuplicates"
             label="Skip duplicate workouts (based on workout date and WOD)"
-            color="teal"
+            color="primary"
             density="compact"
             hide-details
           />
@@ -268,7 +268,7 @@
 
           <div v-if="previewResult.new_movements?.length > 0" class="mb-3">
             <p class="text-caption font-weight-bold mb-2 text-medium-emphasis">Movements ({{ previewResult.new_movements.length }})</p>
-            <v-chip v-for="(movement, idx) in previewResult.new_movements" :key="'movement-' + idx" size="small" class="ma-1" color="teal">
+            <v-chip v-for="(movement, idx) in previewResult.new_movements" :key="'movement-' + idx" size="small" class="ma-1" color="primary">
               {{ movement }}
             </v-chip>
           </div>

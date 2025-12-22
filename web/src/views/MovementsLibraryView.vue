@@ -15,14 +15,14 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon color="teal" size="small">mdi-magnify</v-icon>
+            <v-icon color="primary" size="small">mdi-magnify</v-icon>
           </template>
         </v-text-field>
 
         <v-chip-group
           v-model="selectedType"
           selected-class="text-white"
-          color="teal"
+          color="primary"
           class="mt-2"
           mandatory
         >
@@ -47,7 +47,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="teal" size="48" />
+        <v-progress-circular indeterminate color="primary" size="48" />
         <p class="text-body-2 mt-3 text-medium-emphasis">Loading movements...</p>
       </div>
 
@@ -66,7 +66,7 @@
         </p>
         <v-btn
           v-if="!searchQuery"
-          color="teal"
+          color="primary"
           size="large"
           rounded="lg"
           class="mt-4"
@@ -102,7 +102,7 @@
                 <v-chip
                   v-if="!movement.is_standard"
                   size="x-small"
-                  color="teal"
+                  color="primary"
                   class="ml-2"
                 >
                   Custom
@@ -116,14 +116,14 @@
               </v-chip>
             </div>
             <div v-if="selectionMode">
-              <v-icon color="teal">mdi-chevron-right</v-icon>
+              <v-icon color="primary">mdi-chevron-right</v-icon>
             </div>
             <div v-else class="d-flex gap-1">
               <v-btn
                 icon="mdi-lightning-bolt"
                 size="small"
                 variant="text"
-                color="teal"
+                color="primary"
                 @click.stop="openQuickLog(movement)"
               >
                 <v-icon>mdi-lightning-bolt</v-icon>
@@ -134,7 +134,7 @@
                 icon="mdi-pencil"
                 size="small"
                 variant="text"
-                color="teal"
+                color="primary"
                 @click.stop="editMovement(movement.id)"
               >
                 <v-icon>mdi-pencil</v-icon>
@@ -151,7 +151,7 @@
       v-if="!selectionMode && !loading"
       icon="mdi-plus"
       size="x-large"
-      color="teal"
+      color="primary"
       elevation="8"
       style="position: fixed; bottom: 80px; right: 16px; z-index: 5"
       @click="createNewMovement"
@@ -162,7 +162,7 @@
       v-if="!selectionMode"
       v-model="activeNav"
       name="bottom-navigation"
-      color="teal"
+      color="primary"
       grow
       style="position: fixed; bottom: 0; width: 100%; z-index: 5; background: white"
       elevation="8"
@@ -301,7 +301,7 @@
           <v-btn variant="text" @click="closeQuickLog">Cancel</v-btn>
           <v-spacer />
           <v-btn
-            color="teal"
+            color="primary"
             variant="elevated"
             :loading="quickLogSubmitting"
             :disabled="!quickLogData.name || !quickLogData.date"

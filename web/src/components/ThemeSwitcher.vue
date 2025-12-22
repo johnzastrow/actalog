@@ -34,7 +34,7 @@
             <v-switch
               v-model="themeStore.useSystemPreference"
               @update:model-value="themeStore.setUseSystemPreference"
-              color="teal"
+              color="primary"
               hide-details
               density="compact"
             ></v-switch>
@@ -64,7 +64,7 @@
             </v-list-item-subtitle>
 
             <template v-slot:append v-if="themeStore.currentTheme === theme.id">
-              <v-icon color="teal" size="small">mdi-check-circle</v-icon>
+              <v-icon color="primary" size="small">mdi-check-circle</v-icon>
             </template>
           </v-list-item>
         </v-list>
