@@ -2,12 +2,12 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Success Alert -->
-      <v-alert v-if="success" type="success" closable @click:close="success = null" class="mb-4">
+      <v-alert v-if="success" type="success" closable class="mb-4" @click:close="success = null">
         {{ success }}
       </v-alert>
 
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
+      <v-alert v-if="error" type="error" closable class="mb-4" @click:close="error = null">
         {{ error }}
       </v-alert>
 

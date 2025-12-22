@@ -26,8 +26,8 @@
             size="large"
             :loading="scanning"
             :disabled="scanning || fixing"
-            @click="scanForMismatches"
             prepend-icon="mdi-magnify-scan"
+            @click="scanForMismatches"
           >
             Scan for Mismatches
           </v-btn>
@@ -107,8 +107,8 @@
               size="large"
               :loading="fixing"
               :disabled="scanning || fixing"
-              @click="confirmFix"
               prepend-icon="mdi-delete-sweep"
+              @click="confirmFix"
             >
               Delete {{ mismatches.length }} Mismatched Record{{ mismatches.length !== 1 ? 's' : '' }}
             </v-btn>
@@ -233,8 +233,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="editDialog = false" variant="text">Cancel</v-btn>
-          <v-btn @click="saveEdit" color="primary" variant="flat" :loading="saving">Save Changes</v-btn>
+          <v-btn variant="text" @click="editDialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="flat" :loading="saving" @click="saveEdit">Save Changes</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -257,8 +257,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="confirmDialog = false" variant="text">Cancel</v-btn>
-          <v-btn @click="fixMismatches" color="error" variant="flat">Delete Records</v-btn>
+          <v-btn variant="text" @click="confirmDialog = false">Cancel</v-btn>
+          <v-btn color="error" variant="flat" @click="fixMismatches">Delete Records</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

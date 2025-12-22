@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
       <div class="d-flex align-center mb-4">
-        <v-btn icon @click="$router.back()" class="mr-2">
+        <v-btn icon class="mr-2" @click="$router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
@@ -15,8 +15,8 @@
         prepend-icon="mdi-upload"
         :loading="uploading"
         :disabled="uploading || loading"
-        @click="$refs.fileInput.click()"
         class="mr-2"
+        @click="$refs.fileInput.click()"
       >
         Upload Backup
       </v-btn>
@@ -44,12 +44,12 @@
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
     <!-- Error Alert -->
-    <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = null" class="mb-4">
+    <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
       {{ error }}
     </v-alert>
 
     <!-- Success Alert -->
-    <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+    <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
       {{ successMessage }}
     </v-alert>
 

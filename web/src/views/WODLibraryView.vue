@@ -39,8 +39,8 @@
         v-if="wodsStore.error"
         type="error"
         closable
-        @click:close="wodsStore.error = ''"
         class="mb-3"
+        @click:close="wodsStore.error = ''"
       >
         {{ wodsStore.error }}
       </v-alert>
@@ -71,8 +71,8 @@
           rounded="lg"
           class="mt-4"
           prepend-icon="mdi-plus"
-          @click="createNewWOD"
           style="text-transform: none"
+          @click="createNewWOD"
         >
           Create WOD
         </v-btn>

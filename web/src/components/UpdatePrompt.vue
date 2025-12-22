@@ -16,12 +16,12 @@
         </div>
       </div>
     </div>
-    <template v-slot:actions>
+    <template #actions>
       <v-btn
         variant="text"
         size="small"
-        @click="dismissUpdate"
         style="color: rgba(255, 255, 255, 0.7)"
+        @click="dismissUpdate"
       >
         Later
       </v-btn>
@@ -29,8 +29,8 @@
         variant="flat"
         size="small"
         color="primary"
-        @click="applyUpdate"
         :loading="isUpdating"
+        @click="applyUpdate"
       >
         Update Now
       </v-btn>

@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
+      <v-alert v-if="error" type="error" closable class="mb-3" @click:close="error = null">
         {{ error }}
       </v-alert>
 

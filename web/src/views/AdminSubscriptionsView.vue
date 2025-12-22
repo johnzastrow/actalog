@@ -71,11 +71,11 @@
                 :items-per-page="10"
                 class="elevation-1"
               >
-                <template v-slot:item.user="{ item }">
+                <template #item.user="{ item }">
                   {{ item.user_email || `User ${item.user_id}` }}
                 </template>
 
-                <template v-slot:item.subscription_type="{ item }">
+                <template #item.subscription_type="{ item }">
                   <v-chip
                     :color="getTypeColor(item.subscription_type)"
                     size="small"
@@ -85,7 +85,7 @@
                   </v-chip>
                 </template>
 
-                <template v-slot:item.status="{ item }">
+                <template #item.status="{ item }">
                   <v-chip
                     :color="getStatusColor(item.status)"
                     size="small"
@@ -94,13 +94,13 @@
                   </v-chip>
                 </template>
 
-                <template v-slot:item.end_date="{ item }">
+                <template #item.end_date="{ item }">
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
                 </template>
 
-                <template v-slot:item.permanent="{ item }">
+                <template #item.permanent="{ item }">
                   <v-tooltip :text="item.is_permanent_free ? 'Remove permanent free status' : 'Set as permanent free'" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         v-bind="props"
                         :icon="item.is_permanent_free ? 'mdi-star' : 'mdi-star-outline'"
@@ -113,9 +113,9 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.view="{ item }">
+                <template #item.view="{ item }">
                   <v-tooltip text="View subscription details" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         v-bind="props"
                         icon="mdi-eye"
@@ -127,12 +127,12 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.mark_paid="{ item }">
+                <template #item.mark_paid="{ item }">
                   <v-tooltip text="Mark this subscription as paid and extend end date" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
-                        v-bind="props"
                         v-if="item.status === 'active' && !item.is_permanent_free"
+                        v-bind="props"
                         icon="mdi-cash"
                         size="small"
                         variant="text"
@@ -144,12 +144,12 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.cancel="{ item }">
+                <template #item.cancel="{ item }">
                   <v-tooltip text="Cancel this subscription" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
-                        v-bind="props"
                         v-if="item.status === 'active'"
+                        v-bind="props"
                         icon="mdi-cancel"
                         size="small"
                         variant="text"
@@ -224,11 +224,11 @@
                 :items-per-page="10"
                 class="elevation-1"
               >
-                <template v-slot:item.organization="{ item }">
+                <template #item.organization="{ item }">
                   {{ item.organization_name || `Organization ${item.organization_id}` }}
                 </template>
 
-                <template v-slot:item.subscription_type="{ item }">
+                <template #item.subscription_type="{ item }">
                   <v-chip
                     :color="getTypeColor(item.subscription_type)"
                     size="small"
@@ -238,7 +238,7 @@
                   </v-chip>
                 </template>
 
-                <template v-slot:item.status="{ item }">
+                <template #item.status="{ item }">
                   <v-chip
                     :color="getStatusColor(item.status)"
                     size="small"
@@ -247,13 +247,13 @@
                   </v-chip>
                 </template>
 
-                <template v-slot:item.end_date="{ item }">
+                <template #item.end_date="{ item }">
                   {{ item.is_permanent_free ? 'Never' : formatDate(item.end_date) }}
                 </template>
 
-                <template v-slot:item.permanent="{ item }">
+                <template #item.permanent="{ item }">
                   <v-tooltip :text="item.is_permanent_free ? 'Remove permanent free status' : 'Set as permanent free'" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         v-bind="props"
                         :icon="item.is_permanent_free ? 'mdi-star' : 'mdi-star-outline'"
@@ -266,9 +266,9 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.view="{ item }">
+                <template #item.view="{ item }">
                   <v-tooltip text="View subscription details" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
                         v-bind="props"
                         icon="mdi-eye"
@@ -280,12 +280,12 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.mark_paid="{ item }">
+                <template #item.mark_paid="{ item }">
                   <v-tooltip text="Mark this subscription as paid and extend end date" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
-                        v-bind="props"
                         v-if="item.status === 'active' && !item.is_permanent_free"
+                        v-bind="props"
                         icon="mdi-cash"
                         size="small"
                         variant="text"
@@ -297,12 +297,12 @@
                   </v-tooltip>
                 </template>
 
-                <template v-slot:item.cancel="{ item }">
+                <template #item.cancel="{ item }">
                   <v-tooltip text="Cancel this subscription" location="top">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-btn
-                        v-bind="props"
                         v-if="item.status === 'active'"
+                        v-bind="props"
                         icon="mdi-cancel"
                         size="small"
                         variant="text"
@@ -332,7 +332,7 @@
                   :key="sub.id"
                   class="mb-2"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon :color="getDaysLeftColor(sub.days_left)">
                       mdi-alert-circle
                     </v-icon>
@@ -343,7 +343,7 @@
                   <v-list-item-subtitle>
                     Expires in {{ sub.days_left }} days ({{ formatDate(sub.end_date) }})
                   </v-list-item-subtitle>
-                  <template v-slot:append>
+                  <template #append>
                     <v-btn
                       size="small"
                       color="primary"
@@ -375,7 +375,7 @@
                   :key="sub.id"
                   class="mb-2"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon color="error">mdi-alert-circle</v-icon>
                   </template>
                   <v-list-item-title>
@@ -384,7 +384,7 @@
                   <v-list-item-subtitle>
                     Expired {{ formatDate(sub.end_date) }}
                   </v-list-item-subtitle>
-                  <template v-slot:append>
+                  <template #append>
                     <v-btn
                       size="small"
                       color="error"
@@ -404,27 +404,27 @@
       </v-window>
 
       <!-- Dialogs -->
-      <CreateSubscriptionDialog
+      <create-subscription-dialog
         v-model="createDialog.show"
         :type="createDialog.type"
         @created="handleSubscriptionCreated"
       />
 
-      <SubscriptionDetailDialog
+      <subscription-detail-dialog
         v-model="detailDialog.show"
         :subscription="detailDialog.subscription"
         :type="detailDialog.type"
         @refresh="loadSubscriptions"
       />
 
-      <MarkAsPaidDialog
+      <mark-as-paid-dialog
         v-model="markAsPaidDialog.show"
         :subscription="markAsPaidDialog.subscription"
         :type="markAsPaidDialog.type"
         @paid="handleMarkedAsPaid"
       />
 
-      <CancelSubscriptionDialog
+      <cancel-subscription-dialog
         v-model="cancelDialog.show"
         :subscription="cancelDialog.subscription"
         :type="cancelDialog.type"

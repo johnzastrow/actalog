@@ -93,11 +93,11 @@
                 :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showPassword = !showPassword"
                 required
                 :error-messages="errors.password"
                 hint="Must be at least 8 characters"
                 class="mt-4"
+                @click:append-inner="showPassword = !showPassword"
               />
 
               <v-text-field
@@ -106,10 +106,10 @@
                 :type="showConfirmPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock-check"
                 :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showConfirmPassword = !showConfirmPassword"
                 required
                 :error-messages="errors.confirmPassword"
                 class="mt-4"
+                @click:append-inner="showConfirmPassword = !showConfirmPassword"
               />
 
               <v-btn

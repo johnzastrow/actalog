@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="500">
+  <v-dialog :model-value="modelValue" max-width="500" @update:model-value="$emit('update:modelValue', $event)">
     <v-card v-if="subscription">
       <v-card-title>
         <v-icon class="mr-2" color="error">mdi-cancel</v-icon>

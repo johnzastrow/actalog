@@ -73,10 +73,10 @@
                 :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showPassword = !showPassword"
                 required
                 :error-messages="errors.password"
                 class="mt-4"
+                @click:append-inner="showPassword = !showPassword"
               />
 
               <v-checkbox

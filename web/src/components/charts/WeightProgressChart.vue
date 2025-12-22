@@ -29,18 +29,18 @@
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
-    <div v-else-if="!selectedMovementId" class="text-center py-8" class="text-medium-emphasis">
+    <div v-else-if="!selectedMovementId" class="text-center py-8 text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-line</v-icon>
       <p class="mt-2">Select a movement to view progress</p>
     </div>
 
-    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" class="text-medium-emphasis">
+    <div v-else-if="chartData.labels.length === 0" class="text-center py-8 text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-line-variant</v-icon>
       <p class="mt-2">No weight data for this movement</p>
     </div>
 
     <div v-else style="position: relative; height: 250px">
-      <Line :data="chartData" :options="chartOptions" />
+      <line :data="chartData" :options="chartOptions" />
     </div>
   </v-card>
 </template>

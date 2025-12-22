@@ -14,13 +14,13 @@
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
-    <div v-else-if="chartData.labels.length === 0" class="text-center py-8" class="text-medium-emphasis">
+    <div v-else-if="chartData.labels.length === 0" class="text-center py-8 text-medium-emphasis">
       <v-icon size="48" color="#ccc">mdi-chart-bar</v-icon>
       <p class="mt-2">No workout data available</p>
     </div>
 
     <div v-else style="position: relative; height: 250px">
-      <Bar :data="chartData" :options="chartOptions" />
+      <bar :data="chartData" :options="chartOptions" />
     </div>
 
     <div v-if="!loading && chartData.labels.length > 0" class="mt-4 d-flex justify-space-around text-center">
@@ -28,19 +28,19 @@
         <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-primary))">
           {{ totalWorkouts }}
         </div>
-        <div class="text-caption" class="text-medium-emphasis">Total Workouts</div>
+        <div class="text-caption text-medium-emphasis">Total Workouts</div>
       </div>
       <div>
         <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-success))">
           {{ averagePerWeek }}
         </div>
-        <div class="text-caption" class="text-medium-emphasis">Avg/Week</div>
+        <div class="text-caption text-medium-emphasis">Avg/Week</div>
       </div>
       <div>
         <div class="text-h6 font-weight-bold" style="color: rgb(var(--v-theme-warning))">
           {{ longestStreak }}
         </div>
-        <div class="text-caption" class="text-medium-emphasis">Longest Streak</div>
+        <div class="text-caption text-medium-emphasis">Longest Streak</div>
       </div>
     </div>
   </v-card>

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="600">
+  <v-dialog :model-value="modelValue" max-width="600" @update:model-value="$emit('update:modelValue', $event)">
     <v-card>
       <v-card-title>
         <v-icon class="mr-2">mdi-plus-circle</v-icon>
@@ -23,7 +23,7 @@
             prepend-inner-icon="mdi-account"
             class="mb-3"
           >
-            <template v-slot:item="{ props, item }">
+            <template #item="{ props, item }">
               <v-list-item v-bind="props">
                 <v-list-item-title>{{ item.raw.email }}</v-list-item-title>
                 <v-list-item-subtitle>{{ item.raw.name }}</v-list-item-subtitle>

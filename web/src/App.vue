@@ -16,7 +16,7 @@
         </router-link>
       </v-app-bar-title>
 
-      <template v-slot:append>
+      <template #append>
         <!-- Network Status Indicator -->
         <v-chip
           v-if="!networkStore.isOnline"
@@ -45,7 +45,7 @@
         </div>
 
         <!-- Theme Switcher -->
-        <ThemeSwitcher class="mr-1" />
+        <theme-switcher class="mr-1" />
 
         <!-- Notifications icon with badge -->
         <v-btn icon color="white" variant="text" size="small" to="/notifications">
@@ -76,7 +76,7 @@
           <div class="text-caption">Changes will be saved locally and synced when you're back online</div>
         </div>
       </div>
-      <template v-slot:actions>
+      <template #actions>
         <v-btn
           variant="text"
           size="small"
@@ -98,7 +98,7 @@
         <v-icon start>mdi-cloud-check-outline</v-icon>
         <div>
           <strong>You're back online</strong>
-          <div class="text-caption" v-if="networkStore.hasPendingSync">Syncing your changes...</div>
+          <div v-if="networkStore.hasPendingSync" class="text-caption">Syncing your changes...</div>
         </div>
       </div>
     </v-snackbar>
@@ -134,7 +134,7 @@
           <div class="text-caption">{{ offlineSaveMessage }}</div>
         </div>
       </div>
-      <template v-slot:actions>
+      <template #actions>
         <v-btn
           variant="text"
           size="small"
@@ -146,17 +146,17 @@
     </v-snackbar>
 
     <!-- Subscription Expired Banner -->
-    <SubscriptionExpiredBanner v-if="authStore.isAuthenticated" />
+    <subscription-expired-banner v-if="authStore.isAuthenticated" />
 
     <v-main :style="mainStyle">
       <router-view />
     </v-main>
 
     <!-- Install Prompt -->
-    <InstallPrompt v-if="authStore.isAuthenticated" />
+    <install-prompt v-if="authStore.isAuthenticated" />
 
     <!-- PWA Update Prompt -->
-    <UpdatePrompt />
+    <update-prompt />
 
     <!-- Bottom Navigation (only show when authenticated) -->
     <v-bottom-navigation

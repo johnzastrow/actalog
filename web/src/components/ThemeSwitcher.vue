@@ -1,6 +1,6 @@
 <template>
   <v-menu offset-y>
-    <template v-slot:activator="{ props }">
+    <template #activator="{ props }">
       <v-btn
         icon
         variant="text"
@@ -26,17 +26,17 @@
       <v-card-text class="pa-0">
         <!-- System Preference Toggle -->
         <v-list-item>
-          <template v-slot:prepend>
+          <template #prepend>
             <v-icon>mdi-brightness-auto</v-icon>
           </template>
           <v-list-item-title>Use System Theme</v-list-item-title>
-          <template v-slot:append>
+          <template #append>
             <v-switch
               v-model="themeStore.useSystemPreference"
-              @update:model-value="themeStore.setUseSystemPreference"
               color="primary"
               hide-details
               density="compact"
+              @update:model-value="themeStore.setUseSystemPreference"
             ></v-switch>
           </template>
         </v-list-item>
@@ -48,11 +48,11 @@
           <v-list-item
             v-for="theme in themeStore.availableThemes"
             :key="theme.id"
-            @click="selectTheme(theme.id)"
             :active="themeStore.currentTheme === theme.id"
             :class="{ 'v-list-item--active': themeStore.currentTheme === theme.id }"
+            @click="selectTheme(theme.id)"
           >
-            <template v-slot:prepend>
+            <template #prepend>
               <v-icon :color="themeStore.currentTheme === theme.id ? 'primary' : ''">
                 {{ theme.icon }}
               </v-icon>
@@ -63,7 +63,7 @@
               {{ theme.description }}
             </v-list-item-subtitle>
 
-            <template v-slot:append v-if="themeStore.currentTheme === theme.id">
+            <template v-if="themeStore.currentTheme === theme.id" #append>
               <v-icon color="primary" size="small">mdi-check-circle</v-icon>
             </template>
           </v-list-item>

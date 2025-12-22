@@ -23,9 +23,9 @@
             color="primary"
             size="large"
             rounded
-            @click="goToLogin"
             class="text-none font-weight-bold"
             style="color: rgb(var(--v-theme-on-surface));"
+            @click="goToLogin"
           >
             Go to Login
           </v-btn>
@@ -54,11 +54,11 @@
               color="primary"
               size="large"
               rounded
-              @click="resendVerification"
               :loading="resending"
               :disabled="!email || resending"
               class="text-none font-weight-bold mb-3"
               block
+              @click="resendVerification"
             >
               Resend Verification Email
             </v-btn>
@@ -69,8 +69,8 @@
             color="primary"
             size="large"
             rounded
-            @click="goToLogin"
             class="text-none font-weight-bold"
+            @click="goToLogin"
           >
             Back to Login
           </v-btn>

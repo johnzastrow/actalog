@@ -96,7 +96,7 @@
           <div v-if="wod.description" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
             <div class="text-body-2" >
-              <MarkdownRenderer :content="wod.description" />
+              <markdown-renderer :content="wod.description" />
             </div>
           </div>
 
@@ -104,7 +104,7 @@
           <div v-if="wod.notes" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
             <div class="text-body-2" >
-              <MarkdownRenderer :content="wod.notes" />
+              <markdown-renderer :content="wod.notes" />
             </div>
           </div>
 

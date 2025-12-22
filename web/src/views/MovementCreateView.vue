@@ -6,8 +6,8 @@
         v-if="successMessage"
         type="success"
         closable
-        @click:close="successMessage = ''"
         class="mb-3"
+        @click:close="successMessage = ''"
       >
         {{ successMessage }}
       </v-alert>
@@ -16,8 +16,8 @@
         v-if="error"
         type="error"
         closable
-        @click:close="error = ''"
         class="mb-3"
+        @click:close="error = ''"
       >
         {{ error }}
       </v-alert>
@@ -191,8 +191,8 @@
           size="large"
           rounded="lg"
           :loading="saving"
-          @click="saveMovement"
           style="text-transform: none; font-weight: 600"
+          @click="saveMovement"
         >
           <v-icon start>mdi-content-save</v-icon>
           {{ isEditMode ? 'Update Movement' : 'Create Movement' }}
@@ -207,8 +207,8 @@
           rounded="lg"
           class="mt-2"
           :loading="deleting"
-          @click="confirmDelete"
           style="text-transform: none; font-weight: 600"
+          @click="confirmDelete"
         >
           <v-icon start>mdi-delete</v-icon>
           Delete Movement
@@ -220,8 +220,8 @@
           size="large"
           rounded="lg"
           class="mt-2"
-          @click="handleBack"
           style="text-transform: none"
+          @click="handleBack"
         >
           Cancel
         </v-btn>

@@ -16,12 +16,12 @@
         </div>
       </div>
     </div>
-    <template v-slot:actions>
+    <template #actions>
       <v-btn
         variant="text"
         size="small"
-        @click="dismissPrompt"
         style="color: rgba(255, 255, 255, 0.7)"
+        @click="dismissPrompt"
       >
         Not now
       </v-btn>

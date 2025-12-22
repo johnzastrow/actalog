@@ -17,12 +17,12 @@
         <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
         <!-- Error Alert -->
-        <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = null" class="mb-4">
+        <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
           {{ error }}
         </v-alert>
 
         <!-- Success Alert -->
-        <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+        <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
           {{ successMessage }}
         </v-alert>
 
@@ -95,8 +95,8 @@
                   size="small"
                   variant="text"
                   color="error"
-                  @click="removeOrganization(org)"
                   :disabled="loading"
+                  @click="removeOrganization(org)"
                 >
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>

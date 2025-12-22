@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
       <div class="d-flex align-center mb-4">
-        <v-btn icon @click="$router.back()" class="mr-2">
+        <v-btn icon class="mr-2" @click="$router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
@@ -15,12 +15,12 @@
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = null" class="mb-4">
+      <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
         {{ error }}
       </v-alert>
 
       <!-- Success Alert -->
-      <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+      <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
         {{ successMessage }}
       </v-alert>
 
@@ -447,7 +447,7 @@
           <v-card-actions>
             <v-spacer />
             <v-btn @click="copyDialog = false">Cancel</v-btn>
-            <v-btn color="primary" @click="confirmCopy" :loading="actionLoading">
+            <v-btn color="primary" :loading="actionLoading" @click="confirmCopy">
               <v-icon start>mdi-check</v-icon>
               Convert to Standard
             </v-btn>

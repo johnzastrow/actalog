@@ -6,8 +6,8 @@
         v-if="successMessage"
         type="success"
         closable
-        @click:close="successMessage = ''"
         class="mb-3"
+        @click:close="successMessage = ''"
       >
         {{ successMessage }}
       </v-alert>
@@ -16,8 +16,8 @@
         v-if="error"
         type="error"
         closable
-        @click:close="error = ''"
         class="mb-3"
+        @click:close="error = ''"
       >
         {{ error }}
       </v-alert>
@@ -68,8 +68,8 @@
               color="secondary"
               variant="outlined"
               prepend-icon="mdi-library"
-              @click="browseMovements"
               style="text-transform: none"
+              @click="browseMovements"
             >
               Browse
             </v-btn>
@@ -77,8 +77,8 @@
               size="small"
               color="primary"
               prepend-icon="mdi-plus"
-              @click="addMovement"
               style="text-transform: none"
+              @click="addMovement"
             >
               Add
             </v-btn>
@@ -199,8 +199,8 @@
               color="secondary"
               variant="outlined"
               prepend-icon="mdi-library"
-              @click="browseWODs"
               style="text-transform: none"
+              @click="browseWODs"
             >
               Browse
             </v-btn>
@@ -208,8 +208,8 @@
               size="small"
               color="primary"
               prepend-icon="mdi-plus"
-              @click="addWOD"
               style="text-transform: none"
+              @click="addWOD"
             >
               Add
             </v-btn>
@@ -298,8 +298,8 @@
           size="large"
           rounded="lg"
           :loading="saving"
-          @click="saveTemplate"
           style="text-transform: none; font-weight: 600"
+          @click="saveTemplate"
         >
           <v-icon start>mdi-content-save</v-icon>
           {{ isEditMode ? 'Update Template' : 'Create Template' }}
@@ -314,8 +314,8 @@
           rounded="lg"
           class="mt-2"
           :loading="deleting"
-          @click="confirmDelete"
           style="text-transform: none; font-weight: 600"
+          @click="confirmDelete"
         >
           <v-icon start>mdi-delete</v-icon>
           Delete Template

@@ -8,7 +8,7 @@
     <!-- Content (with padding for fixed header) -->
     <div style="padding: 72px 16px 16px 16px; overflow-y: auto">
       <!-- Calendar Component -->
-      <WorkoutCalendar :workoutDates="workoutDates" @daySelected="handleDaySelected" />
+      <workout-calendar :workout-dates="workoutDates" @day-selected="handleDaySelected" />
 
       <!-- Selected Day Workouts -->
       <div v-if="selectedDate" class="mt-4">
@@ -26,8 +26,8 @@
         </div>
 
         <v-card
-          v-else
           v-for="workout in selectedDayWorkouts"
+          v-else
           :key="workout.id"
           elevation="0"
           rounded="lg"

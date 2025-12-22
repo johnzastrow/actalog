@@ -6,14 +6,14 @@
         <div class="text-center mb-3">
           <!-- Avatar with Upload -->
           <div style="position: relative; display: inline-block">
-            <UserAvatar :user="user" :size="100" />
+            <user-avatar :user="user" :size="100" />
             <v-btn
               icon
               size="small"
               color="primary"
               style="position: absolute; bottom: 0; right: 0"
-              @click="openFileDialog"
               :loading="uploadingAvatar"
+              @click="openFileDialog"
             >
               <v-icon size="small">mdi-camera</v-icon>
             </v-btn>
@@ -40,8 +40,8 @@
             variant="text"
             color="error"
             class="mt-2"
-            @click="deleteAvatar"
             :loading="deletingAvatar"
+            @click="deleteAvatar"
           >
             <v-icon start size="x-small">mdi-delete</v-icon>
             Remove Avatar
@@ -259,9 +259,9 @@
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-dumbbell"
-            @click="$router.push('/workouts')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/workouts')"
           >
             <v-list-item-title class="font-weight-medium" >
               My Templates
@@ -273,9 +273,9 @@
 
           <v-list-item
             prepend-icon="mdi-fire"
-            @click="$router.push('/wods')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/wods')"
           >
             <v-list-item-title class="font-weight-medium" >
               Benchmark WODs
@@ -287,9 +287,9 @@
 
           <v-list-item
             prepend-icon="mdi-trophy"
-            @click="$router.push('/prs')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/prs')"
           >
             <v-list-item-title class="font-weight-medium" >
               Personal Records
@@ -303,9 +303,9 @@
 
           <v-list-item
             prepend-icon="mdi-download"
-            @click="$router.push('/settings/export')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/settings/export')"
           >
             <v-list-item-title class="font-weight-medium" >
               Export Data
@@ -320,9 +320,9 @@
 
           <v-list-item
             prepend-icon="mdi-upload"
-            @click="$router.push('/settings/import')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/settings/import')"
           >
             <v-list-item-title class="font-weight-medium" >
               Import Data
@@ -346,9 +346,9 @@
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-database-refresh"
-            @click="$router.push('/admin/data-cleanup')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/data-cleanup')"
           >
             <v-list-item-title class="font-weight-medium" >
               Data Cleanup
@@ -363,9 +363,9 @@
 
           <v-list-item
             prepend-icon="mdi-account-multiple"
-            @click="$router.push('/admin/users')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/users')"
           >
             <v-list-item-title class="font-weight-medium" >
               User Management
@@ -380,9 +380,9 @@
 
           <v-list-item
             prepend-icon="mdi-file-multiple"
-            @click="$router.push('/admin/user-content')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/user-content')"
           >
             <v-list-item-title class="font-weight-medium" >
               User Content
@@ -397,9 +397,9 @@
 
           <v-list-item
             prepend-icon="mdi-history"
-            @click="$router.push('/admin/audit-logs')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/audit-logs')"
           >
             <v-list-item-title class="font-weight-medium" >
               Audit Logs
@@ -414,9 +414,9 @@
 
           <v-list-item
             prepend-icon="mdi-database-export"
-            @click="$router.push('/admin/backups')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/backups')"
           >
             <v-list-item-title class="font-weight-medium" >
               Database Backups
@@ -431,9 +431,9 @@
 
           <v-list-item
             prepend-icon="mdi-file-document-edit"
-            @click="$router.push('/admin/data-change-logs')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/data-change-logs')"
           >
             <v-list-item-title class="font-weight-medium" >
               Data Change Logs
@@ -448,9 +448,9 @@
 
           <v-list-item
             prepend-icon="mdi-bullhorn"
-            @click="$router.push('/admin/announcements')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/announcements')"
           >
             <v-list-item-title class="font-weight-medium" >
               Announcements
@@ -465,9 +465,9 @@
 
           <v-list-item
             prepend-icon="mdi-domain"
-            @click="$router.push('/admin/organizations')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/organizations')"
           >
             <v-list-item-title class="font-weight-medium" >
               Organization Management
@@ -482,9 +482,9 @@
 
           <v-list-item
             prepend-icon="mdi-credit-card"
-            @click="$router.push('/admin/subscriptions')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/admin/subscriptions')"
           >
             <v-list-item-title class="font-weight-medium" >
               Subscription Management
@@ -518,9 +518,9 @@
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-cog"
-            @click="$router.push('/settings')"
             rounded
             style="cursor: pointer"
+            @click="$router.push('/settings')"
           >
             <v-list-item-title class="font-weight-medium" >
               Settings
@@ -532,9 +532,9 @@
 
           <v-list-item
             prepend-icon="mdi-logout"
-            @click="handleLogout"
             rounded
             style="cursor: pointer"
+            @click="handleLogout"
           >
             <v-list-item-title class="font-weight-medium" style="color: rgb(var(--v-theme-error))">
               Logout
@@ -732,7 +732,7 @@ function calculateStreak(workouts) {
 
   // Start counting streak from most recent workout
   let streak = 1
-  let expectedDate = new Date(mostRecent)
+  const expectedDate = new Date(mostRecent)
 
   for (let i = 1; i < uniqueDates.length; i++) {
     expectedDate.setDate(expectedDate.getDate() - 1)

@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
       <div class="d-flex align-center mb-4">
-        <v-btn icon @click="$router.back()" class="mr-2">
+        <v-btn icon class="mr-2" @click="$router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
@@ -15,12 +15,12 @@
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
     <!-- Error Alert -->
-    <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = null" class="mb-4">
+    <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
       {{ error }}
     </v-alert>
 
     <!-- Success Alert -->
-    <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+    <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
       {{ successMessage }}
     </v-alert>
 
@@ -118,8 +118,8 @@
             icon
             size="small"
             variant="text"
-            @click="viewUserDetails(item)"
             title="View Details"
+            @click="viewUserDetails(item)"
           >
             <v-icon color="primary">mdi-information-outline</v-icon>
           </v-btn>
@@ -131,8 +131,8 @@
             icon
             size="small"
             variant="text"
-            @click="manageOrganizations(item)"
             title="Manage Organizations"
+            @click="manageOrganizations(item)"
           >
             <v-icon color="info">mdi-domain</v-icon>
           </v-btn>
@@ -256,7 +256,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn @click="disableDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDisable" :loading="actionLoading">
+          <v-btn color="error" :loading="actionLoading" @click="confirmDisable">
             Disable Account
           </v-btn>
         </v-card-actions>
@@ -279,7 +279,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn @click="roleDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="confirmRoleChange" :loading="actionLoading">
+          <v-btn color="primary" :loading="actionLoading" @click="confirmRoleChange">
             Change Role
           </v-btn>
         </v-card-actions>
@@ -312,7 +312,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDelete" :loading="actionLoading">
+          <v-btn color="error" :loading="actionLoading" @click="confirmDelete">
             Delete Permanently
           </v-btn>
         </v-card-actions>
@@ -437,7 +437,7 @@
                   rounded
                   variant="tonal"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon size="small">mdi-domain</v-icon>
                   </template>
                   <v-list-item-title>{{ org.name }}</v-list-item-title>
@@ -459,7 +459,7 @@
     </v-dialog>
 
     <!-- Manage Organizations Dialog -->
-    <ManageUserOrganizationsDialog
+    <manage-user-organizations-dialog
       v-model="manageOrganizationsDialog"
       :user="selectedUser"
       @updated="loadUsers"

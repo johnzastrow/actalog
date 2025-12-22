@@ -6,7 +6,7 @@ import globals from 'globals'
 export default [
   // Ignore patterns
   {
-    ignores: ['dist/**', 'node_modules/**', '.cache/**', 'coverage/**']
+    ignores: ['dist/**', 'dev-dist/**', 'node_modules/**', '.cache/**', 'coverage/**']
   },
 
   // Base JavaScript/ES configuration

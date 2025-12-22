@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Success Alert -->
-      <v-alert v-if="importResult" type="success" closable @click:close="resetImport" class="mb-3">
+      <v-alert v-if="importResult" type="success" closable class="mb-3" @click:close="resetImport">
         <strong>Import Complete!</strong><br>
         <span v-if="selectedEntity === 'wodify'">
           Workouts Created: {{ importResult.workouts_created }} |
@@ -22,7 +22,7 @@
       </v-alert>
 
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-3">
+      <v-alert v-if="error" type="error" closable class="mb-3" @click:close="error = null">
         {{ error }}
       </v-alert>
 

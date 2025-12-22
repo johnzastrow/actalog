@@ -1,5 +1,5 @@
 <template>
-  <PullToRefresh @refresh="handleRefresh">
+  <pull-to-refresh @refresh="handleRefresh">
     <div class="mobile-view-wrapper">
       <v-container class="pa-3">
       <!-- Email Verification Alert -->
@@ -172,7 +172,7 @@
       </v-row>
 
       <!-- Active Users This Month Card -->
-      <v-row dense class="mb-1" v-if="activeUsersStats.length > 0">
+      <v-row v-if="activeUsersStats.length > 0" dense class="mb-1">
         <v-col cols="12">
           <v-card elevation="0" rounded class="pa-2" bg-color="surface">
             <div class="text-caption mb-2 font-weight-bold text-medium-emphasis">
@@ -362,7 +362,7 @@
               <div v-if="workout.notes" class="ml-7 mt-2 text-caption text-medium-emphasis">
                 <div class="font-weight-bold mb-1" >Notes:</div>
                 <div class="ml-2">
-                  <MarkdownRenderer :content="workout.notes" />
+                  <markdown-renderer :content="workout.notes" />
                 </div>
               </div>
 
@@ -725,7 +725,7 @@
     </v-dialog>
 
     </div>
-  </PullToRefresh>
+  </pull-to-refresh>
 </template>
 
 <script setup>

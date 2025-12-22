@@ -2,12 +2,12 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
+      <v-alert v-if="error" type="error" closable class="mb-4" @click:close="error = null">
         {{ error }}
       </v-alert>
 
       <!-- Success Alert -->
-      <v-alert v-if="success" type="success" closable @click:close="success = null" class="mb-4">
+      <v-alert v-if="success" type="success" closable class="mb-4" @click:close="success = null">
         {{ success }}
       </v-alert>
 
@@ -54,9 +54,9 @@
             color="primary"
             class="mt-4"
             prepend-icon="mdi-plus"
-            @click="$router.push('/wods/create')"
             rounded="lg"
             style="text-transform: none; font-weight: 600"
+            @click="$router.push('/wods/create')"
           >
             Create WOD
           </v-btn>
@@ -115,8 +115,8 @@
                 size="x-small"
                 variant="text"
                 prepend-icon="mdi-pencil"
-                @click.stop="editWOD(wod)"
                 style="text-transform: none"
+                @click.stop="editWOD(wod)"
               >
                 Edit
               </v-btn>
@@ -125,8 +125,8 @@
                 variant="text"
                 prepend-icon="mdi-delete"
                 color="error"
-                @click.stop="deleteWOD(wod.id)"
                 style="text-transform: none"
+                @click.stop="deleteWOD(wod.id)"
               >
                 Delete
               </v-btn>
@@ -226,14 +226,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="cancelWODForm" style="text-transform: none">
+          <v-btn style="text-transform: none" @click="cancelWODForm">
             Cancel
           </v-btn>
           <v-btn
             color="primary"
             :loading="creating"
-            @click="saveWOD"
             style="text-transform: none"
+            @click="saveWOD"
           >
             {{ editingWOD ? 'Update' : 'Create' }}
           </v-btn>
@@ -303,7 +303,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="detailDialog = false" style="text-transform: none">
+          <v-btn style="text-transform: none" @click="detailDialog = false">
             Close
           </v-btn>
         </v-card-actions>

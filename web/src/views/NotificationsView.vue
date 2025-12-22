@@ -9,9 +9,9 @@
           color="primary"
           variant="text"
           size="small"
-          @click="markAllAsRead"
           :loading="markingAllAsRead"
           style="text-transform: none"
+          @click="markAllAsRead"
         >
           Mark all as read
         </v-btn>
@@ -32,8 +32,8 @@
         v-if="successMessage"
         type="success"
         closable
-        @click:close="successMessage = ''"
         class="mb-3"
+        @click:close="successMessage = ''"
       >
         {{ successMessage }}
       </v-alert>
@@ -42,8 +42,8 @@
         v-if="errorMessage"
         type="error"
         closable
-        @click:close="errorMessage = ''"
         class="mb-3"
+        @click:close="errorMessage = ''"
       >
         {{ errorMessage }}
       </v-alert>
@@ -98,7 +98,7 @@
                 class="text-body-2 mt-1 mb-0"
                 :class="notification.read_at ? 'text-grey-lighten-1' : 'text-grey-darken-1'"
               >
-                <MarkdownRenderer :content="notification.message" />
+                <markdown-renderer :content="notification.message" />
               </div>
 
               <!-- Timestamp -->
@@ -107,7 +107,7 @@
               </p>
 
               <!-- Notification Likes -->
-              <NotificationLikes
+              <notification-likes
                 :notification-id="notification.id"
                 @liked="handleLiked(notification)"
                 @unliked="handleUnliked(notification)"
@@ -116,7 +116,7 @@
 
             <!-- Action Menu -->
             <v-menu>
-              <template v-slot:activator="{ props }">
+              <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
                   icon="mdi-dots-vertical"
@@ -154,9 +154,9 @@
           variant="outlined"
           rounded="lg"
           class="mt-3"
-          @click="loadMore"
           :loading="loadingMore"
           style="text-transform: none"
+          @click="loadMore"
         >
           Load more
         </v-btn>

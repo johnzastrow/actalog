@@ -5,8 +5,8 @@
       :color="hasLiked ? 'primary' : 'grey'"
       variant="text"
       size="small"
-      @click="toggleLike"
       :loading="liking"
+      @click="toggleLike"
     >
       <v-icon left>{{ hasLiked ? 'mdi-thumb-up' : 'mdi-thumb-up-outline' }}</v-icon>
       {{ likeCount }}

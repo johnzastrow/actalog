@@ -12,7 +12,7 @@
       Your subscription has expired. You can view and export data, but cannot create or edit content.
     </v-banner-text>
 
-    <template v-slot:actions>
+    <template #actions>
       <v-btn
         variant="text"
         @click="dismiss"

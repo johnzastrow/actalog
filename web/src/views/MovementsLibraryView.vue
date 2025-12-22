@@ -39,8 +39,8 @@
         v-if="error"
         type="error"
         closable
-        @click:close="error = ''"
         class="mb-3"
+        @click:close="error = ''"
       >
         {{ error }}
       </v-alert>
@@ -71,8 +71,8 @@
           rounded="lg"
           class="mt-4"
           prepend-icon="mdi-plus"
-          @click="createNewMovement"
           style="text-transform: none"
+          @click="createNewMovement"
         >
           Create Movement
         </v-btn>

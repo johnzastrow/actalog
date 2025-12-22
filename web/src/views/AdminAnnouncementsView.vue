@@ -3,7 +3,7 @@
     <v-container fluid class="pa-4">
       <!-- Header -->
       <div class="d-flex align-center mb-4">
-        <v-btn icon @click="$router.back()" class="mr-2">
+        <v-btn icon class="mr-2" @click="$router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
@@ -13,12 +13,12 @@
       </div>
 
       <!-- Success Alert -->
-      <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+      <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
         {{ successMessage }}
       </v-alert>
 
       <!-- Error Alert -->
-      <v-alert v-if="errorMessage" type="error" variant="tonal" closable @click:close="errorMessage = null" class="mb-4">
+      <v-alert v-if="errorMessage" type="error" variant="tonal" closable class="mb-4" @click:close="errorMessage = null">
         {{ errorMessage }}
       </v-alert>
 
@@ -80,7 +80,7 @@
                 <!-- Preview Tab -->
                 <v-window-item value="preview">
                   <div class="pa-4" style="min-height: 200px;">
-                    <MarkdownRenderer v-if="announcement.message" :content="announcement.message" />
+                    <markdown-renderer v-if="announcement.message" :content="announcement.message" />
                     <div v-else class="text-medium-emphasis text-center py-8">
                       No content to preview
                     </div>

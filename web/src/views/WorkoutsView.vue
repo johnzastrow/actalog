@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" closable @click:close="error = null" class="mb-4">
+      <v-alert v-if="error" type="error" closable class="mb-4" @click:close="error = null">
         {{ error }}
       </v-alert>
 
@@ -64,9 +64,9 @@
           color="primary"
           variant="flat"
           prepend-icon="mdi-plus"
-          @click="$router.push('/workouts/templates/create')"
           rounded
           style="text-transform: none; font-weight: 600"
+          @click="$router.push('/workouts/templates/create')"
         >
           Create New Template
         </v-btn>
@@ -103,9 +103,9 @@
             color="primary"
             class="mt-4"
             prepend-icon="mdi-plus"
-            @click="$router.push('/workouts/templates/create')"
             rounded
             style="text-transform: none; font-weight: 600"
+            @click="$router.push('/workouts/templates/create')"
           >
             Create Template
           </v-btn>
@@ -143,8 +143,8 @@
                 color="primary"
                 variant="flat"
                 size="small"
-                @click.stop="logWorkoutFromTemplate(template.id)"
                 style="background-color: rgb(var(--v-theme-primary))"
+                @click.stop="logWorkoutFromTemplate(template.id)"
               >
                 <v-icon color="white">mdi-lightning-bolt</v-icon>
                 <v-tooltip activator="parent" location="top">Quick Log</v-tooltip>
@@ -173,8 +173,8 @@
                 size="x-small"
                 variant="text"
                 prepend-icon="mdi-pencil"
-                @click.stop="editTemplate(template)"
                 style="text-transform: none"
+                @click.stop="editTemplate(template)"
               >
                 Edit
               </v-btn>
@@ -183,8 +183,8 @@
                 variant="text"
                 prepend-icon="mdi-delete"
                 color="error"
-                @click.stop="deleteTemplate(template.id)"
                 style="text-transform: none"
+                @click.stop="deleteTemplate(template.id)"
               >
                 Delete
               </v-btn>
@@ -226,14 +226,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="createTemplateDialog = false" style="text-transform: none">
+          <v-btn style="text-transform: none" @click="createTemplateDialog = false">
             Cancel
           </v-btn>
           <v-btn
             color="primary"
             :loading="creating"
-            @click="createTemplate"
             style="text-transform: none"
+            @click="createTemplate"
           >
             Create
           </v-btn>

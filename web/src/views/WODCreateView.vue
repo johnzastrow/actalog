@@ -1,11 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
-      <v-alert v-if="successMessage" type="success" closable @click:close="successMessage = ''" class="mb-3">
+      <v-alert v-if="successMessage" type="success" closable class="mb-3" @click:close="successMessage = ''">
         {{ successMessage }}
       </v-alert>
 
-      <v-alert v-if="error" type="error" closable @click:close="error = ''" class="mb-3">
+      <v-alert v-if="error" type="error" closable class="mb-3" @click:close="error = ''">
         {{ error }}
       </v-alert>
 
@@ -141,8 +141,8 @@
           size="large"
           rounded="lg"
           :loading="saving"
-          @click="saveWOD"
           style="text-transform: none; font-weight: 600"
+          @click="saveWOD"
         >
           <v-icon start>mdi-content-save</v-icon>
           {{ isEditMode ? 'Update WOD' : 'Create WOD' }}
@@ -157,8 +157,8 @@
           rounded="lg"
           class="mt-2"
           :loading="deleting"
-          @click="confirmDelete"
           style="text-transform: none; font-weight: 600"
+          @click="confirmDelete"
         >
           <v-icon start>mdi-delete</v-icon>
           Delete WOD
@@ -170,8 +170,8 @@
           size="large"
           rounded="lg"
           class="mt-2"
-          @click="handleBack"
           style="text-transform: none"
+          @click="handleBack"
         >
           Cancel
         </v-btn>

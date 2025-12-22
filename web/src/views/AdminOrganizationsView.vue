@@ -2,7 +2,7 @@
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
       <div class="d-flex align-center mb-4">
-        <v-btn icon @click="$router.back()" class="mr-2">
+        <v-btn icon class="mr-2" @click="$router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
@@ -20,12 +20,12 @@
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = null" class="mb-4">
+      <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
         {{ error }}
       </v-alert>
 
       <!-- Success Alert -->
-      <v-alert v-if="successMessage" type="success" variant="tonal" closable @click:close="successMessage = null" class="mb-4">
+      <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
         {{ successMessage }}
       </v-alert>
 
@@ -61,16 +61,16 @@
 
           <!-- Actions Column -->
           <template #item.actions="{ item }">
-            <v-btn icon size="small" variant="text" @click="viewOrgDetails(item)" title="View Details">
+            <v-btn icon size="small" variant="text" title="View Details" @click="viewOrgDetails(item)">
               <v-icon color="primary">mdi-information-outline</v-icon>
             </v-btn>
-            <v-btn icon size="small" variant="text" @click="manageUsers(item)" title="Manage Users">
+            <v-btn icon size="small" variant="text" title="Manage Users" @click="manageUsers(item)">
               <v-icon color="info">mdi-account-multiple</v-icon>
             </v-btn>
-            <v-btn icon size="small" variant="text" @click="editOrganization(item)" title="Edit">
+            <v-btn icon size="small" variant="text" title="Edit" @click="editOrganization(item)">
               <v-icon color="warning">mdi-pencil</v-icon>
             </v-btn>
-            <v-btn icon size="small" variant="text" @click="deleteOrganization(item)" title="Delete">
+            <v-btn icon size="small" variant="text" title="Delete" @click="deleteOrganization(item)">
               <v-icon color="error">mdi-delete</v-icon>
             </v-btn>
           </template>
@@ -136,7 +136,7 @@
     </v-dialog>
 
     <!-- Manage Users Dialog -->
-    <ManageOrganizationUsersDialog
+    <manage-organization-users-dialog
       v-model="manageUsersDialog"
       :organization="selectedOrganization"
       @updated="fetchOrganizations"
@@ -190,7 +190,7 @@
                   rounded
                   variant="tonal"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-avatar color="primary" size="32">
                       <span class="text-caption">{{ getUserInitials(user) }}</span>
                     </v-avatar>

@@ -31,7 +31,7 @@
               {{ errorMessage }}
             </v-alert>
 
-            <v-form @submit.prevent="handleSubmit" :disabled="submitted">
+            <v-form :disabled="submitted" @submit.prevent="handleSubmit">
               <v-text-field
                 v-model="email"
                 label="Email"

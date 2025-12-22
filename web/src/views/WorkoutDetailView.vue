@@ -63,7 +63,7 @@
             <h3 class="text-body-1 font-weight-bold" >Notes</h3>
           </div>
           <div class="text-body-2 text-medium-emphasis">
-            <MarkdownRenderer :content="workout.notes" />
+            <markdown-renderer :content="workout.notes" />
           </div>
         </v-card>
 
@@ -128,7 +128,7 @@
                   </div>
 
                   <div v-if="movement.notes" class="text-caption mt-1" style="color: #999; font-style: italic">
-                    <MarkdownRenderer :content="movement.notes" />
+                    <markdown-renderer :content="movement.notes" />
                   </div>
                 </div>
 
@@ -183,7 +183,7 @@
                 {{ formatTime(wod.time_seconds) }}
               </div>
               <div v-if="wod.notes" class="text-caption mt-1" style="color: #999; font-style: italic">
-                <MarkdownRenderer :content="wod.notes" />
+                <markdown-renderer :content="wod.notes" />
               </div>
             </v-card>
           </div>
@@ -213,8 +213,8 @@
               size="large"
               rounded="lg"
               prepend-icon="mdi-pencil"
-              @click="editWorkout"
               style="text-transform: none; font-weight: 600"
+              @click="editWorkout"
             >
               Edit Workout
             </v-btn>
@@ -227,8 +227,8 @@
               size="large"
               rounded="lg"
               prepend-icon="mdi-delete"
-              @click="confirmDelete"
               style="text-transform: none; font-weight: 600"
+              @click="confirmDelete"
             >
               Delete
             </v-btn>
@@ -276,14 +276,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialog = false" style="text-transform: none">
+          <v-btn style="text-transform: none" @click="deleteDialog = false">
             Cancel
           </v-btn>
           <v-btn
             color="error"
             :loading="deleting"
-            @click="deleteWorkout"
             style="text-transform: none"
+            @click="deleteWorkout"
           >
             Delete
           </v-btn>

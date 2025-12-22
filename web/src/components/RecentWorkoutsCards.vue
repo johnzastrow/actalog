@@ -12,7 +12,7 @@
     <!-- Empty State -->
     <div v-else-if="groupedWorkouts.length === 0" class="text-center pa-4">
       <v-icon size="48" color="#ccc">mdi-calendar-blank</v-icon>
-      <p class="text-body-2 mt-2" class="text-medium-emphasis">No workouts in the last 7 days</p>
+      <p class="text-body-2 mt-2 text-medium-emphasis">No workouts in the last 7 days</p>
       <v-btn
         color="primary"
         size="small"
@@ -33,7 +33,7 @@
         class="mb-3"
       >
         <!-- Date Header -->
-        <div class="text-caption font-weight-bold mb-2" class="text-medium-emphasis">
+        <div class="text-caption font-weight-bold mb-2 text-medium-emphasis">
           {{ formatDateHeader(group.date) }}
         </div>
 
@@ -44,8 +44,8 @@
           elevation="1"
           rounded="lg"
           class="pa-3 mb-2 workout-card"
-          @click="viewWorkout(workout)"
           style="cursor: pointer; border: 1px solid #e0e0e0"
+          @click="viewWorkout(workout)"
         >
           <div class="d-flex align-center">
             <div class="flex-grow-1">
@@ -67,7 +67,7 @@
               </div>
 
               <!-- Movement Details with PR indicators -->
-              <div v-if="workout.movements && workout.movements.length > 0" class="text-caption" class="text-medium-emphasis">
+              <div v-if="workout.movements && workout.movements.length > 0" class="text-caption text-medium-emphasis">
                 <div v-for="(movement, index) in workout.movements.slice(0, 3)" :key="index" class="d-flex align-center">
                   <v-icon v-if="movement.is_pr" color="primary" size="x-small" class="mr-1">mdi-trophy</v-icon>
                   <span>{{ movement.movement?.name || 'Movement' }}</span>

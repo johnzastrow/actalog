@@ -15,8 +15,8 @@
         icon
         size="small"
         variant="text"
-        @click="nextMonth"
         :disabled="isCurrentMonth"
+        @click="nextMonth"
       >
         <v-icon>mdi-chevron-right</v-icon>
       </v-btn>
@@ -50,8 +50,8 @@
           size="small"
           variant="flat"
           :color="getDayColor(day)"
-          @click="selectDay(day)"
           :class="{ 'elevation-2': isToday(day) }"
+          @click="selectDay(day)"
         >
           <span class="text-caption" :style="{ color: getDayTextColor(day) }">
             {{ day.date }}

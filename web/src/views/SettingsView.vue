@@ -6,8 +6,8 @@
         v-if="successMessage"
         type="success"
         closable
-        @click:close="successMessage = ''"
         class="mb-3"
+        @click:close="successMessage = ''"
       >
         {{ successMessage }}
       </v-alert>
@@ -16,8 +16,8 @@
         v-if="errors.general"
         type="error"
         closable
-        @click:close="errors.general = ''"
         class="mb-3"
+        @click:close="errors.general = ''"
       >
         {{ errors.general }}
       </v-alert>
@@ -86,7 +86,7 @@
       </v-card>
 
       <!-- Subscription Status Card -->
-      <SubscriptionStatusBadge class="mb-3" />
+      <subscription-status-badge class="mb-3" />
 
       <!-- Password Change Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">

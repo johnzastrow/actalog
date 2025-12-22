@@ -32,7 +32,7 @@
 
           <!-- User Management -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/users')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/users')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="secondary" size="32" class="mr-3">mdi-account-multiple</v-icon>
                 <div>
@@ -53,7 +53,7 @@
 
           <!-- Organization Management -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/organizations')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/organizations')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="accent" size="32" class="mr-3">mdi-domain</v-icon>
                 <div>
@@ -74,7 +74,7 @@
 
           <!-- User Content Management -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/user-content')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/user-content')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="error" size="32" class="mr-3">mdi-file-multiple</v-icon>
                 <div>
@@ -95,7 +95,7 @@
 
           <!-- Database Backups -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/backups')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/backups')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="warning" size="32" class="mr-3">mdi-database-export</v-icon>
                 <div>
@@ -116,7 +116,7 @@
 
           <!-- Audit Logs -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/audit-logs')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/audit-logs')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="success" size="32" class="mr-3">mdi-shield-check</v-icon>
                 <div>
@@ -137,7 +137,7 @@
 
           <!-- Data Change Logs -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/data-change-logs')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/data-change-logs')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="info" size="32" class="mr-3">mdi-history</v-icon>
                 <div>
@@ -158,7 +158,7 @@
 
           <!-- Announcements -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/announcements')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/announcements')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="warning" size="32" class="mr-3">mdi-bullhorn</v-icon>
                 <div>
@@ -179,7 +179,7 @@
 
           <!-- Subscriptions -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" hover @click="$router.push('/admin/subscriptions')" style="cursor: pointer">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/subscriptions')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="primary" size="32" class="mr-3">mdi-currency-usd</v-icon>
                 <div>
