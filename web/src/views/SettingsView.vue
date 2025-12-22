@@ -358,6 +358,154 @@
       </v-card>
     </v-dialog>
 
+    <!-- Import Data Dialog -->
+    <v-dialog v-model="importDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon start color="primary">mdi-upload</v-icon>
+          Import Data
+        </v-card-title>
+
+        <v-card-text>
+          <!-- Step 1: File Upload -->
+          <div v-if="importStep === 'upload'">
+            <p class="text-medium-emphasis mb-3">
+              Upload a JSON file exported from ActaLog to restore your workout history.
+            </p>
+
+            <v-file-input
+              v-model="importFile"
+              label="Select backup file"
+              accept=".json"
+              prepend-icon="mdi-file-upload"
+              variant="outlined"
+              density="compact"
+              :error-messages="importErrors.file"
+              show-size
+              @update:model-value="importErrors.file = ''"
+            />
+
+            <v-alert
+              v-if="importErrors.general"
+              type="error"
+              density="compact"
+              class="mt-2"
+              closable
+              @click:close="importErrors.general = ''"
+            >
+              {{ importErrors.general }}
+            </v-alert>
+          </div>
+
+          <!-- Step 2: Preview -->
+          <div v-else-if="importStep === 'preview'">
+            <v-alert type="info" density="compact" class="mb-3">
+              Review what will be imported
+            </v-alert>
+
+            <v-list density="compact" bg-color="surface-variant" rounded="lg">
+              <v-list-item>
+                <template #prepend>
+                  <v-icon color="primary">mdi-dumbbell</v-icon>
+                </template>
+                <v-list-item-title>Workouts</v-list-item-title>
+                <template #append>
+                  <v-chip size="small" color="primary">{{ importPreview.total_workouts || 0 }}</v-chip>
+                </template>
+              </v-list-item>
+
+              <v-list-item v-if="importPreview.duplicates > 0">
+                <template #prepend>
+                  <v-icon color="warning">mdi-content-duplicate</v-icon>
+                </template>
+                <v-list-item-title>Potential Duplicates</v-list-item-title>
+                <template #append>
+                  <v-chip size="small" color="warning">{{ importPreview.duplicates }}</v-chip>
+                </template>
+              </v-list-item>
+
+              <v-list-item v-if="importPreview.date_range">
+                <template #prepend>
+                  <v-icon color="secondary">mdi-calendar-range</v-icon>
+                </template>
+                <v-list-item-title>Date Range</v-list-item-title>
+                <v-list-item-subtitle>{{ importPreview.date_range }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+
+            <v-checkbox
+              v-if="importPreview.duplicates > 0"
+              v-model="skipDuplicates"
+              label="Skip duplicate workouts"
+              density="compact"
+              hide-details
+              class="mt-3"
+            />
+
+            <v-alert
+              v-if="importErrors.general"
+              type="error"
+              density="compact"
+              class="mt-3"
+              closable
+              @click:close="importErrors.general = ''"
+            >
+              {{ importErrors.general }}
+            </v-alert>
+          </div>
+
+          <!-- Step 3: Success -->
+          <div v-else-if="importStep === 'success'">
+            <v-alert type="success" density="compact">
+              <div class="font-weight-bold">Import Successful!</div>
+              <div class="text-caption mt-1">
+                {{ importResult.imported }} workout(s) imported successfully.
+                <span v-if="importResult.skipped > 0">
+                  {{ importResult.skipped }} duplicate(s) skipped.
+                </span>
+              </div>
+            </v-alert>
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <!-- Upload step actions -->
+          <template v-if="importStep === 'upload'">
+            <v-btn variant="text" @click="closeImportDialog">Cancel</v-btn>
+            <v-btn
+              color="primary"
+              variant="flat"
+              :loading="importLoading"
+              :disabled="!importFile"
+              @click="previewImport"
+            >
+              Preview
+            </v-btn>
+          </template>
+
+          <!-- Preview step actions -->
+          <template v-else-if="importStep === 'preview'">
+            <v-btn variant="text" @click="importStep = 'upload'">Back</v-btn>
+            <v-btn
+              color="primary"
+              variant="flat"
+              :loading="importLoading"
+              @click="confirmImport"
+            >
+              Import
+            </v-btn>
+          </template>
+
+          <!-- Success step actions -->
+          <template v-else-if="importStep === 'success'">
+            <v-btn color="primary" variant="flat" @click="closeImportDialog">Done</v-btn>
+          </template>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Bottom Navigation -->
     <v-bottom-navigation
       v-model="activeTab"
@@ -429,6 +577,16 @@ const errors = ref({})
 const passwordErrors = ref({})
 const deleteDialog = ref(false)
 const deleteConfirmation = ref('')
+
+// Import state
+const importDialog = ref(false)
+const importStep = ref('upload') // 'upload', 'preview', 'success'
+const importFile = ref(null)
+const importLoading = ref(false)
+const importErrors = ref({ file: '', general: '' })
+const importPreview = ref({})
+const importResult = ref({})
+const skipDuplicates = ref(true)
 
 // Load current user data and preferences
 onMounted(() => {
@@ -569,7 +727,7 @@ const saveWeightUnit = () => {
 // Data management
 const exportData = async () => {
   try {
-    const response = await axios.get('/api/export', { responseType: 'blob' })
+    const response = await axios.get('/api/export/user-workouts', { responseType: 'blob' })
     const blob = new Blob([response.data], { type: 'application/json' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -584,8 +742,73 @@ const exportData = async () => {
 }
 
 const importData = () => {
-  // TODO: Implement import functionality
-  errors.value.general = 'Import functionality coming soon!'
+  // Reset import state and open dialog
+  importStep.value = 'upload'
+  importFile.value = null
+  importErrors.value = { file: '', general: '' }
+  importPreview.value = {}
+  importResult.value = {}
+  skipDuplicates.value = true
+  importDialog.value = true
+}
+
+const closeImportDialog = () => {
+  importDialog.value = false
+  importFile.value = null
+  importErrors.value = { file: '', general: '' }
+}
+
+const previewImport = async () => {
+  if (!importFile.value) {
+    importErrors.value.file = 'Please select a file'
+    return
+  }
+
+  importLoading.value = true
+  importErrors.value = { file: '', general: '' }
+
+  try {
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+
+    const response = await axios.post('/api/import/user-workouts/preview', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    importPreview.value = response.data
+    importStep.value = 'preview'
+  } catch (error) {
+    importErrors.value.general = error.response?.data?.error || 'Failed to preview import. Please check the file format.'
+  } finally {
+    importLoading.value = false
+  }
+}
+
+const confirmImport = async () => {
+  importLoading.value = true
+  importErrors.value.general = ''
+
+  try {
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+    formData.append('skip_duplicates', skipDuplicates.value.toString())
+
+    const response = await axios.post('/api/import/user-workouts/confirm', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    importResult.value = response.data
+    importStep.value = 'success'
+    successMessage.value = `Successfully imported ${response.data.imported || 0} workout(s)!`
+  } catch (error) {
+    importErrors.value.general = error.response?.data?.error || 'Import failed. Please try again.'
+  } finally {
+    importLoading.value = false
+  }
 }
 
 // Account deletion
