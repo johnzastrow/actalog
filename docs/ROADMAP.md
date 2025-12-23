@@ -1,18 +1,43 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.16.0-beta
-**Last Updated:** 2025-12-20
-**Overall Completion:** ~93% of core requirements
+**Current Version:** 0.17.0-beta (in development)
+**Last Updated:** 2025-12-23
+**Overall Completion:** ~95% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, **subscription billing system**, and **social engagement features**. The latest release (v0.16.0-beta) adds **notification likes** allowing users to celebrate each other's achievements, with only the original recipient seeing the like count and list of likers. Previous releases include v0.15.0 (admin announcements), v0.14.0 (dual-level subscription billing), and v0.10.0 (Docker deployment). The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, **subscription billing system**, **social engagement features**, and **advanced backup/restore with merge capabilities**. The current development version (v0.17.0-beta) adds **merge/upsert modes for database restore** with three restore modes (replace, merge, skip), natural key matching, and comprehensive import duplicate handling. The latest stable release (v0.16.0-beta) added **notification likes** allowing users to celebrate each other's achievements. The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
 
 ---
 
 ## Version History & Status
+
+### v0.17.0-beta (In Development)
+**Status:** Merge/upsert for database restore and import duplicate handling
+
+**Completed:**
+- ✅ Three restore modes for database backups: `replace`, `merge`, `skip`
+- ✅ Natural key matching (users by email, movements by name, WODs by name)
+- ✅ ID remapping for foreign key references during merge/skip restore
+- ✅ Detailed restore result statistics (records created, updated, skipped)
+- ✅ User workout import: added `updateDuplicates` parameter
+- ✅ Wodify import: added `skipDuplicates` and `updateDuplicates` parameters
+- ✅ Schema metadata in backup format for type-aware restoration
+
+**Technical Highlights:**
+- 9 files modified (domain, service, handler layers)
+- 674 lines added, 132 lines removed
+- Full backward compatibility with existing backup format
+- Tested on SQLite, PostgreSQL, and MariaDB
+
+**API Changes:**
+- `POST /api/admin/backups/{filename}/restore` accepts `mode` parameter
+- `POST /api/import/user-workouts/confirm` accepts `update_duplicates` form field
+- `POST /api/import/wodify/confirm` accepts `skip_duplicates` and `update_duplicates` form fields
+
+---
 
 ### v0.16.0-beta (Released)
 **Status:** Notification likes feature with social engagement
@@ -377,11 +402,19 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 - Performance search and charts
 
 #### Import/Export System
-- WOD export/import (CSV)
-- Movement export/import (CSV)
-- User Workouts export (JSON)
+- WOD export/import (CSV) with skip/update duplicate handling
+- Movement export/import (CSV) with skip/update duplicate handling
+- User Workouts export/import (JSON) with skip/update duplicate handling
+- Wodify performance import with skip/update duplicate handling
 - Import preview with validation
-- Duplicate detection
+- Comprehensive duplicate detection and handling across all import types
+
+#### Backup/Restore System
+- Full database backup to ZIP with JSON + schema metadata
+- Three restore modes: replace, merge, skip
+- Natural key matching (users by email, movements/WODs by name)
+- ID remapping for foreign key integrity
+- Cross-database restore support (SQLite, PostgreSQL, MariaDB)
 
 #### PWA Features
 - Service worker with caching strategies
@@ -405,13 +438,13 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 - SQL injection protection
 - Account lockout protection
 
-### ⚠️ Incomplete Features (25%)
+### ⚠️ Incomplete Features (5%)
 
 #### High Priority (Blockers for Production)
-1. **User Workouts Import Bug** - Import confirm doesn't persist data
-2. **Database Backup/Restore** - Critical for production deployment
-3. **Calendar/Timeline Views** - Core user story requirement
-4. **Visual Progress Charts** - Core user story requirement
+1. ~~**User Workouts Import Bug**~~ - ✅ Fixed with duplicate handling
+2. ~~**Database Backup/Restore**~~ - ✅ Complete with merge/upsert modes
+3. **Calendar/Timeline Views** - Core user story requirement (partially complete)
+4. **Visual Progress Charts** - Core user story requirement (partially complete)
 5. **WOD PR Tracking** - Only weight-based PRs work, missing time/AMRAP
 6. **Test Coverage** - Currently 68%, need 80%+
 

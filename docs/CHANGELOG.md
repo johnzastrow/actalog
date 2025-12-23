@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Merge/Upsert for Database Restore and Import Duplicate Handling
+
+- **Database Restore Modes**
+  - Added three restore modes to `RestoreBackup` API:
+    - `replace` - Delete all data, insert from backup (original behavior)
+    - `merge` - Update existing records by natural key, insert new ones
+    - `skip` - Only insert records that don't exist
+  - Natural key matching for record identification:
+    - Users matched by email
+    - Movements matched by name
+    - WODs matched by name
+    - Organizations matched by name
+    - User workouts matched by user_id + workout_date + workout_name
+  - ID remapping for foreign key references during merge/skip restore
+  - Returns detailed `RestoreResult` with statistics (records created, updated, skipped)
+
+- **Import Duplicate Handling Enhancements**
+  - **User Workout Import**: Added `updateDuplicates` parameter
+    - Duplicate detection using user_id + workout_date + workout_name
+    - Can now skip OR update existing workouts during import
+  - **Wodify Import**: Added `skipDuplicates` and `updateDuplicates` parameters
+    - `skipDuplicates=true`: Skip workouts that already exist for a date
+    - `updateDuplicates=true`: Replace existing workout data for a date
+    - Added `WorkoutsSkipped` to import result statistics
+
+- **API Changes**
+  - `POST /api/admin/backups/{filename}/restore` now accepts `mode` parameter:
+    ```json
+    {"confirm": true, "mode": "merge"}  // or "skip" or "replace"
+    ```
+  - `POST /api/import/user-workouts/confirm` now accepts `update_duplicates` form field
+  - `POST /api/import/wodify/confirm` now accepts `skip_duplicates` and `update_duplicates` form fields
+
+**Files Modified:**
+- `internal/domain/backup.go` - Added RestoreMode type and RestoreResult struct
+- `internal/domain/wodify_import.go` - Added WorkoutsSkipped field
+- `internal/service/backup_service.go` - Implemented merge/upsert with ID remapping (646+ lines)
+- `internal/service/import_service.go` - Added updateDuplicates to user workout import
+- `internal/service/wodify_import_service.go` - Added skip/update duplicate handling
+- `internal/handler/backup_handler.go` - Added mode parameter parsing
+- `internal/handler/import_handler.go` - Added update_duplicates form field
+- `internal/handler/wodify_import_handler.go` - Added duplicate handling form fields
+
 ### Fixed - PostgreSQL Schema Migration Support
 - **Critical Fix: PostgreSQL Custom Schema Support**
   - Fixed `checkTableExists()` to use `CURRENT_SCHEMA()` instead of hardcoded 'public'

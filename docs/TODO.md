@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-22
-> **Current Version:** 0.16.0-beta
+> **Last Updated:** 2025-12-23
+> **Current Version:** 0.17.0-beta (in development)
 
 ---
 
@@ -99,10 +99,19 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 
 #### Backend Improvements
-- [ ] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB). - - [ ] `[HIGH]` Determine if there is a way to automatically incorporate new tables or other structures into the backup without manual code changes. Does the JSON-based approach already handle this? If not, can we make it more dynamic?
-- [ ] `[HIGH]` **Duplicate Record Protection**
-  - [ ] All imports should protect against duplicate records (movements, wods, user workouts)
-  - [ ] A system restore should be able to detect and handle duplicates gracefully (skip, update, merge, etc), as well import an entire system backup from a prior or current version into a fresh installation of the current version. The goal is to be able to restore a backup from any prior version into the current version without data loss or duplication. Migrations should be applied as needed. The full .zip backup file should be usable for this purpose.
+- [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB).
+  - [x] Added schema metadata to backup format for type-aware restoration
+  - [x] Implemented three restore modes: `replace`, `merge`, `skip`
+  - [x] Natural key matching (users by email, movements by name, etc.)
+  - [x] ID remapping for foreign key references during merge/skip
+- [x] `[HIGH]` **Duplicate Record Protection**
+  - [x] All imports now protect against duplicate records:
+    - [x] WOD Import: `skip_duplicates` and `update_duplicates` options
+    - [x] Movement Import: `skip_duplicates` and `update_duplicates` options
+    - [x] User Workout Import: Added `update_duplicates` option (v0.17.0)
+    - [x] Wodify Import: Added `skip_duplicates` and `update_duplicates` options (v0.17.0)
+  - [x] System restore supports merge/skip modes with natural key matching
+  - [x] API returns detailed results (records created, updated, skipped)
 - [ ] `[HIGH]` **Check for missing indexes** - review all database tables and ensure appropriate indexes exist for performance (especially on foreign keys and commonly queried fields)
 - [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
 - [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
@@ -162,17 +171,17 @@ These features can be added after the core frontend is complete:
   - [ ] Duplicate detection by email
   - [ ] Welcome emails with password reset
 
-- [ ] `[HIGH]` **Improved Duplicate Record Detection During Imports**
-  - [ ] Trap duplicate movements during import (check by name/description)
-  - [ ] Trap duplicate WODs during import (check by name/source)
-  - [ ] Trap duplicate user workouts during import (check by date/template/user)
-  - [ ] Enhanced preview workflow showing detected duplicates with options:
-    - Skip duplicates (keep existing)
-    - Update duplicates (overwrite existing)
-    - Import as new (allow duplicates)
-  - [ ] Detailed duplicate report in preview response
+- [x] `[HIGH]` **Improved Duplicate Record Detection During Imports** (v0.17.0)
+  - [x] Trap duplicate movements during import (check by name)
+  - [x] Trap duplicate WODs during import (check by name)
+  - [x] Trap duplicate user workouts during import (check by date/user/name)
+  - [x] Trap duplicate Wodify workouts during import (check by date)
+  - [x] Import options for handling duplicates:
+    - [x] Skip duplicates (keep existing) - `skip_duplicates=true`
+    - [x] Update duplicates (overwrite existing) - `update_duplicates=true`
+  - [x] Detailed import result with created/updated/skipped counts
   - [ ] Frontend UI to review and select action for each duplicate
-  - [ ] Batch duplicate resolution (apply same action to all)
+  - [ ] Batch duplicate resolution UI (apply same action to all)
 
 - [ ] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure**
   - [ ] Create admin tool to scan for existing duplicates in database
@@ -249,7 +258,7 @@ These features can be added after the core frontend is complete:
 | File | Line | Description |
 |------|------|-------------|
 | `internal/service/workout_service.go` | 396 | Add proper authorization through workout template ownership |
-| `internal/service/import_service.go` | 587, 701 | Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange |
+| ~~`internal/service/import_service.go`~~ | ~~587, 701~~ | ~~Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange~~ **DONE (v0.17.0)** |
 | `internal/handler/movement_handler.go` | 141 | Get user ID from context when auth middleware is added |
 
 ### Frontend (Vue)
