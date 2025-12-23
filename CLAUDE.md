@@ -9,7 +9,7 @@ ActaLog is a mobile-first CrossFit workout tracker built with:
 - **Frontend:** Vue.js 3, Vuetify 3, Pinia
 - **Architecture:** Clean Architecture with strict layer separation
 
-**Version:** 0.16.0-beta
+**Version:** 0.17.0-beta
 
 ## Quick Reference
 
@@ -77,15 +77,6 @@ migrations/       # Database migrations
 3. **Repository Pattern** - Data access abstracted through interfaces
 4. **No Global State** - Everything passed explicitly
 
-## Adding Features
-
-1. Define entities/interfaces in `internal/domain/`
-2. Implement repository in `internal/repository/`
-3. Implement business logic in `internal/service/`
-4. Create HTTP handlers in `internal/handler/`
-5. Wire routes in `cmd/actalog/main.go`
-6. Write tests at each layer
-
 ## Database
 
 **Drivers** (set `DB_DRIVER` in `.env`):
@@ -135,42 +126,11 @@ migrations/       # Database migrations
 
 ## UI Design
 
-**Colors:**
-- Primary: `#00bcd4` (cyan)
-- Header: `#2c3e50` (dark navy)
-- Background: `#f5f7fa`
-- PR/Action: `#ffc107` (gold/amber)
-
-**Layout:**
-- Fixed header (56px), fixed bottom nav (70px)
-- Content: `margin-top: 56px, margin-bottom: 70px, overflow-y: auto`
+Colors: Primary `#00bcd4`, Header `#2c3e50`, Background `#f5f7fa`, PR/Action `#ffc107`. Layout: Fixed header 56px, bottom nav 70px.
 
 ## Database Version Management
 
-**Version Snapshots** (`db_versions/`):
-- Keep a SQLite snapshot of each version for migration testing
-- Name format: `actalog_X.Y.Z.db`
-- Populate with sample data from MariaDB `acta` database if needed
-- Commit snapshots to repo for team access (sanitized data only)
-
-**Creating Version Snapshot:**
-```bash
-# After releasing version X.Y.Z
-cp actalog.db db_versions/actalog_X.Y.Z.db
-git add db_versions/actalog_X.Y.Z.db
-git commit -m "Add database snapshot for version X.Y.Z"
-```
-
-**Testing Migrations:**
-```bash
-# Test migration from old version to current
-cp db_versions/actalog_0.13.0.db test_migration.db
-DB_DRIVER=sqlite3 DB_NAME=test_migration.db ./bin/actalog
-# Verify migration succeeded
-sqlite3 test_migration.db "SELECT version FROM schema_migrations ORDER BY applied_at DESC LIMIT 1;"
-```
-
-See `db_versions/README.md` for detailed version management procedures.
+SQLite snapshots in `db_versions/` for migration testing. Format: `actalog_X.Y.Z.db`. See `db_versions/README.md` for procedures.
 
 ## Testing
 
@@ -225,35 +185,9 @@ go test -race ./...                         # Race detection
 {...entity fields...}          // Single items
 ```
 
-## Documentation
-
-Additional docs in `docs/`:
-- `ARCHITECTURE.md` - Detailed design patterns
-- `DATABASE_SCHEMA.md` - Complete schema with ERD
-- `CHANGELOG.md` - Version history
-- `TODO.md` - Task tracking (canonical source)
-- `ROADMAP.md` - High-level version planning
-
 ## TODO Management
 
-**`docs/TODO.md` is the single source of truth for all task tracking.**
-
-### Guidelines:
-1. **Only track TODOs in `docs/TODO.md`** - Do not create TODO sections in other files
-2. **Active Tasks** - Move items here when starting work
-3. **Backlog** - Planned features with `[HIGH]`, `[MEDIUM]`, `[LOW]` markers
-4. **Known Bugs** - Report with `[BUG]` prefix and reproduction steps
-5. **Completed Releases** - Keep only last 5; older releases are in CHANGELOG.md
-
-### Periodic Cleanup:
-- Archive completed releases older than 5 versions
-- Remove duplicate or obsolete backlog items
-- Update priorities as needed
-
-### File Relationships:
-- `TODO.md` - Active task tracking
-- `CHANGELOG.md` - Release history (do NOT duplicate here)
-- `ROADMAP.md` - High-level planning (do NOT track tasks here)
+`docs/TODO.md` is the single source of truth. Use `[HIGH]`/`[MEDIUM]`/`[LOW]` markers for backlog. Keep only last 5 completed releases.
 
 ## Troubleshooting
 
