@@ -634,7 +634,7 @@ func (s *ImportService) PreviewUserWorkoutImport(jsonData []byte, userID int64) 
 }
 
 // ConfirmUserWorkoutImport actually imports user workout data after preview
-func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, skipDuplicates bool) (*UserWorkoutImportResult, error) {
+func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, skipDuplicates, updateDuplicates bool) (*UserWorkoutImportResult, error) {
 	// Parse JSON into export structure
 	var exportData struct {
 		ExportMetadata struct {
@@ -696,9 +696,38 @@ func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, 
 		}
 
 		// Check for duplicate workout on same date
-		// Note: This is simplified - in production you'd check against actual user_workouts table
-		// For now, we'll just create the workout
-		// TODO: Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange
+		existingWorkouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, workoutDate, workoutDate.Add(24*time.Hour))
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("Error checking for duplicates: %v", err))
+			continue
+		}
+
+		// Find matching workout by name
+		var existingWorkout *domain.UserWorkout
+		for _, ew := range existingWorkouts {
+			if ew.WorkoutName != nil && workoutData.WorkoutName != nil && *ew.WorkoutName == *workoutData.WorkoutName {
+				existingWorkout = ew
+				break
+			}
+		}
+
+		if existingWorkout != nil {
+			result.DuplicateWorkouts++
+			if skipDuplicates && !updateDuplicates {
+				result.SkippedCount++
+				continue
+			}
+			if updateDuplicates {
+				// Delete existing movements and WODs for this workout
+				if err := s.userWorkoutMovementRepo.DeleteByUserWorkoutID(existingWorkout.ID); err != nil {
+					result.Errors = append(result.Errors, fmt.Sprintf("Error clearing existing movements: %v", err))
+				}
+				if err := s.userWorkoutWODRepo.DeleteByUserWorkoutID(existingWorkout.ID); err != nil {
+					result.Errors = append(result.Errors, fmt.Sprintf("Error clearing existing WODs: %v", err))
+				}
+				result.UpdatedCount++
+			}
+		}
 
 		// Create or get movements
 		movementIDs := make(map[string]int64)
@@ -764,7 +793,7 @@ func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, 
 			}
 		}
 
-		// Create UserWorkout record
+		// Create or update UserWorkout record
 		// Ensure workout_name is set for ad-hoc workouts
 		workoutName := workoutData.WorkoutName
 		if workoutName == nil {
@@ -773,19 +802,35 @@ func (s *ImportService) ConfirmUserWorkoutImport(jsonData []byte, userID int64, 
 			workoutName = &defaultName
 		}
 
-		userWorkout := &domain.UserWorkout{
-			UserID:      userID,
-			WorkoutDate: workoutDate,
-			WorkoutName: workoutName,
-			WorkoutType: workoutData.WorkoutType,
-			Notes:       workoutData.Notes,
-			TotalTime:   workoutData.TotalTime,
-		}
+		var userWorkout *domain.UserWorkout
+		if existingWorkout != nil && updateDuplicates {
+			// Update existing workout
+			existingWorkout.WorkoutType = workoutData.WorkoutType
+			existingWorkout.Notes = workoutData.Notes
+			existingWorkout.TotalTime = workoutData.TotalTime
+			if err := s.userWorkoutRepo.Update(existingWorkout); err != nil {
+				result.InvalidWorkouts++
+				result.Errors = append(result.Errors, fmt.Sprintf("Failed to update workout: %v", err))
+				continue
+			}
+			userWorkout = existingWorkout
+		} else {
+			// Create new workout
+			userWorkout = &domain.UserWorkout{
+				UserID:      userID,
+				WorkoutDate: workoutDate,
+				WorkoutName: workoutName,
+				WorkoutType: workoutData.WorkoutType,
+				Notes:       workoutData.Notes,
+				TotalTime:   workoutData.TotalTime,
+			}
 
-		if err := s.userWorkoutRepo.Create(userWorkout); err != nil {
-			result.InvalidWorkouts++
-			result.Errors = append(result.Errors, fmt.Sprintf("Failed to create workout: %v", err))
-			continue
+			if err := s.userWorkoutRepo.Create(userWorkout); err != nil {
+				result.InvalidWorkouts++
+				result.Errors = append(result.Errors, fmt.Sprintf("Failed to create workout: %v", err))
+				continue
+			}
+			result.ValidWorkouts++
 		}
 
 		// Create UserWorkoutMovement records

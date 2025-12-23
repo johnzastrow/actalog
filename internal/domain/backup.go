@@ -2,6 +2,28 @@ package domain
 
 import "time"
 
+// RestoreMode defines how backup restore handles existing data
+type RestoreMode string
+
+const (
+	// RestoreModeReplace deletes all existing data before restoring (default)
+	RestoreModeReplace RestoreMode = "replace"
+	// RestoreModeMerge updates existing records and inserts new ones (by natural key)
+	RestoreModeMerge RestoreMode = "merge"
+	// RestoreModeSkip only inserts records that don't exist (by natural key)
+	RestoreModeSkip RestoreMode = "skip"
+)
+
+// RestoreResult contains statistics about a restore operation
+type RestoreResult struct {
+	Mode           RestoreMode `json:"mode"`
+	TablesRestored int         `json:"tables_restored"`
+	RecordsCreated int         `json:"records_created"`
+	RecordsUpdated int         `json:"records_updated"`
+	RecordsSkipped int         `json:"records_skipped"`
+	Errors         []string    `json:"errors,omitempty"`
+}
+
 // ColumnSchema represents metadata about a single database column
 type ColumnSchema struct {
 	Name     string `json:"name"`
@@ -85,5 +107,6 @@ type BackupService interface {
 	DeleteBackup(filename string, deletedByUserID int64) error
 
 	// RestoreBackup restores database from a backup file
-	RestoreBackup(filename string, restoredByUserID int64) error
+	// mode: "replace" (default) deletes all then inserts, "merge" updates existing, "skip" only inserts new
+	RestoreBackup(filename string, restoredByUserID int64, mode RestoreMode) (*RestoreResult, error)
 }

@@ -88,7 +88,7 @@ func (s *WodifyImportService) PreviewImport(csvData io.Reader, userID int64) (*d
 }
 
 // ConfirmImport executes the import after preview
-func (s *WodifyImportService) ConfirmImport(csvData io.Reader, userID int64) (*domain.WodifyImportResult, error) {
+func (s *WodifyImportService) ConfirmImport(csvData io.Reader, userID int64, skipDuplicates, updateDuplicates bool) (*domain.WodifyImportResult, error) {
 	// Parse CSV
 	rows, _ := s.parseCSV(csvData)
 
@@ -99,7 +99,7 @@ func (s *WodifyImportService) ConfirmImport(csvData io.Reader, userID int64) (*d
 
 	// Process each workout date
 	for _, workout := range grouped {
-		if err := s.importWorkout(workout, userID, result); err != nil {
+		if err := s.importWorkout(workout, userID, result, skipDuplicates, updateDuplicates); err != nil {
 			return nil, fmt.Errorf("failed to import workout for %s: %w", workout.Date.Format("2006-01-02"), err)
 		}
 	}
@@ -334,7 +334,7 @@ func (s *WodifyImportService) createWorkoutSummary(grouped []domain.WodifyGroupe
 }
 
 // importWorkout imports a single grouped workout
-func (s *WodifyImportService) importWorkout(workout domain.WodifyGroupedWorkout, userID int64, result *domain.WodifyImportResult) error {
+func (s *WodifyImportService) importWorkout(workout domain.WodifyGroupedWorkout, userID int64, result *domain.WodifyImportResult, skipDuplicates, updateDuplicates bool) error {
 	// Check if workout already exists for this date
 	existingWorkouts, err := s.userWorkoutRepo.ListByUserAndDateRange(userID, workout.Date, workout.Date.Add(24*time.Hour))
 
@@ -342,7 +342,20 @@ func (s *WodifyImportService) importWorkout(workout domain.WodifyGroupedWorkout,
 	isUpdate := false
 
 	if err == nil && len(existingWorkouts) > 0 {
-		// Use existing workout
+		// Workout exists for this date - handle based on options
+		if skipDuplicates && !updateDuplicates {
+			// Skip this workout entirely
+			result.WorkoutsSkipped++
+			return nil
+		}
+
+		if !updateDuplicates {
+			// Neither skip nor update - skip by default
+			result.WorkoutsSkipped++
+			return nil
+		}
+
+		// updateDuplicates is true - update existing workout
 		userWorkoutID = existingWorkouts[0].ID
 		isUpdate = true
 
