@@ -2,6 +2,25 @@ package domain
 
 import "time"
 
+// ColumnSchema represents metadata about a single database column
+type ColumnSchema struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"` // "integer", "string", "boolean", "datetime", "date", "float"
+	Nullable bool   `json:"nullable"`
+}
+
+// TableSchema represents metadata about a database table
+type TableSchema struct {
+	Columns  []ColumnSchema `json:"columns"`
+	RowCount int            `json:"row_count"`
+}
+
+// SchemaMetadata represents the complete schema information for a backup
+type SchemaMetadata struct {
+	Version string                 `json:"version"` // Schema version (e.g., "0.16.0")
+	Tables  map[string]TableSchema `json:"tables"`
+}
+
 // BackupMetadata represents metadata about a database backup
 type BackupMetadata struct {
 	Filename       string    `json:"filename"`
@@ -21,6 +40,7 @@ type BackupMetadata struct {
 // BackupData represents the complete backup data structure
 type BackupData struct {
 	Metadata                  BackupMetadata           `json:"metadata"`
+	Schema                    SchemaMetadata           `json:"schema"`
 	Users                     []map[string]interface{} `json:"users"`
 	Movements                 []map[string]interface{} `json:"movements"`
 	WODs                      []map[string]interface{} `json:"wods"`

@@ -432,75 +432,75 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 
 	// Restore data (in correct order for foreign keys - parent tables first)
 	// 1. Core tables with no foreign key dependencies
-	if err := s.restoreTable(tx, "users", backupData.Users); err != nil {
+	if err := s.restoreTable(tx, "users", backupData.Users, backupData.Schema.Tables["users"]); err != nil {
 		return fmt.Errorf("failed to restore users: %w", err)
 	}
-	if err := s.restoreTable(tx, "movements", backupData.Movements); err != nil {
+	if err := s.restoreTable(tx, "movements", backupData.Movements, backupData.Schema.Tables["movements"]); err != nil {
 		return fmt.Errorf("failed to restore movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "wods", backupData.WODs); err != nil {
+	if err := s.restoreTable(tx, "wods", backupData.WODs, backupData.Schema.Tables["wods"]); err != nil {
 		return fmt.Errorf("failed to restore wods: %w", err)
 	}
-	if err := s.restoreTable(tx, "workouts", backupData.Workouts); err != nil {
+	if err := s.restoreTable(tx, "workouts", backupData.Workouts, backupData.Schema.Tables["workouts"]); err != nil {
 		return fmt.Errorf("failed to restore workouts: %w", err)
 	}
-	if err := s.restoreTable(tx, "organizations", backupData.Organizations); err != nil {
+	if err := s.restoreTable(tx, "organizations", backupData.Organizations, backupData.Schema.Tables["organizations"]); err != nil {
 		return fmt.Errorf("failed to restore organizations: %w", err)
 	}
 
 	// 2. Tables depending on core tables
-	if err := s.restoreTable(tx, "user_workouts", backupData.UserWorkouts); err != nil {
+	if err := s.restoreTable(tx, "user_workouts", backupData.UserWorkouts, backupData.Schema.Tables["user_workouts"]); err != nil {
 		return fmt.Errorf("failed to restore user_workouts: %w", err)
 	}
-	if err := s.restoreTable(tx, "workout_movements", backupData.WorkoutMovements); err != nil {
+	if err := s.restoreTable(tx, "workout_movements", backupData.WorkoutMovements, backupData.Schema.Tables["workout_movements"]); err != nil {
 		return fmt.Errorf("failed to restore workout_movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "workout_wods", backupData.WorkoutWODs); err != nil {
+	if err := s.restoreTable(tx, "workout_wods", backupData.WorkoutWODs, backupData.Schema.Tables["workout_wods"]); err != nil {
 		return fmt.Errorf("failed to restore workout_wods: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_workout_movements", backupData.UserWorkoutMovements); err != nil {
+	if err := s.restoreTable(tx, "user_workout_movements", backupData.UserWorkoutMovements, backupData.Schema.Tables["user_workout_movements"]); err != nil {
 		return fmt.Errorf("failed to restore user_workout_movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_workout_wods", backupData.UserWorkoutWODs); err != nil {
+	if err := s.restoreTable(tx, "user_workout_wods", backupData.UserWorkoutWODs, backupData.Schema.Tables["user_workout_wods"]); err != nil {
 		return fmt.Errorf("failed to restore user_workout_wods: %w", err)
 	}
 
 	// 3. User-related tables
-	if err := s.restoreTable(tx, "refresh_tokens", backupData.RefreshTokens); err != nil {
+	if err := s.restoreTable(tx, "refresh_tokens", backupData.RefreshTokens, backupData.Schema.Tables["refresh_tokens"]); err != nil {
 		return fmt.Errorf("failed to restore refresh_tokens: %w", err)
 	}
-	if err := s.restoreTable(tx, "password_resets", backupData.PasswordResets); err != nil {
+	if err := s.restoreTable(tx, "password_resets", backupData.PasswordResets, backupData.Schema.Tables["password_resets"]); err != nil {
 		return fmt.Errorf("failed to restore password_resets: %w", err)
 	}
-	if err := s.restoreTable(tx, "email_verification_tokens", backupData.EmailVerificationTokens); err != nil {
+	if err := s.restoreTable(tx, "email_verification_tokens", backupData.EmailVerificationTokens, backupData.Schema.Tables["email_verification_tokens"]); err != nil {
 		return fmt.Errorf("failed to restore email_verification_tokens: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_settings", backupData.UserSettings); err != nil {
+	if err := s.restoreTable(tx, "user_settings", backupData.UserSettings, backupData.Schema.Tables["user_settings"]); err != nil {
 		return fmt.Errorf("failed to restore user_settings: %w", err)
 	}
-	if err := s.restoreTable(tx, "audit_logs", backupData.AuditLogs); err != nil {
+	if err := s.restoreTable(tx, "audit_logs", backupData.AuditLogs, backupData.Schema.Tables["audit_logs"]); err != nil {
 		return fmt.Errorf("failed to restore audit_logs: %w", err)
 	}
-	if err := s.restoreTable(tx, "data_change_logs", backupData.DataChangeLogs); err != nil {
+	if err := s.restoreTable(tx, "data_change_logs", backupData.DataChangeLogs, backupData.Schema.Tables["data_change_logs"]); err != nil {
 		return fmt.Errorf("failed to restore data_change_logs: %w", err)
 	}
 
 	// 4. Organization-related tables
-	if err := s.restoreTable(tx, "user_organizations", backupData.UserOrganizations); err != nil {
+	if err := s.restoreTable(tx, "user_organizations", backupData.UserOrganizations, backupData.Schema.Tables["user_organizations"]); err != nil {
 		return fmt.Errorf("failed to restore user_organizations: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_subscriptions", backupData.UserSubscriptions); err != nil {
+	if err := s.restoreTable(tx, "user_subscriptions", backupData.UserSubscriptions, backupData.Schema.Tables["user_subscriptions"]); err != nil {
 		return fmt.Errorf("failed to restore user_subscriptions: %w", err)
 	}
-	if err := s.restoreTable(tx, "organization_subscriptions", backupData.OrganizationSubscriptions); err != nil {
+	if err := s.restoreTable(tx, "organization_subscriptions", backupData.OrganizationSubscriptions, backupData.Schema.Tables["organization_subscriptions"]); err != nil {
 		return fmt.Errorf("failed to restore organization_subscriptions: %w", err)
 	}
 
 	// 5. Notification tables (depend on users and organizations)
-	if err := s.restoreTable(tx, "notifications", backupData.Notifications); err != nil {
+	if err := s.restoreTable(tx, "notifications", backupData.Notifications, backupData.Schema.Tables["notifications"]); err != nil {
 		return fmt.Errorf("failed to restore notifications: %w", err)
 	}
-	if err := s.restoreTable(tx, "notification_likes", backupData.NotificationLikes); err != nil {
+	if err := s.restoreTable(tx, "notification_likes", backupData.NotificationLikes, backupData.Schema.Tables["notification_likes"]); err != nil {
 		return fmt.Errorf("failed to restore notification_likes: %w", err)
 	}
 
@@ -536,9 +536,15 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 	return nil
 }
 
-// exportAllTables exports all database tables to JSON
+// exportAllTables exports all database tables to JSON with schema metadata
 func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 	data := &domain.BackupData{}
+
+	// Initialize schema metadata
+	data.Schema = domain.SchemaMetadata{
+		Version: version.Version(),
+		Tables:  make(map[string]domain.TableSchema),
+	}
 
 	tables := []struct {
 		name   string
@@ -586,9 +592,125 @@ func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 		}
 
 		*table.target = tableData
+
+		// Capture schema metadata for this table
+		tableSchema, err := s.getTableSchema(table.name)
+		if err != nil {
+			fmt.Printf("Warning: failed to get schema for table %s: %v\n", table.name, err)
+		} else {
+			tableSchema.RowCount = len(tableData)
+			data.Schema.Tables[table.name] = tableSchema
+		}
 	}
 
 	return data, nil
+}
+
+// getTableSchema retrieves column metadata for a table
+func (s *BackupServiceImpl) getTableSchema(tableName string) (domain.TableSchema, error) {
+	schema := domain.TableSchema{
+		Columns: []domain.ColumnSchema{},
+	}
+
+	var query string
+	switch s.dbDriver {
+	case "sqlite3":
+		query = fmt.Sprintf("PRAGMA table_info(%s)", tableName)
+	case "postgres":
+		query = `SELECT column_name, data_type, is_nullable
+			FROM information_schema.columns
+			WHERE table_schema = current_schema() AND table_name = $1
+			ORDER BY ordinal_position`
+	case "mysql":
+		query = `SELECT column_name, data_type, is_nullable
+			FROM information_schema.columns
+			WHERE table_schema = DATABASE() AND table_name = ?
+			ORDER BY ordinal_position`
+	default:
+		return schema, fmt.Errorf("unsupported database driver: %s", s.dbDriver)
+	}
+
+	var rows *sql.Rows
+	var err error
+	if s.dbDriver == "sqlite3" {
+		rows, err = s.db.Query(query)
+	} else {
+		rows, err = s.db.Query(query, tableName)
+	}
+	if err != nil {
+		return schema, fmt.Errorf("failed to query table schema: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var col domain.ColumnSchema
+
+		if s.dbDriver == "sqlite3" {
+			// SQLite PRAGMA returns: cid, name, type, notnull, dflt_value, pk
+			var cid int
+			var colType string
+			var notNull, pk int
+			var dfltValue sql.NullString
+			if err := rows.Scan(&cid, &col.Name, &colType, &notNull, &dfltValue, &pk); err != nil {
+				return schema, fmt.Errorf("failed to scan column info: %w", err)
+			}
+			col.Type = s.normalizeColumnType(colType)
+			col.Nullable = notNull == 0
+		} else {
+			// PostgreSQL and MySQL return: column_name, data_type, is_nullable
+			var dataType, isNullable string
+			if err := rows.Scan(&col.Name, &dataType, &isNullable); err != nil {
+				return schema, fmt.Errorf("failed to scan column info: %w", err)
+			}
+			col.Type = s.normalizeColumnType(dataType)
+			col.Nullable = strings.ToUpper(isNullable) == "YES"
+		}
+
+		schema.Columns = append(schema.Columns, col)
+	}
+
+	return schema, rows.Err()
+}
+
+// normalizeColumnType converts database-specific type names to generic types
+func (s *BackupServiceImpl) normalizeColumnType(dbType string) string {
+	dbType = strings.ToLower(dbType)
+
+	// Integer types
+	if strings.Contains(dbType, "int") || strings.Contains(dbType, "serial") {
+		return "integer"
+	}
+
+	// Boolean types
+	if strings.Contains(dbType, "bool") || dbType == "tinyint(1)" {
+		return "boolean"
+	}
+
+	// Float/decimal types
+	if strings.Contains(dbType, "float") || strings.Contains(dbType, "double") ||
+		strings.Contains(dbType, "decimal") || strings.Contains(dbType, "numeric") ||
+		strings.Contains(dbType, "real") {
+		return "float"
+	}
+
+	// Date types (without time)
+	if dbType == "date" {
+		return "date"
+	}
+
+	// Datetime types
+	if strings.Contains(dbType, "datetime") || strings.Contains(dbType, "timestamp") {
+		return "datetime"
+	}
+
+	// Text/string types
+	if strings.Contains(dbType, "char") || strings.Contains(dbType, "text") ||
+		strings.Contains(dbType, "varchar") || strings.Contains(dbType, "clob") {
+		return "string"
+	}
+
+	// Default to string for unknown types
+	return "string"
 }
 
 // isTableNotExistsError checks if the error is a "table does not exist" error
@@ -657,7 +779,7 @@ func (s *BackupServiceImpl) rowsToMaps(rows *sql.Rows) ([]map[string]interface{}
 }
 
 // restoreTable restores a single table from backup data with schema evolution support
-func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}) error {
+func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}, sourceSchema domain.TableSchema) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -678,6 +800,12 @@ func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []ma
 	targetColumns, err := s.getTableColumns(tx, tableName)
 	if err != nil {
 		return fmt.Errorf("failed to get columns for table %s: %w", tableName, err)
+	}
+
+	// Build column type map from source schema for type-aware conversion
+	columnTypes := make(map[string]string)
+	for _, col := range sourceSchema.Columns {
+		columnTypes[col.Name] = col.Type
 	}
 
 	// Restore each row
@@ -703,8 +831,9 @@ func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []ma
 				placeholders = append(placeholders, "?")
 			}
 
-			// Convert value for database compatibility (e.g., boolean conversion)
-			convertedValue := s.convertValue(val, col)
+			// Convert value for database compatibility using schema metadata
+			colType := columnTypes[col]
+			convertedValue := s.convertValue(val, col, colType)
 			values = append(values, convertedValue)
 			i++
 		}
@@ -1429,27 +1558,27 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 
 	// List of tables with auto-increment id columns
 	tablesWithSequences := map[string]bool{
-		"users":                     true,
-		"movements":                 true,
-		"wods":                      true,
-		"workouts":                  true,
-		"user_workouts":             true,
-		"workout_movements":         true,
-		"workout_wods":              true,
-		"user_workout_movements":    true,
-		"user_workout_wods":         true,
-		"refresh_tokens":            true,
-		"password_resets":           true,
-		"email_verification_tokens": true,
-		"audit_logs":                true,
-		"user_settings":             true,
-		"data_change_logs":          true,
-		"organizations":             true,
-		"user_organizations":        true,
-		"user_subscriptions":        true,
+		"users":                      true,
+		"movements":                  true,
+		"wods":                       true,
+		"workouts":                   true,
+		"user_workouts":              true,
+		"workout_movements":          true,
+		"workout_wods":               true,
+		"user_workout_movements":     true,
+		"user_workout_wods":          true,
+		"refresh_tokens":             true,
+		"password_resets":            true,
+		"email_verification_tokens":  true,
+		"audit_logs":                 true,
+		"user_settings":              true,
+		"data_change_logs":           true,
+		"organizations":              true,
+		"user_organizations":         true,
+		"user_subscriptions":         true,
 		"organization_subscriptions": true,
-		"notifications":             true,
-		"notification_likes":        true,
+		"notifications":              true,
+		"notification_likes":         true,
 	}
 
 	if !tablesWithSequences[tableName] {
@@ -1472,48 +1601,60 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 }
 
 // convertValue converts a value from source database type to target database type
-func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) interface{} {
+// colType is the normalized type from schema metadata ("boolean", "datetime", "date", "integer", "float", "string")
+// If colType is empty, falls back to column name-based detection for backward compatibility
+func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, colType string) interface{} {
 	if val == nil {
 		return nil
 	}
 
-	// Boolean conversion for specific columns
-	booleanColumns := map[string]bool{
-		"is_pr":                 true,
-		"is_rx":                 true,
-		"is_template":           true,
-		"is_standard":           true,
-		"is_permanent_free":     true,
-		"email_verified":        true,
-		"account_disabled":      true,
-		"notifications_enabled": true,
+	// Determine if this is a boolean column (prefer schema type, fallback to column name)
+	isBoolean := colType == "boolean"
+	if !isBoolean && colType == "" {
+		// Fallback for older backups without schema metadata
+		booleanColumns := map[string]bool{
+			"is_pr":                 true,
+			"is_rx":                 true,
+			"is_template":           true,
+			"is_standard":           true,
+			"is_permanent_free":     true,
+			"email_verified":        true,
+			"account_disabled":      true,
+			"notifications_enabled": true,
+		}
+		isBoolean = booleanColumns[columnName]
 	}
 
-	// Datetime columns that may need conversion
-	datetimeColumns := map[string]bool{
-		"created_at":         true,
-		"updated_at":         true,
-		"last_login_at":      true,
-		"email_verified_at":  true,
-		"locked_at":          true,
-		"locked_until":       true,
-		"disabled_at":        true,
-		"expires_at":         true,
-		"used_at":            true,
-		"revoked_at":         true,
-		"workout_date":       true,
-		"birthday":           true,
-		"joined_at":          true,
-		"start_date":         true,
-		"end_date":           true,
-		"last_payment_date":  true,
-		"next_billing_date":  true,
-		"cancelled_at":       true,
-		"read_at":            true,
+	// Determine if this is a datetime/date column (prefer schema type, fallback to column name)
+	isDatetime := colType == "datetime" || colType == "date"
+	if !isDatetime && colType == "" {
+		// Fallback for older backups without schema metadata
+		datetimeColumns := map[string]bool{
+			"created_at":        true,
+			"updated_at":        true,
+			"last_login_at":     true,
+			"email_verified_at": true,
+			"locked_at":         true,
+			"locked_until":      true,
+			"disabled_at":       true,
+			"expires_at":        true,
+			"used_at":           true,
+			"revoked_at":        true,
+			"workout_date":      true,
+			"birthday":          true,
+			"joined_at":         true,
+			"start_date":        true,
+			"end_date":          true,
+			"last_payment_date": true,
+			"next_billing_date": true,
+			"cancelled_at":      true,
+			"read_at":           true,
+		}
+		isDatetime = datetimeColumns[columnName]
 	}
 
 	// Convert datetime values for MySQL (ISO 8601 to MySQL format)
-	if datetimeColumns[columnName] && s.dbDriver == "mysql" {
+	if isDatetime && s.dbDriver == "mysql" {
 		if strVal, ok := val.(string); ok && strVal != "" {
 			converted := s.convertDatetimeForMySQL(strVal)
 			if converted != "" {
@@ -1522,7 +1663,7 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 		}
 	}
 
-	if booleanColumns[columnName] {
+	if isBoolean {
 		// Convert between different boolean representations
 		switch v := val.(type) {
 		case int64:
