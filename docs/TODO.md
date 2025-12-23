@@ -63,28 +63,28 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 ### High Priority
 
-#### Subscription System (Backend Complete - v0.14.0)
-- [ ] `[HIGH]` **Frontend Subscription Status Display**
-  - [ ] Add subscription status badge to user profile/settings
-  - [ ] Show expiration date for paid subscriptions
-  - [ ] Display "Permanent Free" badge for permanent users
-  - [ ] Show organization subscriptions the user benefits from
+#### Subscription System (Backend Complete - v0.14.0, Frontend Complete - v0.17.0)
+- [x] `[HIGH]` **Frontend Subscription Status Display**
+  - [x] Add subscription status badge to user profile/settings (SubscriptionStatusBadge.vue in SettingsView)
+  - [x] Show expiration date for paid subscriptions
+  - [x] Display "Permanent Free" badge for permanent users
+  - [x] Show organization subscriptions the user benefits from
 
-- [ ] `[HIGH]` **Admin Subscription Management UI**
-  - [ ] Admin panel for viewing all user subscriptions
-  - [ ] Admin panel for viewing all organization subscriptions
-  - [ ] Create subscription form (user/org selection, type, permanent free option)
-  - [ ] Mark subscription as paid button/action
-  - [ ] Cancel subscription with reason input
-  - [ ] View subscription history for users and organizations
+- [x] `[HIGH]` **Admin Subscription Management UI**
+  - [x] Admin panel for viewing all user subscriptions (AdminSubscriptionsView.vue)
+  - [x] Admin panel for viewing all organization subscriptions
+  - [x] Create subscription form (CreateSubscriptionDialog.vue)
+  - [x] Mark subscription as paid button/action (MarkAsPaidDialog.vue)
+  - [x] Cancel subscription with reason input (CancelSubscriptionDialog.vue)
+  - [x] View subscription history (SubscriptionDetailDialog.vue)
   - [ ] List expiring subscriptions (next 30 days)
   - [ ] List overdue/expired subscriptions
 
-- [ ] `[HIGH]` **Read-Only Mode UI Feedback**
-  - [ ] Graceful handling of HTTP 402 Payment Required responses
-  - [ ] Show "Subscription Expired" banner when in read-only mode
-  - [ ] Disable/hide create/edit buttons when subscription expired
-  - [ ] "Renew Subscription" call-to-action in banner
+- [x] `[HIGH]` **Read-Only Mode UI Feedback**
+  - [x] Graceful handling of HTTP 402 Payment Required responses (subscription.js store)
+  - [x] Show "Subscription Expired" banner when in read-only mode (SubscriptionExpiredBanner.vue in App.vue)
+  - [x] Disable/hide create/edit buttons when subscription expired
+  - [x] "Renew Subscription" call-to-action in banner
   - [ ] Toast notifications explaining why operations are blocked
 
 #### Front end Improvements
@@ -112,14 +112,13 @@ The following lint issues need to be resolved to re-enable strict linting:
     - [x] Wodify Import: Added `skip_duplicates` and `update_duplicates` options (v0.17.0)
   - [x] System restore supports merge/skip modes with natural key matching
   - [x] API returns detailed results (records created, updated, skipped)
-- [ ] `[HIGH]` **Check for missing indexes** - review all database tables and ensure appropriate indexes exist for performance (especially on foreign keys and commonly queried fields)
+- [x] `[HIGH]` **Check for missing indexes** - 83 indexes defined in migrations (foreign keys and commonly queried fields covered)
 - [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
 - [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
 - [ ] `[HIGH]` **Error Handling Consistency** - ensure all handlers and services have consistent error handling and return appropriate HTTP status codes
 - [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
 - [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
-- [ ] `[HIGH]` **Implement Rate Limiting** - add rate limiting middleware to protect against abuse (especially for public endpoints)
-- [ ] 
+- [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
 ## Future Enhancements (Post-MVP)
 
@@ -156,9 +155,7 @@ These features can be added after the core frontend is complete:
 
 
 #### Testing Coverage
-- [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite created (14 test cases)
-  - Files: `internal/service/subscription_service_test.go`
-  - Status: 10/14 passing, minor assertion fixes needed (see Active Tasks)
+- [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite (internal/service/subscription_service_test.go)
 - [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
 - [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
 - [ ] `[HIGH]` **Add repository unit tests** - All repository implementations
@@ -213,13 +210,14 @@ These features can be added after the core frontend is complete:
 
 
 #### Performance & Analytics
-- [X] `[MEDIUM]` **Calendar View** - Monthly view with workout dots
-- [X] `[MEDIUM]` **Timeline View** - Chronological workout history
+- [x] `[MEDIUM]` **Calendar View** - WorkoutCalendarView.vue with workout dots and month navigation
+- [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
+- [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
 - [ ] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
-- [ ] `[MEDIUM]` **Add backup_service tests**
+- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 20 test functions, 70+ test cases
 - [ ] `[MEDIUM]` **Add export/import_service tests**
 - [ ] `[MEDIUM]` **Add admin_handler tests**
 
