@@ -110,7 +110,7 @@ The following lint issues need to be resolved to re-enable strict linting:
 - [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
 - [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
 - [ ] `[HIGH]` **Implement Rate Limiting** - add rate limiting middleware to protect against abuse (especially for public endpoints)
-- [ ] 
+- [ ] `[HIGH]` **Compliance** Ensure compliance with data privacy regulations (GDPR, CCPA) - review data handling practices and implement necessary features (data export, deletion requests, etc.)
 
 ## Future Enhancements (Post-MVP)
 
