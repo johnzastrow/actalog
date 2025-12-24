@@ -6,6 +6,8 @@ import vuetify from './plugins/vuetify'
 import { registerSW } from 'virtual:pwa-register'
 import { usePwaStore } from '@/stores/pwa'
 
+// MDI icons - must be imported for icon font to work
+import '@mdi/font/css/materialdesignicons.css'
 import './assets/main.css'
 
 const app = createApp(App)

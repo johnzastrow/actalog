@@ -40,8 +40,6 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       'vuetify',
-      'vuetify/components',
-      'vuetify/directives',
       'workbox-window'
     ],
     exclude: []
@@ -264,6 +262,18 @@ export default defineConfig({
     // Serve built assets from the deployment URL (read from environment)
     base: `${FULL_DEPLOYMENT_URL}/`,
     outDir: 'dist',
-    sourcemap: true,
+    // Disable sourcemaps in production for smaller bundles
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: {
+          // Vendor chunks
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'vuetify': ['vuetify'],
+          'chart': ['chart.js', 'vue-chartjs'],
+        }
+      }
+    }
   }
 })
