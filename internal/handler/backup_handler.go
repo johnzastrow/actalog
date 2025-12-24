@@ -268,9 +268,10 @@ func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse request body for confirmation
+	// Parse request body for confirmation and mode
 	var req struct {
-		Confirm bool `json:"confirm"`
+		Confirm bool   `json:"confirm"`
+		Mode    string `json:"mode"` // "replace" (default), "merge", or "skip"
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
@@ -282,8 +283,23 @@ func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate and set restore mode
+	mode := domain.RestoreModeReplace // Default
+	switch req.Mode {
+	case "", "replace":
+		mode = domain.RestoreModeReplace
+	case "merge":
+		mode = domain.RestoreModeMerge
+	case "skip":
+		mode = domain.RestoreModeSkip
+	default:
+		respondError(w, http.StatusBadRequest, "Invalid restore mode. Use 'replace', 'merge', or 'skip'")
+		return
+	}
+
 	// Restore backup
-	if err := h.backupService.RestoreBackup(filename, userID); err != nil {
+	result, err := h.backupService.RestoreBackup(filename, userID, mode)
+	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to restore backup: %v", err))
 		return
 	}
@@ -291,6 +307,7 @@ func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"message":  "Backup restored successfully",
 		"filename": filename,
+		"result":   result,
 	})
 }
 

@@ -100,8 +100,12 @@ func (h *WodifyImportHandler) ConfirmWodifyImport(w http.ResponseWriter, r *http
 	// Create reader for service
 	reader := bytes.NewReader(fileBytes)
 
+	// Parse options from form data
+	skipDuplicates := r.FormValue("skip_duplicates") == "true"
+	updateDuplicates := r.FormValue("update_duplicates") == "true"
+
 	// Confirm import
-	result, err := h.wodifyImportService.ConfirmImport(reader, userID)
+	result, err := h.wodifyImportService.ConfirmImport(reader, userID, skipDuplicates, updateDuplicates)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to import: %v", err))
 		return

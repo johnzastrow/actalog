@@ -809,6 +809,185 @@ type AuditLog struct {
 
 ---
 
+## Backup and Restore Architecture
+
+### Overview
+
+ActaLog provides a comprehensive backup and restore system that supports multiple restore modes for flexible data management. The system uses a JSON-based backup format with schema metadata for cross-database compatibility.
+
+### Backup Format
+
+Backups are stored as ZIP files containing:
+- `metadata.json` - Backup metadata (version, timestamp, database info, record counts)
+- `schema_metadata.json` - Database schema information for type-aware restoration
+- `{table_name}.json` - JSON export of each table's data
+
+### Restore Modes
+
+The restore system supports three modes for handling existing data:
+
+```mermaid
+graph TB
+    subgraph "Restore Modes"
+        Replace[Replace Mode<br>DELETE all → INSERT all]
+        Merge[Merge Mode<br>UPDATE existing → INSERT new]
+        Skip[Skip Mode<br>INSERT only non-existing]
+    end
+
+    subgraph "Natural Key Matching"
+        Users[Users: email]
+        Movements[Movements: name]
+        WODs[WODs: name]
+        Orgs[Organizations: name]
+        Workouts[User Workouts: user_id + date + name]
+    end
+
+    Merge --> Users
+    Merge --> Movements
+    Merge --> WODs
+    Merge --> Orgs
+    Merge --> Workouts
+    Skip --> Users
+    Skip --> Movements
+    Skip --> WODs
+    Skip --> Orgs
+    Skip --> Workouts
+```
+
+**1. Replace Mode** (Default)
+- Deletes all existing data in each table
+- Inserts all records from backup
+- Fastest but destructive
+- Use for clean restores to fresh database
+
+**2. Merge Mode**
+- Matches records by natural key (not ID)
+- Updates existing records with backup data
+- Inserts new records that don't exist
+- Preserves records not in backup
+- ID remapping for foreign key integrity
+
+**3. Skip Mode**
+- Matches records by natural key
+- Skips records that already exist
+- Only inserts new records
+- Safest for incremental imports
+- ID remapping for foreign key integrity
+
+### Natural Key Matching Strategy
+
+Records are matched by business keys rather than database IDs:
+
+| Table | Natural Key | Match Strategy |
+|-------|-------------|----------------|
+| users | email | Exact match |
+| movements | name | Exact match |
+| wods | name | Exact match |
+| organizations | name | Exact match |
+| user_workouts | user_id + workout_date + workout_name | Composite match |
+| workout_movements | workout_id + movement_id + order_index | Composite (after remap) |
+| workout_wods | workout_id + wod_id + order_index | Composite (after remap) |
+| user_settings | user_id | After user remap |
+| notifications | - | Additive only (skip) |
+| audit_logs | - | Additive only (skip) |
+
+### ID Remapping
+
+When using merge or skip mode, IDs may differ between backup and target database. The system maintains ID mappings:
+
+```go
+type idMappings struct {
+    users         map[int64]int64  // backup_id -> target_id
+    movements     map[int64]int64
+    wods          map[int64]int64
+    organizations map[int64]int64
+    workouts      map[int64]int64
+    userWorkouts  map[int64]int64
+}
+```
+
+**Remapping Flow:**
+1. Restore parent tables first (users, movements, wods, organizations)
+2. Build ID mapping for each matched/inserted record
+3. Restore child tables using remapped foreign keys
+4. Update FK references before insert/update
+
+### Restore Result
+
+The API returns detailed statistics:
+
+```json
+{
+  "mode": "merge",
+  "tables_restored": 21,
+  "records_created": 16,
+  "records_updated": 50,
+  "records_skipped": 0,
+  "errors": []
+}
+```
+
+### API Usage
+
+```bash
+# Replace mode (default)
+curl -X POST /api/admin/backups/{filename}/restore \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"confirm": true}'
+
+# Merge mode
+curl -X POST /api/admin/backups/{filename}/restore \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"confirm": true, "mode": "merge"}'
+
+# Skip mode
+curl -X POST /api/admin/backups/{filename}/restore \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"confirm": true, "mode": "skip"}'
+```
+
+### Import Duplicate Handling
+
+All import services support duplicate detection and handling:
+
+| Import Type | Skip Duplicates | Update Duplicates | Detection Key |
+|-------------|-----------------|-------------------|---------------|
+| WOD Import | ✅ | ✅ | name |
+| Movement Import | ✅ | ✅ | name |
+| User Workout Import | ✅ | ✅ | user_id + date + name |
+| Wodify Import | ✅ | ✅ | workout date |
+
+**Import Options:**
+```bash
+# Skip duplicates (keep existing)
+curl -X POST /api/import/wods/confirm \
+  -F "file=@wods.csv" \
+  -F "skip_duplicates=true"
+
+# Update duplicates (overwrite existing)
+curl -X POST /api/import/wods/confirm \
+  -F "file=@wods.csv" \
+  -F "update_duplicates=true"
+```
+
+### Security Considerations
+
+- Only admin users can create, restore, or delete backups
+- Backup files stored in configurable directory (default: `./backups`)
+- Security-sensitive tables (refresh_tokens, password_resets) are skipped during merge/skip
+- Audit logs are append-only (never overwritten)
+- All restore operations are logged to audit trail
+
+### Implementation Files
+
+- `internal/domain/backup.go` - RestoreMode type, RestoreResult struct, BackupService interface
+- `internal/service/backup_service.go` - Full backup/restore implementation with merge/skip logic
+- `internal/handler/backup_handler.go` - REST API endpoints
+- `internal/service/import_service.go` - Import duplicate handling
+- `internal/service/wodify_import_service.go` - Wodify-specific import logic
+
+---
+
 ## Security Architecture
 
 ### Authentication Flow

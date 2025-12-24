@@ -2,6 +2,47 @@ package domain
 
 import "time"
 
+// RestoreMode defines how backup restore handles existing data
+type RestoreMode string
+
+const (
+	// RestoreModeReplace deletes all existing data before restoring (default)
+	RestoreModeReplace RestoreMode = "replace"
+	// RestoreModeMerge updates existing records and inserts new ones (by natural key)
+	RestoreModeMerge RestoreMode = "merge"
+	// RestoreModeSkip only inserts records that don't exist (by natural key)
+	RestoreModeSkip RestoreMode = "skip"
+)
+
+// RestoreResult contains statistics about a restore operation
+type RestoreResult struct {
+	Mode           RestoreMode `json:"mode"`
+	TablesRestored int         `json:"tables_restored"`
+	RecordsCreated int         `json:"records_created"`
+	RecordsUpdated int         `json:"records_updated"`
+	RecordsSkipped int         `json:"records_skipped"`
+	Errors         []string    `json:"errors,omitempty"`
+}
+
+// ColumnSchema represents metadata about a single database column
+type ColumnSchema struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"` // "integer", "string", "boolean", "datetime", "date", "float"
+	Nullable bool   `json:"nullable"`
+}
+
+// TableSchema represents metadata about a database table
+type TableSchema struct {
+	Columns  []ColumnSchema `json:"columns"`
+	RowCount int            `json:"row_count"`
+}
+
+// SchemaMetadata represents the complete schema information for a backup
+type SchemaMetadata struct {
+	Version string                 `json:"version"` // Schema version (e.g., "0.16.0")
+	Tables  map[string]TableSchema `json:"tables"`
+}
+
 // BackupMetadata represents metadata about a database backup
 type BackupMetadata struct {
 	Filename       string    `json:"filename"`
@@ -21,6 +62,7 @@ type BackupMetadata struct {
 // BackupData represents the complete backup data structure
 type BackupData struct {
 	Metadata                  BackupMetadata           `json:"metadata"`
+	Schema                    SchemaMetadata           `json:"schema"`
 	Users                     []map[string]interface{} `json:"users"`
 	Movements                 []map[string]interface{} `json:"movements"`
 	WODs                      []map[string]interface{} `json:"wods"`
@@ -65,5 +107,6 @@ type BackupService interface {
 	DeleteBackup(filename string, deletedByUserID int64) error
 
 	// RestoreBackup restores database from a backup file
-	RestoreBackup(filename string, restoredByUserID int64) error
+	// mode: "replace" (default) deletes all then inserts, "merge" updates existing, "skip" only inserts new
+	RestoreBackup(filename string, restoredByUserID int64, mode RestoreMode) (*RestoreResult, error)
 }

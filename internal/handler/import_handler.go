@@ -287,9 +287,10 @@ func (h *ImportHandler) ConfirmUserWorkoutImport(w http.ResponseWriter, r *http.
 
 	// Parse options from form data
 	skipDuplicates := r.FormValue("skip_duplicates") == "true"
+	updateDuplicates := r.FormValue("update_duplicates") == "true"
 
 	// Confirm import
-	result, err := h.importService.ConfirmUserWorkoutImport(jsonData, userID, skipDuplicates)
+	result, err := h.importService.ConfirmUserWorkoutImport(jsonData, userID, skipDuplicates, updateDuplicates)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Import failed: %v", err))
 		return

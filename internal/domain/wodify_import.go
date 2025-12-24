@@ -65,6 +65,7 @@ type WodifyWorkoutSummary struct {
 type WodifyImportResult struct {
 	WorkoutsCreated     int `json:"workouts_created"`
 	WorkoutsUpdated     int `json:"workouts_updated"`
+	WorkoutsSkipped     int `json:"workouts_skipped"`
 	MovementsCreated    int `json:"movements_created"`
 	WODsCreated         int `json:"wods_created"`
 	PerformancesCreated int `json:"performances_created"`

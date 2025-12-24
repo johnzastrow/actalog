@@ -347,14 +347,45 @@ func (s *BackupServiceImpl) DeleteBackup(filename string, deletedByUserID int64)
 	return nil
 }
 
+// idMappings holds old->new ID mappings for foreign key remapping during merge/skip restore
+type idMappings struct {
+	users         map[int64]int64
+	movements     map[int64]int64
+	wods          map[int64]int64
+	workouts      map[int64]int64
+	organizations map[int64]int64
+	userWorkouts  map[int64]int64
+}
+
+func newIDMappings() *idMappings {
+	return &idMappings{
+		users:         make(map[int64]int64),
+		movements:     make(map[int64]int64),
+		wods:          make(map[int64]int64),
+		workouts:      make(map[int64]int64),
+		organizations: make(map[int64]int64),
+		userWorkouts:  make(map[int64]int64),
+	}
+}
+
 // RestoreBackup restores database from a backup file
-func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int64) error {
+func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int64, mode domain.RestoreMode) (*domain.RestoreResult, error) {
+	// Default to replace mode if not specified
+	if mode == "" {
+		mode = domain.RestoreModeReplace
+	}
+
+	result := &domain.RestoreResult{
+		Mode:   mode,
+		Errors: []string{},
+	}
+
 	filePath := filepath.Join(s.backupDir, filename)
 
 	// Open ZIP file
 	zipReader, err := zip.OpenReader(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to open backup file: %w", err)
+		return nil, fmt.Errorf("failed to open backup file: %w", err)
 	}
 	defer zipReader.Close()
 
@@ -367,178 +398,591 @@ func (s *BackupServiceImpl) RestoreBackup(filename string, restoredByUserID int6
 		}
 	}
 	if dataFile == nil {
-		return fmt.Errorf("backup_data.json not found in backup file")
+		return nil, fmt.Errorf("backup_data.json not found in backup file")
 	}
 
 	// Read and parse backup data
 	rc, err := dataFile.Open()
 	if err != nil {
-		return fmt.Errorf("failed to open backup data file: %w", err)
+		return nil, fmt.Errorf("failed to open backup data file: %w", err)
 	}
 	defer rc.Close()
 
 	var backupData domain.BackupData
 	if err := json.NewDecoder(rc).Decode(&backupData); err != nil {
-		return fmt.Errorf("failed to parse backup data: %w", err)
+		return nil, fmt.Errorf("failed to parse backup data: %w", err)
 	}
 
 	// Start transaction
 	tx, err := s.db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	// Delete all existing data (in reverse order of foreign keys)
-	tables := []string{
-		// Child tables first (depend on other tables)
-		"notification_likes",
-		"notifications",
-		"organization_subscriptions",
-		"user_subscriptions",
-		"user_organizations",
-		"data_change_logs",
-		"user_workout_wods",
-		"user_workout_movements",
-		"workout_wods",
-		"workout_movements",
-		"user_workouts",
-		"workouts",
-		"wods",
-		"movements",
-		"organizations",
-		"email_verification_tokens",
-		"password_resets",
-		"refresh_tokens",
-		"user_settings",
-		"audit_logs",
-		"users",
-	}
-
-	for _, table := range tables {
-		// Check if table exists before trying to delete (database-agnostic)
-		exists, err := s.tableExists(tx, table)
-		if err != nil {
-			return fmt.Errorf("failed to check if table %s exists: %w", table, err)
+	// For replace mode, delete all existing data first
+	if mode == domain.RestoreModeReplace {
+		tables := []string{
+			"notification_likes", "notifications", "organization_subscriptions",
+			"user_subscriptions", "user_organizations", "data_change_logs",
+			"user_workout_wods", "user_workout_movements", "workout_wods",
+			"workout_movements", "user_workouts", "workouts", "wods",
+			"movements", "organizations", "email_verification_tokens",
+			"password_resets", "refresh_tokens", "user_settings", "audit_logs", "users",
 		}
 
-		// Only delete if table exists
-		if exists {
-			if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)); err != nil {
-				return fmt.Errorf("failed to clear table %s: %w", table, err)
+		for _, table := range tables {
+			exists, err := s.tableExists(tx, table)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check if table %s exists: %w", table, err)
+			}
+			if exists {
+				if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)); err != nil {
+					return nil, fmt.Errorf("failed to clear table %s: %w", table, err)
+				}
 			}
 		}
 	}
 
-	// Restore data (in correct order for foreign keys - parent tables first)
+	// Initialize ID mappings for merge/skip modes
+	mappings := newIDMappings()
+
+	// Restore data in correct order for foreign keys
 	// 1. Core tables with no foreign key dependencies
-	if err := s.restoreTable(tx, "users", backupData.Users); err != nil {
-		return fmt.Errorf("failed to restore users: %w", err)
+	if err := s.restoreTableWithMode(tx, "users", backupData.Users, backupData.Schema.Tables["users"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore users: %w", err)
 	}
-	if err := s.restoreTable(tx, "movements", backupData.Movements); err != nil {
-		return fmt.Errorf("failed to restore movements: %w", err)
+	if err := s.restoreTableWithMode(tx, "movements", backupData.Movements, backupData.Schema.Tables["movements"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "wods", backupData.WODs); err != nil {
-		return fmt.Errorf("failed to restore wods: %w", err)
+	if err := s.restoreTableWithMode(tx, "wods", backupData.WODs, backupData.Schema.Tables["wods"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore wods: %w", err)
 	}
-	if err := s.restoreTable(tx, "workouts", backupData.Workouts); err != nil {
-		return fmt.Errorf("failed to restore workouts: %w", err)
+	if err := s.restoreTableWithMode(tx, "workouts", backupData.Workouts, backupData.Schema.Tables["workouts"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore workouts: %w", err)
 	}
-	if err := s.restoreTable(tx, "organizations", backupData.Organizations); err != nil {
-		return fmt.Errorf("failed to restore organizations: %w", err)
+	if err := s.restoreTableWithMode(tx, "organizations", backupData.Organizations, backupData.Schema.Tables["organizations"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore organizations: %w", err)
 	}
+	result.TablesRestored = 5
 
 	// 2. Tables depending on core tables
-	if err := s.restoreTable(tx, "user_workouts", backupData.UserWorkouts); err != nil {
-		return fmt.Errorf("failed to restore user_workouts: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_workouts", backupData.UserWorkouts, backupData.Schema.Tables["user_workouts"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_workouts: %w", err)
 	}
-	if err := s.restoreTable(tx, "workout_movements", backupData.WorkoutMovements); err != nil {
-		return fmt.Errorf("failed to restore workout_movements: %w", err)
+	if err := s.restoreTableWithMode(tx, "workout_movements", backupData.WorkoutMovements, backupData.Schema.Tables["workout_movements"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore workout_movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "workout_wods", backupData.WorkoutWODs); err != nil {
-		return fmt.Errorf("failed to restore workout_wods: %w", err)
+	if err := s.restoreTableWithMode(tx, "workout_wods", backupData.WorkoutWODs, backupData.Schema.Tables["workout_wods"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore workout_wods: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_workout_movements", backupData.UserWorkoutMovements); err != nil {
-		return fmt.Errorf("failed to restore user_workout_movements: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_workout_movements", backupData.UserWorkoutMovements, backupData.Schema.Tables["user_workout_movements"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_workout_movements: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_workout_wods", backupData.UserWorkoutWODs); err != nil {
-		return fmt.Errorf("failed to restore user_workout_wods: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_workout_wods", backupData.UserWorkoutWODs, backupData.Schema.Tables["user_workout_wods"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_workout_wods: %w", err)
 	}
+	result.TablesRestored = 10
 
-	// 3. User-related tables
-	if err := s.restoreTable(tx, "refresh_tokens", backupData.RefreshTokens); err != nil {
-		return fmt.Errorf("failed to restore refresh_tokens: %w", err)
+	// 3. User-related tables (skip security tokens in merge/skip mode)
+	if mode == domain.RestoreModeReplace {
+		if err := s.restoreTableWithMode(tx, "refresh_tokens", backupData.RefreshTokens, backupData.Schema.Tables["refresh_tokens"], mode, mappings, result); err != nil {
+			return nil, fmt.Errorf("failed to restore refresh_tokens: %w", err)
+		}
+		if err := s.restoreTableWithMode(tx, "password_resets", backupData.PasswordResets, backupData.Schema.Tables["password_resets"], mode, mappings, result); err != nil {
+			return nil, fmt.Errorf("failed to restore password_resets: %w", err)
+		}
+		if err := s.restoreTableWithMode(tx, "email_verification_tokens", backupData.EmailVerificationTokens, backupData.Schema.Tables["email_verification_tokens"], mode, mappings, result); err != nil {
+			return nil, fmt.Errorf("failed to restore email_verification_tokens: %w", err)
+		}
 	}
-	if err := s.restoreTable(tx, "password_resets", backupData.PasswordResets); err != nil {
-		return fmt.Errorf("failed to restore password_resets: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_settings", backupData.UserSettings, backupData.Schema.Tables["user_settings"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_settings: %w", err)
 	}
-	if err := s.restoreTable(tx, "email_verification_tokens", backupData.EmailVerificationTokens); err != nil {
-		return fmt.Errorf("failed to restore email_verification_tokens: %w", err)
+	// Skip audit_logs and data_change_logs in merge/skip mode (append-only)
+	if mode == domain.RestoreModeReplace {
+		if err := s.restoreTableWithMode(tx, "audit_logs", backupData.AuditLogs, backupData.Schema.Tables["audit_logs"], mode, mappings, result); err != nil {
+			return nil, fmt.Errorf("failed to restore audit_logs: %w", err)
+		}
+		if err := s.restoreTableWithMode(tx, "data_change_logs", backupData.DataChangeLogs, backupData.Schema.Tables["data_change_logs"], mode, mappings, result); err != nil {
+			return nil, fmt.Errorf("failed to restore data_change_logs: %w", err)
+		}
 	}
-	if err := s.restoreTable(tx, "user_settings", backupData.UserSettings); err != nil {
-		return fmt.Errorf("failed to restore user_settings: %w", err)
-	}
-	if err := s.restoreTable(tx, "audit_logs", backupData.AuditLogs); err != nil {
-		return fmt.Errorf("failed to restore audit_logs: %w", err)
-	}
-	if err := s.restoreTable(tx, "data_change_logs", backupData.DataChangeLogs); err != nil {
-		return fmt.Errorf("failed to restore data_change_logs: %w", err)
-	}
+	result.TablesRestored = 16
 
 	// 4. Organization-related tables
-	if err := s.restoreTable(tx, "user_organizations", backupData.UserOrganizations); err != nil {
-		return fmt.Errorf("failed to restore user_organizations: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_organizations", backupData.UserOrganizations, backupData.Schema.Tables["user_organizations"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_organizations: %w", err)
 	}
-	if err := s.restoreTable(tx, "user_subscriptions", backupData.UserSubscriptions); err != nil {
-		return fmt.Errorf("failed to restore user_subscriptions: %w", err)
+	if err := s.restoreTableWithMode(tx, "user_subscriptions", backupData.UserSubscriptions, backupData.Schema.Tables["user_subscriptions"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore user_subscriptions: %w", err)
 	}
-	if err := s.restoreTable(tx, "organization_subscriptions", backupData.OrganizationSubscriptions); err != nil {
-		return fmt.Errorf("failed to restore organization_subscriptions: %w", err)
+	if err := s.restoreTableWithMode(tx, "organization_subscriptions", backupData.OrganizationSubscriptions, backupData.Schema.Tables["organization_subscriptions"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore organization_subscriptions: %w", err)
 	}
+	result.TablesRestored = 19
 
-	// 5. Notification tables (depend on users and organizations)
-	if err := s.restoreTable(tx, "notifications", backupData.Notifications); err != nil {
-		return fmt.Errorf("failed to restore notifications: %w", err)
+	// 5. Notification tables
+	if err := s.restoreTableWithMode(tx, "notifications", backupData.Notifications, backupData.Schema.Tables["notifications"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore notifications: %w", err)
 	}
-	if err := s.restoreTable(tx, "notification_likes", backupData.NotificationLikes); err != nil {
-		return fmt.Errorf("failed to restore notification_likes: %w", err)
+	if err := s.restoreTableWithMode(tx, "notification_likes", backupData.NotificationLikes, backupData.Schema.Tables["notification_likes"], mode, mappings, result); err != nil {
+		return nil, fmt.Errorf("failed to restore notification_likes: %w", err)
 	}
+	result.TablesRestored = 21
 
 	// Commit transaction
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	// Restore uploaded files
 	if err := s.restoreUploadsFromZip(zipReader); err != nil {
-		// Log error but don't fail the restore
-		fmt.Printf("Warning: failed to restore uploads: %v\n", err)
+		result.Errors = append(result.Errors, fmt.Sprintf("Warning: failed to restore uploads: %v", err))
 	}
 
-	// Create audit log (after restore, so it's in the new database)
-	details := fmt.Sprintf("Restored backup: %s (users: %d, workouts: %d, movements: %d, WODs: %d)",
-		filename,
-		backupData.Metadata.TotalUsers,
-		backupData.Metadata.TotalWorkouts,
-		backupData.Metadata.TotalMovements,
-		backupData.Metadata.TotalWODs,
-	)
+	// Create audit log
+	details := fmt.Sprintf("Restored backup: %s (mode: %s, created: %d, updated: %d, skipped: %d)",
+		filename, mode, result.RecordsCreated, result.RecordsUpdated, result.RecordsSkipped)
 	if err := s.auditLogRepo.Create(&domain.AuditLog{
 		UserID:    &restoredByUserID,
 		EventType: "backup_restored",
 		Details:   stringPtr(details),
 		CreatedAt: time.Now(),
 	}); err != nil {
-		// Log error but don't fail the restore
-		fmt.Printf("Warning: failed to create audit log: %v\n", err)
+		result.Errors = append(result.Errors, fmt.Sprintf("Warning: failed to create audit log: %v", err))
+	}
+
+	return result, nil
+}
+
+// restoreTableWithMode restores a table with the specified mode (replace/merge/skip)
+func (s *BackupServiceImpl) restoreTableWithMode(tx *sql.Tx, tableName string, data []map[string]interface{}, sourceSchema domain.TableSchema, mode domain.RestoreMode, mappings *idMappings, result *domain.RestoreResult) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	// For replace mode, use the original simple insert
+	if mode == domain.RestoreModeReplace {
+		return s.restoreTable(tx, tableName, data, sourceSchema)
+	}
+
+	// For merge/skip modes, use natural key matching
+	return s.mergeTable(tx, tableName, data, sourceSchema, mode, mappings, result)
+}
+
+// mergeTable handles merge/skip restore with natural key matching and ID remapping
+func (s *BackupServiceImpl) mergeTable(tx *sql.Tx, tableName string, data []map[string]interface{}, sourceSchema domain.TableSchema, mode domain.RestoreMode, mappings *idMappings, result *domain.RestoreResult) error {
+	// Check if table exists
+	exists, err := s.tableExists(tx, tableName)
+	if err != nil {
+		return fmt.Errorf("failed to check if table %s exists: %w", tableName, err)
+	}
+	if !exists {
+		fmt.Printf("Warning: table %s does not exist, skipping\n", tableName)
+		return nil
+	}
+
+	// Get target columns
+	targetColumns, err := s.getTableColumns(tx, tableName)
+	if err != nil {
+		return fmt.Errorf("failed to get columns for table %s: %w", tableName, err)
+	}
+
+	// Build column type map from source schema
+	columnTypes := make(map[string]string)
+	for _, col := range sourceSchema.Columns {
+		columnTypes[col.Name] = col.Type
+	}
+
+	// Process each row
+	for _, row := range data {
+		// Remap foreign key IDs
+		s.remapForeignKeys(tableName, row, mappings)
+
+		// Find existing record by natural key
+		existingID, found, err := s.findByNaturalKey(tx, tableName, row, mappings)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("Error finding %s: %v", tableName, err))
+			continue
+		}
+
+		oldID := s.getInt64FromRow(row, "id")
+
+		if found {
+			if mode == domain.RestoreModeSkip {
+				// Skip mode: just record the ID mapping and skip
+				s.recordIDMapping(tableName, oldID, existingID, mappings)
+				result.RecordsSkipped++
+				continue
+			}
+			// Merge mode: update existing record
+			if err := s.updateRecord(tx, tableName, existingID, row, targetColumns, columnTypes); err != nil {
+				result.Errors = append(result.Errors, fmt.Sprintf("Error updating %s: %v", tableName, err))
+				continue
+			}
+			s.recordIDMapping(tableName, oldID, existingID, mappings)
+			result.RecordsUpdated++
+		} else {
+			// Insert new record
+			newID, err := s.insertRecord(tx, tableName, row, targetColumns, columnTypes)
+			if err != nil {
+				result.Errors = append(result.Errors, fmt.Sprintf("Error inserting %s: %v", tableName, err))
+				continue
+			}
+			s.recordIDMapping(tableName, oldID, newID, mappings)
+			result.RecordsCreated++
+		}
+	}
+
+	// Reset sequence for PostgreSQL
+	if err := s.resetSequence(tx, tableName); err != nil {
+		fmt.Printf("Warning: sequence reset failed for %s: %v\n", tableName, err)
 	}
 
 	return nil
 }
 
-// exportAllTables exports all database tables to JSON
+// remapForeignKeys updates foreign key references in a row based on ID mappings
+func (s *BackupServiceImpl) remapForeignKeys(tableName string, row map[string]interface{}, mappings *idMappings) {
+	switch tableName {
+	case "user_workouts", "user_settings", "user_subscriptions", "notifications":
+		if userID := s.getInt64FromRow(row, "user_id"); userID > 0 {
+			if newID, ok := mappings.users[userID]; ok {
+				row["user_id"] = newID
+			}
+		}
+	case "workout_movements", "workout_wods":
+		if workoutID := s.getInt64FromRow(row, "workout_id"); workoutID > 0 {
+			if newID, ok := mappings.workouts[workoutID]; ok {
+				row["workout_id"] = newID
+			}
+		}
+		if movementID := s.getInt64FromRow(row, "movement_id"); movementID > 0 {
+			if newID, ok := mappings.movements[movementID]; ok {
+				row["movement_id"] = newID
+			}
+		}
+		if wodID := s.getInt64FromRow(row, "wod_id"); wodID > 0 {
+			if newID, ok := mappings.wods[wodID]; ok {
+				row["wod_id"] = newID
+			}
+		}
+	case "user_workout_movements":
+		if uwID := s.getInt64FromRow(row, "user_workout_id"); uwID > 0 {
+			if newID, ok := mappings.userWorkouts[uwID]; ok {
+				row["user_workout_id"] = newID
+			}
+		}
+		if movementID := s.getInt64FromRow(row, "movement_id"); movementID > 0 {
+			if newID, ok := mappings.movements[movementID]; ok {
+				row["movement_id"] = newID
+			}
+		}
+	case "user_workout_wods":
+		if uwID := s.getInt64FromRow(row, "user_workout_id"); uwID > 0 {
+			if newID, ok := mappings.userWorkouts[uwID]; ok {
+				row["user_workout_id"] = newID
+			}
+		}
+		if wodID := s.getInt64FromRow(row, "wod_id"); wodID > 0 {
+			if newID, ok := mappings.wods[wodID]; ok {
+				row["wod_id"] = newID
+			}
+		}
+	case "user_organizations":
+		if userID := s.getInt64FromRow(row, "user_id"); userID > 0 {
+			if newID, ok := mappings.users[userID]; ok {
+				row["user_id"] = newID
+			}
+		}
+		if orgID := s.getInt64FromRow(row, "organization_id"); orgID > 0 {
+			if newID, ok := mappings.organizations[orgID]; ok {
+				row["organization_id"] = newID
+			}
+		}
+	case "organization_subscriptions":
+		if orgID := s.getInt64FromRow(row, "organization_id"); orgID > 0 {
+			if newID, ok := mappings.organizations[orgID]; ok {
+				row["organization_id"] = newID
+			}
+		}
+	case "notification_likes":
+		if userID := s.getInt64FromRow(row, "user_id"); userID > 0 {
+			if newID, ok := mappings.users[userID]; ok {
+				row["user_id"] = newID
+			}
+		}
+	}
+
+	// Remap created_by for various tables
+	if createdBy := s.getInt64FromRow(row, "created_by"); createdBy > 0 {
+		if newID, ok := mappings.users[createdBy]; ok {
+			row["created_by"] = newID
+		}
+	}
+}
+
+// findByNaturalKey finds an existing record by its natural key
+func (s *BackupServiceImpl) findByNaturalKey(tx *sql.Tx, tableName string, row map[string]interface{}, mappings *idMappings) (int64, bool, error) {
+	var query string
+	var args []interface{}
+
+	switch tableName {
+	case "users":
+		email, _ := row["email"].(string)
+		if email == "" {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM users WHERE email = ?", 1)
+		args = []interface{}{email}
+
+	case "movements":
+		name, _ := row["name"].(string)
+		if name == "" {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM movements WHERE name = ?", 1)
+		args = []interface{}{name}
+
+	case "wods":
+		name, _ := row["name"].(string)
+		if name == "" {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM wods WHERE name = ?", 1)
+		args = []interface{}{name}
+
+	case "workouts":
+		name, _ := row["name"].(string)
+		if name == "" {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM workouts WHERE name = ?", 1)
+		args = []interface{}{name}
+
+	case "organizations":
+		name, _ := row["name"].(string)
+		if name == "" {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM organizations WHERE name = ?", 1)
+		args = []interface{}{name}
+
+	case "user_workouts":
+		userID := s.getInt64FromRow(row, "user_id")
+		workoutDate, _ := row["workout_date"].(string)
+		workoutName, _ := row["workout_name"].(string)
+		if userID == 0 || workoutDate == "" {
+			return 0, false, nil
+		}
+		if workoutName == "" {
+			query = s.buildQuery("SELECT id FROM user_workouts WHERE user_id = ? AND workout_date = ? AND workout_name IS NULL", 2)
+			args = []interface{}{userID, workoutDate}
+		} else {
+			query = s.buildQuery("SELECT id FROM user_workouts WHERE user_id = ? AND workout_date = ? AND workout_name = ?", 3)
+			args = []interface{}{userID, workoutDate, workoutName}
+		}
+
+	case "user_settings":
+		userID := s.getInt64FromRow(row, "user_id")
+		if userID == 0 {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM user_settings WHERE user_id = ?", 1)
+		args = []interface{}{userID}
+
+	case "user_organizations":
+		userID := s.getInt64FromRow(row, "user_id")
+		orgID := s.getInt64FromRow(row, "organization_id")
+		if userID == 0 || orgID == 0 {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM user_organizations WHERE user_id = ? AND organization_id = ?", 2)
+		args = []interface{}{userID, orgID}
+
+	case "user_subscriptions":
+		userID := s.getInt64FromRow(row, "user_id")
+		if userID == 0 {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM user_subscriptions WHERE user_id = ?", 1)
+		args = []interface{}{userID}
+
+	case "organization_subscriptions":
+		orgID := s.getInt64FromRow(row, "organization_id")
+		if orgID == 0 {
+			return 0, false, nil
+		}
+		query = s.buildQuery("SELECT id FROM organization_subscriptions WHERE organization_id = ?", 1)
+		args = []interface{}{orgID}
+
+	default:
+		// For tables without natural keys, always insert new
+		return 0, false, nil
+	}
+
+	var id int64
+	err := tx.QueryRow(query, args...).Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return id, true, nil
+}
+
+// buildQuery converts ? placeholders to $1, $2, etc. for PostgreSQL
+func (s *BackupServiceImpl) buildQuery(query string, paramCount int) string {
+	if s.dbDriver != "postgres" {
+		return query
+	}
+	for i := 1; i <= paramCount; i++ {
+		query = strings.Replace(query, "?", fmt.Sprintf("$%d", i), 1)
+	}
+	return query
+}
+
+// updateRecord updates an existing record
+func (s *BackupServiceImpl) updateRecord(tx *sql.Tx, tableName string, id int64, row map[string]interface{}, targetColumns []string, columnTypes map[string]string) error {
+	var setClauses []string
+	var values []interface{}
+	paramIndex := 1
+
+	for col, val := range row {
+		if col == "id" {
+			continue // Don't update ID
+		}
+		if !containsString(targetColumns, col) {
+			continue
+		}
+
+		colType := columnTypes[col]
+		convertedValue := s.convertValue(val, col, colType)
+
+		if s.dbDriver == "postgres" {
+			setClauses = append(setClauses, fmt.Sprintf("%s = $%d", col, paramIndex))
+		} else {
+			setClauses = append(setClauses, fmt.Sprintf("%s = ?", col))
+		}
+		values = append(values, convertedValue)
+		paramIndex++
+	}
+
+	if len(setClauses) == 0 {
+		return nil
+	}
+
+	values = append(values, id)
+	var query string
+	if s.dbDriver == "postgres" {
+		query = fmt.Sprintf("UPDATE %s SET %s WHERE id = $%d", tableName, joinStrings(setClauses, ", "), paramIndex)
+	} else {
+		query = fmt.Sprintf("UPDATE %s SET %s WHERE id = ?", tableName, joinStrings(setClauses, ", "))
+	}
+
+	_, err := tx.Exec(query, values...)
+	return err
+}
+
+// insertRecord inserts a new record and returns the new ID
+func (s *BackupServiceImpl) insertRecord(tx *sql.Tx, tableName string, row map[string]interface{}, targetColumns []string, columnTypes map[string]string) (int64, error) {
+	var columns []string
+	var placeholders []string
+	var values []interface{}
+	paramIndex := 1
+
+	for col, val := range row {
+		if col == "id" {
+			continue // Let database generate ID
+		}
+		if !containsString(targetColumns, col) {
+			continue
+		}
+
+		columns = append(columns, col)
+		colType := columnTypes[col]
+		convertedValue := s.convertValue(val, col, colType)
+
+		if s.dbDriver == "postgres" {
+			placeholders = append(placeholders, fmt.Sprintf("$%d", paramIndex))
+		} else {
+			placeholders = append(placeholders, "?")
+		}
+		values = append(values, convertedValue)
+		paramIndex++
+	}
+
+	if len(columns) == 0 {
+		return 0, nil
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		tableName, joinStrings(columns, ", "), joinStrings(placeholders, ", "))
+
+	// Get the new ID
+	if s.dbDriver == "postgres" {
+		query += " RETURNING id"
+		var newID int64
+		err := tx.QueryRow(query, values...).Scan(&newID)
+		return newID, err
+	}
+
+	result, err := tx.Exec(query, values...)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+// recordIDMapping stores the old->new ID mapping for a table
+func (s *BackupServiceImpl) recordIDMapping(tableName string, oldID, newID int64, mappings *idMappings) {
+	if oldID == 0 {
+		return
+	}
+	switch tableName {
+	case "users":
+		mappings.users[oldID] = newID
+	case "movements":
+		mappings.movements[oldID] = newID
+	case "wods":
+		mappings.wods[oldID] = newID
+	case "workouts":
+		mappings.workouts[oldID] = newID
+	case "organizations":
+		mappings.organizations[oldID] = newID
+	case "user_workouts":
+		mappings.userWorkouts[oldID] = newID
+	}
+}
+
+// getInt64FromRow extracts an int64 value from a row map
+func (s *BackupServiceImpl) getInt64FromRow(row map[string]interface{}, key string) int64 {
+	val, ok := row[key]
+	if !ok || val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case int64:
+		return v
+	case float64:
+		return int64(v)
+	case int:
+		return int64(v)
+	}
+	return 0
+}
+
+// exportAllTables exports all database tables to JSON with schema metadata
 func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 	data := &domain.BackupData{}
+
+	// Initialize schema metadata
+	data.Schema = domain.SchemaMetadata{
+		Version: version.Version(),
+		Tables:  make(map[string]domain.TableSchema),
+	}
 
 	tables := []struct {
 		name   string
@@ -586,9 +1030,125 @@ func (s *BackupServiceImpl) exportAllTables() (*domain.BackupData, error) {
 		}
 
 		*table.target = tableData
+
+		// Capture schema metadata for this table
+		tableSchema, err := s.getTableSchema(table.name)
+		if err != nil {
+			fmt.Printf("Warning: failed to get schema for table %s: %v\n", table.name, err)
+		} else {
+			tableSchema.RowCount = len(tableData)
+			data.Schema.Tables[table.name] = tableSchema
+		}
 	}
 
 	return data, nil
+}
+
+// getTableSchema retrieves column metadata for a table
+func (s *BackupServiceImpl) getTableSchema(tableName string) (domain.TableSchema, error) {
+	schema := domain.TableSchema{
+		Columns: []domain.ColumnSchema{},
+	}
+
+	var query string
+	switch s.dbDriver {
+	case "sqlite3":
+		query = fmt.Sprintf("PRAGMA table_info(%s)", tableName)
+	case "postgres":
+		query = `SELECT column_name, data_type, is_nullable
+			FROM information_schema.columns
+			WHERE table_schema = current_schema() AND table_name = $1
+			ORDER BY ordinal_position`
+	case "mysql":
+		query = `SELECT column_name, data_type, is_nullable
+			FROM information_schema.columns
+			WHERE table_schema = DATABASE() AND table_name = ?
+			ORDER BY ordinal_position`
+	default:
+		return schema, fmt.Errorf("unsupported database driver: %s", s.dbDriver)
+	}
+
+	var rows *sql.Rows
+	var err error
+	if s.dbDriver == "sqlite3" {
+		rows, err = s.db.Query(query)
+	} else {
+		rows, err = s.db.Query(query, tableName)
+	}
+	if err != nil {
+		return schema, fmt.Errorf("failed to query table schema: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var col domain.ColumnSchema
+
+		if s.dbDriver == "sqlite3" {
+			// SQLite PRAGMA returns: cid, name, type, notnull, dflt_value, pk
+			var cid int
+			var colType string
+			var notNull, pk int
+			var dfltValue sql.NullString
+			if err := rows.Scan(&cid, &col.Name, &colType, &notNull, &dfltValue, &pk); err != nil {
+				return schema, fmt.Errorf("failed to scan column info: %w", err)
+			}
+			col.Type = s.normalizeColumnType(colType)
+			col.Nullable = notNull == 0
+		} else {
+			// PostgreSQL and MySQL return: column_name, data_type, is_nullable
+			var dataType, isNullable string
+			if err := rows.Scan(&col.Name, &dataType, &isNullable); err != nil {
+				return schema, fmt.Errorf("failed to scan column info: %w", err)
+			}
+			col.Type = s.normalizeColumnType(dataType)
+			col.Nullable = strings.ToUpper(isNullable) == "YES"
+		}
+
+		schema.Columns = append(schema.Columns, col)
+	}
+
+	return schema, rows.Err()
+}
+
+// normalizeColumnType converts database-specific type names to generic types
+func (s *BackupServiceImpl) normalizeColumnType(dbType string) string {
+	dbType = strings.ToLower(dbType)
+
+	// Integer types
+	if strings.Contains(dbType, "int") || strings.Contains(dbType, "serial") {
+		return "integer"
+	}
+
+	// Boolean types
+	if strings.Contains(dbType, "bool") || dbType == "tinyint(1)" {
+		return "boolean"
+	}
+
+	// Float/decimal types
+	if strings.Contains(dbType, "float") || strings.Contains(dbType, "double") ||
+		strings.Contains(dbType, "decimal") || strings.Contains(dbType, "numeric") ||
+		strings.Contains(dbType, "real") {
+		return "float"
+	}
+
+	// Date types (without time)
+	if dbType == "date" {
+		return "date"
+	}
+
+	// Datetime types
+	if strings.Contains(dbType, "datetime") || strings.Contains(dbType, "timestamp") {
+		return "datetime"
+	}
+
+	// Text/string types
+	if strings.Contains(dbType, "char") || strings.Contains(dbType, "text") ||
+		strings.Contains(dbType, "varchar") || strings.Contains(dbType, "clob") {
+		return "string"
+	}
+
+	// Default to string for unknown types
+	return "string"
 }
 
 // isTableNotExistsError checks if the error is a "table does not exist" error
@@ -657,7 +1217,7 @@ func (s *BackupServiceImpl) rowsToMaps(rows *sql.Rows) ([]map[string]interface{}
 }
 
 // restoreTable restores a single table from backup data with schema evolution support
-func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}) error {
+func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []map[string]interface{}, sourceSchema domain.TableSchema) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -678,6 +1238,12 @@ func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []ma
 	targetColumns, err := s.getTableColumns(tx, tableName)
 	if err != nil {
 		return fmt.Errorf("failed to get columns for table %s: %w", tableName, err)
+	}
+
+	// Build column type map from source schema for type-aware conversion
+	columnTypes := make(map[string]string)
+	for _, col := range sourceSchema.Columns {
+		columnTypes[col.Name] = col.Type
 	}
 
 	// Restore each row
@@ -703,8 +1269,9 @@ func (s *BackupServiceImpl) restoreTable(tx *sql.Tx, tableName string, data []ma
 				placeholders = append(placeholders, "?")
 			}
 
-			// Convert value for database compatibility (e.g., boolean conversion)
-			convertedValue := s.convertValue(val, col)
+			// Convert value for database compatibility using schema metadata
+			colType := columnTypes[col]
+			convertedValue := s.convertValue(val, col, colType)
 			values = append(values, convertedValue)
 			i++
 		}
@@ -1429,27 +1996,27 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 
 	// List of tables with auto-increment id columns
 	tablesWithSequences := map[string]bool{
-		"users":                     true,
-		"movements":                 true,
-		"wods":                      true,
-		"workouts":                  true,
-		"user_workouts":             true,
-		"workout_movements":         true,
-		"workout_wods":              true,
-		"user_workout_movements":    true,
-		"user_workout_wods":         true,
-		"refresh_tokens":            true,
-		"password_resets":           true,
-		"email_verification_tokens": true,
-		"audit_logs":                true,
-		"user_settings":             true,
-		"data_change_logs":          true,
-		"organizations":             true,
-		"user_organizations":        true,
-		"user_subscriptions":        true,
+		"users":                      true,
+		"movements":                  true,
+		"wods":                       true,
+		"workouts":                   true,
+		"user_workouts":              true,
+		"workout_movements":          true,
+		"workout_wods":               true,
+		"user_workout_movements":     true,
+		"user_workout_wods":          true,
+		"refresh_tokens":             true,
+		"password_resets":            true,
+		"email_verification_tokens":  true,
+		"audit_logs":                 true,
+		"user_settings":              true,
+		"data_change_logs":           true,
+		"organizations":              true,
+		"user_organizations":         true,
+		"user_subscriptions":         true,
 		"organization_subscriptions": true,
-		"notifications":             true,
-		"notification_likes":        true,
+		"notifications":              true,
+		"notification_likes":         true,
 	}
 
 	if !tablesWithSequences[tableName] {
@@ -1472,48 +2039,60 @@ func (s *BackupServiceImpl) resetSequence(tx *sql.Tx, tableName string) error {
 }
 
 // convertValue converts a value from source database type to target database type
-func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) interface{} {
+// colType is the normalized type from schema metadata ("boolean", "datetime", "date", "integer", "float", "string")
+// If colType is empty, falls back to column name-based detection for backward compatibility
+func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, colType string) interface{} {
 	if val == nil {
 		return nil
 	}
 
-	// Boolean conversion for specific columns
-	booleanColumns := map[string]bool{
-		"is_pr":                 true,
-		"is_rx":                 true,
-		"is_template":           true,
-		"is_standard":           true,
-		"is_permanent_free":     true,
-		"email_verified":        true,
-		"account_disabled":      true,
-		"notifications_enabled": true,
+	// Determine if this is a boolean column (prefer schema type, fallback to column name)
+	isBoolean := colType == "boolean"
+	if !isBoolean && colType == "" {
+		// Fallback for older backups without schema metadata
+		booleanColumns := map[string]bool{
+			"is_pr":                 true,
+			"is_rx":                 true,
+			"is_template":           true,
+			"is_standard":           true,
+			"is_permanent_free":     true,
+			"email_verified":        true,
+			"account_disabled":      true,
+			"notifications_enabled": true,
+		}
+		isBoolean = booleanColumns[columnName]
 	}
 
-	// Datetime columns that may need conversion
-	datetimeColumns := map[string]bool{
-		"created_at":         true,
-		"updated_at":         true,
-		"last_login_at":      true,
-		"email_verified_at":  true,
-		"locked_at":          true,
-		"locked_until":       true,
-		"disabled_at":        true,
-		"expires_at":         true,
-		"used_at":            true,
-		"revoked_at":         true,
-		"workout_date":       true,
-		"birthday":           true,
-		"joined_at":          true,
-		"start_date":         true,
-		"end_date":           true,
-		"last_payment_date":  true,
-		"next_billing_date":  true,
-		"cancelled_at":       true,
-		"read_at":            true,
+	// Determine if this is a datetime/date column (prefer schema type, fallback to column name)
+	isDatetime := colType == "datetime" || colType == "date"
+	if !isDatetime && colType == "" {
+		// Fallback for older backups without schema metadata
+		datetimeColumns := map[string]bool{
+			"created_at":        true,
+			"updated_at":        true,
+			"last_login_at":     true,
+			"email_verified_at": true,
+			"locked_at":         true,
+			"locked_until":      true,
+			"disabled_at":       true,
+			"expires_at":        true,
+			"used_at":           true,
+			"revoked_at":        true,
+			"workout_date":      true,
+			"birthday":          true,
+			"joined_at":         true,
+			"start_date":        true,
+			"end_date":          true,
+			"last_payment_date": true,
+			"next_billing_date": true,
+			"cancelled_at":      true,
+			"read_at":           true,
+		}
+		isDatetime = datetimeColumns[columnName]
 	}
 
 	// Convert datetime values for MySQL (ISO 8601 to MySQL format)
-	if datetimeColumns[columnName] && s.dbDriver == "mysql" {
+	if isDatetime && s.dbDriver == "mysql" {
 		if strVal, ok := val.(string); ok && strVal != "" {
 			converted := s.convertDatetimeForMySQL(strVal)
 			if converted != "" {
@@ -1522,7 +2101,7 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string) int
 		}
 	}
 
-	if booleanColumns[columnName] {
+	if isBoolean {
 		// Convert between different boolean representations
 		switch v := val.(type) {
 		case int64:

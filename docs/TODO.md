@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-22
-> **Current Version:** 0.16.0-beta
+> **Last Updated:** 2025-12-23
+> **Current Version:** 0.17.0-beta (in development)
 
 ---
 
@@ -63,28 +63,28 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 ### High Priority
 
-#### Subscription System (Backend Complete - v0.14.0)
-- [ ] `[HIGH]` **Frontend Subscription Status Display**
-  - [ ] Add subscription status badge to user profile/settings
-  - [ ] Show expiration date for paid subscriptions
-  - [ ] Display "Permanent Free" badge for permanent users
-  - [ ] Show organization subscriptions the user benefits from
+#### Subscription System (Backend Complete - v0.14.0, Frontend Complete - v0.17.0)
+- [x] `[HIGH]` **Frontend Subscription Status Display**
+  - [x] Add subscription status badge to user profile/settings (SubscriptionStatusBadge.vue in SettingsView)
+  - [x] Show expiration date for paid subscriptions
+  - [x] Display "Permanent Free" badge for permanent users
+  - [x] Show organization subscriptions the user benefits from
 
-- [ ] `[HIGH]` **Admin Subscription Management UI**
-  - [ ] Admin panel for viewing all user subscriptions
-  - [ ] Admin panel for viewing all organization subscriptions
-  - [ ] Create subscription form (user/org selection, type, permanent free option)
-  - [ ] Mark subscription as paid button/action
-  - [ ] Cancel subscription with reason input
-  - [ ] View subscription history for users and organizations
+- [x] `[HIGH]` **Admin Subscription Management UI**
+  - [x] Admin panel for viewing all user subscriptions (AdminSubscriptionsView.vue)
+  - [x] Admin panel for viewing all organization subscriptions
+  - [x] Create subscription form (CreateSubscriptionDialog.vue)
+  - [x] Mark subscription as paid button/action (MarkAsPaidDialog.vue)
+  - [x] Cancel subscription with reason input (CancelSubscriptionDialog.vue)
+  - [x] View subscription history (SubscriptionDetailDialog.vue)
   - [ ] List expiring subscriptions (next 30 days)
   - [ ] List overdue/expired subscriptions
 
-- [ ] `[HIGH]` **Read-Only Mode UI Feedback**
-  - [ ] Graceful handling of HTTP 402 Payment Required responses
-  - [ ] Show "Subscription Expired" banner when in read-only mode
-  - [ ] Disable/hide create/edit buttons when subscription expired
-  - [ ] "Renew Subscription" call-to-action in banner
+- [x] `[HIGH]` **Read-Only Mode UI Feedback**
+  - [x] Graceful handling of HTTP 402 Payment Required responses (subscription.js store)
+  - [x] Show "Subscription Expired" banner when in read-only mode (SubscriptionExpiredBanner.vue in App.vue)
+  - [x] Disable/hide create/edit buttons when subscription expired
+  - [x] "Renew Subscription" call-to-action in banner
   - [ ] Toast notifications explaining why operations are blocked
 
 #### Front end Improvements
@@ -99,18 +99,26 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 
 #### Backend Improvements
-- [ ] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB). - - [ ] `[HIGH]` Determine if there is a way to automatically incorporate new tables or other structures into the backup without manual code changes. Does the JSON-based approach already handle this? If not, can we make it more dynamic?
-- [ ] `[HIGH]` **Duplicate Record Protection**
-  - [ ] All imports should protect against duplicate records (movements, wods, user workouts)
-  - [ ] A system restore should be able to detect and handle duplicates gracefully (skip, update, merge, etc), as well import an entire system backup from a prior or current version into a fresh installation of the current version. The goal is to be able to restore a backup from any prior version into the current version without data loss or duplication. Migrations should be applied as needed. The full .zip backup file should be usable for this purpose.
-- [ ] `[HIGH]` **Check for missing indexes** - review all database tables and ensure appropriate indexes exist for performance (especially on foreign keys and commonly queried fields)
+- [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB).
+  - [x] Added schema metadata to backup format for type-aware restoration
+  - [x] Implemented three restore modes: `replace`, `merge`, `skip`
+  - [x] Natural key matching (users by email, movements by name, etc.)
+  - [x] ID remapping for foreign key references during merge/skip
+- [x] `[HIGH]` **Duplicate Record Protection**
+  - [x] All imports now protect against duplicate records:
+    - [x] WOD Import: `skip_duplicates` and `update_duplicates` options
+    - [x] Movement Import: `skip_duplicates` and `update_duplicates` options
+    - [x] User Workout Import: Added `update_duplicates` option (v0.17.0)
+    - [x] Wodify Import: Added `skip_duplicates` and `update_duplicates` options (v0.17.0)
+  - [x] System restore supports merge/skip modes with natural key matching
+  - [x] API returns detailed results (records created, updated, skipped)
+- [x] `[HIGH]` **Check for missing indexes** - 83 indexes defined in migrations (foreign keys and commonly queried fields covered)
 - [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
 - [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
 - [ ] `[HIGH]` **Error Handling Consistency** - ensure all handlers and services have consistent error handling and return appropriate HTTP status codes
 - [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
 - [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
-- [ ] `[HIGH]` **Implement Rate Limiting** - add rate limiting middleware to protect against abuse (especially for public endpoints)
-- [ ] `[HIGH]` **Compliance** Ensure compliance with data privacy regulations (GDPR, CCPA) - review data handling practices and implement necessary features (data export, deletion requests, etc.)
+- [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
 ## Future Enhancements (Post-MVP)
 
@@ -147,9 +155,7 @@ These features can be added after the core frontend is complete:
 
 
 #### Testing Coverage
-- [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite created (14 test cases)
-  - Files: `internal/service/subscription_service_test.go`
-  - Status: 10/14 passing, minor assertion fixes needed (see Active Tasks)
+- [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite (internal/service/subscription_service_test.go)
 - [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
 - [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
 - [ ] `[HIGH]` **Add repository unit tests** - All repository implementations
@@ -162,17 +168,17 @@ These features can be added after the core frontend is complete:
   - [ ] Duplicate detection by email
   - [ ] Welcome emails with password reset
 
-- [ ] `[HIGH]` **Improved Duplicate Record Detection During Imports**
-  - [ ] Trap duplicate movements during import (check by name/description)
-  - [ ] Trap duplicate WODs during import (check by name/source)
-  - [ ] Trap duplicate user workouts during import (check by date/template/user)
-  - [ ] Enhanced preview workflow showing detected duplicates with options:
-    - Skip duplicates (keep existing)
-    - Update duplicates (overwrite existing)
-    - Import as new (allow duplicates)
-  - [ ] Detailed duplicate report in preview response
+- [x] `[HIGH]` **Improved Duplicate Record Detection During Imports** (v0.17.0)
+  - [x] Trap duplicate movements during import (check by name)
+  - [x] Trap duplicate WODs during import (check by name)
+  - [x] Trap duplicate user workouts during import (check by date/user/name)
+  - [x] Trap duplicate Wodify workouts during import (check by date)
+  - [x] Import options for handling duplicates:
+    - [x] Skip duplicates (keep existing) - `skip_duplicates=true`
+    - [x] Update duplicates (overwrite existing) - `update_duplicates=true`
+  - [x] Detailed import result with created/updated/skipped counts
   - [ ] Frontend UI to review and select action for each duplicate
-  - [ ] Batch duplicate resolution (apply same action to all)
+  - [ ] Batch duplicate resolution UI (apply same action to all)
 
 - [ ] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure**
   - [ ] Create admin tool to scan for existing duplicates in database
@@ -204,13 +210,14 @@ These features can be added after the core frontend is complete:
 
 
 #### Performance & Analytics
-- [X] `[MEDIUM]` **Calendar View** - Monthly view with workout dots
-- [X] `[MEDIUM]` **Timeline View** - Chronological workout history
+- [x] `[MEDIUM]` **Calendar View** - WorkoutCalendarView.vue with workout dots and month navigation
+- [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
+- [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
 - [ ] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
-- [ ] `[MEDIUM]` **Add backup_service tests**
+- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 20 test functions, 70+ test cases
 - [ ] `[MEDIUM]` **Add export/import_service tests**
 - [ ] `[MEDIUM]` **Add admin_handler tests**
 
@@ -249,7 +256,7 @@ These features can be added after the core frontend is complete:
 | File | Line | Description |
 |------|------|-------------|
 | `internal/service/workout_service.go` | 396 | Add proper authorization through workout template ownership |
-| `internal/service/import_service.go` | 587, 701 | Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange |
+| ~~`internal/service/import_service.go`~~ | ~~587, 701~~ | ~~Add duplicate detection using userWorkoutRepo.ListByUserAndDateRange~~ **DONE (v0.17.0)** |
 | `internal/handler/movement_handler.go` | 141 | Get user ID from context when auth middleware is added |
 
 ### Frontend (Vue)
