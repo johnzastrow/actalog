@@ -124,6 +124,37 @@ migrations/       # Database migrations
 - Validate input at handler layer
 - Configure `CORS_ORIGINS` in `.env`
 
+### Credential Scanning (CRITICAL)
+
+**Before EVERY commit and push, scan for credentials:**
+
+1. **Never commit files containing:**
+   - API keys, JWT secrets, or tokens
+   - Database passwords or connection strings with credentials
+   - Private keys (`.pem`, `.key` files)
+   - `.env` files with real credentials (use `.env.example` instead)
+   - Hardcoded passwords in source code
+
+2. **Files to always check before committing:**
+   - `.env`, `.env.*` (except `.env.example`)
+   - `configs/`, `config.*` files
+   - Any JSON/YAML with "password", "secret", "key", "token" fields
+   - Docker compose files with environment variables
+
+3. **Scan commands to run before pushing:**
+   ```bash
+   # Check for common credential patterns in staged files
+   git diff --cached --name-only | xargs grep -l -E "(password|secret|api_key|token|credential).*=" 2>/dev/null
+
+   # Check for .env files being tracked
+   git ls-files | grep -E "^\.env$|\.env\.[^e]"
+   ```
+
+4. **If credentials are accidentally committed:**
+   - Do NOT push to remote
+   - Remove from history with `git reset` or `git filter-branch`
+   - Rotate/regenerate the exposed credentials immediately
+
 ## UI Design
 
 Colors: Primary `#00bcd4`, Header `#2c3e50`, Background `#f5f7fa`, PR/Action `#ffc107`. Layout: Fixed header 56px, bottom nav 70px.

@@ -30,10 +30,19 @@ dist/
 build/
 .cache/
 
-# Environment variables
+# Environment variables and credentials
 .env
 .env.local
 .env.*.local
+*.pem
+!*example*.pem
+!web/certs/localhost*.pem
+*.key
+!*example*.key
+!web/certs/localhost*.key
+**/secrets/
+credentials.json
+service-account*.json
 
 # Database files
 *.db
@@ -47,6 +56,10 @@ build/
 *.swo
 *~
 .DS_Store
+
+# Claude Code local settings (may contain tokens/credentials)
+.claude/settings.local.json
+**/settings.local.json
 
 # Logs
 *.log
