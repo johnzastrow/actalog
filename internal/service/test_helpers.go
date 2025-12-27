@@ -1762,3 +1762,106 @@ func (m *mockUserSettingsRepo) Delete(userID int64) error {
 	delete(m.settings, userID)
 	return nil
 }
+
+// Mock WorkoutWODRepository
+type mockWorkoutWODRepo struct {
+	workoutWODs map[int64]*domain.WorkoutWOD
+	nextID      int64
+	createError error
+	deleteError error
+}
+
+func newMockWorkoutWODRepo() *mockWorkoutWODRepo {
+	return &mockWorkoutWODRepo{
+		workoutWODs: make(map[int64]*domain.WorkoutWOD),
+		nextID:      1,
+	}
+}
+
+func (m *mockWorkoutWODRepo) Create(workoutWOD *domain.WorkoutWOD) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	workoutWOD.ID = m.nextID
+	m.nextID++
+	workoutWOD.CreatedAt = time.Now()
+	workoutWOD.UpdatedAt = time.Now()
+	m.workoutWODs[workoutWOD.ID] = workoutWOD
+	return nil
+}
+
+func (m *mockWorkoutWODRepo) GetByID(id int64) (*domain.WorkoutWOD, error) {
+	ww, ok := m.workoutWODs[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return ww, nil
+}
+
+func (m *mockWorkoutWODRepo) ListByWorkout(workoutID int64) ([]*domain.WorkoutWOD, error) {
+	var result []*domain.WorkoutWOD
+	for _, ww := range m.workoutWODs {
+		if ww.WorkoutID == workoutID {
+			result = append(result, ww)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWorkoutWODRepo) ListByWorkoutWithDetails(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
+	var result []*domain.WorkoutWODWithDetails
+	for _, ww := range m.workoutWODs {
+		if ww.WorkoutID == workoutID {
+			result = append(result, &domain.WorkoutWODWithDetails{
+				WorkoutWOD:     *ww,
+				WODName:        "Test WOD",
+				WODType:        "AMRAP",
+				WODRegime:      "CrossFit",
+				WODScoreType:   "rounds_reps",
+				WODDescription: "Test description",
+			})
+		}
+	}
+	return result, nil
+}
+
+func (m *mockWorkoutWODRepo) Update(workoutWOD *domain.WorkoutWOD) error {
+	if _, ok := m.workoutWODs[workoutWOD.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	workoutWOD.UpdatedAt = time.Now()
+	m.workoutWODs[workoutWOD.ID] = workoutWOD
+	return nil
+}
+
+func (m *mockWorkoutWODRepo) Delete(id int64) error {
+	if m.deleteError != nil {
+		return m.deleteError
+	}
+	if _, ok := m.workoutWODs[id]; !ok {
+		return sql.ErrNoRows
+	}
+	delete(m.workoutWODs, id)
+	return nil
+}
+
+func (m *mockWorkoutWODRepo) DeleteByWorkout(workoutID int64) error {
+	if m.deleteError != nil {
+		return m.deleteError
+	}
+	for id, ww := range m.workoutWODs {
+		if ww.WorkoutID == workoutID {
+			delete(m.workoutWODs, id)
+		}
+	}
+	return nil
+}
+
+func (m *mockWorkoutWODRepo) TogglePR(id int64) error {
+	ww, ok := m.workoutWODs[id]
+	if !ok {
+		return sql.ErrNoRows
+	}
+	ww.IsPR = !ww.IsPR
+	return nil
+}
