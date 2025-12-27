@@ -9,7 +9,7 @@ import (
 
 func TestNewWorkoutTemplateService(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -22,7 +22,7 @@ func TestNewWorkoutTemplateService(t *testing.T) {
 
 func TestWorkoutTemplateService_Create(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -62,7 +62,7 @@ func TestWorkoutTemplateService_Create(t *testing.T) {
 
 func TestWorkoutTemplateService_Create_WithoutMovementsOrWODs(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -83,7 +83,7 @@ func TestWorkoutTemplateService_Create_WithoutMovementsOrWODs(t *testing.T) {
 
 func TestWorkoutTemplateService_Create_WithoutAuditLogRepo(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -100,7 +100,7 @@ func TestWorkoutTemplateService_Create_WithoutAuditLogRepo(t *testing.T) {
 
 func TestWorkoutTemplateService_GetByID(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -127,7 +127,7 @@ func TestWorkoutTemplateService_GetByID(t *testing.T) {
 func TestWorkoutTemplateService_GetByID_NotFound(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
 	workoutRepo.getByIDError = sql.ErrNoRows
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -140,7 +140,7 @@ func TestWorkoutTemplateService_GetByID_NotFound(t *testing.T) {
 
 func TestWorkoutTemplateService_GetByIDWithDetails(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -162,7 +162,7 @@ func TestWorkoutTemplateService_GetByIDWithDetails(t *testing.T) {
 
 func TestWorkoutTemplateService_ListByUser(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -186,7 +186,7 @@ func TestWorkoutTemplateService_ListByUser(t *testing.T) {
 
 func TestWorkoutTemplateService_ListStandard(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -209,7 +209,7 @@ func TestWorkoutTemplateService_ListStandard(t *testing.T) {
 
 func TestWorkoutTemplateService_Update(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -246,7 +246,7 @@ func TestWorkoutTemplateService_Update(t *testing.T) {
 
 func TestWorkoutTemplateService_Update_NotOwner(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -266,7 +266,7 @@ func TestWorkoutTemplateService_Update_NotOwner(t *testing.T) {
 func TestWorkoutTemplateService_Update_NotFound(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
 	workoutRepo.getByIDError = sql.ErrNoRows
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -279,7 +279,7 @@ func TestWorkoutTemplateService_Update_NotFound(t *testing.T) {
 
 func TestWorkoutTemplateService_Delete(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 	auditLogRepo := newMockAuditLogRepo()
 
@@ -312,7 +312,7 @@ func TestWorkoutTemplateService_Delete(t *testing.T) {
 
 func TestWorkoutTemplateService_Delete_NotOwner(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -332,7 +332,7 @@ func TestWorkoutTemplateService_Delete_NotOwner(t *testing.T) {
 func TestWorkoutTemplateService_Delete_NotFound(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
 	workoutRepo.getByIDError = sql.ErrNoRows
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -345,7 +345,7 @@ func TestWorkoutTemplateService_Delete_NotFound(t *testing.T) {
 
 func TestWorkoutTemplateService_ListAllUserCreated(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -372,7 +372,7 @@ func TestWorkoutTemplateService_ListAllUserCreated(t *testing.T) {
 
 func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfo(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -393,7 +393,7 @@ func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfo(t *testing.T) {
 
 func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfoFiltered(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -412,7 +412,7 @@ func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfoFiltered(t *testin
 
 func TestWorkoutTemplateService_CopyToStandard(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -440,7 +440,7 @@ func TestWorkoutTemplateService_CopyToStandard(t *testing.T) {
 
 func TestWorkoutTemplateService_CopyToStandard_EmptyName(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
@@ -459,7 +459,7 @@ func TestWorkoutTemplateService_CopyToStandard_EmptyName(t *testing.T) {
 
 func TestWorkoutTemplateService_CopyToStandard_NotFound(t *testing.T) {
 	workoutRepo := newMockWorkoutRepo()
-	workoutMovementRepo := &mockWorkoutMovementRepo{}
+	workoutMovementRepo := newMockWorkoutMovementRepo()
 	workoutWODRepo := newMockWorkoutWODRepo()
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)

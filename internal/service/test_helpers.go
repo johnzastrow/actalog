@@ -267,6 +267,9 @@ func (m *mockWorkoutRepo) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsa
 	if err != nil {
 		return nil, err
 	}
+	if w == nil {
+		return nil, nil
+	}
 	return &domain.WorkoutWithUsageStats{
 		Workout:    *w,
 		TimesUsed:  0,
@@ -322,18 +325,43 @@ func (m *mockWorkoutRepo) CopyToStandard(id int64, newName string) (*domain.Work
 }
 
 // Mock WorkoutMovementRepository
-type mockWorkoutMovementRepo struct{}
+type mockWorkoutMovementRepo struct {
+	movements  map[int64]*domain.WorkoutMovement
+	nextID     int64
+	maxWeights map[int64]map[int64]*float64 // userID -> movementID -> maxWeight
+}
+
+func newMockWorkoutMovementRepo() *mockWorkoutMovementRepo {
+	return &mockWorkoutMovementRepo{
+		movements:  make(map[int64]*domain.WorkoutMovement),
+		nextID:     1,
+		maxWeights: make(map[int64]map[int64]*float64),
+	}
+}
 
 func (m *mockWorkoutMovementRepo) Create(workoutMovement *domain.WorkoutMovement) error {
+	workoutMovement.ID = m.nextID
+	m.nextID++
+	m.movements[workoutMovement.ID] = workoutMovement
 	return nil
 }
 
 func (m *mockWorkoutMovementRepo) GetByID(id int64) (*domain.WorkoutMovement, error) {
-	return nil, sql.ErrNoRows
+	wm, ok := m.movements[id]
+	if !ok {
+		return nil, nil
+	}
+	return wm, nil
 }
 
 func (m *mockWorkoutMovementRepo) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutMovement, error) {
-	return []*domain.WorkoutMovement{}, nil
+	var result []*domain.WorkoutMovement
+	for _, wm := range m.movements {
+		if wm.WorkoutID == workoutID {
+			result = append(result, wm)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockWorkoutMovementRepo) GetByUserIDAndMovementID(userID, movementID int64, limit int) ([]*domain.WorkoutMovement, error) {
@@ -341,14 +369,27 @@ func (m *mockWorkoutMovementRepo) GetByUserIDAndMovementID(userID, movementID in
 }
 
 func (m *mockWorkoutMovementRepo) Update(wm *domain.WorkoutMovement) error {
+	if _, ok := m.movements[wm.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.movements[wm.ID] = wm
 	return nil
 }
 
 func (m *mockWorkoutMovementRepo) Delete(id int64) error {
+	if _, ok := m.movements[id]; !ok {
+		return sql.ErrNoRows
+	}
+	delete(m.movements, id)
 	return nil
 }
 
 func (m *mockWorkoutMovementRepo) DeleteByWorkoutID(workoutID int64) error {
+	for id, wm := range m.movements {
+		if wm.WorkoutID == workoutID {
+			delete(m.movements, id)
+		}
+	}
 	return nil
 }
 
@@ -357,19 +398,30 @@ func (m *mockWorkoutMovementRepo) GetPersonalRecords(userID int64) ([]*domain.Pe
 }
 
 func (m *mockWorkoutMovementRepo) GetMaxWeightForMovement(userID, movementID int64) (*float64, error) {
+	if userWeights, ok := m.maxWeights[userID]; ok {
+		if weight, ok := userWeights[movementID]; ok {
+			return weight, nil
+		}
+	}
 	return nil, nil
 }
 
 func (m *mockWorkoutMovementRepo) GetPRMovements(userID int64, limit int) ([]*domain.WorkoutMovement, error) {
-	return []*domain.WorkoutMovement{}, nil
+	var result []*domain.WorkoutMovement
+	for _, wm := range m.movements {
+		if wm.IsPR {
+			result = append(result, wm)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockWorkoutMovementRepo) ListByWorkout(workoutID int64) ([]*domain.WorkoutMovement, error) {
-	return []*domain.WorkoutMovement{}, nil
+	return m.GetByWorkoutID(workoutID)
 }
 
 func (m *mockWorkoutMovementRepo) DeleteByWorkout(workoutID int64) error {
-	return nil
+	return m.DeleteByWorkoutID(workoutID)
 }
 
 // Mock UserWorkoutMovementRepository
@@ -1044,34 +1096,78 @@ func (m *mockAuditLogRepo) Delete(id int64) error {
 }
 
 // Mock MovementRepository
-type mockMovementRepo struct{}
+type mockMovementRepo struct {
+	movements map[int64]*domain.Movement
+	nextID    int64
+}
+
+func newMockMovementRepo() *mockMovementRepo {
+	return &mockMovementRepo{
+		movements: make(map[int64]*domain.Movement),
+		nextID:    1,
+	}
+}
 
 func (m *mockMovementRepo) Create(movement *domain.Movement) error {
+	movement.ID = m.nextID
+	m.nextID++
+	m.movements[movement.ID] = movement
 	return nil
 }
 
 func (m *mockMovementRepo) GetByID(id int64) (*domain.Movement, error) {
-	return nil, sql.ErrNoRows
+	movement, ok := m.movements[id]
+	if !ok {
+		return nil, nil
+	}
+	return movement, nil
 }
 
 func (m *mockMovementRepo) GetByName(name string) (*domain.Movement, error) {
-	return nil, sql.ErrNoRows
+	for _, movement := range m.movements {
+		if movement.Name == name {
+			return movement, nil
+		}
+	}
+	return nil, nil
 }
 
 func (m *mockMovementRepo) ListAll() ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
+	var result []*domain.Movement
+	for _, m := range m.movements {
+		result = append(result, m)
+	}
+	return result, nil
 }
 
 func (m *mockMovementRepo) ListStandard() ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
+	var result []*domain.Movement
+	for _, movement := range m.movements {
+		if movement.IsStandard {
+			result = append(result, movement)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockMovementRepo) ListByUser(userID int64) ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
+	var result []*domain.Movement
+	for _, movement := range m.movements {
+		if movement.CreatedBy != nil && *movement.CreatedBy == userID {
+			result = append(result, movement)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockMovementRepo) ListAllUserCreated() ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
+	var result []*domain.Movement
+	for _, movement := range m.movements {
+		if movement.CreatedBy != nil {
+			result = append(result, movement)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockMovementRepo) ListAllUserCreatedWithUserInfo() ([]*domain.MovementWithCreator, error) {
@@ -1083,23 +1179,54 @@ func (m *mockMovementRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset 
 }
 
 func (m *mockMovementRepo) CountAllUserCreated() (int64, error) {
-	return 0, nil
+	count := int64(0)
+	for _, movement := range m.movements {
+		if movement.CreatedBy != nil {
+			count++
+		}
+	}
+	return count, nil
 }
 
 func (m *mockMovementRepo) Update(movement *domain.Movement) error {
+	if _, ok := m.movements[movement.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.movements[movement.ID] = movement
 	return nil
 }
 
 func (m *mockMovementRepo) Delete(id int64) error {
+	if _, ok := m.movements[id]; !ok {
+		return sql.ErrNoRows
+	}
+	delete(m.movements, id)
 	return nil
 }
 
 func (m *mockMovementRepo) Search(query string, limit int) ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
+	var result []*domain.Movement
+	for _, movement := range m.movements {
+		if matchString(movement.Name, query) {
+			result = append(result, movement)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockMovementRepo) CopyToStandard(id int64, newName string) (*domain.Movement, error) {
-	return nil, nil
+	movement, ok := m.movements[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	newMovement := &domain.Movement{
+		Name:       newName,
+		Type:       movement.Type,
+		IsStandard: true,
+		CreatedBy:  nil,
+	}
+	_ = m.Create(newMovement)
+	return newMovement, nil
 }
 
 // Mock UserRepository
