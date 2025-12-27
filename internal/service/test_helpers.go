@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -956,21 +957,23 @@ func (m *mockSubscriptionAccessRepo) CheckUserAccess(userID int64) (*domain.Subs
 
 // Mock OrganizationRepository
 type mockOrganizationRepo struct {
-	organizations map[int64]*domain.Organization
-	nextID        int64
+	organizations     map[int64]*domain.Organization
+	userOrganizations map[int64]map[int64]string // userID -> orgID -> role
+	nextID            int64
 }
 
 func newMockOrganizationRepo() *mockOrganizationRepo {
 	return &mockOrganizationRepo{
-		organizations: make(map[int64]*domain.Organization),
-		nextID:        1,
+		organizations:     make(map[int64]*domain.Organization),
+		userOrganizations: make(map[int64]map[int64]string),
+		nextID:            1,
 	}
 }
 
 func (m *mockOrganizationRepo) GetByID(id int64) (*domain.Organization, error) {
 	org, ok := m.organizations[id]
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, nil // Service expects nil, nil for not found
 	}
 	return org, nil
 }
@@ -1329,6 +1332,12 @@ func (m *mockOrganizationRepo) Update(org *domain.Organization) error {
 }
 
 func (m *mockOrganizationRepo) Delete(id int64) error {
+	// Check if any users are assigned
+	for _, orgMap := range m.userOrganizations {
+		if _, ok := orgMap[id]; ok {
+			return errors.New("cannot delete organization: users are still assigned")
+		}
+	}
 	delete(m.organizations, id)
 	return nil
 }
@@ -1342,15 +1351,30 @@ func (m *mockOrganizationRepo) List(limit, offset int) ([]*domain.Organization, 
 }
 
 func (m *mockOrganizationRepo) AddUserToOrganization(userID, orgID int64, role string) error {
+	if m.userOrganizations[userID] == nil {
+		m.userOrganizations[userID] = make(map[int64]string)
+	}
+	m.userOrganizations[userID][orgID] = role
 	return nil
 }
 
 func (m *mockOrganizationRepo) RemoveUserFromOrganization(userID, orgID int64) error {
+	if m.userOrganizations[userID] != nil {
+		delete(m.userOrganizations[userID], orgID)
+	}
 	return nil
 }
 
 func (m *mockOrganizationRepo) GetUserOrganizations(userID int64) ([]*domain.Organization, error) {
-	return []*domain.Organization{}, nil
+	var orgs []*domain.Organization
+	if orgMap, ok := m.userOrganizations[userID]; ok {
+		for orgID := range orgMap {
+			if org, ok := m.organizations[orgID]; ok {
+				orgs = append(orgs, org)
+			}
+		}
+	}
+	return orgs, nil
 }
 
 func (m *mockOrganizationRepo) GetOrganizationUsers(orgID int64) ([]*domain.User, error) {
@@ -1358,6 +1382,10 @@ func (m *mockOrganizationRepo) GetOrganizationUsers(orgID int64) ([]*domain.User
 }
 
 func (m *mockOrganizationRepo) IsUserInOrganization(userID, orgID int64) (bool, error) {
+	if orgMap, ok := m.userOrganizations[userID]; ok {
+		_, inOrg := orgMap[orgID]
+		return inOrg, nil
+	}
 	return false, nil
 }
 
@@ -1427,13 +1455,17 @@ func (m *mockOrganizationRepo) GetByName(name string) (*domain.Organization, err
 			return org, nil
 		}
 	}
-	return nil, sql.ErrNoRows
+	return nil, nil // Service expects nil, nil for not found
 }
 
 func (m *mockOrganizationRepo) GetUserOrganizationIDs(userID int64) ([]int64, error) {
-	// For mock purposes, return empty slice
-	// Real implementation would query organization membership
-	return []int64{}, nil
+	var ids []int64
+	if orgMap, ok := m.userOrganizations[userID]; ok {
+		for orgID := range orgMap {
+			ids = append(ids, orgID)
+		}
+	}
+	return ids, nil
 }
 
 // Add missing ResetFailedAttempts to mockUserRepo (different signature)
