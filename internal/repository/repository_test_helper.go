@@ -73,5 +73,32 @@ func getTestAdditionalSchema() string {
 	);
 	CREATE INDEX IF NOT EXISTS idx_notification_likes_notification_id ON notification_likes(notification_id);
 	CREATE INDEX IF NOT EXISTS idx_notification_likes_user_id ON notification_likes(user_id);
+
+	-- Organizations table (from migration v0.5.0)
+	CREATE TABLE IF NOT EXISTS organizations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		description TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_organizations_name ON organizations(name);
+
+	-- User organizations junction table (from migration v0.5.1)
+	CREATE TABLE IF NOT EXISTS user_organizations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		organization_id INTEGER NOT NULL,
+		role TEXT DEFAULT 'member',
+		joined_at DATETIME NOT NULL,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT,
+		UNIQUE(user_id, organization_id)
+	);
+	CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
+	CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);
 	`
 }
