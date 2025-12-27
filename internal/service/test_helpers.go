@@ -1717,3 +1717,48 @@ func (m *mockNotificationRepo) Delete(id int64) error {
 func (m *mockNotificationRepo) DeleteOlderThan(before time.Time) (int64, error) {
 	return 0, nil
 }
+
+// Mock UserSettingsRepository
+type mockUserSettingsRepo struct {
+	settings    map[int64]*domain.UserSettings
+	createError error
+	updateError error
+}
+
+func newMockUserSettingsRepo() *mockUserSettingsRepo {
+	return &mockUserSettingsRepo{
+		settings: make(map[int64]*domain.UserSettings),
+	}
+}
+
+func (m *mockUserSettingsRepo) GetByUserID(userID int64) (*domain.UserSettings, error) {
+	settings, ok := m.settings[userID]
+	if !ok {
+		return nil, nil // Not found returns nil, nil
+	}
+	return settings, nil
+}
+
+func (m *mockUserSettingsRepo) Create(settings *domain.UserSettings) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	settings.CreatedAt = time.Now()
+	settings.UpdatedAt = time.Now()
+	m.settings[settings.UserID] = settings
+	return nil
+}
+
+func (m *mockUserSettingsRepo) Update(settings *domain.UserSettings) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
+	settings.UpdatedAt = time.Now()
+	m.settings[settings.UserID] = settings
+	return nil
+}
+
+func (m *mockUserSettingsRepo) Delete(userID int64) error {
+	delete(m.settings, userID)
+	return nil
+}
