@@ -100,5 +100,73 @@ func getTestAdditionalSchema() string {
 	CREATE INDEX IF NOT EXISTS idx_user_orgs_user_id ON user_organizations(user_id);
 	CREATE INDEX IF NOT EXISTS idx_user_orgs_org_id ON user_organizations(organization_id);
 	CREATE INDEX IF NOT EXISTS idx_user_orgs_lookup ON user_organizations(user_id, organization_id);
+
+	-- Data change logs table (from migration v0.11.1)
+	CREATE TABLE IF NOT EXISTS data_change_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		entity_type TEXT NOT NULL,
+		entity_id INTEGER NOT NULL,
+		entity_name TEXT NOT NULL,
+		operation TEXT NOT NULL,
+		user_id INTEGER NOT NULL,
+		user_email TEXT NOT NULL,
+		before_values TEXT,
+		after_values TEXT,
+		ip_address TEXT,
+		user_agent TEXT,
+		created_at DATETIME NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_data_change_logs_entity ON data_change_logs(entity_type, entity_id);
+	CREATE INDEX IF NOT EXISTS idx_data_change_logs_user_id ON data_change_logs(user_id);
+	CREATE INDEX IF NOT EXISTS idx_data_change_logs_created_at ON data_change_logs(created_at);
+	CREATE INDEX IF NOT EXISTS idx_data_change_logs_operation ON data_change_logs(operation);
+
+	-- User subscriptions table (from migration v0.14.0)
+	CREATE TABLE IF NOT EXISTS user_subscriptions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+		status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+		is_permanent_free INTEGER NOT NULL DEFAULT 0,
+		start_date DATETIME NOT NULL,
+		end_date DATETIME,
+		last_payment_date DATETIME,
+		next_billing_date DATETIME,
+		cancelled_at DATETIME,
+		cancelled_reason TEXT,
+		notes TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		created_by_user_id INTEGER,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status);
+	CREATE INDEX IF NOT EXISTS idx_user_subscriptions_next_billing ON user_subscriptions(next_billing_date);
+
+	-- Organization subscriptions table (from migration v0.14.0)
+	CREATE TABLE IF NOT EXISTS organization_subscriptions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		subscription_type TEXT NOT NULL CHECK(subscription_type IN ('free', 'monthly', 'annual')),
+		status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'cancelled')),
+		is_permanent_free INTEGER NOT NULL DEFAULT 0,
+		start_date DATETIME NOT NULL,
+		end_date DATETIME,
+		last_payment_date DATETIME,
+		next_billing_date DATETIME,
+		cancelled_at DATETIME,
+		cancelled_reason TEXT,
+		notes TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		created_by_user_id INTEGER,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
+	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_status ON organization_subscriptions(status);
+	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
 	`
 }
