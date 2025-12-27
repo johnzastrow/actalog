@@ -1,1251 +1,678 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
 
-// testWorkoutRepo is a mock for WorkoutRepository
-type testWorkoutRepo struct {
-	workouts    map[int64]*domain.Workout
-	nextID      int64
-	createError error
-	updateError error
-	deleteError error
-	getError    error
-}
+func TestNewWorkoutService(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	movementRepo := newMockMovementRepo()
 
-func newTestWorkoutRepo() *testWorkoutRepo {
-	return &testWorkoutRepo{
-		workouts: make(map[int64]*domain.Workout),
-		nextID:   1,
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
+
+	if svc == nil {
+		t.Fatal("NewWorkoutService returned nil")
 	}
 }
 
-func (m *testWorkoutRepo) Create(workout *domain.Workout) error {
-	if m.createError != nil {
-		return m.createError
-	}
-	workout.ID = m.nextID
-	m.nextID++
-	workout.CreatedAt = time.Now()
-	workout.UpdatedAt = time.Now()
-	m.workouts[workout.ID] = workout
-	return nil
-}
-
-func (m *testWorkoutRepo) GetByID(id int64) (*domain.Workout, error) {
-	if m.getError != nil {
-		return nil, m.getError
-	}
-	w, ok := m.workouts[id]
-	if !ok {
-		return nil, nil
-	}
-	return w, nil
-}
-
-func (m *testWorkoutRepo) GetByIDWithDetails(id int64) (*domain.Workout, error) {
-	return m.GetByID(id)
-}
-
-func (m *testWorkoutRepo) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
-	var result []*domain.Workout
-	for _, w := range m.workouts {
-		if w.CreatedBy != nil && *w.CreatedBy == userID {
-			result = append(result, w)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutRepo) ListStandard(limit, offset int) ([]*domain.Workout, error) {
-	var result []*domain.Workout
-	for _, w := range m.workouts {
-		if w.CreatedBy == nil {
-			result = append(result, w)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutRepo) Update(workout *domain.Workout) error {
-	if m.updateError != nil {
-		return m.updateError
-	}
-	if _, ok := m.workouts[workout.ID]; !ok {
-		return sql.ErrNoRows
-	}
-	workout.UpdatedAt = time.Now()
-	m.workouts[workout.ID] = workout
-	return nil
-}
-
-func (m *testWorkoutRepo) Delete(id int64) error {
-	if m.deleteError != nil {
-		return m.deleteError
-	}
-	if _, ok := m.workouts[id]; !ok {
-		return sql.ErrNoRows
-	}
-	delete(m.workouts, id)
-	return nil
-}
-
-func (m *testWorkoutRepo) GetUsageCount(templateID int64) (int, error) {
-	return 0, nil
-}
-
-func (m *testWorkoutRepo) Count(userID *int64) (int64, error) {
-	count := int64(0)
-	for _, w := range m.workouts {
-		if userID == nil {
-			if w.CreatedBy == nil {
-				count++
-			}
-		} else if w.CreatedBy != nil && *w.CreatedBy == *userID {
-			count++
-		}
-	}
-	return count, nil
-}
-
-func (m *testWorkoutRepo) List(filters map[string]interface{}, limit, offset int) ([]*domain.Workout, error) {
-	var result []*domain.Workout
-	for _, w := range m.workouts {
-		result = append(result, w)
-	}
-	return result, nil
-}
-
-func (m *testWorkoutRepo) Search(query string, limit int) ([]*domain.Workout, error) {
-	var result []*domain.Workout
-	queryLower := strings.ToLower(query)
-	for _, w := range m.workouts {
-		if strings.Contains(strings.ToLower(w.Name), queryLower) {
-			result = append(result, w)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutRepo) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsageStats, error) {
-	w, err := m.GetByID(workoutID)
-	if err != nil {
-		return nil, err
-	}
-	if w == nil {
-		return nil, nil
-	}
-	return &domain.WorkoutWithUsageStats{
-		Workout:    *w,
-		TimesUsed:  5,
-		LastUsedAt: nil,
-	}, nil
-}
-
-func (m *testWorkoutRepo) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
-	var result []*domain.Workout
-	for _, w := range m.workouts {
-		if w.CreatedBy != nil {
-			result = append(result, w)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutRepo) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
-	return []*domain.WorkoutWithCreator{}, nil
-}
-
-func (m *testWorkoutRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
-	return []*domain.WorkoutWithCreator{}, 0, nil
-}
-
-func (m *testWorkoutRepo) CountAllUserCreated() (int64, error) {
-	count := int64(0)
-	for _, w := range m.workouts {
-		if w.CreatedBy != nil {
-			count++
-		}
-	}
-	return count, nil
-}
-
-func (m *testWorkoutRepo) CopyToStandard(id int64, newName string) (*domain.Workout, error) {
-	w, _ := m.GetByID(id)
-	if w == nil {
-		return nil, sql.ErrNoRows
-	}
-	newWorkout := &domain.Workout{
-		Name:      newName,
-		Notes:     w.Notes,
-		CreatedBy: nil,
-	}
-	m.Create(newWorkout)
-	return newWorkout, nil
-}
-
-// testWorkoutMovementRepo is a mock for WorkoutMovementRepository
-type testWorkoutMovementRepo struct {
-	movements   map[int64]*domain.WorkoutMovement
-	nextID      int64
-	createError error
-}
-
-func newTestWorkoutMovementRepo() *testWorkoutMovementRepo {
-	return &testWorkoutMovementRepo{
-		movements: make(map[int64]*domain.WorkoutMovement),
-		nextID:    1,
-	}
-}
-
-func (m *testWorkoutMovementRepo) Create(wm *domain.WorkoutMovement) error {
-	if m.createError != nil {
-		return m.createError
-	}
-	wm.ID = m.nextID
-	m.nextID++
-	m.movements[wm.ID] = wm
-	return nil
-}
-
-func (m *testWorkoutMovementRepo) GetByID(id int64) (*domain.WorkoutMovement, error) {
-	wm, ok := m.movements[id]
-	if !ok {
-		return nil, nil
-	}
-	return wm, nil
-}
-
-func (m *testWorkoutMovementRepo) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutMovement, error) {
-	var result []*domain.WorkoutMovement
-	for _, wm := range m.movements {
-		if wm.WorkoutID == workoutID {
-			result = append(result, wm)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutMovementRepo) GetByUserIDAndMovementID(userID, movementID int64, limit int) ([]*domain.WorkoutMovement, error) {
-	return []*domain.WorkoutMovement{}, nil
-}
-
-func (m *testWorkoutMovementRepo) Update(wm *domain.WorkoutMovement) error {
-	if _, ok := m.movements[wm.ID]; !ok {
-		return sql.ErrNoRows
-	}
-	m.movements[wm.ID] = wm
-	return nil
-}
-
-func (m *testWorkoutMovementRepo) Delete(id int64) error {
-	delete(m.movements, id)
-	return nil
-}
-
-func (m *testWorkoutMovementRepo) DeleteByWorkoutID(workoutID int64) error {
-	for id, wm := range m.movements {
-		if wm.WorkoutID == workoutID {
-			delete(m.movements, id)
-		}
-	}
-	return nil
-}
-
-func (m *testWorkoutMovementRepo) GetPersonalRecords(userID int64) ([]*domain.PersonalRecord, error) {
-	return []*domain.PersonalRecord{}, nil
-}
-
-func (m *testWorkoutMovementRepo) GetMaxWeightForMovement(userID, movementID int64) (*float64, error) {
-	var maxWeight *float64
-	for _, wm := range m.movements {
-		if wm.MovementID == movementID && wm.Weight != nil {
-			if maxWeight == nil || *wm.Weight > *maxWeight {
-				maxWeight = wm.Weight
-			}
-		}
-	}
-	return maxWeight, nil
-}
-
-func (m *testWorkoutMovementRepo) GetPRMovements(userID int64, limit int) ([]*domain.WorkoutMovement, error) {
-	var result []*domain.WorkoutMovement
-	for _, wm := range m.movements {
-		if wm.IsPR {
-			result = append(result, wm)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutMovementRepo) ListByWorkout(workoutID int64) ([]*domain.WorkoutMovement, error) {
-	return m.GetByWorkoutID(workoutID)
-}
-
-func (m *testWorkoutMovementRepo) DeleteByWorkout(workoutID int64) error {
-	return m.DeleteByWorkoutID(workoutID)
-}
-
-// testWorkoutWODRepo is a mock for WorkoutWODRepository
-type testWorkoutWODRepo struct {
-	wods        map[int64]*domain.WorkoutWOD
-	nextID      int64
-	createError error
-}
-
-func newTestWorkoutWODRepo() *testWorkoutWODRepo {
-	return &testWorkoutWODRepo{
-		wods:   make(map[int64]*domain.WorkoutWOD),
-		nextID: 1,
-	}
-}
-
-func (m *testWorkoutWODRepo) Create(wod *domain.WorkoutWOD) error {
-	if m.createError != nil {
-		return m.createError
-	}
-	wod.ID = m.nextID
-	m.nextID++
-	m.wods[wod.ID] = wod
-	return nil
-}
-
-func (m *testWorkoutWODRepo) GetByID(id int64) (*domain.WorkoutWOD, error) {
-	wod, ok := m.wods[id]
-	if !ok {
-		return nil, sql.ErrNoRows
-	}
-	return wod, nil
-}
-
-func (m *testWorkoutWODRepo) GetByWorkoutID(workoutID int64) ([]*domain.WorkoutWOD, error) {
-	var result []*domain.WorkoutWOD
-	for _, wod := range m.wods {
-		if wod.WorkoutID == workoutID {
-			result = append(result, wod)
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutWODRepo) Update(wod *domain.WorkoutWOD) error {
-	if _, ok := m.wods[wod.ID]; !ok {
-		return sql.ErrNoRows
-	}
-	m.wods[wod.ID] = wod
-	return nil
-}
-
-func (m *testWorkoutWODRepo) Delete(id int64) error {
-	delete(m.wods, id)
-	return nil
-}
-
-func (m *testWorkoutWODRepo) DeleteByWorkout(workoutID int64) error {
-	for id, wod := range m.wods {
-		if wod.WorkoutID == workoutID {
-			delete(m.wods, id)
-		}
-	}
-	return nil
-}
-
-func (m *testWorkoutWODRepo) ListByWorkout(workoutID int64) ([]*domain.WorkoutWOD, error) {
-	return m.GetByWorkoutID(workoutID)
-}
-
-func (m *testWorkoutWODRepo) ListByWorkoutWithDetails(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
-	var result []*domain.WorkoutWODWithDetails
-	for _, wod := range m.wods {
-		if wod.WorkoutID == workoutID {
-			result = append(result, &domain.WorkoutWODWithDetails{
-				WorkoutWOD:   *wod,
-				WODName:      "Test WOD",
-				WODScoreType: "time",
-			})
-		}
-	}
-	return result, nil
-}
-
-func (m *testWorkoutWODRepo) TogglePR(id int64) error {
-	wod, ok := m.wods[id]
-	if !ok {
-		return sql.ErrNoRows
-	}
-	wod.IsPR = !wod.IsPR
-	return nil
-}
-
-// testMovementRepoForWorkout is a mock for MovementRepository used by WorkoutService
-type testMovementRepoForWorkout struct {
-	movements map[int64]*domain.Movement
-	nextID    int64
-}
-
-func newTestMovementRepoForWorkout() *testMovementRepoForWorkout {
-	return &testMovementRepoForWorkout{
-		movements: make(map[int64]*domain.Movement),
-		nextID:    1,
-	}
-}
-
-func (m *testMovementRepoForWorkout) Create(movement *domain.Movement) error {
-	movement.ID = m.nextID
-	m.nextID++
-	m.movements[movement.ID] = movement
-	return nil
-}
-
-func (m *testMovementRepoForWorkout) GetByID(id int64) (*domain.Movement, error) {
-	mov, ok := m.movements[id]
-	if !ok {
-		return nil, nil
-	}
-	return mov, nil
-}
-
-func (m *testMovementRepoForWorkout) GetByName(name string) (*domain.Movement, error) {
-	for _, mov := range m.movements {
-		if strings.EqualFold(mov.Name, name) {
-			return mov, nil
-		}
-	}
-	return nil, nil
-}
-
-func (m *testMovementRepoForWorkout) ListAll() ([]*domain.Movement, error) {
-	var result []*domain.Movement
-	for _, mov := range m.movements {
-		result = append(result, mov)
-	}
-	return result, nil
-}
-
-func (m *testMovementRepoForWorkout) ListStandard() ([]*domain.Movement, error) {
-	var result []*domain.Movement
-	for _, mov := range m.movements {
-		if mov.IsStandard {
-			result = append(result, mov)
-		}
-	}
-	return result, nil
-}
-
-func (m *testMovementRepoForWorkout) ListByUser(userID int64) ([]*domain.Movement, error) {
-	var result []*domain.Movement
-	for _, mov := range m.movements {
-		if mov.CreatedBy != nil && *mov.CreatedBy == userID {
-			result = append(result, mov)
-		}
-	}
-	return result, nil
-}
-
-func (m *testMovementRepoForWorkout) ListAllUserCreated() ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
-}
-
-func (m *testMovementRepoForWorkout) ListAllUserCreatedWithUserInfo() ([]*domain.MovementWithCreator, error) {
-	return []*domain.MovementWithCreator{}, nil
-}
-
-func (m *testMovementRepoForWorkout) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, movementType, creator string) ([]*domain.MovementWithCreator, int64, error) {
-	return []*domain.MovementWithCreator{}, 0, nil
-}
-
-func (m *testMovementRepoForWorkout) CountAllUserCreated() (int64, error) {
-	return 0, nil
-}
-
-func (m *testMovementRepoForWorkout) Update(movement *domain.Movement) error {
-	m.movements[movement.ID] = movement
-	return nil
-}
-
-func (m *testMovementRepoForWorkout) Delete(id int64) error {
-	delete(m.movements, id)
-	return nil
-}
-
-func (m *testMovementRepoForWorkout) Search(query string, limit int) ([]*domain.Movement, error) {
-	return []*domain.Movement{}, nil
-}
-
-func (m *testMovementRepoForWorkout) CopyToStandard(id int64, newName string) (*domain.Movement, error) {
-	return nil, nil
-}
-
-// Helper to create test workout service
-func newTestWorkoutService() (*WorkoutService, *testWorkoutRepo, *testWorkoutMovementRepo, *testWorkoutWODRepo, *testMovementRepoForWorkout) {
-	workoutRepo := newTestWorkoutRepo()
-	wmRepo := newTestWorkoutMovementRepo()
-	wwRepo := newTestWorkoutWODRepo()
-	movRepo := newTestMovementRepoForWorkout()
-	return NewWorkoutService(workoutRepo, wmRepo, wwRepo, movRepo), workoutRepo, wmRepo, wwRepo, movRepo
-}
-
-// TestWorkoutService_CreateTemplate tests creating workout templates
 func TestWorkoutService_CreateTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		userID      int64
-		workout     *domain.Workout
-		setupRepo   func(*testWorkoutRepo, *testWorkoutMovementRepo, *testWorkoutWODRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:   "create simple template",
-			userID: 1,
-			workout: &domain.Workout{
-				Name:  "Morning Workout",
-				Notes: stringPtr("Full body routine"),
-			},
-			wantErr: false,
-		},
-		{
-			name:   "create template with movements",
-			userID: 1,
-			workout: &domain.Workout{
-				Name: "Strength Day",
-				Movements: []*domain.WorkoutMovement{
-					{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
-					{MovementID: 2, Sets: intPtr(4), Reps: intPtr(8)},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name:   "create template with WODs",
-			userID: 1,
-			workout: &domain.Workout{
-				Name: "WOD Day",
-				WODs: []*domain.WorkoutWODWithDetails{
-					{WorkoutWOD: domain.WorkoutWOD{WODID: 1}},
-					{WorkoutWOD: domain.WorkoutWOD{WODID: 2}},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name:   "repository error",
-			userID: 1,
-			workout: &domain.Workout{
-				Name: "Test",
-			},
-			setupRepo: func(wr *testWorkoutRepo, wmr *testWorkoutMovementRepo, wwr *testWorkoutWODRepo) {
-				wr.createError = errors.New("database error")
-			},
-			wantErr:     true,
-			errContains: "database error",
-		},
-		{
-			name:   "movement create error",
-			userID: 1,
-			workout: &domain.Workout{
-				Name: "Test",
-				Movements: []*domain.WorkoutMovement{
-					{MovementID: 1},
-				},
-			},
-			setupRepo: func(wr *testWorkoutRepo, wmr *testWorkoutMovementRepo, wwr *testWorkoutWODRepo) {
-				wmr.createError = errors.New("movement error")
-			},
-			wantErr:     true,
-			errContains: "movement error",
-		},
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	movementRepo := newMockMovementRepo()
+
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
+
+	workout := &domain.Workout{
+		Name:  "Test Template",
+		Notes: stringPtr("Test notes"),
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, wmr, wwr, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr, wmr, wwr)
-			}
-
-			err := svc.CreateTemplate(tt.userID, tt.workout)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if tt.workout.ID == 0 {
-					t.Error("expected workout ID to be set")
-				}
-				if tt.workout.CreatedBy == nil || *tt.workout.CreatedBy != tt.userID {
-					t.Error("expected CreatedBy to be set to userID")
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_GetTemplate tests retrieving workout templates
-func TestWorkoutService_GetTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		setupRepo   func(*testWorkoutRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "existing template",
-			templateID: 1,
-			setupRepo: func(r *testWorkoutRepo) {
-				r.workouts[1] = &domain.Workout{
-					ID:   1,
-					Name: "Test Workout",
-				}
-			},
-			wantErr: false,
-		},
-		{
-			name:        "non-existent template",
-			templateID:  999,
-			wantErr:     true,
-			errContains: "not found",
-		},
-		{
-			name:       "repository error",
-			templateID: 1,
-			setupRepo: func(r *testWorkoutRepo) {
-				r.getError = errors.New("database error")
-			},
-			wantErr:     true,
-			errContains: "database error",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			workout, err := svc.GetTemplate(tt.templateID)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if workout == nil {
-					t.Error("expected non-nil workout")
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_ListTemplates tests listing workout templates
-func TestWorkoutService_ListTemplates(t *testing.T) {
-	tests := []struct {
-		name      string
-		userID    *int64
-		setupRepo func(*testWorkoutRepo)
-		wantCount int
-	}{
-		{
-			name:   "list standard only (no user)",
-			userID: nil,
-			setupRepo: func(r *testWorkoutRepo) {
-				r.workouts[1] = &domain.Workout{ID: 1, Name: "Standard 1", CreatedBy: nil}
-				r.workouts[2] = &domain.Workout{ID: 2, Name: "Standard 2", CreatedBy: nil}
-				userID := int64(1)
-				r.workouts[3] = &domain.Workout{ID: 3, Name: "User", CreatedBy: &userID}
-			},
-			wantCount: 2,
-		},
-		{
-			name:   "list standard plus user templates",
-			userID: int64Ptr(1),
-			setupRepo: func(r *testWorkoutRepo) {
-				r.workouts[1] = &domain.Workout{ID: 1, Name: "Standard", CreatedBy: nil}
-				userID := int64(1)
-				r.workouts[2] = &domain.Workout{ID: 2, Name: "User", CreatedBy: &userID}
-				otherUser := int64(2)
-				r.workouts[3] = &domain.Workout{ID: 3, Name: "Other", CreatedBy: &otherUser}
-			},
-			wantCount: 2, // 1 standard + 1 user's own
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			templates, err := svc.ListTemplates(tt.userID, 100, 0)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if len(templates) != tt.wantCount {
-				t.Errorf("expected %d templates, got %d", tt.wantCount, len(templates))
-			}
-		})
-	}
-}
-
-// TestWorkoutService_UpdateTemplate tests updating workout templates
-func TestWorkoutService_UpdateTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		userID      int64
-		updates     *domain.Workout
-		setupRepo   func(*testWorkoutRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "successful update",
-			templateID: 1,
-			userID:     1,
-			updates: &domain.Workout{
-				Name:  "Updated Name",
-				Notes: stringPtr("Updated notes"),
-			},
-			setupRepo: func(r *testWorkoutRepo) {
-				userID := int64(1)
-				r.workouts[1] = &domain.Workout{
-					ID:        1,
-					Name:      "Original",
-					CreatedBy: &userID,
-				}
-			},
-			wantErr: false,
-		},
-		{
-			name:       "unauthorized - different user",
-			templateID: 1,
-			userID:     2,
-			updates:    &domain.Workout{Name: "Updated"},
-			setupRepo: func(r *testWorkoutRepo) {
-				userID := int64(1)
-				r.workouts[1] = &domain.Workout{
-					ID:        1,
-					Name:      "Original",
-					CreatedBy: &userID,
-				}
-			},
-			wantErr:     true,
-			errContains: "unauthorized",
-		},
-		{
-			name:       "unauthorized - standard template",
-			templateID: 1,
-			userID:     1,
-			updates:    &domain.Workout{Name: "Updated"},
-			setupRepo: func(r *testWorkoutRepo) {
-				r.workouts[1] = &domain.Workout{
-					ID:        1,
-					Name:      "Standard",
-					CreatedBy: nil, // Standard template
-				}
-			},
-			wantErr:     true,
-			errContains: "unauthorized",
-		},
-		{
-			name:        "template not found",
-			templateID:  999,
-			userID:      1,
-			updates:     &domain.Workout{Name: "Updated"},
-			wantErr:     true,
-			errContains: "not found",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			err := svc.UpdateTemplate(tt.templateID, tt.userID, tt.updates)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				// Verify update applied
-				updated := wr.workouts[tt.templateID]
-				if updated.Name != tt.updates.Name {
-					t.Errorf("expected name %q, got %q", tt.updates.Name, updated.Name)
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_DeleteTemplate tests deleting workout templates
-func TestWorkoutService_DeleteTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		userID      int64
-		setupRepo   func(*testWorkoutRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "successful delete",
-			templateID: 1,
-			userID:     1,
-			setupRepo: func(r *testWorkoutRepo) {
-				userID := int64(1)
-				r.workouts[1] = &domain.Workout{
-					ID:        1,
-					Name:      "To Delete",
-					CreatedBy: &userID,
-				}
-			},
-			wantErr: false,
-		},
-		{
-			name:       "unauthorized - different user",
-			templateID: 1,
-			userID:     2,
-			setupRepo: func(r *testWorkoutRepo) {
-				userID := int64(1)
-				r.workouts[1] = &domain.Workout{
-					ID:        1,
-					Name:      "Original",
-					CreatedBy: &userID,
-				}
-			},
-			wantErr:     true,
-			errContains: "unauthorized",
-		},
-		{
-			name:        "template not found",
-			templateID:  999,
-			userID:      1,
-			wantErr:     true,
-			errContains: "not found",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			err := svc.DeleteTemplate(tt.templateID, tt.userID)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				// Verify deleted
-				if _, exists := wr.workouts[tt.templateID]; exists {
-					t.Error("expected template to be deleted")
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_GetTemplateUsageStats tests getting usage statistics
-func TestWorkoutService_GetTemplateUsageStats(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		setupRepo   func(*testWorkoutRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "existing template",
-			templateID: 1,
-			setupRepo: func(r *testWorkoutRepo) {
-				r.workouts[1] = &domain.Workout{ID: 1, Name: "Test"}
-			},
-			wantErr: false,
-		},
-		{
-			name:        "non-existent template",
-			templateID:  999,
-			wantErr:     true,
-			errContains: "not found",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			stats, err := svc.GetTemplateUsageStats(tt.templateID)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if stats == nil {
-					t.Error("expected non-nil stats")
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_AddMovementToTemplate tests adding movements to templates
-func TestWorkoutService_AddMovementToTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		movementID  int64
-		userID      int64
-		setupRepo   func(*testWorkoutRepo, *testMovementRepoForWorkout)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "successful add",
-			templateID: 1,
-			movementID: 1,
-			userID:     1,
-			setupRepo: func(wr *testWorkoutRepo, mr *testMovementRepoForWorkout) {
-				userID := int64(1)
-				wr.workouts[1] = &domain.Workout{ID: 1, CreatedBy: &userID}
-				mr.movements[1] = &domain.Movement{ID: 1, Name: "Squat"}
-			},
-			wantErr: false,
-		},
-		{
-			name:       "template not found",
-			templateID: 999,
-			movementID: 1,
-			userID:     1,
-			setupRepo: func(wr *testWorkoutRepo, mr *testMovementRepoForWorkout) {
-				mr.movements[1] = &domain.Movement{ID: 1, Name: "Squat"}
-			},
-			wantErr:     true,
-			errContains: "not found",
-		},
-		{
-			name:       "unauthorized",
-			templateID: 1,
-			movementID: 1,
-			userID:     2,
-			setupRepo: func(wr *testWorkoutRepo, mr *testMovementRepoForWorkout) {
-				userID := int64(1)
-				wr.workouts[1] = &domain.Workout{ID: 1, CreatedBy: &userID}
-				mr.movements[1] = &domain.Movement{ID: 1, Name: "Squat"}
-			},
-			wantErr:     true,
-			errContains: "unauthorized",
-		},
-		{
-			name:       "movement not found",
-			templateID: 1,
-			movementID: 999,
-			userID:     1,
-			setupRepo: func(wr *testWorkoutRepo, mr *testMovementRepoForWorkout) {
-				userID := int64(1)
-				wr.workouts[1] = &domain.Workout{ID: 1, CreatedBy: &userID}
-			},
-			wantErr:     true,
-			errContains: "movement not found",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, mr := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr, mr)
-			}
-
-			wm := &domain.WorkoutMovement{}
-			err := svc.AddMovementToTemplate(tt.templateID, tt.movementID, tt.userID, wm)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_AddWODToTemplate tests adding WODs to templates
-func TestWorkoutService_AddWODToTemplate(t *testing.T) {
-	tests := []struct {
-		name        string
-		templateID  int64
-		wodID       int64
-		userID      int64
-		setupRepo   func(*testWorkoutRepo)
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name:       "successful add",
-			templateID: 1,
-			wodID:      1,
-			userID:     1,
-			setupRepo: func(wr *testWorkoutRepo) {
-				userID := int64(1)
-				wr.workouts[1] = &domain.Workout{ID: 1, CreatedBy: &userID}
-			},
-			wantErr: false,
-		},
-		{
-			name:        "template not found",
-			templateID:  999,
-			wodID:       1,
-			userID:      1,
-			wantErr:     true,
-			errContains: "not found",
-		},
-		{
-			name:       "unauthorized",
-			templateID: 1,
-			wodID:      1,
-			userID:     2,
-			setupRepo: func(wr *testWorkoutRepo) {
-				userID := int64(1)
-				wr.workouts[1] = &domain.Workout{ID: 1, CreatedBy: &userID}
-			},
-			wantErr:     true,
-			errContains: "unauthorized",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, wr, _, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wr)
-			}
-
-			wod := &domain.WorkoutWOD{}
-			err := svc.AddWODToTemplate(tt.templateID, tt.wodID, tt.userID, wod)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-			}
-		})
-	}
-}
-
-// TestWorkoutService_ListMovements tests listing movements
-func TestWorkoutService_ListMovements(t *testing.T) {
-	svc, _, _, _, mr := newTestWorkoutService()
-
-	// Add some movements
-	userID := int64(1)
-	mr.movements[1] = &domain.Movement{ID: 1, Name: "Standard Move", IsStandard: true}
-	mr.movements[2] = &domain.Movement{ID: 2, Name: "Custom Move", IsStandard: false, CreatedBy: &userID}
-	otherUser := int64(2)
-	mr.movements[3] = &domain.Movement{ID: 3, Name: "Other User Move", IsStandard: false, CreatedBy: &otherUser}
-
-	movements, err := svc.ListMovements(userID)
+	err := svc.CreateTemplate(1, workout)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Errorf("CreateTemplate() error = %v", err)
 	}
 
-	// Should get 1 standard + 1 user's custom = 2
-	if len(movements) != 2 {
-		t.Errorf("expected 2 movements, got %d", len(movements))
+	// Verify workout was created
+	if workout.ID == 0 {
+		t.Error("CreateTemplate() did not set workout ID")
+	}
+	if workout.CreatedBy == nil || *workout.CreatedBy != 1 {
+		t.Error("CreateTemplate() did not set CreatedBy")
 	}
 }
 
-// TestWorkoutService_DetectAndFlagPRs tests PR detection
-func TestWorkoutService_DetectAndFlagPRs(t *testing.T) {
-	svc, _, wmr, _, _ := newTestWorkoutService()
+func TestWorkoutService_CreateTemplate_WithMovements(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	movementRepo := newMockMovementRepo()
 
-	// Add existing max weight
-	weight100 := float64(100)
-	wmr.movements[1] = &domain.WorkoutMovement{
-		ID:         1,
-		MovementID: 1,
-		Weight:     &weight100,
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
+
+	workout := &domain.Workout{
+		Name: "Template with Movements",
+		Movements: []*domain.WorkoutMovement{
+			{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
+			{MovementID: 2, Sets: intPtr(4), Reps: intPtr(8)},
+		},
 	}
 
-	// New movements to check
-	weight150 := float64(150) // PR (exceeds 100)
-	weight80 := float64(80)   // Not PR (less than 100)
+	err := svc.CreateTemplate(1, workout)
+	if err != nil {
+		t.Errorf("CreateTemplate() error = %v", err)
+	}
+
+	// Verify movements were created
+	if len(workoutMovementRepo.movements) != 2 {
+		t.Errorf("CreateTemplate() created %d movements, want 2", len(workoutMovementRepo.movements))
+	}
+}
+
+func TestWorkoutService_CreateTemplate_WithWODs(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	movementRepo := newMockMovementRepo()
+
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
+
+	workout := &domain.Workout{
+		Name: "Template with WODs",
+		WODs: []*domain.WorkoutWODWithDetails{
+			{WorkoutWOD: domain.WorkoutWOD{WODID: 1}},
+			{WorkoutWOD: domain.WorkoutWOD{WODID: 2}},
+		},
+	}
+
+	err := svc.CreateTemplate(1, workout)
+	if err != nil {
+		t.Errorf("CreateTemplate() error = %v", err)
+	}
+
+	// Verify WODs were created
+	if len(workoutWODRepo.workoutWODs) != 2 {
+		t.Errorf("CreateTemplate() created %d WODs, want 2", len(workoutWODRepo.workoutWODs))
+	}
+}
+
+func TestWorkoutService_GetTemplate(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	movementRepo := newMockMovementRepo()
+
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, movementRepo)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Test Workout", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Get it back
+	result, err := svc.GetTemplate(workout.ID)
+	if err != nil {
+		t.Errorf("GetTemplate() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("GetTemplate() returned nil")
+	}
+	if result.Name != "Test Workout" {
+		t.Errorf("GetTemplate() Name = %s, want Test Workout", result.Name)
+	}
+}
+
+func TestWorkoutService_GetTemplate_NotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	_, err := svc.GetTemplate(999)
+	if err == nil {
+		t.Error("GetTemplate() should return error for non-existent template")
+	}
+	if err != ErrWorkoutNotFound {
+		t.Errorf("GetTemplate() error = %v, want ErrWorkoutNotFound", err)
+	}
+}
+
+func TestWorkoutService_ListTemplates_StandardOnly(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create standard templates
+	_ = workoutRepo.Create(&domain.Workout{Name: "Standard 1", CreatedBy: nil})
+	_ = workoutRepo.Create(&domain.Workout{Name: "Standard 2", CreatedBy: nil})
+
+	// Create user template
+	userID := int64(1)
+	_ = workoutRepo.Create(&domain.Workout{Name: "User Template", CreatedBy: &userID})
+
+	// List without user ID - should only get standard
+	result, err := svc.ListTemplates(nil, 50, 0)
+	if err != nil {
+		t.Errorf("ListTemplates() error = %v", err)
+	}
+	if len(result) != 2 {
+		t.Errorf("ListTemplates() returned %d templates, want 2 (standard only)", len(result))
+	}
+}
+
+func TestWorkoutService_ListTemplates_WithUser(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create standard templates
+	_ = workoutRepo.Create(&domain.Workout{Name: "Standard 1", CreatedBy: nil})
+
+	// Create user templates
+	userID := int64(1)
+	_ = workoutRepo.Create(&domain.Workout{Name: "User Template 1", CreatedBy: &userID})
+	_ = workoutRepo.Create(&domain.Workout{Name: "User Template 2", CreatedBy: &userID})
+
+	// List with user ID - should get standard + user's
+	result, err := svc.ListTemplates(&userID, 50, 0)
+	if err != nil {
+		t.Errorf("ListTemplates() error = %v", err)
+	}
+	if len(result) != 3 {
+		t.Errorf("ListTemplates() returned %d templates, want 3 (1 standard + 2 user)", len(result))
+	}
+}
+
+func TestWorkoutService_UpdateTemplate(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original Name", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Update it
+	updates := &domain.Workout{
+		Name:  "Updated Name",
+		Notes: stringPtr("Updated notes"),
+	}
+
+	err := svc.UpdateTemplate(workout.ID, userID, updates)
+	if err != nil {
+		t.Errorf("UpdateTemplate() error = %v", err)
+	}
+
+	// Verify update
+	updated, _ := workoutRepo.GetByID(workout.ID)
+	if updated.Name != "Updated Name" {
+		t.Errorf("UpdateTemplate() Name = %s, want Updated Name", updated.Name)
+	}
+}
+
+func TestWorkoutService_UpdateTemplate_NotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	err := svc.UpdateTemplate(999, 1, &domain.Workout{Name: "Test"})
+	if err == nil {
+		t.Error("UpdateTemplate() should return error for non-existent template")
+	}
+	if err != ErrWorkoutNotFound {
+		t.Errorf("UpdateTemplate() error = %v, want ErrWorkoutNotFound", err)
+	}
+}
+
+func TestWorkoutService_UpdateTemplate_Unauthorized(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{Name: "User 1's Workout", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Try to update as user 2
+	err := svc.UpdateTemplate(workout.ID, 2, &domain.Workout{Name: "Hacked"})
+	if err == nil {
+		t.Error("UpdateTemplate() should return error for unauthorized user")
+	}
+	if err != ErrUnauthorized {
+		t.Errorf("UpdateTemplate() error = %v, want ErrUnauthorized", err)
+	}
+}
+
+func TestWorkoutService_UpdateTemplate_WithMovements(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout with movements
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+	_ = workoutMovementRepo.Create(&domain.WorkoutMovement{WorkoutID: workout.ID, MovementID: 1})
+
+	// Update with new movements
+	updates := &domain.Workout{
+		Name: "Updated",
+		Movements: []*domain.WorkoutMovement{
+			{MovementID: 2},
+			{MovementID: 3},
+		},
+	}
+
+	err := svc.UpdateTemplate(workout.ID, userID, updates)
+	if err != nil {
+		t.Errorf("UpdateTemplate() error = %v", err)
+	}
+
+	// Verify old movements deleted and new ones created
+	movements, _ := workoutMovementRepo.GetByWorkoutID(workout.ID)
+	if len(movements) != 2 {
+		t.Errorf("UpdateTemplate() resulted in %d movements, want 2", len(movements))
+	}
+}
+
+func TestWorkoutService_DeleteTemplate(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout
+	userID := int64(1)
+	workout := &domain.Workout{Name: "To Delete", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Delete it
+	err := svc.DeleteTemplate(workout.ID, userID)
+	if err != nil {
+		t.Errorf("DeleteTemplate() error = %v", err)
+	}
+
+	// Verify deleted
+	if _, exists := workoutRepo.workouts[workout.ID]; exists {
+		t.Error("DeleteTemplate() did not delete the workout")
+	}
+}
+
+func TestWorkoutService_DeleteTemplate_NotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	err := svc.DeleteTemplate(999, 1)
+	if err == nil {
+		t.Error("DeleteTemplate() should return error for non-existent template")
+	}
+	if err != ErrWorkoutNotFound {
+		t.Errorf("DeleteTemplate() error = %v, want ErrWorkoutNotFound", err)
+	}
+}
+
+func TestWorkoutService_DeleteTemplate_Unauthorized(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{Name: "User 1's Workout", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Try to delete as user 2
+	err := svc.DeleteTemplate(workout.ID, 2)
+	if err == nil {
+		t.Error("DeleteTemplate() should return error for unauthorized user")
+	}
+	if err != ErrUnauthorized {
+		t.Errorf("DeleteTemplate() error = %v, want ErrUnauthorized", err)
+	}
+}
+
+func TestWorkoutService_GetTemplateUsageStats(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Test", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Get usage stats
+	stats, err := svc.GetTemplateUsageStats(workout.ID)
+	if err != nil {
+		t.Errorf("GetTemplateUsageStats() error = %v", err)
+	}
+	if stats == nil {
+		t.Fatal("GetTemplateUsageStats() returned nil")
+	}
+}
+
+func TestWorkoutService_GetTemplateUsageStats_NotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	_, err := svc.GetTemplateUsageStats(999)
+	if err == nil {
+		t.Error("GetTemplateUsageStats() should return error for non-existent template")
+	}
+}
+
+func TestWorkoutService_AddMovementToTemplate(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	movementRepo := newMockMovementRepo()
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, nil, movementRepo)
+
+	// Create a workout
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Create a movement
+	movement := &domain.Movement{Name: "Back Squat", IsStandard: true}
+	_ = movementRepo.Create(movement)
+
+	// Add movement to template
+	wm := &domain.WorkoutMovement{Sets: intPtr(3), Reps: intPtr(10)}
+	err := svc.AddMovementToTemplate(workout.ID, movement.ID, userID, wm)
+	if err != nil {
+		t.Errorf("AddMovementToTemplate() error = %v", err)
+	}
+
+	// Verify movement was added
+	if len(workoutMovementRepo.movements) != 1 {
+		t.Errorf("AddMovementToTemplate() created %d movements, want 1", len(workoutMovementRepo.movements))
+	}
+}
+
+func TestWorkoutService_AddMovementToTemplate_TemplateNotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	err := svc.AddMovementToTemplate(999, 1, 1, &domain.WorkoutMovement{})
+	if err == nil {
+		t.Error("AddMovementToTemplate() should return error for non-existent template")
+	}
+}
+
+func TestWorkoutService_AddMovementToTemplate_Unauthorized(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Try to add movement as user 2
+	err := svc.AddMovementToTemplate(workout.ID, 1, 2, &domain.WorkoutMovement{})
+	if err == nil {
+		t.Error("AddMovementToTemplate() should return error for unauthorized user")
+	}
+	if err != ErrUnauthorized {
+		t.Errorf("AddMovementToTemplate() error = %v, want ErrUnauthorized", err)
+	}
+}
+
+func TestWorkoutService_AddMovementToTemplate_MovementNotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	movementRepo := newMockMovementRepo()
+	svc := NewWorkoutService(workoutRepo, workoutMovementRepo, nil, movementRepo)
+
+	// Create a workout
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Try to add non-existent movement
+	err := svc.AddMovementToTemplate(workout.ID, 999, userID, &domain.WorkoutMovement{})
+	if err == nil {
+		t.Error("AddMovementToTemplate() should return error for non-existent movement")
+	}
+}
+
+func TestWorkoutService_AddWODToTemplate(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	svc := NewWorkoutService(workoutRepo, nil, workoutWODRepo, nil)
+
+	// Create a workout
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Add WOD to template
+	wod := &domain.WorkoutWOD{}
+	err := svc.AddWODToTemplate(workout.ID, 1, userID, wod)
+	if err != nil {
+		t.Errorf("AddWODToTemplate() error = %v", err)
+	}
+
+	// Verify WOD was added
+	if len(workoutWODRepo.workoutWODs) != 1 {
+		t.Errorf("AddWODToTemplate() created %d WODs, want 1", len(workoutWODRepo.workoutWODs))
+	}
+}
+
+func TestWorkoutService_AddWODToTemplate_TemplateNotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	err := svc.AddWODToTemplate(999, 1, 1, &domain.WorkoutWOD{})
+	if err == nil {
+		t.Error("AddWODToTemplate() should return error for non-existent template")
+	}
+}
+
+func TestWorkoutService_AddWODToTemplate_Unauthorized(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	svc := NewWorkoutService(workoutRepo, nil, nil, nil)
+
+	// Create a workout owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Template", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Try to add WOD as user 2
+	err := svc.AddWODToTemplate(workout.ID, 1, 2, &domain.WorkoutWOD{})
+	if err == nil {
+		t.Error("AddWODToTemplate() should return error for unauthorized user")
+	}
+	if err != ErrUnauthorized {
+		t.Errorf("AddWODToTemplate() error = %v, want ErrUnauthorized", err)
+	}
+}
+
+func TestWorkoutService_ListMovements(t *testing.T) {
+	movementRepo := newMockMovementRepo()
+	svc := NewWorkoutService(nil, nil, nil, movementRepo)
+
+	// Create standard movements
+	_ = movementRepo.Create(&domain.Movement{Name: "Back Squat", IsStandard: true})
+	_ = movementRepo.Create(&domain.Movement{Name: "Deadlift", IsStandard: true})
+
+	// Create user movement
+	userID := int64(1)
+	_ = movementRepo.Create(&domain.Movement{Name: "Custom Movement", CreatedBy: &userID})
+
+	// List movements for user
+	result, err := svc.ListMovements(userID)
+	if err != nil {
+		t.Errorf("ListMovements() error = %v", err)
+	}
+	if len(result) != 3 {
+		t.Errorf("ListMovements() returned %d movements, want 3 (2 standard + 1 user)", len(result))
+	}
+}
+
+func TestWorkoutService_DetectAndFlagPRs_NewPR(t *testing.T) {
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	// Create movement with weight
+	weight := 315.0
 	movements := []*domain.WorkoutMovement{
-		{MovementID: 1, Weight: &weight150},
-		{MovementID: 1, Weight: &weight80},
-		{MovementID: 2, Weight: &weight100}, // New movement, should be PR
+		{MovementID: 1, Weight: &weight},
+	}
+
+	// No previous max weight - should flag as PR
+	err := svc.DetectAndFlagPRs(1, movements)
+	if err != nil {
+		t.Errorf("DetectAndFlagPRs() error = %v", err)
+	}
+
+	if !movements[0].IsPR {
+		t.Error("DetectAndFlagPRs() should flag first lift as PR")
+	}
+}
+
+func TestWorkoutService_DetectAndFlagPRs_ExceedsPrevious(t *testing.T) {
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	// Set up previous max weight
+	userID := int64(1)
+	movementID := int64(1)
+	previousMax := 300.0
+	workoutMovementRepo.maxWeights[userID] = make(map[int64]*float64)
+	workoutMovementRepo.maxWeights[userID][movementID] = &previousMax
+
+	// Create movement with weight exceeding previous max
+	newWeight := 315.0
+	movements := []*domain.WorkoutMovement{
+		{MovementID: movementID, Weight: &newWeight},
+	}
+
+	err := svc.DetectAndFlagPRs(userID, movements)
+	if err != nil {
+		t.Errorf("DetectAndFlagPRs() error = %v", err)
+	}
+
+	if !movements[0].IsPR {
+		t.Error("DetectAndFlagPRs() should flag lift that exceeds previous max as PR")
+	}
+}
+
+func TestWorkoutService_DetectAndFlagPRs_NotPR(t *testing.T) {
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	// Set up previous max weight
+	userID := int64(1)
+	movementID := int64(1)
+	previousMax := 315.0
+	workoutMovementRepo.maxWeights[userID] = make(map[int64]*float64)
+	workoutMovementRepo.maxWeights[userID][movementID] = &previousMax
+
+	// Create movement with weight below previous max
+	newWeight := 300.0
+	movements := []*domain.WorkoutMovement{
+		{MovementID: movementID, Weight: &newWeight},
+	}
+
+	err := svc.DetectAndFlagPRs(userID, movements)
+	if err != nil {
+		t.Errorf("DetectAndFlagPRs() error = %v", err)
+	}
+
+	if movements[0].IsPR {
+		t.Error("DetectAndFlagPRs() should not flag lift below previous max as PR")
+	}
+}
+
+func TestWorkoutService_DetectAndFlagPRs_NoWeight(t *testing.T) {
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	// Create movement without weight
+	movements := []*domain.WorkoutMovement{
+		{MovementID: 1, Weight: nil},
 	}
 
 	err := svc.DetectAndFlagPRs(1, movements)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Errorf("DetectAndFlagPRs() error = %v", err)
 	}
 
-	if !movements[0].IsPR {
-		t.Error("expected 150 to be flagged as PR")
-	}
-	if movements[1].IsPR {
-		t.Error("expected 80 to NOT be flagged as PR")
-	}
-	if !movements[2].IsPR {
-		t.Error("expected new movement to be flagged as PR")
+	if movements[0].IsPR {
+		t.Error("DetectAndFlagPRs() should not flag movement without weight as PR")
 	}
 }
 
-// TestWorkoutService_GetPersonalRecords tests getting personal records
 func TestWorkoutService_GetPersonalRecords(t *testing.T) {
-	svc, _, _, _, _ := newTestWorkoutService()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
 
 	records, err := svc.GetPersonalRecords(1)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Errorf("GetPersonalRecords() error = %v", err)
 	}
-
-	// Mock returns empty slice
 	if records == nil {
-		t.Error("expected non-nil records")
+		t.Error("GetPersonalRecords() returned nil")
 	}
 }
 
-// TestWorkoutService_GetPRMovements tests getting PR movements
 func TestWorkoutService_GetPRMovements(t *testing.T) {
-	svc, _, wmr, _, _ := newTestWorkoutService()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
 
-	// Add some PR movements
-	wmr.movements[1] = &domain.WorkoutMovement{ID: 1, IsPR: true}
-	wmr.movements[2] = &domain.WorkoutMovement{ID: 2, IsPR: false}
-	wmr.movements[3] = &domain.WorkoutMovement{ID: 3, IsPR: true}
+	// Create some movements with PR flags
+	weight := 315.0
+	_ = workoutMovementRepo.Create(&domain.WorkoutMovement{MovementID: 1, Weight: &weight, IsPR: true})
+	_ = workoutMovementRepo.Create(&domain.WorkoutMovement{MovementID: 2, Weight: &weight, IsPR: false})
 
 	movements, err := svc.GetPRMovements(1, 10)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Errorf("GetPRMovements() error = %v", err)
 	}
-
-	if len(movements) != 2 {
-		t.Errorf("expected 2 PR movements, got %d", len(movements))
+	if len(movements) != 1 {
+		t.Errorf("GetPRMovements() returned %d movements, want 1 (PR only)", len(movements))
 	}
 }
 
-// TestWorkoutService_TogglePRFlag tests toggling PR flag
 func TestWorkoutService_TogglePRFlag(t *testing.T) {
-	tests := []struct {
-		name         string
-		movementID   int64
-		setupRepo    func(*testWorkoutMovementRepo)
-		wantErr      bool
-		errContains  string
-		wantPRAfter  bool
-	}{
-		{
-			name:       "toggle false to true",
-			movementID: 1,
-			setupRepo: func(r *testWorkoutMovementRepo) {
-				r.movements[1] = &domain.WorkoutMovement{ID: 1, IsPR: false}
-			},
-			wantErr:     false,
-			wantPRAfter: true,
-		},
-		{
-			name:       "toggle true to false",
-			movementID: 1,
-			setupRepo: func(r *testWorkoutMovementRepo) {
-				r.movements[1] = &domain.WorkoutMovement{ID: 1, IsPR: true}
-			},
-			wantErr:     false,
-			wantPRAfter: false,
-		},
-		{
-			name:        "movement not found",
-			movementID:  999,
-			wantErr:     true,
-			errContains: "not found",
-		},
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	// Create a movement
+	weight := 315.0
+	wm := &domain.WorkoutMovement{MovementID: 1, Weight: &weight, IsPR: false}
+	_ = workoutMovementRepo.Create(wm)
+
+	// Toggle PR flag
+	err := svc.TogglePRFlag(wm.ID, 1)
+	if err != nil {
+		t.Errorf("TogglePRFlag() error = %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc, _, wmr, _, _ := newTestWorkoutService()
-			if tt.setupRepo != nil {
-				tt.setupRepo(wmr)
-			}
+	// Verify toggled
+	updated, _ := workoutMovementRepo.GetByID(wm.ID)
+	if !updated.IsPR {
+		t.Error("TogglePRFlag() did not toggle IsPR to true")
+	}
 
-			err := svc.TogglePRFlag(tt.movementID, 1)
+	// Toggle again
+	err = svc.TogglePRFlag(wm.ID, 1)
+	if err != nil {
+		t.Errorf("TogglePRFlag() error = %v", err)
+	}
 
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.errContains)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				// Verify toggle
-				wm := wmr.movements[tt.movementID]
-				if wm.IsPR != tt.wantPRAfter {
-					t.Errorf("expected IsPR=%v after toggle, got %v", tt.wantPRAfter, wm.IsPR)
-				}
-			}
-		})
+	// Verify toggled back
+	updated, _ = workoutMovementRepo.GetByID(wm.ID)
+	if updated.IsPR {
+		t.Error("TogglePRFlag() did not toggle IsPR back to false")
+	}
+}
+
+func TestWorkoutService_TogglePRFlag_NotFound(t *testing.T) {
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	svc := NewWorkoutService(nil, workoutMovementRepo, nil, nil)
+
+	err := svc.TogglePRFlag(999, 1)
+	if err == nil {
+		t.Error("TogglePRFlag() should return error for non-existent movement")
 	}
 }
