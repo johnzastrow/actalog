@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -11,10 +13,19 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Default connection timeouts
+const (
+	DefaultConnectTimeout = 30 * time.Second
+	DefaultReadTimeout    = 30 * time.Second
+	DefaultWriteTimeout   = 30 * time.Second
+	DefaultPingTimeout    = 10 * time.Second
+)
+
 // currentDriver stores the database driver being used
 var currentDriver string
 
 // BuildDSN constructs a database connection string based on the driver type
+// Includes connection timeout parameters for remote database reliability
 func BuildDSN(driver, host string, port int, user, password, database, sslMode, schema string) string {
 	switch driver {
 	case "sqlite3":
@@ -24,20 +35,26 @@ func BuildDSN(driver, host string, port int, user, password, database, sslMode, 
 	case "postgres":
 		// PostgreSQL connection string (pgx format)
 		// Format: postgres://user:password@host:port/database?sslmode=disable&search_path=schema
+		// Added connect_timeout for connection reliability
 		dsn := fmt.Sprintf("postgres://%s", user)
 		if password != "" {
 			dsn = fmt.Sprintf("postgres://%s:%s", user, password)
 		}
-		dsn = fmt.Sprintf("%s@%s:%d/%s?sslmode=%s", dsn, host, port, database, sslMode)
+		dsn = fmt.Sprintf("%s@%s:%d/%s?sslmode=%s&connect_timeout=%d",
+			dsn, host, port, database, sslMode, int(DefaultConnectTimeout.Seconds()))
 		if schema != "" && schema != "public" {
 			dsn = fmt.Sprintf("%s&search_path=%s", dsn, schema)
 		}
 		return dsn
 
 	case "mysql":
-		// MySQL/MariaDB connection string
-		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&multiStatements=true",
-			user, password, host, port, database)
+		// MySQL/MariaDB connection string with timeout parameters
+		// timeout: connection timeout, readTimeout: I/O read timeout, writeTimeout: I/O write timeout
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&multiStatements=true&timeout=%s&readTimeout=%s&writeTimeout=%s",
+			user, password, host, port, database,
+			DefaultConnectTimeout.String(),
+			DefaultReadTimeout.String(),
+			DefaultWriteTimeout.String())
 		return dsn
 
 	default:
@@ -47,23 +64,40 @@ func BuildDSN(driver, host string, port int, user, password, database, sslMode, 
 }
 
 // InitDatabase initializes the database connection and runs migrations
+// Includes comprehensive logging at each stage to help diagnose deployment issues
 func InitDatabase(driver, dsn string, dbConfig interface{}) (*sql.DB, error) {
+	startTime := time.Now()
+
 	// Store driver for later use
 	currentDriver = driver
+
+	// Log initialization start with sanitized DSN (hide password)
+	sanitizedDSN := sanitizeDSN(driver, dsn)
+	logInfo("DATABASE INIT", "Starting database initialization...")
+	logInfo("DATABASE INIT", "Driver: %s", driver)
+	logInfo("DATABASE INIT", "DSN: %s", sanitizedDSN)
+	logInfo("DATABASE INIT", "Connection timeout: %v", DefaultConnectTimeout)
 
 	// Use pgx driver name for PostgreSQL
 	driverName := driver
 	if driver == "postgres" {
 		driverName = "pgx"
+		logInfo("DATABASE INIT", "Using pgx driver for PostgreSQL")
 	}
 
+	// Open database connection
+	logInfo("DATABASE INIT", "Opening database connection...")
+	openStart := time.Now()
 	db, err := sql.Open(driverName, dsn)
 	if err != nil {
+		logError("DATABASE INIT", "Failed to open database connection: %v", err)
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Database connection opened (took %v)", time.Since(openStart))
 
 	// Configure connection pooling for PostgreSQL and MySQL
 	if driver == "postgres" || driver == "mysql" {
+		logInfo("DATABASE INIT", "Configuring connection pool...")
 		// Type assert to get database config
 		// This is safe because the caller passes configs.DatabaseConfig
 		if cfg, ok := dbConfig.(interface {
@@ -74,47 +108,170 @@ func InitDatabase(driver, dsn string, dbConfig interface{}) (*sql.DB, error) {
 			db.SetMaxOpenConns(cfg.GetMaxOpenConns())
 			db.SetMaxIdleConns(cfg.GetMaxIdleConns())
 			db.SetConnMaxLifetime(cfg.GetConnMaxLifetime())
+			logInfo("DATABASE INIT", "Pool config: MaxOpen=%d, MaxIdle=%d, MaxLifetime=%v",
+				cfg.GetMaxOpenConns(), cfg.GetMaxIdleConns(), cfg.GetConnMaxLifetime())
 		} else {
 			// Fallback to default values if type assertion fails
 			db.SetMaxOpenConns(25)
 			db.SetMaxIdleConns(5)
 			db.SetConnMaxLifetime(5 * time.Minute)
+			logInfo("DATABASE INIT", "Using default pool config: MaxOpen=25, MaxIdle=5, MaxLifetime=5m")
 		}
+		logSuccess("DATABASE INIT", "Connection pool configured")
 	}
 
-	// Test connection
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+	// Test connection with timeout
+	logInfo("DATABASE INIT", "Testing database connection (timeout: %v)...", DefaultPingTimeout)
+	pingStart := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultPingTimeout)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		logError("DATABASE INIT", "Database ping failed after %v: %v", time.Since(pingStart), err)
+		logError("DATABASE INIT", "Possible causes:")
+		logError("DATABASE INIT", "  - Database server not running or unreachable")
+		logError("DATABASE INIT", "  - Incorrect host/port configuration")
+		logError("DATABASE INIT", "  - Invalid credentials (user/password)")
+		logError("DATABASE INIT", "  - User lacks required database privileges")
+		logError("DATABASE INIT", "  - Firewall blocking connection")
+		logError("DATABASE INIT", "  - Docker network configuration issue")
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database (timeout after %v): %w", time.Since(pingStart), err)
 	}
+	logSuccess("DATABASE INIT", "Database connection verified (ping took %v)", time.Since(pingStart))
+
+	// Test basic query to verify permissions
+	logInfo("DATABASE INIT", "Testing database permissions...")
+	permStart := time.Now()
+	if err := testDatabasePermissions(db, driver); err != nil {
+		logError("DATABASE INIT", "Permission test failed: %v", err)
+		db.Close()
+		return nil, fmt.Errorf("database permission test failed: %w", err)
+	}
+	logSuccess("DATABASE INIT", "Database permissions verified (took %v)", time.Since(permStart))
 
 	// For new databases, create initial tables (v0.1.0 schema)
 	// This ensures the database is initialized before running migrations
+	logInfo("DATABASE INIT", "Checking/creating initial tables...")
+	tablesStart := time.Now()
 	if err := createInitialTablesIfNotExist(db, driver); err != nil {
+		logError("DATABASE INIT", "Failed to create initial tables: %v", err)
+		db.Close()
 		return nil, fmt.Errorf("failed to create initial tables: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Initial tables ready (took %v)", time.Since(tablesStart))
 
 	// Run migrations to bring schema up to latest version
-	fmt.Println("Running database migrations...")
+	logInfo("DATABASE INIT", "Running database migrations...")
+	migrationsStart := time.Now()
 	if err := RunMigrations(db, driver); err != nil {
+		logError("DATABASE INIT", "Migration failed: %v", err)
+		db.Close()
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Migrations completed (took %v)", time.Since(migrationsStart))
 
 	// Seed standard movements (if not already seeded)
+	logInfo("DATABASE INIT", "Seeding standard movements...")
+	seedMovStart := time.Now()
 	if err := seedStandardMovements(db); err != nil {
+		logError("DATABASE INIT", "Failed to seed standard movements: %v", err)
+		db.Close()
 		return nil, fmt.Errorf("failed to seed standard movements: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Standard movements ready (took %v)", time.Since(seedMovStart))
 
 	// Seed standard WODs (if not already seeded)
+	logInfo("DATABASE INIT", "Seeding standard WODs...")
+	seedWODStart := time.Now()
 	if err := seedStandardWODs(db); err != nil {
+		logError("DATABASE INIT", "Failed to seed standard WODs: %v", err)
+		db.Close()
 		return nil, fmt.Errorf("failed to seed standard WODs: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Standard WODs ready (took %v)", time.Since(seedWODStart))
 
 	// Seed workout templates (if not already seeded)
+	logInfo("DATABASE INIT", "Seeding workout templates...")
+	seedTemplateStart := time.Now()
 	if err := seedWorkoutTemplates(db); err != nil {
+		logError("DATABASE INIT", "Failed to seed workout templates: %v", err)
+		db.Close()
 		return nil, fmt.Errorf("failed to seed workout templates: %w", err)
 	}
+	logSuccess("DATABASE INIT", "Workout templates ready (took %v)", time.Since(seedTemplateStart))
 
+	logSuccess("DATABASE INIT", "Database initialized successfully (total: %v)", time.Since(startTime))
 	return db, nil
+}
+
+// testDatabasePermissions verifies the user has required database privileges
+func testDatabasePermissions(db *sql.DB, driver string) error {
+	// Test SELECT permission with a simple query
+	var result int
+	switch driver {
+	case "sqlite3":
+		// SQLite doesn't have user permissions in the same way
+		err := db.QueryRow("SELECT 1").Scan(&result)
+		if err != nil {
+			return fmt.Errorf("SELECT test failed: %w", err)
+		}
+	case "postgres":
+		err := db.QueryRow("SELECT 1").Scan(&result)
+		if err != nil {
+			return fmt.Errorf("SELECT test failed (check user privileges): %w", err)
+		}
+	case "mysql":
+		err := db.QueryRow("SELECT 1").Scan(&result)
+		if err != nil {
+			return fmt.Errorf("SELECT test failed (check GRANT privileges for user): %w", err)
+		}
+	}
+	return nil
+}
+
+// sanitizeDSN removes passwords from DSN strings for safe logging
+func sanitizeDSN(driver, dsn string) string {
+	switch driver {
+	case "mysql":
+		// MySQL format: user:password@tcp(host:port)/database
+		if idx := strings.Index(dsn, ":"); idx > 0 {
+			if atIdx := strings.Index(dsn, "@"); atIdx > idx {
+				return dsn[:idx+1] + "****" + dsn[atIdx:]
+			}
+		}
+	case "postgres":
+		// PostgreSQL format: postgres://user:password@host:port/database
+		if strings.Contains(dsn, "@") {
+			parts := strings.SplitN(dsn, "://", 2)
+			if len(parts) == 2 {
+				userHost := strings.SplitN(parts[1], "@", 2)
+				if len(userHost) == 2 {
+					userPass := strings.SplitN(userHost[0], ":", 2)
+					if len(userPass) == 2 {
+						return parts[0] + "://" + userPass[0] + ":****@" + userHost[1]
+					}
+				}
+			}
+		}
+	}
+	return dsn
+}
+
+// Logging helper functions for consistent output format
+func logInfo(prefix, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	fmt.Fprintf(os.Stdout, "[%s] [INFO] %s: %s\n", time.Now().Format("2006-01-02 15:04:05"), prefix, msg)
+}
+
+func logSuccess(prefix, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	fmt.Fprintf(os.Stdout, "[%s] [OK] %s: ✓ %s\n", time.Now().Format("2006-01-02 15:04:05"), prefix, msg)
+}
+
+func logError(prefix, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	fmt.Fprintf(os.Stderr, "[%s] [ERROR] %s: ✗ %s\n", time.Now().Format("2006-01-02 15:04:05"), prefix, msg)
 }
 
 // createInitialTablesIfNotExist creates the initial v0.1.0 schema if tables don't exist

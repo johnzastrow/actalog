@@ -1,0 +1,1240 @@
+-------------------- .env file for production hosted at al.fluidgrid.site this file is in the same directory as the docker-compose.yml where the containers are started-----------------------------------------------
+
+GITHUB_OWNER=johnzastrow
+TAG=latest
+DB_PASSWORD=BonzoTriangle831^
+JWT_SECRET=b41a29658c72001be3f4aa725f56f3c4eaf76e55735b9ca891625f783dc506b0
+APP_URL=https://al.fluidgrid.site
+CORS_ORIGINS=https://al.fluidgrid.site
+
+
+# =============================================================================
+# JWT Configuration
+# =============================================================================
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
+
+# =============================================================================
+# Email Configuration (Optional - for password reset and verification)
+# =============================================================================
+SMTP_HOST=gator4088.hostgator.com
+SMTP_PORT=465
+SMTP_USER=acta@northredoubt.com
+SMTP_PASS=Placate6-Unvocal-Unburned
+EMAIL_FROM=acta@northredoubt.com
+
+
+# MySQL/MariaDB (uncomment and configure if using MySQL)
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=acta
+DB_USER=acta
+DB_PASSWORD=BonzoTriangle831^
+DB_ROOT_PASSWORD=SillyBanana392-
+
+--------------------------------- docker compose for production Actalog --------------------------------------------------------------
+# docker-compose.external-host.yml
+version: '3.8'
+
+services:
+  actalog:
+    image: ghcr.io/johnzastrow/actalog:latest
+    container_name: actalog
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Connect to host database
+      - DB_DRIVER=mysql
+      - DB_HOST=host.docker.internal  # Works on Linux with extra_hosts above
+      # - DB_HOST=172.17.0.1          # Alternative: Linux default bridge IP
+      - DB_PORT=3306
+      - DB_NAME=acta
+      - DB_USER=acta
+      - DB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:?SillyBanana392-}
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATION=utf8mb4_unicode_ci
+
+
+      # Application config
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
+
+      # Optional: automatic seed import
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+
+    volumes:
+      - actalog-uploads:/app/uploads
+
+    # No database container needed!
+
+volumes:
+  actalog-uploads:
+
+---------------------------- Caddyfile for all sites. All are running from Docker --------------------------------------------------------------------
+
+
+
+# ActaLog - Reverse Proxy Configuration
+# This Caddyfile configures two PWA applications:
+# 1. ActaLog (PWA) at https://al.fluidgrid.site (internal port 3000)
+# 2. Mealie (PWA) at https://recipe.fluidgrid.site (internal port 9925)
+
+# Global options for debugging
+{
+        debug
+        # Enable admin API for debugging
+        admin 0.0.0.0:2019
+}
+
+# ActaLog Configuration
+al.fluidgrid.site {
+        # Reverse proxy to ActaLog frontend running on port 3000
+        reverse_proxy localhost:8080
+
+        # Enhanced logging with human-readable format and debugging info
+        log {
+                output file /var/log/caddy/al.access.log {
+                        roll_size 1MB # Create new file when size exceeds 1MB
+                        roll_keep 5 # Keep at most 5 rolled files
+                }
+                format console # Human-readable format instead of JSON
+                level DEBUG # Enable debug-level logging
+        }
+
+        # Response headers for security
+        header {
+                # Security headers
+                Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                X-Frame-Options "SAMEORIGIN"
+                X-Content-Type-Options "nosniff"
+                X-XSS-Protection "1; mode=block"
+                Referrer-Policy "strict-origin-when-cross-origin"
+        }
+
+        # Compression for better performance (important for PWA)
+        encode gzip
+
+        # Timeouts for reverse proxy
+        reverse_proxy localhost:8080 {
+                # Set timeouts for backend communication
+                transport http {
+                        response_header_timeout 30s
+                        read_timeout 1m
+                        write_timeout 1m
+                }
+
+                # Health check
+                health_uri /health
+                health_interval 30s
+                health_timeout 5s
+
+                # Forward client information
+                header_up Host {host}
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+
+                # Debug headers to verify proxy is working
+                header_down X-Debug-Proxy "ActaLog-Caddy"
+                header_down X-Debug-Backend "localhost:4173"
+        }
+
+        # Diagnostic endpoint to test Caddy is running
+        handle /caddy-test {
+                respond "Caddy is serving al.fluidgrid.site - {time.now}" 200
+        }
+}
+
+# Mealie Configuration (PWA)
+recipe.fluidgrid.site {
+        # Reverse proxy to Mealie (PWA) running on port 9925
+        reverse_proxy localhost:9925
+
+        # Enhanced logging with human-readable format and debugging info
+        log {
+                output file /var/log/caddy/recipe.access.log {
+                        roll_size 1MB # Create new file when size exceeds 1MB
+                        roll_keep 5 # Keep at most 5 rolled files
+                }
+                format console # Human-readable format instead of JSON
+                level DEBUG # Enable debug-level logging
+        }
+
+        # Response headers for security
+        header {
+                # Security headers
+                Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                X-Frame-Options "SAMEORIGIN"
+                X-Content-Type-Options "nosniff"
+                X-XSS-Protection "1; mode=block"
+                Referrer-Policy "strict-origin-when-cross-origin"
+        }
+
+        # Compression for better performance (important for PWA)
+        encode gzip
+
+        # Timeouts for reverse proxy
+        reverse_proxy localhost:9925 {
+                # Set timeouts for backend communication
+                transport http {
+                        response_header_timeout 30s
+                        read_timeout 1m
+                        write_timeout 1m
+                }
+
+                # Forward client information
+                header_up Host {host}
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+
+                # Debug headers to verify proxy is working
+                header_down X-Debug-Proxy "Mealie-Caddy"
+                header_down X-Debug-Backend "localhost:9925"
+        }
+
+        # Diagnostic endpoint to test Caddy is running
+        handle /caddy-test {
+                respond "Caddy is serving recipe.fluidgrid.site - {time.now}" 200
+        }
+}
+
+
+
+# ActaLog Beta Configuration
+albeta.fluidgrid.site {
+        # Reverse proxy to ActaLog frontend running on port 8081
+        reverse_proxy localhost:8081
+
+        # Enhanced logging with human-readable format and debugging info
+        log {
+                output file /var/log/caddy/albeta.access.log {
+                        roll_size 1MB # Create new file when size exceeds 1MB
+                        roll_keep 5 # Keep at most 5 rolled files
+                }
+                format console # Human-readable format instead of JSON
+                level DEBUG # Enable debug-level logging
+        }
+
+
+       # Response headers for security
+        header {
+                # Security headers
+                Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                X-Frame-Options "SAMEORIGIN"
+                X-Content-Type-Options "nosniff"
+                X-XSS-Protection "1; mode=block"
+                Referrer-Policy "strict-origin-when-cross-origin"
+        }
+
+        # Compression for better performance (important for PWA)
+        encode gzip
+
+        # Timeouts for reverse proxy
+        reverse_proxy localhost:8081 {
+                # Set timeouts for backend communication
+                transport http {
+                        response_header_timeout 30s
+                        read_timeout 1m
+                        write_timeout 1m
+                }
+
+                # Health check
+                health_uri /health
+                health_interval 30s
+                health_timeout 5s
+
+                # Forward client information
+                header_up Host {host}
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+
+                # Debug headers to verify proxy is working
+                header_down X-Debug-Proxy "ActaLog-Caddy"
+                header_down X-Debug-Backend "localhost:4173"
+        }
+
+        # Diagnostic endpoint to test Caddy is running
+        handle /caddy-test {
+                respond "Caddy is serving albeta.fluidgrid.site - {time.now}" 200
+        }
+}
+
+
+
+
+# Catch-all for debugging - shows what domain was requested
+:80 {
+        respond "Caddy is running. Requested host: {http.request.host} - Try https://al.fluidgrid.site or https://recipe.fluidgrid.site" 200
+        log {
+                format console
+                level DEBUG
+        }
+}
+
+
+
+---------------- .env file for beta version of actalog for testing --------------------------------
+
+ITHUB_OWNER=johnzastrow
+TAG=latest
+DB_PASSWORD=BonzoTriangle831^
+JWT_SECRET=b41a29658c72001be3f4aa725f56f3c4eaf76e55735b9ca891625f783dc506b0
+APP_URL=https://albeta.fluidgrid.site
+CORS_ORIGINS=https://albeta.fluidgrid.site
+
+
+# =============================================================================
+# JWT Configuration
+# =============================================================================
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
+
+# =============================================================================
+# Email Configuration (Optional - for password reset and verification)
+# =============================================================================
+SMTP_HOST=gator4088.hostgator.com
+SMTP_PORT=465
+SMTP_USER=acta@northredoubt.com
+SMTP_PASS=Placate6-Unvocal-Unburned
+EMAIL_FROM=acta@northredoubt.com
+
+
+# MySQL/MariaDB (uncomment and configure if using MySQL)
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=actaa
+DB_USER=actaa
+DB_PASSWORD=BonzoTriangle831^
+DB_ROOT_PASSWORD=SillyBanana392-
+
+
+
+---------------- docker-compose file for beta version of actalog for testing --------------------------------
+
+
+# docker-compose.external-host.yml
+version: '3.8'
+
+services:
+  actalog:
+    image: ghcr.io/johnzastrow/actalog:build-67
+    container_name: actalogbeta
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Connect to host database
+      - DB_DRIVER=mysql
+      - DB_HOST=host.docker.internal  # Works on Linux with extra_hosts above
+      # - DB_HOST=172.17.0.1          # Alternative: Linux default bridge IP
+      - DB_PORT=3306
+      - DB_NAME=actaa
+      - DB_USER=actaa
+      - DB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:?SillyBanana392-}
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATION=utf8mb4_unicode_ci
+
+
+      # Application config
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_URL=${APP_URL:-http://localhost:8081}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8081}
+
+      # Optional: automatic seed import
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+
+    volumes:
+      - actalog-uploads:/app/uploadsbeta
+
+    # No database container needed!
+
+volumes:
+  actalog-uploads:
+
+----------------------from Mariadb on the host that works with all actalogs  ----------------------------------
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| acta               |
+| actaa              |
+| actab              |
+| back               |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+
+
+MariaDB [mysql]> select * from user \G;
+*************************** 1. row ***************************
+                  Host: localhost
+                  User: mariadb.sys
+              Password:
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string:
+      password_expired: Y
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 2. row ***************************
+                  Host: localhost
+                  User: root
+              Password: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+   Delete_history_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 3. row ***************************
+                  Host: localhost
+                  User: mysql
+              Password: invalid
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+   Delete_history_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: invalid
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 4. row ***************************
+                  Host: 127.0.0.1
+                  User: jcz
+              Password: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+   Delete_history_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 5. row ***************************
+                  Host: 127.0.0.1
+                  User: acta
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 6. row ***************************
+                  Host: 127.0.0.1
+                  User: back
+              Password: *6B9F4BD8CE2D9F5A344AD0E2885AC8722A97330A
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *6B9F4BD8CE2D9F5A344AD0E2885AC8722A97330A
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 7. row ***************************
+                  Host: localhost
+                  User: jcz
+              Password: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+   Delete_history_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 8. row ***************************
+                  Host: localhost
+                  User: acta
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 9. row ***************************
+                  Host: localhost
+                  User: back
+              Password: *6B9F4BD8CE2D9F5A344AD0E2885AC8722A97330A
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *6B9F4BD8CE2D9F5A344AD0E2885AC8722A97330A
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 10. row ***************************
+                  Host: %
+                  User: actalog
+              Password: *D4CECBA84F0A507325CD8AA82FCDE04EA8BE56B0
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *D4CECBA84F0A507325CD8AA82FCDE04EA8BE56B0
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 11. row ***************************
+                  Host: 127.0.0.1
+                  User: actalog
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 12. row ***************************
+                  Host: 127.0.0.1
+                  User: root
+              Password: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+   Delete_history_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *04C1E001FF90DD1BEA6747B20A797FA041C20BCE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 13. row ***************************
+                  Host: %
+                  User: acta
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 14. row ***************************
+                  Host: 172.17.%
+                  User: acta
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 15. row ***************************
+                  Host: localhost
+                  User: actaa
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+*************************** 16. row ***************************
+                  Host: %
+                  User: actaa
+              Password: *F0F47267A5646F3B8007BF4D655541400672C4DE
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+            Super_priv: N
+ Create_tmp_table_priv: N
+      Lock_tables_priv: N
+          Execute_priv: N
+       Repl_slave_priv: N
+      Repl_client_priv: N
+      Create_view_priv: N
+        Show_view_priv: N
+   Create_routine_priv: N
+    Alter_routine_priv: N
+      Create_user_priv: N
+            Event_priv: N
+          Trigger_priv: N
+Create_tablespace_priv: N
+   Delete_history_priv: N
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F0F47267A5646F3B8007BF4D655541400672C4DE
+      password_expired: N
+               is_role: N
+          default_role:
+    max_statement_time: 0.000000
+16 rows in set (0.008 sec)
+
+----------------------- output from trying to start the beta testing container ---------------------------------------------
+
+jcz@recipe:~/actabetadocker$ docker compose up -d &&   docker compose logs -f
+WARN[0000] /home/jcz/actabetadocker/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] up 2/2
+ ✔ Network actabetadocker_default Created                                                                                                                                                                                                                                                                                0.1s
+ ✔ Container actalogbeta          Created                                                                                                                                                                                                                                                                                0.2s
+WARN[0000] /home/jcz/actabetadocker/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+actalogbeta  | Starting ActaLog...
+actalogbeta  | Waiting for ActaLog to start (PID: 7)...
+actalogbeta  | ActaLog v0.17.0-beta
+actalogbeta  | Starting ActaLog server...
+actalogbeta  | 2025-12-24 22:59:32 [INFO] Environment: development
+actalogbeta  | 2025-12-24 22:59:32 [INFO] Log Level: info
+actalogbeta  | 2025-12-24 22:59:32 [INFO] File logging: disabled (stdout only)
+actalogbeta  | 2025-12-24 22:59:32 [INFO] Database Driver: mysql
+actalogbeta  | 2025-12-24 22:59:32 [INFO] Server: 0.0.0.0:8080
+actalogbeta  | 2025-12-24 22:59:32 [INFO] Allow Registration: true
+actalogbeta  | 2025/12/24 22:59:32 No .env file found or error loading it, using environment variables or defaults
+actalogbeta  | ERROR: ActaLog failed to become healthy within 30 seconds
+actalogbeta  | The process is running but not responding. Check logs for details.
+actalogbeta exited with code 1 (restarting)
+actalogbeta  | Starting ActaLog...
+actalogbeta  | Waiting for ActaLog to start (PID: 7)...
+actalogbeta  | ActaLog v0.17.0-beta
+actalogbeta  | Starting ActaLog server...
+actalogbeta  | 2025/12/24 23:00:03 No .env file found or error loading it, using environment variables or defaults
+actalogbeta  | 2025-12-24 23:00:03 [INFO] Environment: development
+actalogbeta  | 2025-12-24 23:00:03 [INFO] Log Level: info
+actalogbeta  | 2025-12-24 23:00:03 [INFO] File logging: disabled (stdout only)
+actalogbeta  | 2025-12-24 23:00:03 [INFO] Database Driver: mysql
+actalogbeta  | 2025-12-24 23:00:03 [INFO] Server: 0.0.0.0:8080
+actalogbeta  | 2025-12-24 23:00:03 [INFO] Allow Registration: true
+actalogbeta  | ERROR: ActaLog failed to become healthy within 30 seconds
+actalogbeta  | The process is running but not responding. Check logs for details.
+actalogbeta exited with code 1 (restarting)
+actalogbeta  | Starting ActaLog...
+actalogbeta  | Waiting for ActaLog to start (PID: 6)...
+actalogbeta  | ActaLog v0.17.0-beta
+actalogbeta  | Starting ActaLog server...
+actalogbeta  | 2025/12/24 23:00:33 No .env file found or error loading it, using environment variables or defaults
+actalogbeta  | 2025-12-24 23:00:33 [INFO] Environment: development
+actalogbeta  | 2025-12-24 23:00:33 [INFO] Log Level: info
+actalogbeta  | 2025-12-24 23:00:33 [INFO] File logging: disabled (stdout only)
+actalogbeta  | 2025-12-24 23:00:33 [INFO] Database Driver: mysql
+actalogbeta  | 2025-12-24 23:00:33 [INFO] Server: 0.0.0.0:8080
+actalogbeta  | 2025-12-24 23:00:33 [INFO] Allow Registration: true
+
+
+----------------------- output from trying to start the production testing container ---------------------------------------------'
+
+jcz@recipe:~/actadocker$ ls
+almost.env  docker-compose.yml  nowork.docker-compose.yml  sqlite.docker-compose.yml  trying.docker-compose.yml
+jcz@recipe:~/actadocker$ docker compose down
+WARN[0000] /home/jcz/actadocker/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+jcz@recipe:~/actadocker$ docker compose up -d &&   docker compose logs -f
+WARN[0000] /home/jcz/actadocker/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] up 2/2
+ ✔ Network actadocker_default Created                                                                                                                                                                                                                                                                                    0.1s
+ ✔ Container actalog          Created                                                                                                                                                                                                                                                                                    0.1s
+WARN[0000] /home/jcz/actadocker/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+actalog  | Starting ActaLog...
+actalog  | Waiting for ActaLog to start (PID: 7)...
+actalog  | ActaLog v0.12.2-beta
+actalog  | Starting ActaLog server...
+actalog  | 2025/12/24 23:02:27 No .env file found or error loading it, using environment variables or defaults
+actalog  | 2025-12-24 23:02:27 [INFO] Environment: development
+actalog  | 2025-12-24 23:02:27 [INFO] Log Level: info
+actalog  | 2025-12-24 23:02:27 [INFO] File logging: disabled (stdout only)
+actalog  | 2025-12-24 23:02:27 [INFO] Database Driver: mysql
+actalog  | 2025-12-24 23:02:27 [INFO] Server: 0.0.0.0:8080
+actalog  | 2025-12-24 23:02:27 [INFO] Allow Registration: true
+actalog  | Running database migrations...
+actalog  | 2025-12-24 23:02:27 [INFO] Database initialized successfully
+actalog  | 2025-12-24 23:02:27 [INFO] Email service: disabled (password reset emails will not be sent)
+actalog  | 2025-12-24 23:02:27 [INFO] Serving frontend from: /app/web/dist
+actalog  | 2025-12-24 23:02:27 [INFO] Server listening on 0.0.0.0:8080
+actalog  | 2025-12-24 23:02:28 [INFO] GET /health status=200 duration=82.15µs size=44 bytes user=- route=-
+actalog  | ActaLog is ready!
+actalog  | No admin credentials provided. Skipping automatic seed import.
+actalog  | You can manually import seeds via the web UI or API after creating an admin account.
+actalog  | ActaLog is now running. Monitoring process...
+actalog  | 2025-12-24 23:02:31 [INFO] GET / status=200 duration=771.397µs size=1114 bytes user=- route=-
+actalog  | 2025-12-24 23:02:32 [INFO] GET /health status=200 duration=39.041µs size=44 bytes user=- route=-
+actalog  | 2025-12-24 23:02:42 [INFO] GET /health status=200 duration=41.14µs size=44 bytes user=- route=-

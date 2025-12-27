@@ -31,21 +31,35 @@ import (
 )
 
 func main() {
-	// Print version information
+	startTime := time.Now()
+
+	// Print startup banner with timestamp
+	fmt.Println("============================================================")
+	fmt.Printf("[%s] ActaLog Server Starting\n", time.Now().Format("2006-01-02 15:04:05"))
+	fmt.Println("============================================================")
 	fmt.Println(version.String())
-	fmt.Println("Starting ActaLog server...")
+
+	// Log basic environment info for diagnostics
+	hostname, _ := os.Hostname()
+	fmt.Printf("[STARTUP] Hostname: %s\n", hostname)
+	fmt.Printf("[STARTUP] Working Directory: %s\n", mustGetCwd())
+	fmt.Printf("[STARTUP] Process ID: %d\n", os.Getpid())
+	fmt.Println("[STARTUP] Loading configuration...")
 
 	// Load .env file (ignore error if file doesn't exist)
 	// In production, you should use actual environment variables
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found or error loading it, using environment variables or defaults")
+		log.Println("[STARTUP] No .env file found or error loading it, using environment variables or defaults")
+	} else {
+		fmt.Println("[STARTUP] ✓ .env file loaded")
 	}
 
 	// Load configuration
 	cfg, err := configs.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		log.Fatalf("[STARTUP] ✗ Failed to load configuration: %v", err)
 	}
+	fmt.Println("[STARTUP] ✓ Configuration loaded")
 
 	// Initialize logger
 	appLogger, err := logger.New(logger.Config{
@@ -56,21 +70,41 @@ func main() {
 		MaxBackups: cfg.Logging.MaxBackups,
 	})
 	if err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
+		log.Fatalf("[STARTUP] ✗ Failed to initialize logger: %v", err)
 	}
 	defer appLogger.Close()
+	fmt.Println("[STARTUP] ✓ Logger initialized")
 
-	// Log configuration (without sensitive data)
+	// Log comprehensive configuration (without sensitive data)
+	fmt.Println("------------------------------------------------------------")
+	fmt.Println("[CONFIG] Application Settings:")
 	appLogger.Info("Environment: %s", cfg.App.Environment)
 	appLogger.Info("Log Level: %s", cfg.Logging.Level)
 	if cfg.Logging.EnableFile {
-		appLogger.Info("File logging: enabled")
+		appLogger.Info("File logging: enabled (%s)", cfg.Logging.FilePath)
 	} else {
 		appLogger.Info("File logging: disabled (stdout only)")
 	}
+
+	// Database configuration (detailed for debugging)
+	fmt.Println("[CONFIG] Database Settings:")
 	appLogger.Info("Database Driver: %s", cfg.Database.Driver)
-	appLogger.Info("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
+	if cfg.Database.Driver != "sqlite3" {
+		appLogger.Info("Database Host: %s", cfg.Database.Host)
+		appLogger.Info("Database Port: %d", cfg.Database.Port)
+		appLogger.Info("Database Name: %s", cfg.Database.Database)
+		appLogger.Info("Database User: %s", cfg.Database.User)
+		if cfg.Database.Schema != "" {
+			appLogger.Info("Database Schema: %s", cfg.Database.Schema)
+		}
+	} else {
+		appLogger.Info("Database File: %s", cfg.Database.Database)
+	}
+
+	fmt.Println("[CONFIG] Server Settings:")
+	appLogger.Info("Server Address: %s:%d", cfg.Server.Host, cfg.Server.Port)
 	appLogger.Info("Allow Registration: %t", cfg.App.AllowRegistration)
+	fmt.Println("------------------------------------------------------------")
 
 	// Build database connection string
 	dsn := repository.BuildDSN(
@@ -569,6 +603,11 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
+		fmt.Println("============================================================")
+		fmt.Printf("[%s] ✓ SERVER READY\n", time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Printf("[STARTUP] Total startup time: %v\n", time.Since(startTime))
+		fmt.Printf("[STARTUP] Server listening on %s\n", addr)
+		fmt.Println("============================================================")
 		appLogger.Info("Server listening on %s", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			appLogger.Fatal("Server failed to start: %v", err)
@@ -611,4 +650,13 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	}))
+}
+
+// mustGetCwd returns the current working directory or "unknown" if it fails
+func mustGetCwd() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "unknown"
+	}
+	return cwd
 }
