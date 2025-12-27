@@ -959,6 +959,7 @@ func (m *mockSubscriptionAccessRepo) CheckUserAccess(userID int64) (*domain.Subs
 type mockOrganizationRepo struct {
 	organizations     map[int64]*domain.Organization
 	userOrganizations map[int64]map[int64]string // userID -> orgID -> role
+	orgUsers          map[int64][]*domain.User   // orgID -> users
 	nextID            int64
 }
 
@@ -966,6 +967,7 @@ func newMockOrganizationRepo() *mockOrganizationRepo {
 	return &mockOrganizationRepo{
 		organizations:     make(map[int64]*domain.Organization),
 		userOrganizations: make(map[int64]map[int64]string),
+		orgUsers:          make(map[int64][]*domain.User),
 		nextID:            1,
 	}
 }
@@ -1378,6 +1380,9 @@ func (m *mockOrganizationRepo) GetUserOrganizations(userID int64) ([]*domain.Org
 }
 
 func (m *mockOrganizationRepo) GetOrganizationUsers(orgID int64) ([]*domain.User, error) {
+	if users, ok := m.orgUsers[orgID]; ok {
+		return users, nil
+	}
 	return []*domain.User{}, nil
 }
 
