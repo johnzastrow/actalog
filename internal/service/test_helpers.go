@@ -1490,3 +1490,230 @@ func (m *mockUserRepo) UnlockAccount(userID int64) error {
 	m.users[userID] = user
 	return nil
 }
+
+// Mock DataChangeLogRepository
+type mockDataChangeLogRepo struct {
+	logs   []*domain.DataChangeLog
+	nextID int64
+}
+
+func newMockDataChangeLogRepo() *mockDataChangeLogRepo {
+	return &mockDataChangeLogRepo{
+		logs:   make([]*domain.DataChangeLog, 0),
+		nextID: 1,
+	}
+}
+
+func (m *mockDataChangeLogRepo) Create(log *domain.DataChangeLog) error {
+	log.ID = m.nextID
+	m.nextID++
+	log.CreatedAt = time.Now()
+	m.logs = append(m.logs, log)
+	return nil
+}
+
+func (m *mockDataChangeLogRepo) GetByID(id int64) (*domain.DataChangeLog, error) {
+	for _, log := range m.logs {
+		if log.ID == id {
+			return log, nil
+		}
+	}
+	return nil, sql.ErrNoRows
+}
+
+func (m *mockDataChangeLogRepo) List(filters domain.DataChangeLogFilters, limit, offset int) ([]*domain.DataChangeLog, error) {
+	return m.logs, nil
+}
+
+func (m *mockDataChangeLogRepo) Count(filters domain.DataChangeLogFilters) (int, error) {
+	return len(m.logs), nil
+}
+
+func (m *mockDataChangeLogRepo) GetByEntityID(entityType string, entityID int64, limit, offset int) ([]*domain.DataChangeLog, error) {
+	var result []*domain.DataChangeLog
+	for _, log := range m.logs {
+		if log.EntityType == entityType && log.EntityID == entityID {
+			result = append(result, log)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockDataChangeLogRepo) GetByUserID(userID int64, limit, offset int) ([]*domain.DataChangeLog, error) {
+	var result []*domain.DataChangeLog
+	for _, log := range m.logs {
+		if log.UserID == userID {
+			result = append(result, log)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockDataChangeLogRepo) DeleteOlderThan(before time.Time) (int, error) {
+	count := 0
+	var remaining []*domain.DataChangeLog
+	for _, log := range m.logs {
+		if log.CreatedAt.Before(before) {
+			count++
+		} else {
+			remaining = append(remaining, log)
+		}
+	}
+	m.logs = remaining
+	return count, nil
+}
+
+// Mock NotificationLikeRepository
+type mockNotificationLikeRepo struct {
+	likes  []*domain.NotificationLike
+	nextID int64
+}
+
+func newMockNotificationLikeRepo() *mockNotificationLikeRepo {
+	return &mockNotificationLikeRepo{
+		likes:  make([]*domain.NotificationLike, 0),
+		nextID: 1,
+	}
+}
+
+func (m *mockNotificationLikeRepo) Create(like *domain.NotificationLike) error {
+	like.ID = m.nextID
+	m.nextID++
+	like.CreatedAt = time.Now()
+	m.likes = append(m.likes, like)
+	return nil
+}
+
+func (m *mockNotificationLikeRepo) Delete(notificationID, userID int64) error {
+	for i, like := range m.likes {
+		if like.NotificationID == notificationID && like.UserID == userID {
+			m.likes = append(m.likes[:i], m.likes[i+1:]...)
+			return nil
+		}
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockNotificationLikeRepo) GetByNotificationID(notificationID int64) ([]*domain.NotificationLike, error) {
+	var result []*domain.NotificationLike
+	for _, like := range m.likes {
+		if like.NotificationID == notificationID {
+			result = append(result, like)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockNotificationLikeRepo) GetLikeCount(notificationID int64) (int, error) {
+	count := 0
+	for _, like := range m.likes {
+		if like.NotificationID == notificationID {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockNotificationLikeRepo) HasUserLiked(notificationID, userID int64) (bool, error) {
+	for _, like := range m.likes {
+		if like.NotificationID == notificationID && like.UserID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// Mock NotificationRepository (for notification like service tests)
+type mockNotificationRepo struct {
+	notifications map[int64]*domain.Notification
+	nextID        int64
+}
+
+func newMockNotificationRepo() *mockNotificationRepo {
+	return &mockNotificationRepo{
+		notifications: make(map[int64]*domain.Notification),
+		nextID:        1,
+	}
+}
+
+func (m *mockNotificationRepo) Create(notification *domain.Notification) error {
+	notification.ID = m.nextID
+	m.nextID++
+	notification.CreatedAt = time.Now()
+	m.notifications[notification.ID] = notification
+	return nil
+}
+
+func (m *mockNotificationRepo) GetByID(id int64) (*domain.Notification, error) {
+	notification, ok := m.notifications[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return notification, nil
+}
+
+func (m *mockNotificationRepo) GetByUserID(userID int64, limit, offset int) ([]*domain.Notification, error) {
+	var result []*domain.Notification
+	for _, n := range m.notifications {
+		if n.UserID == userID {
+			result = append(result, n)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockNotificationRepo) GetUnreadByUserID(userID int64, limit, offset int) ([]*domain.Notification, error) {
+	var result []*domain.Notification
+	for _, n := range m.notifications {
+		if n.UserID == userID && n.ReadAt == nil {
+			result = append(result, n)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockNotificationRepo) CountUnreadByUserID(userID int64) (int64, error) {
+	count := int64(0)
+	for _, n := range m.notifications {
+		if n.UserID == userID && n.ReadAt == nil {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockNotificationRepo) MarkAsRead(id int64) error {
+	if n, ok := m.notifications[id]; ok {
+		now := time.Now()
+		n.ReadAt = &now
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockNotificationRepo) MarkAsUnread(id int64) error {
+	if n, ok := m.notifications[id]; ok {
+		n.ReadAt = nil
+		return nil
+	}
+	return sql.ErrNoRows
+}
+
+func (m *mockNotificationRepo) MarkAllAsReadForUser(userID int64) error {
+	now := time.Now()
+	for _, n := range m.notifications {
+		if n.UserID == userID {
+			n.ReadAt = &now
+		}
+	}
+	return nil
+}
+
+func (m *mockNotificationRepo) Delete(id int64) error {
+	delete(m.notifications, id)
+	return nil
+}
+
+func (m *mockNotificationRepo) DeleteOlderThan(before time.Time) (int64, error) {
+	return 0, nil
+}
