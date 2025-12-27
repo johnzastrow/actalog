@@ -114,7 +114,7 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 
 // GetByID retrieves a user workout movement by ID
 func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMovement, error) {
-	query := rebindQuery(`SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at
 	          FROM user_workout_movements WHERE id = ?`)
 
 	uwm := &domain.UserWorkoutMovement{}
@@ -124,7 +124,7 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 	var time sql.NullInt64
 	var distance sql.NullFloat64
 
-	err := r.db.QueryRow(query, id).Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance, &uwm.Notes, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance, &uwm.Notes, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

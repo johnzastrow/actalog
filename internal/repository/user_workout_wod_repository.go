@@ -114,7 +114,7 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 
 // GetByID retrieves a user workout WOD by ID
 func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, error) {
-	query := rebindQuery(`SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at
 	          FROM user_workout_wods WHERE id = ?`)
 
 	uww := &domain.UserWorkoutWOD{}
@@ -125,7 +125,7 @@ func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, er
 	var reps sql.NullInt64
 	var weight sql.NullFloat64
 
-	err := r.db.QueryRow(query, id).Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight, &uww.Notes, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight, &uww.Notes, &uww.IsPR, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
