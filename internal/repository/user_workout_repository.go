@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -411,24 +412,364 @@ func (r *UserWorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*
 }
 
 // ListByUserWithDetails retrieves all workouts logged by a user with details
+// Optimized: uses batch queries instead of N+1 pattern (reduces from 6N+1 to 6 queries)
 func (r *UserWorkoutRepository) ListByUserWithDetails(userID int64, limit, offset int) ([]*domain.UserWorkoutWithDetails, error) {
-	// Get user workouts
-	userWorkouts, err := r.ListByUser(userID, limit, offset)
+	// Step 1: Get user workouts with workout names/descriptions in a single query
+	mainQuery := rebindQuery(`
+		SELECT uw.id, uw.user_id, uw.workout_id, uw.workout_name, uw.workout_date, uw.workout_type,
+		       uw.total_time, uw.notes, uw.created_at, uw.updated_at,
+		       w.name as template_name, w.notes as template_notes
+		FROM user_workouts uw
+		LEFT JOIN workouts w ON uw.workout_id = w.id
+		WHERE uw.user_id = ?
+		ORDER BY uw.workout_date DESC, uw.created_at DESC
+		LIMIT ? OFFSET ?`)
+
+	rows, err := r.db.Query(mainQuery, userID, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list user workouts: %w", err)
 	}
+	defer rows.Close()
 
 	var results []*domain.UserWorkoutWithDetails
-	for _, uw := range userWorkouts {
-		// Get details for each workout
-		details, err := r.GetByIDWithDetails(uw.ID, userID)
+	var userWorkoutIDs []int64
+	var templateWorkoutIDs []int64
+	templateIDSet := make(map[int64]bool)
+
+	for rows.Next() {
+		uw := &domain.UserWorkout{}
+		var workoutID sql.NullInt64
+		var workoutName sql.NullString
+		var totalTime sql.NullInt64
+		var notes sql.NullString
+		var templateName sql.NullString
+		var templateNotes sql.NullString
+
+		err := rows.Scan(&uw.ID, &uw.UserID, &workoutID, &workoutName, &uw.WorkoutDate, &uw.WorkoutType,
+			&totalTime, &notes, &uw.CreatedAt, &uw.UpdatedAt,
+			&templateName, &templateNotes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan user workout: %w", err)
 		}
-		results = append(results, details)
+
+		if workoutID.Valid {
+			uw.WorkoutID = &workoutID.Int64
+		}
+		if workoutName.Valid {
+			uw.WorkoutName = &workoutName.String
+		}
+		if totalTime.Valid {
+			t := int(totalTime.Int64)
+			uw.TotalTime = &t
+		}
+		if notes.Valid {
+			uw.Notes = &notes.String
+		}
+
+		// Determine workout name and description
+		var wkName string
+		var wkDesc *string
+		if workoutID.Valid && templateName.Valid {
+			wkName = templateName.String
+			if templateNotes.Valid {
+				wkDesc = &templateNotes.String
+			}
+		} else if workoutName.Valid {
+			wkName = workoutName.String
+		}
+
+		result := &domain.UserWorkoutWithDetails{
+			UserWorkout:        *uw,
+			WorkoutName:        wkName,
+			WorkoutDescription: wkDesc,
+		}
+		results = append(results, result)
+		userWorkoutIDs = append(userWorkoutIDs, uw.ID)
+
+		if workoutID.Valid && !templateIDSet[workoutID.Int64] {
+			templateWorkoutIDs = append(templateWorkoutIDs, workoutID.Int64)
+			templateIDSet[workoutID.Int64] = true
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate user workouts: %w", err)
+	}
+
+	if len(results) == 0 {
+		return results, nil
+	}
+
+	// Step 2: Batch fetch template movements (workout_movements)
+	templateMovements := make(map[int64][]*domain.WorkoutMovement)
+	if len(templateWorkoutIDs) > 0 {
+		placeholders := r.buildPlaceholders(len(templateWorkoutIDs))
+		movQuery := fmt.Sprintf(`
+			SELECT ws.id, ws.workout_id, ws.movement_id, ws.weight, ws.sets, ws.reps, ws.time, ws.distance,
+			       ws.is_rx, ws.is_pr, ws.notes, ws.order_index, ws.created_at, ws.updated_at,
+			       m.name as movement_name, m.type as movement_type
+			FROM workout_movements ws
+			JOIN movements m ON ws.movement_id = m.id
+			WHERE ws.workout_id IN (%s)
+			ORDER BY ws.workout_id, ws.order_index`, placeholders)
+
+		args := make([]interface{}, len(templateWorkoutIDs))
+		for i, id := range templateWorkoutIDs {
+			args[i] = id
+		}
+
+		movRows, err := r.db.Query(movQuery, args...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to batch fetch template movements: %w", err)
+		}
+		defer movRows.Close()
+
+		for movRows.Next() {
+			wm := &domain.WorkoutMovement{}
+			var weight sql.NullFloat64
+			var sets, reps, time sql.NullInt64
+			var distance sql.NullFloat64
+			var notes sql.NullString
+			var movementName, movementType string
+
+			err := movRows.Scan(&wm.ID, &wm.WorkoutID, &wm.MovementID, &weight, &sets, &reps, &time, &distance,
+				&wm.IsRx, &wm.IsPR, &notes, &wm.OrderIndex, &wm.CreatedAt, &wm.UpdatedAt,
+				&movementName, &movementType)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan template movement: %w", err)
+			}
+
+			if weight.Valid {
+				wm.Weight = &weight.Float64
+			}
+			if sets.Valid {
+				s := int(sets.Int64)
+				wm.Sets = &s
+			}
+			if reps.Valid {
+				r := int(reps.Int64)
+				wm.Reps = &r
+			}
+			if time.Valid {
+				t := int(time.Int64)
+				wm.Time = &t
+			}
+			if distance.Valid {
+				wm.Distance = &distance.Float64
+			}
+			if notes.Valid {
+				wm.Notes = notes.String
+			}
+			wm.Movement = &domain.Movement{ID: wm.MovementID, Name: movementName, Type: domain.MovementType(movementType)}
+
+			templateMovements[wm.WorkoutID] = append(templateMovements[wm.WorkoutID], wm)
+		}
+	}
+
+	// Step 3: Batch fetch template WODs (workout_wods)
+	templateWODs := make(map[int64][]*domain.WorkoutWODWithDetails)
+	if len(templateWorkoutIDs) > 0 {
+		placeholders := r.buildPlaceholders(len(templateWorkoutIDs))
+		wodQuery := fmt.Sprintf(`
+			SELECT ww.id, ww.workout_id, ww.wod_id, ww.order_index, ww.created_at, ww.updated_at,
+			       w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
+			       w.score_type as wod_score_type, w.description as wod_description
+			FROM workout_wods ww
+			JOIN wods w ON ww.wod_id = w.id
+			WHERE ww.workout_id IN (%s)
+			ORDER BY ww.workout_id, ww.order_index`, placeholders)
+
+		args := make([]interface{}, len(templateWorkoutIDs))
+		for i, id := range templateWorkoutIDs {
+			args[i] = id
+		}
+
+		wodRows, err := r.db.Query(wodQuery, args...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to batch fetch template WODs: %w", err)
+		}
+		defer wodRows.Close()
+
+		for wodRows.Next() {
+			wod := &domain.WorkoutWODWithDetails{}
+			err := wodRows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID, &wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
+				&wod.WODName, &wod.WODType, &wod.WODRegime, &wod.WODScoreType, &wod.WODDescription)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan template WOD: %w", err)
+			}
+			templateWODs[wod.WorkoutID] = append(templateWODs[wod.WorkoutID], wod)
+		}
+	}
+
+	// Step 4: Batch fetch performance movements (user_workout_movements)
+	perfMovements := make(map[int64][]*domain.UserWorkoutMovement)
+	{
+		placeholders := r.buildPlaceholders(len(userWorkoutIDs))
+		perfMovQuery := fmt.Sprintf(`
+			SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight,
+			       uwm.time, uwm.distance, uwm.notes, uwm.order_index, uwm.created_at, uwm.updated_at,
+			       m.name as movement_name, m.type as movement_type
+			FROM user_workout_movements uwm
+			JOIN movements m ON uwm.movement_id = m.id
+			WHERE uwm.user_workout_id IN (%s)
+			ORDER BY uwm.user_workout_id, uwm.order_index`, placeholders)
+
+		args := make([]interface{}, len(userWorkoutIDs))
+		for i, id := range userWorkoutIDs {
+			args[i] = id
+		}
+
+		perfRows, err := r.db.Query(perfMovQuery, args...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to batch fetch performance movements: %w", err)
+		}
+		defer perfRows.Close()
+
+		for perfRows.Next() {
+			uwm := &domain.UserWorkoutMovement{}
+			var sets, reps, time sql.NullInt64
+			var weight, distance sql.NullFloat64
+			var notes sql.NullString
+			var movementName, movementType string
+
+			err := perfRows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight,
+				&time, &distance, &notes, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
+				&movementName, &movementType)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan performance movement: %w", err)
+			}
+
+			if sets.Valid {
+				s := int(sets.Int64)
+				uwm.Sets = &s
+			}
+			if reps.Valid {
+				r := int(reps.Int64)
+				uwm.Reps = &r
+			}
+			if weight.Valid {
+				uwm.Weight = &weight.Float64
+			}
+			if time.Valid {
+				t := int(time.Int64)
+				uwm.Time = &t
+			}
+			if distance.Valid {
+				uwm.Distance = &distance.Float64
+			}
+			if notes.Valid {
+				uwm.Notes = notes.String
+			}
+			uwm.Movement = &domain.Movement{ID: uwm.MovementID, Name: movementName, Type: domain.MovementType(movementType)}
+			uwm.MovementName = movementName
+			uwm.MovementType = movementType
+
+			perfMovements[uwm.UserWorkoutID] = append(perfMovements[uwm.UserWorkoutID], uwm)
+		}
+	}
+
+	// Step 5: Batch fetch performance WODs (user_workout_wods)
+	perfWODs := make(map[int64][]*domain.UserWorkoutWOD)
+	{
+		placeholders := r.buildPlaceholders(len(userWorkoutIDs))
+		perfWODQuery := fmt.Sprintf(`
+			SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value,
+			       uww.time_seconds, uww.rounds, uww.reps, uww.weight, uww.notes,
+			       uww.order_index, uww.created_at, uww.updated_at,
+			       w.name as wod_name, w.type as wod_type, w.regime as wod_regime
+			FROM user_workout_wods uww
+			JOIN wods w ON uww.wod_id = w.id
+			WHERE uww.user_workout_id IN (%s)
+			ORDER BY uww.user_workout_id, uww.order_index`, placeholders)
+
+		args := make([]interface{}, len(userWorkoutIDs))
+		for i, id := range userWorkoutIDs {
+			args[i] = id
+		}
+
+		wodRows, err := r.db.Query(perfWODQuery, args...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to batch fetch performance WODs: %w", err)
+		}
+		defer wodRows.Close()
+
+		for wodRows.Next() {
+			uww := &domain.UserWorkoutWOD{}
+			var scoreType, scoreValue sql.NullString
+			var timeSeconds, rounds, reps sql.NullInt64
+			var weight sql.NullFloat64
+			var notes sql.NullString
+			var wodName, wodType, wodRegime string
+
+			err := wodRows.Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue,
+				&timeSeconds, &rounds, &reps, &weight, &notes,
+				&uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
+				&wodName, &wodType, &wodRegime)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan performance WOD: %w", err)
+			}
+
+			if scoreType.Valid {
+				uww.ScoreType = &scoreType.String
+			}
+			if scoreValue.Valid {
+				uww.ScoreValue = &scoreValue.String
+			}
+			if timeSeconds.Valid {
+				t := int(timeSeconds.Int64)
+				uww.TimeSeconds = &t
+			}
+			if rounds.Valid {
+				r := int(rounds.Int64)
+				uww.Rounds = &r
+			}
+			if reps.Valid {
+				r := int(reps.Int64)
+				uww.Reps = &r
+			}
+			if weight.Valid {
+				uww.Weight = &weight.Float64
+			}
+			if notes.Valid {
+				uww.Notes = notes.String
+			}
+			uww.WOD = &domain.WOD{ID: uww.WODID, Name: wodName, Type: wodType, Regime: wodRegime}
+			uww.WODName = wodName
+
+			perfWODs[uww.UserWorkoutID] = append(perfWODs[uww.UserWorkoutID], uww)
+		}
+	}
+
+	// Step 6: Assemble results
+	for _, result := range results {
+		if result.UserWorkout.WorkoutID != nil {
+			result.Movements = templateMovements[*result.UserWorkout.WorkoutID]
+			result.WODs = templateWODs[*result.UserWorkout.WorkoutID]
+		}
+		result.PerformanceMovements = perfMovements[result.UserWorkout.ID]
+		result.PerformanceWODs = perfWODs[result.UserWorkout.ID]
 	}
 
 	return results, nil
+}
+
+// buildPlaceholders creates a comma-separated list of placeholders for IN clauses
+func (r *UserWorkoutRepository) buildPlaceholders(count int) string {
+	if count == 0 {
+		return ""
+	}
+	placeholder := "?"
+	if currentDriver == "postgres" {
+		placeholders := make([]string, count)
+		for i := 0; i < count; i++ {
+			placeholders[i] = fmt.Sprintf("$%d", i+1)
+		}
+		return strings.Join(placeholders, ", ")
+	}
+	placeholders := make([]string, count)
+	for i := 0; i < count; i++ {
+		placeholders[i] = placeholder
+	}
+	return strings.Join(placeholders, ", ")
 }
 
 // ListByUserAndDateRange retrieves workouts within a date range
@@ -673,26 +1014,22 @@ func (r *UserWorkoutRepository) GetActiveUsersThisMonth(userID int64) ([]map[str
 		})
 	}
 
-	// Get current user's workout count
+	// Get current user's name and workout count in a single query
+	// Optimized: combines 2 queries into 1 using LEFT JOIN with aggregate
 	currentUserQuery := rebindQuery(`
-		SELECT COUNT(*)
-		FROM user_workouts
-		WHERE user_id = ?
-			AND workout_date >= ?
-			AND workout_date < ?
+		SELECT u.id, u.name, COUNT(uw.id) as workout_count
+		FROM users u
+		LEFT JOIN user_workouts uw ON u.id = uw.user_id
+			AND uw.workout_date >= ?
+			AND uw.workout_date < ?
+		WHERE u.id = ?
+		GROUP BY u.id, u.name
 	`)
 
-	var currentUserCount int
-	err = r.db.QueryRow(currentUserQuery, userID, firstOfMonth, nextMonth).Scan(&currentUserCount)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current user count: %w", err)
-	}
-
-	// Get current user name
-	userQuery := rebindQuery(`SELECT id, name FROM users WHERE id = ?`)
 	var currentUserID int64
 	var currentUserName string
-	err = r.db.QueryRow(userQuery, userID).Scan(&currentUserID, &currentUserName)
+	var currentUserCount int
+	err = r.db.QueryRow(currentUserQuery, firstOfMonth, nextMonth, userID).Scan(&currentUserID, &currentUserName, &currentUserCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current user: %w", err)
 	}

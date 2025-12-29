@@ -1337,6 +1337,93 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.17.0",
+		Description: "Add missing indexes to audit_logs table for query optimization",
+		Up: func(db *sql.DB, driver string) error {
+			// Add index on target_user_id for queries filtering by affected user
+			var createTargetUserIDIndex string
+			switch driver {
+			case "sqlite3":
+				createTargetUserIDIndex = `CREATE INDEX IF NOT EXISTS idx_audit_logs_target_user_id ON audit_logs(target_user_id)`
+			case "postgres":
+				createTargetUserIDIndex = `CREATE INDEX IF NOT EXISTS idx_audit_logs_target_user_id ON audit_logs(target_user_id)`
+			case "mysql":
+				// MySQL doesn't support IF NOT EXISTS for indexes, need to check first
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.statistics
+					WHERE table_schema = DATABASE() AND table_name = 'audit_logs' AND index_name = 'idx_audit_logs_target_user_id'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for existing index: %w", err)
+				}
+				if count == 0 {
+					createTargetUserIDIndex = `CREATE INDEX idx_audit_logs_target_user_id ON audit_logs(target_user_id)`
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if createTargetUserIDIndex != "" {
+				if _, err := db.Exec(createTargetUserIDIndex); err != nil {
+					return fmt.Errorf("failed to create idx_audit_logs_target_user_id: %w", err)
+				}
+				fmt.Println("✓ Created idx_audit_logs_target_user_id index")
+			}
+
+			// Add composite index for common query pattern (user_id, event_type, created_at)
+			var createCompositeIndex string
+			switch driver {
+			case "sqlite3":
+				createCompositeIndex = `CREATE INDEX IF NOT EXISTS idx_audit_logs_user_event ON audit_logs(user_id, event_type, created_at)`
+			case "postgres":
+				createCompositeIndex = `CREATE INDEX IF NOT EXISTS idx_audit_logs_user_event ON audit_logs(user_id, event_type, created_at)`
+			case "mysql":
+				var count int
+				err := db.QueryRow(`SELECT COUNT(*) FROM information_schema.statistics
+					WHERE table_schema = DATABASE() AND table_name = 'audit_logs' AND index_name = 'idx_audit_logs_user_event'`).Scan(&count)
+				if err != nil {
+					return fmt.Errorf("failed to check for existing index: %w", err)
+				}
+				if count == 0 {
+					createCompositeIndex = `CREATE INDEX idx_audit_logs_user_event ON audit_logs(user_id, event_type, created_at)`
+				}
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if createCompositeIndex != "" {
+				if _, err := db.Exec(createCompositeIndex); err != nil {
+					return fmt.Errorf("failed to create idx_audit_logs_user_event: %w", err)
+				}
+				fmt.Println("✓ Created idx_audit_logs_user_event composite index")
+			}
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP INDEX IF EXISTS idx_audit_logs_target_user_id"); err != nil {
+				// MySQL syntax differs
+				if driver == "mysql" {
+					if _, err := db.Exec("DROP INDEX idx_audit_logs_target_user_id ON audit_logs"); err != nil {
+						fmt.Printf("⚠️  Warning: could not drop idx_audit_logs_target_user_id: %v\n", err)
+					}
+				} else {
+					fmt.Printf("⚠️  Warning: could not drop idx_audit_logs_target_user_id: %v\n", err)
+				}
+			}
+			if _, err := db.Exec("DROP INDEX IF EXISTS idx_audit_logs_user_event"); err != nil {
+				if driver == "mysql" {
+					if _, err := db.Exec("DROP INDEX idx_audit_logs_user_event ON audit_logs"); err != nil {
+						fmt.Printf("⚠️  Warning: could not drop idx_audit_logs_user_event: %v\n", err)
+					}
+				} else {
+					fmt.Printf("⚠️  Warning: could not drop idx_audit_logs_user_event: %v\n", err)
+				}
+			}
+			fmt.Println("⚠️  Removed audit_logs optimization indexes")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

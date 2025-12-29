@@ -459,8 +459,10 @@ func getSQLiteSchema() string {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+	CREATE INDEX IF NOT EXISTS idx_audit_logs_target_user_id ON audit_logs(target_user_id);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON audit_logs(event_type);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_audit_logs_user_event ON audit_logs(user_id, event_type, created_at);
 
 	CREATE TABLE IF NOT EXISTS workouts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -688,8 +690,10 @@ func getPostgreSQLSchema() string {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+	CREATE INDEX IF NOT EXISTS idx_audit_logs_target_user_id ON audit_logs(target_user_id);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON audit_logs(event_type);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_audit_logs_user_event ON audit_logs(user_id, event_type, created_at);
 
 	CREATE TABLE IF NOT EXISTS workouts (
 		id BIGSERIAL PRIMARY KEY,
@@ -910,8 +914,10 @@ func getMySQLSchema() string {
 		details TEXT,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		INDEX idx_audit_logs_user_id (user_id),
+		INDEX idx_audit_logs_target_user_id (target_user_id),
 		INDEX idx_audit_logs_event_type (event_type),
 		INDEX idx_audit_logs_created_at (created_at DESC),
+		INDEX idx_audit_logs_user_event (user_id, event_type, created_at),
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
 		FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE SET NULL
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

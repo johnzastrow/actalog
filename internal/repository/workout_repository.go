@@ -511,39 +511,48 @@ func (r *WorkoutRepository) Count(userID *int64) (int64, error) {
 }
 
 // GetUsageStats gets usage statistics for a template
+// Optimized: combines 3 queries into 1 using LEFT JOIN with aggregates
 func (r *WorkoutRepository) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsageStats, error) {
-	// Get the workout template
-	workout, err := r.GetByID(workoutID)
-	if err != nil {
-		return nil, err
-	}
-	if workout == nil {
-		return nil, nil
-	}
+	query := rebindQuery(`
+		SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+		       COUNT(uw.id) as times_used,
+		       MAX(uw.workout_date) as last_used_at
+		FROM workouts w
+		LEFT JOIN user_workouts uw ON w.id = uw.workout_id
+		WHERE w.id = ?
+		GROUP BY w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at`)
 
-	// Count how many times this template has been used
+	workout := &domain.Workout{}
+	var createdBy sql.NullInt64
+	var notes sql.NullString
 	var timesUsed int64
-	countQuery := rebindQuery(`SELECT COUNT(*) FROM user_workouts WHERE workout_id = ?`)
-	if err := r.db.QueryRow(countQuery, workoutID).Scan(&timesUsed); err != nil {
-		return nil, fmt.Errorf("failed to count usage: %w", err)
+	var lastUsedAt sql.NullTime
+
+	err := r.db.QueryRow(query, workoutID).Scan(
+		&workout.ID, &workout.Name, &notes, &createdBy,
+		&workout.CreatedAt, &workout.UpdatedAt,
+		&timesUsed, &lastUsedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get workout usage stats: %w", err)
 	}
 
-	// Get the most recent usage date
-	var lastUsedAt *time.Time
-	lastUsedQuery := rebindQuery(`SELECT MAX(workout_date) FROM user_workouts WHERE workout_id = ?`)
-	var nullableLastUsed sql.NullTime
-	if err := r.db.QueryRow(lastUsedQuery, workoutID).Scan(&nullableLastUsed); err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to get last usage: %w", err)
+	if notes.Valid {
+		workout.Notes = &notes.String
 	}
-	if nullableLastUsed.Valid {
-		lastUsedAt = &nullableLastUsed.Time
+	if createdBy.Valid {
+		workout.CreatedBy = &createdBy.Int64
 	}
 
-	// Construct the stats response
 	result := &domain.WorkoutWithUsageStats{
-		Workout:    *workout,
-		TimesUsed:  int(timesUsed),
-		LastUsedAt: lastUsedAt,
+		Workout:   *workout,
+		TimesUsed: int(timesUsed),
+	}
+	if lastUsedAt.Valid {
+		result.LastUsedAt = &lastUsedAt.Time
 	}
 
 	return result, nil
