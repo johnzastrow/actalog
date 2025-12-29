@@ -222,3 +222,149 @@ func (s *AuditLogService) LogRateLimitExceeded(endpoint, ipAddress, userAgent st
 	}
 	return s.LogEvent(domain.EventRateLimitExceeded, nil, nil, &ipAddress, &userAgent, details)
 }
+
+// LogLogout logs when a user logs out
+func (s *AuditLogService) LogLogout(userID int64, ipAddress, userAgent string) error {
+	return s.LogEvent(domain.EventLogout, &userID, nil, &ipAddress, &userAgent, nil)
+}
+
+// LogTokenRefresh logs when a user refreshes their JWT token
+func (s *AuditLogService) LogTokenRefresh(userID int64, ipAddress, userAgent string) error {
+	return s.LogEvent(domain.EventTokenRefresh, &userID, nil, &ipAddress, &userAgent, nil)
+}
+
+// LogProfileUpdated logs when a user updates their profile
+func (s *AuditLogService) LogProfileUpdated(userID int64, changes map[string]interface{}, ipAddress, userAgent string) error {
+	return s.LogEvent(domain.EventProfileUpdated, &userID, nil, &ipAddress, &userAgent, changes)
+}
+
+// LogUserSettingsUpdated logs when a user updates their settings
+func (s *AuditLogService) LogUserSettingsUpdated(userID int64, changes map[string]interface{}, ipAddress, userAgent string) error {
+	return s.LogEvent(domain.EventUserSettingsUpdate, &userID, nil, &ipAddress, &userAgent, changes)
+}
+
+// LogUserDeleted logs when an admin deletes a user
+func (s *AuditLogService) LogUserDeleted(adminUserID, targetUserID int64, adminEmail, targetEmail string) error {
+	details := map[string]interface{}{
+		"target_email":       targetEmail,
+		"deleted_by_admin":   adminEmail,
+		"deleted_by_user_id": adminUserID,
+	}
+	return s.LogEvent(domain.EventUserDeleted, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// Organization Events
+
+// LogOrganizationCreated logs when a new organization is created
+func (s *AuditLogService) LogOrganizationCreated(adminUserID, orgID int64, orgName string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+	}
+	return s.LogEvent(domain.EventOrganizationCreated, &adminUserID, nil, nil, nil, details)
+}
+
+// LogOrganizationUpdated logs when an organization is updated
+func (s *AuditLogService) LogOrganizationUpdated(adminUserID, orgID int64, orgName string, changes map[string]interface{}) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+	}
+	for k, v := range changes {
+		details[k] = v
+	}
+	return s.LogEvent(domain.EventOrganizationUpdated, &adminUserID, nil, nil, nil, details)
+}
+
+// LogOrganizationDeleted logs when an organization is deleted
+func (s *AuditLogService) LogOrganizationDeleted(adminUserID, orgID int64, orgName string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+	}
+	return s.LogEvent(domain.EventOrganizationDeleted, &adminUserID, nil, nil, nil, details)
+}
+
+// LogUserAssignedToOrganization logs when a user is assigned to an organization
+func (s *AuditLogService) LogUserAssignedToOrganization(adminUserID, targetUserID, orgID int64, targetEmail, orgName string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+		"target_email":      targetEmail,
+	}
+	return s.LogEvent(domain.EventUserAssignedToOrg, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// LogUserRemovedFromOrganization logs when a user is removed from an organization
+func (s *AuditLogService) LogUserRemovedFromOrganization(adminUserID, targetUserID, orgID int64, targetEmail, orgName string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+		"target_email":      targetEmail,
+	}
+	return s.LogEvent(domain.EventUserRemovedFromOrg, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// Subscription Events
+
+// LogSubscriptionCreated logs when a new user subscription is created
+func (s *AuditLogService) LogSubscriptionCreated(adminUserID, targetUserID int64, subType string, expiresAt *time.Time) error {
+	details := map[string]interface{}{
+		"subscription_type": subType,
+	}
+	if expiresAt != nil {
+		details["expires_at"] = expiresAt.Format(time.RFC3339)
+	}
+	return s.LogEvent(domain.EventSubscriptionCreated, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// LogSubscriptionMarkedPaid logs when a subscription is marked as paid
+func (s *AuditLogService) LogSubscriptionMarkedPaid(adminUserID, targetUserID, subscriptionID int64) error {
+	details := map[string]interface{}{
+		"subscription_id": subscriptionID,
+	}
+	return s.LogEvent(domain.EventSubscriptionMarkedPaid, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// LogSubscriptionCancelled logs when a subscription is cancelled
+func (s *AuditLogService) LogSubscriptionCancelled(adminUserID, targetUserID, subscriptionID int64, reason string) error {
+	details := map[string]interface{}{
+		"subscription_id": subscriptionID,
+		"reason":          reason,
+	}
+	return s.LogEvent(domain.EventSubscriptionCancelled, &adminUserID, &targetUserID, nil, nil, details)
+}
+
+// LogOrgSubscriptionCreated logs when a new organization subscription is created
+func (s *AuditLogService) LogOrgSubscriptionCreated(adminUserID, orgID int64, orgName, subType string, expiresAt *time.Time) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+		"subscription_type": subType,
+	}
+	if expiresAt != nil {
+		details["expires_at"] = expiresAt.Format(time.RFC3339)
+	}
+	return s.LogEvent(domain.EventOrgSubscriptionCreated, &adminUserID, nil, nil, nil, details)
+}
+
+// LogOrgSubscriptionMarkedPaid logs when an org subscription is marked as paid
+func (s *AuditLogService) LogOrgSubscriptionMarkedPaid(adminUserID, orgID, subscriptionID int64, orgName string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+		"subscription_id":   subscriptionID,
+	}
+	return s.LogEvent(domain.EventOrgSubscriptionMarkedPaid, &adminUserID, nil, nil, nil, details)
+}
+
+// LogOrgSubscriptionCancelled logs when an org subscription is cancelled
+func (s *AuditLogService) LogOrgSubscriptionCancelled(adminUserID, orgID, subscriptionID int64, orgName, reason string) error {
+	details := map[string]interface{}{
+		"organization_id":   orgID,
+		"organization_name": orgName,
+		"subscription_id":   subscriptionID,
+		"reason":            reason,
+	}
+	return s.LogEvent(domain.EventOrgSubscriptionCancelled, &adminUserID, nil, nil, nil, details)
+}

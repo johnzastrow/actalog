@@ -64,6 +64,7 @@ func main() {
 	// Initialize logger
 	appLogger, err := logger.New(logger.Config{
 		Level:      cfg.Logging.Level,
+		Format:     cfg.Logging.Format,
 		EnableFile: cfg.Logging.EnableFile,
 		FilePath:   cfg.Logging.FilePath,
 		MaxSizeMB:  cfg.Logging.MaxSizeMB,

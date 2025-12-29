@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -377,5 +378,311 @@ func TestLogger_LogFormat(t *testing.T) {
 	// Check for message
 	if !strings.Contains(logLine, "test message") {
 		t.Error("Log line should contain the message")
+	}
+}
+
+func TestParseFormat(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected Format
+	}{
+		{"json", FormatJSON},
+		{"text", FormatText},
+		{"JSON", FormatText},  // Case-sensitive, defaults to text
+		{"", FormatText},      // Empty - defaults to text
+		{"invalid", FormatText},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			if got := parseFormat(tt.input); got != tt.expected {
+				t.Errorf("parseFormat(%q) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestLogger_JSONFormat(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	l.Info("test message with %s", "args")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := strings.TrimSpace(string(content))
+
+	// Verify it's valid JSON
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(logLine), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v\nGot: %s", err, logLine)
+	}
+
+	// Verify fields
+	if entry.Level != "INFO" {
+		t.Errorf("Level = %q, want %q", entry.Level, "INFO")
+	}
+	if entry.Message != "test message with args" {
+		t.Errorf("Message = %q, want %q", entry.Message, "test message with args")
+	}
+	if entry.Timestamp == "" {
+		t.Error("Timestamp should not be empty")
+	}
+}
+
+func TestLogger_JSONFormatWithFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	fields := Fields{
+		"user_id": 123,
+		"action":  "login",
+		"ip":      "192.168.1.1",
+	}
+	l.InfoWithFields(fields, "user logged in")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := strings.TrimSpace(string(content))
+
+	// Verify it's valid JSON
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(logLine), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v\nGot: %s", err, logLine)
+	}
+
+	// Verify message
+	if entry.Message != "user logged in" {
+		t.Errorf("Message = %q, want %q", entry.Message, "user logged in")
+	}
+
+	// Verify fields
+	if entry.Fields == nil {
+		t.Fatal("Fields should not be nil")
+	}
+	if entry.Fields["action"] != "login" {
+		t.Errorf("Fields[action] = %v, want %q", entry.Fields["action"], "login")
+	}
+	if entry.Fields["ip"] != "192.168.1.1" {
+		t.Errorf("Fields[ip] = %v, want %q", entry.Fields["ip"], "192.168.1.1")
+	}
+	// user_id may be float64 due to JSON unmarshaling
+	if userID, ok := entry.Fields["user_id"].(float64); !ok || userID != 123 {
+		t.Errorf("Fields[user_id] = %v, want %v", entry.Fields["user_id"], 123)
+	}
+}
+
+func TestLogger_TextFormatWithFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "text", // Explicitly text format
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	fields := Fields{
+		"user_id": 123,
+		"action":  "login",
+	}
+	l.InfoWithFields(fields, "user logged in")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := string(content)
+
+	// Should contain the message
+	if !strings.Contains(logLine, "user logged in") {
+		t.Error("Log line should contain the message")
+	}
+
+	// Should contain fields as key=value pairs
+	if !strings.Contains(logLine, "user_id=123") {
+		t.Error("Log line should contain user_id=123")
+	}
+	if !strings.Contains(logLine, "action=login") {
+		t.Error("Log line should contain action=login")
+	}
+}
+
+func TestLogger_WithChaining(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	// Create a logger with base fields
+	requestLogger := l.With(Fields{"request_id": "abc123"})
+
+	// Add more fields
+	userLogger := requestLogger.With(Fields{"user_id": 456})
+
+	// Log with the chained logger
+	userLogger.Info("processing request")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := strings.TrimSpace(string(content))
+
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(logLine), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v", err)
+	}
+
+	// Should have both fields from chaining
+	if entry.Fields["request_id"] != "abc123" {
+		t.Errorf("Fields[request_id] = %v, want %q", entry.Fields["request_id"], "abc123")
+	}
+	if userID, ok := entry.Fields["user_id"].(float64); !ok || userID != 456 {
+		t.Errorf("Fields[user_id] = %v, want %v", entry.Fields["user_id"], 456)
+	}
+}
+
+func TestLogger_AllLevelsWithFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "debug",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	fields := Fields{"test": "value"}
+	l.DebugWithFields(fields, "debug message")
+	l.InfoWithFields(fields, "info message")
+	l.WarnWithFields(fields, "warn message")
+	l.ErrorWithFields(fields, "error message")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+	if len(lines) != 4 {
+		t.Fatalf("Expected 4 log lines, got %d", len(lines))
+	}
+
+	expectedLevels := []string{"DEBUG", "INFO", "WARN", "ERROR"}
+	for i, line := range lines {
+		var entry LogEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			t.Fatalf("Line %d should be valid JSON: %v", i, err)
+		}
+		if entry.Level != expectedLevels[i] {
+			t.Errorf("Line %d: Level = %q, want %q", i, entry.Level, expectedLevels[i])
+		}
+		if entry.Fields["test"] != "value" {
+			t.Errorf("Line %d: Fields[test] = %v, want %q", i, entry.Fields["test"], "value")
+		}
+	}
+}
+
+func TestFieldLogger_AllLevels(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "debug",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	fl := l.With(Fields{"component": "test"})
+	fl.Debug("debug via FieldLogger")
+	fl.Info("info via FieldLogger")
+	fl.Warn("warn via FieldLogger")
+	fl.Error("error via FieldLogger")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+	if len(lines) != 4 {
+		t.Fatalf("Expected 4 log lines, got %d", len(lines))
+	}
+
+	for i, line := range lines {
+		var entry LogEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			t.Fatalf("Line %d should be valid JSON: %v", i, err)
+		}
+		if entry.Fields["component"] != "test" {
+			t.Errorf("Line %d: Fields[component] = %v, want %q", i, entry.Fields["component"], "test")
+		}
 	}
 }

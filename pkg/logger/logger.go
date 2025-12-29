@@ -2,6 +2,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -28,9 +29,18 @@ var levelNames = map[Level]string{
 	ERROR: "ERROR",
 }
 
+// Format represents the log output format
+type Format int
+
+const (
+	FormatText Format = iota // Plain text format (default)
+	FormatJSON               // JSON structured format
+)
+
 // Logger handles application logging
 type Logger struct {
 	level      Level
+	format     Format
 	stdout     *log.Logger
 	file       *log.Logger
 	fileHandle *os.File
@@ -39,9 +49,21 @@ type Logger struct {
 	logPath    string // Path to log file
 }
 
+// Fields represents structured log fields
+type Fields map[string]interface{}
+
+// LogEntry represents a structured log entry for JSON output
+type LogEntry struct {
+	Timestamp string                 `json:"timestamp"`
+	Level     string                 `json:"level"`
+	Message   string                 `json:"msg"`
+	Fields    map[string]interface{} `json:"fields,omitempty"`
+}
+
 // Config holds logger configuration
 type Config struct {
 	Level      string // "debug", "info", "warn", "error"
+	Format     string // "text" (default) or "json"
 	EnableFile bool   // Enable file logging
 	FilePath   string // Path to log file (default: ./logs/actalog.log)
 	MaxSizeMB  int    // Max log file size in MB before rotation (default: 100)
@@ -52,6 +74,7 @@ type Config struct {
 func New(cfg Config) (*Logger, error) {
 	l := &Logger{
 		level:   parseLevel(cfg.Level),
+		format:  parseFormat(cfg.Format),
 		maxSize: int64(cfg.MaxSizeMB) * 1024 * 1024, // Convert MB to bytes
 	}
 
@@ -115,6 +138,16 @@ func parseLevel(level string) Level {
 	}
 }
 
+// parseFormat converts a string to a log format
+func parseFormat(format string) Format {
+	switch format {
+	case "json":
+		return FormatJSON
+	default:
+		return FormatText
+	}
+}
+
 // Close closes the log file if it's open
 func (l *Logger) Close() error {
 	l.mu.Lock()
@@ -128,6 +161,11 @@ func (l *Logger) Close() error {
 
 // log writes a log message at the specified level
 func (l *Logger) log(level Level, format string, v ...interface{}) {
+	l.logWithFields(level, nil, format, v...)
+}
+
+// logWithFields writes a log message with structured fields
+func (l *Logger) logWithFields(level Level, fields Fields, format string, v ...interface{}) {
 	if level < l.level {
 		return // Skip if below configured level
 	}
@@ -135,11 +173,16 @@ func (l *Logger) log(level Level, format string, v ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	// Format: 2024-11-09 15:04:05 [INFO] message
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	timestamp := time.Now()
 	levelName := levelNames[level]
 	message := fmt.Sprintf(format, v...)
-	logLine := fmt.Sprintf("%s [%s] %s", timestamp, levelName, message)
+
+	var logLine string
+	if l.format == FormatJSON {
+		logLine = l.formatJSON(timestamp, levelName, message, fields)
+	} else {
+		logLine = l.formatText(timestamp, levelName, message, fields)
+	}
 
 	// Write to stdout
 	l.stdout.Println(logLine)
@@ -151,9 +194,39 @@ func (l *Logger) log(level Level, format string, v ...interface{}) {
 		// Check if rotation is needed
 		if err := l.rotateIfNeeded(); err != nil {
 			// Log rotation error to stdout only
-			l.stdout.Printf("%s [ERROR] Failed to rotate log file: %v", timestamp, err)
+			l.stdout.Printf("%s [ERROR] Failed to rotate log file: %v", timestamp.Format("2006-01-02 15:04:05"), err)
 		}
 	}
+}
+
+// formatText formats a log entry as plain text
+func (l *Logger) formatText(timestamp time.Time, level, message string, fields Fields) string {
+	ts := timestamp.Format("2006-01-02 15:04:05")
+	if len(fields) == 0 {
+		return fmt.Sprintf("%s [%s] %s", ts, level, message)
+	}
+	// Append fields as key=value pairs
+	fieldStr := ""
+	for k, v := range fields {
+		fieldStr += fmt.Sprintf(" %s=%v", k, v)
+	}
+	return fmt.Sprintf("%s [%s] %s%s", ts, level, message, fieldStr)
+}
+
+// formatJSON formats a log entry as JSON
+func (l *Logger) formatJSON(timestamp time.Time, level, message string, fields Fields) string {
+	entry := LogEntry{
+		Timestamp: timestamp.Format(time.RFC3339),
+		Level:     level,
+		Message:   message,
+		Fields:    fields,
+	}
+	data, err := json.Marshal(entry)
+	if err != nil {
+		// Fallback to text format on JSON error
+		return l.formatText(timestamp, level, message, fields)
+	}
+	return string(data)
 }
 
 // rotateIfNeeded rotates the log file if it exceeds maxSize
@@ -263,6 +336,69 @@ func (l *Logger) Warn(format string, v ...interface{}) {
 // Error logs an error message
 func (l *Logger) Error(format string, v ...interface{}) {
 	l.log(ERROR, format, v...)
+}
+
+// DebugWithFields logs a debug message with structured fields
+func (l *Logger) DebugWithFields(fields Fields, format string, v ...interface{}) {
+	l.logWithFields(DEBUG, fields, format, v...)
+}
+
+// InfoWithFields logs an info message with structured fields
+func (l *Logger) InfoWithFields(fields Fields, format string, v ...interface{}) {
+	l.logWithFields(INFO, fields, format, v...)
+}
+
+// WarnWithFields logs a warning message with structured fields
+func (l *Logger) WarnWithFields(fields Fields, format string, v ...interface{}) {
+	l.logWithFields(WARN, fields, format, v...)
+}
+
+// ErrorWithFields logs an error message with structured fields
+func (l *Logger) ErrorWithFields(fields Fields, format string, v ...interface{}) {
+	l.logWithFields(ERROR, fields, format, v...)
+}
+
+// With returns a FieldLogger bound to the given fields for chained logging
+func (l *Logger) With(fields Fields) *FieldLogger {
+	return &FieldLogger{logger: l, fields: fields}
+}
+
+// FieldLogger is a logger bound to specific fields
+type FieldLogger struct {
+	logger *Logger
+	fields Fields
+}
+
+// Debug logs a debug message with the bound fields
+func (fl *FieldLogger) Debug(format string, v ...interface{}) {
+	fl.logger.logWithFields(DEBUG, fl.fields, format, v...)
+}
+
+// Info logs an info message with the bound fields
+func (fl *FieldLogger) Info(format string, v ...interface{}) {
+	fl.logger.logWithFields(INFO, fl.fields, format, v...)
+}
+
+// Warn logs a warning message with the bound fields
+func (fl *FieldLogger) Warn(format string, v ...interface{}) {
+	fl.logger.logWithFields(WARN, fl.fields, format, v...)
+}
+
+// Error logs an error message with the bound fields
+func (fl *FieldLogger) Error(format string, v ...interface{}) {
+	fl.logger.logWithFields(ERROR, fl.fields, format, v...)
+}
+
+// With adds additional fields and returns a new FieldLogger
+func (fl *FieldLogger) With(fields Fields) *FieldLogger {
+	merged := make(Fields)
+	for k, v := range fl.fields {
+		merged[k] = v
+	}
+	for k, v := range fields {
+		merged[k] = v
+	}
+	return &FieldLogger{logger: fl.logger, fields: merged}
 }
 
 // Fatal logs an error message and exits the program

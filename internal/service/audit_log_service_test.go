@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
@@ -427,5 +428,241 @@ func TestAuditLogService_LogRateLimitExceeded(t *testing.T) {
 
 	if repo.logs[0].EventType != domain.EventRateLimitExceeded {
 		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventRateLimitExceeded)
+	}
+}
+
+func TestAuditLogService_LogLogout(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogLogout(1, "192.168.1.1", "Mozilla/5.0")
+	if err != nil {
+		t.Errorf("LogLogout() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventLogout {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventLogout)
+	}
+}
+
+func TestAuditLogService_LogTokenRefresh(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogTokenRefresh(1, "192.168.1.1", "Mozilla/5.0")
+	if err != nil {
+		t.Errorf("LogTokenRefresh() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventTokenRefresh {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventTokenRefresh)
+	}
+}
+
+func TestAuditLogService_LogProfileUpdated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	changes := map[string]interface{}{
+		"name":  "New Name",
+		"email": "new@example.com",
+	}
+	err := svc.LogProfileUpdated(1, changes, "192.168.1.1", "Mozilla/5.0")
+	if err != nil {
+		t.Errorf("LogProfileUpdated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventProfileUpdated {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventProfileUpdated)
+	}
+}
+
+func TestAuditLogService_LogUserSettingsUpdated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	changes := map[string]interface{}{
+		"theme": "dark",
+	}
+	err := svc.LogUserSettingsUpdated(1, changes, "192.168.1.1", "Mozilla/5.0")
+	if err != nil {
+		t.Errorf("LogUserSettingsUpdated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventUserSettingsUpdate {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventUserSettingsUpdate)
+	}
+}
+
+func TestAuditLogService_LogUserDeleted(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogUserDeleted(1, 2, "admin@example.com", "user@example.com")
+	if err != nil {
+		t.Errorf("LogUserDeleted() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventUserDeleted {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventUserDeleted)
+	}
+}
+
+func TestAuditLogService_LogOrganizationCreated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogOrganizationCreated(1, 10, "Test Org")
+	if err != nil {
+		t.Errorf("LogOrganizationCreated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrganizationCreated {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrganizationCreated)
+	}
+}
+
+func TestAuditLogService_LogOrganizationUpdated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	changes := map[string]interface{}{
+		"name": "New Org Name",
+	}
+	err := svc.LogOrganizationUpdated(1, 10, "Test Org", changes)
+	if err != nil {
+		t.Errorf("LogOrganizationUpdated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrganizationUpdated {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrganizationUpdated)
+	}
+}
+
+func TestAuditLogService_LogOrganizationDeleted(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogOrganizationDeleted(1, 10, "Test Org")
+	if err != nil {
+		t.Errorf("LogOrganizationDeleted() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrganizationDeleted {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrganizationDeleted)
+	}
+}
+
+func TestAuditLogService_LogUserAssignedToOrganization(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogUserAssignedToOrganization(1, 2, 10, "user@example.com", "Test Org")
+	if err != nil {
+		t.Errorf("LogUserAssignedToOrganization() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventUserAssignedToOrg {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventUserAssignedToOrg)
+	}
+}
+
+func TestAuditLogService_LogUserRemovedFromOrganization(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogUserRemovedFromOrganization(1, 2, 10, "user@example.com", "Test Org")
+	if err != nil {
+		t.Errorf("LogUserRemovedFromOrganization() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventUserRemovedFromOrg {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventUserRemovedFromOrg)
+	}
+}
+
+func TestAuditLogService_LogSubscriptionCreated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	expiresAt := time.Now().AddDate(0, 1, 0)
+	err := svc.LogSubscriptionCreated(1, 2, "monthly", &expiresAt)
+	if err != nil {
+		t.Errorf("LogSubscriptionCreated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventSubscriptionCreated {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventSubscriptionCreated)
+	}
+}
+
+func TestAuditLogService_LogSubscriptionMarkedPaid(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogSubscriptionMarkedPaid(1, 2, 100)
+	if err != nil {
+		t.Errorf("LogSubscriptionMarkedPaid() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventSubscriptionMarkedPaid {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventSubscriptionMarkedPaid)
+	}
+}
+
+func TestAuditLogService_LogSubscriptionCancelled(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogSubscriptionCancelled(1, 2, 100, "User requested")
+	if err != nil {
+		t.Errorf("LogSubscriptionCancelled() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventSubscriptionCancelled {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventSubscriptionCancelled)
+	}
+}
+
+func TestAuditLogService_LogOrgSubscriptionCreated(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	expiresAt := time.Now().AddDate(1, 0, 0)
+	err := svc.LogOrgSubscriptionCreated(1, 10, "Test Org", "annual", &expiresAt)
+	if err != nil {
+		t.Errorf("LogOrgSubscriptionCreated() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrgSubscriptionCreated {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrgSubscriptionCreated)
+	}
+}
+
+func TestAuditLogService_LogOrgSubscriptionMarkedPaid(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogOrgSubscriptionMarkedPaid(1, 10, 200, "Test Org")
+	if err != nil {
+		t.Errorf("LogOrgSubscriptionMarkedPaid() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrgSubscriptionMarkedPaid {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrgSubscriptionMarkedPaid)
+	}
+}
+
+func TestAuditLogService_LogOrgSubscriptionCancelled(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	err := svc.LogOrgSubscriptionCancelled(1, 10, 200, "Test Org", "Contract ended")
+	if err != nil {
+		t.Errorf("LogOrgSubscriptionCancelled() error = %v", err)
+	}
+
+	if repo.logs[0].EventType != domain.EventOrgSubscriptionCancelled {
+		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrgSubscriptionCancelled)
 	}
 }

@@ -65,6 +65,7 @@ type AppConfig struct {
 // LoggingConfig holds logging configuration
 type LoggingConfig struct {
 	Level      string // debug, info, warn, error
+	Format     string // text (default) or json
 	EnableFile bool   // Enable file logging
 	FilePath   string // Path to log file
 	MaxSizeMB  int    // Max file size in MB before rotation
@@ -134,6 +135,7 @@ func Load() (*Config, error) {
 		},
 		Logging: LoggingConfig{
 			Level:      getEnv("LOG_LEVEL", "info"),
+			Format:     getEnv("LOG_FORMAT", "text"),      // text (default) or json
 			EnableFile: getEnvBool("LOG_FILE_ENABLED", false),
 			FilePath:   getEnv("LOG_FILE_PATH", ""),       // Empty = auto-detect (./logs/actalog.log)
 			MaxSizeMB:  getEnvInt("LOG_MAX_SIZE_MB", 100), // 100MB default
