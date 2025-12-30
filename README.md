@@ -128,6 +128,57 @@ For the full backlog and lower-priority items see [TODO.md](docs/TODO.md). For r
    - Frontend: `http://localhost:3000`
    - Backend API: `http://localhost:8080`
    - API Health: `http://localhost:8080/health`
+   - **API Documentation**: `http://localhost:8080/api/docs/`
+
+## API Documentation
+
+ActaLog provides interactive API documentation via Swagger UI, making it easy to explore and test all available endpoints.
+
+### Accessing Swagger UI
+
+Once the server is running, navigate to:
+
+```
+http://localhost:8080/api/docs/
+```
+
+### Features
+
+- **Interactive Documentation**: Browse all 129 API operations across 105 endpoints
+- **Try It Out**: Test endpoints directly from the browser
+- **Request/Response Examples**: See expected request bodies and response formats
+- **Authentication Support**: Authorize with JWT tokens to test protected endpoints
+
+### Authentication
+
+Most endpoints require JWT authentication. To use protected endpoints in Swagger UI:
+
+1. First, call `POST /api/auth/login` with your credentials
+2. Copy the `token` from the response
+3. Click the **Authorize** button (lock icon) at the top of the page
+4. Enter: `Bearer <your-token>` (include the word "Bearer" followed by a space)
+5. Click **Authorize** to apply the token to all requests
+
+### Endpoint Categories
+
+| Tag | Description |
+|-----|-------------|
+| `auth` | Login, register, password reset, token management |
+| `users` | User profile and settings |
+| `workouts` | Workout logging and history |
+| `movements` | Exercise/movement definitions |
+| `wods` | Workout of the Day management |
+| `templates` | Reusable workout templates |
+| `performance` | Analytics and statistics |
+| `prs` | Personal records tracking |
+| `notifications` | User notifications |
+| `sessions` | Session management |
+| `subscriptions` | Subscription management |
+| `organizations` | Organization management |
+| `admin` | Admin-only operations |
+| `import-export` | Data import/export (CSV, JSON) |
+| `backups` | System backup/restore |
+| `audit` | Audit logs |
 
 ### Docker Deployment (Production)
 
