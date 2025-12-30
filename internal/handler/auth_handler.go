@@ -23,33 +23,48 @@ func NewAuthHandler(userService *service.UserService, l *logger.Logger) *AuthHan
 }
 
 // RegisterRequest represents a registration request
+// @Description User registration request body
 type RegisterRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" example:"John Doe"`
+	Email    string `json:"email" example:"john@example.com"`
+	Password string `json:"password" example:"securePassword123"`
 }
 
 // LoginRequest represents a login request
+// @Description User login request body
 type LoginRequest struct {
-	Email      string `json:"email"`
-	Password   string `json:"password"`
-	RememberMe bool   `json:"remember_me,omitempty"`
+	Email      string `json:"email" example:"john@example.com"`
+	Password   string `json:"password" example:"securePassword123"`
+	RememberMe bool   `json:"remember_me,omitempty" example:"true"`
 }
 
 // AuthResponse represents an authentication response
+// @Description Authentication response containing JWT token and user info
 type AuthResponse struct {
-	Token        string      `json:"token"`
-	RefreshToken string      `json:"refresh_token,omitempty"`
+	Token        string      `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string      `json:"refresh_token,omitempty" example:"550e8400-e29b-41d4-a716-446655440000"`
 	User         interface{} `json:"user"`
 }
 
 // ErrorResponse represents an error response
+// @Description Error response returned when a request fails
 type ErrorResponse struct {
-	Message string `json:"message"`
-	Error   string `json:"error,omitempty"`
+	Message string `json:"message" example:"Invalid credentials"`
+	Error   string `json:"error,omitempty" example:"additional error details"`
 }
 
 // Register handles user registration
+// @Summary      Register a new user
+// @Description  Create a new user account with name, email, and password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RegisterRequest true "Registration details"
+// @Success      201 {object} AuthResponse "Successfully registered"
+// @Failure      400 {object} ErrorResponse "Invalid request or validation error"
+// @Failure      403 {object} ErrorResponse "Registration is closed"
+// @Failure      409 {object} ErrorResponse "Email already exists"
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -103,6 +118,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login handles user login
+// @Summary      User login
+// @Description  Authenticate user with email and password. Set remember_me to true for refresh token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body LoginRequest true "Login credentials"
+// @Success      200 {object} AuthResponse "Successfully authenticated"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      401 {object} ErrorResponse "Invalid email or password"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -168,22 +194,35 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // ForgotPasswordRequest represents a forgot password request
+// @Description Request to initiate password reset
 type ForgotPasswordRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" example:"john@example.com"`
 }
 
 // ResetPasswordRequest represents a reset password request
+// @Description Request to complete password reset with token
 type ResetPasswordRequest struct {
-	Token       string `json:"token"`
-	NewPassword string `json:"new_password"`
+	Token       string `json:"token" example:"abc123def456"`
+	NewPassword string `json:"new_password" example:"newSecurePassword123"`
 }
 
 // MessageResponse represents a simple message response
+// @Description Generic message response
 type MessageResponse struct {
-	Message string `json:"message"`
+	Message string `json:"message" example:"Operation completed successfully"`
 }
 
 // ForgotPassword handles forgot password requests
+// @Summary      Request password reset
+// @Description  Send a password reset email to the user. Always returns success for security.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body ForgotPasswordRequest true "Email address"
+// @Success      200 {object} MessageResponse "Reset email sent if address exists"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      500 {object} ErrorResponse "Failed to process request"
+// @Router       /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req ForgotPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -213,6 +252,16 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // ResetPassword handles password reset requests
+// @Summary      Reset password
+// @Description  Complete password reset using token from email
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body ResetPasswordRequest true "Reset token and new password"
+// @Success      200 {object} MessageResponse "Password reset successfully"
+// @Failure      400 {object} ErrorResponse "Invalid token, expired token, or weak password"
+// @Failure      500 {object} ErrorResponse "Failed to reset password"
+// @Router       /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req ResetPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -252,11 +301,22 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // VerifyEmailRequest represents an email verification request
+// @Description Email verification request
 type VerifyEmailRequest struct {
-	Token string `json:"token"`
+	Token string `json:"token" example:"verification-token-123"`
 }
 
 // VerifyEmail handles email verification requests
+// @Summary      Verify email address
+// @Description  Verify user's email using token from verification email
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        token query string true "Verification token from email"
+// @Success      200 {object} MessageResponse "Email verified successfully"
+// @Failure      400 {object} ErrorResponse "Invalid or expired token, or already verified"
+// @Failure      500 {object} ErrorResponse "Failed to verify email"
+// @Router       /auth/verify-email [get]
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	// Get token from query parameter
 	token := r.URL.Query().Get("token")
@@ -287,11 +347,22 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 // ResendVerificationRequest represents a resend verification email request
+// @Description Request to resend verification email
 type ResendVerificationRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" example:"john@example.com"`
 }
 
 // ResendVerification handles resend verification email requests
+// @Summary      Resend verification email
+// @Description  Resend email verification link. Always returns success for security.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body ResendVerificationRequest true "Email address"
+// @Success      200 {object} MessageResponse "Verification email sent if applicable"
+// @Failure      400 {object} ErrorResponse "Invalid request or already verified"
+// @Failure      500 {object} ErrorResponse "Failed to resend verification email"
+// @Router       /auth/resend-verification [post]
 func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request) {
 	var req ResendVerificationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -323,11 +394,23 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 }
 
 // RefreshTokenRequest represents a refresh token request
+// @Description Request to refresh access token
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // RefreshToken handles refresh token requests
+// @Summary      Refresh access token
+// @Description  Get a new access token using a valid refresh token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RefreshTokenRequest true "Refresh token"
+// @Success      200 {object} AuthResponse "New access token"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      401 {object} ErrorResponse "Invalid or expired refresh token"
+// @Failure      500 {object} ErrorResponse "Failed to refresh token"
+// @Router       /auth/refresh-token [post]
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req RefreshTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -359,11 +442,23 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 // RevokeTokenRequest represents a revoke token request
+// @Description Request to revoke a refresh token (logout)
 type RevokeTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // RevokeToken handles token revocation (logout)
+// @Summary      Revoke refresh token
+// @Description  Invalidate a refresh token to logout from a specific session
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RevokeTokenRequest true "Refresh token to revoke"
+// @Success      200 {object} MessageResponse "Token revoked successfully"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      404 {object} ErrorResponse "Refresh token not found"
+// @Failure      500 {object} ErrorResponse "Failed to revoke token"
+// @Router       /auth/revoke-token [post]
 func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
 	var req RevokeTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

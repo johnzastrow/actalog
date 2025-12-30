@@ -28,6 +28,18 @@ func NewAuditLogHandler(service *service.AuditLogService, logger *logger.Logger)
 }
 
 // GetAuditLog handles GET /api/audit-logs/:id
+// @Summary      Get audit log entry (Admin)
+// @Description  Retrieve a specific audit log entry by ID
+// @Tags         audit
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Audit Log ID"
+// @Success      200 {object} domain.AuditLog "Audit log entry"
+// @Failure      400 {object} ErrorResponse "Invalid ID"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      404 {object} ErrorResponse "Audit log not found"
+// @Router       /audit-logs/{id} [get]
 func (h *AuditLogHandler) GetAuditLog(w http.ResponseWriter, r *http.Request) {
 	// Only admins can access individual audit logs
 	userRole, _ := middleware.GetUserRole(r.Context())
@@ -56,7 +68,25 @@ func (h *AuditLogHandler) GetAuditLog(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListAuditLogs handles GET /api/audit-logs
-// Query params: user_id, target_user_id, event_type, ip_address, start_date, end_date, limit, offset
+// @Summary      List audit logs (Admin)
+// @Description  Get a paginated list of audit logs with optional filters
+// @Tags         audit
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        user_id query int false "Filter by user ID"
+// @Param        target_user_id query int false "Filter by target user ID"
+// @Param        event_type query string false "Filter by event type"
+// @Param        ip_address query string false "Filter by IP address"
+// @Param        start_date query string false "Filter by start date (RFC3339)"
+// @Param        end_date query string false "Filter by end date (RFC3339)"
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "Audit logs list with total count"
+// @Failure      400 {object} ErrorResponse "Invalid parameters"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /audit-logs [get]
 func (h *AuditLogHandler) ListAuditLogs(w http.ResponseWriter, r *http.Request) {
 	// Only admins can list all audit logs
 	userRole, _ := middleware.GetUserRole(r.Context())
@@ -157,7 +187,18 @@ func (h *AuditLogHandler) ListAuditLogs(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetMyAuditLogs handles GET /api/users/me/audit-logs
-// Returns audit logs for the current user only
+// @Summary      Get my audit logs
+// @Description  Get audit logs for the current user only
+// @Tags         audit
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "User's audit logs with total count"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /users/me/audit-logs [get]
 func (h *AuditLogHandler) GetMyAuditLogs(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok || userID == 0 {
@@ -212,7 +253,18 @@ func (h *AuditLogHandler) GetMyAuditLogs(w http.ResponseWriter, r *http.Request)
 }
 
 // CleanupOldLogs handles POST /api/admin/audit-logs/cleanup
-// Admin endpoint to delete old audit logs
+// @Summary      Cleanup old audit logs (Admin)
+// @Description  Delete audit logs older than specified retention period
+// @Tags         audit
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object true "Retention days (must be positive)"
+// @Success      200 {object} map[string]interface{} "Deleted count and success message"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/audit-logs/cleanup [post]
 func (h *AuditLogHandler) CleanupOldLogs(w http.ResponseWriter, r *http.Request) {
 	// Only admins can cleanup audit logs
 	userRole, _ := middleware.GetUserRole(r.Context())

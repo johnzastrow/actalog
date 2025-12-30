@@ -1,4 +1,72 @@
 // Package main is the entry point for ActaLog application
+//
+// @title           ActaLog API
+// @version         0.17.0
+// @description     ActaLog is a mobile-first CrossFit workout tracker API. It provides endpoints for user authentication, workout logging, movement tracking, personal records, and administrative functions.
+// @termsOfService  https://actalog.com/terms/
+//
+// @contact.name   ActaLog Support
+// @contact.url    https://github.com/johnzastrow/actalog/issues
+// @contact.email  support@actalog.com
+//
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+//
+// @host      localhost:8080
+// @BasePath  /api
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT Bearer token. Format: "Bearer {token}"
+//
+// @tag.name auth
+// @tag.description Authentication and authorization endpoints
+//
+// @tag.name users
+// @tag.description User profile and settings management
+//
+// @tag.name workouts
+// @tag.description Workout logging and history
+//
+// @tag.name movements
+// @tag.description Movement/exercise definitions and management
+//
+// @tag.name wods
+// @tag.description Workout of the Day management
+//
+// @tag.name templates
+// @tag.description Workout template management
+//
+// @tag.name performance
+// @tag.description Performance analytics and statistics
+//
+// @tag.name prs
+// @tag.description Personal records tracking
+//
+// @tag.name notifications
+// @tag.description User notifications and announcements
+//
+// @tag.name sessions
+// @tag.description Session management
+//
+// @tag.name subscriptions
+// @tag.description Subscription and billing management
+//
+// @tag.name organizations
+// @tag.description Organization management
+//
+// @tag.name admin
+// @tag.description Administrative operations (admin only)
+//
+// @tag.name import-export
+// @tag.description Data import and export operations
+//
+// @tag.name backups
+// @tag.description System backup and restore (admin only)
+//
+// @tag.name audit
+// @tag.description Audit log operations
 package main
 
 import (
@@ -14,7 +82,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/johnzastrow/actalog/configs"
+	_ "github.com/johnzastrow/actalog/docs" // Swagger docs
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
@@ -357,6 +428,11 @@ func main() {
 			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s"}`,
 				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name)
 		})
+
+		// Swagger documentation UI (public)
+		r.Get("/docs/*", httpSwagger.Handler(
+			httpSwagger.URL("/api/docs/doc.json"), // The url pointing to API definition
+		))
 
 		// Auth routes (public with rate limiting)
 		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/register", authHandler.Register)

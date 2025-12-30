@@ -28,73 +28,90 @@ func NewUserWorkoutHandler(userWorkoutService *service.UserWorkoutService, l *lo
 }
 
 // LogWorkoutRequest represents a request to log a workout instance
+// @Description Request to log a workout (either from template or ad-hoc)
 type LogWorkoutRequest struct {
-	WorkoutID   *int64  `json:"workout_id,omitempty"`   // Template ID (optional for ad-hoc workouts)
-	WorkoutName *string `json:"workout_name,omitempty"` // Name for ad-hoc workouts (required if workout_id is null)
-	WorkoutDate string  `json:"workout_date"`           // YYYY-MM-DD format
-	WorkoutType *string `json:"workout_type,omitempty"`
-	TotalTime   *int    `json:"total_time,omitempty"`
-	Notes       *string `json:"notes,omitempty"`
+	WorkoutID   *int64  `json:"workout_id,omitempty" example:"1"`       // Template ID (optional for ad-hoc workouts)
+	WorkoutName *string `json:"workout_name,omitempty" example:"Fran"` // Name for ad-hoc workouts (required if workout_id is null)
+	WorkoutDate string  `json:"workout_date" example:"2024-01-15"`     // YYYY-MM-DD format
+	WorkoutType *string `json:"workout_type,omitempty" example:"AMRAP"`
+	TotalTime   *int    `json:"total_time,omitempty" example:"1200"` // Duration in seconds
+	Notes       *string `json:"notes,omitempty" example:"Felt strong today"`
 	// Performance data
 	Movements []MovementPerformance `json:"movements,omitempty"`
 	WODs      []WODPerformance      `json:"wods,omitempty"`
 }
 
 // MovementPerformance represents performance data for a single movement
+// @Description Performance data recorded for a movement in a workout
 type MovementPerformance struct {
-	MovementID int64    `json:"movement_id"`
-	Sets       *int     `json:"sets,omitempty"`
-	Reps       *int     `json:"reps,omitempty"`
-	Weight     *float64 `json:"weight,omitempty"`
-	Time       *int     `json:"time,omitempty"` // in seconds
-	Distance   *float64 `json:"distance,omitempty"`
-	Notes      string   `json:"notes,omitempty"`
-	OrderIndex int      `json:"order_index"`
+	MovementID int64    `json:"movement_id" example:"1"`
+	Sets       *int     `json:"sets,omitempty" example:"5"`
+	Reps       *int     `json:"reps,omitempty" example:"10"`
+	Weight     *float64 `json:"weight,omitempty" example:"135.5"`
+	Time       *int     `json:"time,omitempty" example:"300"` // in seconds
+	Distance   *float64 `json:"distance,omitempty" example:"1000"`
+	Notes      string   `json:"notes,omitempty" example:"Used belt"`
+	OrderIndex int      `json:"order_index" example:"0"`
 }
 
 // WODPerformance represents performance data for a single WOD
+// @Description Performance data recorded for a WOD in a workout
 type WODPerformance struct {
-	WODID       int64    `json:"wod_id"`
-	ScoreType   *string  `json:"score_type,omitempty"`   // Time, Rounds+Reps, Max Weight
-	ScoreValue  *string  `json:"score_value,omitempty"`  // Formatted score
-	TimeSeconds *int     `json:"time_seconds,omitempty"` // For time-based WODs
-	Rounds      *int     `json:"rounds,omitempty"`       // For AMRAP
-	Reps        *int     `json:"reps,omitempty"`         // Remaining reps in AMRAP
-	Weight      *float64 `json:"weight,omitempty"`       // For max weight WODs
-	Notes       string   `json:"notes,omitempty"`
-	OrderIndex  int      `json:"order_index"`
+	WODID       int64    `json:"wod_id" example:"1"`
+	ScoreType   *string  `json:"score_type,omitempty" example:"Time"`          // Time, Rounds+Reps, Max Weight
+	ScoreValue  *string  `json:"score_value,omitempty" example:"12:30"`        // Formatted score
+	TimeSeconds *int     `json:"time_seconds,omitempty" example:"750"`         // For time-based WODs
+	Rounds      *int     `json:"rounds,omitempty" example:"5"`                 // For AMRAP
+	Reps        *int     `json:"reps,omitempty" example:"12"`                  // Remaining reps in AMRAP
+	Weight      *float64 `json:"weight,omitempty" example:"225.0"`             // For max weight WODs
+	Notes       string   `json:"notes,omitempty" example:"PR attempt"`
+	OrderIndex  int      `json:"order_index" example:"0"`
 }
 
 // UpdateLoggedWorkoutRequest represents a request to update a logged workout
+// @Description Request to update an existing logged workout
 type UpdateLoggedWorkoutRequest struct {
-	WorkoutName *string               `json:"workout_name,omitempty"` // For ad-hoc workouts
-	WorkoutType *string               `json:"workout_type,omitempty"`
-	TotalTime   *int                  `json:"total_time,omitempty"`
-	Notes       *string               `json:"notes,omitempty"`
+	WorkoutName *string               `json:"workout_name,omitempty" example:"Custom WOD"` // For ad-hoc workouts
+	WorkoutType *string               `json:"workout_type,omitempty" example:"EMOM"`
+	TotalTime   *int                  `json:"total_time,omitempty" example:"900"`
+	Notes       *string               `json:"notes,omitempty" example:"Updated notes"`
 	Movements   []MovementPerformance `json:"movements,omitempty"`
 	WODs        []WODPerformance      `json:"wods,omitempty"`
 }
 
 // UserWorkoutResponse represents a logged workout instance
+// @Description Complete logged workout with performance data
 type UserWorkoutResponse struct {
-	ID                   int64                           `json:"id"`
-	UserID               int64                           `json:"user_id"`
-	WorkoutID            *int64                          `json:"workout_id,omitempty"` // Nullable for ad-hoc workouts
-	WorkoutName          string                          `json:"workout_name"`
-	WorkoutDate          string                          `json:"workout_date"`
-	WorkoutType          *string                         `json:"workout_type,omitempty"`
-	TotalTime            *int                            `json:"total_time,omitempty"`
-	Notes                *string                         `json:"notes,omitempty"`
-	CreatedAt            string                          `json:"created_at"`
-	UpdatedAt            string                          `json:"updated_at"`
+	ID                   int64                           `json:"id" example:"1"`
+	UserID               int64                           `json:"user_id" example:"1"`
+	WorkoutID            *int64                          `json:"workout_id,omitempty" example:"1"` // Nullable for ad-hoc workouts
+	WorkoutName          string                          `json:"workout_name" example:"Fran"`
+	WorkoutDate          string                          `json:"workout_date" example:"2024-01-15"`
+	WorkoutType          *string                         `json:"workout_type,omitempty" example:"For Time"`
+	TotalTime            *int                            `json:"total_time,omitempty" example:"1200"`
+	Notes                *string                         `json:"notes,omitempty" example:"Felt great"`
+	CreatedAt            string                          `json:"created_at" example:"2024-01-15T10:30:00Z"`
+	UpdatedAt            string                          `json:"updated_at" example:"2024-01-15T10:30:00Z"`
 	Movements            []*domain.WorkoutMovement       `json:"movements,omitempty"`             // Template movements
 	WODs                 []*domain.WorkoutWODWithDetails `json:"wods,omitempty"`                  // Template WODs
 	PerformanceMovements []*domain.UserWorkoutMovement   `json:"performance_movements,omitempty"` // Actual performance
 	PerformanceWODs      []*domain.UserWorkoutWOD        `json:"performance_wods,omitempty"`      // Actual performance
-	WorkoutNotes         *string                         `json:"workout_notes,omitempty"`
+	WorkoutNotes         *string                         `json:"workout_notes,omitempty" example:"Template notes"`
 }
 
 // LogWorkout logs a workout instance (user performs a workout template)
+// @Summary      Log a workout
+// @Description  Record a workout with performance data. Can be based on a template or ad-hoc.
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body LogWorkoutRequest true "Workout data with optional performance"
+// @Success      201 {object} UserWorkoutResponse "Workout logged successfully"
+// @Failure      400 {object} ErrorResponse "Invalid request body or missing required fields"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts [post]
 func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -232,6 +249,18 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetLoggedWorkout retrieves a logged workout by ID
+// @Summary      Get a logged workout
+// @Description  Retrieve a specific logged workout by ID with all performance data
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Logged workout ID"
+// @Success      200 {object} UserWorkoutResponse "Logged workout details"
+// @Failure      400 {object} ErrorResponse "Invalid workout ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/{id} [get]
 func (h *UserWorkoutHandler) GetLoggedWorkout(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -282,6 +311,21 @@ func (h *UserWorkoutHandler) GetLoggedWorkout(w http.ResponseWriter, r *http.Req
 }
 
 // ListLoggedWorkouts retrieves all workouts logged by the user
+// @Summary      List logged workouts
+// @Description  Retrieve all logged workouts for the user with pagination and optional date filtering
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 20)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Param        start_date query string false "Filter start date (YYYY-MM-DD)"
+// @Param        end_date query string false "Filter end date (YYYY-MM-DD)"
+// @Success      200 {object} map[string]interface{} "List of workouts with pagination"
+// @Failure      400 {object} ErrorResponse "Invalid date format"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts [get]
 func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -395,6 +439,21 @@ func (h *UserWorkoutHandler) ListLoggedWorkouts(w http.ResponseWriter, r *http.R
 }
 
 // UpdateLoggedWorkout updates a logged workout
+// @Summary      Update a logged workout
+// @Description  Update an existing logged workout's details and performance data
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Logged workout ID"
+// @Param        request body UpdateLoggedWorkoutRequest true "Updated workout data"
+// @Success      200 {object} UserWorkoutResponse "Updated workout details"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Forbidden - not your workout"
+// @Failure      404 {object} ErrorResponse "Workout not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/{id} [put]
 func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -525,6 +584,19 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 }
 
 // DeleteLoggedWorkout deletes a logged workout
+// @Summary      Delete a logged workout
+// @Description  Delete a specific logged workout and all its performance data
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Logged workout ID"
+// @Success      200 {object} MessageResponse "Workout deleted successfully"
+// @Failure      400 {object} ErrorResponse "Invalid workout ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Forbidden - not your workout"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/{id} [delete]
 func (h *UserWorkoutHandler) DeleteLoggedWorkout(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -568,6 +640,19 @@ func (h *UserWorkoutHandler) DeleteLoggedWorkout(w http.ResponseWriter, r *http.
 }
 
 // GetMonthlyStats retrieves workout count for a specific month
+// @Summary      Get monthly workout stats
+// @Description  Retrieve the workout count for a specific month
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        year query int true "Year (e.g., 2024)"
+// @Param        month query int true "Month (1-12)"
+// @Success      200 {object} map[string]interface{} "Monthly stats with workout count"
+// @Failure      400 {object} ErrorResponse "Invalid year or month"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/stats/monthly [get]
 func (h *UserWorkoutHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -607,6 +692,17 @@ func (h *UserWorkoutHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Requ
 }
 
 // GetPersonalRecords retrieves all personal records (movements and WODs) for the user
+// @Summary      Get personal records
+// @Description  Retrieve all personal records for movements and WODs
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results per category (default 50)"
+// @Success      200 {object} map[string]interface{} "PR movements and PR WODs"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/personal-records [get]
 func (h *UserWorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -659,6 +755,16 @@ func (h *UserWorkoutHandler) GetPersonalRecords(w http.ResponseWriter, r *http.R
 }
 
 // RetroactiveFlagPRs analyzes all existing workouts and flags PRs based on historical data
+// @Summary      Retroactively flag PRs
+// @Description  Analyze all existing workouts and flag personal records based on historical data
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Count of flagged PRs"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/retroactive-prs [post]
 func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -693,6 +799,16 @@ func (h *UserWorkoutHandler) RetroactiveFlagPRs(w http.ResponseWriter, r *http.R
 }
 
 // GetActiveUsersStats handles GET /api/stats/active-users-this-month
+// @Summary      Get active users this month
+// @Description  Retrieve stats about active users who have logged workouts this month
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Active users stats"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /stats/active-users-this-month [get]
 func (h *UserWorkoutHandler) GetActiveUsersStats(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

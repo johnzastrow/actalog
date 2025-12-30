@@ -29,6 +29,18 @@ func NewWorkoutTemplateHandler(service WorkoutTemplateService) *WorkoutTemplateH
 }
 
 // CreateTemplate handles POST /api/templates
+// @Summary      Create workout template
+// @Description  Create a new reusable workout template with movements and WODs
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object true "Template details with movements and WODs"
+// @Success      201 {object} map[string]interface{} "Created template"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates [post]
 func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -106,6 +118,17 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 }
 
 // GetTemplate handles GET /api/templates/{id}
+// @Summary      Get workout template
+// @Description  Retrieve a specific workout template by ID with full details
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Success      200 {object} map[string]interface{} "Template details"
+// @Failure      400 {object} ErrorResponse "Invalid template ID"
+// @Failure      404 {object} ErrorResponse "Template not found"
+// @Router       /templates/{id} [get]
 func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -127,6 +150,18 @@ func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Requ
 }
 
 // ListMyTemplates handles GET /api/workouts/my-templates
+// @Summary      List my workout templates
+// @Description  Get all workout templates created by the current user
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of user's templates"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/my-templates [get]
 func (h *WorkoutTemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -167,6 +202,17 @@ func (h *WorkoutTemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.
 }
 
 // ListStandardTemplates handles GET /api/templates
+// @Summary      List standard workout templates
+// @Description  Get all standard (system-provided) workout templates
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of standard templates"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates [get]
 func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r *http.Request) {
 	limit := 100
 	offset := 0
@@ -201,6 +247,19 @@ func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r 
 }
 
 // UpdateTemplate handles PUT /api/templates/{id}
+// @Summary      Update workout template
+// @Description  Update an existing workout template (owner only)
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Param        request body object true "Updated template details"
+// @Success      200 {object} map[string]interface{} "Updated template"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates/{id} [put]
 func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -284,6 +343,18 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 }
 
 // DeleteTemplate handles DELETE /api/templates/{id}
+// @Summary      Delete workout template
+// @Description  Delete a workout template (owner only)
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Success      204 "Template deleted"
+// @Failure      400 {object} ErrorResponse "Invalid template ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Not the template owner"
+// @Router       /templates/{id} [delete]
 func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

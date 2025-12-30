@@ -24,47 +24,68 @@ func NewWODHandler(wodService *service.WODService) *WODHandler {
 }
 
 // CreateWODRequest represents a request to create a custom WOD
+// @Description Request to create a new WOD
 type CreateWODRequest struct {
-	Name        string  `json:"name"`
-	Source      string  `json:"source,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Regime      string  `json:"regime,omitempty"`
-	ScoreType   string  `json:"score_type,omitempty"`
-	Description string  `json:"description,omitempty"`
+	Name        string  `json:"name" example:"My Custom WOD"`
+	Source      string  `json:"source,omitempty" example:"custom"`
+	Type        string  `json:"type,omitempty" example:"AMRAP"`
+	Regime      string  `json:"regime,omitempty" example:"15 min"`
+	ScoreType   string  `json:"score_type,omitempty" example:"rounds+reps"`
+	Description string  `json:"description,omitempty" example:"15 min AMRAP of 10 KB swings, 15 box jumps"`
 	URL         *string `json:"url,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
 }
 
 // UpdateWODRequest represents a request to update a WOD
+// @Description Request to update an existing WOD
 type UpdateWODRequest struct {
-	Name        string  `json:"name"`
-	Source      string  `json:"source,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Regime      string  `json:"regime,omitempty"`
-	ScoreType   string  `json:"score_type,omitempty"`
-	Description string  `json:"description,omitempty"`
+	Name        string  `json:"name" example:"Updated WOD Name"`
+	Source      string  `json:"source,omitempty" example:"custom"`
+	Type        string  `json:"type,omitempty" example:"For Time"`
+	Regime      string  `json:"regime,omitempty" example:"21-15-9"`
+	ScoreType   string  `json:"score_type,omitempty" example:"time"`
+	Description string  `json:"description,omitempty" example:"21-15-9 thrusters and pull-ups"`
 	URL         *string `json:"url,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
 }
 
 // WODResponse represents a WOD
+// @Description WOD details response
 type WODResponse struct {
-	ID          int64   `json:"id"`
-	Name        string  `json:"name"`
-	Source      string  `json:"source,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Regime      string  `json:"regime,omitempty"`
-	ScoreType   string  `json:"score_type,omitempty"`
-	Description string  `json:"description,omitempty"`
+	ID          int64   `json:"id" example:"1"`
+	Name        string  `json:"name" example:"Fran"`
+	Source      string  `json:"source,omitempty" example:"CrossFit"`
+	Type        string  `json:"type,omitempty" example:"For Time"`
+	Regime      string  `json:"regime,omitempty" example:"21-15-9"`
+	ScoreType   string  `json:"score_type,omitempty" example:"time"`
+	Description string  `json:"description,omitempty" example:"21-15-9 thrusters and pull-ups"`
 	URL         *string `json:"url,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
-	IsStandard  bool    `json:"is_standard"`
+	IsStandard  bool    `json:"is_standard" example:"true"`
 	CreatedBy   *int64  `json:"created_by,omitempty"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	CreatedAt   string  `json:"created_at" example:"2024-01-15T10:30:00Z"`
+	UpdatedAt   string  `json:"updated_at" example:"2024-01-15T10:30:00Z"`
+}
+
+// WODListResponse represents a list of WODs
+// @Description List of WODs
+type WODListResponse struct {
+	WODs []WODResponse `json:"wods"`
 }
 
 // CreateWOD creates a new custom WOD
+// @Summary      Create a custom WOD
+// @Description  Create a new custom WOD (Workout of the Day)
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateWODRequest true "WOD details"
+// @Success      201 {object} WODResponse "Created WOD"
+// @Failure      400 {object} ErrorResponse "Invalid request body or missing name"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods [post]
 func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -130,6 +151,16 @@ func (h *WODHandler) CreateWOD(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetWOD retrieves a WOD by ID
+// @Summary      Get WOD by ID
+// @Description  Retrieve a single WOD by its ID
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "WOD ID"
+// @Success      200 {object} WODResponse "WOD details"
+// @Failure      400 {object} ErrorResponse "Invalid WOD ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/{id} [get]
 func (h *WODHandler) GetWOD(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -164,6 +195,18 @@ func (h *WODHandler) GetWOD(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListWODs retrieves all WODs (standard + user's custom)
+// @Summary      List all WODs
+// @Description  Retrieve all WODs including standard and user's custom WODs
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Param        standard query bool false "Return only standard WODs"
+// @Success      200 {object} WODListResponse "List of WODs"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods [get]
 func (h *WODHandler) ListWODs(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context (optional)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -230,6 +273,16 @@ func (h *WODHandler) ListWODs(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListStandardWODs returns only standard/pre-seeded WODs
+// @Summary      List standard WODs
+// @Description  Retrieve only standard (built-in) WODs
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} WODListResponse "List of standard WODs"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/standard [get]
 func (h *WODHandler) ListStandardWODs(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination parameters
 	limit := 100 // default
@@ -279,6 +332,18 @@ func (h *WODHandler) ListStandardWODs(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListMyWODs returns only the authenticated user's custom WODs
+// @Summary      List my custom WODs
+// @Description  Retrieve only the authenticated user's custom WODs
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} WODListResponse "List of user's custom WODs"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/mine [get]
 func (h *WODHandler) ListMyWODs(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -335,6 +400,16 @@ func (h *WODHandler) ListMyWODs(w http.ResponseWriter, r *http.Request) {
 }
 
 // SearchWODs searches for WODs by name
+// @Summary      Search WODs
+// @Description  Search for WODs by name
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Param        q query string true "Search query"
+// @Success      200 {object} WODListResponse "Matching WODs"
+// @Failure      400 {object} ErrorResponse "Missing search query"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/search [get]
 func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -375,6 +450,20 @@ func (h *WODHandler) SearchWODs(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateWOD updates a custom WOD (or any WOD if admin)
+// @Summary      Update a WOD
+// @Description  Update an existing WOD (admin can update any, users only their own custom WODs)
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "WOD ID"
+// @Param        request body UpdateWODRequest true "Updated WOD details"
+// @Success      200 {object} WODResponse "Updated WOD"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Forbidden - not your WOD"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/{id} [put]
 func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -458,6 +547,19 @@ func (h *WODHandler) UpdateWOD(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteWOD deletes a custom WOD
+// @Summary      Delete a WOD
+// @Description  Delete a custom WOD (cannot delete standard WODs)
+// @Tags         wods
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "WOD ID"
+// @Success      200 {object} MessageResponse "WOD deleted successfully"
+// @Failure      400 {object} ErrorResponse "Invalid WOD ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Forbidden - cannot delete this WOD"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /wods/{id} [delete]
 func (h *WODHandler) DeleteWOD(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())

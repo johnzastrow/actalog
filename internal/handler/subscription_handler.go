@@ -26,27 +26,40 @@ func NewSubscriptionHandler(subscriptionService *service.SubscriptionService, l 
 }
 
 // CreateUserSubscriptionRequest represents a request to create a user subscription
+// @Description Request to create a user subscription (admin only)
 type CreateUserSubscriptionRequest struct {
-	UserID           int64  `json:"user_id"`
-	SubscriptionType string `json:"subscription_type"` // "free", "monthly", "annual"
-	IsPermanentFree  bool   `json:"is_permanent_free"`
-	Notes            string `json:"notes"`
+	UserID           int64  `json:"user_id" example:"1"`
+	SubscriptionType string `json:"subscription_type" example:"monthly"` // "free", "monthly", "annual"
+	IsPermanentFree  bool   `json:"is_permanent_free" example:"false"`
+	Notes            string `json:"notes" example:"Customer referral discount"`
 }
 
 // CreateOrganizationSubscriptionRequest represents a request to create an organization subscription
+// @Description Request to create an organization subscription (admin only)
 type CreateOrganizationSubscriptionRequest struct {
-	OrganizationID   int64  `json:"organization_id"`
-	SubscriptionType string `json:"subscription_type"`
-	IsPermanentFree  bool   `json:"is_permanent_free"`
-	Notes            string `json:"notes"`
+	OrganizationID   int64  `json:"organization_id" example:"1"`
+	SubscriptionType string `json:"subscription_type" example:"annual"`
+	IsPermanentFree  bool   `json:"is_permanent_free" example:"false"`
+	Notes            string `json:"notes" example:"Enterprise plan"`
 }
 
 // CancelSubscriptionRequest represents a request to cancel a subscription
+// @Description Request to cancel a subscription
 type CancelSubscriptionRequest struct {
-	Reason string `json:"reason"`
+	Reason string `json:"reason" example:"User requested cancellation"`
 }
 
 // GetMySubscriptionStatus returns the current user's subscription status
+// @Summary      Get my subscription status
+// @Description  Get the current user's subscription status and plan details
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Subscription status"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /subscriptions/my-status [get]
 func (h *SubscriptionHandler) GetMySubscriptionStatus(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -69,6 +82,19 @@ func (h *SubscriptionHandler) GetMySubscriptionStatus(w http.ResponseWriter, r *
 }
 
 // CreateUserSubscription creates a new user subscription (admin only)
+// @Summary      Create user subscription (Admin)
+// @Description  Create a new subscription for a user (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateUserSubscriptionRequest true "Subscription details"
+// @Success      201 {object} domain.UserSubscription "Created subscription"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      403 {object} ErrorResponse "Cannot modify own subscription"
+// @Failure      409 {object} ErrorResponse "Active subscription exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users [post]
 func (h *SubscriptionHandler) CreateUserSubscription(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -129,6 +155,18 @@ func (h *SubscriptionHandler) CreateUserSubscription(w http.ResponseWriter, r *h
 }
 
 // CreateOrganizationSubscription creates a new organization subscription (admin only)
+// @Summary      Create organization subscription (Admin)
+// @Description  Create a new subscription for an organization (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateOrganizationSubscriptionRequest true "Subscription details"
+// @Success      201 {object} domain.OrganizationSubscription "Created subscription"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      409 {object} ErrorResponse "Active subscription exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations [post]
 func (h *SubscriptionHandler) CreateOrganizationSubscription(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -187,6 +225,17 @@ func (h *SubscriptionHandler) CreateOrganizationSubscription(w http.ResponseWrit
 }
 
 // GetUserSubscriptions gets all subscriptions for a user (admin only)
+// @Summary      Get user subscriptions (Admin)
+// @Description  Get all subscriptions for a specific user (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        user_id path int true "User ID"
+// @Success      200 {object} map[string]interface{} "Subscriptions list"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/{user_id} [get]
 func (h *SubscriptionHandler) GetUserSubscriptions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from URL parameter
 	userIDStr := chi.URLParam(r, "user_id")
@@ -213,6 +262,17 @@ func (h *SubscriptionHandler) GetUserSubscriptions(w http.ResponseWriter, r *htt
 }
 
 // GetOrganizationSubscriptions gets all subscriptions for an organization (admin only)
+// @Summary      Get organization subscriptions (Admin)
+// @Description  Get all subscriptions for a specific organization (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        org_id path int true "Organization ID"
+// @Success      200 {object} map[string]interface{} "Subscriptions list"
+// @Failure      400 {object} ErrorResponse "Invalid organization ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/{org_id} [get]
 func (h *SubscriptionHandler) GetOrganizationSubscriptions(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from URL parameter
 	orgIDStr := chi.URLParam(r, "org_id")
@@ -239,12 +299,27 @@ func (h *SubscriptionHandler) GetOrganizationSubscriptions(w http.ResponseWriter
 }
 
 // MarkUserSubscriptionAsPaidRequest represents a request to mark a subscription as paid
+// @Description Request to mark a subscription as paid
 type MarkUserSubscriptionAsPaidRequest struct {
-	PaymentDate  *string `json:"payment_date"`  // Optional: defaults to now
-	DurationDays *int    `json:"duration_days"` // Optional: custom duration in days
+	PaymentDate  *string `json:"payment_date" example:"2024-01-15"`  // Optional: defaults to now
+	DurationDays *int    `json:"duration_days" example:"30"` // Optional: custom duration in days
 }
 
 // MarkUserSubscriptionAsPaid marks a user subscription as paid (admin only)
+// @Summary      Mark user subscription as paid (Admin)
+// @Description  Mark a user subscription as paid and extend the subscription period
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body MarkUserSubscriptionAsPaidRequest false "Payment details"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Cannot mark free subscription as paid"
+// @Failure      403 {object} ErrorResponse "Cannot modify own subscription"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/{id}/paid [put]
 func (h *SubscriptionHandler) MarkUserSubscriptionAsPaid(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -302,6 +377,19 @@ func (h *SubscriptionHandler) MarkUserSubscriptionAsPaid(w http.ResponseWriter, 
 }
 
 // MarkOrganizationSubscriptionAsPaid marks an organization subscription as paid (admin only)
+// @Summary      Mark organization subscription as paid (Admin)
+// @Description  Mark an organization subscription as paid and extend the subscription period
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body MarkUserSubscriptionAsPaidRequest false "Payment details"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Cannot mark free subscription as paid"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/{id}/paid [put]
 func (h *SubscriptionHandler) MarkOrganizationSubscriptionAsPaid(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -357,6 +445,20 @@ func (h *SubscriptionHandler) MarkOrganizationSubscriptionAsPaid(w http.Response
 }
 
 // CancelUserSubscription cancels a user subscription (admin only)
+// @Summary      Cancel user subscription (Admin)
+// @Description  Cancel a user subscription with a reason
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body CancelSubscriptionRequest true "Cancellation reason"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request or missing reason"
+// @Failure      403 {object} ErrorResponse "Cannot modify own subscription"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/{id}/cancel [post]
 func (h *SubscriptionHandler) CancelUserSubscription(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -415,11 +517,26 @@ func (h *SubscriptionHandler) CancelUserSubscription(w http.ResponseWriter, r *h
 }
 
 // SetUserSubscriptionPermanentRequest represents a request to set permanent status
+// @Description Request to set subscription permanent status
 type SetUserSubscriptionPermanentRequest struct {
-	IsPermanent bool `json:"is_permanent"`
+	IsPermanent bool `json:"is_permanent" example:"true"`
 }
 
 // SetUserSubscriptionPermanent sets the permanent free status of a user subscription (admin only)
+// @Summary      Set user subscription permanent status (Admin)
+// @Description  Set whether a user subscription is permanently free
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body SetUserSubscriptionPermanentRequest true "Permanent status"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      403 {object} ErrorResponse "Cannot modify own subscription"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/{id}/permanent [put]
 func (h *SubscriptionHandler) SetUserSubscriptionPermanent(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -474,6 +591,19 @@ func (h *SubscriptionHandler) SetUserSubscriptionPermanent(w http.ResponseWriter
 }
 
 // CancelOrganizationSubscription cancels an organization subscription (admin only)
+// @Summary      Cancel organization subscription (Admin)
+// @Description  Cancel an organization subscription with a reason
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body CancelSubscriptionRequest true "Cancellation reason"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request or missing reason"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/{id}/cancel [post]
 func (h *SubscriptionHandler) CancelOrganizationSubscription(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -530,6 +660,19 @@ func (h *SubscriptionHandler) CancelOrganizationSubscription(w http.ResponseWrit
 }
 
 // SetOrganizationSubscriptionPermanent sets the permanent free status of an organization subscription (admin only)
+// @Summary      Set organization subscription permanent status (Admin)
+// @Description  Set whether an organization subscription is permanently free
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Subscription ID"
+// @Param        request body SetUserSubscriptionPermanentRequest true "Permanent status"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "Subscription not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/{id}/permanent [put]
 func (h *SubscriptionHandler) SetOrganizationSubscriptionPermanent(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -582,6 +725,15 @@ func (h *SubscriptionHandler) SetOrganizationSubscriptionPermanent(w http.Respon
 }
 
 // ListAllUserSubscriptions lists all user subscriptions (admin only)
+// @Summary      List all user subscriptions (Admin)
+// @Description  Get a list of all user subscriptions in the system
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users [get]
 func (h *SubscriptionHandler) ListAllUserSubscriptions(w http.ResponseWriter, r *http.Request) {
 	// Get all user subscriptions
 	subscriptions, err := h.subscriptionService.ListAllUserSubscriptions()
@@ -600,6 +752,15 @@ func (h *SubscriptionHandler) ListAllUserSubscriptions(w http.ResponseWriter, r 
 }
 
 // ListAllOrganizationSubscriptions lists all organization subscriptions (admin only)
+// @Summary      List all organization subscriptions (Admin)
+// @Description  Get a list of all organization subscriptions in the system
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations [get]
 func (h *SubscriptionHandler) ListAllOrganizationSubscriptions(w http.ResponseWriter, r *http.Request) {
 	// Get all organization subscriptions
 	subscriptions, err := h.subscriptionService.ListAllOrganizationSubscriptions()

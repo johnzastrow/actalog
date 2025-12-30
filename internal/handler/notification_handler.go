@@ -26,6 +26,18 @@ func NewNotificationHandler(notificationService *service.NotificationService, l 
 }
 
 // ListNotifications handles GET /api/notifications
+// @Summary      List notifications
+// @Description  Retrieve all notifications for the authenticated user
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 20, max 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of notifications"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications [get]
 func (h *NotificationHandler) ListNotifications(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -78,6 +90,18 @@ func (h *NotificationHandler) ListNotifications(w http.ResponseWriter, r *http.R
 }
 
 // ListUnreadNotifications handles GET /api/notifications/unread
+// @Summary      List unread notifications
+// @Description  Retrieve only unread notifications for the authenticated user
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 20, max 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of unread notifications"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/unread [get]
 func (h *NotificationHandler) ListUnreadNotifications(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -130,6 +154,16 @@ func (h *NotificationHandler) ListUnreadNotifications(w http.ResponseWriter, r *
 }
 
 // GetUnreadCount handles GET /api/notifications/count
+// @Summary      Get unread notification count
+// @Description  Get the count of unread notifications (for badge display)
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Unread count"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/count [get]
 func (h *NotificationHandler) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -158,6 +192,18 @@ func (h *NotificationHandler) GetUnreadCount(w http.ResponseWriter, r *http.Requ
 }
 
 // MarkAsRead handles PUT /api/notifications/{id}/read
+// @Summary      Mark notification as read
+// @Description  Mark a specific notification as read
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Notification ID"
+// @Success      200 {object} MessageResponse "Marked as read"
+// @Failure      400 {object} ErrorResponse "Invalid notification ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/{id}/read [put]
 func (h *NotificationHandler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -193,6 +239,16 @@ func (h *NotificationHandler) MarkAsRead(w http.ResponseWriter, r *http.Request)
 }
 
 // MarkAllAsRead handles PUT /api/notifications/read-all
+// @Summary      Mark all notifications as read
+// @Description  Mark all notifications for the user as read
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} MessageResponse "All marked as read"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/read-all [put]
 func (h *NotificationHandler) MarkAllAsRead(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -220,6 +276,18 @@ func (h *NotificationHandler) MarkAllAsRead(w http.ResponseWriter, r *http.Reque
 }
 
 // DeleteNotification handles DELETE /api/notifications/{id}
+// @Summary      Delete notification
+// @Description  Delete a specific notification
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Notification ID"
+// @Success      200 {object} MessageResponse "Notification deleted"
+// @Failure      400 {object} ErrorResponse "Invalid notification ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/{id} [delete]
 func (h *NotificationHandler) DeleteNotification(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -254,7 +322,29 @@ func (h *NotificationHandler) DeleteNotification(w http.ResponseWriter, r *http.
 	})
 }
 
+// CreateAnnouncementRequest represents an announcement creation request
+// @Description Admin announcement request
+type CreateAnnouncementRequest struct {
+	Title          string  `json:"title" example:"System Update"`
+	Message        string  `json:"message" example:"Scheduled maintenance tonight"`
+	TargetType     string  `json:"target_type" example:"all"` // "all", "organization", or "users"
+	TargetIDs      []int64 `json:"target_ids"`                // org IDs or user IDs
+	OrganizationID *int64  `json:"organization_id,omitempty"`
+}
+
 // CreateAnnouncement handles POST /api/admin/notifications/announce (admin only)
+// @Summary      Create announcement (Admin)
+// @Description  Send an announcement to all users, organization members, or specific users
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateAnnouncementRequest true "Announcement details"
+// @Success      201 {object} MessageResponse "Announcement created"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      403 {object} ErrorResponse "Admin access required"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/notifications/announce [post]
 func (h *NotificationHandler) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
 	// Get user role from context (set by auth middleware)
 	userRole, ok := middleware.GetUserRole(r.Context())

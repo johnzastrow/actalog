@@ -22,10 +22,11 @@ type PerformanceHandler struct {
 }
 
 // MovementPerformanceWithRM extends UserWorkoutMovement with calculated 1RM
+// @Description Movement performance with calculated 1RM values
 type MovementPerformanceWithRM struct {
 	*domain.UserWorkoutMovement
-	Calculated1RM *float64 `json:"calculated_1rm,omitempty"`
-	Formula       *string  `json:"formula,omitempty"`
+	Calculated1RM *float64 `json:"calculated_1rm,omitempty" example:"315.5"`
+	Formula       *string  `json:"formula,omitempty" example:"Epley"`
 }
 
 // NewPerformanceHandler creates a new performance handler
@@ -46,6 +47,19 @@ func NewPerformanceHandler(
 }
 
 // UnifiedSearch searches both movements and WODs
+// @Summary      Unified search for movements and WODs
+// @Description  Search across both movements and WODs in a single query
+// @Tags         performance
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        q query string true "Search query"
+// @Param        limit query int false "Max results per category (default 10)"
+// @Success      200 {object} map[string]interface{} "Combined search results"
+// @Failure      400 {object} ErrorResponse "Missing search query"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /performance/search [get]
 func (h *PerformanceHandler) UnifiedSearch(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context (for authorization)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -131,6 +145,18 @@ func (h *PerformanceHandler) UnifiedSearch(w http.ResponseWriter, r *http.Reques
 }
 
 // GetMovementPerformance retrieves all performance history for a specific movement with calculated 1RM
+// @Summary      Get movement performance history
+// @Description  Retrieve all performance records for a movement with calculated 1RM values
+// @Tags         performance
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Movement ID"
+// @Success      200 {object} map[string]interface{} "Performance history with best 1RM"
+// @Failure      400 {object} ErrorResponse "Invalid movement ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /performance/movements/{id} [get]
 func (h *PerformanceHandler) GetMovementPerformance(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -199,6 +225,18 @@ func (h *PerformanceHandler) GetMovementPerformance(w http.ResponseWriter, r *ht
 }
 
 // GetWODPerformance retrieves all performance history for a specific WOD
+// @Summary      Get WOD performance history
+// @Description  Retrieve all performance records for a specific WOD
+// @Tags         performance
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "WOD ID"
+// @Success      200 {object} map[string]interface{} "WOD performance history"
+// @Failure      400 {object} ErrorResponse "Invalid WOD ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /performance/wods/{id} [get]
 func (h *PerformanceHandler) GetWODPerformance(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

@@ -1,0 +1,5669 @@
+basePath: /api
+definitions:
+  domain.AuditLog:
+    properties:
+      created_at:
+        type: string
+      details:
+        description: JSON string
+        type: string
+      event_type:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      target_user_email:
+        description: Email of affected user
+        type: string
+      target_user_id:
+        description: User affected by the action
+        type: integer
+      user_agent:
+        type: string
+      user_email:
+        description: These fields are populated via JOIN queries and are not in the
+          audit_logs table
+        type: string
+      user_id:
+        description: User who performed the action (NULL for system)
+        type: integer
+    type: object
+  domain.BackupMetadata:
+    properties:
+      created_at:
+        type: string
+      created_by_email:
+        type: string
+      database_driver:
+        type: string
+      database_name:
+        type: string
+      file_size:
+        description: Size in bytes
+        type: integer
+      filename:
+        type: string
+      total_movements:
+        type: integer
+      total_users:
+        type: integer
+      total_wods:
+        type: integer
+      total_workouts:
+        type: integer
+      version:
+        type: string
+    type: object
+  domain.DataChangeLog:
+    properties:
+      after_values:
+        description: JSON of record after change (NULL for deletes)
+        type: string
+      before_values:
+        description: JSON of record before change
+        type: string
+      created_at:
+        type: string
+      entity_id:
+        description: ID of the record that was changed
+        type: integer
+      entity_name:
+        description: Human-readable name (e.g., WOD name, movement name)
+        type: string
+      entity_type:
+        description: wod, movement, workout, user_workout, etc.
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      operation:
+        description: update, delete
+        type: string
+      user_agent:
+        type: string
+      user_email:
+        description: Email for display (denormalized)
+        type: string
+      user_id:
+        description: User who made the change
+        type: integer
+    type: object
+  domain.Movement:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        description: User ID if custom
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      is_standard:
+        description: True for predefined movements
+        type: boolean
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/domain.MovementType'
+      updated_at:
+        type: string
+    type: object
+  domain.MovementType:
+    enum:
+    - weightlifting
+    - bodyweight
+    - cardio
+    - gymnastics
+    type: string
+    x-enum-varnames:
+    - MovementTypeWeightlifting
+    - MovementTypeBodyweight
+    - MovementTypeCardio
+    - MovementTypeGymnastics
+  domain.Organization:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.OrganizationSubscription:
+    properties:
+      cancelled_at:
+        type: string
+      cancelled_reason:
+        type: string
+      created_at:
+        type: string
+      created_by_user_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_permanent_free:
+        type: boolean
+      last_payment_date:
+        type: string
+      next_billing_date:
+        type: string
+      notes:
+        type: string
+      organization_id:
+        type: integer
+      organization_name:
+        description: Joined from organizations table
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/domain.SubscriptionStatus'
+      subscription_type:
+        $ref: '#/definitions/domain.SubscriptionType'
+      updated_at:
+        type: string
+    type: object
+  domain.SubscriptionStatus:
+    enum:
+    - active
+    - expired
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - SubscriptionStatusActive
+    - SubscriptionStatusExpired
+    - SubscriptionStatusCancelled
+  domain.SubscriptionType:
+    enum:
+    - free
+    - monthly
+    - annual
+    type: string
+    x-enum-varnames:
+    - SubscriptionTypeFree
+    - SubscriptionTypeMonthly
+    - SubscriptionTypeAnnual
+  domain.User:
+    properties:
+      account_disabled:
+        description: Expose so client knows
+        type: boolean
+      birthday:
+        type: string
+      created_at:
+        type: string
+      disable_reason:
+        description: Reason for account disable
+        type: string
+      disabled_at:
+        type: string
+      disabled_by_user_id:
+        type: integer
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      email_verified_at:
+        type: string
+      id:
+        type: integer
+      last_login_at:
+        type: string
+      name:
+        type: string
+      profile_image:
+        type: string
+      role:
+        description: user, admin
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.UserSettings:
+    properties:
+      created_at:
+        type: string
+      data_export_format:
+        description: JSON, CSV
+        type: string
+      distance_unit:
+        description: miles, km
+        type: string
+      id:
+        type: integer
+      notification_preferences:
+        description: JSON format
+        type: string
+      theme:
+        description: light, dark
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      weight_unit:
+        description: lbs, kg
+        type: string
+    type: object
+  domain.UserSubscription:
+    properties:
+      cancelled_at:
+        type: string
+      cancelled_reason:
+        type: string
+      created_at:
+        type: string
+      created_by_user_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_permanent_free:
+        type: boolean
+      last_payment_date:
+        type: string
+      next_billing_date:
+        type: string
+      notes:
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/domain.SubscriptionStatus'
+      subscription_type:
+        $ref: '#/definitions/domain.SubscriptionType'
+      updated_at:
+        type: string
+      user_email:
+        description: Joined from users table
+        type: string
+      user_id:
+        type: integer
+      user_name:
+        description: Joined from users table
+        type: string
+    type: object
+  domain.UserWorkoutMovement:
+    properties:
+      created_at:
+        type: string
+      distance:
+        description: in meters or miles
+        type: number
+      id:
+        type: integer
+      is_pr:
+        description: Personal record flag
+        type: boolean
+      movement:
+        allOf:
+        - $ref: '#/definitions/domain.Movement'
+        description: Related data (loaded via joins)
+      movement_id:
+        description: References movements table
+        type: integer
+      movement_name:
+        description: Flattened for convenience
+        type: string
+      movement_type:
+        description: Flattened for convenience
+        type: string
+      notes:
+        type: string
+      order_index:
+        description: Order in the workout
+        type: integer
+      reps:
+        type: integer
+      sets:
+        type: integer
+      time_seconds:
+        description: in seconds
+        type: integer
+      updated_at:
+        type: string
+      user_workout_id:
+        description: References user_workouts (logged workout instance)
+        type: integer
+      weight:
+        description: in lbs or kg
+        type: number
+      workout_date:
+        description: From user_workouts.workout_date
+        type: string
+    type: object
+  domain.UserWorkoutWOD:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_pr:
+        description: Personal record flag
+        type: boolean
+      notes:
+        type: string
+      order_index:
+        description: Order in the workout
+        type: integer
+      reps:
+        description: Remaining reps in AMRAP
+        type: integer
+      rounds:
+        description: For AMRAP WODs
+        type: integer
+      score_type:
+        description: Time (HH:MM:SS), Rounds+Reps, Max Weight
+        type: string
+      score_value:
+        description: Formatted score (e.g., "12:34", "10+15", "225.5")
+        type: string
+      time_seconds:
+        description: For Time-based WODs
+        type: integer
+      updated_at:
+        type: string
+      user_workout_id:
+        description: References user_workouts (logged workout instance)
+        type: integer
+      weight:
+        description: For Max Weight WODs
+        type: number
+      wod:
+        allOf:
+        - $ref: '#/definitions/domain.WOD'
+        description: Related data (loaded via joins)
+      wod_id:
+        description: References wods table
+        type: integer
+      wod_name:
+        description: Flattened for convenience
+        type: string
+      wod_score_type:
+        description: WOD's defined score_type from wods table
+        type: string
+      wod_type:
+        description: Flattened for convenience (Benchmark, Hero, Girl, etc.)
+        type: string
+      workout_date:
+        description: From user_workouts.workout_date
+        type: string
+    type: object
+  domain.WOD:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        description: User ID if custom WOD (NULL for standard)
+        type: integer
+      description:
+        description: Full WOD description/instructions
+        type: string
+      id:
+        type: integer
+      is_standard:
+        description: TRUE for pre-seeded WODs, FALSE for user-created
+        type: boolean
+      name:
+        type: string
+      notes:
+        description: Additional notes
+        type: string
+      regime:
+        description: EMOM, AMRAP, Fastest Time, Slowest Round, Get Stronger, Skills
+        type: string
+      score_type:
+        description: Time (HH:MM:SS), Rounds+Reps, Max Weight
+        type: string
+      source:
+        description: CrossFit, Other Coach, Self-recorded
+        type: string
+      type:
+        description: Benchmark, Hero, Girl, Notables, Games, Endurance, Self-created
+        type: string
+      updated_at:
+        type: string
+      url:
+        description: Optional video or reference URL
+        type: string
+    type: object
+  domain.Workout:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        description: User who created (NULL for standard templates)
+        type: integer
+      id:
+        type: integer
+      movements:
+        description: Related data (not stored directly in workout table, loaded via
+          joins)
+        items:
+          $ref: '#/definitions/domain.WorkoutMovement'
+        type: array
+      name:
+        description: Template name (e.g., "Monday Strength", "Hero WOD")
+        type: string
+      notes:
+        description: General template notes/description
+        type: string
+      updated_at:
+        type: string
+      wods:
+        description: WODs in this template
+        items:
+          $ref: '#/definitions/domain.WorkoutWODWithDetails'
+        type: array
+    type: object
+  domain.WorkoutMovement:
+    properties:
+      created_at:
+        type: string
+      distance:
+        description: in meters or miles
+        type: number
+      id:
+        type: integer
+      is_pr:
+        description: Personal record flag
+        type: boolean
+      is_rx:
+        description: Prescribed weight/standard
+        type: boolean
+      movement:
+        allOf:
+        - $ref: '#/definitions/domain.Movement'
+        description: Related data
+      movement_id:
+        description: References movements table
+        type: integer
+      notes:
+        type: string
+      order_index:
+        description: Order in the workout
+        type: integer
+      reps:
+        type: integer
+      sets:
+        type: integer
+      time:
+        description: in seconds
+        type: integer
+      updated_at:
+        type: string
+      weight:
+        description: in lbs or kg
+        type: number
+      workout_id:
+        description: References workout template
+        type: integer
+    type: object
+  domain.WorkoutWODWithDetails:
+    properties:
+      created_at:
+        type: string
+      division:
+        description: rx, scaled, beginner
+        type: string
+      id:
+        type: integer
+      is_pr:
+        description: Personal record flag
+        type: boolean
+      order_index:
+        description: Order in workout sequence
+        type: integer
+      score_value:
+        description: Actual score when logged (time, rounds+reps, weight)
+        type: string
+      updated_at:
+        type: string
+      wod_description:
+        type: string
+      wod_id:
+        description: References WOD
+        type: integer
+      wod_name:
+        type: string
+      wod_regime:
+        type: string
+      wod_score_type:
+        type: string
+      wod_type:
+        type: string
+      workout_id:
+        description: References workout template
+        type: integer
+    type: object
+  handler.AuthResponse:
+    description: Authentication response containing JWT token and user info
+    properties:
+      refresh_token:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user: {}
+    type: object
+  handler.CancelSubscriptionRequest:
+    description: Request to cancel a subscription
+    properties:
+      reason:
+        example: User requested cancellation
+        type: string
+    type: object
+  handler.ChangePasswordRequest:
+    description: Password change request
+    properties:
+      new_password:
+        example: newSecurePassword456
+        type: string
+      old_password:
+        example: currentPassword123
+        type: string
+    type: object
+  handler.CopyToStandardRequest:
+    properties:
+      new_name:
+        type: string
+    type: object
+  handler.CreateAnnouncementRequest:
+    description: Admin announcement request
+    properties:
+      message:
+        example: Scheduled maintenance tonight
+        type: string
+      organization_id:
+        type: integer
+      target_ids:
+        description: org IDs or user IDs
+        items:
+          type: integer
+        type: array
+      target_type:
+        description: '"all", "organization", or "users"'
+        example: all
+        type: string
+      title:
+        example: System Update
+        type: string
+    type: object
+  handler.CreateMovementRequest:
+    description: Request to create a new custom movement
+    properties:
+      description:
+        example: A hip hinge movement using a kettlebell
+        type: string
+      name:
+        example: Kettlebell Swing
+        type: string
+      type:
+        example: strength
+        type: string
+    type: object
+  handler.CreateOrganizationSubscriptionRequest:
+    description: Request to create an organization subscription (admin only)
+    properties:
+      is_permanent_free:
+        example: false
+        type: boolean
+      notes:
+        example: Enterprise plan
+        type: string
+      organization_id:
+        example: 1
+        type: integer
+      subscription_type:
+        example: annual
+        type: string
+    type: object
+  handler.CreateUserSubscriptionRequest:
+    description: Request to create a user subscription (admin only)
+    properties:
+      is_permanent_free:
+        example: false
+        type: boolean
+      notes:
+        example: Customer referral discount
+        type: string
+      subscription_type:
+        description: '"free", "monthly", "annual"'
+        example: monthly
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  handler.CreateWODRequest:
+    description: Request to create a new WOD
+    properties:
+      description:
+        example: 15 min AMRAP of 10 KB swings, 15 box jumps
+        type: string
+      name:
+        example: My Custom WOD
+        type: string
+      notes:
+        type: string
+      regime:
+        example: 15 min
+        type: string
+      score_type:
+        example: rounds+reps
+        type: string
+      source:
+        example: custom
+        type: string
+      type:
+        example: AMRAP
+        type: string
+      url:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    description: Error response returned when a request fails
+    properties:
+      error:
+        example: additional error details
+        type: string
+      message:
+        example: Invalid credentials
+        type: string
+    type: object
+  handler.ForgotPasswordRequest:
+    description: Request to initiate password reset
+    properties:
+      email:
+        example: john@example.com
+        type: string
+    type: object
+  handler.LogWorkoutRequest:
+    description: Request to log a workout (either from template or ad-hoc)
+    properties:
+      movements:
+        description: Performance data
+        items:
+          $ref: '#/definitions/handler.MovementPerformance'
+        type: array
+      notes:
+        example: Felt strong today
+        type: string
+      total_time:
+        description: Duration in seconds
+        example: 1200
+        type: integer
+      wods:
+        items:
+          $ref: '#/definitions/handler.WODPerformance'
+        type: array
+      workout_date:
+        description: YYYY-MM-DD format
+        example: "2024-01-15"
+        type: string
+      workout_id:
+        description: Template ID (optional for ad-hoc workouts)
+        example: 1
+        type: integer
+      workout_name:
+        description: Name for ad-hoc workouts (required if workout_id is null)
+        example: Fran
+        type: string
+      workout_type:
+        example: AMRAP
+        type: string
+    type: object
+  handler.LoginRequest:
+    description: User login request body
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      password:
+        example: securePassword123
+        type: string
+      remember_me:
+        example: true
+        type: boolean
+    type: object
+  handler.MarkUserSubscriptionAsPaidRequest:
+    description: Request to mark a subscription as paid
+    properties:
+      duration_days:
+        description: 'Optional: custom duration in days'
+        example: 30
+        type: integer
+      payment_date:
+        description: 'Optional: defaults to now'
+        example: "2024-01-15"
+        type: string
+    type: object
+  handler.MessageResponse:
+    description: Generic message response
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
+  handler.MovementListResponse:
+    description: List of movements
+    properties:
+      movements:
+        items:
+          $ref: '#/definitions/domain.Movement'
+        type: array
+    type: object
+  handler.MovementPerformance:
+    description: Performance data recorded for a movement in a workout
+    properties:
+      distance:
+        example: 1000
+        type: number
+      movement_id:
+        example: 1
+        type: integer
+      notes:
+        example: Used belt
+        type: string
+      order_index:
+        example: 0
+        type: integer
+      reps:
+        example: 10
+        type: integer
+      sets:
+        example: 5
+        type: integer
+      time:
+        description: in seconds
+        example: 300
+        type: integer
+      weight:
+        example: 135.5
+        type: number
+    type: object
+  handler.ProfileResponse:
+    description: User profile data
+    properties:
+      user: {}
+    type: object
+  handler.RefreshTokenRequest:
+    description: Request to refresh access token
+    properties:
+      refresh_token:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
+  handler.RegisterRequest:
+    description: User registration request body
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: securePassword123
+        type: string
+    type: object
+  handler.ResendVerificationRequest:
+    description: Request to resend verification email
+    properties:
+      email:
+        example: john@example.com
+        type: string
+    type: object
+  handler.ResetPasswordRequest:
+    description: Request to complete password reset with token
+    properties:
+      new_password:
+        example: newSecurePassword123
+        type: string
+      token:
+        example: abc123def456
+        type: string
+    type: object
+  handler.RevokeTokenRequest:
+    description: Request to revoke a refresh token (logout)
+    properties:
+      refresh_token:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
+  handler.SetUserSubscriptionPermanentRequest:
+    description: Request to set subscription permanent status
+    properties:
+      is_permanent:
+        example: true
+        type: boolean
+    type: object
+  handler.UpdateLoggedWorkoutRequest:
+    description: Request to update an existing logged workout
+    properties:
+      movements:
+        items:
+          $ref: '#/definitions/handler.MovementPerformance'
+        type: array
+      notes:
+        example: Updated notes
+        type: string
+      total_time:
+        example: 900
+        type: integer
+      wods:
+        items:
+          $ref: '#/definitions/handler.WODPerformance'
+        type: array
+      workout_name:
+        description: For ad-hoc workouts
+        example: Custom WOD
+        type: string
+      workout_type:
+        example: EMOM
+        type: string
+    type: object
+  handler.UpdateProfileRequest:
+    description: User profile update request
+    properties:
+      birthday:
+        description: 'Format: "YYYY-MM-DD" or empty'
+        example: "1990-05-15"
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+    type: object
+  handler.UpdateWODRecordRequest:
+    properties:
+      notes:
+        type: string
+      reps:
+        type: integer
+      rounds:
+        type: integer
+      time_seconds:
+        type: integer
+      weight:
+        type: number
+    type: object
+  handler.UpdateWODRequest:
+    description: Request to update an existing WOD
+    properties:
+      description:
+        example: 21-15-9 thrusters and pull-ups
+        type: string
+      name:
+        example: Updated WOD Name
+        type: string
+      notes:
+        type: string
+      regime:
+        example: 21-15-9
+        type: string
+      score_type:
+        example: time
+        type: string
+      source:
+        example: custom
+        type: string
+      type:
+        example: For Time
+        type: string
+      url:
+        type: string
+    type: object
+  handler.UserWorkoutResponse:
+    description: Complete logged workout with performance data
+    properties:
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      movements:
+        description: Template movements
+        items:
+          $ref: '#/definitions/domain.WorkoutMovement'
+        type: array
+      notes:
+        example: Felt great
+        type: string
+      performance_movements:
+        description: Actual performance
+        items:
+          $ref: '#/definitions/domain.UserWorkoutMovement'
+        type: array
+      performance_wods:
+        description: Actual performance
+        items:
+          $ref: '#/definitions/domain.UserWorkoutWOD'
+        type: array
+      total_time:
+        example: 1200
+        type: integer
+      updated_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      user_id:
+        example: 1
+        type: integer
+      wods:
+        description: Template WODs
+        items:
+          $ref: '#/definitions/domain.WorkoutWODWithDetails'
+        type: array
+      workout_date:
+        example: "2024-01-15"
+        type: string
+      workout_id:
+        description: Nullable for ad-hoc workouts
+        example: 1
+        type: integer
+      workout_name:
+        example: Fran
+        type: string
+      workout_notes:
+        example: Template notes
+        type: string
+      workout_type:
+        example: For Time
+        type: string
+    type: object
+  handler.WODListResponse:
+    description: List of WODs
+    properties:
+      wods:
+        items:
+          $ref: '#/definitions/handler.WODResponse'
+        type: array
+    type: object
+  handler.WODPerformance:
+    description: Performance data recorded for a WOD in a workout
+    properties:
+      notes:
+        example: PR attempt
+        type: string
+      order_index:
+        example: 0
+        type: integer
+      reps:
+        description: Remaining reps in AMRAP
+        example: 12
+        type: integer
+      rounds:
+        description: For AMRAP
+        example: 5
+        type: integer
+      score_type:
+        description: Time, Rounds+Reps, Max Weight
+        example: Time
+        type: string
+      score_value:
+        description: Formatted score
+        example: "12:30"
+        type: string
+      time_seconds:
+        description: For time-based WODs
+        example: 750
+        type: integer
+      weight:
+        description: For max weight WODs
+        example: 225
+        type: number
+      wod_id:
+        example: 1
+        type: integer
+    type: object
+  handler.WODResponse:
+    description: WOD details response
+    properties:
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      created_by:
+        type: integer
+      description:
+        example: 21-15-9 thrusters and pull-ups
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_standard:
+        example: true
+        type: boolean
+      name:
+        example: Fran
+        type: string
+      notes:
+        type: string
+      regime:
+        example: 21-15-9
+        type: string
+      score_type:
+        example: time
+        type: string
+      source:
+        example: CrossFit
+        type: string
+      type:
+        example: For Time
+        type: string
+      updated_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      url:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@actalog.com
+    name: ActaLog Support
+    url: https://github.com/johnzastrow/actalog/issues
+  description: ActaLog is a mobile-first CrossFit workout tracker API. It provides
+    endpoints for user authentication, workout logging, movement tracking, personal
+    records, and administrative functions.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://actalog.com/terms/
+  title: ActaLog API
+  version: 0.17.0
+paths:
+  /admin/audit-logs/cleanup:
+    post:
+      consumes:
+      - application/json
+      description: Delete audit logs older than specified retention period
+      parameters:
+      - description: Retention days (must be positive)
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted count and success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cleanup old audit logs (Admin)
+      tags:
+      - audit
+  /admin/backups:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all available backup files
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of backups with count
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List backups (Admin)
+      tags:
+      - backups
+    post:
+      consumes:
+      - application/json
+      description: Create a new database backup
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Backup created with filename and metadata
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create backup (Admin)
+      tags:
+      - backups
+  /admin/backups/{filename}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a backup file
+      parameters:
+      - description: Backup filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message with filename
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid filename
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete backup (Admin)
+      tags:
+      - backups
+    get:
+      consumes:
+      - application/json
+      description: Download a backup file
+      parameters:
+      - description: Backup filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: Backup ZIP file
+          schema:
+            type: file
+        "400":
+          description: Invalid filename
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Backup not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Download backup (Admin)
+      tags:
+      - backups
+  /admin/backups/{filename}/metadata:
+    get:
+      consumes:
+      - application/json
+      description: Get metadata information for a specific backup file
+      parameters:
+      - description: Backup filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Backup metadata
+          schema:
+            $ref: '#/definitions/domain.BackupMetadata'
+        "400":
+          description: Invalid filename
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Backup not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get backup metadata (Admin)
+      tags:
+      - backups
+  /admin/backups/{filename}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore database from a backup file (requires confirmation)
+      parameters:
+      - description: Backup filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      - description: Restore options (confirm, mode)
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Restore result
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request or filename
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restore backup (Admin)
+      tags:
+      - backups
+  /admin/backups/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a backup ZIP file from another system
+      parameters:
+      - description: Backup ZIP file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload success with filename and metadata
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file or format
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload backup (Admin)
+      tags:
+      - backups
+  /admin/data-change-logs/cleanup:
+    post:
+      consumes:
+      - application/json
+      description: Delete data change logs older than specified retention period
+      parameters:
+      - description: Retention days (must be positive)
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted count and success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cleanup old data change logs (Admin)
+      tags:
+      - admin
+  /admin/notifications/announce:
+    post:
+      consumes:
+      - application/json
+      description: Send an announcement to all users, organization members, or specific
+        users
+      parameters:
+      - description: Announcement details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Announcement created
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Admin access required
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create announcement (Admin)
+      tags:
+      - admin
+  /admin/organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all organizations
+      parameters:
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Organizations list with total count
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List organizations (Admin)
+      tags:
+      - organizations
+    post:
+      consumes:
+      - application/json
+      description: Create a new organization (admin only)
+      parameters:
+      - description: Organization name and description
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created organization
+          schema:
+            $ref: '#/definitions/domain.Organization'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Organization name exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create organization (Admin)
+      tags:
+      - organizations
+  /admin/organizations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an organization (must have no assigned users)
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid organization ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Organization has assigned users
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete organization (Admin)
+      tags:
+      - organizations
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific organization
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Organization details
+          schema:
+            $ref: '#/definitions/domain.Organization'
+        "400":
+          description: Invalid organization ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get organization (Admin)
+      tags:
+      - organizations
+    put:
+      consumes:
+      - application/json
+      description: Update an existing organization's details
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated organization details
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated organization
+          schema:
+            $ref: '#/definitions/domain.Organization'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Organization name exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update organization (Admin)
+      tags:
+      - organizations
+  /admin/organizations/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users belonging to an organization
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid organization ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get organization users (Admin)
+      tags:
+      - organizations
+  /admin/subscriptions/organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all organization subscriptions in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all organization subscriptions (Admin)
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new subscription for an organization (admin only)
+      parameters:
+      - description: Subscription details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateOrganizationSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created subscription
+          schema:
+            $ref: '#/definitions/domain.OrganizationSubscription'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Active subscription exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create organization subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel an organization subscription with a reason
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cancellation reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CancelSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request or missing reason
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel organization subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/{id}/paid:
+    put:
+      consumes:
+      - application/json
+      description: Mark an organization subscription as paid and extend the subscription
+        period
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment details
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handler.MarkUserSubscriptionAsPaidRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Cannot mark free subscription as paid
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark organization subscription as paid (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/{id}/permanent:
+    put:
+      consumes:
+      - application/json
+      description: Set whether an organization subscription is permanently free
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permanent status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SetUserSubscriptionPermanentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Set organization subscription permanent status (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/{org_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all subscriptions for a specific organization (admin only)
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid organization ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get organization subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all user subscriptions in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all user subscriptions (Admin)
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new subscription for a user (admin only)
+      parameters:
+      - description: Subscription details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateUserSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created subscription
+          schema:
+            $ref: '#/definitions/domain.UserSubscription'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot modify own subscription
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Active subscription exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a user subscription with a reason
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cancellation reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CancelSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request or missing reason
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot modify own subscription
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel user subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/{id}/paid:
+    put:
+      consumes:
+      - application/json
+      description: Mark a user subscription as paid and extend the subscription period
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment details
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handler.MarkUserSubscriptionAsPaidRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Cannot mark free subscription as paid
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot modify own subscription
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark user subscription as paid (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/{id}/permanent:
+    put:
+      consumes:
+      - application/json
+      description: Set whether a user subscription is permanently free
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permanent status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SetUserSubscriptionPermanentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot modify own subscription
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Set user subscription permanent status (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all subscriptions for a specific user (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user subscriptions (Admin)
+      tags:
+      - admin
+  /admin/user-created/movements:
+    get:
+      consumes:
+      - application/json
+      description: Get all user-created movements with creator information
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Filter by movement type
+        in: query
+        name: type
+        type: string
+      - description: Filter by creator email
+        in: query
+        name: creator
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user-created movements
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List user-created movements (Admin)
+      tags:
+      - admin
+  /admin/user-created/movements/{id}/copy-to-standard:
+    post:
+      consumes:
+      - application/json
+      description: Create a standard movement from a user-created movement
+      parameters:
+      - description: Movement ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New name for standard movement
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CopyToStandardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created standard movement
+          schema:
+            $ref: '#/definitions/domain.Movement'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Movement not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Name already exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Copy movement to standard (Admin)
+      tags:
+      - admin
+  /admin/user-created/wods:
+    get:
+      consumes:
+      - application/json
+      description: Get all user-created WODs with creator information
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Filter by score type
+        in: query
+        name: score_type
+        type: string
+      - description: Filter by creator email
+        in: query
+        name: creator
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user-created WODs
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List user-created WODs (Admin)
+      tags:
+      - admin
+  /admin/user-created/wods/{id}/copy-to-standard:
+    post:
+      consumes:
+      - application/json
+      description: Create a standard WOD from a user-created WOD
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New name for standard WOD
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CopyToStandardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created standard WOD
+          schema:
+            $ref: '#/definitions/domain.WOD'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: WOD not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Name already exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Copy WOD to standard (Admin)
+      tags:
+      - admin
+  /admin/user-created/workouts:
+    get:
+      consumes:
+      - application/json
+      description: Get all user-created workout templates with creator information
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Filter by creator email
+        in: query
+        name: creator
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user-created workouts
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List user-created workouts (Admin)
+      tags:
+      - admin
+  /admin/user-created/workouts/{id}/copy-to-standard:
+    post:
+      consumes:
+      - application/json
+      description: Create a standard workout template from a user-created workout
+      parameters:
+      - description: Workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New name for standard workout
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CopyToStandardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created standard workout
+          schema:
+            $ref: '#/definitions/domain.Workout'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Workout not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Name already exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Copy workout to standard (Admin)
+      tags:
+      - admin
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all users
+      parameters:
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users list with total count
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users (Admin)
+      tags:
+      - admin
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a user and all their data
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID or cannot delete
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user (Admin)
+      tags:
+      - admin
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user details (Admin)
+      tags:
+      - admin
+  /admin/users/{id}/disable:
+    post:
+      consumes:
+      - application/json
+      description: Disable a user account with optional reason
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Optional disable reason
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID or cannot disable
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Disable user account (Admin)
+      tags:
+      - admin
+  /admin/users/{id}/enable:
+    post:
+      consumes:
+      - application/json
+      description: Re-enable a previously disabled user account
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Enable user account (Admin)
+      tags:
+      - admin
+  /admin/users/{id}/organization:
+    post:
+      consumes:
+      - application/json
+      description: Assign a user to an organization
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Organization ID to assign
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User or organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Assign user to organization (Admin)
+      tags:
+      - organizations
+  /admin/users/{id}/organization/{org_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user from an organization
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User or organization not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove user from organization (Admin)
+      tags:
+      - organizations
+  /admin/users/{id}/organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get all organizations a user belongs to
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of organizations
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user organizations (Admin)
+      tags:
+      - organizations
+  /admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Change a user's role to 'user' or 'admin'
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New role (user or admin)
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID or role
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change user role (Admin)
+      tags:
+      - admin
+  /admin/users/{id}/toggle-email-verification:
+    post:
+      consumes:
+      - application/json
+      description: Manually set a user's email verification status
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Verified status (true/false)
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Toggle email verification (Admin)
+      tags:
+      - admin
+  /admin/users/{id}/unlock:
+    post:
+      consumes:
+      - application/json
+      description: Unlock a user account that was locked due to failed login attempts
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unlock user account (Admin)
+      tags:
+      - admin
+  /admin/wod-mismatches:
+    get:
+      consumes:
+      - application/json
+      description: Find WOD records where data doesn't match the expected score_type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of mismatched records
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detect WOD score type mismatches (Admin)
+      tags:
+      - admin
+  /admin/wod-mismatches/fix:
+    post:
+      consumes:
+      - application/json
+      description: Delete WOD records that don't match their expected score_type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count of deleted records
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Fix WOD score type mismatches (Admin)
+      tags:
+      - admin
+  /admin/wod-records/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a specific WOD performance record
+      parameters:
+      - description: WOD Record ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated record data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateWODRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request or score type mismatch
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Record not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update WOD record (Admin)
+      tags:
+      - admin
+  /audit-logs:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of audit logs with optional filters
+      parameters:
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter by target user ID
+        in: query
+        name: target_user_id
+        type: integer
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      - description: Filter by IP address
+        in: query
+        name: ip_address
+        type: string
+      - description: Filter by start date (RFC3339)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339)
+        in: query
+        name: end_date
+        type: string
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Audit logs list with total count
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List audit logs (Admin)
+      tags:
+      - audit
+  /audit-logs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific audit log entry by ID
+      parameters:
+      - description: Audit Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Audit log entry
+          schema:
+            $ref: '#/definitions/domain.AuditLog'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Audit log not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get audit log entry (Admin)
+      tags:
+      - audit
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send a password reset email to the user. Always returns success
+        for security.
+      parameters:
+      - description: Email address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset email sent if address exists
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to process request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password. Set remember_me to true
+        for refresh token.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            $ref: '#/definitions/handler.AuthResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: User login
+      tags:
+      - auth
+  /auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Get a new access token using a valid refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access token
+          schema:
+            $ref: '#/definitions/handler.AuthResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to refresh token
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with name, email, and password
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully registered
+          schema:
+            $ref: '#/definitions/handler.AuthResponse'
+        "400":
+          description: Invalid request or validation error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Registration is closed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Resend email verification link. Always returns success for security.
+      parameters:
+      - description: Email address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ResendVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verification email sent if applicable
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request or already verified
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to resend verification email
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Resend verification email
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Complete password reset using token from email
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid token, expired token, or weak password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to reset password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /auth/revoke-token:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate a refresh token to logout from a specific session
+      parameters:
+      - description: Refresh token to revoke
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RevokeTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token revoked successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Refresh token not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to revoke token
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Revoke refresh token
+      tags:
+      - auth
+  /auth/verify-email:
+    get:
+      consumes:
+      - application/json
+      description: Verify user's email using token from verification email
+      parameters:
+      - description: Verification token from email
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email verified successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid or expired token, or already verified
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to verify email
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Verify email address
+      tags:
+      - auth
+  /data-change-logs:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of data change logs with optional filters
+      parameters:
+      - description: Filter by entity type
+        in: query
+        name: entity_type
+        type: string
+      - description: Filter by entity ID
+        in: query
+        name: entity_id
+        type: integer
+      - description: Filter by operation (create, update, delete)
+        in: query
+        name: operation
+        type: string
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter by user email
+        in: query
+        name: user_email
+        type: string
+      - description: Filter by start date (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Data change logs with total count
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List data change logs (Admin)
+      tags:
+      - admin
+  /data-change-logs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific data change log entry by ID
+      parameters:
+      - description: Data Change Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Data change log entry
+          schema:
+            $ref: '#/definitions/domain.DataChangeLog'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Log not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get data change log (Admin)
+      tags:
+      - admin
+  /data-change-logs/entity/{entity_type}/{entity_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get the change history for a specific entity
+      parameters:
+      - description: Entity type (e.g., user, workout, wod)
+        in: path
+        name: entity_type
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: integer
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Entity change history
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid entity_id
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get entity history (Admin)
+      tags:
+      - admin
+  /export/movements:
+    get:
+      consumes:
+      - application/json
+      description: Export movements to CSV or JSON format with optional filters
+      parameters:
+      - description: Include standard movements (default true)
+        in: query
+        name: include_standard
+        type: boolean
+      - description: Include custom movements (default true)
+        in: query
+        name: include_custom
+        type: boolean
+      - description: 'Export format: csv or json (default csv)'
+        in: query
+        name: format
+        type: string
+      produces:
+      - text/csv
+      - application/json
+      responses:
+        "200":
+          description: Exported file (CSV or JSON)
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Export movements
+      tags:
+      - import-export
+  /export/user-workouts:
+    get:
+      consumes:
+      - application/json
+      description: Export user's logged workouts to CSV or JSON format with optional
+        date range
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Export format: csv or json (default json)'
+        in: query
+        name: format
+        type: string
+      produces:
+      - text/csv
+      - application/json
+      responses:
+        "200":
+          description: Exported file (CSV or JSON)
+          schema:
+            type: file
+        "400":
+          description: Invalid date format
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Export user workouts
+      tags:
+      - import-export
+  /export/wods:
+    get:
+      consumes:
+      - application/json
+      description: Export WODs to CSV or JSON format with optional filters
+      parameters:
+      - description: Include standard WODs (default true)
+        in: query
+        name: include_standard
+        type: boolean
+      - description: Include custom WODs (default true)
+        in: query
+        name: include_custom
+        type: boolean
+      - description: 'Export format: csv or json (default csv)'
+        in: query
+        name: format
+        type: string
+      produces:
+      - text/csv
+      - application/json
+      responses:
+        "200":
+          description: Exported file (CSV or JSON)
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Export WODs
+      tags:
+      - import-export
+  /import/movements/confirm:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Execute movement CSV import after preview
+      parameters:
+      - description: CSV file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Skip duplicate entries
+        in: formData
+        name: skip_duplicates
+        type: boolean
+      - description: Update existing duplicates
+        in: formData
+        name: update_duplicates
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import results with counts
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Import failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm movement import
+      tags:
+      - import-export
+  /import/movements/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Validate and preview movement CSV import before confirming
+      parameters:
+      - description: CSV file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import preview with validation results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file or validation failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview movement import
+      tags:
+      - import-export
+  /import/user-workouts/confirm:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Execute user workout JSON import after preview
+      parameters:
+      - description: JSON file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Skip duplicate entries
+        in: formData
+        name: skip_duplicates
+        type: boolean
+      - description: Update existing duplicates
+        in: formData
+        name: update_duplicates
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import results with counts
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Import failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm user workout import
+      tags:
+      - import-export
+  /import/user-workouts/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Validate and preview user workout JSON import before confirming
+      parameters:
+      - description: JSON file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import preview with validation results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file or validation failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview user workout import
+      tags:
+      - import-export
+  /import/wodify/confirm:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Execute Wodify performance data import after preview
+      parameters:
+      - description: Wodify export file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Skip duplicate entries
+        in: formData
+        name: skip_duplicates
+        type: boolean
+      - description: Update existing duplicates
+        in: formData
+        name: update_duplicates
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import results with counts
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Import failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm Wodify import
+      tags:
+      - import-export
+  /import/wodify/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Validate and preview Wodify performance data import before confirming
+      parameters:
+      - description: Wodify export file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import preview with validation results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Preview failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview Wodify import
+      tags:
+      - import-export
+  /import/wods/confirm:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Execute WOD CSV import after preview
+      parameters:
+      - description: CSV file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Skip duplicate entries
+        in: formData
+        name: skip_duplicates
+        type: boolean
+      - description: Update existing duplicates
+        in: formData
+        name: update_duplicates
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import results with counts
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Import failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm WOD import
+      tags:
+      - import-export
+  /import/wods/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Validate and preview WOD CSV import before confirming
+      parameters:
+      - description: CSV file to import
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Import preview with validation results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid file or validation failed
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview WOD import
+      tags:
+      - import-export
+  /movements:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all movements including standard and custom
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of all movements
+          schema:
+            $ref: '#/definitions/handler.MovementListResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: List all movements
+      tags:
+      - movements
+    post:
+      consumes:
+      - application/json
+      description: Create a new custom movement (non-standard)
+      parameters:
+      - description: Movement details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateMovementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created movement
+          schema:
+            $ref: '#/definitions/domain.Movement'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a custom movement
+      tags:
+      - movements
+  /movements/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a custom movement (cannot delete standard movements)
+      parameters:
+      - description: Movement ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movement deleted successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid movement ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot delete standard movement
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a movement
+      tags:
+      - movements
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single movement by its ID
+      parameters:
+      - description: Movement ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movement details
+          schema:
+            $ref: '#/definitions/domain.Movement'
+        "400":
+          description: Invalid movement ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Movement not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get movement by ID
+      tags:
+      - movements
+    put:
+      consumes:
+      - application/json
+      description: Update an existing movement (admin can update any, users only custom)
+      parameters:
+      - description: Movement ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated movement details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateMovementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated movement
+          schema:
+            $ref: '#/definitions/domain.Movement'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Cannot modify standard movement
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a movement
+      tags:
+      - movements
+  /movements/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for movements by name
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results (default 20)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Matching movements
+          schema:
+            $ref: '#/definitions/handler.MovementListResponse'
+        "400":
+          description: Missing query parameter
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Search movements
+      tags:
+      - movements
+  /movements/standard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve only standard (built-in) movements
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of standard movements
+          schema:
+            $ref: '#/definitions/handler.MovementListResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: List standard movements
+      tags:
+      - movements
+  /notifications:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all notifications for the authenticated user
+      parameters:
+      - description: Max results (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of notifications
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List notifications
+      tags:
+      - notifications
+  /notifications/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification deleted
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete notification
+      tags:
+      - notifications
+  /notifications/{id}/like:
+    delete:
+      consumes:
+      - application/json
+      description: Remove like from a notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Like removed
+        "400":
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unlike notification
+      tags:
+      - notifications
+    post:
+      consumes:
+      - application/json
+      description: Like a notification (e.g., PR announcement)
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Notification liked
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Already liked
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Like notification
+      tags:
+      - notifications
+  /notifications/{id}/likes:
+    get:
+      consumes:
+      - application/json
+      description: Get all likes for a notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Likes list with count
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get notification likes
+      tags:
+      - notifications
+  /notifications/{id}/read:
+    put:
+      consumes:
+      - application/json
+      description: Mark a specific notification as read
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Marked as read
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read
+      tags:
+      - notifications
+  /notifications/count:
+    get:
+      consumes:
+      - application/json
+      description: Get the count of unread notifications (for badge display)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unread count
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get unread notification count
+      tags:
+      - notifications
+  /notifications/read-all:
+    put:
+      consumes:
+      - application/json
+      description: Mark all notifications for the user as read
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All marked as read
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - notifications
+  /notifications/unread:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve only unread notifications for the authenticated user
+      parameters:
+      - description: Max results (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of unread notifications
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List unread notifications
+      tags:
+      - notifications
+  /performance/movements/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all performance records for a movement with calculated
+        1RM values
+      parameters:
+      - description: Movement ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Performance history with best 1RM
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid movement ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get movement performance history
+      tags:
+      - performance
+  /performance/search:
+    get:
+      consumes:
+      - application/json
+      description: Search across both movements and WODs in a single query
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results per category (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Combined search results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing search query
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unified search for movements and WODs
+      tags:
+      - performance
+  /performance/wods/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all performance records for a specific WOD
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WOD performance history
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid WOD ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get WOD performance history
+      tags:
+      - performance
+  /prs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all personal records (PRs) for movements and WODs
+      parameters:
+      - description: Max results (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of personal records
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all personal records
+      tags:
+      - prs
+  /prs/movements:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve movements that have personal records with summary stats
+      parameters:
+      - description: Max results (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movement PR summaries
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get movements with PRs
+      tags:
+      - prs
+  /prs/toggle:
+    post:
+      consumes:
+      - application/json
+      description: Toggle the personal record flag on a specific workout movement
+      parameters:
+      - description: Workout movement ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New PR state
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing or invalid movement ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Movement not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Toggle movement PR flag
+      tags:
+      - prs
+  /sessions:
+    get:
+      consumes:
+      - application/json
+      description: Get all active sessions for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of active sessions
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List active sessions
+      tags:
+      - sessions
+  /sessions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Revoke a specific session (log out that device)
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session revoked
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid session ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke session
+      tags:
+      - sessions
+  /sessions/revoke-all:
+    post:
+      consumes:
+      - application/json
+      description: Revoke all sessions for the current user (log out everywhere)
+      parameters:
+      - description: Options (except_current_session)
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All sessions revoked
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke all sessions
+      tags:
+      - sessions
+  /settings:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current user's settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User settings
+          schema:
+            $ref: '#/definitions/domain.UserSettings'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user settings
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update the current user's settings
+      parameters:
+      - description: Updated settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UserSettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated settings
+          schema:
+            $ref: '#/definitions/domain.UserSettings'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user settings
+      tags:
+      - users
+  /stats/active-users-this-month:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve stats about active users who have logged workouts this
+        month
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Active users stats
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get active users this month
+      tags:
+      - workouts
+  /subscriptions/my-status:
+    get:
+      consumes:
+      - application/json
+      description: Get the current user's subscription status and plan details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription status
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my subscription status
+      tags:
+      - subscriptions
+  /templates:
+    get:
+      consumes:
+      - application/json
+      description: Get all standard (system-provided) workout templates
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of standard templates
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List standard workout templates
+      tags:
+      - templates
+    post:
+      consumes:
+      - application/json
+      description: Create a new reusable workout template with movements and WODs
+      parameters:
+      - description: Template details with movements and WODs
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created template
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create workout template
+      tags:
+      - templates
+  /templates/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a workout template (owner only)
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Template deleted
+        "400":
+          description: Invalid template ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Not the template owner
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete workout template
+      tags:
+      - templates
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific workout template by ID with full details
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Template details
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid template ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Template not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get workout template
+      tags:
+      - templates
+    put:
+      consumes:
+      - application/json
+      description: Update an existing workout template (owner only)
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated template details
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated template
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update workout template
+      tags:
+      - templates
+  /users/avatar:
+    delete:
+      consumes:
+      - application/json
+      description: Remove the authenticated user's avatar image
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Avatar deleted successfully
+          schema:
+            $ref: '#/definitions/handler.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to delete avatar
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete avatar image
+      tags:
+      - users
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a new avatar image for the authenticated user (max 5MB)
+      parameters:
+      - description: Avatar image file
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Avatar uploaded successfully
+          schema:
+            $ref: '#/definitions/handler.ProfileResponse'
+        "400":
+          description: No file provided, file too large, or invalid file type
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to save avatar
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload avatar image
+      tags:
+      - users
+  /users/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change the authenticated user's password
+      parameters:
+      - description: Current and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid request or weak password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized or incorrect current password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Failed to change password
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change password
+      tags:
+      - users
+  /users/me/audit-logs:
+    get:
+      consumes:
+      - application/json
+      description: Get audit logs for the current user only
+      parameters:
+      - description: Max results (default 50)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User's audit logs with total count
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my audit logs
+      tags:
+      - audit
+  /users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/handler.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update the authenticated user's profile information
+      parameters:
+      - description: Profile updates
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            $ref: '#/definitions/handler.ProfileResponse'
+        "400":
+          description: Invalid request body or birthday format
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Email already in use
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
+  /wods:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all WODs including standard and user's custom WODs
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Return only standard WODs
+        in: query
+        name: standard
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of WODs
+          schema:
+            $ref: '#/definitions/handler.WODListResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all WODs
+      tags:
+      - wods
+    post:
+      consumes:
+      - application/json
+      description: Create a new custom WOD (Workout of the Day)
+      parameters:
+      - description: WOD details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateWODRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created WOD
+          schema:
+            $ref: '#/definitions/handler.WODResponse'
+        "400":
+          description: Invalid request body or missing name
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a custom WOD
+      tags:
+      - wods
+  /wods/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a custom WOD (cannot delete standard WODs)
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WOD deleted successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid WOD ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden - cannot delete this WOD
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a WOD
+      tags:
+      - wods
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single WOD by its ID
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WOD details
+          schema:
+            $ref: '#/definitions/handler.WODResponse'
+        "400":
+          description: Invalid WOD ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get WOD by ID
+      tags:
+      - wods
+    put:
+      consumes:
+      - application/json
+      description: Update an existing WOD (admin can update any, users only their
+        own custom WODs)
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated WOD details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateWODRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated WOD
+          schema:
+            $ref: '#/definitions/handler.WODResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden - not your WOD
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a WOD
+      tags:
+      - wods
+  /wods/mine:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve only the authenticated user's custom WODs
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's custom WODs
+          schema:
+            $ref: '#/definitions/handler.WODListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List my custom WODs
+      tags:
+      - wods
+  /wods/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for WODs by name
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Matching WODs
+          schema:
+            $ref: '#/definitions/handler.WODListResponse'
+        "400":
+          description: Missing search query
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Search WODs
+      tags:
+      - wods
+  /wods/standard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve only standard (built-in) WODs
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of standard WODs
+          schema:
+            $ref: '#/definitions/handler.WODListResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: List standard WODs
+      tags:
+      - wods
+  /workouts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all logged workouts for the user with pagination and optional
+        date filtering
+      parameters:
+      - description: Max results (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Filter start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter end date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of workouts with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid date format
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List logged workouts
+      tags:
+      - workouts
+    post:
+      consumes:
+      - application/json
+      description: Record a workout with performance data. Can be based on a template
+        or ad-hoc.
+      parameters:
+      - description: Workout data with optional performance
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LogWorkoutRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Workout logged successfully
+          schema:
+            $ref: '#/definitions/handler.UserWorkoutResponse'
+        "400":
+          description: Invalid request body or missing required fields
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Log a workout
+      tags:
+      - workouts
+  /workouts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific logged workout and all its performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Workout deleted successfully
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Invalid workout ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden - not your workout
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a logged workout
+      tags:
+      - workouts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific logged workout by ID with all performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged workout details
+          schema:
+            $ref: '#/definitions/handler.UserWorkoutResponse'
+        "400":
+          description: Invalid workout ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a logged workout
+      tags:
+      - workouts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing logged workout's details and performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated workout data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateLoggedWorkoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated workout details
+          schema:
+            $ref: '#/definitions/handler.UserWorkoutResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden - not your workout
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Workout not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a logged workout
+      tags:
+      - workouts
+  /workouts/my-templates:
+    get:
+      consumes:
+      - application/json
+      description: Get all workout templates created by the current user
+      parameters:
+      - description: Max results (default 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Skip N results (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's templates
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List my workout templates
+      tags:
+      - templates
+  /workouts/personal-records:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all personal records for movements and WODs
+      parameters:
+      - description: Max results per category (default 50)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PR movements and PR WODs
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get personal records
+      tags:
+      - workouts
+  /workouts/retroactive-prs:
+    post:
+      consumes:
+      - application/json
+      description: Analyze all existing workouts and flag personal records based on
+        historical data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count of flagged PRs
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retroactively flag PRs
+      tags:
+      - workouts
+  /workouts/stats/monthly:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the workout count for a specific month
+      parameters:
+      - description: Year (e.g., 2024)
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month (1-12)
+        in: query
+        name: month
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly stats with workout count
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid year or month
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get monthly workout stats
+      tags:
+      - workouts
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT Bearer token. Format: "Bearer {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

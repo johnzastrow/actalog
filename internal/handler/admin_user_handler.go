@@ -26,6 +26,17 @@ func NewAdminUserHandler(userService *service.UserService, logger *logger.Logger
 }
 
 // ListUsers handles GET /api/admin/users
+// @Summary      List users (Admin)
+// @Description  Get a paginated list of all users
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "Users list with total count"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users [get]
 func (h *AdminUserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination parameters
 	limit := 50
@@ -62,6 +73,17 @@ func (h *AdminUserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // UnlockUser handles POST /api/admin/users/:id/unlock
+// @Summary      Unlock user account (Admin)
+// @Description  Unlock a user account that was locked due to failed login attempts
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/unlock [post]
 func (h *AdminUserHandler) UnlockUser(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -94,6 +116,18 @@ func (h *AdminUserHandler) UnlockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // DisableUser handles POST /api/admin/users/:id/disable
+// @Summary      Disable user account (Admin)
+// @Description  Disable a user account with optional reason
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Param        request body object false "Optional disable reason"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID or cannot disable"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/disable [post]
 func (h *AdminUserHandler) DisableUser(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -135,6 +169,17 @@ func (h *AdminUserHandler) DisableUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // EnableUser handles POST /api/admin/users/:id/enable
+// @Summary      Enable user account (Admin)
+// @Description  Re-enable a previously disabled user account
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/enable [post]
 func (h *AdminUserHandler) EnableUser(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -167,6 +212,18 @@ func (h *AdminUserHandler) EnableUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // ChangeUserRole handles PUT /api/admin/users/:id/role
+// @Summary      Change user role (Admin)
+// @Description  Change a user's role to 'user' or 'admin'
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Param        request body object true "New role (user or admin)"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID or role"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/role [put]
 func (h *AdminUserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -214,6 +271,18 @@ func (h *AdminUserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request
 }
 
 // ToggleEmailVerification handles POST /api/admin/users/:id/toggle-email-verification
+// @Summary      Toggle email verification (Admin)
+// @Description  Manually set a user's email verification status
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Param        request body object true "Verified status (true/false)"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/toggle-email-verification [post]
 func (h *AdminUserHandler) ToggleEmailVerification(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())
@@ -255,6 +324,17 @@ func (h *AdminUserHandler) ToggleEmailVerification(w http.ResponseWriter, r *htt
 }
 
 // GetUserDetails handles GET /api/admin/users/:id
+// @Summary      Get user details (Admin)
+// @Description  Get detailed information about a specific user
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Success      200 {object} domain.User "User details"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      404 {object} ErrorResponse "User not found"
+// @Router       /admin/users/{id} [get]
 func (h *AdminUserHandler) GetUserDetails(w http.ResponseWriter, r *http.Request) {
 	// Get target user ID from URL
 	targetUserIDStr := chi.URLParam(r, "id")
@@ -277,6 +357,16 @@ func (h *AdminUserHandler) GetUserDetails(w http.ResponseWriter, r *http.Request
 }
 
 // DeleteUser handles DELETE /api/admin/users/:id
+// @Summary      Delete user (Admin)
+// @Description  Permanently delete a user and all their data
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid user ID or cannot delete"
+// @Router       /admin/users/{id} [delete]
 func (h *AdminUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get admin user ID from context
 	adminUserID, ok := middleware.GetUserID(r.Context())

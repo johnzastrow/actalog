@@ -23,7 +23,19 @@ func NewExportHandler(exportService *service.ExportService) *ExportHandler {
 }
 
 // ExportWODs exports WODs to CSV or JSON format
-// GET /api/export/wods?include_standard=true&include_custom=true&format=csv
+// @Summary      Export WODs
+// @Description  Export WODs to CSV or JSON format with optional filters
+// @Tags         import-export
+// @Accept       json
+// @Produce      text/csv,application/json
+// @Security     BearerAuth
+// @Param        include_standard query bool false "Include standard WODs (default true)"
+// @Param        include_custom query bool false "Include custom WODs (default true)"
+// @Param        format query string false "Export format: csv or json (default csv)"
+// @Success      200 {file} file "Exported file (CSV or JSON)"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /export/wods [get]
 func (h *ExportHandler) ExportWODs(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -79,7 +91,19 @@ func (h *ExportHandler) ExportWODs(w http.ResponseWriter, r *http.Request) {
 }
 
 // ExportMovements exports movements to CSV or JSON format
-// GET /api/export/movements?include_standard=true&include_custom=true&format=csv
+// @Summary      Export movements
+// @Description  Export movements to CSV or JSON format with optional filters
+// @Tags         import-export
+// @Accept       json
+// @Produce      text/csv,application/json
+// @Security     BearerAuth
+// @Param        include_standard query bool false "Include standard movements (default true)"
+// @Param        include_custom query bool false "Include custom movements (default true)"
+// @Param        format query string false "Export format: csv or json (default csv)"
+// @Success      200 {file} file "Exported file (CSV or JSON)"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /export/movements [get]
 func (h *ExportHandler) ExportMovements(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -147,7 +171,20 @@ func parseBoolParam(value string, defaultValue bool) bool {
 }
 
 // ExportUserWorkouts exports user workouts to CSV or JSON format
-// GET /api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31&format=json
+// @Summary      Export user workouts
+// @Description  Export user's logged workouts to CSV or JSON format with optional date range
+// @Tags         import-export
+// @Accept       json
+// @Produce      text/csv,application/json
+// @Security     BearerAuth
+// @Param        start_date query string false "Start date (YYYY-MM-DD)"
+// @Param        end_date query string false "End date (YYYY-MM-DD)"
+// @Param        format query string false "Export format: csv or json (default json)"
+// @Success      200 {file} file "Exported file (CSV or JSON)"
+// @Failure      400 {object} ErrorResponse "Invalid date format"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /export/user-workouts [get]
 func (h *ExportHandler) ExportUserWorkouts(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
