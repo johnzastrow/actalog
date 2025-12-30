@@ -140,3 +140,10 @@ func TestAuditLogHandler_CleanupOldLogs_InvalidRetentionDays(t *testing.T) {
 		})
 	}
 }
+
+func TestNewAuditLogHandler(t *testing.T) {
+	handler := NewAuditLogHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewAuditLogHandler should return a non-nil handler")
+	}
+}

@@ -172,3 +172,10 @@ func TestDataChangeLogHandler_CleanupOldLogs_InvalidRetentionDays(t *testing.T) 
 		})
 	}
 }
+
+func TestNewDataChangeLogHandler(t *testing.T) {
+	handler := NewDataChangeLogHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewDataChangeLogHandler should return a non-nil handler")
+	}
+}

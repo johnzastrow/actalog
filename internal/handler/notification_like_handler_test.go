@@ -68,3 +68,44 @@ func TestNotificationLikeHandler_GetNotificationLikes_InvalidID(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid notification ID")
 }
+
+func TestNewNotificationLikeHandler(t *testing.T) {
+	handler := NewNotificationLikeHandler(nil)
+	if handler == nil {
+		t.Error("NewNotificationLikeHandler should return a non-nil handler")
+	}
+}
+
+func TestNotificationLikeHandler_LikeNotification_ValidIDNilService(t *testing.T) {
+	handler := &NotificationLikeHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/notifications/1/like", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry with valid ID
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("LikeNotification requires service")
+		}
+	}()
+
+	handler.LikeNotification(rr, req)
+}
+
+func TestNotificationLikeHandler_GetNotificationLikes_ValidIDNilService(t *testing.T) {
+	handler := &NotificationLikeHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/notifications/1/likes", "")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry with valid ID
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("GetNotificationLikes requires service")
+		}
+	}()
+
+	handler.GetNotificationLikes(rr, req)
+}

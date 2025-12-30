@@ -53,3 +53,10 @@ func TestWodifyImportHandler_ConfirmWodifyImport_NoFile(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Failed to parse form data")
 }
+
+func TestNewWodifyImportHandler(t *testing.T) {
+	handler := NewWodifyImportHandler(nil)
+	if handler == nil {
+		t.Error("NewWodifyImportHandler should return a non-nil handler")
+	}
+}

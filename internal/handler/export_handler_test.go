@@ -125,3 +125,10 @@ func TestParseBoolParam(t *testing.T) {
 		})
 	}
 }
+
+func TestNewExportHandler(t *testing.T) {
+	handler := NewExportHandler(nil)
+	if handler == nil {
+		t.Error("NewExportHandler should return a non-nil handler")
+	}
+}

@@ -150,3 +150,10 @@ func TestImportHandler_ConfirmUserWorkoutImport_NoFile(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Failed to parse multipart form")
 }
+
+func TestNewImportHandler(t *testing.T) {
+	handler := NewImportHandler(nil)
+	if handler == nil {
+		t.Error("NewImportHandler should return a non-nil handler")
+	}
+}

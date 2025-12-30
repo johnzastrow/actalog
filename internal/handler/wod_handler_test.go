@@ -329,3 +329,10 @@ func TestWODHandler_DeleteWOD_InvalidID(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid WOD ID")
 }
+
+func TestNewWODHandler(t *testing.T) {
+	handler := NewWODHandler(nil)
+	if handler == nil {
+		t.Error("NewWODHandler should return a non-nil handler")
+	}
+}
