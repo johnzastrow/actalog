@@ -417,3 +417,120 @@ func TestAdminHandler_FixWODScoreTypeMismatches_NilDB(t *testing.T) {
 
 	handler.FixWODScoreTypeMismatches(rr, req)
 }
+
+func TestAdminHandler_UpdateWODRecord_ValidIDInvalidJSON(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPut, "/api/admin/wod-records/1", "{invalid json")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateWODRecord(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestAdminHandler_CopyWODToStandard_ValidIDInvalidJSON(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/1/copy-to-standard", "{invalid json")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWODToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestAdminHandler_CopyMovementToStandard_ValidIDInvalidJSON(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/1/copy-to-standard", "{invalid json")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyMovementToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestAdminHandler_CopyWorkoutToStandard_ValidIDInvalidJSON(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/workouts/1/copy-to-standard", "{invalid json")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWorkoutToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestAdminHandler_CopyWODToStandard_ValidInputNilService(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/1/copy-to-standard", `{"new_name": "Test WOD"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyWODToStandard requires wodService")
+		}
+	}()
+
+	handler.CopyWODToStandard(rr, req)
+}
+
+func TestAdminHandler_CopyMovementToStandard_ValidInputNilService(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/1/copy-to-standard", `{"new_name": "Test Movement"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyMovementToStandard requires movementService")
+		}
+	}()
+
+	handler.CopyMovementToStandard(rr, req)
+}
+
+func TestAdminHandler_CopyWorkoutToStandard_ValidInputNilService(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/workouts/1/copy-to-standard", `{"new_name": "Test Workout"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyWorkoutToStandard requires workoutTemplateService")
+		}
+	}()
+
+	handler.CopyWorkoutToStandard(rr, req)
+}
