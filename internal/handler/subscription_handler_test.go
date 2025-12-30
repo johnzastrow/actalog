@@ -611,3 +611,155 @@ func TestSubscriptionHandler_AllSubscriptionTypes(t *testing.T) {
 		})
 	}
 }
+
+func TestSubscriptionHandler_GetUserSubscriptions_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/1", "")
+	req = addChiURLParam(req, "user_id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.GetUserSubscriptions(rr, req)
+}
+
+func TestSubscriptionHandler_GetOrganizationSubscriptions_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/1", "")
+	req = addChiURLParam(req, "org_id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.GetOrganizationSubscriptions(rr, req)
+}
+
+func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/mark-paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.MarkUserSubscriptionAsPaid(rr, req)
+}
+
+func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/mark-paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.MarkOrganizationSubscriptionAsPaid(rr, req)
+}
+
+func TestSubscriptionHandler_CancelUserSubscription_ValidIDWithReason(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel", `{"reason": "Customer requested"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.CancelUserSubscription(rr, req)
+}
+
+func TestSubscriptionHandler_CancelOrganizationSubscription_ValidIDWithReason(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel", `{"reason": "Org requested"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.CancelOrganizationSubscription(rr, req)
+}
+
+func TestSubscriptionHandler_SetUserSubscriptionPermanent_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/permanent", `{"is_permanent": true}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.SetUserSubscriptionPermanent(rr, req)
+}
+
+func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidID(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/permanent", `{"is_permanent": true}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// This will panic due to nil subscriptionService
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.SetOrganizationSubscriptionPermanent(rr, req)
+}

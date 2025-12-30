@@ -63,3 +63,11 @@ func addChiURLParam(r *http.Request, key, value string) *http.Request {
 	rctx.URLParams.Add(key, value)
 	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
 }
+
+// createUserIDOnlyRequest creates a request with only userID in context (no email or role)
+// Useful for testing "missing role" authorization checks
+func createUserIDOnlyRequest(method, path, body string, userID int64) *http.Request {
+	req := createTestRequest(method, path, body)
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	return req.WithContext(ctx)
+}

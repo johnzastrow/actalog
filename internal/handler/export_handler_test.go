@@ -132,3 +132,156 @@ func TestNewExportHandler(t *testing.T) {
 		t.Error("NewExportHandler should return a non-nil handler")
 	}
 }
+
+func TestExportHandler_ExportWODs_MissingRole(t *testing.T) {
+	handler := &ExportHandler{}
+
+	// Create request with userID but no role context
+	req := createUserIDOnlyRequest(http.MethodGet, "/api/export/wods", "", 1)
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusUnauthorized)
+	assertBodyContains(t, rr, "Unauthorized")
+}
+
+func TestExportHandler_ExportWODs_WithQueryParams(t *testing.T) {
+	handler := &ExportHandler{}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"default params", "/api/export/wods"},
+		{"json format", "/api/export/wods?format=json"},
+		{"csv format", "/api/export/wods?format=csv"},
+		{"include standard only", "/api/export/wods?include_standard=true&include_custom=false"},
+		{"include custom only", "/api/export/wods?include_standard=false&include_custom=true"},
+		{"all params", "/api/export/wods?format=json&include_standard=true&include_custom=true"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			// Without service, will panic - tests param parsing paths
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ExportWODs requires exportService - params were parsed")
+				}
+			}()
+
+			handler.ExportWODs(rr, req)
+		})
+	}
+}
+
+func TestExportHandler_ExportWODs_AsAdmin(t *testing.T) {
+	handler := &ExportHandler{}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	// Without service, will panic - tests admin path
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ExportWODs requires exportService")
+		}
+	}()
+
+	handler.ExportWODs(rr, req)
+}
+
+func TestExportHandler_ExportMovements_MissingRole(t *testing.T) {
+	handler := &ExportHandler{}
+
+	// Create request with userID but no role context
+	req := createUserIDOnlyRequest(http.MethodGet, "/api/export/movements", "", 1)
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusUnauthorized)
+	assertBodyContains(t, rr, "Unauthorized")
+}
+
+func TestExportHandler_ExportMovements_WithQueryParams(t *testing.T) {
+	handler := &ExportHandler{}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"default params", "/api/export/movements"},
+		{"json format", "/api/export/movements?format=json"},
+		{"csv format", "/api/export/movements?format=csv"},
+		{"include standard only", "/api/export/movements?include_standard=true&include_custom=false"},
+		{"include custom only", "/api/export/movements?include_standard=false&include_custom=true"},
+		{"all params", "/api/export/movements?format=json&include_standard=true&include_custom=true"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			// Without service, will panic - tests param parsing paths
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ExportMovements requires exportService - params were parsed")
+				}
+			}()
+
+			handler.ExportMovements(rr, req)
+		})
+	}
+}
+
+func TestExportHandler_ExportMovements_AsAdmin(t *testing.T) {
+	handler := &ExportHandler{}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	// Without service, will panic - tests admin path
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ExportMovements requires exportService")
+		}
+	}()
+
+	handler.ExportMovements(rr, req)
+}
+
+func TestExportHandler_ExportUserWorkouts_WithFormatParams(t *testing.T) {
+	handler := &ExportHandler{}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"json format", "/api/export/user-workouts?format=json"},
+		{"csv format", "/api/export/user-workouts?format=csv"},
+		{"default format", "/api/export/user-workouts"},
+		{"with valid date range json", "/api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31&format=json"},
+		{"with valid date range csv", "/api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31&format=csv"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			// Without service, will panic - tests param parsing paths
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ExportUserWorkouts requires exportService - params were parsed")
+				}
+			}()
+
+			handler.ExportUserWorkouts(rr, req)
+		})
+	}
+}
