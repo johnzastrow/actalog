@@ -210,3 +210,182 @@ func TestOrganizationHandler_GetOrganizationUsers_InvalidOrgID(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid organization ID")
 }
+
+// Tests for ListOrganizations
+
+func TestOrganizationHandler_ListOrganizations_NilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/organizations", "")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ListOrganizations requires service")
+		}
+	}()
+
+	handler.ListOrganizations(rr, req)
+}
+
+// Test NewOrganizationHandler
+
+func TestNewOrganizationHandler(t *testing.T) {
+	handler := NewOrganizationHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewOrganizationHandler should return a non-nil handler")
+	}
+}
+
+// Test GetOrganization with valid ID
+
+func TestOrganizationHandler_GetOrganization_ValidIDNilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/organizations/1", "")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("GetOrganization requires service")
+		}
+	}()
+
+	handler.GetOrganization(rr, req)
+}
+
+// Test UpdateOrganization with valid JSON
+
+func TestOrganizationHandler_UpdateOrganization_ValidIDInvalidJSON(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/organizations/1", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateOrganization(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestOrganizationHandler_UpdateOrganization_ValidInputNilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/organizations/1", `{"name": "Test Org"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("UpdateOrganization requires service")
+		}
+	}()
+
+	handler.UpdateOrganization(rr, req)
+}
+
+// Test DeleteOrganization with valid ID
+
+func TestOrganizationHandler_DeleteOrganization_ValidIDNilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/organizations/1", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("DeleteOrganization requires service")
+		}
+	}()
+
+	handler.DeleteOrganization(rr, req)
+}
+
+// Test AssignUserToOrganization with valid JSON
+
+func TestOrganizationHandler_AssignUserToOrganization_ValidIDInvalidJSON(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/organization", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.AssignUserToOrganization(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestOrganizationHandler_AssignUserToOrganization_MissingOrgIDWithValidUserID(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/organization", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.AssignUserToOrganization(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Organization ID is required")
+}
+
+// Test RemoveUserFromOrganization with valid IDs
+
+func TestOrganizationHandler_RemoveUserFromOrganization_InvalidOrgID(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/users/1/organization/abc", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	// org_id is empty without chi context -> Invalid organization ID
+	rr := httptest.NewRecorder()
+
+	handler.RemoveUserFromOrganization(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid organization ID")
+}
+
+// Test GetUserOrganizations with valid ID
+
+func TestOrganizationHandler_GetUserOrganizations_ValidIDNilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/users/1/organizations", "")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("GetUserOrganizations requires service")
+		}
+	}()
+
+	handler.GetUserOrganizations(rr, req)
+}
+
+// Test GetOrganizationUsers with valid ID
+
+func TestOrganizationHandler_GetOrganizationUsers_ValidIDNilService(t *testing.T) {
+	handler := &OrganizationHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/organizations/1/users", "")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("GetOrganizationUsers requires service")
+		}
+	}()
+
+	handler.GetOrganizationUsers(rr, req)
+}

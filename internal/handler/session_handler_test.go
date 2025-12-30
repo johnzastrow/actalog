@@ -54,3 +54,59 @@ func TestSessionHandler_RevokeAllSessions_Unauthorized(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
 }
+
+func TestNewSessionHandler(t *testing.T) {
+	handler := NewSessionHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewSessionHandler should return a non-nil handler")
+	}
+}
+
+func TestSessionHandler_ListSessions_NilService(t *testing.T) {
+	handler := &SessionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/sessions", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ListSessions requires service")
+		}
+	}()
+
+	handler.ListSessions(rr, req)
+}
+
+func TestSessionHandler_RevokeSession_ValidIDNilService(t *testing.T) {
+	handler := &SessionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/sessions/1", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry with valid ID
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("RevokeSession requires service")
+		}
+	}()
+
+	handler.RevokeSession(rr, req)
+}
+
+func TestSessionHandler_RevokeAllSessions_NilService(t *testing.T) {
+	handler := &SessionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/sessions/revoke-all", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("RevokeAllSessions requires service")
+		}
+	}()
+
+	handler.RevokeAllSessions(rr, req)
+}

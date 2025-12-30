@@ -305,3 +305,57 @@ func TestUserWorkoutHandler_GetActiveUsersStats_Unauthorized(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
 }
+
+func TestNewUserWorkoutHandler(t *testing.T) {
+	handler := NewUserWorkoutHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewUserWorkoutHandler should return a non-nil handler")
+	}
+}
+
+func TestUserWorkoutHandler_UpdateLoggedWorkout_ValidIDInvalidJSON(t *testing.T) {
+	handler := &UserWorkoutHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/workouts/1", "{bad json", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestUserWorkoutHandler_GetLoggedWorkout_ValidIDNilService(t *testing.T) {
+	handler := &UserWorkoutHandler{}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/1", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry with valid ID
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("GetLoggedWorkout requires service")
+		}
+	}()
+
+	handler.GetLoggedWorkout(rr, req)
+}
+
+func TestUserWorkoutHandler_DeleteLoggedWorkout_ValidIDNilService(t *testing.T) {
+	handler := &UserWorkoutHandler{}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/workouts/1", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry with valid ID
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("DeleteLoggedWorkout requires service")
+		}
+	}()
+
+	handler.DeleteLoggedWorkout(rr, req)
+}

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
@@ -54,4 +55,11 @@ func assertBodyContains(t interface{ Errorf(string, ...interface{}) }, rr *httpt
 	if !strings.Contains(rr.Body.String(), expected) {
 		t.Errorf("handler body does not contain %q: got %s", expected, rr.Body.String())
 	}
+}
+
+// addChiURLParam adds a chi URL parameter to a request context
+func addChiURLParam(r *http.Request, key, value string) *http.Request {
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add(key, value)
+	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
 }

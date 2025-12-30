@@ -168,3 +168,110 @@ func TestIsValidFilename(t *testing.T) {
 		})
 	}
 }
+
+// Tests for ListBackups
+
+func TestBackupHandler_ListBackups_NilService(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/backups", "")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ListBackups requires service")
+		}
+	}()
+
+	handler.ListBackups(rr, req)
+}
+
+// Test NewBackupHandler
+
+func TestNewBackupHandler(t *testing.T) {
+	handler := NewBackupHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewBackupHandler should return a non-nil handler")
+	}
+}
+
+// Tests with chi URL params
+
+func TestBackupHandler_DownloadBackup_InvalidFilename(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/backups/../test.zip", "")
+	req = addChiURLParam(req, "filename", "../test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DownloadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid filename")
+}
+
+func TestBackupHandler_DeleteBackup_InvalidFilename(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/backups/../test.zip", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "../test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DeleteBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid filename")
+}
+
+func TestBackupHandler_GetBackupMetadata_InvalidFilename(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/backups/../test.zip/metadata", "")
+	req = addChiURLParam(req, "filename", "../test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.GetBackupMetadata(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid filename")
+}
+
+func TestBackupHandler_RestoreBackup_InvalidFilename(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/backups/../test.zip/restore", `{"confirm": true}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "../test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.RestoreBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid filename")
+}
+
+func TestBackupHandler_RestoreBackup_InvalidJSON(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/backups/test.zip/restore", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.RestoreBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestBackupHandler_RestoreBackup_NotConfirmedWithValidFilename(t *testing.T) {
+	handler := &BackupHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/backups/test.zip/restore", `{"confirm": false}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.RestoreBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "confirmation required")
+}

@@ -386,3 +386,10 @@ func TestRespondErrorWithDetail(t *testing.T) {
 	assertBodyContains(t, rr, `"message":"main error"`)
 	assertBodyContains(t, rr, `"error":"detailed error"`)
 }
+
+func TestNewAuthHandler(t *testing.T) {
+	handler := NewAuthHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewAuthHandler should return a non-nil handler")
+	}
+}

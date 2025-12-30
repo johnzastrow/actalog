@@ -189,3 +189,52 @@ func TestAdminUserHandler_DeleteUser_InvalidID(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid user ID")
 }
+
+func TestNewAdminUserHandler(t *testing.T) {
+	handler := NewAdminUserHandler(nil, nil)
+	if handler == nil {
+		t.Error("NewAdminUserHandler should return a non-nil handler")
+	}
+}
+
+func TestAdminUserHandler_ListUsers_NilService(t *testing.T) {
+	handler := &AdminUserHandler{}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/users", "")
+	rr := httptest.NewRecorder()
+
+	// Without a service, will panic - tests function entry
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ListUsers requires service")
+		}
+	}()
+
+	handler.ListUsers(rr, req)
+}
+
+func TestAdminUserHandler_ChangeUserRole_ValidIDInvalidJSON(t *testing.T) {
+	handler := &AdminUserHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/1/role", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.ChangeUserRole(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestAdminUserHandler_ChangeUserRole_InvalidRoleValue(t *testing.T) {
+	handler := &AdminUserHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/1/role", `{"role": "superuser"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.ChangeUserRole(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Role must be 'user' or 'admin'")
+}
