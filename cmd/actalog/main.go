@@ -215,6 +215,7 @@ func main() {
 	orgRepo := repository.NewOrganizationRepository(db)
 	notificationRepo := repository.NewNotificationRepository(db)
 	notificationLikeRepo := repository.NewNotificationLikeRepository(db)
+	emailLogRepo := repository.NewEmailLogRepository(db, cfg.Database.Driver)
 
 	// Subscription repositories
 	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
@@ -253,6 +254,7 @@ func main() {
 	// Initialize services
 	auditLogService := service.NewAuditLogService(auditLogRepo)
 	dataChangeLogService := service.NewDataChangeLogService(dataChangeLogRepo)
+	emailLogService := service.NewEmailLogService(emailLogRepo)
 
 	userService := service.NewUserService(
 		userRepo,
@@ -370,6 +372,8 @@ func main() {
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
 	notificationHandler := handler.NewNotificationHandler(notificationService, appLogger)
 	notificationLikeHandler := handler.NewNotificationLikeHandler(notificationLikeService)
+	emailHandler := handler.NewEmailHandler(emailService, emailLogService, appLogger)
+	emailLogHandler := handler.NewEmailLogHandler(emailLogService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -573,6 +577,21 @@ func main() {
 				r.Get("/backups/{filename}/metadata", backupHandler.GetBackupMetadata)
 				r.Delete("/backups/{filename}", backupHandler.DeleteBackup)
 				r.Post("/backups/{filename}/restore", backupHandler.RestoreBackup)
+
+				// Email admin routes (admin only)
+				r.Route("/email", func(r chi.Router) {
+					r.Get("/config", emailHandler.GetEmailConfig)
+					r.Post("/test", emailHandler.SendTestEmail)
+				})
+
+				// Email logs routes (admin only)
+				r.Route("/email-logs", func(r chi.Router) {
+					r.Get("/", emailLogHandler.ListEmailLogs)
+					r.Get("/stats", emailLogHandler.GetEmailStats)
+					r.Get("/failures", emailLogHandler.GetRecentFailures)
+					r.Post("/cleanup", emailLogHandler.CleanupEmailLogs)
+					r.Get("/{id}", emailLogHandler.GetEmailLog)
+				})
 
 				// Announcement routes (admin only)
 				r.Post("/notifications/announce", notificationHandler.CreateAnnouncement)

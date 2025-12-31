@@ -198,6 +198,27 @@
             </v-card>
           </v-col>
 
+          <!-- Email Settings -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/email-settings')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="indigo" size="32" class="mr-3">mdi-email-outline</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Email Settings</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Test email configuration and view logs</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Test email configuration with detailed SMTP debug output. View history of sent emails.
+              </p>
+              <v-chip size="small" color="indigo" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- Reports (Placeholder) -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" disabled>

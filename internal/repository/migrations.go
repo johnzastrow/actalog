@@ -1424,6 +1424,99 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.18.0",
+		Description: "Add email_logs table for email audit trail",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if email_logs table already exists
+			hasEmailLogs, err := checkTableExists(db, driver, "email_logs")
+			if err != nil {
+				return fmt.Errorf("failed to check for email_logs table: %w", err)
+			}
+			if hasEmailLogs {
+				fmt.Println("✓ email_logs table already exists, skipping creation")
+				return nil
+			}
+
+			// Create email_logs table
+			var createEmailLogsSQL string
+			switch driver {
+			case "sqlite3":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					recipient_email TEXT NOT NULL,
+					email_type TEXT NOT NULL,
+					subject TEXT NOT NULL,
+					success INTEGER NOT NULL DEFAULT 0,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id INTEGER,
+					created_at DATETIME NOT NULL,
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				);
+				CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+				CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+				CREATE INDEX idx_email_logs_created_at ON email_logs(created_at DESC);
+				CREATE INDEX idx_email_logs_success ON email_logs(success);
+				`
+			case "postgres":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id BIGSERIAL PRIMARY KEY,
+					recipient_email VARCHAR(255) NOT NULL,
+					email_type VARCHAR(50) NOT NULL,
+					subject VARCHAR(500) NOT NULL,
+					success BOOLEAN NOT NULL DEFAULT FALSE,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id BIGINT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				);
+				CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+				CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+				CREATE INDEX idx_email_logs_created_at ON email_logs(created_at DESC);
+				CREATE INDEX idx_email_logs_success ON email_logs(success);
+				`
+			case "mysql":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					recipient_email VARCHAR(255) NOT NULL,
+					email_type VARCHAR(50) NOT NULL,
+					subject VARCHAR(500) NOT NULL,
+					success BOOLEAN NOT NULL DEFAULT FALSE,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id BIGINT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					INDEX idx_email_logs_type (email_type),
+					INDEX idx_email_logs_recipient (recipient_email),
+					INDEX idx_email_logs_created_at (created_at DESC),
+					INDEX idx_email_logs_success (success),
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createEmailLogsSQL); err != nil {
+				return fmt.Errorf("failed to create email_logs table: %w", err)
+			}
+			fmt.Println("✓ Created email_logs table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS email_logs"); err != nil {
+				return fmt.Errorf("failed to drop email_logs table: %w", err)
+			}
+			fmt.Println("⚠️  WARNING: Email logs data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

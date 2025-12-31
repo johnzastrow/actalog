@@ -225,6 +225,18 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
+      path: '/admin/email-settings',
+      name: 'admin-email-settings',
+      component: () => import('@/views/AdminEmailSettingsView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/email-logs',
+      name: 'admin-email-logs',
+      component: () => import('@/views/AdminEmailLogsView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue')
