@@ -1802,6 +1802,17 @@ func (m *MockBackupService) UploadBackup(file interface{}, filename string, uplo
 	if m.shouldError {
 		return "", m.errorToReturn
 	}
+	// Add the uploaded backup to the list so GetBackupMetadata will find it
+	backup := domain.BackupMetadata{
+		Filename:       filename,
+		FileSize:       1024,
+		CreatedAt:      time.Now(),
+		CreatedByEmail: "admin@example.com",
+		Version:        "0.17.0",
+		DatabaseDriver: "sqlite3",
+		DatabaseName:   "test.db",
+	}
+	m.backups = append(m.backups, backup)
 	return filename, nil
 }
 

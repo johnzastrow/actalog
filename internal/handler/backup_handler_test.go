@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/johnzastrow/actalog/internal/domain"
 )
 
 func TestBackupHandler_CreateBackup_Unauthorized(t *testing.T) {
@@ -671,4 +673,171 @@ func TestStringPtr(t *testing.T) {
 	if *ptr != s {
 		t.Errorf("stringPtr returned wrong value: got %q, want %q", *ptr, s)
 	}
+}
+
+// Additional tests for DownloadBackup
+func TestBackupHandler_DownloadBackup_BackupNotFound(t *testing.T) {
+	mockService := NewMockBackupService()
+	mockService.SetError(ErrMockNotFound)
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/backups/nonexistent.zip", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "nonexistent.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DownloadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "Backup not found")
+}
+
+// Test UploadBackup with non-zip file
+func TestBackupHandler_UploadBackup_NonZipFile(t *testing.T) {
+	mockService := NewMockBackupService()
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	// Create a multipart request with non-zip file
+	content := []byte("This is not a zip file")
+	req := createMultipartRequest(http.MethodPost, "/api/admin/backups/upload",
+		"file", "backup.txt", "text/plain", content, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UploadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Only ZIP files are allowed")
+}
+
+// Test UploadBackup with service error
+func TestBackupHandler_UploadBackup_ServiceError(t *testing.T) {
+	mockService := NewMockBackupService()
+	mockService.SetError(ErrMockInternalError)
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	// Create a multipart request with zip file
+	content := []byte("PK\x03\x04") // Start of a zip file
+	req := createMultipartRequest(http.MethodPost, "/api/admin/backups/upload",
+		"file", "backup.zip", "application/zip", content, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UploadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to upload backup")
+}
+
+// Test UploadBackup success
+func TestBackupHandler_UploadBackup_Success(t *testing.T) {
+	mockService := NewMockBackupService()
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	// Create a multipart request with zip file
+	content := []byte("PK\x03\x04") // Start of a zip file
+	req := createMultipartRequest(http.MethodPost, "/api/admin/backups/upload",
+		"file", "backup.zip", "application/zip", content, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UploadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertBodyContains(t, rr, "Backup uploaded successfully")
+}
+
+// Test CreateBackup with metadata retrieval error
+func TestBackupHandler_CreateBackup_MetadataError(t *testing.T) {
+	mockService := &MockBackupServiceWithMetadataError{}
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/backups", `{}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get backup metadata")
+}
+
+// MockBackupServiceWithMetadataError is a mock that fails on GetBackupMetadata
+type MockBackupServiceWithMetadataError struct{}
+
+func (m *MockBackupServiceWithMetadataError) CreateBackup(createdByUserID int64) (string, error) {
+	return "test.zip", nil
+}
+
+func (m *MockBackupServiceWithMetadataError) ListBackups() ([]domain.BackupMetadata, error) {
+	return nil, nil
+}
+
+func (m *MockBackupServiceWithMetadataError) GetBackupMetadata(filename string) (*domain.BackupMetadata, error) {
+	return nil, ErrMockInternalError
+}
+
+func (m *MockBackupServiceWithMetadataError) DownloadBackup(filename string) (string, error) {
+	return "", nil
+}
+
+func (m *MockBackupServiceWithMetadataError) UploadBackup(file interface{}, filename string, uploadedByUserID int64) (string, error) {
+	return "", nil
+}
+
+func (m *MockBackupServiceWithMetadataError) DeleteBackup(filename string, deletedByUserID int64) error {
+	return nil
+}
+
+func (m *MockBackupServiceWithMetadataError) RestoreBackup(filename string, restoredByUserID int64, mode domain.RestoreMode) (*domain.RestoreResult, error) {
+	return nil, nil
+}
+
+// Test UploadBackup with metadata retrieval error
+func TestBackupHandler_UploadBackup_MetadataError(t *testing.T) {
+	mockService := &MockBackupServiceWithUploadMetadataError{}
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	// Create a multipart request with zip file
+	content := []byte("PK\x03\x04") // Start of a zip file
+	req := createMultipartRequest(http.MethodPost, "/api/admin/backups/upload",
+		"file", "backup.zip", "application/zip", content, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UploadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get backup metadata")
+}
+
+// MockBackupServiceWithUploadMetadataError is a mock that succeeds on Upload but fails on GetBackupMetadata
+type MockBackupServiceWithUploadMetadataError struct{}
+
+func (m *MockBackupServiceWithUploadMetadataError) CreateBackup(createdByUserID int64) (string, error) {
+	return "", nil
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) ListBackups() ([]domain.BackupMetadata, error) {
+	return nil, nil
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) GetBackupMetadata(filename string) (*domain.BackupMetadata, error) {
+	return nil, ErrMockInternalError
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) DownloadBackup(filename string) (string, error) {
+	return "", nil
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) UploadBackup(file interface{}, filename string, uploadedByUserID int64) (string, error) {
+	return "uploaded.zip", nil
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) DeleteBackup(filename string, deletedByUserID int64) error {
+	return nil
+}
+
+func (m *MockBackupServiceWithUploadMetadataError) RestoreBackup(filename string, restoredByUserID int64, mode domain.RestoreMode) (*domain.RestoreResult, error) {
+	return nil, nil
 }
