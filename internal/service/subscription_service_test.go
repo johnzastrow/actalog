@@ -650,3 +650,681 @@ func TestSubscriptionService_CreateOrganizationSubscription(t *testing.T) {
 		})
 	}
 }
+
+// Tests for MarkOrganizationSubscriptionAsPaid
+func TestSubscriptionService_MarkOrganizationSubscriptionAsPaid(t *testing.T) {
+	tests := []struct {
+		name           string
+		subscriptionID int64
+		adminUserID    int64
+		paymentDate    *string
+		durationDays   *int
+		setupMock      func(*mockOrganizationSubscriptionRepo)
+		expectedError  error
+	}{
+		{
+			name:           "successful payment marking",
+			subscriptionID: 1,
+			adminUserID:    1,
+			paymentDate:    nil,
+			durationDays:   nil,
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				endDate := time.Now().Add(10 * 24 * time.Hour)
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:               1,
+					OrganizationID:   10,
+					SubscriptionType: domain.SubscriptionTypeMonthly,
+					Status:           domain.SubscriptionStatusActive,
+					IsPermanentFree:  false,
+					StartDate:        time.Now().Add(-20 * 24 * time.Hour),
+					EndDate:          &endDate,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "with custom duration",
+			subscriptionID: 1,
+			adminUserID:    1,
+			paymentDate:    stringPtr("2025-01-15"),
+			durationDays:   intPtr(90),
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				endDate := time.Now().Add(10 * 24 * time.Hour)
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:               1,
+					OrganizationID:   10,
+					SubscriptionType: domain.SubscriptionTypeAnnual,
+					Status:           domain.SubscriptionStatusActive,
+					StartDate:        time.Now(),
+					EndDate:          &endDate,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "cannot mark free subscription as paid",
+			subscriptionID: 1,
+			adminUserID:    1,
+			paymentDate:    nil,
+			durationDays:   nil,
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:               1,
+					OrganizationID:   10,
+					SubscriptionType: domain.SubscriptionTypeFree,
+					Status:           domain.SubscriptionStatusActive,
+				}
+			},
+			expectedError: ErrCannotMarkFreeSubscriptionPaid,
+		},
+		{
+			name:           "subscription not found",
+			subscriptionID: 999,
+			adminUserID:    1,
+			paymentDate:    nil,
+			durationDays:   nil,
+			setupMock:      func(repo *mockOrganizationSubscriptionRepo) {},
+			expectedError:  nil, // Will check for any error
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subRepo := newMockUserSubscriptionRepo()
+			userRepo := newMockUserRepo()
+			orgRepo := newMockOrganizationRepo()
+			orgSubRepo := newMockOrganizationSubscriptionRepo()
+			accessRepo := newMockSubscriptionAccessRepo()
+			auditRepo := newMockAuditLogRepo()
+
+			if tt.setupMock != nil {
+				tt.setupMock(orgSubRepo)
+			}
+
+			service := NewSubscriptionService(
+				subRepo,
+				orgSubRepo,
+				accessRepo,
+				auditRepo,
+				userRepo,
+				orgRepo,
+			)
+
+			err := service.MarkOrganizationSubscriptionAsPaid(
+				tt.adminUserID,
+				tt.subscriptionID,
+				tt.paymentDate,
+				tt.durationDays,
+			)
+
+			// Special case for "subscription not found" - just expect an error
+			if tt.name == "subscription not found" {
+				if err == nil {
+					t.Error("expected error for subscription not found")
+				}
+				return
+			}
+
+			if tt.expectedError != nil {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("expected error %v, got %v", tt.expectedError, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+// Tests for SetUserSubscriptionPermanent
+func TestSubscriptionService_SetUserSubscriptionPermanent(t *testing.T) {
+	tests := []struct {
+		name           string
+		subscriptionID int64
+		adminUserID    int64
+		isPermanent    bool
+		setupMock      func(*mockUserSubscriptionRepo)
+		expectedError  error
+	}{
+		{
+			name:           "set permanent true",
+			subscriptionID: 1,
+			adminUserID:    1,
+			isPermanent:    true,
+			setupMock: func(repo *mockUserSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.UserSubscription{
+					ID:              1,
+					UserID:          2,
+					IsPermanentFree: false,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "set permanent false",
+			subscriptionID: 1,
+			adminUserID:    1,
+			isPermanent:    false,
+			setupMock: func(repo *mockUserSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.UserSubscription{
+					ID:              1,
+					UserID:          2,
+					IsPermanentFree: true,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "cannot modify own subscription",
+			subscriptionID: 1,
+			adminUserID:    2,
+			isPermanent:    true,
+			setupMock: func(repo *mockUserSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.UserSubscription{
+					ID:     1,
+					UserID: 2,
+				}
+			},
+			expectedError: ErrCannotModifyOwnSubscription,
+		},
+		{
+			name:           "subscription not found",
+			subscriptionID: 999,
+			adminUserID:    1,
+			isPermanent:    true,
+			setupMock:      func(repo *mockUserSubscriptionRepo) {},
+			expectedError:  nil, // Will check for any error
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subRepo := newMockUserSubscriptionRepo()
+			userRepo := newMockUserRepo()
+			orgRepo := newMockOrganizationRepo()
+			orgSubRepo := newMockOrganizationSubscriptionRepo()
+			accessRepo := newMockSubscriptionAccessRepo()
+			auditRepo := newMockAuditLogRepo()
+
+			if tt.setupMock != nil {
+				tt.setupMock(subRepo)
+			}
+
+			service := NewSubscriptionService(
+				subRepo,
+				orgSubRepo,
+				accessRepo,
+				auditRepo,
+				userRepo,
+				orgRepo,
+			)
+
+			err := service.SetUserSubscriptionPermanent(
+				tt.adminUserID,
+				tt.subscriptionID,
+				tt.isPermanent,
+			)
+
+			// Special case for "subscription not found" - just expect an error
+			if tt.name == "subscription not found" {
+				if err == nil {
+					t.Error("expected error for subscription not found")
+				}
+				return
+			}
+
+			if tt.expectedError != nil {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("expected error %v, got %v", tt.expectedError, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			// Verify subscription was updated
+			sub := subRepo.subscriptions[tt.subscriptionID]
+			if sub.IsPermanentFree != tt.isPermanent {
+				t.Errorf("expected IsPermanentFree %v, got %v", tt.isPermanent, sub.IsPermanentFree)
+			}
+		})
+	}
+}
+
+// Tests for CancelOrganizationSubscription
+func TestSubscriptionService_CancelOrganizationSubscription(t *testing.T) {
+	tests := []struct {
+		name           string
+		subscriptionID int64
+		adminUserID    int64
+		reason         string
+		setupMock      func(*mockOrganizationSubscriptionRepo)
+		expectedError  error
+	}{
+		{
+			name:           "successful cancellation",
+			subscriptionID: 1,
+			adminUserID:    1,
+			reason:         "Organization closed",
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				endDate := time.Now().Add(30 * 24 * time.Hour)
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:               1,
+					OrganizationID:   10,
+					SubscriptionType: domain.SubscriptionTypeAnnual,
+					Status:           domain.SubscriptionStatusActive,
+					StartDate:        time.Now(),
+					EndDate:          &endDate,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "subscription not found",
+			subscriptionID: 999,
+			adminUserID:    1,
+			reason:         "Test",
+			setupMock:      func(repo *mockOrganizationSubscriptionRepo) {},
+			expectedError:  nil, // Will check for any error
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subRepo := newMockUserSubscriptionRepo()
+			userRepo := newMockUserRepo()
+			orgRepo := newMockOrganizationRepo()
+			orgSubRepo := newMockOrganizationSubscriptionRepo()
+			accessRepo := newMockSubscriptionAccessRepo()
+			auditRepo := newMockAuditLogRepo()
+
+			if tt.setupMock != nil {
+				tt.setupMock(orgSubRepo)
+			}
+
+			service := NewSubscriptionService(
+				subRepo,
+				orgSubRepo,
+				accessRepo,
+				auditRepo,
+				userRepo,
+				orgRepo,
+			)
+
+			err := service.CancelOrganizationSubscription(
+				tt.adminUserID,
+				tt.subscriptionID,
+				tt.reason,
+			)
+
+			// Special case for "subscription not found" - just expect an error
+			if tt.name == "subscription not found" {
+				if err == nil {
+					t.Error("expected error for subscription not found")
+				}
+				return
+			}
+
+			if tt.expectedError != nil {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("expected error %v, got %v", tt.expectedError, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			// Verify subscription was cancelled
+			sub := orgSubRepo.subscriptions[tt.subscriptionID]
+			if sub.Status != domain.SubscriptionStatusCancelled {
+				t.Errorf("expected Status cancelled, got %s", sub.Status)
+			}
+		})
+	}
+}
+
+// Tests for SetOrganizationSubscriptionPermanent
+func TestSubscriptionService_SetOrganizationSubscriptionPermanent(t *testing.T) {
+	tests := []struct {
+		name           string
+		subscriptionID int64
+		adminUserID    int64
+		isPermanent    bool
+		setupMock      func(*mockOrganizationSubscriptionRepo)
+		expectedError  error
+	}{
+		{
+			name:           "set permanent true",
+			subscriptionID: 1,
+			adminUserID:    1,
+			isPermanent:    true,
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:              1,
+					OrganizationID:  10,
+					IsPermanentFree: false,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "set permanent false",
+			subscriptionID: 1,
+			adminUserID:    1,
+			isPermanent:    false,
+			setupMock: func(repo *mockOrganizationSubscriptionRepo) {
+				repo.subscriptions[1] = &domain.OrganizationSubscription{
+					ID:              1,
+					OrganizationID:  10,
+					IsPermanentFree: true,
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "subscription not found",
+			subscriptionID: 999,
+			adminUserID:    1,
+			isPermanent:    true,
+			setupMock:      func(repo *mockOrganizationSubscriptionRepo) {},
+			expectedError:  nil, // Will check for any error
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subRepo := newMockUserSubscriptionRepo()
+			userRepo := newMockUserRepo()
+			orgRepo := newMockOrganizationRepo()
+			orgSubRepo := newMockOrganizationSubscriptionRepo()
+			accessRepo := newMockSubscriptionAccessRepo()
+			auditRepo := newMockAuditLogRepo()
+
+			if tt.setupMock != nil {
+				tt.setupMock(orgSubRepo)
+			}
+
+			service := NewSubscriptionService(
+				subRepo,
+				orgSubRepo,
+				accessRepo,
+				auditRepo,
+				userRepo,
+				orgRepo,
+			)
+
+			err := service.SetOrganizationSubscriptionPermanent(
+				tt.adminUserID,
+				tt.subscriptionID,
+				tt.isPermanent,
+			)
+
+			// Special case for "subscription not found" - just expect an error
+			if tt.name == "subscription not found" {
+				if err == nil {
+					t.Error("expected error for subscription not found")
+				}
+				return
+			}
+
+			if tt.expectedError != nil {
+				if !errors.Is(err, tt.expectedError) {
+					t.Errorf("expected error %v, got %v", tt.expectedError, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			// Verify subscription was updated
+			sub := orgSubRepo.subscriptions[tt.subscriptionID]
+			if sub.IsPermanentFree != tt.isPermanent {
+				t.Errorf("expected IsPermanentFree %v, got %v", tt.isPermanent, sub.IsPermanentFree)
+			}
+		})
+	}
+}
+
+// Tests for CheckUserAccess
+func TestSubscriptionService_CheckUserAccess(t *testing.T) {
+	tests := []struct {
+		name              string
+		userID            int64
+		setupMock         func(*mockSubscriptionAccessRepo)
+		expectedHasAccess bool
+	}{
+		{
+			name:   "user has access",
+			userID: 1,
+			setupMock: func(repo *mockSubscriptionAccessRepo) {
+				repo.accessResults[1] = &domain.SubscriptionAccessResult{
+					HasAccess: true,
+					Source:    "user",
+				}
+			},
+			expectedHasAccess: true,
+		},
+		{
+			name:   "user has no access",
+			userID: 2,
+			setupMock: func(repo *mockSubscriptionAccessRepo) {
+				repo.accessResults[2] = &domain.SubscriptionAccessResult{
+					HasAccess: false,
+					Source:    "none",
+				}
+			},
+			expectedHasAccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subRepo := newMockUserSubscriptionRepo()
+			userRepo := newMockUserRepo()
+			orgRepo := newMockOrganizationRepo()
+			orgSubRepo := newMockOrganizationSubscriptionRepo()
+			accessRepo := newMockSubscriptionAccessRepo()
+			auditRepo := newMockAuditLogRepo()
+
+			if tt.setupMock != nil {
+				tt.setupMock(accessRepo)
+			}
+
+			service := NewSubscriptionService(
+				subRepo,
+				orgSubRepo,
+				accessRepo,
+				auditRepo,
+				userRepo,
+				orgRepo,
+			)
+
+			result, err := service.CheckUserAccess(tt.userID)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			if result.HasAccess != tt.expectedHasAccess {
+				t.Errorf("expected HasAccess %v, got %v", tt.expectedHasAccess, result.HasAccess)
+			}
+		})
+	}
+}
+
+// Tests for GetUserSubscriptions
+func TestSubscriptionService_GetUserSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	// Add some subscriptions
+	subRepo.subscriptions[1] = &domain.UserSubscription{ID: 1, UserID: 5}
+	subRepo.subscriptions[2] = &domain.UserSubscription{ID: 2, UserID: 5}
+	subRepo.subscriptions[3] = &domain.UserSubscription{ID: 3, UserID: 6}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.GetUserSubscriptions(5)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs))
+	}
+}
+
+// Tests for GetOrganizationSubscriptions
+func TestSubscriptionService_GetOrganizationSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	// Add some subscriptions
+	orgSubRepo.subscriptions[1] = &domain.OrganizationSubscription{ID: 1, OrganizationID: 10}
+	orgSubRepo.subscriptions[2] = &domain.OrganizationSubscription{ID: 2, OrganizationID: 10}
+	orgSubRepo.subscriptions[3] = &domain.OrganizationSubscription{ID: 3, OrganizationID: 20}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.GetOrganizationSubscriptions(10)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs))
+	}
+}
+
+// Tests for ExpireOverdueSubscriptions
+func TestSubscriptionService_ExpireOverdueSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	count, err := service.ExpireOverdueSubscriptions()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	// Currently not implemented, should return 0
+	if count != 0 {
+		t.Errorf("expected 0 expired subscriptions, got %d", count)
+	}
+}
+
+// Tests for ListAllUserSubscriptions
+func TestSubscriptionService_ListAllUserSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	// Add some subscriptions
+	subRepo.subscriptions[1] = &domain.UserSubscription{ID: 1, UserID: 1}
+	subRepo.subscriptions[2] = &domain.UserSubscription{ID: 2, UserID: 2}
+	subRepo.subscriptions[3] = &domain.UserSubscription{ID: 3, UserID: 3}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.ListAllUserSubscriptions()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 3 {
+		t.Errorf("expected 3 subscriptions, got %d", len(subs))
+	}
+}
+
+// Tests for ListAllOrganizationSubscriptions
+func TestSubscriptionService_ListAllOrganizationSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	// Add some subscriptions
+	orgSubRepo.subscriptions[1] = &domain.OrganizationSubscription{ID: 1, OrganizationID: 10}
+	orgSubRepo.subscriptions[2] = &domain.OrganizationSubscription{ID: 2, OrganizationID: 20}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.ListAllOrganizationSubscriptions()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs))
+	}
+}
