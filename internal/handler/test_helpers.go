@@ -71,3 +71,26 @@ func createUserIDOnlyRequest(method, path, body string, userID int64) *http.Requ
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
 	return req.WithContext(ctx)
 }
+
+// createMultipartRequest creates a multipart form request for file upload testing
+// Returns nil if there's an error creating the request
+func createMultipartRequest(method, path, fieldName, fileName, contentType string, fileContent []byte, userID int64, email, role string) *http.Request {
+	body := &strings.Builder{}
+
+	// Create a simple multipart form body manually
+	boundary := "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+
+	body.WriteString("--" + boundary + "\r\n")
+	body.WriteString("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + fileName + "\"\r\n")
+	body.WriteString("Content-Type: " + contentType + "\r\n\r\n")
+	body.WriteString(string(fileContent))
+	body.WriteString("\r\n--" + boundary + "--\r\n")
+
+	req := httptest.NewRequest(method, path, strings.NewReader(body.String()))
+	req.Header.Set("Content-Type", "multipart/form-data; boundary="+boundary)
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.UserEmailKey, email)
+	ctx = context.WithValue(ctx, middleware.UserRoleKey, role)
+	return req.WithContext(ctx)
+}

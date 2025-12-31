@@ -110,3 +110,44 @@ func TestSessionHandler_RevokeAllSessions_NilService(t *testing.T) {
 
 	handler.RevokeAllSessions(rr, req)
 }
+
+// Tests with mock service
+
+func TestSessionHandler_ListSessions_Success(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewSessionHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/sessions", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListSessions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSessionHandler_RevokeAllSessions_Success(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewSessionHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/sessions/revoke-all", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.RevokeAllSessions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSessionHandler_RevokeSession_NotFound(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewSessionHandler(userService, createTestLogger())
+
+	// Try to revoke a session that doesn't exist
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/sessions/999", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.RevokeSession(rr, req)
+
+	// Returns 400 when session not found or doesn't belong to user
+	assertStatusCode(t, rr, http.StatusBadRequest)
+}

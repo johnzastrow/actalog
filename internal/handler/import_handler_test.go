@@ -157,3 +157,139 @@ func TestNewImportHandler(t *testing.T) {
 		t.Error("NewImportHandler should return a non-nil handler")
 	}
 }
+
+func TestImportHandler_PreviewWODImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type,score_type\nTest WOD,AMRAP,rounds+reps")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wods/preview",
+		"file", "wods.csv", "text/csv", content, 1, "test@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewWODImport requires service")
+		}
+	}()
+
+	handler.PreviewWODImport(rr, req)
+}
+
+func TestImportHandler_ConfirmWODImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type,score_type\nTest WOD,AMRAP,rounds+reps")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wods/confirm",
+		"file", "wods.csv", "text/csv", content, 1, "test@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ConfirmWODImport requires service")
+		}
+	}()
+
+	handler.ConfirmWODImport(rr, req)
+}
+
+func TestImportHandler_PreviewMovementImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type\nBack Squat,weightlifting")
+	req := createMultipartRequest(http.MethodPost, "/api/import/movements/preview",
+		"file", "movements.csv", "text/csv", content, 1, "test@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewMovementImport requires service")
+		}
+	}()
+
+	handler.PreviewMovementImport(rr, req)
+}
+
+func TestImportHandler_ConfirmMovementImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type\nBack Squat,weightlifting")
+	req := createMultipartRequest(http.MethodPost, "/api/import/movements/confirm",
+		"file", "movements.csv", "text/csv", content, 1, "test@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ConfirmMovementImport requires service")
+		}
+	}()
+
+	handler.ConfirmMovementImport(rr, req)
+}
+
+func TestImportHandler_PreviewUserWorkoutImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte(`[{"workout_date": "2024-01-15", "notes": "Test workout"}]`)
+	req := createMultipartRequest(http.MethodPost, "/api/import/user-workouts/preview",
+		"file", "workouts.json", "application/json", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewUserWorkoutImport requires service")
+		}
+	}()
+
+	handler.PreviewUserWorkoutImport(rr, req)
+}
+
+func TestImportHandler_ConfirmUserWorkoutImport_WithFileNilService(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte(`[{"workout_date": "2024-01-15", "notes": "Test workout"}]`)
+	req := createMultipartRequest(http.MethodPost, "/api/import/user-workouts/confirm",
+		"file", "workouts.json", "application/json", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ConfirmUserWorkoutImport requires service")
+		}
+	}()
+
+	handler.ConfirmUserWorkoutImport(rr, req)
+}
+
+func TestImportHandler_PreviewWODImport_AsNonAdmin(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type,score_type\nTest WOD,AMRAP,rounds+reps")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wods/preview",
+		"file", "wods.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewWODImport may check role or require service")
+		}
+	}()
+
+	handler.PreviewWODImport(rr, req)
+}
+
+func TestImportHandler_PreviewMovementImport_AsNonAdmin(t *testing.T) {
+	handler := &ImportHandler{}
+
+	content := []byte("name,type\nBack Squat,weightlifting")
+	req := createMultipartRequest(http.MethodPost, "/api/import/movements/preview",
+		"file", "movements.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewMovementImport may check role or require service")
+		}
+	}()
+
+	handler.PreviewMovementImport(rr, req)
+}

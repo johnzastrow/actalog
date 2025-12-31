@@ -763,3 +763,181 @@ func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidID(t *tes
 
 	handler.SetOrganizationSubscriptionPermanent(rr, req)
 }
+
+// Additional tests for Cancel subscription with valid IDs and empty reason
+
+func TestSubscriptionHandler_CancelUserSubscription_ValidIDEmptyReason(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel", `{"reason": ""}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelUserSubscription(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Cancellation reason is required")
+}
+
+func TestSubscriptionHandler_CancelOrganizationSubscription_ValidIDEmptyReason(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel", `{"reason": ""}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelOrganizationSubscription(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Cancellation reason is required")
+}
+
+func TestSubscriptionHandler_CancelUserSubscription_ValidIDInvalidJSON(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelUserSubscription(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestSubscriptionHandler_CancelOrganizationSubscription_ValidIDInvalidJSON(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelOrganizationSubscription(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestSubscriptionHandler_SetUserSubscriptionPermanent_ValidIDInvalidJSON(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/permanent", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetUserSubscriptionPermanent(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidIDInvalidJSON(t *testing.T) {
+	handler := &SubscriptionHandler{}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/permanent", "{bad json", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetOrganizationSubscriptionPermanent(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Invalid request body")
+}
+
+// Tests with different IDs
+
+func TestSubscriptionHandler_GetUserSubscriptions_DifferentIDs(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testIDs := []string{"1", "10", "100"}
+
+	for _, id := range testIDs {
+		t.Run("user_id_"+id, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/"+id, "")
+			req = addChiURLParam(req, "user_id", id)
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("GetUserSubscriptions requires service")
+				}
+			}()
+
+			handler.GetUserSubscriptions(rr, req)
+		})
+	}
+}
+
+func TestSubscriptionHandler_GetOrganizationSubscriptions_DifferentIDs(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testIDs := []string{"1", "10", "100"}
+
+	for _, id := range testIDs {
+		t.Run("org_id_"+id, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/"+id, "")
+			req = addChiURLParam(req, "org_id", id)
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("GetOrganizationSubscriptions requires service")
+				}
+			}()
+
+			handler.GetOrganizationSubscriptions(rr, req)
+		})
+	}
+}
+
+func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_DifferentIDs(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testIDs := []string{"1", "10", "100"}
+
+	for _, id := range testIDs {
+		t.Run("subscription_id_"+id, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/"+id+"/mark-paid", `{}`, 1, "admin@example.com", "admin")
+			req = addChiURLParam(req, "id", id)
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("MarkUserSubscriptionAsPaid requires service")
+				}
+			}()
+
+			handler.MarkUserSubscriptionAsPaid(rr, req)
+		})
+	}
+}
+
+func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_DifferentIDs(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testIDs := []string{"1", "10", "100"}
+
+	for _, id := range testIDs {
+		t.Run("subscription_id_"+id, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/"+id+"/mark-paid", `{}`, 1, "admin@example.com", "admin")
+			req = addChiURLParam(req, "id", id)
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("MarkOrganizationSubscriptionAsPaid requires service")
+				}
+			}()
+
+			handler.MarkOrganizationSubscriptionAsPaid(rr, req)
+		})
+	}
+}

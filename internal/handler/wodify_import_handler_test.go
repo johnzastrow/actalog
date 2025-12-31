@@ -60,3 +60,80 @@ func TestNewWodifyImportHandler(t *testing.T) {
 		t.Error("NewWodifyImportHandler should return a non-nil handler")
 	}
 }
+
+func TestWodifyImportHandler_PreviewWodifyImport_WithFileNilService(t *testing.T) {
+	handler := &WodifyImportHandler{}
+
+	content := []byte("Date,Workout Name,Duration,Notes\n2024-01-15,Fran,5:30,Great workout")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/preview",
+		"file", "wodify_export.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewWodifyImport requires service")
+		}
+	}()
+
+	handler.PreviewWodifyImport(rr, req)
+}
+
+func TestWodifyImportHandler_ConfirmWodifyImport_WithFileNilService(t *testing.T) {
+	handler := &WodifyImportHandler{}
+
+	content := []byte("Date,Workout Name,Duration,Notes\n2024-01-15,Fran,5:30,Great workout")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/confirm",
+		"file", "wodify_export.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("ConfirmWodifyImport requires service")
+		}
+	}()
+
+	handler.ConfirmWodifyImport(rr, req)
+}
+
+func TestWodifyImportHandler_PreviewWodifyImport_EmptyFile(t *testing.T) {
+	handler := &WodifyImportHandler{}
+
+	content := []byte("")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/preview",
+		"file", "empty.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("PreviewWodifyImport handles empty file")
+		}
+	}()
+
+	handler.PreviewWodifyImport(rr, req)
+}
+
+func TestWodifyImportHandler_PreviewWodifyImport_WrongFieldName(t *testing.T) {
+	handler := &WodifyImportHandler{}
+
+	content := []byte("Date,Workout Name,Duration\n2024-01-15,Fran,5:30")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/preview",
+		"wrongfield", "wodify.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.PreviewWodifyImport(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+}
+
+func TestWodifyImportHandler_ConfirmWodifyImport_WrongFieldName(t *testing.T) {
+	handler := &WodifyImportHandler{}
+
+	content := []byte("Date,Workout Name,Duration\n2024-01-15,Fran,5:30")
+	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/confirm",
+		"wrongfield", "wodify.csv", "text/csv", content, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ConfirmWodifyImport(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+}

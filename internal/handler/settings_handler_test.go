@@ -83,3 +83,61 @@ func TestSettingsHandler_UpdateSettings_NilService(t *testing.T) {
 
 	handler.UpdateSettings(rr, req)
 }
+
+// Tests with mock service
+
+func TestSettingsHandler_GetSettings_Success(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.GetSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Should contain default settings fields
+	assertBodyContains(t, rr, "theme")
+}
+
+func TestSettingsHandler_UpdateSettings_Success(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	body := `{"theme": "dark", "weight_unit": "kg", "distance_unit": "km", "data_export_format": "CSV", "notification_preferences": "{}"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "dark")
+}
+
+func TestSettingsHandler_UpdateSettings_EmptyJSON(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	body := `{}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSettingsHandler_GetSettings_CreatesDefaults(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	// First call should create default settings
+	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 2, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "light") // default theme
+	assertBodyContains(t, rr, "lbs")   // default weight unit
+}

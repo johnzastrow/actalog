@@ -113,10 +113,10 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] System restore supports merge/skip modes with natural key matching
   - [x] API returns detailed results (records created, updated, skipped)
 - [x] `[HIGH]` **Check for missing indexes** - 83 indexes defined in migrations (foreign keys and commonly queried fields covered)
-- [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
-- [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
-- [ ] `[HIGH]` **Error Handling Consistency** - ensure all handlers and services have consistent error handling and return appropriate HTTP status codes
-- [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
+- [x] `[HIGH]` **Audit Log Enhancements** - Added 17+ helper methods for comprehensive audit coverage (logout, token refresh, profile updates, user deletion, organization CRUD, subscription lifecycle)
+- [x] `[HIGH]` **Database Query Optimization** - Added audit_logs indexes (migration 0.17.0), optimized GetUsageStats (3→1 query), GetActiveUsersThisMonth (3→2 queries), ListByUserWithDetails N+1 fix (6N+1→5 queries)
+- [x] `[HIGH]` **Error Handling Consistency** - Centralized error handling in internal/handler/errors.go with HTTPError type and 30+ service error mappings
+- [x] `[HIGH]` **Structured Logging** - Added JSON format support to pkg/logger with InfoWithFields, ErrorWithFields, and FieldLogger chaining
 - [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
 - [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
@@ -505,9 +505,9 @@ Items to address when time permits:
 
 - [ ] Refactor large view components (DashboardView, PerformanceView) into smaller sub-components
 - [ ] Add comprehensive API documentation (OpenAPI/Swagger)
-- [ ] Improve error handling consistency across handlers
-- [ ] Add structured logging throughout the codebase
-- [ ] Review and optimize database queries with EXPLAIN
+- [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
+- [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
+- [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
 
 ---
 

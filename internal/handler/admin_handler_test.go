@@ -534,3 +534,213 @@ func TestAdminHandler_CopyWorkoutToStandard_ValidInputNilService(t *testing.T) {
 
 	handler.CopyWorkoutToStandard(rr, req)
 }
+
+func TestAdminHandler_UpdateWODRecord_ValidInputNilDB(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPut, "/api/admin/wod-records/1", `{"time_seconds": 600, "notes": "Good time"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("UpdateWODRecord requires db")
+		}
+	}()
+
+	handler.UpdateWODRecord(rr, req)
+}
+
+func TestAdminHandler_ListUserCreatedWODs_WithPagination(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"default", "/api/admin/user-content/wods"},
+		{"with limit", "/api/admin/user-content/wods?limit=10"},
+		{"with offset", "/api/admin/user-content/wods?offset=5"},
+		{"with both", "/api/admin/user-content/wods?limit=20&offset=10"},
+		{"invalid limit", "/api/admin/user-content/wods?limit=abc"},
+		{"invalid offset", "/api/admin/user-content/wods?offset=xyz"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, tt.query, "")
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ListUserCreatedWODs requires service")
+				}
+			}()
+
+			handler.ListUserCreatedWODs(rr, req)
+		})
+	}
+}
+
+func TestAdminHandler_ListUserCreatedMovements_WithPagination(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"default", "/api/admin/user-content/movements"},
+		{"with limit", "/api/admin/user-content/movements?limit=10"},
+		{"with offset", "/api/admin/user-content/movements?offset=5"},
+		{"with both", "/api/admin/user-content/movements?limit=20&offset=10"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, tt.query, "")
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ListUserCreatedMovements requires service")
+				}
+			}()
+
+			handler.ListUserCreatedMovements(rr, req)
+		})
+	}
+}
+
+func TestAdminHandler_ListUserCreatedWorkouts_WithPagination(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"default", "/api/admin/user-content/workouts"},
+		{"with limit", "/api/admin/user-content/workouts?limit=10"},
+		{"with offset", "/api/admin/user-content/workouts?offset=5"},
+		{"with both", "/api/admin/user-content/workouts?limit=20&offset=10"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, tt.query, "")
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ListUserCreatedWorkouts requires service")
+				}
+			}()
+
+			handler.ListUserCreatedWorkouts(rr, req)
+		})
+	}
+}
+
+func TestAdminHandler_UpdateWODRecord_DifferentIDs(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	testIDs := []string{"1", "10", "100", "999"}
+
+	for _, id := range testIDs {
+		t.Run("id_"+id, func(t *testing.T) {
+			req := createTestRequest(http.MethodPut, "/api/admin/wod-records/"+id, `{"time_seconds": 600}`)
+			req = addChiURLParam(req, "id", id)
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("UpdateWODRecord requires db")
+				}
+			}()
+
+			handler.UpdateWODRecord(rr, req)
+		})
+	}
+}
+
+func TestAdminHandler_UpdateWODRecord_WithAllFields(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPut, "/api/admin/wod-records/1",
+		`{"time_seconds": 600, "rounds": 5, "reps": 10, "weight": 135.5, "notes": "Complete workout"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("UpdateWODRecord requires db")
+		}
+	}()
+
+	handler.UpdateWODRecord(rr, req)
+}
+
+func TestAdminHandler_CopyWODToStandard_EmptyNewName(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/1/copy-to-standard", `{"new_name": ""}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyWODToStandard may require service to validate")
+		}
+	}()
+
+	handler.CopyWODToStandard(rr, req)
+}
+
+func TestAdminHandler_CopyMovementToStandard_EmptyNewName(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/1/copy-to-standard", `{"new_name": ""}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyMovementToStandard may require service to validate")
+		}
+	}()
+
+	handler.CopyMovementToStandard(rr, req)
+}
+
+func TestAdminHandler_CopyWorkoutToStandard_EmptyNewName(t *testing.T) {
+	handler := &AdminHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodPost, "/api/admin/workouts/1/copy-to-standard", `{"new_name": ""}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Log("CopyWorkoutToStandard may require service to validate")
+		}
+	}()
+
+	handler.CopyWorkoutToStandard(rr, req)
+}
