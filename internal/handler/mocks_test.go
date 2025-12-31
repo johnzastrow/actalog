@@ -1904,3 +1904,158 @@ func createTestNotificationLikeService() *service.NotificationLikeService {
 	notificationRepo := NewMockNotificationRepository()
 	return service.NewNotificationLikeService(likeRepo, notificationRepo)
 }
+
+// MockEmailLogRepository is a mock implementation of EmailLogRepository
+type MockEmailLogRepository struct {
+	logs          []*domain.EmailLog
+	shouldError   bool
+	errorToReturn error
+}
+
+func NewMockEmailLogRepository() *MockEmailLogRepository {
+	now := time.Now()
+	userID := int64(1)
+	userEmail := "admin@example.com"
+	errMsg := "SMTP connection failed"
+	return &MockEmailLogRepository{
+		logs: []*domain.EmailLog{
+			{
+				ID:              1,
+				RecipientEmail:  "test@example.com",
+				EmailType:       domain.EmailTypeTest,
+				Subject:         "ActaLog Test Email",
+				Success:         true,
+				SentByUserID:    &userID,
+				CreatedAt:       now,
+				SentByUserEmail: &userEmail,
+			},
+			{
+				ID:              2,
+				RecipientEmail:  "user@example.com",
+				EmailType:       domain.EmailTypePasswordReset,
+				Subject:         "Password Reset Request",
+				Success:         true,
+				CreatedAt:       now.Add(-time.Hour),
+				SentByUserEmail: nil,
+			},
+			{
+				ID:              3,
+				RecipientEmail:  "failed@example.com",
+				EmailType:       domain.EmailTypeTest,
+				Subject:         "ActaLog Test Email",
+				Success:         false,
+				ErrorMessage:    &errMsg,
+				SentByUserID:    &userID,
+				CreatedAt:       now.Add(-2 * time.Hour),
+				SentByUserEmail: &userEmail,
+			},
+		},
+	}
+}
+
+func (m *MockEmailLogRepository) SetError(err error) {
+	m.shouldError = true
+	m.errorToReturn = err
+}
+
+func (m *MockEmailLogRepository) ClearError() {
+	m.shouldError = false
+	m.errorToReturn = nil
+}
+
+func (m *MockEmailLogRepository) Create(log *domain.EmailLog) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	log.ID = int64(len(m.logs) + 1)
+	m.logs = append(m.logs, log)
+	return nil
+}
+
+func (m *MockEmailLogRepository) GetByID(id int64) (*domain.EmailLog, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, log := range m.logs {
+		if log.ID == id {
+			return log, nil
+		}
+	}
+	return nil, ErrMockNotFound
+}
+
+func (m *MockEmailLogRepository) List(filters domain.EmailLogFilters, limit, offset int) ([]*domain.EmailLog, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+
+	var result []*domain.EmailLog
+	for _, log := range m.logs {
+		// Apply filters
+		if filters.EmailType != nil && log.EmailType != *filters.EmailType {
+			continue
+		}
+		if filters.Success != nil && log.Success != *filters.Success {
+			continue
+		}
+		if filters.RecipientEmail != nil && log.RecipientEmail != *filters.RecipientEmail {
+			continue
+		}
+		result = append(result, log)
+	}
+
+	// Apply pagination
+	if offset >= len(result) {
+		return []*domain.EmailLog{}, nil
+	}
+	result = result[offset:]
+	if limit > 0 && len(result) > limit {
+		result = result[:limit]
+	}
+	return result, nil
+}
+
+func (m *MockEmailLogRepository) Count(filters domain.EmailLogFilters) (int, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+
+	count := 0
+	for _, log := range m.logs {
+		// Apply filters
+		if filters.EmailType != nil && log.EmailType != *filters.EmailType {
+			continue
+		}
+		if filters.Success != nil && log.Success != *filters.Success {
+			continue
+		}
+		if filters.RecipientEmail != nil && log.RecipientEmail != *filters.RecipientEmail {
+			continue
+		}
+		count++
+	}
+	return count, nil
+}
+
+func (m *MockEmailLogRepository) DeleteOlderThan(before time.Time) (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	deleted := int64(0)
+	var remaining []*domain.EmailLog
+	for _, log := range m.logs {
+		if log.CreatedAt.Before(before) {
+			deleted++
+		} else {
+			remaining = append(remaining, log)
+		}
+	}
+	m.logs = remaining
+	return deleted, nil
+}
+
+// createTestEmailLogService creates an EmailLogService with mock repository
+func createTestEmailLogService() *service.EmailLogService {
+	emailLogRepo := NewMockEmailLogRepository()
+	return service.NewEmailLogService(emailLogRepo)
+}
