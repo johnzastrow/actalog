@@ -686,3 +686,424 @@ func TestFieldLogger_AllLevels(t *testing.T) {
 		}
 	}
 }
+
+func TestLogger_RotateIfNeeded_NoFile(t *testing.T) {
+	// Logger without file logging should not error on rotation
+	cfg := Config{
+		Level:      "info",
+		EnableFile: false,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer l.Close()
+
+	// rotateIfNeeded should return nil when no file is configured
+	if err := l.rotateIfNeeded(); err != nil {
+		t.Errorf("rotateIfNeeded() error = %v, want nil", err)
+	}
+}
+
+func TestLogger_RotateIfNeeded_UnderSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		EnableFile: true,
+		FilePath:   logPath,
+		MaxSizeMB:  1, // 1 MB
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer l.Close()
+
+	// Write a small amount of data
+	l.Info("small message")
+
+	// rotateIfNeeded should not rotate (file is under max size)
+	if err := l.rotateIfNeeded(); err != nil {
+		t.Errorf("rotateIfNeeded() error = %v", err)
+	}
+
+	// Verify no backup file was created
+	matches, _ := filepath.Glob(filepath.Join(tmpDir, "test.log.*"))
+	if len(matches) > 0 {
+		t.Errorf("No backup files should exist, found %d", len(matches))
+	}
+}
+
+func TestLogger_RotateIfNeeded_ExceedsSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	// Set a very small max size to trigger rotation easily
+	cfg := Config{
+		Level:      "info",
+		EnableFile: true,
+		FilePath:   logPath,
+		MaxSizeMB:  0, // 0 MB means any write triggers rotation (in bytes: 0)
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer l.Close()
+
+	// Write some data to the file first
+	l.Info("first message")
+
+	// Now set maxSize to something very small to trigger rotation
+	l.maxSize = 10 // 10 bytes
+
+	// Write more to exceed the size
+	l.Info("another message that will exceed the size limit")
+
+	// Force a rotation check
+	if err := l.rotateIfNeeded(); err != nil {
+		t.Errorf("rotateIfNeeded() error = %v", err)
+	}
+
+	// Give goroutine time to run cleanup
+	// Not strictly necessary but helps ensure cleanup runs
+	// The backup should exist
+	matches, _ := filepath.Glob(filepath.Join(tmpDir, "test.log.*"))
+	if len(matches) == 0 {
+		t.Error("Expected backup file to be created after rotation")
+	}
+
+	// Original file should be recreated (empty or with new content)
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		t.Error("Log file should be recreated after rotation")
+	}
+}
+
+func TestLogger_CleanupOldBackups_KeepsRecent(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	// Create the main log file
+	if err := os.WriteFile(logPath, []byte("main log"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create 3 backup files (should all be kept)
+	for i := 1; i <= 3; i++ {
+		backupPath := filepath.Join(tmpDir, "test.log."+strings.Repeat("0", i))
+		if err := os.WriteFile(backupPath, []byte("backup"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	l := &Logger{
+		logPath: logPath,
+	}
+
+	l.cleanupOldBackups()
+
+	// All 3 backups should still exist
+	matches, _ := filepath.Glob(filepath.Join(tmpDir, "test.log.*"))
+	if len(matches) != 3 {
+		t.Errorf("Expected 3 backup files, found %d", len(matches))
+	}
+}
+
+func TestLogger_CleanupOldBackups_RemovesOldest(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	// Create the main log file
+	if err := os.WriteFile(logPath, []byte("main log"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create 5 backup files with different timestamps
+	backups := []string{
+		"test.log.20240101-100000", // oldest
+		"test.log.20240102-100000",
+		"test.log.20240103-100000",
+		"test.log.20240104-100000",
+		"test.log.20240105-100000", // newest
+	}
+
+	for _, backup := range backups {
+		backupPath := filepath.Join(tmpDir, backup)
+		if err := os.WriteFile(backupPath, []byte("backup content"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	l := &Logger{
+		logPath: logPath,
+	}
+
+	l.cleanupOldBackups()
+
+	// Should have only 3 backup files remaining
+	matches, _ := filepath.Glob(filepath.Join(tmpDir, "test.log.*"))
+	if len(matches) != 3 {
+		t.Errorf("Expected 3 backup files after cleanup, found %d", len(matches))
+	}
+}
+
+func TestLogger_CleanupOldBackups_NoBackups(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	// Create only the main log file (no backups)
+	if err := os.WriteFile(logPath, []byte("main log"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	l := &Logger{
+		logPath: logPath,
+	}
+
+	// Should not panic or error
+	l.cleanupOldBackups()
+
+	// Main log should still exist
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		t.Error("Main log file should still exist")
+	}
+}
+
+func TestLogger_CleanupOldBackups_InvalidPattern(t *testing.T) {
+	l := &Logger{
+		logPath: "/nonexistent/path/test.log",
+	}
+
+	// Should not panic when directory doesn't exist
+	l.cleanupOldBackups()
+}
+
+func TestLogger_FormatJSON_WithComplexFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	// Log with complex field types
+	fields := Fields{
+		"string":  "value",
+		"int":     123,
+		"float":   3.14,
+		"bool":    true,
+		"nested":  map[string]interface{}{"key": "val"},
+		"array":   []int{1, 2, 3},
+	}
+	l.InfoWithFields(fields, "complex fields test")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := strings.TrimSpace(string(content))
+
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(logLine), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v\nGot: %s", err, logLine)
+	}
+
+	// Verify fields are preserved
+	if entry.Fields["string"] != "value" {
+		t.Errorf("string field = %v, want 'value'", entry.Fields["string"])
+	}
+	if entry.Fields["bool"] != true {
+		t.Errorf("bool field = %v, want true", entry.Fields["bool"])
+	}
+}
+
+func TestLogger_New_CreatesDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+	// Create a path with nested directories that don't exist
+	logPath := filepath.Join(tmpDir, "subdir1", "subdir2", "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() should create directories: %v", err)
+	}
+	defer l.Close()
+
+	// Verify the directory was created
+	dir := filepath.Dir(logPath)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		t.Error("Directory should have been created")
+	}
+
+	// Verify the file was created
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		t.Error("Log file should have been created")
+	}
+}
+
+func TestLogger_New_DefaultMaxSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		EnableFile: true,
+		FilePath:   logPath,
+		// MaxSizeMB not specified, should default to 100MB
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer l.Close()
+
+	// Default max size is 100MB when file logging is enabled
+	expectedSize := int64(100 * 1024 * 1024)
+	if l.maxSize != expectedSize {
+		t.Errorf("maxSize = %d, want %d", l.maxSize, expectedSize)
+	}
+}
+
+func TestFieldLogger_With(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	// Create a FieldLogger and chain With
+	fl1 := l.With(Fields{"a": 1})
+	fl2 := fl1.With(Fields{"b": 2})
+	fl3 := fl2.With(Fields{"c": 3})
+
+	fl3.Info("chained fields")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(strings.TrimSpace(string(content))), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v", err)
+	}
+
+	// All chained fields should be present
+	if entry.Fields["a"] != float64(1) {
+		t.Errorf("Fields[a] = %v, want 1", entry.Fields["a"])
+	}
+	if entry.Fields["b"] != float64(2) {
+		t.Errorf("Fields[b] = %v, want 2", entry.Fields["b"])
+	}
+	if entry.Fields["c"] != float64(3) {
+		t.Errorf("Fields[c] = %v, want 3", entry.Fields["c"])
+	}
+}
+
+func TestLogger_FormatText_WithFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "text",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	// Log with fields containing special characters
+	fields := Fields{
+		"path":  "/api/test?q=hello",
+		"empty": "",
+	}
+	l.InfoWithFields(fields, "test with special chars")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	logLine := string(content)
+
+	// Should contain the message
+	if !strings.Contains(logLine, "test with special chars") {
+		t.Error("Log line should contain the message")
+	}
+
+	// Should contain field with special chars
+	if !strings.Contains(logLine, "path=/api/test?q=hello") {
+		t.Error("Log line should contain path field")
+	}
+}
+
+func TestLogger_LogWithFields_NilFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "test.log")
+
+	cfg := Config{
+		Level:      "info",
+		Format:     "json",
+		EnableFile: true,
+		FilePath:   logPath,
+	}
+
+	l, err := New(cfg)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	// Log with nil fields should not panic
+	l.InfoWithFields(nil, "no fields message")
+	l.Close()
+
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("Failed to read log file: %v", err)
+	}
+
+	var entry LogEntry
+	if err := json.Unmarshal([]byte(strings.TrimSpace(string(content))), &entry); err != nil {
+		t.Fatalf("Log line should be valid JSON: %v", err)
+	}
+
+	if entry.Message != "no fields message" {
+		t.Errorf("Message = %q, want %q", entry.Message, "no fields message")
+	}
+}
