@@ -168,5 +168,23 @@ func getTestAdditionalSchema() string {
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_status ON organization_subscriptions(status);
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+
+	-- Email logs table (from migration v0.18.0)
+	CREATE TABLE IF NOT EXISTS email_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		recipient_email TEXT NOT NULL,
+		email_type TEXT NOT NULL,
+		subject TEXT NOT NULL,
+		success INTEGER NOT NULL DEFAULT 0,
+		error_message TEXT,
+		debug_info TEXT,
+		sent_by_user_id INTEGER,
+		created_at DATETIME NOT NULL,
+		FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_type ON email_logs(email_type);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient_email);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_success ON email_logs(success);
 	`
 }
