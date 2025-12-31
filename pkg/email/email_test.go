@@ -2,10 +2,12 @@ package email
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestExtractEmailAddress(t *testing.T) {
@@ -709,5 +711,647 @@ func TestService_Logger(t *testing.T) {
 	logOutput := logBuf.String()
 	if !strings.HasPrefix(logOutput, "[EMAIL]") {
 		t.Error("Log output should use provided logger prefix")
+	}
+}
+
+// TestService_GetConfig tests GetConfig returns correct configuration info
+func TestService_GetConfig(t *testing.T) {
+	logger := log.New(os.Stdout, "", 0)
+
+	tests := []struct {
+		name            string
+		config          Config
+		expectedTLSMode string
+		expectedEnabled bool
+	}{
+		{
+			name: "STARTTLS port 587",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     587,
+				SMTPUser:     "user@example.com",
+				SMTPPassword: "secret",
+				FromAddress:  "noreply@example.com",
+				FromName:     "ActaLog",
+			},
+			expectedTLSMode: "STARTTLS",
+			expectedEnabled: true,
+		},
+		{
+			name: "TLS port 465",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     465,
+				SMTPUser:     "user@example.com",
+				SMTPPassword: "secret",
+				FromAddress:  "noreply@example.com",
+				FromName:     "Test",
+			},
+			expectedTLSMode: "TLS",
+			expectedEnabled: true,
+		},
+		{
+			name: "Plain port 25",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     25,
+				SMTPUser:     "user@example.com",
+				SMTPPassword: "secret",
+				FromAddress:  "noreply@example.com",
+			},
+			expectedTLSMode: "Plain",
+			expectedEnabled: true,
+		},
+		{
+			name: "Non-standard port defaults to STARTTLS",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     2525,
+				SMTPUser:     "user@example.com",
+				SMTPPassword: "secret",
+				FromAddress:  "noreply@example.com",
+			},
+			expectedTLSMode: "STARTTLS",
+			expectedEnabled: true,
+		},
+		{
+			name: "Empty host means disabled",
+			config: Config{
+				SMTPHost: "",
+				SMTPPort: 587,
+			},
+			expectedTLSMode: "STARTTLS",
+			expectedEnabled: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := NewService(tt.config, logger)
+			info := svc.GetConfig()
+
+			if info.TLSMode != tt.expectedTLSMode {
+				t.Errorf("GetConfig().TLSMode = %q, want %q", info.TLSMode, tt.expectedTLSMode)
+			}
+
+			if info.Enabled != tt.expectedEnabled {
+				t.Errorf("GetConfig().Enabled = %v, want %v", info.Enabled, tt.expectedEnabled)
+			}
+
+			if info.SMTPHost != tt.config.SMTPHost {
+				t.Errorf("GetConfig().SMTPHost = %q, want %q", info.SMTPHost, tt.config.SMTPHost)
+			}
+
+			if info.SMTPPort != tt.config.SMTPPort {
+				t.Errorf("GetConfig().SMTPPort = %d, want %d", info.SMTPPort, tt.config.SMTPPort)
+			}
+
+			if info.SMTPUser != tt.config.SMTPUser {
+				t.Errorf("GetConfig().SMTPUser = %q, want %q", info.SMTPUser, tt.config.SMTPUser)
+			}
+
+			if info.FromAddress != tt.config.FromAddress {
+				t.Errorf("GetConfig().FromAddress = %q, want %q", info.FromAddress, tt.config.FromAddress)
+			}
+
+			if info.FromName != tt.config.FromName {
+				t.Errorf("GetConfig().FromName = %q, want %q", info.FromName, tt.config.FromName)
+			}
+		})
+	}
+}
+
+// TestService_SendWithDebug_ConnectionError tests SendWithDebug with connection failure
+func TestService_SendWithDebug_ConnectionError(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	tests := []struct {
+		name        string
+		port        int
+		expectedTLS string
+	}{
+		{
+			name:        "STARTTLS port 587",
+			port:        587,
+			expectedTLS: "STARTTLS",
+		},
+		{
+			name:        "TLS port 465",
+			port:        465,
+			expectedTLS: "TLS",
+		},
+		{
+			name:        "Plain port 25",
+			port:        25,
+			expectedTLS: "Plain",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logBuf.Reset()
+
+			cfg := Config{
+				SMTPHost:     "localhost",
+				SMTPPort:     tt.port,
+				SMTPUser:     "test",
+				SMTPPassword: "test",
+				FromAddress:  "noreply@example.com",
+				FromName:     "Test",
+			}
+
+			svc := NewService(cfg, logger)
+
+			msg := Message{
+				To:      []string{"recipient@example.com"},
+				Subject: "Test Subject",
+				Body:    "Test body content",
+				IsHTML:  false,
+			}
+
+			result := svc.SendWithDebug(msg)
+
+			// Should fail due to connection error
+			if result.Success {
+				t.Error("SendWithDebug() should fail when SMTP is unreachable")
+			}
+
+			if result.Error == nil {
+				t.Error("SendWithDebug() should return an error")
+			}
+
+			if result.DebugInfo == nil {
+				t.Fatal("SendWithDebug() should return DebugInfo even on failure")
+			}
+
+			// Check debug info
+			if result.DebugInfo.ConnectionHost != "localhost" {
+				t.Errorf("DebugInfo.ConnectionHost = %q, want localhost", result.DebugInfo.ConnectionHost)
+			}
+
+			if result.DebugInfo.ConnectionPort != tt.port {
+				t.Errorf("DebugInfo.ConnectionPort = %d, want %d", result.DebugInfo.ConnectionPort, tt.port)
+			}
+
+			if result.DebugInfo.ConnectionTLS != tt.expectedTLS {
+				t.Errorf("DebugInfo.ConnectionTLS = %q, want %q", result.DebugInfo.ConnectionTLS, tt.expectedTLS)
+			}
+
+			if result.DebugInfo.Success {
+				t.Error("DebugInfo.Success should be false on failure")
+			}
+
+			if result.DebugInfo.FinalError == "" {
+				t.Error("DebugInfo.FinalError should contain error message")
+			}
+
+			if result.DebugInfo.ConnectionError == "" {
+				t.Error("DebugInfo.ConnectionError should contain error message")
+			}
+
+			if len(result.DebugInfo.SMTPResponses) == 0 {
+				t.Error("DebugInfo.SMTPResponses should contain entries")
+			}
+
+			// Check timing info
+			if result.DebugInfo.StartTime.IsZero() {
+				t.Error("DebugInfo.StartTime should be set")
+			}
+
+			if result.DebugInfo.EndTime.IsZero() {
+				t.Error("DebugInfo.EndTime should be set")
+			}
+
+			if result.DebugInfo.TotalDuration == 0 {
+				t.Error("DebugInfo.TotalDuration should be non-zero")
+			}
+
+			// Check logging
+			logOutput := logBuf.String()
+			if !strings.Contains(logOutput, "SendWithDebug") {
+				t.Error("Should log SendWithDebug attempt")
+			}
+		})
+	}
+}
+
+// TestService_SendWithDebug_HTMLMessage tests SendWithDebug with HTML content
+func TestService_SendWithDebug_HTMLMessage(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     587,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+		FromName:     "Test App",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: "HTML Test",
+		Body:    "<html><body><h1>Hello</h1></body></html>",
+		IsHTML:  true,
+	}
+
+	result := svc.SendWithDebug(msg)
+
+	// Will fail due to connection, but should process correctly
+	if result.Success {
+		t.Error("SendWithDebug() should fail when SMTP is unreachable")
+	}
+
+	if result.DebugInfo == nil {
+		t.Fatal("DebugInfo should not be nil")
+	}
+
+	if result.DebugInfo.AuthMethod != "PLAIN" {
+		t.Errorf("DebugInfo.AuthMethod = %q, want PLAIN", result.DebugInfo.AuthMethod)
+	}
+}
+
+// TestService_SendWithDebug_FromNameFormatting tests from address formatting in SendWithDebug
+func TestService_SendWithDebug_FromNameFormatting(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	tests := []struct {
+		name        string
+		fromAddress string
+		fromName    string
+	}{
+		{
+			name:        "with from name",
+			fromAddress: "noreply@example.com",
+			fromName:    "ActaLog",
+		},
+		{
+			name:        "without from name",
+			fromAddress: "noreply@example.com",
+			fromName:    "",
+		},
+		{
+			name:        "from address already has display name",
+			fromAddress: "ActaLog <noreply@example.com>",
+			fromName:    "Should Be Ignored",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logBuf.Reset()
+
+			cfg := Config{
+				SMTPHost:     "localhost",
+				SMTPPort:     587,
+				SMTPUser:     "test",
+				SMTPPassword: "test",
+				FromAddress:  tt.fromAddress,
+				FromName:     tt.fromName,
+			}
+
+			svc := NewService(cfg, logger)
+			msg := Message{
+				To:      []string{"test@example.com"},
+				Subject: "Test",
+				Body:    "Body",
+				IsHTML:  false,
+			}
+
+			// Will fail to connect, but exercises the from address formatting code
+			result := svc.SendWithDebug(msg)
+			if result.DebugInfo == nil {
+				t.Error("DebugInfo should not be nil")
+			}
+		})
+	}
+}
+
+// TestService_SendTestEmail_ConnectionError tests SendTestEmail with connection failure
+func TestService_SendTestEmail_ConnectionError(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	tests := []struct {
+		name string
+		port int
+	}{
+		{"port 587 STARTTLS", 587},
+		{"port 465 TLS", 465},
+		{"port 25 Plain", 25},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logBuf.Reset()
+
+			cfg := Config{
+				SMTPHost:     "localhost",
+				SMTPPort:     tt.port,
+				SMTPUser:     "test",
+				SMTPPassword: "test",
+				FromAddress:  "noreply@example.com",
+				FromName:     "ActaLog",
+			}
+
+			svc := NewService(cfg, logger)
+
+			result := svc.SendTestEmail("recipient@example.com")
+
+			// Should fail due to connection error
+			if result.Success {
+				t.Error("SendTestEmail() should fail when SMTP is unreachable")
+			}
+
+			if result.Error == nil {
+				t.Error("SendTestEmail() should return an error")
+			}
+
+			if result.DebugInfo == nil {
+				t.Fatal("SendTestEmail() should return DebugInfo even on failure")
+			}
+
+			// Verify logging
+			logOutput := logBuf.String()
+			if !strings.Contains(logOutput, "Preparing test email") {
+				t.Error("Should log test email preparation")
+			}
+			if !strings.Contains(logOutput, "recipient@example.com") {
+				t.Error("Should log recipient email")
+			}
+		})
+	}
+}
+
+// TestService_sendWithTLSDebug_ConnectionError tests TLS debug path
+func TestService_sendWithTLSDebug_ConnectionError(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     465,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	debug := &SMTPDebugInfo{
+		SMTPResponses: []string{},
+	}
+
+	err := svc.sendWithTLSDebug("localhost:55555", "from@example.com", []string{"to@example.com"}, []byte("test message"), debug)
+
+	if err == nil {
+		t.Error("sendWithTLSDebug() should return error when connection fails")
+	}
+
+	if !strings.Contains(err.Error(), "TLS connection failed") {
+		t.Errorf("Error should mention TLS connection failure, got: %v", err)
+	}
+
+	if debug.ConnectionError == "" {
+		t.Error("debug.ConnectionError should be set")
+	}
+
+	if debug.AuthMethod != "PLAIN" {
+		t.Errorf("debug.AuthMethod = %q, want PLAIN", debug.AuthMethod)
+	}
+
+	if len(debug.SMTPResponses) == 0 {
+		t.Error("debug.SMTPResponses should contain error entry")
+	}
+
+	// Verify logging
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "TLS: Connecting") {
+		t.Error("Should log TLS connection attempt")
+	}
+}
+
+// TestService_sendWithSTARTTLSDebug_ConnectionError tests STARTTLS debug path
+func TestService_sendWithSTARTTLSDebug_ConnectionError(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     587,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	debug := &SMTPDebugInfo{
+		SMTPResponses: []string{},
+	}
+
+	err := svc.sendWithSTARTTLSDebug("localhost:55556", "from@example.com", []string{"to@example.com"}, []byte("test message"), debug)
+
+	if err == nil {
+		t.Error("sendWithSTARTTLSDebug() should return error when connection fails")
+	}
+
+	if !strings.Contains(err.Error(), "connection failed") {
+		t.Errorf("Error should mention connection failure, got: %v", err)
+	}
+
+	if debug.ConnectionError == "" {
+		t.Error("debug.ConnectionError should be set")
+	}
+
+	if debug.AuthMethod != "PLAIN" {
+		t.Errorf("debug.AuthMethod = %q, want PLAIN", debug.AuthMethod)
+	}
+
+	if len(debug.SMTPResponses) == 0 {
+		t.Error("debug.SMTPResponses should contain error entry")
+	}
+
+	// Verify logging
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "STARTTLS: Connecting") {
+		t.Error("Should log STARTTLS connection attempt")
+	}
+}
+
+// TestSMTPDebugInfo tests the SMTPDebugInfo struct
+func TestSMTPDebugInfo(t *testing.T) {
+	now := time.Now()
+
+	debug := SMTPDebugInfo{
+		StartTime:       now,
+		EndTime:         now.Add(1 * time.Second),
+		TotalDuration:   1 * time.Second,
+		ConnectionHost:  "smtp.example.com",
+		ConnectionPort:  587,
+		ConnectionTLS:   "STARTTLS",
+		ConnectionTime:  100 * time.Millisecond,
+		ConnectionError: "",
+		AuthMethod:      "PLAIN",
+		AuthTime:        50 * time.Millisecond,
+		AuthError:       "",
+		SendTime:        200 * time.Millisecond,
+		SendError:       "",
+		SMTPResponses:   []string{"220 OK", "250 OK"},
+		Success:         true,
+		FinalError:      "",
+	}
+
+	if debug.ConnectionHost != "smtp.example.com" {
+		t.Errorf("ConnectionHost = %q, want smtp.example.com", debug.ConnectionHost)
+	}
+
+	if debug.ConnectionPort != 587 {
+		t.Errorf("ConnectionPort = %d, want 587", debug.ConnectionPort)
+	}
+
+	if debug.ConnectionTLS != "STARTTLS" {
+		t.Errorf("ConnectionTLS = %q, want STARTTLS", debug.ConnectionTLS)
+	}
+
+	if !debug.Success {
+		t.Error("Success should be true")
+	}
+
+	if len(debug.SMTPResponses) != 2 {
+		t.Errorf("SMTPResponses length = %d, want 2", len(debug.SMTPResponses))
+	}
+}
+
+// TestSendResult tests the SendResult struct
+func TestSendResult(t *testing.T) {
+	// Test successful result
+	successResult := SendResult{
+		Success:   true,
+		Error:     nil,
+		DebugInfo: &SMTPDebugInfo{Success: true},
+	}
+
+	if !successResult.Success {
+		t.Error("Success result should have Success = true")
+	}
+
+	if successResult.Error != nil {
+		t.Error("Success result should have nil Error")
+	}
+
+	if successResult.DebugInfo == nil {
+		t.Error("Success result should have DebugInfo")
+	}
+
+	// Test failure result
+	failResult := SendResult{
+		Success:   false,
+		Error:     fmt.Errorf("connection failed"),
+		DebugInfo: &SMTPDebugInfo{Success: false, FinalError: "connection failed"},
+	}
+
+	if failResult.Success {
+		t.Error("Failure result should have Success = false")
+	}
+
+	if failResult.Error == nil {
+		t.Error("Failure result should have non-nil Error")
+	}
+
+	if failResult.DebugInfo.FinalError != "connection failed" {
+		t.Errorf("FinalError = %q, want 'connection failed'", failResult.DebugInfo.FinalError)
+	}
+}
+
+// TestEmailConfigInfo tests the EmailConfigInfo struct
+func TestEmailConfigInfo(t *testing.T) {
+	info := EmailConfigInfo{
+		SMTPHost:    "smtp.example.com",
+		SMTPPort:    587,
+		SMTPUser:    "user@example.com",
+		FromAddress: "noreply@example.com",
+		FromName:    "ActaLog",
+		Enabled:     true,
+		TLSMode:     "STARTTLS",
+	}
+
+	if info.SMTPHost != "smtp.example.com" {
+		t.Errorf("SMTPHost = %q, want smtp.example.com", info.SMTPHost)
+	}
+
+	if info.SMTPPort != 587 {
+		t.Errorf("SMTPPort = %d, want 587", info.SMTPPort)
+	}
+
+	if !info.Enabled {
+		t.Error("Enabled should be true")
+	}
+
+	if info.TLSMode != "STARTTLS" {
+		t.Errorf("TLSMode = %q, want STARTTLS", info.TLSMode)
+	}
+}
+
+// TestTimeoutConstants tests the timeout constants are defined
+func TestTimeoutConstants(t *testing.T) {
+	if ConnectionTimeout != 10*time.Second {
+		t.Errorf("ConnectionTimeout = %v, want 10s", ConnectionTimeout)
+	}
+
+	if AuthTimeout != 5*time.Second {
+		t.Errorf("AuthTimeout = %v, want 5s", AuthTimeout)
+	}
+
+	if SendTimeout != 30*time.Second {
+		t.Errorf("SendTimeout = %v, want 30s", SendTimeout)
+	}
+
+	if OverallTimeout != 60*time.Second {
+		t.Errorf("OverallTimeout = %v, want 60s", OverallTimeout)
+	}
+}
+
+// TestService_SendWithDebug_MultipleRecipients tests sending to multiple recipients
+func TestService_SendWithDebug_MultipleRecipients(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     587,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To: []string{
+			"user1@example.com",
+			"user2@example.com",
+			"user3@example.com",
+		},
+		Subject: "Group Email",
+		Body:    "Hello everyone!",
+		IsHTML:  false,
+	}
+
+	result := svc.SendWithDebug(msg)
+
+	// Will fail, but should process correctly
+	if result.DebugInfo == nil {
+		t.Fatal("DebugInfo should not be nil")
+	}
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "user1@example.com") {
+		t.Error("Should log first recipient in To list")
 	}
 }
