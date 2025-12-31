@@ -838,7 +838,7 @@ func (m *MockOrganizationRepository) GetByID(id int64) (*domain.Organization, er
 			return org, nil
 		}
 	}
-	return nil, ErrMockNotFound
+	return nil, nil // Not found returns nil, nil per repository pattern
 }
 
 func (m *MockOrganizationRepository) GetByOwner(ownerID int64) (*domain.Organization, error) {
@@ -889,7 +889,7 @@ func (m *MockOrganizationRepository) GetByName(name string) (*domain.Organizatio
 			return org, nil
 		}
 	}
-	return nil, ErrMockNotFound
+	return nil, nil // Not found returns nil, nil per repository pattern
 }
 
 func (m *MockOrganizationRepository) Count() (int64, error) {
