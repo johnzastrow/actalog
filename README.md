@@ -13,53 +13,15 @@ ActaLog is an open-source web application designed for CrossFit/Functional Fitne
 
 ## Screenshots
 
-<!--
-Source - https://stackoverflow.com/a
-Posted by alciregi, modified by the community. See post 'Timeline' for change history
-Retrieved 2025-11-23, License - CC BY-SA 4.0
--->
+See the [primary website](https://johnzastrow.github.io/actalog/index.html)
 
-<p align="center">
-<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="300"><br>
-1. Dashboard with Workout Summary
-</p><br>
-
-<p align="center">
-<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="300"><br>
-2. Quick logging the standard "Annie" benchmark workout
-</p><br>
-
-<p align="center">
-<img title="Annie WOD details" alt="Annie WOD details" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_details.png" width="300"><br>
-3. Annie WOD details
-</p><br>
-
-<p align="center">
-<img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_performance.png" width="300"><br>
-1. Annie performance over time
-</p><br>
-
-<p align="center">
-<img title="Weight performance" alt="Weight performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf1.png" width="300"><br>
-5. Weight performance over time
-</p><br>
-
-<p align="center">
-<img title="Weight performance, cont" alt="Weight performance, cont" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf2.png" width="300"><br>
-6. Weight performance over time, cont. Movements can be lifts or other types such as running or rowing, box jumps, air squats, etc.
-</p><br>
-
-<p align="center">
-<img title="Composite workout templates" alt="Composite workout templates" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/mytemplates.png" width="300"><br>
-7. Workout templates are composite structures that contain a description and zero or more WODS and zero or more movements. Some are supplied as standard in the app, and users can create their own custom templates. Logging a workout against a template records results against all included WODs and movements and they count toward performance tracking. But the workout is only stored once.
-</p><br>
 
 # Videos - be sure to view the full playlist
 
-* [![Overview](https://img.youtube.com/vi/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi/hqdefault.jpg)](https://www.youtube.com/embed/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)
-* [![Registering, Quicklog and User Menus](aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa/hqdefault.jpg)](https://www.youtube.com/embed/aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa)
-* [![Recording custom WODs: can be converted to WODs for all users](Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r/hqdefault.jpg)](https://www.youtube.com/embed/Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r)
-* [![Personal workouts to workouts for all users](IW3manK6iHM?si=qhhh4BiHzcGeHNND/hqdefault.jpg)](https://www.youtube.com/embed/IW3manK6iHM?si=qhhh4BiHzcGeHNND)
+* [Overview](https://www.youtube.com/embed/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)
+* [Registering, Quicklog and User Menus](https://www.youtube.com/embed/aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa)
+* [Recording custom WODs: can be converted to WODs for all users](https://www.youtube.com/embed/Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r)
+* [Personal workouts to workouts for all users](https://www.youtube.com/embed/IW3manK6iHM?si=qhhh4BiHzcGeHNND)
 
 
 ## Roadmap — Next priorities
