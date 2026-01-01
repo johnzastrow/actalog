@@ -2,6 +2,10 @@ package service
 
 import (
 	"database/sql"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -966,6 +970,31 @@ func TestIsTableNotExistsError(t *testing.T) {
 			err:      sql.ErrNoRows, // This won't match, but let's test the function
 			expected: false,
 		},
+		{
+			name:     "SQLite no such table error string",
+			err:      fmt.Errorf("no such table: users"),
+			expected: true,
+		},
+		{
+			name:     "PostgreSQL does not exist error",
+			err:      fmt.Errorf("relation \"users\" does not exist"),
+			expected: true,
+		},
+		{
+			name:     "MySQL error code 1146",
+			err:      fmt.Errorf("Error 1146 (42S02): Table 'db.users' doesn't exist"),
+			expected: true,
+		},
+		{
+			name:     "MySQL doesn't exist pattern",
+			err:      fmt.Errorf("Table 'test.users' doesn't exist"),
+			expected: true,
+		},
+		{
+			name:     "unrelated error",
+			err:      fmt.Errorf("connection refused"),
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -977,3 +1006,764 @@ func TestIsTableNotExistsError(t *testing.T) {
 		})
 	}
 }
+
+// TestNewBackupService tests backup service creation
+func TestNewBackupService(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	userRepo := &mockUserRepo{users: make(map[int64]*domain.User)}
+	auditLogRepo := &mockAuditLogRepo{}
+
+	svc := NewBackupService(db, "sqlite3", "test.db", "/tmp/backups", "/tmp/uploads", userRepo, auditLogRepo)
+
+	if svc == nil {
+		t.Fatal("expected non-nil service")
+	}
+	if svc.db != db {
+		t.Error("db not set correctly")
+	}
+	if svc.dbDriver != "sqlite3" {
+		t.Errorf("expected dbDriver 'sqlite3', got %s", svc.dbDriver)
+	}
+	if svc.dbName != "test.db" {
+		t.Errorf("expected dbName 'test.db', got %s", svc.dbName)
+	}
+	if svc.backupDir != "/tmp/backups" {
+		t.Errorf("expected backupDir '/tmp/backups', got %s", svc.backupDir)
+	}
+	if svc.uploadsDir != "/tmp/uploads" {
+		t.Errorf("expected uploadsDir '/tmp/uploads', got %s", svc.uploadsDir)
+	}
+}
+
+// TestBackupService_ListBackups_EmptyDir tests listing backups from empty directory
+func TestBackupService_ListBackups_EmptyDir(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Create temporary directory
+	tmpDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	svc := &BackupServiceImpl{
+		db:        db,
+		dbDriver:  "sqlite3",
+		backupDir: tmpDir,
+	}
+
+	backups, err := svc.ListBackups()
+	if err != nil {
+		t.Fatalf("ListBackups error: %v", err)
+	}
+	if len(backups) != 0 {
+		t.Errorf("expected 0 backups, got %d", len(backups))
+	}
+}
+
+// TestBackupService_ListBackups_NonExistentDir tests listing backups from non-existent directory
+func TestBackupService_ListBackups_NonExistentDir(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	svc := &BackupServiceImpl{
+		db:        db,
+		dbDriver:  "sqlite3",
+		backupDir: "/nonexistent/path/that/does/not/exist",
+	}
+
+	backups, err := svc.ListBackups()
+	if err != nil {
+		t.Fatalf("ListBackups should return empty list for non-existent dir, got error: %v", err)
+	}
+	if len(backups) != 0 {
+		t.Errorf("expected 0 backups, got %d", len(backups))
+	}
+}
+
+// TestBackupService_DownloadBackup_NotFound tests downloading non-existent backup
+func TestBackupService_DownloadBackup_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tmpDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	svc := &BackupServiceImpl{
+		db:        db,
+		dbDriver:  "sqlite3",
+		backupDir: tmpDir,
+	}
+
+	_, err = svc.DownloadBackup("nonexistent.zip")
+	if err == nil {
+		t.Error("expected error for non-existent backup")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' in error, got: %v", err)
+	}
+}
+
+// TestBackupService_DownloadBackup_Exists tests downloading existing backup
+func TestBackupService_DownloadBackup_Exists(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tmpDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create a test file
+	testFilePath := filepath.Join(tmpDir, "test_backup.zip")
+	if err := os.WriteFile(testFilePath, []byte("test content"), 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:        db,
+		dbDriver:  "sqlite3",
+		backupDir: tmpDir,
+	}
+
+	path, err := svc.DownloadBackup("test_backup.zip")
+	if err != nil {
+		t.Fatalf("DownloadBackup error: %v", err)
+	}
+	if path != testFilePath {
+		t.Errorf("expected path %s, got %s", testFilePath, path)
+	}
+}
+
+// TestBackupService_DeleteBackup_NotFound tests deleting non-existent backup
+func TestBackupService_DeleteBackup_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tmpDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	svc := &BackupServiceImpl{
+		db:           db,
+		dbDriver:     "sqlite3",
+		backupDir:    tmpDir,
+		auditLogRepo: &mockAuditLogRepo{},
+	}
+
+	err = svc.DeleteBackup("nonexistent.zip", 1)
+	if err == nil {
+		t.Error("expected error for non-existent backup")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' in error, got: %v", err)
+	}
+}
+
+// TestBackupService_DeleteBackup_Success tests successful backup deletion
+func TestBackupService_DeleteBackup_Success(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tmpDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create a test file
+	testFilePath := filepath.Join(tmpDir, "test_backup.zip")
+	if err := os.WriteFile(testFilePath, []byte("test content"), 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:           db,
+		dbDriver:     "sqlite3",
+		backupDir:    tmpDir,
+		auditLogRepo: &mockAuditLogRepo{},
+	}
+
+	err = svc.DeleteBackup("test_backup.zip", 1)
+	if err != nil {
+		t.Fatalf("DeleteBackup error: %v", err)
+	}
+
+	// Verify file is deleted
+	if _, err := os.Stat(testFilePath); !os.IsNotExist(err) {
+		t.Error("expected file to be deleted")
+	}
+}
+
+// TestBackupService_RowsToMaps tests SQL rows to maps conversion
+func TestBackupService_RowsToMaps(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	_, err := db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test1@example.com', 'hash1', 'Test User 1', 'user', datetime('now'), datetime('now')),
+		       ('test2@example.com', 'hash2', 'Test User 2', 'admin', datetime('now'), datetime('now'))
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test users: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "sqlite3",
+	}
+
+	rows, err := db.Query("SELECT id, email, name, role FROM users ORDER BY id")
+	if err != nil {
+		t.Fatalf("failed to query users: %v", err)
+	}
+	defer rows.Close()
+
+	maps, err := svc.rowsToMaps(rows)
+	if err != nil {
+		t.Fatalf("rowsToMaps error: %v", err)
+	}
+
+	if len(maps) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(maps))
+	}
+
+	// Check first row
+	if maps[0]["email"] != "test1@example.com" {
+		t.Errorf("expected email 'test1@example.com', got %v", maps[0]["email"])
+	}
+	if maps[0]["name"] != "Test User 1" {
+		t.Errorf("expected name 'Test User 1', got %v", maps[0]["name"])
+	}
+}
+
+// TestBackupService_FindByNaturalKey_AllTables tests natural key matching for all supported tables
+func TestBackupService_FindByNaturalKey_AllTables(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	_, err := db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test@example.com', 'hash', 'Test User', 'user', datetime('now'), datetime('now'))
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test user: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO wods (name, score_type, is_standard, created_at, updated_at)
+		VALUES ('Fran', 'time', 1, datetime('now'), datetime('now'))
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test wod: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO workouts (name, created_at, updated_at)
+		VALUES ('Test Workout', datetime('now'), datetime('now'))
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test workout: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO organizations (name, created_at, updated_at)
+		VALUES ('Test Org', datetime('now'), datetime('now'))
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test organization: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "sqlite3",
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	mappings := newIDMappings()
+
+	tests := []struct {
+		name        string
+		tableName   string
+		row         map[string]interface{}
+		expectFound bool
+	}{
+		{
+			name:        "find wod by name",
+			tableName:   "wods",
+			row:         map[string]interface{}{"name": "Fran"},
+			expectFound: true,
+		},
+		{
+			name:        "wod not found",
+			tableName:   "wods",
+			row:         map[string]interface{}{"name": "Murph"},
+			expectFound: false,
+		},
+		{
+			name:        "empty wod name returns not found",
+			tableName:   "wods",
+			row:         map[string]interface{}{"name": ""},
+			expectFound: false,
+		},
+		{
+			name:        "find workout by name",
+			tableName:   "workouts",
+			row:         map[string]interface{}{"name": "Test Workout"},
+			expectFound: true,
+		},
+		{
+			name:        "workout not found",
+			tableName:   "workouts",
+			row:         map[string]interface{}{"name": "Other Workout"},
+			expectFound: false,
+		},
+		{
+			name:        "empty workout name returns not found",
+			tableName:   "workouts",
+			row:         map[string]interface{}{"name": ""},
+			expectFound: false,
+		},
+		{
+			name:        "find organization by name",
+			tableName:   "organizations",
+			row:         map[string]interface{}{"name": "Test Org"},
+			expectFound: true,
+		},
+		{
+			name:        "organization not found",
+			tableName:   "organizations",
+			row:         map[string]interface{}{"name": "Other Org"},
+			expectFound: false,
+		},
+		{
+			name:        "empty organization name returns not found",
+			tableName:   "organizations",
+			row:         map[string]interface{}{"name": ""},
+			expectFound: false,
+		},
+		{
+			name:        "unknown table returns not found",
+			tableName:   "unknown_table",
+			row:         map[string]interface{}{"name": "test"},
+			expectFound: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			id, found, err := svc.findByNaturalKey(tx, tt.tableName, tt.row, mappings)
+			if err != nil {
+				t.Fatalf("findByNaturalKey error: %v", err)
+			}
+			if found != tt.expectFound {
+				t.Errorf("findByNaturalKey found = %v, expected %v (id=%d)", found, tt.expectFound, id)
+			}
+		})
+	}
+}
+
+// TestRemapForeignKeys_AllCases tests all remapping cases
+func TestRemapForeignKeys_AllCases(t *testing.T) {
+	svc := &BackupServiceImpl{}
+
+	tests := []struct {
+		name       string
+		tableName  string
+		row        map[string]interface{}
+		mappings   *idMappings
+		checkKey   string
+		expected   int64
+		shouldHave bool
+	}{
+		{
+			name:      "user_settings user_id remapping",
+			tableName: "user_settings",
+			row:       map[string]interface{}{"user_id": int64(1)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.users[1] = 100
+				return m
+			}(),
+			checkKey:   "user_id",
+			expected:   100,
+			shouldHave: true,
+		},
+		{
+			name:      "notifications user_id remapping",
+			tableName: "notifications",
+			row:       map[string]interface{}{"user_id": int64(2)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.users[2] = 200
+				return m
+			}(),
+			checkKey:   "user_id",
+			expected:   200,
+			shouldHave: true,
+		},
+		{
+			name:      "workout_wods wod_id remapping",
+			tableName: "workout_wods",
+			row:       map[string]interface{}{"wod_id": int64(3)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.wods[3] = 300
+				return m
+			}(),
+			checkKey:   "wod_id",
+			expected:   300,
+			shouldHave: true,
+		},
+		{
+			name:      "user_workout_wods user_workout_id remapping",
+			tableName: "user_workout_wods",
+			row:       map[string]interface{}{"user_workout_id": int64(4)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.userWorkouts[4] = 400
+				return m
+			}(),
+			checkKey:   "user_workout_id",
+			expected:   400,
+			shouldHave: true,
+		},
+		{
+			name:      "user_workout_wods wod_id remapping",
+			tableName: "user_workout_wods",
+			row:       map[string]interface{}{"wod_id": int64(5)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.wods[5] = 500
+				return m
+			}(),
+			checkKey:   "wod_id",
+			expected:   500,
+			shouldHave: true,
+		},
+		{
+			name:      "organization_subscriptions organization_id remapping",
+			tableName: "organization_subscriptions",
+			row:       map[string]interface{}{"organization_id": int64(6)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.organizations[6] = 600
+				return m
+			}(),
+			checkKey:   "organization_id",
+			expected:   600,
+			shouldHave: true,
+		},
+		{
+			name:      "notification_likes user_id remapping",
+			tableName: "notification_likes",
+			row:       map[string]interface{}{"user_id": int64(7)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.users[7] = 700
+				return m
+			}(),
+			checkKey:   "user_id",
+			expected:   700,
+			shouldHave: true,
+		},
+		{
+			name:      "user_subscriptions user_id remapping",
+			tableName: "user_subscriptions",
+			row:       map[string]interface{}{"user_id": int64(8)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.users[8] = 800
+				return m
+			}(),
+			checkKey:   "user_id",
+			expected:   800,
+			shouldHave: true,
+		},
+		{
+			name:      "user_workout_movements movement_id remapping",
+			tableName: "user_workout_movements",
+			row:       map[string]interface{}{"movement_id": int64(9)},
+			mappings: func() *idMappings {
+				m := newIDMappings()
+				m.movements[9] = 900
+				return m
+			}(),
+			checkKey:   "movement_id",
+			expected:   900,
+			shouldHave: true,
+		},
+		{
+			name:       "no mapping for zero ID",
+			tableName:  "user_workouts",
+			row:        map[string]interface{}{"user_id": int64(0)},
+			mappings:   newIDMappings(),
+			checkKey:   "user_id",
+			expected:   0,
+			shouldHave: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc.remapForeignKeys(tt.tableName, tt.row, tt.mappings)
+
+			got := svc.getInt64FromRow(tt.row, tt.checkKey)
+			if got != tt.expected {
+				t.Errorf("expected %d, got %d", tt.expected, got)
+			}
+		})
+	}
+}
+
+// TestBackupService_ResetSequence_NonPostgres tests resetSequence for non-postgres drivers
+func TestBackupService_ResetSequence_NonPostgres(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	tests := []struct {
+		name     string
+		dbDriver string
+	}{
+		{"sqlite3 driver", "sqlite3"},
+		{"mysql driver", "mysql"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &BackupServiceImpl{dbDriver: tt.dbDriver}
+			err := svc.resetSequence(tx, "users")
+			if err != nil {
+				t.Errorf("resetSequence should not error for %s: %v", tt.dbDriver, err)
+			}
+		})
+	}
+}
+
+// TestBackupService_ConvertValue_DatetimeMySQL tests datetime conversion for MySQL
+func TestBackupService_ConvertValue_DatetimeMySQL(t *testing.T) {
+	svc := &BackupServiceImpl{dbDriver: "mysql"}
+
+	tests := []struct {
+		name       string
+		value      interface{}
+		columnName string
+		colType    string
+		expected   interface{}
+	}{
+		{
+			name:       "RFC3339 datetime",
+			value:      "2025-01-15T10:30:00Z",
+			columnName: "created_at",
+			colType:    "datetime",
+			expected:   "2025-01-15 10:30:00",
+		},
+		{
+			name:       "date only column",
+			value:      "2025-01-15",
+			columnName: "birthday",
+			colType:    "date",
+			expected:   "2025-01-15",
+		},
+		{
+			name:       "nil datetime",
+			value:      nil,
+			columnName: "updated_at",
+			colType:    "datetime",
+			expected:   nil,
+		},
+		{
+			name:       "empty datetime string",
+			value:      "",
+			columnName: "locked_at",
+			colType:    "datetime",
+			expected:   "", // Empty string should remain unchanged
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := svc.convertValue(tt.value, tt.columnName, tt.colType)
+			if result != tt.expected {
+				t.Errorf("convertValue(%v, %q, %q) = %v, expected %v", tt.value, tt.columnName, tt.colType, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestBackupService_ConvertValue_BooleanFallback tests boolean conversion with fallback column names
+func TestBackupService_ConvertValue_BooleanFallback(t *testing.T) {
+	tests := []struct {
+		name       string
+		dbDriver   string
+		value      interface{}
+		columnName string
+		colType    string // Empty to test fallback
+		expected   interface{}
+	}{
+		{
+			name:       "is_rx fallback to SQLite",
+			dbDriver:   "sqlite3",
+			value:      true,
+			columnName: "is_rx",
+			colType:    "", // No schema type, use column name fallback
+			expected:   int64(1),
+		},
+		{
+			name:       "is_template fallback to PostgreSQL",
+			dbDriver:   "postgres",
+			value:      int64(1),
+			columnName: "is_template",
+			colType:    "", // No schema type, use column name fallback
+			expected:   true,
+		},
+		{
+			name:       "email_verified fallback to MySQL",
+			dbDriver:   "mysql",
+			value:      true,
+			columnName: "email_verified",
+			colType:    "",
+			expected:   int64(1),
+		},
+		{
+			name:       "account_disabled fallback",
+			dbDriver:   "sqlite3",
+			value:      false,
+			columnName: "account_disabled",
+			colType:    "",
+			expected:   int64(0),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &BackupServiceImpl{dbDriver: tt.dbDriver}
+			result := svc.convertValue(tt.value, tt.columnName, tt.colType)
+			if result != tt.expected {
+				t.Errorf("convertValue(%v, %q, %q) = %v (%T), expected %v (%T)",
+					tt.value, tt.columnName, tt.colType, result, result, tt.expected, tt.expected)
+			}
+		})
+	}
+}
+
+// TestBackupService_ConvertValue_DatetimeFallback tests datetime conversion with fallback column names
+func TestBackupService_ConvertValue_DatetimeFallback(t *testing.T) {
+	svc := &BackupServiceImpl{dbDriver: "mysql"}
+
+	tests := []struct {
+		name       string
+		value      interface{}
+		columnName string
+		expected   interface{}
+	}{
+		{
+			name:       "created_at fallback",
+			value:      "2025-01-15T10:30:00Z",
+			columnName: "created_at",
+			expected:   "2025-01-15 10:30:00",
+		},
+		{
+			name:       "updated_at fallback",
+			value:      "2025-01-15T10:30:00Z",
+			columnName: "updated_at",
+			expected:   "2025-01-15 10:30:00",
+		},
+		{
+			name:       "last_login_at fallback",
+			value:      "2025-01-15T10:30:00Z",
+			columnName: "last_login_at",
+			expected:   "2025-01-15 10:30:00",
+		},
+		{
+			name:       "workout_date fallback",
+			value:      "2025-01-15",
+			columnName: "workout_date",
+			expected:   "2025-01-15",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := svc.convertValue(tt.value, tt.columnName, "")
+			if result != tt.expected {
+				t.Errorf("convertValue(%v, %q, \"\") = %v, expected %v", tt.value, tt.columnName, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestBackupService_TableExists_UnsupportedDriver tests unsupported driver error
+func TestBackupService_TableExists_UnsupportedDriver(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "unsupported",
+	}
+
+	_, err = svc.tableExists(tx, "users")
+	if err == nil {
+		t.Error("expected error for unsupported driver")
+	}
+	if !strings.Contains(err.Error(), "unsupported database driver") {
+		t.Errorf("expected 'unsupported database driver' error, got: %v", err)
+	}
+}
+
+// TestBackupService_GetTableColumns_UnsupportedDriver tests unsupported driver error
+func TestBackupService_GetTableColumns_UnsupportedDriver(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "unsupported",
+	}
+
+	_, err = svc.getTableColumns(tx, "users")
+	if err == nil {
+		t.Error("expected error for unsupported driver")
+	}
+	if !strings.Contains(err.Error(), "unsupported database driver") {
+		t.Errorf("expected 'unsupported database driver' error, got: %v", err)
+	}
+}
+
+// mockAuditLogRepo is defined in test_helpers.go
