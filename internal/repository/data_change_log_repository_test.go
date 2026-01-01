@@ -736,3 +736,139 @@ func TestDataChangeLogRepository_CombinedFilters(t *testing.T) {
 		t.Errorf("List() with WOD + User 1 returned %d logs, want 2", len(got))
 	}
 }
+
+func TestDataChangeLogRepository_Create_UnsupportedDriver(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	// Create repo with unsupported driver
+	repo := NewDataChangeLogRepository(db, "unsupported_driver")
+
+	log := &domain.DataChangeLog{
+		EntityType: domain.EntityTypeWOD,
+		EntityID:   1,
+		EntityName: "Test",
+		Operation:  domain.OperationUpdate,
+		UserID:     1,
+		UserEmail:  "test@example.com",
+	}
+
+	err = repo.Create(log)
+	if err == nil {
+		t.Error("Create() with unsupported driver should return error")
+	}
+	if err != nil && !containsString(err.Error(), "unsupported database driver") {
+		t.Errorf("Create() error = %v, want error containing 'unsupported database driver'", err)
+	}
+}
+
+func TestDataChangeLogRepository_Count_AllFilters(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	repo := NewDataChangeLogRepository(db, "sqlite3")
+	now := time.Now()
+
+	// Create test data with specific timestamps for date filtering
+	testData := []struct {
+		entityType string
+		entityID   int64
+		operation  string
+		userID     int64
+		userEmail  string
+		createdAt  time.Time
+	}{
+		{domain.EntityTypeWOD, 1, domain.OperationUpdate, 1, "admin@example.com", now.AddDate(0, 0, -10)},
+		{domain.EntityTypeWOD, 1, domain.OperationUpdate, 1, "admin@example.com", now.AddDate(0, 0, -5)},
+		{domain.EntityTypeWOD, 2, domain.OperationDelete, 2, "user@example.com", now.AddDate(0, 0, -3)},
+		{domain.EntityTypeMovement, 3, domain.OperationUpdate, 1, "admin@example.com", now.AddDate(0, 0, -1)},
+		{domain.EntityTypeMovement, 4, domain.OperationDelete, 2, "user@example.com", now},
+	}
+
+	for _, td := range testData {
+		_, err := db.Exec(`INSERT INTO data_change_logs (entity_type, entity_id, entity_name, operation, user_id, user_email, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			td.entityType, td.entityID, "Test", td.operation, td.userID, td.userEmail, td.createdAt)
+		if err != nil {
+			t.Fatalf("Failed to create log: %v", err)
+		}
+	}
+
+	t.Run("Count by entity ID", func(t *testing.T) {
+		entityID := int64(1)
+		filters := domain.DataChangeLogFilters{EntityID: &entityID}
+		count, err := repo.Count(filters)
+		if err != nil {
+			t.Fatalf("Count() error = %v", err)
+		}
+		if count != 2 {
+			t.Errorf("Count() = %d, want 2", count)
+		}
+	})
+
+	t.Run("Count by user email", func(t *testing.T) {
+		userEmail := "admin"
+		filters := domain.DataChangeLogFilters{UserEmail: &userEmail}
+		count, err := repo.Count(filters)
+		if err != nil {
+			t.Fatalf("Count() error = %v", err)
+		}
+		if count != 3 {
+			t.Errorf("Count() = %d, want 3", count)
+		}
+	})
+
+	t.Run("Count by date range", func(t *testing.T) {
+		startDate := now.AddDate(0, 0, -4)
+		endDate := now.AddDate(0, 0, 1)
+		filters := domain.DataChangeLogFilters{
+			StartDate: &startDate,
+			EndDate:   &endDate,
+		}
+		count, err := repo.Count(filters)
+		if err != nil {
+			t.Fatalf("Count() error = %v", err)
+		}
+		// Should get logs from -3, -1, and today (3 logs)
+		if count != 3 {
+			t.Errorf("Count() = %d, want 3", count)
+		}
+	})
+
+	t.Run("Count with multiple filters", func(t *testing.T) {
+		entityType := domain.EntityTypeWOD
+		entityID := int64(1)
+		userID := int64(1)
+		filters := domain.DataChangeLogFilters{
+			EntityType: &entityType,
+			EntityID:   &entityID,
+			UserID:     &userID,
+		}
+		count, err := repo.Count(filters)
+		if err != nil {
+			t.Fatalf("Count() error = %v", err)
+		}
+		if count != 2 {
+			t.Errorf("Count() = %d, want 2", count)
+		}
+	})
+}
+
+// containsString is a helper to check if s contains substr
+func containsString(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstr(s, substr))
+}
+
+func containsSubstr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
