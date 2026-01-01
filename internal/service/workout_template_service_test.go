@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -473,4 +474,439 @@ func TestWorkoutTemplateService_CopyToStandard_NotFound(t *testing.T) {
 // Helper function for float pointers
 func floatPtr(f float64) *float64 {
 	return &f
+}
+
+func TestWorkoutTemplateService_GetByIDWithDetails_NotFound(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.getByIDWithDetailsError = sql.ErrNoRows
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.GetByIDWithDetails(999)
+	if err == nil {
+		t.Error("GetByIDWithDetails() should return error when not found")
+	}
+}
+
+func TestWorkoutTemplateService_GetByIDWithDetails_RepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.getByIDWithDetailsError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.GetByIDWithDetails(1)
+	if err == nil {
+		t.Error("GetByIDWithDetails() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_GetByID_RepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.getByIDError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.GetByID(1)
+	if err == nil {
+		t.Error("GetByID() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListByUser_Error(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.listByUserError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.ListByUser(1, 50, 0)
+	if err == nil {
+		t.Error("ListByUser() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListStandard_Error(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.listStandardError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.ListStandard(50, 0)
+	if err == nil {
+		t.Error("ListStandard() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListAllUserCreated_ListError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.listAllUserCreatedError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, _, err := svc.ListAllUserCreated(50, 0)
+	if err == nil {
+		t.Error("ListAllUserCreated() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListAllUserCreated_CountError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.countAllUserCreatedError = errors.New("count error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a user workout
+	userID := int64(1)
+	_ = workoutRepo.Create(&domain.Workout{Name: "Test", CreatedBy: &userID})
+
+	_, _, err := svc.ListAllUserCreated(50, 0)
+	if err == nil {
+		t.Error("ListAllUserCreated() should return error when count fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfo_ListError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.listUserCreatedWithInfoError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, _, err := svc.ListAllUserCreatedWithUserInfo(50, 0)
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfo() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfo_CountError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.countAllUserCreatedError = errors.New("count error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, _, err := svc.ListAllUserCreatedWithUserInfo(50, 0)
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfo() should return error when count fails")
+	}
+}
+
+func TestWorkoutTemplateService_ListAllUserCreatedWithUserInfoFiltered_Error(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.listUserCreatedFilteredError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, _, err := svc.ListAllUserCreatedWithUserInfoFiltered(50, 0, "test", "")
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfoFiltered() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_Create_RepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.createError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.Create(1, "user@example.com", "Test", nil, nil, nil)
+	if err == nil {
+		t.Error("Create() should return error when repo fails")
+	}
+}
+
+func TestWorkoutTemplateService_Create_MovementError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutMovementRepo.createError = errors.New("movement error")
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	movements := []domain.WorkoutMovement{
+		{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
+	}
+	_, err := svc.Create(1, "user@example.com", "Test", nil, movements, nil)
+	if err == nil {
+		t.Error("Create() should return error when adding movement fails")
+	}
+}
+
+func TestWorkoutTemplateService_Create_WODError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutWODRepo.createError = errors.New("wod error")
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	wods := []domain.WorkoutWOD{
+		{WODID: 1},
+	}
+	_, err := svc.Create(1, "user@example.com", "Test", nil, nil, wods)
+	if err == nil {
+		t.Error("Create() should return error when adding WOD fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_RepoUpdateError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Set update error
+	workoutRepo.updateError = errors.New("update error")
+
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil)
+	if err == nil {
+		t.Error("Update() should return error when repo update fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_DeleteMovementsError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Set delete movements error
+	workoutMovementRepo.deleteByWorkoutIDError = errors.New("delete movements error")
+
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil)
+	if err == nil {
+		t.Error("Update() should return error when deleting movements fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_CreateMovementError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Set create movement error
+	workoutMovementRepo.createError = errors.New("create movement error")
+
+	movements := []domain.WorkoutMovement{
+		{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
+	}
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, movements, nil)
+	if err == nil {
+		t.Error("Update() should return error when creating movement fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_DeleteWODsError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutWODRepo.deleteError = errors.New("delete wods error")
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil)
+	if err == nil {
+		t.Error("Update() should return error when deleting WODs fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_CreateWODError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Set create WOD error after delete succeeds
+	workoutWODRepo.createError = errors.New("create wod error")
+
+	wods := []domain.WorkoutWOD{
+		{WODID: 1},
+	}
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, wods)
+	if err == nil {
+		t.Error("Update() should return error when creating WOD fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_GetByIDRepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.getByIDError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	_, err := svc.Update(1, 1, "user@example.com", "Updated", nil, nil, nil)
+	if err == nil {
+		t.Error("Update() should return error when GetByID fails")
+	}
+}
+
+func TestWorkoutTemplateService_Update_NilCreatedBy(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a standard workout (CreatedBy = nil)
+	workout := &domain.Workout{Name: "Standard", CreatedBy: nil}
+	_ = workoutRepo.Create(workout)
+
+	// Try to update as any user - should fail since CreatedBy is nil
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil)
+	if err == nil {
+		t.Error("Update() should return error when workout has no owner")
+	}
+}
+
+func TestWorkoutTemplateService_Delete_RepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "To Delete", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Set delete error
+	workoutRepo.deleteError = errors.New("delete error")
+
+	err := svc.Delete(workout.ID, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when repo delete fails")
+	}
+}
+
+func TestWorkoutTemplateService_Delete_DeleteMovementsError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutMovementRepo.deleteByWorkoutIDError = errors.New("delete movements error")
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "To Delete", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	err := svc.Delete(workout.ID, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when deleting movements fails")
+	}
+}
+
+func TestWorkoutTemplateService_Delete_GetByIDRepoError(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutRepo.getByIDError = errors.New("database error")
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	err := svc.Delete(1, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when GetByID fails")
+	}
+}
+
+func TestWorkoutTemplateService_Delete_NilCreatedBy(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a standard workout (CreatedBy = nil)
+	workout := &domain.Workout{Name: "Standard", CreatedBy: nil}
+	_ = workoutRepo.Create(workout)
+
+	// Try to delete as any user - should fail since CreatedBy is nil
+	err := svc.Delete(workout.ID, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when workout has no owner")
+	}
+}
+
+func TestWorkoutTemplateService_Update_WithWODs(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	auditLogRepo := newMockAuditLogRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, auditLogRepo)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original Name", CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Update with WODs
+	wods := []domain.WorkoutWOD{
+		{WODID: 1},
+		{WODID: 2},
+	}
+	result, err := svc.Update(workout.ID, 1, "user@example.com", "Updated Name", nil, nil, wods)
+	if err != nil {
+		t.Errorf("Update() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Update() returned nil")
+	}
+	if result.Name != "Updated Name" {
+		t.Errorf("Name = %s, want Updated Name", result.Name)
+	}
 }

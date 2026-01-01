@@ -159,9 +159,19 @@ func (m *mockUserWorkoutRepo) GetActiveUsersThisMonth(orgID int64) ([]map[string
 
 // Mock WorkoutRepository
 type mockWorkoutRepo struct {
-	workouts     map[int64]*domain.Workout
-	nextID       int64
-	getByIDError error
+	workouts                        map[int64]*domain.Workout
+	nextID                          int64
+	getByIDError                    error
+	createError                     error
+	updateError                     error
+	deleteError                     error
+	listByUserError                 error
+	listStandardError               error
+	listAllUserCreatedError         error
+	listUserCreatedWithInfoError    error
+	listUserCreatedFilteredError    error
+	countAllUserCreatedError        error
+	getByIDWithDetailsError         error
 }
 
 func newMockWorkoutRepo() *mockWorkoutRepo {
@@ -172,6 +182,9 @@ func newMockWorkoutRepo() *mockWorkoutRepo {
 }
 
 func (m *mockWorkoutRepo) Create(workout *domain.Workout) error {
+	if m.createError != nil {
+		return m.createError
+	}
 	m.nextID++
 	workout.ID = m.nextID
 	workout.CreatedAt = time.Now()
@@ -192,6 +205,9 @@ func (m *mockWorkoutRepo) GetByID(id int64) (*domain.Workout, error) {
 }
 
 func (m *mockWorkoutRepo) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
+	if m.listByUserError != nil {
+		return nil, m.listByUserError
+	}
 	var result []*domain.Workout
 	for _, w := range m.workouts {
 		if w.CreatedBy != nil && *w.CreatedBy == userID {
@@ -202,6 +218,9 @@ func (m *mockWorkoutRepo) ListByUser(userID int64, limit, offset int) ([]*domain
 }
 
 func (m *mockWorkoutRepo) Update(workout *domain.Workout) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
 	if _, ok := m.workouts[workout.ID]; !ok {
 		return sql.ErrNoRows
 	}
@@ -211,6 +230,9 @@ func (m *mockWorkoutRepo) Update(workout *domain.Workout) error {
 }
 
 func (m *mockWorkoutRepo) Delete(id int64) error {
+	if m.deleteError != nil {
+		return m.deleteError
+	}
 	if _, ok := m.workouts[id]; !ok {
 		return sql.ErrNoRows
 	}
@@ -237,6 +259,9 @@ func (m *mockWorkoutRepo) Count(userID *int64) (int64, error) {
 }
 
 func (m *mockWorkoutRepo) GetByIDWithDetails(id int64) (*domain.Workout, error) {
+	if m.getByIDWithDetailsError != nil {
+		return nil, m.getByIDWithDetailsError
+	}
 	return m.GetByID(id)
 }
 
@@ -249,6 +274,9 @@ func (m *mockWorkoutRepo) List(filters map[string]interface{}, limit, offset int
 }
 
 func (m *mockWorkoutRepo) ListStandard(limit, offset int) ([]*domain.Workout, error) {
+	if m.listStandardError != nil {
+		return nil, m.listStandardError
+	}
 	var result []*domain.Workout
 	for _, w := range m.workouts {
 		if w.CreatedBy == nil {
@@ -278,6 +306,9 @@ func (m *mockWorkoutRepo) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsa
 }
 
 func (m *mockWorkoutRepo) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
+	if m.listAllUserCreatedError != nil {
+		return nil, m.listAllUserCreatedError
+	}
 	var result []*domain.Workout
 	for _, w := range m.workouts {
 		if w.CreatedBy != nil {
@@ -288,14 +319,23 @@ func (m *mockWorkoutRepo) ListAllUserCreated(limit, offset int) ([]*domain.Worko
 }
 
 func (m *mockWorkoutRepo) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
+	if m.listUserCreatedWithInfoError != nil {
+		return nil, m.listUserCreatedWithInfoError
+	}
 	return []*domain.WorkoutWithCreator{}, nil
 }
 
 func (m *mockWorkoutRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
+	if m.listUserCreatedFilteredError != nil {
+		return nil, 0, m.listUserCreatedFilteredError
+	}
 	return []*domain.WorkoutWithCreator{}, 0, nil
 }
 
 func (m *mockWorkoutRepo) CountAllUserCreated() (int64, error) {
+	if m.countAllUserCreatedError != nil {
+		return 0, m.countAllUserCreatedError
+	}
 	count := int64(0)
 	for _, w := range m.workouts {
 		if w.CreatedBy != nil {
@@ -326,9 +366,11 @@ func (m *mockWorkoutRepo) CopyToStandard(id int64, newName string) (*domain.Work
 
 // Mock WorkoutMovementRepository
 type mockWorkoutMovementRepo struct {
-	movements  map[int64]*domain.WorkoutMovement
-	nextID     int64
-	maxWeights map[int64]map[int64]*float64 // userID -> movementID -> maxWeight
+	movements             map[int64]*domain.WorkoutMovement
+	nextID                int64
+	maxWeights            map[int64]map[int64]*float64 // userID -> movementID -> maxWeight
+	createError           error
+	deleteByWorkoutIDError error
 }
 
 func newMockWorkoutMovementRepo() *mockWorkoutMovementRepo {
@@ -340,6 +382,9 @@ func newMockWorkoutMovementRepo() *mockWorkoutMovementRepo {
 }
 
 func (m *mockWorkoutMovementRepo) Create(workoutMovement *domain.WorkoutMovement) error {
+	if m.createError != nil {
+		return m.createError
+	}
 	workoutMovement.ID = m.nextID
 	m.nextID++
 	m.movements[workoutMovement.ID] = workoutMovement
@@ -385,6 +430,9 @@ func (m *mockWorkoutMovementRepo) Delete(id int64) error {
 }
 
 func (m *mockWorkoutMovementRepo) DeleteByWorkoutID(workoutID int64) error {
+	if m.deleteByWorkoutIDError != nil {
+		return m.deleteByWorkoutIDError
+	}
 	for id, wm := range m.movements {
 		if wm.WorkoutID == workoutID {
 			delete(m.movements, id)
