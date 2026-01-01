@@ -612,6 +612,32 @@ func TestNewEmailLogRepository(t *testing.T) {
 	}
 }
 
+func TestEmailLogRepository_Create_UnsupportedDriver(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("failed to setup test db: %v", err)
+	}
+	defer cleanup()
+
+	// Create repo with unsupported driver
+	repo := NewEmailLogRepository(db, "unsupported_driver")
+
+	log := &domain.EmailLog{
+		RecipientEmail: "test@example.com",
+		EmailType:      domain.EmailTypeTest,
+		Subject:        "Test Email",
+		Success:        true,
+	}
+
+	err = repo.Create(log)
+	if err == nil {
+		t.Error("Create() with unsupported driver should return error")
+	}
+	if err != nil && !containsStr(err.Error(), "unsupported database driver") {
+		t.Errorf("Create() error = %v, want error containing 'unsupported database driver'", err)
+	}
+}
+
 // Helper functions
 func strPtr(s string) *string {
 	return &s
@@ -619,4 +645,14 @@ func strPtr(s string) *string {
 
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// containsStr is a helper to check if s contains substr
+func containsStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
