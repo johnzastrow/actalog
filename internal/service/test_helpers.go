@@ -1953,10 +1953,14 @@ func (m *mockUserSettingsRepo) Delete(userID int64) error {
 
 // Mock WorkoutWODRepository
 type mockWorkoutWODRepo struct {
-	workoutWODs map[int64]*domain.WorkoutWOD
-	nextID      int64
-	createError error
-	deleteError error
+	workoutWODs                   map[int64]*domain.WorkoutWOD
+	nextID                        int64
+	createError                   error
+	deleteError                   error
+	getByIDError                  error
+	updateError                   error
+	togglePRError                 error
+	listByWorkoutWithDetailsError error
 }
 
 func newMockWorkoutWODRepo() *mockWorkoutWODRepo {
@@ -1979,6 +1983,9 @@ func (m *mockWorkoutWODRepo) Create(workoutWOD *domain.WorkoutWOD) error {
 }
 
 func (m *mockWorkoutWODRepo) GetByID(id int64) (*domain.WorkoutWOD, error) {
+	if m.getByIDError != nil {
+		return nil, m.getByIDError
+	}
 	ww, ok := m.workoutWODs[id]
 	if !ok {
 		return nil, sql.ErrNoRows
@@ -1997,6 +2004,9 @@ func (m *mockWorkoutWODRepo) ListByWorkout(workoutID int64) ([]*domain.WorkoutWO
 }
 
 func (m *mockWorkoutWODRepo) ListByWorkoutWithDetails(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
+	if m.listByWorkoutWithDetailsError != nil {
+		return nil, m.listByWorkoutWithDetailsError
+	}
 	var result []*domain.WorkoutWODWithDetails
 	for _, ww := range m.workoutWODs {
 		if ww.WorkoutID == workoutID {
@@ -2014,6 +2024,9 @@ func (m *mockWorkoutWODRepo) ListByWorkoutWithDetails(workoutID int64) ([]*domai
 }
 
 func (m *mockWorkoutWODRepo) Update(workoutWOD *domain.WorkoutWOD) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
 	if _, ok := m.workoutWODs[workoutWOD.ID]; !ok {
 		return sql.ErrNoRows
 	}
@@ -2046,6 +2059,9 @@ func (m *mockWorkoutWODRepo) DeleteByWorkout(workoutID int64) error {
 }
 
 func (m *mockWorkoutWODRepo) TogglePR(id int64) error {
+	if m.togglePRError != nil {
+		return m.togglePRError
+	}
 	ww, ok := m.workoutWODs[id]
 	if !ok {
 		return sql.ErrNoRows
