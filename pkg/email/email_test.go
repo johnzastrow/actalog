@@ -1355,3 +1355,391 @@ func TestService_SendWithDebug_MultipleRecipients(t *testing.T) {
 		t.Error("Should log first recipient in To list")
 	}
 }
+
+// TestService_Send_EmptyRecipients tests sending with empty recipients list
+func TestService_Send_EmptyRecipients(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To:      []string{},
+		Subject: "Test",
+		Body:    "Test body",
+		IsHTML:  false,
+	}
+
+	// Should still attempt to send (will fail at SMTP level)
+	err := svc.Send(msg)
+	if err == nil {
+		t.Error("Send() with empty recipients should fail")
+	}
+}
+
+// TestService_Send_Port25_Plain tests plain SMTP (port 25) path
+func TestService_Send_Port25_Plain(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     25,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: "Test",
+		Body:    "Test body",
+		IsHTML:  false,
+	}
+
+	_ = svc.Send(msg)
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "STARTTLS connection (port 25)") {
+		t.Error("Should log STARTTLS connection for port 25")
+	}
+}
+
+// TestService_SendWithDebug_Port25_Plain tests plain SMTP debug path
+func TestService_SendWithDebug_Port25_Plain(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     25,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: "Test",
+		Body:    "Test body",
+		IsHTML:  false,
+	}
+
+	result := svc.SendWithDebug(msg)
+
+	if result.DebugInfo == nil {
+		t.Fatal("DebugInfo should not be nil")
+	}
+
+	if result.DebugInfo.ConnectionTLS != "Plain" {
+		t.Errorf("ConnectionTLS = %q, want Plain", result.DebugInfo.ConnectionTLS)
+	}
+}
+
+// TestService_Send_LongSubject tests sending with a long subject line
+func TestService_Send_LongSubject(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	longSubject := strings.Repeat("Test Subject ", 50)
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: longSubject,
+		Body:    "Test body",
+		IsHTML:  false,
+	}
+
+	_ = svc.Send(msg)
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "Attempting to send email") {
+		t.Error("Should log attempt to send email")
+	}
+}
+
+// TestService_Send_LongBody tests sending with a very long body
+func TestService_Send_LongBody(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	longBody := strings.Repeat("This is a test paragraph. ", 1000)
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: "Long Body Test",
+		Body:    longBody,
+		IsHTML:  false,
+	}
+
+	_ = svc.Send(msg)
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "Attempting to send email") {
+		t.Error("Should log attempt to send email")
+	}
+}
+
+// TestService_Send_SpecialCharactersInAddress tests sending to addresses with special characters
+func TestService_Send_SpecialCharactersInAddress(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	// Test various email formats
+	testAddresses := []string{
+		"user+tag@example.com",
+		"user.name@example.com",
+		"user_name@example.com",
+	}
+
+	for _, addr := range testAddresses {
+		msg := Message{
+			To:      []string{addr},
+			Subject: "Test",
+			Body:    "Test body",
+			IsHTML:  false,
+		}
+
+		_ = svc.Send(msg)
+	}
+
+	logOutput := logBuf.String()
+	if strings.Count(logOutput, "Attempting to send email") != 3 {
+		t.Error("Should have attempted to send 3 emails")
+	}
+}
+
+// TestConfig_Validation tests various Config scenarios
+func TestConfig_Validation(t *testing.T) {
+	tests := []struct {
+		name   string
+		config Config
+	}{
+		{
+			name: "minimal config",
+			config: Config{
+				SMTPHost: "smtp.example.com",
+				SMTPPort: 587,
+			},
+		},
+		{
+			name: "full config",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     587,
+				SMTPUser:     "user",
+				SMTPPassword: "pass",
+				FromAddress:  "from@example.com",
+				FromName:     "From Name",
+			},
+		},
+		{
+			name: "config with empty password",
+			config: Config{
+				SMTPHost:     "smtp.example.com",
+				SMTPPort:     587,
+				SMTPUser:     "user",
+				SMTPPassword: "",
+				FromAddress:  "from@example.com",
+			},
+		},
+	}
+
+	logger := log.New(os.Stdout, "", 0)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := NewService(tt.config, logger)
+			if svc == nil {
+				t.Error("NewService should not return nil")
+			}
+			if svc.config.SMTPHost != tt.config.SMTPHost {
+				t.Errorf("SMTPHost = %q, want %q", svc.config.SMTPHost, tt.config.SMTPHost)
+			}
+		})
+	}
+}
+
+// TestService_sendWithTLS_NilAuth tests sendWithTLS with nil authentication
+func TestService_sendWithTLS_NilAuth(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     465,
+		SMTPUser:     "",
+		SMTPPassword: "",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	// This tests the TLS path with no auth (will still fail due to connection, but exercises the code)
+	err := svc.sendWithTLS("localhost:55557", nil, "test@example.com", []string{"recipient@example.com"}, []byte("test message"))
+	if err == nil {
+		t.Error("sendWithTLS() should return error when connection fails")
+	}
+}
+
+// TestSMTPDebugInfo_EmptyFields tests SMTPDebugInfo with empty fields
+func TestSMTPDebugInfo_EmptyFields(t *testing.T) {
+	debug := SMTPDebugInfo{}
+
+	if debug.ConnectionHost != "" {
+		t.Error("Empty SMTPDebugInfo.ConnectionHost should be empty")
+	}
+
+	if debug.ConnectionPort != 0 {
+		t.Error("Empty SMTPDebugInfo.ConnectionPort should be 0")
+	}
+
+	if debug.Success {
+		t.Error("Empty SMTPDebugInfo.Success should be false")
+	}
+
+	if debug.SMTPResponses != nil {
+		t.Error("Empty SMTPDebugInfo.SMTPResponses should be nil")
+	}
+}
+
+// TestService_GetConfig_MaskedPassword verifies password is not exposed
+func TestService_GetConfig_MaskedPassword(t *testing.T) {
+	logger := log.New(os.Stdout, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "smtp.example.com",
+		SMTPPort:     587,
+		SMTPUser:     "user@example.com",
+		SMTPPassword: "super_secret_password_123",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+	info := svc.GetConfig()
+
+	// The password should not be in the config info (it doesn't have a password field)
+	// Verify the struct doesn't contain the password
+	infoStr := fmt.Sprintf("%+v", info)
+	if strings.Contains(infoStr, "super_secret_password_123") {
+		t.Error("GetConfig() should not expose the password")
+	}
+}
+
+// TestService_Send_UnicodeContent tests sending with Unicode content
+func TestService_Send_UnicodeContent(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	msg := Message{
+		To:      []string{"recipient@example.com"},
+		Subject: "Test: émojis 🎉 and 中文",
+		Body:    "Hello 世界! 🌍 This is a test with Unicode: äöüß",
+		IsHTML:  false,
+	}
+
+	_ = svc.Send(msg)
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "Attempting to send email") {
+		t.Error("Should log attempt to send email")
+	}
+}
+
+// TestService_SendHTMLEmail_ComplexHTML tests SendHTMLEmail with complex HTML
+func TestService_SendHTMLEmail_ComplexHTML(t *testing.T) {
+	var logBuf bytes.Buffer
+	logger := log.New(&logBuf, "", 0)
+
+	cfg := Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     12345,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		FromAddress:  "noreply@example.com",
+	}
+
+	svc := NewService(cfg, logger)
+
+	complexHTML := `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .header { background-color: #00bcd4; color: white; padding: 20px; }
+        .content { padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to ActaLog</h1>
+    </div>
+    <div class="content">
+        <p>This is a <strong>test</strong> email with <em>HTML</em> content.</p>
+        <table>
+            <tr><td>Item 1</td><td>Value 1</td></tr>
+            <tr><td>Item 2</td><td>Value 2</td></tr>
+        </table>
+    </div>
+</body>
+</html>`
+
+	err := svc.SendHTMLEmail("recipient@example.com", "Complex HTML Test", complexHTML)
+	if err == nil {
+		t.Error("SendHTMLEmail() should return error when SMTP is unreachable")
+	}
+
+	logOutput := logBuf.String()
+	if !strings.Contains(logOutput, "Preparing HTML email") {
+		t.Error("Should log HTML email preparation")
+	}
+}
