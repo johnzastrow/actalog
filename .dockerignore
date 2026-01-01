@@ -7,7 +7,12 @@
 # Documentation
 *.md
 !README.md
-docs/
+docs/*.md
+docs/admin/
+docs/help/
+docs/images/
+docs/old/
+docs/seeds/
 LICENSE
 
 # IDE and editor files
