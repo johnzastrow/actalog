@@ -564,7 +564,7 @@ func (m *mockWODRepo) GetByID(id int64) (*domain.WOD, error) {
 	}
 	wod, ok := m.wods[id]
 	if !ok {
-		return nil, sql.ErrNoRows
+		return nil, nil // Service expects nil, nil for not found
 	}
 	return wod, nil
 }
@@ -582,6 +582,14 @@ func (m *mockWODRepo) GetByName(name string) (*domain.WOD, error) {
 func (m *mockWODRepo) List(filters map[string]interface{}, limit, offset int) ([]*domain.WOD, error) {
 	var result []*domain.WOD
 	for _, wod := range m.wods {
+		// Apply is_standard filter if present
+		if isStandard, ok := filters["is_standard"]; ok {
+			if isStandardBool, ok := isStandard.(bool); ok {
+				if wod.IsStandard != isStandardBool {
+					continue
+				}
+			}
+		}
 		result = append(result, wod)
 	}
 	return result, nil
