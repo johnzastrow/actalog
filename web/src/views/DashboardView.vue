@@ -433,17 +433,17 @@
               />
             </div>
 
-            <!-- Notes -->
+            <!-- Quick Entry -->
             <div class="mb-1">
               <label class="text-caption font-weight-bold d-block" >
-                Notes
+                Quick Entry
               </label>
               <v-textarea
                 v-model="quickLogData.notes"
                 variant="outlined"
                 density="compact"
                 rows="3"
-                placeholder="How did it feel? Any highlights?"
+                placeholder="Enter your workout text here, along with any notes. Or pick a WOD or Movement below."
                 hide-details
               />
             </div>

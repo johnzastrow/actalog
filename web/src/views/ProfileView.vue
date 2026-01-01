@@ -498,6 +498,40 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-email-cog"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/email-settings')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Email Settings
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Configure SMTP and email options
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-email-search"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/email-logs')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Email Logs
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              View sent email history
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-chart-bar"
             disabled
             rounded
