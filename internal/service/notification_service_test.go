@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -697,6 +698,72 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 			isAchievingUser: true,
 			want:            false,
 		},
+		{
+			name: "weekly_streak email enabled for own achievement",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"weekly_streak":{"email":true}}`,
+			},
+			notificationType: domain.NotificationTypeWeeklyStreak,
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name: "wod_milestones email disabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"wod_milestones":{"email":false}}`,
+			},
+			notificationType: domain.NotificationTypeWODMilestone,
+			isAchievingUser: true,
+			want:            false,
+		},
+		{
+			name: "gym_mate_streaks email enabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"gym_mate_streaks":{"email":true}}`,
+			},
+			notificationType: domain.NotificationTypeWeeklyStreak,
+			isAchievingUser: false,
+			want:            true,
+		},
+		{
+			name: "gym_mate_milestones email enabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"gym_mate_milestones":{"email":true}}`,
+			},
+			notificationType: domain.NotificationTypeWODMilestone,
+			isAchievingUser: false,
+			want:            true,
+		},
+		{
+			name:            "invalid JSON defaults based on isAchievingUser",
+			settings:        &domain.UserSettings{NotificationPreferences: "not valid json"},
+			notificationType: domain.NotificationTypePRAchievement,
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name:            "unknown type for own achievement",
+			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			notificationType: "unknown_type",
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name:            "unknown type for gym mate",
+			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			notificationType: "unknown_type",
+			isAchievingUser: false,
+			want:            false,
+		},
+		{
+			name: "preference exists but email not specified - defaults based on isAchievingUser",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"pr_achievements":{"enabled":true}}`,
+			},
+			notificationType: domain.NotificationTypePRAchievement,
+			isAchievingUser: true,
+			want:            true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -707,4 +774,264 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
+	service := NewNotificationService(nil, nil, nil, nil, nil)
+
+	tests := []struct {
+		name            string
+		settings        *domain.UserSettings
+		notificationType string
+		isAchievingUser bool
+		want            bool
+	}{
+		{
+			name: "weekly_streak enabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"weekly_streak":{"enabled":true,"in_app":true}}`,
+			},
+			notificationType: domain.NotificationTypeWeeklyStreak,
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name: "wod_milestones disabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"wod_milestones":{"enabled":false}}`,
+			},
+			notificationType: domain.NotificationTypeWODMilestone,
+			isAchievingUser: true,
+			want:            false,
+		},
+		{
+			name: "gym_mate_streaks enabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"gym_mate_streaks":{"enabled":true,"in_app":true}}`,
+			},
+			notificationType: domain.NotificationTypeWeeklyStreak,
+			isAchievingUser: false,
+			want:            true,
+		},
+		{
+			name: "gym_mate_milestones disabled",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"gym_mate_milestones":{"enabled":false}}`,
+			},
+			notificationType: domain.NotificationTypeWODMilestone,
+			isAchievingUser: false,
+			want:            false,
+		},
+		{
+			name: "enabled true but in_app false",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"pr_achievements":{"enabled":true,"in_app":false}}`,
+			},
+			notificationType: domain.NotificationTypePRAchievement,
+			isAchievingUser: true,
+			want:            false,
+		},
+		{
+			name: "enabled true but in_app not specified",
+			settings: &domain.UserSettings{
+				NotificationPreferences: `{"pr_achievements":{"enabled":true}}`,
+			},
+			notificationType: domain.NotificationTypePRAchievement,
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name:            "unknown type for own user defaults to true",
+			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			notificationType: "unknown_type",
+			isAchievingUser: true,
+			want:            true,
+		},
+		{
+			name:            "unknown type for gym mate defaults to true",
+			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			notificationType: "unknown_type",
+			isAchievingUser: false,
+			want:            true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := service.shouldNotifyUser(tt.settings, tt.notificationType, tt.isAchievingUser)
+			if got != tt.want {
+				t.Errorf("shouldNotifyUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNotificationService_CreateNotification_WithData(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+	settingsRepo := newTestUserSettingsRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, settingsRepo, nil)
+
+	// Create a user
+	user := &domain.User{Email: "user@example.com", Name: "Test User"}
+	userRepo.Create(user)
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user}
+
+	movementName := "Back Squat"
+	value := "315 lbs"
+	data := &domain.NotificationData{
+		MovementName: &movementName,
+		Value:        &value,
+	}
+
+	err := service.CreateNotification(user.ID, &orgID, domain.NotificationTypePRAchievement, "Test", "Message", data)
+	if err != nil {
+		t.Errorf("CreateNotification() with data error = %v", err)
+		return
+	}
+
+	// Verify notification was created with data
+	notifications, _ := notifRepo.GetByUserID(user.ID, 10, 0)
+	if len(notifications) != 1 {
+		t.Errorf("CreateNotification() created %d notifications, want 1", len(notifications))
+		return
+	}
+
+	if notifications[0].Data == "" {
+		t.Error("CreateNotification() should have set data field")
+	}
+}
+
+func TestNotificationService_CreateNotification_CreateError(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	notifRepo.createError = fmt.Errorf("database error")
+
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+	settingsRepo := newTestUserSettingsRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, settingsRepo, nil)
+
+	// Create a user
+	user := &domain.User{Email: "user@example.com", Name: "Test User"}
+	userRepo.Create(user)
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user}
+
+	// Should not return error even if notification creation fails (just logs)
+	err := service.CreateNotification(user.ID, &orgID, domain.NotificationTypePRAchievement, "Test", "Message", nil)
+	if err != nil {
+		t.Errorf("CreateNotification() should not return error on create failure, got: %v", err)
+	}
+}
+
+func TestNotificationService_CreateNotification_UserSkipsByPreference(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+	settingsRepo := newTestUserSettingsRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, settingsRepo, nil)
+
+	// Create a user with disabled notifications
+	user := &domain.User{Email: "user@example.com", Name: "Test User"}
+	userRepo.Create(user)
+
+	// Set user preferences to disable PR notifications
+	settingsRepo.settings[user.ID] = &domain.UserSettings{
+		UserID: user.ID,
+		NotificationPreferences: `{"pr_achievements":{"enabled":false}}`,
+	}
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user}
+
+	err := service.CreateNotification(user.ID, &orgID, domain.NotificationTypePRAchievement, "Test", "Message", nil)
+	if err != nil {
+		t.Errorf("CreateNotification() error = %v", err)
+		return
+	}
+
+	// Verify no notifications were created (user opted out)
+	notifications, _ := notifRepo.GetByUserID(user.ID, 10, 0)
+	if len(notifications) != 0 {
+		t.Errorf("CreateNotification() created %d notifications for opted-out user, want 0", len(notifications))
+	}
+}
+
+func TestNotificationService_CreateAnnouncement_AllUsers(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepoWithList()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, nil, nil)
+
+	// Create some users
+	for i := 0; i < 5; i++ {
+		user := &domain.User{Email: "user@example.com", Name: "User"}
+		userRepo.Create(user)
+	}
+
+	err := service.CreateAnnouncement("Test", "Message", "all", nil, nil)
+	if err != nil {
+		t.Errorf("CreateAnnouncement() for all users error = %v", err)
+		return
+	}
+
+	// All users should receive notifications
+	if len(notifRepo.notifications) != 5 {
+		t.Errorf("CreateAnnouncement() created %d notifications, want 5", len(notifRepo.notifications))
+	}
+}
+
+func TestNotificationService_CreateAnnouncement_ToOrganization(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, nil, nil)
+
+	// Create users in organization
+	user1 := &domain.User{Email: "user1@example.com", Name: "User One"}
+	user2 := &domain.User{Email: "user2@example.com", Name: "User Two"}
+	userRepo.Create(user1)
+	userRepo.Create(user2)
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user1, user2}
+
+	err := service.CreateAnnouncement("Test", "Message", "organization", []int64{orgID}, nil)
+	if err != nil {
+		t.Errorf("CreateAnnouncement() to organization error = %v", err)
+		return
+	}
+
+	// Both users in org should receive notifications
+	if len(notifRepo.notifications) != 2 {
+		t.Errorf("CreateAnnouncement() created %d notifications, want 2", len(notifRepo.notifications))
+	}
+}
+
+// mockUserRepoWithList extends mockUserRepo with List functionality
+type mockUserRepoWithList struct {
+	*mockUserRepo
+}
+
+func newMockUserRepoWithList() *mockUserRepoWithList {
+	return &mockUserRepoWithList{
+		mockUserRepo: newMockUserRepo(),
+	}
+}
+
+func (m *mockUserRepoWithList) List(limit, offset int) ([]*domain.User, error) {
+	var users []*domain.User
+	for _, u := range m.users {
+		users = append(users, u)
+	}
+	return users, nil
 }
