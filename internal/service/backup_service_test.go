@@ -3496,3 +3496,776 @@ func TestBackupService_FindByNaturalKey_UserWorkoutsNullName(t *testing.T) {
 		t.Error("expected to find user_workout with NULL workout_name")
 	}
 }
+
+// setupFullTestDB creates an in-memory SQLite database with all tables needed for backup testing
+func setupFullTestDB(t *testing.T) *sql.DB {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("failed to open test database: %v", err)
+	}
+
+	// Create complete schema for testing backups
+	schema := `
+		CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			email TEXT UNIQUE NOT NULL,
+			password_hash TEXT NOT NULL,
+			name TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'user',
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS movements (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			description TEXT,
+			type TEXT NOT NULL,
+			is_standard INTEGER NOT NULL DEFAULT 0,
+			created_by INTEGER,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS wods (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			score_type TEXT,
+			is_standard INTEGER NOT NULL DEFAULT 0,
+			created_by INTEGER,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS workouts (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			notes TEXT,
+			created_by INTEGER,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS organizations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			description TEXT,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_workouts (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			workout_id INTEGER,
+			workout_name TEXT,
+			workout_date DATE NOT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS workout_movements (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workout_id INTEGER NOT NULL,
+			movement_id INTEGER NOT NULL,
+			sets INTEGER,
+			reps INTEGER,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS workout_wods (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workout_id INTEGER NOT NULL,
+			wod_id INTEGER NOT NULL,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_workout_movements (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_workout_id INTEGER NOT NULL,
+			movement_id INTEGER NOT NULL,
+			sets INTEGER,
+			reps INTEGER,
+			weight REAL,
+			is_pr INTEGER DEFAULT 0,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_workout_wods (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_workout_id INTEGER NOT NULL,
+			wod_id INTEGER NOT NULL,
+			score TEXT,
+			is_pr INTEGER DEFAULT 0,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS refresh_tokens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			token TEXT NOT NULL,
+			expires_at DATETIME NOT NULL,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS password_resets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			token TEXT NOT NULL,
+			expires_at DATETIME NOT NULL,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS email_verification_tokens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			token TEXT NOT NULL,
+			expires_at DATETIME NOT NULL,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS audit_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER,
+			action TEXT NOT NULL,
+			entity_type TEXT,
+			entity_id INTEGER,
+			details TEXT,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_settings (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER UNIQUE NOT NULL,
+			theme TEXT DEFAULT 'light',
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS data_change_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER,
+			table_name TEXT NOT NULL,
+			record_id INTEGER,
+			action TEXT NOT NULL,
+			old_data TEXT,
+			new_data TEXT,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_organizations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			organization_id INTEGER NOT NULL,
+			role TEXT DEFAULT 'member',
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_subscriptions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			plan TEXT NOT NULL,
+			status TEXT NOT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS organization_subscriptions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			organization_id INTEGER NOT NULL,
+			plan TEXT NOT NULL,
+			status TEXT NOT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS notifications (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			type TEXT NOT NULL,
+			title TEXT NOT NULL,
+			message TEXT,
+			is_read INTEGER DEFAULT 0,
+			created_at DATETIME NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS notification_likes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			notification_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at DATETIME NOT NULL
+		);
+	`
+
+	if _, err := db.Exec(schema); err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
+
+	return db
+}
+
+// TestBackupService_ExportAllTables tests exporting all database tables
+func TestBackupService_ExportAllTables(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	_, err := db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test@example.com', 'hash123', 'Test User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test user: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO movements (name, type, is_standard, created_at, updated_at)
+		VALUES ('Squat', 'weightlifting', 1, '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test movement: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "sqlite3",
+	}
+
+	data, err := svc.exportAllTables()
+	if err != nil {
+		t.Fatalf("exportAllTables error: %v", err)
+	}
+
+	if data == nil {
+		t.Fatal("expected non-nil backup data")
+	}
+
+	// Verify users exported
+	if len(data.Users) != 1 {
+		t.Errorf("expected 1 user, got %d", len(data.Users))
+	}
+
+	// Verify movements exported
+	if len(data.Movements) != 1 {
+		t.Errorf("expected 1 movement, got %d", len(data.Movements))
+	}
+
+	// Verify schema metadata captured
+	if data.Schema.Tables == nil {
+		t.Error("expected schema tables to be initialized")
+	}
+	if _, ok := data.Schema.Tables["users"]; !ok {
+		t.Error("expected users table in schema metadata")
+	}
+}
+
+// TestBackupService_ExportAllTables_EmptyDatabase tests export with no data
+func TestBackupService_ExportAllTables_EmptyDatabase(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "sqlite3",
+	}
+
+	data, err := svc.exportAllTables()
+	if err != nil {
+		t.Fatalf("exportAllTables error: %v", err)
+	}
+
+	if len(data.Users) != 0 {
+		t.Errorf("expected 0 users, got %d", len(data.Users))
+	}
+	if len(data.Movements) != 0 {
+		t.Errorf("expected 0 movements, got %d", len(data.Movements))
+	}
+}
+
+// TestBackupService_CreateBackup tests creating a full backup
+func TestBackupService_CreateBackup(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	// Create temp directories
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create backup temp dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	uploadsDir, err := os.MkdirTemp("", "uploads_test")
+	if err != nil {
+		t.Fatalf("failed to create uploads temp dir: %v", err)
+	}
+	defer os.RemoveAll(uploadsDir)
+
+	// Insert test user
+	_, err = db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('admin@example.com', 'hash123', 'Admin User', 'admin', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test user: %v", err)
+	}
+
+	// Create mock user repo
+	userRepo := newMockUserRepo()
+	userRepo.users[1] = &domain.User{
+		ID:    1,
+		Email: "admin@example.com",
+		Name:  "Admin User",
+		Role:  "admin",
+	}
+
+	svc := NewBackupService(db, "sqlite3", "test.db", backupDir, uploadsDir, userRepo, &mockAuditLogRepo{})
+
+	filename, err := svc.CreateBackup(1)
+	if err != nil {
+		t.Fatalf("CreateBackup error: %v", err)
+	}
+
+	if filename == "" {
+		t.Error("expected non-empty filename")
+	}
+
+	// Verify file was created
+	backupPath := filepath.Join(backupDir, filename)
+	if _, err := os.Stat(backupPath); os.IsNotExist(err) {
+		t.Errorf("backup file not found at %s", backupPath)
+	}
+
+	// Verify ZIP contents
+	zipReader, err := zip.OpenReader(backupPath)
+	if err != nil {
+		t.Fatalf("failed to open backup ZIP: %v", err)
+	}
+	defer zipReader.Close()
+
+	foundDataJSON := false
+	for _, f := range zipReader.File {
+		if f.Name == "backup_data.json" {
+			foundDataJSON = true
+			break
+		}
+	}
+	if !foundDataJSON {
+		t.Error("backup_data.json not found in ZIP")
+	}
+}
+
+// TestBackupService_CreateBackup_UserNotFound tests backup creation with invalid user
+func TestBackupService_CreateBackup_UserNotFound(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	userRepo := newMockUserRepo()
+	userRepo.getByIDError = fmt.Errorf("user not found") // Return error for non-existent users
+
+	svc := NewBackupService(db, "sqlite3", "test.db", backupDir, "/tmp", userRepo, &mockAuditLogRepo{})
+
+	_, err = svc.CreateBackup(999)
+	if err == nil {
+		t.Error("expected error for non-existent user")
+	}
+	if !strings.Contains(err.Error(), "user info") {
+		t.Errorf("expected user error, got: %v", err)
+	}
+}
+
+// TestBackupService_CreateBackup_WithUploads tests backup with upload files
+func TestBackupService_CreateBackup_WithUploads(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	// Create temp directories
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create backup temp dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	uploadsDir, err := os.MkdirTemp("", "uploads_test")
+	if err != nil {
+		t.Fatalf("failed to create uploads temp dir: %v", err)
+	}
+	defer os.RemoveAll(uploadsDir)
+
+	// Create a test upload file
+	testFile := filepath.Join(uploadsDir, "profile_1.jpg")
+	if err := os.WriteFile(testFile, []byte("fake image data"), 0644); err != nil {
+		t.Fatalf("failed to create test upload file: %v", err)
+	}
+
+	// Insert test user
+	_, err = db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('admin@example.com', 'hash123', 'Admin User', 'admin', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test user: %v", err)
+	}
+
+	userRepo := newMockUserRepo()
+	userRepo.users[1] = &domain.User{
+		ID:    1,
+		Email: "admin@example.com",
+		Name:  "Admin User",
+		Role:  "admin",
+	}
+
+	svc := NewBackupService(db, "sqlite3", "test.db", backupDir, uploadsDir, userRepo, &mockAuditLogRepo{})
+
+	filename, err := svc.CreateBackup(1)
+	if err != nil {
+		t.Fatalf("CreateBackup error: %v", err)
+	}
+
+	// Verify ZIP contains upload file
+	backupPath := filepath.Join(backupDir, filename)
+	zipReader, err := zip.OpenReader(backupPath)
+	if err != nil {
+		t.Fatalf("failed to open backup ZIP: %v", err)
+	}
+	defer zipReader.Close()
+
+	foundUpload := false
+	for _, f := range zipReader.File {
+		if strings.Contains(f.Name, "profile_1.jpg") {
+			foundUpload = true
+			break
+		}
+	}
+	if !foundUpload {
+		t.Error("upload file not found in backup ZIP")
+	}
+}
+
+// TestBackupService_CreateSQLiteDump tests SQLite dump creation
+func TestBackupService_CreateSQLiteDump(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	_, err := db.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test@example.com', 'hash123', 'Test User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert test user: %v", err)
+	}
+
+	svc := &BackupServiceImpl{
+		db:       db,
+		dbDriver: "sqlite3",
+	}
+
+	// Export data
+	data, err := svc.exportAllTables()
+	if err != nil {
+		t.Fatalf("exportAllTables error: %v", err)
+	}
+
+	// Create temp file for SQLite dump
+	tmpFile, err := os.CreateTemp("", "sqlitedump_*.db")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+	defer os.Remove(tmpPath)
+
+	// Create SQLite dump
+	err = svc.createSQLiteDump(data, tmpPath)
+	if err != nil {
+		t.Fatalf("createSQLiteDump error: %v", err)
+	}
+
+	// Verify dump file exists
+	if _, err := os.Stat(tmpPath); os.IsNotExist(err) {
+		t.Error("SQLite dump file not created")
+	}
+
+	// Verify dump contains data
+	dumpDB, err := sql.Open("sqlite3", tmpPath)
+	if err != nil {
+		t.Fatalf("failed to open dump database: %v", err)
+	}
+	defer dumpDB.Close()
+
+	var count int
+	err = dumpDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil {
+		t.Fatalf("failed to query dump database: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("expected 1 user in dump, got %d", count)
+	}
+}
+
+// TestBackupService_RestoreBackup tests restoring from a backup file
+func TestBackupService_RestoreBackup(t *testing.T) {
+	// Create source database with data
+	sourceDB := setupFullTestDB(t)
+	defer sourceDB.Close()
+
+	_, err := sourceDB.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('source@example.com', 'hash123', 'Source User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert source user: %v", err)
+	}
+
+	_, err = sourceDB.Exec(`
+		INSERT INTO movements (name, type, is_standard, created_at, updated_at)
+		VALUES ('Deadlift', 'weightlifting', 1, '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert source movement: %v", err)
+	}
+
+	// Create backup
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create backup dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	uploadsDir, err := os.MkdirTemp("", "uploads_test")
+	if err != nil {
+		t.Fatalf("failed to create uploads dir: %v", err)
+	}
+	defer os.RemoveAll(uploadsDir)
+
+	userRepo := newMockUserRepo()
+	userRepo.users[1] = &domain.User{
+		ID:    1,
+		Email: "source@example.com",
+		Name:  "Source User",
+	}
+
+	sourceSvc := NewBackupService(sourceDB, "sqlite3", "source.db", backupDir, uploadsDir, userRepo, &mockAuditLogRepo{})
+	filename, err := sourceSvc.CreateBackup(1)
+	if err != nil {
+		t.Fatalf("CreateBackup error: %v", err)
+	}
+
+	// Create target database (empty)
+	targetDB := setupFullTestDB(t)
+	defer targetDB.Close()
+
+	targetSvc := NewBackupService(targetDB, "sqlite3", "target.db", backupDir, uploadsDir, newMockUserRepo(), &mockAuditLogRepo{})
+
+	// Restore backup
+	result, err := targetSvc.RestoreBackup(filename, 1, domain.RestoreModeReplace)
+	if err != nil {
+		t.Fatalf("RestoreBackup error: %v", err)
+	}
+
+	if result == nil {
+		t.Fatal("expected non-nil restore result")
+	}
+
+	// Verify data was restored
+	var userCount int
+	err = targetDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if err != nil {
+		t.Fatalf("failed to query target database: %v", err)
+	}
+	if userCount != 1 {
+		t.Errorf("expected 1 user in target, got %d", userCount)
+	}
+
+	var movementCount int
+	err = targetDB.QueryRow("SELECT COUNT(*) FROM movements").Scan(&movementCount)
+	if err != nil {
+		t.Fatalf("failed to query movements: %v", err)
+	}
+	if movementCount != 1 {
+		t.Errorf("expected 1 movement in target, got %d", movementCount)
+	}
+}
+
+// TestBackupService_RestoreBackup_FileNotFound tests restore with missing file
+func TestBackupService_RestoreBackup_FileNotFound(t *testing.T) {
+	db := setupFullTestDB(t)
+	defer db.Close()
+
+	svc := &BackupServiceImpl{
+		db:        db,
+		dbDriver:  "sqlite3",
+		backupDir: "/tmp/nonexistent",
+	}
+
+	_, err := svc.RestoreBackup("nonexistent.zip", 1, domain.RestoreModeReplace)
+	if err == nil {
+		t.Error("expected error for non-existent file")
+	}
+}
+
+// TestBackupService_RestoreBackup_MergeMode tests restore with merge mode
+func TestBackupService_RestoreBackup_MergeMode(t *testing.T) {
+	// Create source database
+	sourceDB := setupFullTestDB(t)
+	defer sourceDB.Close()
+
+	_, err := sourceDB.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('source@example.com', 'hash123', 'Source User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert source user: %v", err)
+	}
+
+	// Create backup
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create backup dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	uploadsDir, err := os.MkdirTemp("", "uploads_test")
+	if err != nil {
+		t.Fatalf("failed to create uploads dir: %v", err)
+	}
+	defer os.RemoveAll(uploadsDir)
+
+	userRepo := newMockUserRepo()
+	userRepo.users[1] = &domain.User{
+		ID:    1,
+		Email: "source@example.com",
+		Name:  "Source User",
+	}
+
+	sourceSvc := NewBackupService(sourceDB, "sqlite3", "source.db", backupDir, uploadsDir, userRepo, &mockAuditLogRepo{})
+	filename, err := sourceSvc.CreateBackup(1)
+	if err != nil {
+		t.Fatalf("CreateBackup error: %v", err)
+	}
+
+	// Create target database with existing data
+	targetDB := setupFullTestDB(t)
+	defer targetDB.Close()
+
+	_, err = targetDB.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('existing@example.com', 'hash456', 'Existing User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert existing user: %v", err)
+	}
+
+	targetSvc := NewBackupService(targetDB, "sqlite3", "target.db", backupDir, uploadsDir, newMockUserRepo(), &mockAuditLogRepo{})
+
+	// Restore with merge mode
+	result, err := targetSvc.RestoreBackup(filename, 1, domain.RestoreModeMerge)
+	if err != nil {
+		t.Fatalf("RestoreBackup merge error: %v", err)
+	}
+
+	if result == nil {
+		t.Fatal("expected non-nil restore result")
+	}
+
+	// Verify both users exist (merged)
+	var userCount int
+	err = targetDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if err != nil {
+		t.Fatalf("failed to query target database: %v", err)
+	}
+	if userCount != 2 {
+		t.Errorf("expected 2 users after merge, got %d", userCount)
+	}
+}
+
+// TestBackupService_RestoreBackup_SkipMode tests restore with skip mode
+func TestBackupService_RestoreBackup_SkipMode(t *testing.T) {
+	// Create source database
+	sourceDB := setupFullTestDB(t)
+	defer sourceDB.Close()
+
+	_, err := sourceDB.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test@example.com', 'hash123', 'Source User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert source user: %v", err)
+	}
+
+	// Create backup
+	backupDir, err := os.MkdirTemp("", "backup_test")
+	if err != nil {
+		t.Fatalf("failed to create backup dir: %v", err)
+	}
+	defer os.RemoveAll(backupDir)
+
+	uploadsDir, err := os.MkdirTemp("", "uploads_test")
+	if err != nil {
+		t.Fatalf("failed to create uploads dir: %v", err)
+	}
+	defer os.RemoveAll(uploadsDir)
+
+	userRepo := newMockUserRepo()
+	userRepo.users[1] = &domain.User{
+		ID:    1,
+		Email: "test@example.com",
+		Name:  "Source User",
+	}
+
+	sourceSvc := NewBackupService(sourceDB, "sqlite3", "source.db", backupDir, uploadsDir, userRepo, &mockAuditLogRepo{})
+	filename, err := sourceSvc.CreateBackup(1)
+	if err != nil {
+		t.Fatalf("CreateBackup error: %v", err)
+	}
+
+	// Create target database with same email user (conflict)
+	targetDB := setupFullTestDB(t)
+	defer targetDB.Close()
+
+	_, err = targetDB.Exec(`
+		INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+		VALUES ('test@example.com', 'hash456', 'Existing User', 'user', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+	`)
+	if err != nil {
+		t.Fatalf("failed to insert existing user: %v", err)
+	}
+
+	targetSvc := NewBackupService(targetDB, "sqlite3", "target.db", backupDir, uploadsDir, newMockUserRepo(), &mockAuditLogRepo{})
+
+	// Restore with skip mode
+	result, err := targetSvc.RestoreBackup(filename, 1, domain.RestoreModeSkip)
+	if err != nil {
+		t.Fatalf("RestoreBackup skip error: %v", err)
+	}
+
+	if result == nil {
+		t.Fatal("expected non-nil restore result")
+	}
+
+	// Verify only 1 user (existing was kept, incoming was skipped)
+	var userCount int
+	err = targetDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if err != nil {
+		t.Fatalf("failed to query target database: %v", err)
+	}
+	if userCount != 1 {
+		t.Errorf("expected 1 user after skip, got %d", userCount)
+	}
+
+	// Verify it's still the existing user
+	var name string
+	err = targetDB.QueryRow("SELECT name FROM users WHERE email = 'test@example.com'").Scan(&name)
+	if err != nil {
+		t.Fatalf("failed to query user name: %v", err)
+	}
+	if name != "Existing User" {
+		t.Errorf("expected 'Existing User', got '%s'", name)
+	}
+}

@@ -10,13 +10,17 @@ import (
 
 // Mock UserWorkoutRepository
 type mockUserWorkoutRepo struct {
-	userWorkouts        map[int64]*domain.UserWorkout
-	userWorkoutsDetails map[int64]*domain.UserWorkoutWithDetails
-	nextID              int64
-	getByIDError        error
-	createError         error
-	updateError         error
-	deleteError         error
+	userWorkouts              map[int64]*domain.UserWorkout
+	userWorkoutsDetails       map[int64]*domain.UserWorkoutWithDetails
+	nextID                    int64
+	getByIDError              error
+	createError               error
+	updateError               error
+	deleteError               error
+	listByUserAndDateRangeErr error
+	listByUserWithDetailsErr  error
+	getActiveUsersError       error
+	activeUsersResult         []map[string]interface{}
 }
 
 func newMockUserWorkoutRepo() *mockUserWorkoutRepo {
@@ -89,6 +93,9 @@ func (m *mockUserWorkoutRepo) ListByUser(userID int64, limit, offset int) ([]*do
 }
 
 func (m *mockUserWorkoutRepo) ListByUserWithDetails(userID int64, limit, offset int) ([]*domain.UserWorkoutWithDetails, error) {
+	if m.listByUserWithDetailsErr != nil {
+		return nil, m.listByUserWithDetailsErr
+	}
 	var result []*domain.UserWorkoutWithDetails
 	for _, uw := range m.userWorkouts {
 		if uw.UserID == userID {
@@ -106,6 +113,9 @@ func (m *mockUserWorkoutRepo) ListByUserWithDetails(userID int64, limit, offset 
 }
 
 func (m *mockUserWorkoutRepo) ListByUserAndDateRange(userID int64, startDate, endDate time.Time) ([]*domain.UserWorkout, error) {
+	if m.listByUserAndDateRangeErr != nil {
+		return nil, m.listByUserAndDateRangeErr
+	}
 	var result []*domain.UserWorkout
 	for _, uw := range m.userWorkouts {
 		if uw.UserID == userID && !uw.WorkoutDate.Before(startDate) && !uw.WorkoutDate.After(endDate) {
@@ -152,8 +162,13 @@ func (m *mockUserWorkoutRepo) GetByUserWorkoutDate(userID, workoutID int64, date
 	return nil, nil
 }
 
-func (m *mockUserWorkoutRepo) GetActiveUsersThisMonth(orgID int64) ([]map[string]interface{}, error) {
-	// For mock purposes, return empty slice
+func (m *mockUserWorkoutRepo) GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error) {
+	if m.getActiveUsersError != nil {
+		return nil, m.getActiveUsersError
+	}
+	if m.activeUsersResult != nil {
+		return m.activeUsersResult, nil
+	}
 	return []map[string]interface{}{}, nil
 }
 
@@ -473,33 +488,92 @@ func (m *mockWorkoutMovementRepo) DeleteByWorkout(workoutID int64) error {
 }
 
 // Mock UserWorkoutMovementRepository
-type mockUserWorkoutMovementRepo struct{}
+type mockUserWorkoutMovementRepo struct {
+	movements                        map[int64]*domain.UserWorkoutMovement
+	nextID                           int64
+	createError                      error
+	createBatchError                 error
+	deleteByUserWorkoutIDError       error
+	getPRMovementsError              error
+	updatePRFlagError                error
+	getAllPerformancesError          error
+	getByUserWorkoutIDError          error
+	previousPerformances             map[int64][]*domain.UserWorkoutMovement // movementID -> performances
+}
+
+func newMockUserWorkoutMovementRepo() *mockUserWorkoutMovementRepo {
+	return &mockUserWorkoutMovementRepo{
+		movements:            make(map[int64]*domain.UserWorkoutMovement),
+		nextID:               1,
+		previousPerformances: make(map[int64][]*domain.UserWorkoutMovement),
+	}
+}
 
 func (m *mockUserWorkoutMovementRepo) Create(uwm *domain.UserWorkoutMovement) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	uwm.ID = m.nextID
+	m.nextID++
+	m.movements[uwm.ID] = uwm
 	return nil
 }
 
 func (m *mockUserWorkoutMovementRepo) CreateBatch(movements []*domain.UserWorkoutMovement) error {
+	if m.createBatchError != nil {
+		return m.createBatchError
+	}
+	for _, uwm := range movements {
+		uwm.ID = m.nextID
+		m.nextID++
+		m.movements[uwm.ID] = uwm
+	}
 	return nil
 }
 
 func (m *mockUserWorkoutMovementRepo) GetByID(id int64) (*domain.UserWorkoutMovement, error) {
-	return nil, sql.ErrNoRows
+	uwm, ok := m.movements[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return uwm, nil
 }
 
 func (m *mockUserWorkoutMovementRepo) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutMovement, error) {
-	return []*domain.UserWorkoutMovement{}, nil
+	if m.getByUserWorkoutIDError != nil {
+		return nil, m.getByUserWorkoutIDError
+	}
+	var result []*domain.UserWorkoutMovement
+	for _, uwm := range m.movements {
+		if uwm.UserWorkoutID == userWorkoutID {
+			result = append(result, uwm)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockUserWorkoutMovementRepo) Update(uwm *domain.UserWorkoutMovement) error {
+	if _, ok := m.movements[uwm.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.movements[uwm.ID] = uwm
 	return nil
 }
 
 func (m *mockUserWorkoutMovementRepo) Delete(id int64) error {
+	delete(m.movements, id)
 	return nil
 }
 
 func (m *mockUserWorkoutMovementRepo) DeleteByUserWorkoutID(userWorkoutID int64) error {
+	if m.deleteByUserWorkoutIDError != nil {
+		return m.deleteByUserWorkoutIDError
+	}
+	for id, uwm := range m.movements {
+		if uwm.UserWorkoutID == userWorkoutID {
+			delete(m.movements, id)
+		}
+	}
 	return nil
 }
 
@@ -508,61 +582,171 @@ func (m *mockUserWorkoutMovementRepo) GetMaxWeightForMovement(userID, movementID
 }
 
 func (m *mockUserWorkoutMovementRepo) GetPRMovements(userID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
-	return []*domain.UserWorkoutMovement{}, nil
+	if m.getPRMovementsError != nil {
+		return nil, m.getPRMovementsError
+	}
+	result := []*domain.UserWorkoutMovement{}
+	for _, uwm := range m.movements {
+		if uwm.IsPR {
+			result = append(result, uwm)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockUserWorkoutMovementRepo) UpdatePRFlag(id int64, isPR bool) error {
+	if m.updatePRFlagError != nil {
+		return m.updatePRFlagError
+	}
+	if uwm, ok := m.movements[id]; ok {
+		uwm.IsPR = isPR
+	}
 	return nil
 }
 
 func (m *mockUserWorkoutMovementRepo) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
+	if m.getAllPerformancesError != nil {
+		return nil, m.getAllPerformancesError
+	}
+	if perfs, ok := m.previousPerformances[movementID]; ok {
+		return perfs, nil
+	}
 	return []*domain.UserWorkoutMovement{}, nil
 }
 
 // Mock UserWorkoutWODRepository
-type mockUserWorkoutWODRepo struct{}
+type mockUserWorkoutWODRepo struct {
+	wods                       map[int64]*domain.UserWorkoutWOD
+	nextID                     int64
+	createError                error
+	createBatchError           error
+	deleteByUserWorkoutIDError error
+	getPRWODsError             error
+	updatePRFlagError          error
+	getBestTimeError           error
+	getBestRoundsRepsError     error
+	getByUserWorkoutIDError    error
+	bestTimes                  map[int64]*int            // wodID -> bestTime
+	bestRoundsReps             map[int64]struct{ rounds, reps *int }
+}
+
+func newMockUserWorkoutWODRepo() *mockUserWorkoutWODRepo {
+	return &mockUserWorkoutWODRepo{
+		wods:           make(map[int64]*domain.UserWorkoutWOD),
+		nextID:         1,
+		bestTimes:      make(map[int64]*int),
+		bestRoundsReps: make(map[int64]struct{ rounds, reps *int }),
+	}
+}
 
 func (m *mockUserWorkoutWODRepo) Create(uww *domain.UserWorkoutWOD) error {
+	if m.createError != nil {
+		return m.createError
+	}
+	uww.ID = m.nextID
+	m.nextID++
+	m.wods[uww.ID] = uww
 	return nil
 }
 
 func (m *mockUserWorkoutWODRepo) CreateBatch(wods []*domain.UserWorkoutWOD) error {
+	if m.createBatchError != nil {
+		return m.createBatchError
+	}
+	for _, uww := range wods {
+		uww.ID = m.nextID
+		m.nextID++
+		m.wods[uww.ID] = uww
+	}
 	return nil
 }
 
 func (m *mockUserWorkoutWODRepo) GetByID(id int64) (*domain.UserWorkoutWOD, error) {
-	return nil, sql.ErrNoRows
+	uww, ok := m.wods[id]
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	return uww, nil
 }
 
 func (m *mockUserWorkoutWODRepo) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutWOD, error) {
-	return []*domain.UserWorkoutWOD{}, nil
+	if m.getByUserWorkoutIDError != nil {
+		return nil, m.getByUserWorkoutIDError
+	}
+	var result []*domain.UserWorkoutWOD
+	for _, uww := range m.wods {
+		if uww.UserWorkoutID == userWorkoutID {
+			result = append(result, uww)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockUserWorkoutWODRepo) Update(uww *domain.UserWorkoutWOD) error {
+	if _, ok := m.wods[uww.ID]; !ok {
+		return sql.ErrNoRows
+	}
+	m.wods[uww.ID] = uww
 	return nil
 }
 
 func (m *mockUserWorkoutWODRepo) Delete(id int64) error {
+	delete(m.wods, id)
 	return nil
 }
 
 func (m *mockUserWorkoutWODRepo) DeleteByUserWorkoutID(userWorkoutID int64) error {
+	if m.deleteByUserWorkoutIDError != nil {
+		return m.deleteByUserWorkoutIDError
+	}
+	for id, uww := range m.wods {
+		if uww.UserWorkoutID == userWorkoutID {
+			delete(m.wods, id)
+		}
+	}
 	return nil
 }
 
 func (m *mockUserWorkoutWODRepo) GetBestTimeForWOD(userID, wodID int64) (*int, error) {
+	if m.getBestTimeError != nil {
+		return nil, m.getBestTimeError
+	}
+	if t, ok := m.bestTimes[wodID]; ok {
+		return t, nil
+	}
 	return nil, nil
 }
 
 func (m *mockUserWorkoutWODRepo) GetBestRoundsRepsForWOD(userID, wodID int64) (rounds *int, reps *int, err error) {
+	if m.getBestRoundsRepsError != nil {
+		return nil, nil, m.getBestRoundsRepsError
+	}
+	if rr, ok := m.bestRoundsReps[wodID]; ok {
+		return rr.rounds, rr.reps, nil
+	}
 	return nil, nil, nil
 }
 
 func (m *mockUserWorkoutWODRepo) GetPRWODs(userID int64, limit int) ([]*domain.UserWorkoutWOD, error) {
-	return []*domain.UserWorkoutWOD{}, nil
+	if m.getPRWODsError != nil {
+		return nil, m.getPRWODsError
+	}
+	result := []*domain.UserWorkoutWOD{}
+	for _, uww := range m.wods {
+		if uww.IsPR {
+			result = append(result, uww)
+		}
+	}
+	return result, nil
 }
 
 func (m *mockUserWorkoutWODRepo) UpdatePRFlag(id int64, isPR bool) error {
+	if m.updatePRFlagError != nil {
+		return m.updatePRFlagError
+	}
+	if uww, ok := m.wods[id]; ok {
+		uww.IsPR = isPR
+	}
 	return nil
 }
 
@@ -1289,8 +1473,9 @@ func (m *mockMovementRepo) CopyToStandard(id int64, newName string) (*domain.Mov
 
 // Mock UserRepository (complete implementation)
 type mockUserRepo struct {
-	users  map[int64]*domain.User
-	nextID int64
+	users        map[int64]*domain.User
+	nextID       int64
+	getByIDError error // If set, GetByID returns this error for non-existent users
 }
 
 func newMockUserRepo() *mockUserRepo {
@@ -1312,6 +1497,9 @@ func (m *mockUserRepo) Create(user *domain.User) error {
 func (m *mockUserRepo) GetByID(id int64) (*domain.User, error) {
 	user, ok := m.users[id]
 	if !ok {
+		if m.getByIDError != nil {
+			return nil, m.getByIDError
+		}
 		return nil, nil
 	}
 	return user, nil

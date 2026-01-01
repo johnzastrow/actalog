@@ -144,6 +144,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Subscription operations logged (from v0.14.0)
 - ✅ User associations logged (from v0.14.0)
 
+### Added - Comprehensive Test Coverage Improvements
+
+- **Service Layer Test Coverage: 81.6% Overall**
+  - 13 services now at 100% coverage
+  - Added comprehensive backup_service tests (10 test functions)
+  - Added wodify_import_service tests with duplicate handling
+  - Fixed mock initialization patterns across test files
+  - Added error injection support to mockUserRepo
+
+- **Backup Service Tests** (`backup_service_test.go`)
+  - `TestBackupService_CreateBackup` - Full backup creation with ZIP archive
+  - `TestBackupService_CreateBackup_UserNotFound` - Error handling for missing user
+  - `TestBackupService_CreateBackup_WithUploads` - Backup with file attachments
+  - `TestBackupService_RestoreBackup` - Replace mode restoration
+  - `TestBackupService_RestoreBackup_MergeMode` - Merge mode with ID remapping
+  - `TestBackupService_RestoreBackup_SkipMode` - Skip mode preserving existing
+  - `TestBackupService_CreateSQLiteDump` - SQLite dump generation
+  - `TestBackupService_ExportAllTables` - JSON export of all tables
+  - Added `setupFullTestDB` helper with complete 20-table schema
+
+- **Test Infrastructure Improvements** (`test_helpers.go`)
+  - Added `getByIDError` field to mockUserRepo for error injection
+  - Fixed mock constructor patterns for proper map initialization
+  - All mocks now use `newMockX()` constructor functions
+
+- **Files Modified:**
+  - `internal/service/test_helpers.go` - Enhanced mockUserRepo with error injection
+  - `internal/service/backup_service_test.go` - 10 new test functions
+  - `internal/service/wodify_import_service_test.go` - Fixed mock initialization
+  - `docs/TESTING.md` - Complete rewrite with current coverage stats
+
 ---
 
 ## [0.16.0-beta] - 2024-12-20

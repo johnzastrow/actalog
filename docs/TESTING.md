@@ -1,152 +1,95 @@
 # Testing Documentation
 
-**Last Updated:** 2025-11-10
-**Version:** 0.4.0-dev
+**Last Updated:** 2026-01-01
+**Version:** 0.17.0-beta
 
 ## Overview
 
-This document tracks testing progress for the ActaLog v0.4.0 template-based architecture and provides guidelines for writing tests.
+This document tracks testing progress and coverage for ActaLog, providing guidelines for writing tests and maintaining the test suite.
 
-## Test Coverage Status
+## Test Coverage Summary
 
-### Unit Tests
+### Overall Coverage: 81.6%
 
-#### ✅ Completed
+| Service | Coverage | Status |
+|---------|----------|--------|
+| audit_log_service.go | 100.0% | ✅ Complete |
+| backup_service.go | 100.0% | ✅ Complete |
+| data_change_log_service.go | 100.0% | ✅ Complete |
+| email_log_service.go | 100.0% | ✅ Complete |
+| movement_service.go | 100.0% | ✅ Complete |
+| notification_like_service.go | 100.0% | ✅ Complete |
+| subscription_service.go | 100.0% | ✅ Complete |
+| user_settings_service.go | 95.2% | ✅ Complete |
+| user_workout_service.go | 100.0% | ✅ Complete |
+| wod_service.go | 100.0% | ✅ Complete |
+| wodify_import_service.go | 100.0% | ✅ Complete |
+| workout_template_service.go | 100.0% | ✅ Complete |
+| workout_wod_service.go | 100.0% | ✅ Complete |
+| export_service.go | 83.6% | 🔄 Good |
+| notification_service.go | 82.6% | 🔄 Good |
+| workout_service.go | 80.0% | 🔄 Good |
+| organization_service.go | 77.8% | 🔄 Needs Improvement |
+| user_service.go | 61.9% | ⚠️ Needs Improvement |
+| import_service.go | 60.8% | ⚠️ Needs Improvement |
 
-**Test Infrastructure:**
-- `internal/service/test_helpers.go` (334 lines)
-  - Mock `UserWorkoutRepository` - Full interface implementation
-  - Mock `WorkoutRepository` - Full interface implementation
-  - Mock `WorkoutMovementRepository` - Full interface implementation
-  - Helper functions: `stringPtr()`, `intPtr()`, `int64Ptr()`
+### Coverage Goals
 
-**UserWorkoutService Tests:**
-- `internal/service/user_workout_service_test.go` (483 lines)
-  - **Test Results: 11/16 passing (68%)**
+| Component | Target | Current | Status |
+|-----------|--------|---------|--------|
+| Overall | >80% | 81.6% | ✅ Met |
+| Service Layer | >90% | 81.6% | 🔄 Close |
+| Repository Layer | >85% | - | ⏳ Pending |
+| Handler Layer | >75% | - | ⏳ Pending |
 
-| Test Function | Test Cases | Passing | Status |
-|--------------|-----------|---------|---------|
-| `TestUserWorkoutService_LogWorkout` | 4 | 4 | ✅ All passing |
-| `TestUserWorkoutService_GetLoggedWorkout` | 3 | 1 | ⚠️ Error wrapping issue |
-| `TestUserWorkoutService_UpdateLoggedWorkout` | 3 | 2 | ⚠️ Error wrapping issue |
-| `TestUserWorkoutService_DeleteLoggedWorkout` | 3 | 2 | ⚠️ Error wrapping issue |
-| `TestUserWorkoutService_GetWorkoutStatsForMonth` | 2 | 2 | ✅ All passing |
-
-**Coverage:**
-- ✅ Authorization checks (user ownership verification)
-- ✅ Business logic validation
-- ✅ Repository interaction
-- ✅ Success paths
-- ⚠️ Error handling paths (needs error wrapping fix)
-- ✅ Edge cases (not found, unauthorized, date ranges)
-
-#### 🔄 In Progress
-
-**WODService Tests** (`internal/service/wod_service_test.go` - not yet created):
-- [ ] `TestWODService_CreateWOD` - Create custom WOD
-- [ ] `TestWODService_GetWOD` - Retrieve WOD by ID
-- [ ] `TestWODService_GetWODByName` - Retrieve WOD by name
-- [ ] `TestWODService_ListStandardWODs` - List standard CrossFit WODs
-- [ ] `TestWODService_ListUserWODs` - List user's custom WODs
-- [ ] `TestWODService_ListAllWODs` - List all WODs (standard + custom)
-- [ ] `TestWODService_UpdateWOD` - Update custom WOD
-- [ ] `TestWODService_DeleteWOD` - Delete custom WOD
-- [ ] `TestWODService_SearchWODs` - Search WODs by name
-
-**WorkoutWODService Tests** (`internal/service/workout_wod_service_test.go` - not yet created):
-- [ ] `TestWorkoutWODService_AddWODToWorkout` - Link WOD to workout template
-- [ ] `TestWorkoutWODService_RemoveWODFromWorkout` - Unlink WOD from workout
-- [ ] `TestWorkoutWODService_UpdateWorkoutWOD` - Update WOD score/division
-- [ ] `TestWorkoutWODService_ToggleWODPR` - Toggle PR flag
-- [ ] `TestWorkoutWODService_ListWODsForWorkout` - List WODs in template
-
-**WorkoutService Template Tests** (`internal/service/workout_service_test.go` - needs rewrite):
-- [ ] `TestWorkoutService_CreateTemplate` - Create workout template
-- [ ] `TestWorkoutService_GetTemplate` - Retrieve template by ID
-- [ ] `TestWorkoutService_ListTemplates` - List templates (standard + user's)
-- [ ] `TestWorkoutService_UpdateTemplate` - Update template
-- [ ] `TestWorkoutService_DeleteTemplate` - Delete template
-- [ ] `TestWorkoutService_GetTemplateUsageStats` - Usage statistics
-
-#### ⏳ Pending
-
-**Repository Tests:**
-- [ ] `UserWorkoutRepository` tests
-- [ ] `WODRepository` tests
-- [ ] `WorkoutWODRepository` tests
-- [ ] `WorkoutRepository` template operation tests
-
-**Integration Tests:**
-- [ ] `user_workout_handler` HTTP tests
-- [ ] `wod_handler` HTTP tests
-- [ ] `workout_wod_handler` HTTP tests
-- [ ] End-to-end API workflow tests
-
-**Frontend Tests:**
-- [ ] Component tests
-- [ ] Store tests (Pinia)
-- [ ] E2E tests (Cypress/Playwright)
-
-## Test Architecture
+## Test Infrastructure
 
 ### Directory Structure
 
 ```
-test/
-├── unit/              # Unit tests (fast, isolated)
-└── integration/       # Integration tests (database, HTTP)
-
 internal/service/
-├── test_helpers.go    # Shared mock repositories
-├── *_service_test.go  # Service unit tests
+├── test_helpers.go            # Shared mock repositories (600+ lines)
+├── *_service_test.go          # Service unit tests
 ```
 
-### Test Patterns
+### Mock Repository Infrastructure
 
-#### Table-Driven Tests
+Located in `internal/service/test_helpers.go`:
 
-All tests use table-driven test pattern for multiple scenarios:
+**User-Related Mocks:**
+- `mockUserRepo` - User CRUD with error injection support
+- `mockUserSettingsRepo` - User settings management
+- `mockRefreshTokenRepo` - JWT refresh token handling
 
-```go
-func TestUserWorkoutService_LogWorkout(t *testing.T) {
-    tests := []struct {
-        name          string
-        userID        int64
-        workoutID     int64
-        setupMock     func(*mockWorkoutRepo)
-        expectedError error
-    }{
-        {
-            name: "successful workout log",
-            userID: 1,
-            workoutID: 1,
-            setupMock: func(m *mockWorkoutRepo) {
-                // Setup mock data
-            },
-            expectedError: nil,
-        },
-        // More test cases...
-    }
+**Workout Mocks:**
+- `mockUserWorkoutRepo` - User workout logging with stats
+- `mockUserWorkoutMovementRepo` - Movement performance tracking
+- `mockUserWorkoutWODRepo` - WOD performance tracking
+- `mockWorkoutRepo` - Workout template management
+- `mockWorkoutMovementRepo` - Template-movement associations
+- `mockWorkoutWODRepo` - Template-WOD associations
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            // Test implementation
-        })
-    }
-}
-```
+**Entity Mocks:**
+- `mockMovementRepo` - Movement CRUD with category support
+- `mockWODRepo` - WOD management with search
+- `mockWorkoutTemplateRepo` - Template CRUD
 
-#### Mock Repository Pattern
+**System Mocks:**
+- `mockAuditLogRepo` - Audit trail logging
+- `mockNotificationRepo` - Notification system
+- `mockSubscriptionAccessRepo` - Subscription access checks
+- `mockEmailService` - Email sending simulation
 
-Shared mock repositories implement full domain interfaces:
+### Mock Pattern
+
+All mocks use constructor functions for proper initialization:
 
 ```go
 type mockUserWorkoutRepo struct {
-    userWorkouts map[int64]*domain.UserWorkout
-    nextID       int64
-    getByIDError error
-    createError  error
-    // ...
+    userWorkouts          map[int64]*domain.UserWorkout
+    nextID                int64
+    getByIDError          error
+    createError           error
 }
 
 func newMockUserWorkoutRepo() *mockUserWorkoutRepo {
@@ -157,199 +100,274 @@ func newMockUserWorkoutRepo() *mockUserWorkoutRepo {
 }
 ```
 
-## Known Issues
+### Error Injection
 
-### Error Wrapping
+Mocks support error injection for testing error paths:
 
-**Issue:** Service layer wraps errors with `fmt.Errorf()`, but tests use direct error comparison.
-
-**Current (fails):**
 ```go
-if err != tt.expectedError {
-    t.Errorf("expected error %v, got %v", tt.expectedError, err)
-}
+mockRepo := newMockUserWorkoutRepo()
+mockRepo.createError = errors.New("database connection lost")
+// Test will now receive this error from Create()
 ```
 
-**Should be:**
+## Running Tests
+
+### Quick Commands
+
+```bash
+# Run all tests
+make test
+
+# Run service tests only
+go test -v ./internal/service/...
+
+# Run with coverage
+go test -coverprofile=coverage.out ./internal/service/...
+go tool cover -html=coverage.out
+
+# Run specific test
+go test -v -run TestBackupService ./internal/service/...
+
+# Run with race detection
+go test -race ./internal/service/...
+```
+
+### Coverage Report
+
+```bash
+# Generate per-function coverage
+go test -coverprofile=coverage.out ./internal/service/...
+go tool cover -func=coverage.out
+
+# Generate HTML report
+go tool cover -html=coverage.out -o coverage.html
+```
+
+## Test Patterns
+
+### Table-Driven Tests
+
+All tests follow the table-driven pattern for comprehensive coverage:
+
 ```go
-if tt.expectedError != nil {
-    if !errors.Is(err, tt.expectedError) {
-        t.Errorf("expected error %v, got %v", tt.expectedError, err)
+func TestService_Method(t *testing.T) {
+    tests := []struct {
+        name          string
+        input         InputType
+        setupMock     func(*mockRepo)
+        expectedError error
+        validate      func(*testing.T, ResultType)
+    }{
+        {
+            name:  "successful operation",
+            input: validInput,
+            setupMock: func(m *mockRepo) {
+                m.data[1] = expectedData
+            },
+            expectedError: nil,
+            validate: func(t *testing.T, result ResultType) {
+                if result.ID != expected.ID {
+                    t.Errorf("expected ID %d, got %d", expected.ID, result.ID)
+                }
+            },
+        },
+        {
+            name:          "handles not found",
+            input:         missingInput,
+            expectedError: service.ErrNotFound,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            mockRepo := newMockRepo()
+            if tt.setupMock != nil {
+                tt.setupMock(mockRepo)
+            }
+            svc := NewService(mockRepo)
+
+            result, err := svc.Method(tt.input)
+
+            if tt.expectedError != nil {
+                if !errors.Is(err, tt.expectedError) {
+                    t.Errorf("expected error %v, got %v", tt.expectedError, err)
+                }
+                return
+            }
+            if err != nil {
+                t.Fatalf("unexpected error: %v", err)
+            }
+            if tt.validate != nil {
+                tt.validate(t, result)
+            }
+        })
     }
 }
 ```
 
-**Affected Tests:**
-- `TestUserWorkoutService_GetLoggedWorkout` - 2/3 failing
-- `TestUserWorkoutService_UpdateLoggedWorkout` - 1/3 failing
-- `TestUserWorkoutService_DeleteLoggedWorkout` - 1/3 failing
+### Integration Tests with SQLite
 
-**Fix:** Update test assertions to use `errors.Is()` for wrapped error comparison.
+For tests requiring a real database (backup/restore, migrations):
 
-### Deprecated Test Files
+```go
+func setupTestDB(t *testing.T) *sql.DB {
+    db, err := sql.Open("sqlite3", ":memory:")
+    if err != nil {
+        t.Fatalf("failed to open test database: %v", err)
+    }
 
-- `internal/service/workout_service_test.go.old` - v0.3.x tests (incompatible with v0.4.0)
-- `internal/service/user_service_test.go` - Needs update for new UserService constructor
+    // Create schema
+    _, err = db.Exec(`
+        CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT UNIQUE);
+        CREATE TABLE movements (id INTEGER PRIMARY KEY, name TEXT);
+        -- ... full schema
+    `)
+    if err != nil {
+        t.Fatalf("failed to create schema: %v", err)
+    }
 
-## Running Tests
-
-### Run All Tests
-```bash
-make test
+    return db
+}
 ```
 
-### Run Specific Service Tests
-```bash
-go test -v -run TestUserWorkoutService ./internal/service/user_workout_service_test.go ./internal/service/user_workout_service.go ./internal/service/test_helpers.go
+### Arrange-Act-Assert Pattern
+
+```go
+func TestExample(t *testing.T) {
+    // Arrange - Set up test data and mocks
+    mockRepo := newMockRepo()
+    mockRepo.data[1] = &domain.Entity{ID: 1, Name: "test"}
+    service := NewService(mockRepo)
+
+    // Act - Execute the operation
+    result, err := service.GetByID(1)
+
+    // Assert - Verify the outcome
+    if err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
+    if result.Name != "test" {
+        t.Errorf("expected name 'test', got %q", result.Name)
+    }
+}
 ```
 
-### Run Unit Tests Only
-```bash
-make test-unit
-```
+## Test Coverage by Feature
 
-### Run Integration Tests Only
-```bash
-make test-integration
-```
+### Backup Service (100% coverage)
 
-### Test with Coverage
-```bash
-go test -coverprofile=coverage.out ./internal/service/...
-go tool cover -html=coverage.out
-```
+Comprehensive tests in `backup_service_test.go`:
 
-## Test Guidelines
+- `TestBackupService_CreateBackup` - Full backup creation with ZIP archive
+- `TestBackupService_CreateBackup_UserNotFound` - Error handling for missing user
+- `TestBackupService_CreateBackup_WithUploads` - Backup with file attachments
+- `TestBackupService_RestoreBackup` - Replace mode restoration
+- `TestBackupService_RestoreBackup_MergeMode` - Merge mode with updates
+- `TestBackupService_RestoreBackup_SkipMode` - Skip mode preserving existing
+- `TestBackupService_RestoreBackup_FileNotFound` - Missing backup file handling
+- `TestBackupService_CreateSQLiteDump` - SQLite dump generation
+- `TestBackupService_ExportAllTables` - JSON export of all tables
+- `TestBackupService_ExportAllTables_EmptyDatabase` - Empty database handling
 
-### Writing Good Tests
+### User Workout Service (100% coverage)
+
+Tests in `user_workout_service_test.go`:
+
+- `TestUserWorkoutService_LogWorkout` - Workout logging
+- `TestUserWorkoutService_LogWorkoutWithPerformance` - Logging with PR detection
+- `TestUserWorkoutService_GetLoggedWorkout` - Retrieve with authorization
+- `TestUserWorkoutService_UpdateLoggedWorkout` - Update with authorization
+- `TestUserWorkoutService_DeleteLoggedWorkout` - Delete with authorization
+- `TestUserWorkoutService_GetWorkoutStatsForMonth` - Monthly statistics
+- `TestUserWorkoutService_ListByUser` - User workout listing
+- `TestUserWorkoutService_GetWorkoutSummary` - Summary calculations
+
+### Subscription Service (100% coverage)
+
+Tests in `subscription_service_test.go`:
+
+- Create/cancel user subscriptions
+- Create/cancel organization subscriptions
+- Mark subscriptions as paid
+- Access checking (user-level and organization-level)
+- Permanent free subscription handling
+
+### Import/Export Services
+
+Tests in `import_service_test.go`, `wodify_import_service_test.go`:
+
+- CSV parsing and validation
+- Duplicate detection and handling
+- Skip vs update modes
+- Error recovery
+- Multi-format support (Wodify CSV, JSON)
+
+## Writing New Tests
+
+### Guidelines
 
 1. **Test Behavior, Not Implementation**
    - Focus on what the service does, not how
-   - Test public API, not internal details
+   - Test public API only
 
-2. **Use Descriptive Test Names**
-   - Good: `"successful workout log"`
+2. **Use Descriptive Names**
+   - Good: `"successful workout log with PR detection"`
    - Bad: `"test1"`
 
 3. **Cover Edge Cases**
    - Happy path (success scenarios)
-   - Error conditions (not found, unauthorized, validation failures)
-   - Boundary conditions (empty lists, nil values, date ranges)
+   - Error conditions (not found, unauthorized, validation)
+   - Boundary conditions (empty lists, nil values, limits)
 
 4. **Keep Tests Independent**
-   - Each test should run in isolation
+   - Each test runs in isolation
    - No shared state between tests
-   - Use fresh mock instances per test
+   - Fresh mock instances per test
 
-5. **Mock External Dependencies**
-   - Repository interfaces
-   - Email services
-   - External APIs
+5. **Use `errors.Is()` for Error Comparison**
+   ```go
+   if !errors.Is(err, service.ErrNotFound) {
+       t.Errorf("expected ErrNotFound, got %v", err)
+   }
+   ```
 
-### Test Organization
+### Adding a New Mock
 
-```go
-// 1. Arrange - Set up test data
-mockRepo := newMockUserWorkoutRepo()
-if tt.setupMock != nil {
-    tt.setupMock(mockRepo)
-}
-service := NewUserWorkoutService(mockRepo, ...)
+1. Add interface implementation to `test_helpers.go`
+2. Include constructor function with map initialization
+3. Add error injection fields as needed
+4. Implement all interface methods
 
-// 2. Act - Execute the operation
-result, err := service.LogWorkout(...)
+## Continuous Integration
 
-// 3. Assert - Verify the outcome
-if tt.expectedError != nil {
-    if !errors.Is(err, tt.expectedError) {
-        t.Errorf("expected error %v, got %v", tt.expectedError, err)
-    }
-    return
-}
+Tests run automatically on:
+- Pull request creation
+- Push to main branch
 
-if err != nil {
-    t.Errorf("unexpected error: %v", err)
-}
+CI configuration: `.github/workflows/ci.yml`
 
-// Verify result
-if result.UserID != tt.userID {
-    t.Errorf("expected user ID %d, got %d", tt.userID, result.UserID)
-}
+```yaml
+- name: Run tests
+  run: go test -v -race -coverprofile=coverage.out ./...
 ```
-
-## Coverage Goals
-
-### Target Coverage
-
-- **Overall:** >80%
-- **Service Layer:** >90%
-- **Repository Layer:** >85%
-- **Handler Layer:** >75%
-
-### Current Coverage
-
-| Component | Coverage | Status |
-|-----------|----------|--------|
-| UserWorkoutService | 68% | 🔄 In Progress |
-| WODService | 0% | ⏳ Not Started |
-| WorkoutWODService | 0% | ⏳ Not Started |
-| WorkoutService (templates) | 0% | ⏳ Not Started |
-| Repositories | 0% | ⏳ Not Started |
-| Handlers | 0% | ⏳ Not Started |
 
 ## Next Steps
 
-### Immediate Priorities
+### High Priority
+1. Improve `user_service.go` coverage (61.9% → 80%+)
+2. Improve `import_service.go` coverage (60.8% → 80%+)
+3. Add handler unit tests
 
-1. **Fix Error Wrapping in UserWorkoutService Tests**
-   - Update assertions to use `errors.Is()`
-   - Target: 16/16 tests passing (100%)
-
-2. **Complete WODService Tests**
-   - Create `wod_service_test.go`
-   - Add mock WODRepository to `test_helpers.go`
-   - Implement 9 test functions
-
-3. **Complete WorkoutWODService Tests**
-   - Create `workout_wod_service_test.go`
-   - Add mock WorkoutWODRepository to `test_helpers.go`
-   - Implement 5 test functions
-
-4. **Rewrite WorkoutService Tests for v0.4.0**
-   - Update `workout_service_test.go` for template operations
-   - Remove v0.3.x user-specific workout tests
-   - Focus on template CRUD operations
+### Medium Priority
+1. Add repository integration tests
+2. Improve `organization_service.go` coverage (77.8% → 90%+)
+3. Add E2E API tests
 
 ### Future Work
-
-1. **Repository Integration Tests**
-   - Test with real database (SQLite in-memory)
-   - Verify SQL queries and transactions
-   - Test migrations
-
-2. **Handler Integration Tests**
-   - HTTP request/response testing
-   - JWT authentication verification
-   - JSON serialization/deserialization
-
-3. **E2E Tests**
-   - Complete user workflows
-   - Frontend-backend integration
-   - Cross-browser compatibility
-
-4. **Performance Tests**
-   - Load testing for API endpoints
-   - Database query optimization
-   - Memory leak detection
-
-## References
-
-- [Go Testing Package](https://pkg.go.dev/testing)
-- [Table-Driven Tests](https://github.com/golang/go/wiki/TableDrivenTests)
-- [Testify Package](https://github.com/stretchr/testify) (if needed for assertions)
-- [Go Mock](https://github.com/golang/mock) (alternative to manual mocks)
+1. Frontend component tests (Vue Test Utils)
+2. E2E tests (Playwright/Cypress)
+3. Performance/load testing
 
 ---
 
-**Maintained by:** Development Team
-**Review Frequency:** Weekly during v0.4.0 development
+*This file is maintained alongside test improvements. Update coverage stats after significant test additions.*

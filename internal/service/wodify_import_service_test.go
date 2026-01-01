@@ -13,8 +13,8 @@ func TestNewWodifyImportService(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -46,8 +46,8 @@ func TestWodifyImportService_PreviewImport_ValidCSV(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -94,8 +94,8 @@ func TestWodifyImportService_PreviewImport_InvalidHeader(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -125,8 +125,8 @@ func TestWodifyImportService_PreviewImport_EmptyDate(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -158,8 +158,8 @@ func TestWodifyImportService_PreviewImport_MissingComponentFields(t *testing.T) 
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -192,8 +192,8 @@ func TestWodifyImportService_PreviewImport_ExistingMovement(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Add existing movement
 	movementRepo.movements[1] = &domain.Movement{
@@ -231,8 +231,8 @@ func TestWodifyImportService_PreviewImport_ExistingWorkout(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Add existing workout for the date
 	existingWorkout := &domain.UserWorkout{
@@ -273,8 +273,8 @@ func TestWodifyImportService_ConfirmImport_CreateNew(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -315,8 +315,8 @@ func TestWodifyImportService_ConfirmImport_SkipDuplicates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Add existing workout
 	existingWorkout := &domain.UserWorkout{
@@ -356,8 +356,8 @@ func TestWodifyImportService_ConfirmImport_UpdateDuplicates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Add existing workout
 	existingWorkout := &domain.UserWorkout{
@@ -400,8 +400,8 @@ func TestWodifyImportService_ConfirmImport_MultipleDates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,
@@ -582,8 +582,8 @@ func TestWodifyImportService_ConfirmImport_WithExistingMovementAndWOD(t *testing
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Add existing movement and WOD
 	movementRepo.movements[1] = &domain.Movement{
@@ -629,8 +629,8 @@ func TestWodifyImportService_PreviewImport_PRDetection(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	wodRepo := newMockWODRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewWodifyImportService(
 		userRepo,

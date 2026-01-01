@@ -12,8 +12,8 @@ func TestNewImportService(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -27,8 +27,8 @@ func TestImportService_PreviewWODImport_ValidCSV(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -58,8 +58,8 @@ func TestImportService_PreviewWODImport_InvalidHeader(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -77,8 +77,8 @@ func TestImportService_PreviewWODImport_MissingRequiredFields(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -103,8 +103,8 @@ func TestImportService_PreviewWODImport_InvalidEnumValues(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -131,8 +131,8 @@ func TestImportService_PreviewWODImport_DuplicateDetection(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -160,8 +160,8 @@ func TestImportService_PreviewWODImport_NonAdminCannotImportStandard(t *testing.
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -183,8 +183,8 @@ func TestImportService_ConfirmWODImport_CreateNew(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -211,8 +211,8 @@ func TestImportService_ConfirmWODImport_SkipDuplicates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -240,8 +240,8 @@ func TestImportService_PreviewMovementImport_ValidCSV(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -268,8 +268,8 @@ func TestImportService_PreviewMovementImport_InvalidHeader(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -287,8 +287,8 @@ func TestImportService_PreviewMovementImport_MissingRequiredFields(t *testing.T)
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -310,8 +310,8 @@ func TestImportService_PreviewMovementImport_InvalidType(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -332,8 +332,8 @@ func TestImportService_PreviewMovementImport_DuplicateDetection(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -358,8 +358,8 @@ func TestImportService_PreviewMovementImport_NonAdminCannotImportStandard(t *tes
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -380,8 +380,8 @@ func TestImportService_ConfirmMovementImport_CreateNew(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -408,8 +408,8 @@ func TestImportService_ConfirmMovementImport_SkipDuplicates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -434,8 +434,8 @@ func TestImportService_PreviewUserWorkoutImport_ValidJSON(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -487,8 +487,8 @@ func TestImportService_PreviewUserWorkoutImport_InvalidDate(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -516,8 +516,8 @@ func TestImportService_PreviewUserWorkoutImport_InvalidJSON(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -532,8 +532,8 @@ func TestImportService_PreviewUserWorkoutImport_MissingMovement(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -568,8 +568,8 @@ func TestImportService_MultipleRows(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -595,8 +595,8 @@ func TestImportService_PreviewWODImport_WithCreatedByEmail(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -665,8 +665,8 @@ func TestImportService_ConfirmWODImport_UpdateDuplicates_Standard(t *testing.T) 
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -708,8 +708,8 @@ func TestImportService_ConfirmWODImport_UpdateDuplicates_Custom(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -750,8 +750,8 @@ func TestImportService_ConfirmWODImport_WithURLAndNotes(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -784,8 +784,8 @@ func TestImportService_ConfirmWODImport_WithCreatedByEmail(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Create a user to be referenced
 	user := &domain.User{Email: "creator@example.com"}
@@ -819,8 +819,8 @@ func TestImportService_ConfirmWODImport_CustomWithoutEmail(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -851,8 +851,8 @@ func TestImportService_ConfirmMovementImport_UpdateDuplicates(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -891,8 +891,8 @@ func TestImportService_ConfirmMovementImport_WithCreatedByEmail(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Create a user to be referenced
 	user := &domain.User{Email: "coach@example.com"}
@@ -926,8 +926,8 @@ func TestImportService_ConfirmMovementImport_CustomWithoutEmail(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -958,8 +958,8 @@ func TestImportService_PreviewUserWorkoutImport_WithMissingMovement(t *testing.T
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1000,8 +1000,8 @@ func TestImportService_PreviewUserWorkoutImport_WithMissingWOD(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1042,8 +1042,8 @@ func TestImportService_PreviewUserWorkoutImport_MissingMovementName(t *testing.T
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1081,8 +1081,8 @@ func TestImportService_PreviewUserWorkoutImport_MissingWODName(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1120,8 +1120,8 @@ func TestImportService_ConfirmUserWorkoutImport_BasicSuccess(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1160,8 +1160,8 @@ func TestImportService_ConfirmUserWorkoutImport_InvalidJSON(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1178,8 +1178,8 @@ func TestImportService_ConfirmUserWorkoutImport_InvalidDate(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1211,8 +1211,8 @@ func TestImportService_ConfirmUserWorkoutImport_WithMovements(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Create a movement that exists
 	existingMovement := &domain.Movement{
@@ -1263,8 +1263,8 @@ func TestImportService_ConfirmUserWorkoutImport_WithWODs(t *testing.T) {
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	// Create a WOD that exists
 	existingWOD := &domain.WOD{
@@ -1315,8 +1315,8 @@ func TestImportService_ConfirmUserWorkoutImport_CreatesMissingMovement(t *testin
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1363,8 +1363,8 @@ func TestImportService_ConfirmUserWorkoutImport_CreatesMissingWOD(t *testing.T) 
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 
@@ -1412,8 +1412,8 @@ func TestImportService_ConfirmUserWorkoutImport_DefaultWorkoutName(t *testing.T)
 	movementRepo := newMockMovementRepo()
 	userRepo := newMockUserRepo()
 	userWorkoutRepo := newMockUserWorkoutRepo()
-	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
-	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+	userWorkoutMovementRepo := newMockUserWorkoutMovementRepo()
+	userWorkoutWODRepo := newMockUserWorkoutWODRepo()
 
 	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
 

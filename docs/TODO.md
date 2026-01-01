@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-23
-> **Current Version:** 0.17.0-beta (in development)
+> **Last Updated:** 2026-01-01
+> **Current Version:** 0.17.0-beta (Build 72)
 
 ---
 
@@ -154,11 +154,16 @@ These features can be added after the core frontend is complete:
    - Different grace periods for different subscription tiers
 
 
-#### Testing Coverage
+#### Testing Coverage (81.6% Service Layer)
 - [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite (internal/service/subscription_service_test.go)
+- [x] `[HIGH]` **Backup Service Tests** - 10 test functions with full restore mode coverage (internal/service/backup_service_test.go)
+- [x] `[HIGH]` **User Workout Service Tests** - Complete coverage with PR detection
+- [x] `[HIGH]` **Wodify Import Service Tests** - Duplicate handling and error recovery
+- [x] `[HIGH]` **Most Service Tests Complete** - 13 services at 100% coverage
 - [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
-- [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
-- [ ] `[HIGH]` **Add repository unit tests** - All repository implementations
+- [ ] `[MEDIUM]` **Improve user_service coverage** - Currently 61.9%, target 80%+
+- [ ] `[MEDIUM]` **Improve import_service coverage** - Currently 60.8%, target 80%+
+- [ ] `[LOW]` **Add repository unit tests** - All repository implementations
 
 #### Admin Features
 - [ ] `[HIGH]` **User Import/Export System** (Admin only)
@@ -217,8 +222,9 @@ These features can be added after the core frontend is complete:
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
-- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 20 test functions, 70+ test cases
-- [ ] `[MEDIUM]` **Add export/import_service tests**
+- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 10 test functions covering create/restore/export
+- [x] `[MEDIUM]` **Add wodify_import_service tests** - wodify_import_service_test.go with duplicate handling
+- [ ] `[MEDIUM]` **Add export/import_service tests** - Currently at 60-83% coverage
 - [ ] `[MEDIUM]` **Add admin_handler tests**
 
 #### PWA Enhancements
@@ -229,8 +235,8 @@ These features can be added after the core frontend is complete:
 ### Low Priority
 
 #### Testing
-- [ ] `[LOW]` **Add audit_log_service tests**
-- [ ] `[LOW]` **Add wodify_import_service tests**
+- [x] `[LOW]` **Add audit_log_service tests** - 100% coverage achieved
+- [x] `[LOW]` **Add wodify_import_service tests** - 100% coverage achieved
 
 #### Features
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
