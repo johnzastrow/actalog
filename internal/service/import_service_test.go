@@ -657,3 +657,786 @@ func TestContains(t *testing.T) {
 		t.Error("contains() should return false for empty slice")
 	}
 }
+
+// Additional tests for better coverage
+
+func TestImportService_ConfirmWODImport_UpdateDuplicates_Standard(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	// Create existing standard WOD
+	existingWOD := &domain.WOD{
+		Name:        "Fran",
+		IsStandard:  true,
+		Source:      "CrossFit",
+		Type:        "Benchmark",
+		Regime:      "Fastest Time",
+		ScoreType:   "Time (HH:MM:SS)",
+		Description: "Original description",
+	}
+	_ = wodRepo.Create(existingWOD)
+
+	csv := `name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Fran,CrossFit,Benchmark,Fastest Time,Time (HH:MM:SS),Updated description,https://example.com,Updated notes,true,`
+
+	result, err := svc.ConfirmWODImport(strings.NewReader(csv), 1, true, false, true) // updateDuplicates = true
+	if err != nil {
+		t.Errorf("ConfirmWODImport() error = %v", err)
+	}
+	if result.UpdatedCount != 1 {
+		t.Errorf("UpdatedCount = %d, want 1", result.UpdatedCount)
+	}
+	if result.CreatedCount != 0 {
+		t.Errorf("CreatedCount = %d, want 0", result.CreatedCount)
+	}
+
+	// Verify WOD was updated
+	updatedWOD, _ := wodRepo.GetByName("Fran")
+	if updatedWOD.Description != "Updated description" {
+		t.Errorf("Description = %s, want Updated description", updatedWOD.Description)
+	}
+}
+
+func TestImportService_ConfirmWODImport_UpdateDuplicates_Custom(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	// Create existing custom WOD
+	userID := int64(1)
+	existingWOD := &domain.WOD{
+		Name:        "My Custom WOD",
+		IsStandard:  false,
+		Source:      "Self-recorded",
+		Type:        "Self-created",
+		Regime:      "AMRAP",
+		ScoreType:   "Rounds+Reps",
+		Description: "Original description",
+		CreatedBy:   &userID,
+	}
+	_ = wodRepo.Create(existingWOD)
+
+	csv := `name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+My Custom WOD,Self-recorded,Self-created,AMRAP,Rounds+Reps,Updated description,,,false,`
+
+	result, err := svc.ConfirmWODImport(strings.NewReader(csv), userID, false, false, true) // updateDuplicates = true
+	if err != nil {
+		t.Errorf("ConfirmWODImport() error = %v", err)
+	}
+	if result.UpdatedCount != 1 {
+		t.Errorf("UpdatedCount = %d, want 1", result.UpdatedCount)
+	}
+
+	// Verify WOD was updated using regular Update (not UpdateStandard)
+	updatedWOD, _ := wodRepo.GetByName("My Custom WOD")
+	if updatedWOD.Description != "Updated description" {
+		t.Errorf("Description = %s, want Updated description", updatedWOD.Description)
+	}
+}
+
+func TestImportService_ConfirmWODImport_WithURLAndNotes(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	csv := `name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Grace,CrossFit,Benchmark,Fastest Time,Time (HH:MM:SS),30 Clean and Jerks,https://crossfit.com/grace,Classic Olympic lift benchmark,true,`
+
+	result, err := svc.ConfirmWODImport(strings.NewReader(csv), 1, true, false, false)
+	if err != nil {
+		t.Errorf("ConfirmWODImport() error = %v", err)
+	}
+	if result.CreatedCount != 1 {
+		t.Errorf("CreatedCount = %d, want 1", result.CreatedCount)
+	}
+
+	// Verify WOD was created with URL and Notes
+	createdWOD, _ := wodRepo.GetByName("Grace")
+	if createdWOD == nil {
+		t.Fatal("WOD not created")
+	}
+	if createdWOD.URL == nil || *createdWOD.URL != "https://crossfit.com/grace" {
+		t.Error("URL not set correctly")
+	}
+	if createdWOD.Notes == nil || *createdWOD.Notes != "Classic Olympic lift benchmark" {
+		t.Error("Notes not set correctly")
+	}
+}
+
+func TestImportService_ConfirmWODImport_WithCreatedByEmail(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	// Create a user to be referenced
+	user := &domain.User{Email: "creator@example.com"}
+	_ = userRepo.Create(user)
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	csv := `name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Custom WOD,Self-recorded,Self-created,AMRAP,Rounds+Reps,Custom workout,,,false,creator@example.com`
+
+	result, err := svc.ConfirmWODImport(strings.NewReader(csv), 2, false, false, false) // Different user ID
+	if err != nil {
+		t.Errorf("ConfirmWODImport() error = %v", err)
+	}
+	if result.CreatedCount != 1 {
+		t.Errorf("CreatedCount = %d, want 1", result.CreatedCount)
+	}
+
+	// Verify WOD was created with correct created_by
+	createdWOD, _ := wodRepo.GetByName("Custom WOD")
+	if createdWOD == nil {
+		t.Fatal("WOD not created")
+	}
+	if createdWOD.CreatedBy == nil || *createdWOD.CreatedBy != user.ID {
+		t.Error("CreatedBy not set correctly from email")
+	}
+}
+
+func TestImportService_ConfirmWODImport_CustomWithoutEmail(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	csv := `name,source,type,regime,score_type,description,url,notes,is_standard,created_by_email
+Custom WOD No Email,Self-recorded,Self-created,AMRAP,Rounds+Reps,Custom workout,,,false,`
+
+	userID := int64(5)
+	result, err := svc.ConfirmWODImport(strings.NewReader(csv), userID, false, false, false)
+	if err != nil {
+		t.Errorf("ConfirmWODImport() error = %v", err)
+	}
+	if result.CreatedCount != 1 {
+		t.Errorf("CreatedCount = %d, want 1", result.CreatedCount)
+	}
+
+	// Verify WOD was created with current user as created_by
+	createdWOD, _ := wodRepo.GetByName("Custom WOD No Email")
+	if createdWOD == nil {
+		t.Fatal("WOD not created")
+	}
+	if createdWOD.CreatedBy == nil || *createdWOD.CreatedBy != userID {
+		t.Error("CreatedBy should be set to current user when no email provided")
+	}
+}
+
+func TestImportService_ConfirmMovementImport_UpdateDuplicates(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	// Create existing movement
+	existingMovement := &domain.Movement{
+		Name:        "Back Squat",
+		Type:        domain.MovementTypeWeightlifting,
+		Description: "Original description",
+		IsStandard:  true,
+	}
+	_ = movementRepo.Create(existingMovement)
+
+	csv := `name,type,description,is_standard,created_by_email
+Back Squat,weightlifting,Updated description,true,`
+
+	result, err := svc.ConfirmMovementImport(strings.NewReader(csv), 1, true, false, true) // updateDuplicates = true
+	if err != nil {
+		t.Errorf("ConfirmMovementImport() error = %v", err)
+	}
+	if result.UpdatedCount != 1 {
+		t.Errorf("UpdatedCount = %d, want 1", result.UpdatedCount)
+	}
+	if result.CreatedCount != 0 {
+		t.Errorf("CreatedCount = %d, want 0", result.CreatedCount)
+	}
+
+	// Verify movement was updated
+	updatedMovement, _ := movementRepo.GetByName("Back Squat")
+	if updatedMovement.Description != "Updated description" {
+		t.Errorf("Description = %s, want Updated description", updatedMovement.Description)
+	}
+}
+
+func TestImportService_ConfirmMovementImport_WithCreatedByEmail(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	// Create a user to be referenced
+	user := &domain.User{Email: "coach@example.com"}
+	_ = userRepo.Create(user)
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	csv := `name,type,description,is_standard,created_by_email
+Custom Move,gymnastics,Custom movement,false,coach@example.com`
+
+	result, err := svc.ConfirmMovementImport(strings.NewReader(csv), 2, false, false, false)
+	if err != nil {
+		t.Errorf("ConfirmMovementImport() error = %v", err)
+	}
+	if result.CreatedCount != 1 {
+		t.Errorf("CreatedCount = %d, want 1", result.CreatedCount)
+	}
+
+	// Verify movement was created with correct created_by
+	createdMovement, _ := movementRepo.GetByName("Custom Move")
+	if createdMovement == nil {
+		t.Fatal("Movement not created")
+	}
+	if createdMovement.CreatedBy == nil || *createdMovement.CreatedBy != user.ID {
+		t.Error("CreatedBy not set correctly from email")
+	}
+}
+
+func TestImportService_ConfirmMovementImport_CustomWithoutEmail(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	csv := `name,type,description,is_standard,created_by_email
+Custom Move No Email,gymnastics,Custom movement,false,`
+
+	userID := int64(7)
+	result, err := svc.ConfirmMovementImport(strings.NewReader(csv), userID, false, false, false)
+	if err != nil {
+		t.Errorf("ConfirmMovementImport() error = %v", err)
+	}
+	if result.CreatedCount != 1 {
+		t.Errorf("CreatedCount = %d, want 1", result.CreatedCount)
+	}
+
+	// Verify movement was created with current user as created_by
+	createdMovement, _ := movementRepo.GetByName("Custom Move No Email")
+	if createdMovement == nil {
+		t.Fatal("Movement not created")
+	}
+	if createdMovement.CreatedBy == nil || *createdMovement.CreatedBy != userID {
+		t.Error("CreatedBy should be set to current user when no email provided")
+	}
+}
+
+func TestImportService_PreviewUserWorkoutImport_WithMissingMovement(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"movements": [
+					{
+						"movement_name": "Back Squat",
+						"movement_type": "weightlifting"
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.PreviewUserWorkoutImport(jsonData, 1)
+	if err != nil {
+		t.Errorf("PreviewUserWorkoutImport() error = %v", err)
+	}
+	// Should warn about missing movement but still be valid
+	if result.ValidWorkouts != 1 {
+		t.Errorf("ValidWorkouts = %d, want 1", result.ValidWorkouts)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("Should have warning about missing movement")
+	}
+}
+
+func TestImportService_PreviewUserWorkoutImport_WithMissingWOD(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"wods": [
+					{
+						"wod_name": "Fran",
+						"wod_type": "Benchmark"
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.PreviewUserWorkoutImport(jsonData, 1)
+	if err != nil {
+		t.Errorf("PreviewUserWorkoutImport() error = %v", err)
+	}
+	// Should warn about missing WOD but still be valid
+	if result.ValidWorkouts != 1 {
+		t.Errorf("ValidWorkouts = %d, want 1", result.ValidWorkouts)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("Should have warning about missing WOD")
+	}
+}
+
+func TestImportService_PreviewUserWorkoutImport_MissingMovementName(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"movements": [
+					{
+						"movement_name": "",
+						"movement_type": "weightlifting"
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.PreviewUserWorkoutImport(jsonData, 1)
+	if err != nil {
+		t.Errorf("PreviewUserWorkoutImport() error = %v", err)
+	}
+	// Should mark as invalid when movement name is missing
+	if result.InvalidWorkouts != 1 {
+		t.Errorf("InvalidWorkouts = %d, want 1", result.InvalidWorkouts)
+	}
+}
+
+func TestImportService_PreviewUserWorkoutImport_MissingWODName(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"wods": [
+					{
+						"wod_name": "",
+						"wod_type": "Benchmark"
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.PreviewUserWorkoutImport(jsonData, 1)
+	if err != nil {
+		t.Errorf("PreviewUserWorkoutImport() error = %v", err)
+	}
+	// Should mark as invalid when WOD name is missing
+	if result.InvalidWorkouts != 1 {
+		t.Errorf("InvalidWorkouts = %d, want 1", result.InvalidWorkouts)
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_BasicSuccess(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_type": "strength",
+				"workout_name": "Morning Workout",
+				"total_time": 3600,
+				"notes": "Felt good"
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.TotalWorkouts != 1 {
+		t.Errorf("TotalWorkouts = %d, want 1", result.TotalWorkouts)
+	}
+	// ValidWorkouts includes all successful imports
+	if result.ValidWorkouts < 1 {
+		t.Errorf("ValidWorkouts = %d, want at least 1", result.ValidWorkouts)
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_InvalidJSON(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{invalid json}`)
+
+	_, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err == nil {
+		t.Error("ConfirmUserWorkoutImport() should return error for invalid JSON")
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_InvalidDate(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "not-a-date",
+				"workout_name": "Morning Workout"
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.InvalidWorkouts != 1 {
+		t.Errorf("InvalidWorkouts = %d, want 1", result.InvalidWorkouts)
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_WithMovements(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	// Create a movement that exists
+	existingMovement := &domain.Movement{
+		Name:       "Back Squat",
+		Type:       domain.MovementTypeWeightlifting,
+		IsStandard: true,
+	}
+	_ = movementRepo.Create(existingMovement)
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_name": "Squat Day",
+				"movements": [
+					{
+						"movement_name": "Back Squat",
+						"movement_type": "weightlifting",
+						"sets": 5,
+						"reps": 5,
+						"weight": 225.0,
+						"is_pr": true,
+						"order_index": 0
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.ValidWorkouts < 1 {
+		t.Errorf("ValidWorkouts = %d, want at least 1", result.ValidWorkouts)
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_WithWODs(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	// Create a WOD that exists
+	existingWOD := &domain.WOD{
+		Name:       "Fran",
+		Type:       "Benchmark",
+		IsStandard: true,
+	}
+	_ = wodRepo.Create(existingWOD)
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_name": "WOD Day",
+				"wods": [
+					{
+						"wod_name": "Fran",
+						"wod_type": "Benchmark",
+						"score_type": "Time",
+						"score_value": "3:45",
+						"time_seconds": 225,
+						"is_pr": true,
+						"order_index": 0
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.ValidWorkouts < 1 {
+		t.Errorf("ValidWorkouts = %d, want at least 1", result.ValidWorkouts)
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_CreatesMissingMovement(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_name": "Squat Day",
+				"movements": [
+					{
+						"movement_name": "New Movement",
+						"movement_type": "weightlifting",
+						"sets": 3,
+						"reps": 10,
+						"order_index": 0
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.MovementsCreated != 1 {
+		t.Errorf("MovementsCreated = %d, want 1", result.MovementsCreated)
+	}
+
+	// Verify movement was created
+	createdMovement, _ := movementRepo.GetByName("New Movement")
+	if createdMovement == nil {
+		t.Error("Movement should have been created")
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_CreatesMissingWOD(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_name": "WOD Day",
+				"wods": [
+					{
+						"wod_name": "New WOD",
+						"wod_type": "Custom",
+						"score_type": "Rounds+Reps",
+						"rounds": 10,
+						"reps": 5,
+						"order_index": 0
+					}
+				]
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.WODsCreated != 1 {
+		t.Errorf("WODsCreated = %d, want 1", result.WODsCreated)
+	}
+
+	// Verify WOD was created
+	createdWOD, _ := wodRepo.GetByName("New WOD")
+	if createdWOD == nil {
+		t.Error("WOD should have been created")
+	}
+}
+
+func TestImportService_ConfirmUserWorkoutImport_DefaultWorkoutName(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+	userWorkoutMovementRepo := &mockUserWorkoutMovementRepo{}
+	userWorkoutWODRepo := &mockUserWorkoutWODRepo{}
+
+	svc := NewImportService(wodRepo, movementRepo, userRepo, userWorkoutRepo, userWorkoutMovementRepo, userWorkoutWODRepo)
+
+	// No workout_name provided
+	jsonData := []byte(`{
+		"export_metadata": {
+			"user_email": "test@example.com",
+			"version": "1.0",
+			"total_count": 1
+		},
+		"user_workouts": [
+			{
+				"workout_date": "2024-01-15",
+				"workout_type": "strength"
+			}
+		]
+	}`)
+
+	result, err := svc.ConfirmUserWorkoutImport(jsonData, 1, false, false)
+	if err != nil {
+		t.Errorf("ConfirmUserWorkoutImport() error = %v", err)
+	}
+	if result.ValidWorkouts < 1 {
+		t.Errorf("ValidWorkouts = %d, want at least 1", result.ValidWorkouts)
+	}
+}
