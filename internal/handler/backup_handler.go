@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -25,6 +26,20 @@ func NewBackupHandler(backupService domain.BackupService, auditLogRepo domain.Au
 		backupService: backupService,
 		auditLogRepo:  auditLogRepo,
 	}
+}
+
+// getFilenameParam extracts and URL-decodes the filename from the URL path
+func getFilenameParam(r *http.Request) (string, error) {
+	filename := chi.URLParam(r, "filename")
+	if filename == "" {
+		return "", fmt.Errorf("filename is required")
+	}
+	// URL-decode the filename (handles spaces as %20, etc.)
+	decoded, err := url.PathUnescape(filename)
+	if err != nil {
+		return "", fmt.Errorf("invalid filename encoding: %w", err)
+	}
+	return decoded, nil
 }
 
 // CreateBackup creates a new database backup
@@ -103,9 +118,9 @@ func (h *BackupHandler) ListBackups(w http.ResponseWriter, r *http.Request) {
 // @Failure      404 {object} ErrorResponse "Backup not found"
 // @Router       /admin/backups/{filename}/metadata [get]
 func (h *BackupHandler) GetBackupMetadata(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -139,9 +154,9 @@ func (h *BackupHandler) GetBackupMetadata(w http.ResponseWriter, r *http.Request
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /admin/backups/{filename} [get]
 func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -214,9 +229,9 @@ func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /admin/backups/{filename} [delete]
 func (h *BackupHandler) DeleteBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -322,9 +337,9 @@ func (h *BackupHandler) UploadBackup(w http.ResponseWriter, r *http.Request) {
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /admin/backups/{filename}/restore [post]
 func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
