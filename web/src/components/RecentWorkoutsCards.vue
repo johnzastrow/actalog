@@ -100,6 +100,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
+
+const settingsStore = useSettingsStore()
 
 const props = defineProps({
   workouts: {
@@ -135,24 +139,32 @@ const groupedWorkouts = computed(() => {
 })
 
 function formatDateHeader(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  })
+  const tz = settingsStore.timezone
+  return formatDateInTimezone(dateString, tz, 'EEE, MMM d')
 }
 
 function formatRelativeDate(dateString) {
-  const date = new Date(dateString)
-  const today = new Date()
-  const diffTime = today - date
+  const tz = settingsStore.timezone
+  const datePart = dateString.split('T')[0]
+  const todayStr = getTodayInTimezone(tz)
+
+  // Calculate yesterday
+  const todayDate = new Date(todayStr)
+  const yesterdayDate = new Date(todayDate)
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
+
+  if (datePart === todayStr) return 'Today'
+  if (datePart === yesterdayStr) return 'Yesterday'
+
+  // Calculate days ago
+  const workoutDate = new Date(datePart)
+  const today = new Date(todayStr)
+  const diffTime = today - workoutDate
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
   if (diffDays <= 7) return `${diffDays} days ago`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return formatDateInTimezone(dateString, tz, 'MMM d')
 }
 
 function hasPR(workout) {

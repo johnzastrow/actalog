@@ -297,10 +297,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const route = useRoute()
+const settingsStore = useSettingsStore()
 const activeTab = ref('')
 
 const workout = ref(null)
@@ -339,29 +342,26 @@ async function fetchWorkout() {
   }
 }
 
-// Format date for display
+// Format date for display using user's timezone
 function formatDate(dateString) {
-  // Parse as local date to avoid timezone conversion issues
-  // Extract YYYY-MM-DD from the date string
+  const tz = settingsStore.timezone
   const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day) // Month is 0-indexed
 
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  // Get today and yesterday in user's timezone
+  const todayStr = getTodayInTimezone(tz)
+  const todayDate = new Date(todayStr)
+  const yesterdayDate = new Date(todayDate)
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
 
-  // Reset time parts for comparison
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+  const formattedDate = formatDateInTimezone(dateString, tz, 'MMM d, yyyy')
 
-  if (dateOnly.getTime() === todayOnly.getTime()) {
-    return 'Today, ' + date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-    return 'Yesterday, ' + date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  if (datePart === todayStr) {
+    return 'Today, ' + formattedDate
+  } else if (datePart === yesterdayStr) {
+    return 'Yesterday, ' + formattedDate
   } else {
-    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    return formatDateInTimezone(dateString, tz, 'EEE, MMM d, yyyy')
   }
 }
 

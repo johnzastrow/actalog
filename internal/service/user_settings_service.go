@@ -37,6 +37,7 @@ func (s *UserSettingsService) GetSettings(userID int64) (*domain.UserSettings, e
 			Theme:                   "light",
 			WeightUnit:              "lbs",
 			DistanceUnit:            "miles",
+			Timezone:                "America/New_York",
 		}
 
 		if err := s.settingsRepo.Create(settings); err != nil {
@@ -61,6 +62,7 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 	oldTheme := existing.Theme
 	oldWeightUnit := existing.WeightUnit
 	oldDistanceUnit := existing.DistanceUnit
+	oldTimezone := existing.Timezone
 
 	// Update fields (preserve ID and UserID)
 	existing.NotificationPreferences = updates.NotificationPreferences
@@ -68,6 +70,7 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 	existing.Theme = updates.Theme
 	existing.WeightUnit = updates.WeightUnit
 	existing.DistanceUnit = updates.DistanceUnit
+	existing.Timezone = updates.Timezone
 
 	if err := s.settingsRepo.Update(existing); err != nil {
 		return nil, err
@@ -89,6 +92,8 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 				"weight_unit_new":              existing.WeightUnit,
 				"distance_unit_old":            oldDistanceUnit,
 				"distance_unit_new":            existing.DistanceUnit,
+				"timezone_old":                 oldTimezone,
+				"timezone_new":                 existing.Timezone,
 			},
 		})
 		detailsStr := string(details)

@@ -704,9 +704,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import axios from '@/utils/axios'
 import { Chart, registerables } from 'chart.js'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
 
 Chart.register(...registerables)
 
+const settingsStore = useSettingsStore()
 const theme = useTheme()
 
 // Get theme colors as hex values for Chart.js
@@ -1595,37 +1598,30 @@ function formatWODScore(performance) {
   return 'N/A'
 }
 
-// Format Date (for display with Today/Yesterday)
+// Format Date using user's timezone (for display with Today/Yesterday)
 function formatDate(dateString) {
+  const tz = settingsStore.timezone
   const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
 
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  // Get today and yesterday in user's timezone
+  const todayStr = getTodayInTimezone(tz)
+  const todayDate = new Date(todayStr)
+  const yesterdayDate = new Date(todayDate)
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
 
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
-
-  if (dateOnly.getTime() === todayOnly.getTime()) {
+  if (datePart === todayStr) {
     return 'Today'
-  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+  } else if (datePart === yesterdayStr) {
     return 'Yesterday'
   } else {
-    const options = { month: 'short', day: 'numeric', year: 'numeric' }
-    return date.toLocaleDateString('en-US', options)
+    return formatDateInTimezone(dateString, tz, 'MMM d, yyyy')
   }
 }
 
 // Format Date for charts (always show actual date with year)
 function formatChartDate(dateString) {
-  const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
-  const options = { month: 'short', day: 'numeric', year: 'numeric' }
-  return date.toLocaleDateString('en-US', options)
+  return formatDateInTimezone(dateString, settingsStore.timezone, 'MMM d, yyyy')
 }
 
 // Format Time

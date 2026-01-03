@@ -438,6 +438,7 @@ func getSQLiteSchema() string {
 		theme TEXT DEFAULT 'light',
 		weight_unit TEXT DEFAULT 'lbs',
 		distance_unit TEXT DEFAULT 'meters',
+		timezone TEXT DEFAULT 'America/New_York',
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -669,6 +670,7 @@ func getPostgreSQLSchema() string {
 		theme VARCHAR(50) DEFAULT 'light',
 		weight_unit VARCHAR(20) DEFAULT 'lbs',
 		distance_unit VARCHAR(20) DEFAULT 'meters',
+		timezone VARCHAR(50) DEFAULT 'America/New_York',
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -898,6 +900,7 @@ func getMySQLSchema() string {
 		theme VARCHAR(50) DEFAULT 'light',
 		weight_unit VARCHAR(20) DEFAULT 'lbs',
 		distance_unit VARCHAR(20) DEFAULT 'meters',
+		timezone VARCHAR(50) DEFAULT 'America/New_York',
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		INDEX idx_user_settings_user_id (user_id),

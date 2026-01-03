@@ -11,6 +11,7 @@ type UserSettings struct {
 	Theme                   string    `json:"theme"`                    // light, dark
 	WeightUnit              string    `json:"weight_unit"`              // lbs, kg
 	DistanceUnit            string    `json:"distance_unit"`            // miles, km
+	Timezone                string    `json:"timezone"`                 // IANA timezone identifier
 	CreatedAt               time.Time `json:"created_at"`
 	UpdatedAt               time.Time `json:"updated_at"`
 }

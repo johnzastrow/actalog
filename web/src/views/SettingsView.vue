@@ -253,6 +253,40 @@
             </template>
           </v-list-item>
         </v-list>
+
+        <v-divider class="my-3" />
+
+        <!-- Timezone Selection -->
+        <div>
+          <div class="d-flex align-center mb-2">
+            <v-icon color="primary" class="mr-2">mdi-earth</v-icon>
+            <span class="font-weight-medium">Timezone</span>
+          </div>
+          <p class="text-caption text-medium-emphasis mb-2">
+            Set your timezone to display workout dates correctly
+          </p>
+          <v-autocomplete
+            v-model="timezone"
+            :items="timezoneOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="compact"
+            hide-details
+            :loading="timezoneLoading"
+            class="mb-2"
+            @update:model-value="saveTimezone"
+          />
+          <v-btn
+            variant="text"
+            size="small"
+            color="primary"
+            prepend-icon="mdi-crosshairs-gps"
+            @click="detectTimezone"
+          >
+            Detect browser timezone
+          </v-btn>
+        </div>
       </v-card>
 
       <!-- Data Management Card -->
@@ -544,18 +578,24 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { useThemeStore } from '@/stores/theme'
+import { useSettingsStore } from '@/stores/settings'
 import axios from '@/utils/axios'
+import { getTimezoneOptions, getBrowserTimezone } from '@/utils/timezone'
 import SubscriptionStatusBadge from '@/components/SubscriptionStatusBadge.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
 const themeStore = useThemeStore()
+const settingsStore = useSettingsStore()
 const activeTab = ref('profile')
 
 // State
 const notifications = ref(true)
 const weightUnit = ref('lbs')
+const timezone = ref('America/New_York')
+const timezoneOptions = ref(getTimezoneOptions())
+const timezoneLoading = ref(false)
 
 const profileForm = ref({
   name: '',
@@ -589,7 +629,7 @@ const importResult = ref({})
 const skipDuplicates = ref(true)
 
 // Load current user data and preferences
-onMounted(() => {
+onMounted(async () => {
   if (authStore.user) {
     profileForm.value.name = authStore.user.name || ''
     profileForm.value.email = authStore.user.email || ''
@@ -604,6 +644,15 @@ onMounted(() => {
   // Load preferences from localStorage
   notifications.value = localStorage.getItem('notifications') !== 'false'
   weightUnit.value = localStorage.getItem('weightUnit') || 'lbs'
+
+  // Fetch user settings from server
+  try {
+    await settingsStore.fetchSettings()
+    timezone.value = settingsStore.timezone
+    weightUnit.value = settingsStore.weightUnit
+  } catch (err) {
+    console.error('Failed to fetch user settings:', err)
+  }
 
   // Fetch subscription status
   subscriptionStore.fetchStatus().catch(err => {
@@ -720,8 +769,33 @@ const saveNotifications = () => {
   localStorage.setItem('notifications', notifications.value.toString())
 }
 
-const saveWeightUnit = () => {
+const saveWeightUnit = async () => {
   localStorage.setItem('weightUnit', weightUnit.value)
+  try {
+    await settingsStore.updateWeightUnit(weightUnit.value)
+  } catch (err) {
+    console.error('Failed to save weight unit:', err)
+  }
+}
+
+const saveTimezone = async () => {
+  timezoneLoading.value = true
+  try {
+    await settingsStore.updateTimezone(timezone.value)
+    successMessage.value = 'Timezone updated successfully!'
+  } catch {
+    errors.value.general = 'Failed to save timezone. Please try again.'
+  } finally {
+    timezoneLoading.value = false
+  }
+}
+
+const detectTimezone = () => {
+  const browserTz = getBrowserTimezone()
+  timezone.value = browserTz
+  // Update the options list if browser timezone isn't in the list
+  timezoneOptions.value = getTimezoneOptions()
+  saveTimezone()
 }
 
 // Data management

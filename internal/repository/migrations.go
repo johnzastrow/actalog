@@ -1517,6 +1517,54 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.19.0",
+		Description: "Add timezone column to user_settings table",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if timezone column already exists
+			hasTimezone, err := checkColumnExists(db, driver, "user_settings", "timezone")
+			if err != nil {
+				return fmt.Errorf("failed to check for timezone column: %w", err)
+			}
+			if hasTimezone {
+				fmt.Println("✓ timezone column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add timezone column with default value
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone TEXT DEFAULT 'America/New_York'`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone VARCHAR(50) DEFAULT 'America/New_York'`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone VARCHAR(50) DEFAULT 'America/New_York'`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add timezone column: %w", err)
+			}
+			fmt.Println("✓ Added timezone column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, so we skip it
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN timezone"); err != nil {
+					return fmt.Errorf("failed to drop timezone column: %w", err)
+				}
+				fmt.Println("✓ Dropped timezone column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, timezone column remains")
+			}
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 
