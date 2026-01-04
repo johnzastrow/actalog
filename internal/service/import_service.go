@@ -97,9 +97,8 @@ type MovementImportRow struct {
 	Errors         []string `json:"errors,omitempty"`
 }
 
-// Valid enum values for WODs
+// Valid enum values for WODs (source is now free-form text)
 var (
-	validSources       = []string{"CrossFit", "Other Coach", "Self-recorded"}
 	validTypes         = []string{"Benchmark", "Hero", "Girl", "Notables", "Games", "Endurance", "Self-created"}
 	validRegimes       = []string{"EMOM", "AMRAP", "Fastest Time", "Slowest Round", "Get Stronger", "Skills"}
 	validScoreTypes    = []string{"Time (HH:MM:SS)", "Rounds+Reps", "Max Weight"}
@@ -460,11 +459,7 @@ func (s *ImportService) validateWODRow(row *WODImportRow, userID int64, isAdmin 
 		row.IsValid = false
 	}
 
-	// Validate enum values
-	if !contains(validSources, row.Source) {
-		row.Errors = append(row.Errors, fmt.Sprintf("invalid source: %s (must be one of: %v)", row.Source, validSources))
-		row.IsValid = false
-	}
+	// Validate enum values (source is free-form text, no validation needed)
 	if !contains(validTypes, row.Type) {
 		row.Errors = append(row.Errors, fmt.Sprintf("invalid type: %s (must be one of: %v)", row.Type, validTypes))
 		row.IsValid = false

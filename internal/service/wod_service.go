@@ -465,16 +465,7 @@ func (s *WODService) validateWOD(wod *domain.WOD) error {
 		return ErrWODTypeRequired
 	}
 
-	// Validate allowed values for enums
-	validSources := map[string]bool{
-		"CrossFit":      true,
-		"Other Coach":   true,
-		"Self-recorded": true,
-	}
-	if !validSources[wod.Source] {
-		return fmt.Errorf("invalid source: must be one of [CrossFit, Other Coach, Self-recorded]")
-	}
-
+	// Validate allowed values for enums (source is free-form text, no validation needed)
 	validTypes := map[string]bool{
 		"Benchmark":    true,
 		"Hero":         true,
