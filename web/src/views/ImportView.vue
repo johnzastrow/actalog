@@ -30,27 +30,60 @@
       <v-card v-if="!previewResult" elevation="0" rounded="lg" class="pa-4 mb-3" bg-color="surface">
         <h2 class="text-h6 font-weight-bold mb-3" >1. Select Data Type</h2>
 
-        <v-btn-toggle
-          v-model="selectedEntity"
-          color="primary"
-          variant="outlined"
-          mandatory
-          class="mb-4"
-          style="display: flex; flex-wrap: wrap; gap: 8px"
-        >
-          <v-btn value="wods" prepend-icon="mdi-fire" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+        <div class="d-flex flex-wrap mb-4" style="gap: 8px">
+          <v-btn
+            size="small"
+            :color="selectedEntity === 'wods' ? 'primary' : 'default'"
+            :variant="selectedEntity === 'wods' ? 'flat' : 'outlined'"
+            rounded="lg"
+            :elevation="selectedEntity === 'wods' ? 2 : 0"
+            class="font-weight-bold"
+            style="text-transform: none; padding: 8px 16px; flex: 1 1 calc(50% - 4px); min-width: 140px"
+            @click="selectedEntity = 'wods'"
+          >
+            <v-icon start size="small">mdi-fire</v-icon>
             WODs
           </v-btn>
-          <v-btn value="movements" prepend-icon="mdi-dumbbell" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+          <v-btn
+            size="small"
+            :color="selectedEntity === 'movements' ? 'primary' : 'default'"
+            :variant="selectedEntity === 'movements' ? 'flat' : 'outlined'"
+            rounded="lg"
+            :elevation="selectedEntity === 'movements' ? 2 : 0"
+            class="font-weight-bold"
+            style="text-transform: none; padding: 8px 16px; flex: 1 1 calc(50% - 4px); min-width: 140px"
+            @click="selectedEntity = 'movements'"
+          >
+            <v-icon start size="small">mdi-dumbbell</v-icon>
             Movements
           </v-btn>
-          <v-btn value="user_workouts" prepend-icon="mdi-clipboard-text" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
+          <v-btn
+            size="small"
+            :color="selectedEntity === 'user_workouts' ? 'primary' : 'default'"
+            :variant="selectedEntity === 'user_workouts' ? 'flat' : 'outlined'"
+            rounded="lg"
+            :elevation="selectedEntity === 'user_workouts' ? 2 : 0"
+            class="font-weight-bold"
+            style="text-transform: none; padding: 8px 16px; flex: 1 1 calc(50% - 4px); min-width: 140px"
+            @click="selectedEntity = 'user_workouts'"
+          >
+            <v-icon start size="small">mdi-clipboard-text</v-icon>
             User Workouts
           </v-btn>
-          <v-btn value="wodify" prepend-icon="mdi-file-chart" style="flex: 1 1 calc(50% - 4px); min-width: 140px">
-            Wodify Performance
+          <v-btn
+            size="small"
+            :color="selectedEntity === 'wodify' ? 'primary' : 'default'"
+            :variant="selectedEntity === 'wodify' ? 'flat' : 'outlined'"
+            rounded="lg"
+            :elevation="selectedEntity === 'wodify' ? 2 : 0"
+            class="font-weight-bold"
+            style="text-transform: none; padding: 8px 16px; flex: 1 1 calc(50% - 4px); min-width: 140px"
+            @click="selectedEntity = 'wodify'"
+          >
+            <v-icon start size="small">mdi-file-chart</v-icon>
+            Wodify
           </v-btn>
-        </v-btn-toggle>
+        </div>
 
         <v-alert type="info" density="compact" class="text-caption">
           <template v-if="selectedEntity === 'wods'">
