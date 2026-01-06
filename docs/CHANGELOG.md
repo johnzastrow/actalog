@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Admin Notification System for User Events
+
+- **Email Notifications for Administrators**
+  - Notify admins when users are created, modified, or deleted
+  - Events: registration, profile updates, role changes, disable/enable/unlock/delete
+  - Per-admin opt-out setting in user_settings (`admin_user_event_notifications`)
+  - Email includes before/after values for changes
+  - Actor (admin who performed action) excluded from notifications
+
+- **In-App Notifications for Administrators**
+  - Real-time in-app notifications for all admin user events
+  - Notification types: `admin_user_created`, `admin_user_updated`, `admin_user_role_changed`, etc.
+  - Links directly to user management in admin panel
+  - Notifications sent to all admins except the actor
+
+- **New Service: AdminNotificationService**
+  - Centralized admin notification logic
+  - Async email sending (non-blocking)
+  - Graceful degradation when email disabled
+  - Files: `internal/service/admin_notification_service.go`
+
+- **Database Migration v0.20.0**
+  - Added `admin_user_event_notifications` column to `user_settings` table
+
+### Added - Expiring/Expired Subscription Management
+
+- **Admin Dashboard Subscription Views**
+  - List subscriptions expiring within N days (7, 14, 30, 60, 90)
+  - List all expired (overdue) subscriptions
+  - Separate views for user and organization subscriptions
+
+- **New API Endpoints**
+  - `GET /api/admin/subscriptions/users/expiring?days=N` - Expiring user subscriptions
+  - `GET /api/admin/subscriptions/users/expired` - Expired user subscriptions
+  - `GET /api/admin/subscriptions/organizations/expiring?days=N` - Expiring org subscriptions
+  - `GET /api/admin/subscriptions/organizations/expired` - Expired org subscriptions
+
+- **Repository Methods**
+  - Added `ListExpiring(days int)` and `ListExpired()` to both subscription repositories
+  - Multi-database support (SQLite, PostgreSQL, MySQL) with database-native date arithmetic
+
+### Added - User Timezone Support
+
+- **Per-User Timezone Settings**
+  - Users can set their preferred timezone in settings
+  - Dates displayed in user's local timezone throughout the application
+  - Database migration v0.19.0 adds `timezone` column to `user_settings`
+
+- **Frontend Integration**
+  - Timezone selector in Settings view
+  - Utility functions for timezone-aware date formatting
+  - Pinia store for timezone state management
+
+### Fixed - PostgreSQL Compatibility
+
+- **GetPersonalRecords Query Fix**
+  - Added aggregate functions (MAX) to all non-grouped SELECT columns
+  - Fixes PostgreSQL strict GROUP BY enforcement error
+  - Scan workout_date as string and parse to time.Time (MAX returns string in SQLite)
+  - All databases (SQLite, PostgreSQL, MySQL) now work correctly
+
+- **Base Schema Sync**
+  - Added `admin_user_event_notifications` column to base schema for all database types
+  - Ensures fresh database installations have all columns
+
+### Fixed - Test Suite Improvements
+
+- **Test Coverage for Subscription Features**
+  - Repository tests for `ListExpiring` and `ListExpired` methods
+  - Service tests for all 4 new subscription service methods
+  - Handler tests with mock implementations
+
+- **Pre-existing Test Fixes**
+  - Fixed backup handler test case sensitivity ("Filename" → "filename")
+  - Updated WOD service test for removed source validation constraint
+  - Integration test now outputs response body on failure for debugging
+
 ### Added - Merge/Upsert for Database Restore and Import Duplicate Handling
 
 - **Database Restore Modes**
