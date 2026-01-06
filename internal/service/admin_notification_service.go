@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -35,10 +36,11 @@ type UserEventInfo struct {
 	Timestamp    time.Time
 }
 
-// AdminNotificationService handles sending email notifications to admins for user events
+// AdminNotificationService handles sending email and in-app notifications to admins for user events
 type AdminNotificationService struct {
 	userRepo         domain.UserRepository
 	userSettingsRepo domain.UserSettingsRepository
+	notificationRepo domain.NotificationRepository
 	emailService     email.EmailService
 	emailLogService  *EmailLogService
 	appURL           string
@@ -49,6 +51,7 @@ type AdminNotificationService struct {
 func NewAdminNotificationService(
 	userRepo domain.UserRepository,
 	userSettingsRepo domain.UserSettingsRepository,
+	notificationRepo domain.NotificationRepository,
 	emailService email.EmailService,
 	emailLogService *EmailLogService,
 	appURL string,
@@ -57,6 +60,7 @@ func NewAdminNotificationService(
 	return &AdminNotificationService{
 		userRepo:         userRepo,
 		userSettingsRepo: userSettingsRepo,
+		notificationRepo: notificationRepo,
 		emailService:     emailService,
 		emailLogService:  emailLogService,
 		appURL:           appURL,
@@ -70,14 +74,8 @@ func (s *AdminNotificationService) NotifyAdminsOfUserEvent(event UserEventInfo) 
 	go s.notifyAdminsAsync(event)
 }
 
-// notifyAdminsAsync performs the actual notification sending
+// notifyAdminsAsync performs the actual notification sending (email and in-app)
 func (s *AdminNotificationService) notifyAdminsAsync(event UserEventInfo) {
-	// Skip if email service is not configured
-	if s.emailService == nil {
-		s.logger.Printf("[INFO] AdminNotificationService: Email service not configured, skipping notification")
-		return
-	}
-
 	// Get all admin users
 	admins, err := s.userRepo.ListAdmins()
 	if err != nil {
@@ -90,7 +88,9 @@ func (s *AdminNotificationService) notifyAdminsAsync(event UserEventInfo) {
 		return
 	}
 
-	// Build email content
+	// Build notification content
+	title := s.buildNotificationTitle(event)
+	message := s.buildNotificationMessage(event)
 	subject := s.buildSubject(event)
 	htmlBody := s.buildHTMLBody(event)
 
@@ -119,39 +119,59 @@ func (s *AdminNotificationService) notifyAdminsAsync(event UserEventInfo) {
 			continue
 		}
 
-		// Send email
-		err = s.emailService.SendHTMLEmail(admin.Email, subject, htmlBody)
-		if err != nil {
-			s.logger.Printf("[ERROR] AdminNotificationService: Failed to send email to %s: %v", admin.Email, err)
-			// Log failed attempt if email log service is available
-			if s.emailLogService != nil {
-				errMsg := err.Error()
-				s.emailLogService.LogEmailAttempt(
-					admin.Email,
-					domain.EmailTypeNotification,
-					subject,
-					false,
-					&errMsg,
-					nil,
-					nil,
-				)
+		// Create in-app notification
+		if s.notificationRepo != nil {
+			notification := &domain.Notification{
+				UserID:    admin.ID,
+				Type:      domain.NotificationTypeAdminUserEvent,
+				Title:     title,
+				Message:   message,
+				Data:      s.buildNotificationData(event),
+				CreatedAt: event.Timestamp,
+				UpdatedAt: event.Timestamp,
 			}
-			continue
+
+			if err := s.notificationRepo.Create(notification); err != nil {
+				s.logger.Printf("[ERROR] AdminNotificationService: Failed to create in-app notification for %s: %v", admin.Email, err)
+			} else {
+				s.logger.Printf("[INFO] AdminNotificationService: In-app notification created for %s", admin.Email)
+			}
 		}
 
-		s.logger.Printf("[INFO] AdminNotificationService: Notification sent to %s for event %s", admin.Email, event.EventType)
+		// Send email (if email service is configured)
+		if s.emailService != nil {
+			err = s.emailService.SendHTMLEmail(admin.Email, subject, htmlBody)
+			if err != nil {
+				s.logger.Printf("[ERROR] AdminNotificationService: Failed to send email to %s: %v", admin.Email, err)
+				// Log failed attempt if email log service is available
+				if s.emailLogService != nil {
+					errMsg := err.Error()
+					s.emailLogService.LogEmailAttempt(
+						admin.Email,
+						domain.EmailTypeNotification,
+						subject,
+						false,
+						&errMsg,
+						nil,
+						nil,
+					)
+				}
+			} else {
+				s.logger.Printf("[INFO] AdminNotificationService: Email sent to %s for event %s", admin.Email, event.EventType)
 
-		// Log successful email
-		if s.emailLogService != nil {
-			s.emailLogService.LogEmailAttempt(
-				admin.Email,
-				domain.EmailTypeNotification,
-				subject,
-				true,
-				nil,
-				nil,
-				nil,
-			)
+				// Log successful email
+				if s.emailLogService != nil {
+					s.emailLogService.LogEmailAttempt(
+						admin.Email,
+						domain.EmailTypeNotification,
+						subject,
+						true,
+						nil,
+						nil,
+						nil,
+					)
+				}
+			}
 		}
 	}
 }
@@ -385,4 +405,104 @@ func (s *AdminNotificationService) buildActorInfo(event UserEventInfo) string {
                 <strong>Action performed by:</strong> %s (%s)
             </div>
 `, event.ActorName, event.ActorEmail)
+}
+
+// buildNotificationTitle generates a short title for in-app notifications
+func (s *AdminNotificationService) buildNotificationTitle(event UserEventInfo) string {
+	switch event.EventType {
+	case UserEventRegistration:
+		return "New User Registration"
+	case UserEventProfileUpdate:
+		return "User Profile Updated"
+	case UserEventRoleChange:
+		return "User Role Changed"
+	case UserEventDisable:
+		return "User Account Disabled"
+	case UserEventEnable:
+		return "User Account Enabled"
+	case UserEventUnlock:
+		return "User Account Unlocked"
+	case UserEventDelete:
+		return "User Deleted"
+	default:
+		return "User Event"
+	}
+}
+
+// buildNotificationMessage generates the message for in-app notifications
+func (s *AdminNotificationService) buildNotificationMessage(event UserEventInfo) string {
+	switch event.EventType {
+	case UserEventRegistration:
+		return fmt.Sprintf("%s (%s) registered a new account", event.TargetName, event.TargetEmail)
+	case UserEventProfileUpdate:
+		changesStr := s.formatChangesForMessage(event.Changes)
+		if changesStr != "" {
+			return fmt.Sprintf("%s updated their profile: %s", event.TargetEmail, changesStr)
+		}
+		return fmt.Sprintf("%s updated their profile", event.TargetEmail)
+	case UserEventRoleChange:
+		if changes, ok := event.Changes["role"]; ok {
+			return fmt.Sprintf("%s role changed from %s to %s by %s", event.TargetEmail, changes[0], changes[1], event.ActorEmail)
+		}
+		return fmt.Sprintf("%s role was changed by %s", event.TargetEmail, event.ActorEmail)
+	case UserEventDisable:
+		msg := fmt.Sprintf("%s account disabled by %s", event.TargetEmail, event.ActorEmail)
+		if event.Reason != "" {
+			msg += fmt.Sprintf(": %s", event.Reason)
+		}
+		return msg
+	case UserEventEnable:
+		return fmt.Sprintf("%s account re-enabled by %s", event.TargetEmail, event.ActorEmail)
+	case UserEventUnlock:
+		return fmt.Sprintf("%s account unlocked by %s", event.TargetEmail, event.ActorEmail)
+	case UserEventDelete:
+		return fmt.Sprintf("%s account deleted by %s", event.TargetEmail, event.ActorEmail)
+	default:
+		return fmt.Sprintf("Event for user %s", event.TargetEmail)
+	}
+}
+
+// formatChangesForMessage formats changes map into a readable string
+func (s *AdminNotificationService) formatChangesForMessage(changes map[string][2]string) string {
+	if len(changes) == 0 {
+		return ""
+	}
+
+	var parts []string
+	for field := range changes {
+		fieldName := s.formatFieldName(field)
+		parts = append(parts, fmt.Sprintf("%s changed", fieldName))
+	}
+	return strings.Join(parts, ", ")
+}
+
+// buildNotificationData generates JSON data for the notification
+func (s *AdminNotificationService) buildNotificationData(event UserEventInfo) string {
+	data := map[string]interface{}{
+		"event_type":     event.EventType,
+		"target_user_id": event.TargetUserID,
+		"target_email":   event.TargetEmail,
+		"target_name":    event.TargetName,
+	}
+
+	if event.ActorUserID != nil {
+		data["actor_user_id"] = *event.ActorUserID
+		data["actor_email"] = event.ActorEmail
+		data["actor_name"] = event.ActorName
+	}
+
+	if len(event.Changes) > 0 {
+		data["changes"] = event.Changes
+	}
+
+	if event.Reason != "" {
+		data["reason"] = event.Reason
+	}
+
+	// Marshal to JSON, return empty object on error
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return "{}"
+	}
+	return string(jsonBytes)
 }
