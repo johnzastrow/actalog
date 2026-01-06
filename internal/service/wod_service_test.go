@@ -1277,14 +1277,13 @@ func TestWODService_ValidateWOD(t *testing.T) {
 			errorMsg:    "wod type is required",
 		},
 		{
-			name: "invalid source",
+			name: "custom source allowed",
 			wod: &domain.WOD{
 				Name:   "Test WOD",
-				Source: "Invalid Source",
+				Source: "Custom Source", // Custom sources are now allowed
 				Type:   "Benchmark",
 			},
-			expectError: true,
-			errorMsg:    "invalid source",
+			expectError: false,
 		},
 		{
 			name: "invalid type",

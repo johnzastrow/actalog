@@ -30,7 +30,7 @@ func TestBackupHandler_GetBackupMetadata_MissingFilename(t *testing.T) {
 	handler.GetBackupMetadata(rr, req)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
-	assertBodyContains(t, rr, "Filename is required")
+	assertBodyContains(t, rr, "filename is required")
 }
 
 func TestBackupHandler_DownloadBackup_MissingFilename(t *testing.T) {
@@ -43,7 +43,7 @@ func TestBackupHandler_DownloadBackup_MissingFilename(t *testing.T) {
 	handler.DownloadBackup(rr, req)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
-	assertBodyContains(t, rr, "Filename is required")
+	assertBodyContains(t, rr, "filename is required")
 }
 
 func TestBackupHandler_DownloadBackup_Unauthorized(t *testing.T) {
@@ -55,7 +55,7 @@ func TestBackupHandler_DownloadBackup_Unauthorized(t *testing.T) {
 
 	handler.DownloadBackup(rr, req)
 
-	// Without chi router context, filename is empty -> "Filename is required"
+	// Without chi router context, filename is empty -> "filename is required"
 	assertStatusCode(t, rr, http.StatusBadRequest)
 }
 
@@ -68,7 +68,7 @@ func TestBackupHandler_DeleteBackup_MissingFilename(t *testing.T) {
 	handler.DeleteBackup(rr, req)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
-	assertBodyContains(t, rr, "Filename is required")
+	assertBodyContains(t, rr, "filename is required")
 }
 
 func TestBackupHandler_DeleteBackup_Unauthorized(t *testing.T) {
@@ -79,7 +79,7 @@ func TestBackupHandler_DeleteBackup_Unauthorized(t *testing.T) {
 
 	handler.DeleteBackup(rr, req)
 
-	// Without chi router context, filename is empty -> "Filename is required"
+	// Without chi router context, filename is empty -> "filename is required"
 	assertStatusCode(t, rr, http.StatusBadRequest)
 }
 
@@ -116,7 +116,7 @@ func TestBackupHandler_RestoreBackup_MissingFilename(t *testing.T) {
 	handler.RestoreBackup(rr, req)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
-	assertBodyContains(t, rr, "Filename is required")
+	assertBodyContains(t, rr, "filename is required")
 }
 
 func TestBackupHandler_RestoreBackup_Unauthorized(t *testing.T) {
@@ -127,7 +127,7 @@ func TestBackupHandler_RestoreBackup_Unauthorized(t *testing.T) {
 
 	handler.RestoreBackup(rr, req)
 
-	// Without chi router context, filename is empty -> "Filename is required"
+	// Without chi router context, filename is empty -> "filename is required"
 	assertStatusCode(t, rr, http.StatusBadRequest)
 }
 
@@ -141,7 +141,7 @@ func TestBackupHandler_RestoreBackup_NotConfirmed(t *testing.T) {
 
 	handler.RestoreBackup(rr, req)
 
-	// Without chi router context, filename is empty -> "Filename is required"
+	// Without chi router context, filename is empty -> "filename is required"
 	assertStatusCode(t, rr, http.StatusBadRequest)
 }
 
