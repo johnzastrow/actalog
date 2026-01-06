@@ -576,3 +576,196 @@ func TestOrganizationSubscriptionRepository_PermanentFree(t *testing.T) {
 		t.Error("Permanent free subscription should be returned as active")
 	}
 }
+
+func TestOrganizationSubscriptionRepository_ListExpiring(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	orgRepo := NewOrganizationRepository(db)
+	subRepo := NewSQLiteOrganizationSubscriptionRepository(db)
+
+	// Create test organizations
+	org1 := &domain.Organization{Name: "Org 1", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org2 := &domain.Organization{Name: "Org 2", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org3 := &domain.Organization{Name: "Org 3", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org4 := &domain.Organization{Name: "Org 4", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	orgRepo.Create(org1)
+	orgRepo.Create(org2)
+	orgRepo.Create(org3)
+	orgRepo.Create(org4)
+
+	now := time.Now()
+
+	// Subscription expiring in 15 days (should be included for 30 days query)
+	endDate15 := now.AddDate(0, 0, 15)
+	sub1 := &domain.OrganizationSubscription{
+		OrganizationID:   org1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDate15,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	// Subscription expiring in 50 days (should NOT be included for 30 days query)
+	endDate50 := now.AddDate(0, 0, 50)
+	sub2 := &domain.OrganizationSubscription{
+		OrganizationID:   org2.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(-1, 0, 0),
+		EndDate:          &endDate50,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	// Permanent free subscription (should NOT be included)
+	sub3 := &domain.OrganizationSubscription{
+		OrganizationID:   org3.ID,
+		SubscriptionType: domain.SubscriptionTypeFree,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  true,
+		StartDate:        now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Already expired subscription (should NOT be included)
+	endDatePast := now.AddDate(0, 0, -10)
+	sub4 := &domain.OrganizationSubscription{
+		OrganizationID:   org4.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub4)
+
+	// Test ListExpiring with 30 days
+	expiring, err := subRepo.ListExpiring(30)
+	if err != nil {
+		t.Fatalf("ListExpiring() error = %v", err)
+	}
+
+	if len(expiring) != 1 {
+		t.Errorf("ListExpiring(30) returned %d subscriptions, want 1", len(expiring))
+	}
+
+	if len(expiring) > 0 && expiring[0].OrganizationID != org1.ID {
+		t.Errorf("Expected subscription for org1, got organization ID %d", expiring[0].OrganizationID)
+	}
+
+	// Test ListExpiring with 60 days (should include both sub1 and sub2)
+	expiring60, err := subRepo.ListExpiring(60)
+	if err != nil {
+		t.Fatalf("ListExpiring(60) error = %v", err)
+	}
+
+	if len(expiring60) != 2 {
+		t.Errorf("ListExpiring(60) returned %d subscriptions, want 2", len(expiring60))
+	}
+}
+
+func TestOrganizationSubscriptionRepository_ListExpired(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	orgRepo := NewOrganizationRepository(db)
+	subRepo := NewSQLiteOrganizationSubscriptionRepository(db)
+
+	// Create test organizations
+	org1 := &domain.Organization{Name: "Org 1", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org2 := &domain.Organization{Name: "Org 2", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org3 := &domain.Organization{Name: "Org 3", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	orgRepo.Create(org1)
+	orgRepo.Create(org2)
+	orgRepo.Create(org3)
+
+	now := time.Now()
+
+	// Subscription with status 'expired' (should be included)
+	endDatePast := now.AddDate(0, 0, -15)
+	sub1 := &domain.OrganizationSubscription{
+		OrganizationID:   org1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusExpired,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	// Active subscription with past end date (overdue, should be included)
+	endDatePast2 := now.AddDate(0, 0, -3)
+	sub2 := &domain.OrganizationSubscription{
+		OrganizationID:   org2.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(-1, 0, 0),
+		EndDate:          &endDatePast2,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	// Active subscription with future end date (should NOT be included)
+	endDateFuture := now.AddDate(0, 0, 60)
+	sub3 := &domain.OrganizationSubscription{
+		OrganizationID:   org3.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now,
+		EndDate:          &endDateFuture,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Test ListExpired
+	expired, err := subRepo.ListExpired()
+	if err != nil {
+		t.Fatalf("ListExpired() error = %v", err)
+	}
+
+	if len(expired) != 2 {
+		t.Errorf("ListExpired() returned %d subscriptions, want 2", len(expired))
+	}
+
+	// Verify the correct subscriptions were returned
+	foundOrg1 := false
+	foundOrg2 := false
+	for _, sub := range expired {
+		if sub.OrganizationID == org1.ID {
+			foundOrg1 = true
+		}
+		if sub.OrganizationID == org2.ID {
+			foundOrg2 = true
+		}
+	}
+
+	if !foundOrg1 {
+		t.Error("ListExpired() should include subscription with expired status")
+	}
+	if !foundOrg2 {
+		t.Error("ListExpired() should include active subscription with past end date")
+	}
+}

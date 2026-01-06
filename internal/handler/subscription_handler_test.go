@@ -941,3 +941,145 @@ func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_DifferentIDs(t *
 		})
 	}
 }
+
+// Tests for ListExpiringUserSubscriptions
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_NilService(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.ListExpiringUserSubscriptions(rr, req)
+}
+
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_QueryParam(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testCases := []struct {
+		name string
+		days string
+	}{
+		{"default", ""},
+		{"7 days", "7"},
+		{"30 days", "30"},
+		{"60 days", "60"},
+		{"invalid", "abc"}, // Falls back to default
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			url := "/api/admin/subscriptions/users/expiring"
+			if tc.days != "" {
+				url += "?days=" + tc.days
+			}
+			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ListExpiringUserSubscriptions requires service")
+				}
+			}()
+
+			handler.ListExpiringUserSubscriptions(rr, req)
+		})
+	}
+}
+
+// Tests for ListExpiredUserSubscriptions
+func TestSubscriptionHandler_ListExpiredUserSubscriptions_NilService(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.ListExpiredUserSubscriptions(rr, req)
+}
+
+// Tests for ListExpiringOrganizationSubscriptions
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_NilService(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.ListExpiringOrganizationSubscriptions(rr, req)
+}
+
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_QueryParam(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	testCases := []struct {
+		name string
+		days string
+	}{
+		{"default", ""},
+		{"14 days", "14"},
+		{"90 days", "90"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			url := "/api/admin/subscriptions/organizations/expiring"
+			if tc.days != "" {
+				url += "?days=" + tc.days
+			}
+			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			defer func() {
+				if r := recover(); r == nil {
+					t.Log("ListExpiringOrganizationSubscriptions requires service")
+				}
+			}()
+
+			handler.ListExpiringOrganizationSubscriptions(rr, req)
+		})
+	}
+}
+
+// Tests for ListExpiredOrganizationSubscriptions
+func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_NilService(t *testing.T) {
+	handler := &SubscriptionHandler{
+		logger: createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic with nil subscriptionService")
+		}
+	}()
+
+	handler.ListExpiredOrganizationSubscriptions(rr, req)
+}

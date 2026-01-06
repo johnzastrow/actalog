@@ -795,6 +795,19 @@ func (m *MockUserRepository) EnableAccount(userID int64) error {
 	return nil
 }
 
+func (m *MockUserRepository) ListAdmins() ([]*domain.User, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var admins []*domain.User
+	for _, u := range m.users {
+		if u.Role == "admin" {
+			admins = append(admins, u)
+		}
+	}
+	return admins, nil
+}
+
 // MockOrganizationRepository is a mock implementation of OrganizationRepository
 type MockOrganizationRepository struct {
 	organizations []*domain.Organization
@@ -1418,6 +1431,43 @@ func (m *MockUserSubscriptionRepository) Cancel(id int64, reason string, adminUs
 		return m.errorToReturn
 	}
 	return nil
+}
+
+func (m *MockUserSubscriptionRepository) ListExpiring(days int) ([]*domain.UserSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, days)
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive &&
+			!sub.IsPermanentFree &&
+			sub.EndDate != nil &&
+			sub.EndDate.After(now) &&
+			sub.EndDate.Before(futureDate) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockUserSubscriptionRepository) ListExpired() ([]*domain.UserSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	now := time.Now()
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusExpired ||
+			(sub.Status == domain.SubscriptionStatusActive &&
+				!sub.IsPermanentFree &&
+				sub.EndDate != nil &&
+				sub.EndDate.Before(now)) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
 }
 
 // MockUserWorkoutWODRepository is a mock implementation of UserWorkoutWODRepository

@@ -1328,3 +1328,292 @@ func TestSubscriptionService_ListAllOrganizationSubscriptions(t *testing.T) {
 		t.Errorf("expected 2 subscriptions, got %d", len(subs))
 	}
 }
+
+// Tests for ListExpiringUserSubscriptions
+func TestSubscriptionService_ListExpiringUserSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	now := time.Now()
+
+	// Subscription expiring in 10 days (should be included)
+	endDate10 := now.AddDate(0, 0, 10)
+	subRepo.subscriptions[1] = &domain.UserSubscription{
+		ID:               1,
+		UserID:           1,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDate10,
+	}
+
+	// Subscription expiring in 45 days (should NOT be included for 30 days)
+	endDate45 := now.AddDate(0, 0, 45)
+	subRepo.subscriptions[2] = &domain.UserSubscription{
+		ID:               2,
+		UserID:           2,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -10, 0),
+		EndDate:          &endDate45,
+	}
+
+	// Permanent free (should NOT be included)
+	subRepo.subscriptions[3] = &domain.UserSubscription{
+		ID:               3,
+		UserID:           3,
+		SubscriptionType: domain.SubscriptionTypeFree,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  true,
+		StartDate:        now,
+	}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	// Test with 30 days
+	subs, err := service.ListExpiringUserSubscriptions(30)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 1 {
+		t.Errorf("expected 1 subscription, got %d", len(subs))
+	}
+
+	// Test with 0 days (should default to 30)
+	subs2, err := service.ListExpiringUserSubscriptions(0)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs2) != 1 {
+		t.Errorf("expected 1 subscription with default days, got %d", len(subs2))
+	}
+
+	// Test with 60 days (should include both)
+	subs3, err := service.ListExpiringUserSubscriptions(60)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs3) != 2 {
+		t.Errorf("expected 2 subscriptions with 60 days, got %d", len(subs3))
+	}
+}
+
+// Tests for ListExpiredUserSubscriptions
+func TestSubscriptionService_ListExpiredUserSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	now := time.Now()
+
+	// Expired subscription (status = expired)
+	endDatePast := now.AddDate(0, 0, -10)
+	subRepo.subscriptions[1] = &domain.UserSubscription{
+		ID:               1,
+		UserID:           1,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusExpired,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+	}
+
+	// Overdue subscription (active but past end date)
+	endDatePast2 := now.AddDate(0, 0, -5)
+	subRepo.subscriptions[2] = &domain.UserSubscription{
+		ID:               2,
+		UserID:           2,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDatePast2,
+	}
+
+	// Active subscription with future end date (should NOT be included)
+	endDateFuture := now.AddDate(0, 0, 30)
+	subRepo.subscriptions[3] = &domain.UserSubscription{
+		ID:               3,
+		UserID:           3,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now,
+		EndDate:          &endDateFuture,
+	}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.ListExpiredUserSubscriptions()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs))
+	}
+}
+
+// Tests for ListExpiringOrganizationSubscriptions
+func TestSubscriptionService_ListExpiringOrganizationSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	now := time.Now()
+
+	// Subscription expiring in 15 days
+	endDate15 := now.AddDate(0, 0, 15)
+	orgSubRepo.subscriptions[1] = &domain.OrganizationSubscription{
+		ID:               1,
+		OrganizationID:   10,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDate15,
+	}
+
+	// Subscription expiring in 50 days
+	endDate50 := now.AddDate(0, 0, 50)
+	orgSubRepo.subscriptions[2] = &domain.OrganizationSubscription{
+		ID:               2,
+		OrganizationID:   20,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(-1, 0, 0),
+		EndDate:          &endDate50,
+	}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	// Test with 30 days
+	subs, err := service.ListExpiringOrganizationSubscriptions(30)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 1 {
+		t.Errorf("expected 1 subscription, got %d", len(subs))
+	}
+
+	// Test with 60 days
+	subs2, err := service.ListExpiringOrganizationSubscriptions(60)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs2) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs2))
+	}
+}
+
+// Tests for ListExpiredOrganizationSubscriptions
+func TestSubscriptionService_ListExpiredOrganizationSubscriptions(t *testing.T) {
+	subRepo := newMockUserSubscriptionRepo()
+	userRepo := newMockUserRepo()
+	orgRepo := newMockOrganizationRepo()
+	orgSubRepo := newMockOrganizationSubscriptionRepo()
+	accessRepo := newMockSubscriptionAccessRepo()
+	auditRepo := newMockAuditLogRepo()
+
+	now := time.Now()
+
+	// Expired subscription
+	endDatePast := now.AddDate(0, 0, -10)
+	orgSubRepo.subscriptions[1] = &domain.OrganizationSubscription{
+		ID:               1,
+		OrganizationID:   10,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusExpired,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+	}
+
+	// Overdue subscription
+	endDatePast2 := now.AddDate(0, 0, -3)
+	orgSubRepo.subscriptions[2] = &domain.OrganizationSubscription{
+		ID:               2,
+		OrganizationID:   20,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(-1, 0, 0),
+		EndDate:          &endDatePast2,
+	}
+
+	// Active subscription (should NOT be included)
+	endDateFuture := now.AddDate(0, 0, 60)
+	orgSubRepo.subscriptions[3] = &domain.OrganizationSubscription{
+		ID:               3,
+		OrganizationID:   30,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now,
+		EndDate:          &endDateFuture,
+	}
+
+	service := NewSubscriptionService(
+		subRepo,
+		orgSubRepo,
+		accessRepo,
+		auditRepo,
+		userRepo,
+		orgRepo,
+	)
+
+	subs, err := service.ListExpiredOrganizationSubscriptions()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if len(subs) != 2 {
+		t.Errorf("expected 2 subscriptions, got %d", len(subs))
+	}
+}

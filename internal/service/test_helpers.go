@@ -1093,6 +1093,37 @@ func (m *mockUserSubscriptionRepo) Cancel(id int64, reason string, adminUserID i
 	return nil
 }
 
+func (m *mockUserSubscriptionRepo) ListExpiring(days int) ([]*domain.UserSubscription, error) {
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, days)
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive &&
+			!sub.IsPermanentFree &&
+			sub.EndDate != nil &&
+			sub.EndDate.After(now) &&
+			sub.EndDate.Before(futureDate) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockUserSubscriptionRepo) ListExpired() ([]*domain.UserSubscription, error) {
+	now := time.Now()
+	var result []*domain.UserSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusExpired ||
+			(sub.Status == domain.SubscriptionStatusActive &&
+				!sub.IsPermanentFree &&
+				sub.EndDate != nil &&
+				sub.EndDate.Before(now)) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
 // Mock OrganizationSubscriptionRepository
 type mockOrganizationSubscriptionRepo struct {
 	subscriptions map[int64]*domain.OrganizationSubscription
@@ -1221,6 +1252,37 @@ func (m *mockOrganizationSubscriptionRepo) Cancel(id int64, reason string, admin
 	sub.UpdatedAt = time.Now()
 	m.subscriptions[id] = sub
 	return nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) ListExpiring(days int) ([]*domain.OrganizationSubscription, error) {
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, days)
+	var result []*domain.OrganizationSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive &&
+			!sub.IsPermanentFree &&
+			sub.EndDate != nil &&
+			sub.EndDate.After(now) &&
+			sub.EndDate.Before(futureDate) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockOrganizationSubscriptionRepo) ListExpired() ([]*domain.OrganizationSubscription, error) {
+	now := time.Now()
+	var result []*domain.OrganizationSubscription
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusExpired ||
+			(sub.Status == domain.SubscriptionStatusActive &&
+				!sub.IsPermanentFree &&
+				sub.EndDate != nil &&
+				sub.EndDate.Before(now)) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
 }
 
 // Mock SubscriptionAccessRepository
@@ -1865,6 +1927,17 @@ func (m *mockUserRepo) UnlockAccount(userID int64) error {
 	user.FailedLoginAttempts = 0
 	m.users[userID] = user
 	return nil
+}
+
+// Add missing ListAdmins to mockUserRepo
+func (m *mockUserRepo) ListAdmins() ([]*domain.User, error) {
+	var admins []*domain.User
+	for _, user := range m.users {
+		if user.Role == "admin" {
+			admins = append(admins, user)
+		}
+	}
+	return admins, nil
 }
 
 // Mock DataChangeLogRepository

@@ -630,3 +630,196 @@ func TestUserSubscriptionRepository_PermanentFree(t *testing.T) {
 		t.Error("Permanent free subscription should be returned as active")
 	}
 }
+
+func TestUserSubscriptionRepository_ListExpiring(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	subRepo := NewSQLiteUserSubscriptionRepository(db)
+
+	// Create test users
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
+	user4 := &domain.User{Email: "user4@example.com", PasswordHash: "hash", Name: "User 4", Role: "user"}
+	userRepo.Create(user1)
+	userRepo.Create(user2)
+	userRepo.Create(user3)
+	userRepo.Create(user4)
+
+	now := time.Now()
+
+	// Subscription expiring in 10 days (should be included for 30 days query)
+	endDate10 := now.AddDate(0, 0, 10)
+	sub1 := &domain.UserSubscription{
+		UserID:           user1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDate10,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	// Subscription expiring in 45 days (should NOT be included for 30 days query)
+	endDate45 := now.AddDate(0, 0, 45)
+	sub2 := &domain.UserSubscription{
+		UserID:           user2.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -11, 0),
+		EndDate:          &endDate45,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	// Permanent free subscription (should NOT be included)
+	sub3 := &domain.UserSubscription{
+		UserID:           user3.ID,
+		SubscriptionType: domain.SubscriptionTypeFree,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  true,
+		StartDate:        now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Already expired subscription (should NOT be included)
+	endDatePast := now.AddDate(0, 0, -5)
+	sub4 := &domain.UserSubscription{
+		UserID:           user4.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub4)
+
+	// Test ListExpiring with 30 days
+	expiring, err := subRepo.ListExpiring(30)
+	if err != nil {
+		t.Fatalf("ListExpiring() error = %v", err)
+	}
+
+	if len(expiring) != 1 {
+		t.Errorf("ListExpiring(30) returned %d subscriptions, want 1", len(expiring))
+	}
+
+	if len(expiring) > 0 && expiring[0].UserID != user1.ID {
+		t.Errorf("Expected subscription for user1, got user ID %d", expiring[0].UserID)
+	}
+
+	// Test ListExpiring with 60 days (should include both sub1 and sub2)
+	expiring60, err := subRepo.ListExpiring(60)
+	if err != nil {
+		t.Fatalf("ListExpiring(60) error = %v", err)
+	}
+
+	if len(expiring60) != 2 {
+		t.Errorf("ListExpiring(60) returned %d subscriptions, want 2", len(expiring60))
+	}
+}
+
+func TestUserSubscriptionRepository_ListExpired(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	subRepo := NewSQLiteUserSubscriptionRepository(db)
+
+	// Create test users
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
+	userRepo.Create(user1)
+	userRepo.Create(user2)
+	userRepo.Create(user3)
+
+	now := time.Now()
+
+	// Subscription with status 'expired' (should be included)
+	endDatePast := now.AddDate(0, 0, -10)
+	sub1 := &domain.UserSubscription{
+		UserID:           user1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusExpired,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -2, 0),
+		EndDate:          &endDatePast,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	// Active subscription with past end date (overdue, should be included)
+	endDatePast2 := now.AddDate(0, 0, -5)
+	sub2 := &domain.UserSubscription{
+		UserID:           user2.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now.AddDate(0, -1, 0),
+		EndDate:          &endDatePast2,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	// Active subscription with future end date (should NOT be included)
+	endDateFuture := now.AddDate(0, 0, 30)
+	sub3 := &domain.UserSubscription{
+		UserID:           user3.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  false,
+		StartDate:        now,
+		EndDate:          &endDateFuture,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Test ListExpired
+	expired, err := subRepo.ListExpired()
+	if err != nil {
+		t.Fatalf("ListExpired() error = %v", err)
+	}
+
+	if len(expired) != 2 {
+		t.Errorf("ListExpired() returned %d subscriptions, want 2", len(expired))
+	}
+
+	// Verify the correct subscriptions were returned
+	foundUser1 := false
+	foundUser2 := false
+	for _, sub := range expired {
+		if sub.UserID == user1.ID {
+			foundUser1 = true
+		}
+		if sub.UserID == user2.ID {
+			foundUser2 = true
+		}
+	}
+
+	if !foundUser1 {
+		t.Error("ListExpired() should include subscription with expired status")
+	}
+	if !foundUser2 {
+		t.Error("ListExpired() should include active subscription with past end date")
+	}
+}
