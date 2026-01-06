@@ -663,6 +663,12 @@ func main() {
 					r.Get("/users", subscriptionHandler.ListAllUserSubscriptions)
 					r.Get("/organizations", subscriptionHandler.ListAllOrganizationSubscriptions)
 
+					// Expiring and expired subscriptions (must come before parameterized routes)
+					r.Get("/users/expiring", subscriptionHandler.ListExpiringUserSubscriptions)
+					r.Get("/users/expired", subscriptionHandler.ListExpiredUserSubscriptions)
+					r.Get("/organizations/expiring", subscriptionHandler.ListExpiringOrganizationSubscriptions)
+					r.Get("/organizations/expired", subscriptionHandler.ListExpiredOrganizationSubscriptions)
+
 					// User subscriptions
 					r.Post("/user", subscriptionHandler.CreateUserSubscription)
 					r.Get("/user/{user_id}", subscriptionHandler.GetUserSubscriptions)

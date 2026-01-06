@@ -497,3 +497,29 @@ func (s *SubscriptionService) ListAllUserSubscriptions() ([]*domain.UserSubscrip
 func (s *SubscriptionService) ListAllOrganizationSubscriptions() ([]*domain.OrganizationSubscription, error) {
 	return s.orgSubRepo.ListAll()
 }
+
+// ListExpiringUserSubscriptions returns active user subscriptions expiring within N days (admin only)
+func (s *SubscriptionService) ListExpiringUserSubscriptions(days int) ([]*domain.UserSubscription, error) {
+	if days <= 0 {
+		days = 30 // Default to 30 days
+	}
+	return s.userSubRepo.ListExpiring(days)
+}
+
+// ListExpiredUserSubscriptions returns expired or overdue user subscriptions (admin only)
+func (s *SubscriptionService) ListExpiredUserSubscriptions() ([]*domain.UserSubscription, error) {
+	return s.userSubRepo.ListExpired()
+}
+
+// ListExpiringOrganizationSubscriptions returns active org subscriptions expiring within N days (admin only)
+func (s *SubscriptionService) ListExpiringOrganizationSubscriptions(days int) ([]*domain.OrganizationSubscription, error) {
+	if days <= 0 {
+		days = 30 // Default to 30 days
+	}
+	return s.orgSubRepo.ListExpiring(days)
+}
+
+// ListExpiredOrganizationSubscriptions returns expired or overdue organization subscriptions (admin only)
+func (s *SubscriptionService) ListExpiredOrganizationSubscriptions() ([]*domain.OrganizationSubscription, error) {
+	return s.orgSubRepo.ListExpired()
+}

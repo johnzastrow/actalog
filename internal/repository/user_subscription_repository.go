@@ -415,6 +415,156 @@ func (r *SQLiteUserSubscriptionRepository) Cancel(id int64, reason string, admin
 	return err
 }
 
+// ListExpiring returns active subscriptions expiring within the specified number of days
+func (r *SQLiteUserSubscriptionRepository) ListExpiring(days int) ([]*domain.UserSubscription, error) {
+	// Use database-agnostic date arithmetic
+	var query string
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = false
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > NOW()
+			  AND us.end_date <= NOW() + INTERVAL '1 day' * $1
+			ORDER BY us.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = false
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > NOW()
+			  AND us.end_date <= DATE_ADD(NOW(), INTERVAL ? DAY)
+			ORDER BY us.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = 0
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > datetime('now')
+			  AND us.end_date <= datetime('now', '+' || ? || ' days')
+			ORDER BY us.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query, days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expiring subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// ListExpired returns subscriptions that are expired or overdue
+func (r *SQLiteUserSubscriptionRepository) ListExpired() ([]*domain.UserSubscription, error) {
+	// Use database-agnostic date comparison
+	var query string
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = false AND us.end_date IS NOT NULL AND us.end_date <= NOW()))
+			ORDER BY us.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = false AND us.end_date IS NOT NULL AND us.end_date <= NOW()))
+			ORDER BY us.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = 0 AND us.end_date IS NOT NULL AND us.end_date <= datetime('now')))
+			ORDER BY us.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expired subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// scanSubscriptionRows is a helper to scan subscription rows with user details
+func (r *SQLiteUserSubscriptionRepository) scanSubscriptionRows(rows *sql.Rows) ([]*domain.UserSubscription, error) {
+	var subscriptions []*domain.UserSubscription
+	for rows.Next() {
+		var sub domain.UserSubscription
+		err := rows.Scan(
+			&sub.ID,
+			&sub.UserID,
+			&sub.UserEmail,
+			&sub.UserName,
+			&sub.SubscriptionType,
+			&sub.Status,
+			&sub.IsPermanentFree,
+			&sub.StartDate,
+			&sub.EndDate,
+			&sub.LastPaymentDate,
+			&sub.NextBillingDate,
+			&sub.CancelledAt,
+			&sub.CancelledReason,
+			&sub.Notes,
+			&sub.CreatedAt,
+			&sub.UpdatedAt,
+			&sub.CreatedByUserID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan subscription: %w", err)
+		}
+		subscriptions = append(subscriptions, &sub)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating subscriptions: %w", err)
+	}
+
+	return subscriptions, nil
+}
+
 // ListAll returns all user subscriptions with user details
 func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription, error) {
 	query := rebindQuery(`

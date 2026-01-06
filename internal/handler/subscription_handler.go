@@ -777,3 +777,127 @@ func (h *SubscriptionHandler) ListAllOrganizationSubscriptions(w http.ResponseWr
 		"count":         len(subscriptions),
 	})
 }
+
+// ListExpiringUserSubscriptions lists user subscriptions expiring within N days (admin only)
+// @Summary      List expiring user subscriptions (Admin)
+// @Description  Get a list of user subscriptions expiring within the specified number of days
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        days query int false "Number of days to look ahead (default: 30)"
+// @Success      200 {object} map[string]interface{} "Expiring subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/expiring [get]
+func (h *SubscriptionHandler) ListExpiringUserSubscriptions(w http.ResponseWriter, r *http.Request) {
+	// Get days parameter (default to 30)
+	days := 30
+	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	subscriptions, err := h.subscriptionService.ListExpiringUserSubscriptions(days)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_expiring_user_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get expiring subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+		"days":          days,
+	})
+}
+
+// ListExpiredUserSubscriptions lists expired or overdue user subscriptions (admin only)
+// @Summary      List expired user subscriptions (Admin)
+// @Description  Get a list of expired or overdue user subscriptions
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Expired subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/users/expired [get]
+func (h *SubscriptionHandler) ListExpiredUserSubscriptions(w http.ResponseWriter, r *http.Request) {
+	subscriptions, err := h.subscriptionService.ListExpiredUserSubscriptions()
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_expired_user_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get expired subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+	})
+}
+
+// ListExpiringOrganizationSubscriptions lists org subscriptions expiring within N days (admin only)
+// @Summary      List expiring organization subscriptions (Admin)
+// @Description  Get a list of organization subscriptions expiring within the specified number of days
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        days query int false "Number of days to look ahead (default: 30)"
+// @Success      200 {object} map[string]interface{} "Expiring subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/expiring [get]
+func (h *SubscriptionHandler) ListExpiringOrganizationSubscriptions(w http.ResponseWriter, r *http.Request) {
+	// Get days parameter (default to 30)
+	days := 30
+	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	subscriptions, err := h.subscriptionService.ListExpiringOrganizationSubscriptions(days)
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_expiring_org_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get expiring subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+		"days":          days,
+	})
+}
+
+// ListExpiredOrganizationSubscriptions lists expired or overdue organization subscriptions (admin only)
+// @Summary      List expired organization subscriptions (Admin)
+// @Description  Get a list of expired or overdue organization subscriptions
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Expired subscriptions list"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/subscriptions/organizations/expired [get]
+func (h *SubscriptionHandler) ListExpiredOrganizationSubscriptions(w http.ResponseWriter, r *http.Request) {
+	subscriptions, err := h.subscriptionService.ListExpiredOrganizationSubscriptions()
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Error("action=list_expired_org_subscriptions outcome=failure error=%v", err)
+		}
+		respondError(w, http.StatusInternalServerError, "Failed to get expired subscriptions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subscriptions,
+		"count":         len(subscriptions),
+	})
+}

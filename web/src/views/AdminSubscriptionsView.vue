@@ -321,41 +321,99 @@
         <!-- Expiring Soon Tab -->
         <v-window-item value="expiring">
           <v-card elevation="0" rounded="lg">
-            <v-card-title>
+            <v-card-title class="d-flex align-center">
               <v-icon class="mr-2" color="warning">mdi-clock-alert</v-icon>
-              Expiring in Next 30 Days
+              Expiring Soon
+              <v-spacer></v-spacer>
+              <v-select
+                v-model="expiringDays"
+                :items="expiringDaysOptions"
+                label="Days ahead"
+                variant="outlined"
+                density="compact"
+                style="max-width: 150px;"
+                @update:model-value="loadExpiringExpired"
+              ></v-select>
             </v-card-title>
             <v-card-text>
-              <v-list>
-                <v-list-item
-                  v-for="sub in expiringSoonSubscriptions"
-                  :key="sub.id"
-                  class="mb-2"
-                >
-                  <template #prepend>
-                    <v-icon :color="getDaysLeftColor(sub.days_left)">
-                      mdi-alert-circle
-                    </v-icon>
-                  </template>
-                  <v-list-item-title>
-                    {{ sub.name }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>
-                    Expires in {{ sub.days_left }} days ({{ formatDate(sub.end_date) }})
-                  </v-list-item-subtitle>
-                  <template #append>
-                    <v-btn
-                      size="small"
-                      color="primary"
-                      @click="openMarkAsPaidDialog(sub, sub.type)"
-                    >
-                      Mark as Paid
-                    </v-btn>
-                  </template>
-                </v-list-item>
-              </v-list>
-              <v-alert v-if="expiringSoonSubscriptions.length === 0" type="info" variant="tonal">
-                No subscriptions expiring in the next 30 days
+              <v-progress-linear v-if="loadingExpiring" indeterminate color="warning"></v-progress-linear>
+
+              <!-- User subscriptions expiring -->
+              <div v-if="expiringUserSubscriptions.length > 0" class="mb-4">
+                <h3 class="text-subtitle-1 mb-2">User Subscriptions ({{ expiringUserSubscriptions.length }})</h3>
+                <v-list density="compact">
+                  <v-list-item
+                    v-for="sub in expiringUserSubscriptions"
+                    :key="'user-' + sub.id"
+                    class="mb-1"
+                  >
+                    <template #prepend>
+                      <v-icon :color="getDaysLeftColor(calculateDaysLeft(sub.end_date))" size="small">
+                        mdi-account
+                      </v-icon>
+                    </template>
+                    <v-list-item-title>
+                      {{ sub.user_email || `User ${sub.user_id}` }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ sub.subscription_type }} - Expires {{ formatDate(sub.end_date) }}
+                      ({{ calculateDaysLeft(sub.end_date) }} days)
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        size="small"
+                        color="primary"
+                        variant="tonal"
+                        @click="openMarkAsPaidDialog(sub, 'user')"
+                      >
+                        Mark Paid
+                      </v-btn>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </div>
+
+              <!-- Organization subscriptions expiring -->
+              <div v-if="expiringOrgSubscriptions.length > 0">
+                <h3 class="text-subtitle-1 mb-2">Organization Subscriptions ({{ expiringOrgSubscriptions.length }})</h3>
+                <v-list density="compact">
+                  <v-list-item
+                    v-for="sub in expiringOrgSubscriptions"
+                    :key="'org-' + sub.id"
+                    class="mb-1"
+                  >
+                    <template #prepend>
+                      <v-icon :color="getDaysLeftColor(calculateDaysLeft(sub.end_date))" size="small">
+                        mdi-office-building
+                      </v-icon>
+                    </template>
+                    <v-list-item-title>
+                      {{ sub.organization_name || `Organization ${sub.organization_id}` }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ sub.subscription_type }} - Expires {{ formatDate(sub.end_date) }}
+                      ({{ calculateDaysLeft(sub.end_date) }} days)
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        size="small"
+                        color="primary"
+                        variant="tonal"
+                        @click="openMarkAsPaidDialog(sub, 'organization')"
+                      >
+                        Mark Paid
+                      </v-btn>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </div>
+
+              <v-alert
+                v-if="!loadingExpiring && expiringUserSubscriptions.length === 0 && expiringOrgSubscriptions.length === 0"
+                type="success"
+                variant="tonal"
+              >
+                No subscriptions expiring in the next {{ expiringDays }} days
               </v-alert>
             </v-card-text>
           </v-card>
@@ -369,33 +427,79 @@
               Expired Subscriptions
             </v-card-title>
             <v-card-text>
-              <v-list>
-                <v-list-item
-                  v-for="sub in overdueSubscriptions"
-                  :key="sub.id"
-                  class="mb-2"
-                >
-                  <template #prepend>
-                    <v-icon color="error">mdi-alert-circle</v-icon>
-                  </template>
-                  <v-list-item-title>
-                    {{ sub.name }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>
-                    Expired {{ formatDate(sub.end_date) }}
-                  </v-list-item-subtitle>
-                  <template #append>
-                    <v-btn
-                      size="small"
-                      color="error"
-                      @click="openMarkAsPaidDialog(sub, sub.type)"
-                    >
-                      Renew
-                    </v-btn>
-                  </template>
-                </v-list-item>
-              </v-list>
-              <v-alert v-if="overdueSubscriptions.length === 0" type="success" variant="tonal">
+              <v-progress-linear v-if="loadingExpired" indeterminate color="error"></v-progress-linear>
+
+              <!-- User subscriptions expired -->
+              <div v-if="expiredUserSubscriptions.length > 0" class="mb-4">
+                <h3 class="text-subtitle-1 mb-2">User Subscriptions ({{ expiredUserSubscriptions.length }})</h3>
+                <v-list density="compact">
+                  <v-list-item
+                    v-for="sub in expiredUserSubscriptions"
+                    :key="'user-' + sub.id"
+                    class="mb-1"
+                  >
+                    <template #prepend>
+                      <v-icon color="error" size="small">mdi-account</v-icon>
+                    </template>
+                    <v-list-item-title>
+                      {{ sub.user_email || `User ${sub.user_id}` }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ sub.subscription_type }} - Expired {{ formatDate(sub.end_date) }}
+                      <v-chip size="x-small" color="grey" class="ml-1">{{ sub.status }}</v-chip>
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        size="small"
+                        color="error"
+                        variant="tonal"
+                        @click="openMarkAsPaidDialog(sub, 'user')"
+                      >
+                        Renew
+                      </v-btn>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </div>
+
+              <!-- Organization subscriptions expired -->
+              <div v-if="expiredOrgSubscriptions.length > 0">
+                <h3 class="text-subtitle-1 mb-2">Organization Subscriptions ({{ expiredOrgSubscriptions.length }})</h3>
+                <v-list density="compact">
+                  <v-list-item
+                    v-for="sub in expiredOrgSubscriptions"
+                    :key="'org-' + sub.id"
+                    class="mb-1"
+                  >
+                    <template #prepend>
+                      <v-icon color="error" size="small">mdi-office-building</v-icon>
+                    </template>
+                    <v-list-item-title>
+                      {{ sub.organization_name || `Organization ${sub.organization_id}` }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ sub.subscription_type }} - Expired {{ formatDate(sub.end_date) }}
+                      <v-chip size="x-small" color="grey" class="ml-1">{{ sub.status }}</v-chip>
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        size="small"
+                        color="error"
+                        variant="tonal"
+                        @click="openMarkAsPaidDialog(sub, 'organization')"
+                      >
+                        Renew
+                      </v-btn>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </div>
+
+              <v-alert
+                v-if="!loadingExpired && expiredUserSubscriptions.length === 0 && expiredOrgSubscriptions.length === 0"
+                type="success"
+                variant="tonal"
+              >
                 No expired subscriptions
               </v-alert>
             </v-card-text>
@@ -435,7 +539,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from '@/utils/axios'
 import CreateSubscriptionDialog from '@/components/admin/CreateSubscriptionDialog.vue'
 import SubscriptionDetailDialog from '@/components/admin/SubscriptionDetailDialog.vue'
@@ -444,10 +548,28 @@ import CancelSubscriptionDialog from '@/components/admin/CancelSubscriptionDialo
 
 const activeTab = ref('users')
 const loading = ref(false)
+const loadingExpiring = ref(false)
+const loadingExpired = ref(false)
 
 // Data
 const userSubscriptions = ref([])
 const orgSubscriptions = ref([])
+
+// Expiring/Expired data from API
+const expiringUserSubscriptions = ref([])
+const expiringOrgSubscriptions = ref([])
+const expiredUserSubscriptions = ref([])
+const expiredOrgSubscriptions = ref([])
+
+// Days filter for expiring subscriptions
+const expiringDays = ref(30)
+const expiringDaysOptions = [
+  { title: '7 days', value: 7 },
+  { title: '14 days', value: 14 },
+  { title: '30 days', value: 30 },
+  { title: '60 days', value: 60 },
+  { title: '90 days', value: 90 }
+]
 
 // Filters
 const userFilters = ref({
@@ -569,47 +691,13 @@ const filteredOrgSubscriptions = computed(() => {
   return filtered
 })
 
-// Computed - Expiring soon (next 30 days)
-const expiringSoonSubscriptions = computed(() => {
+// Helper function to calculate days left
+function calculateDaysLeft(endDate) {
+  if (!endDate) return 0
   const now = new Date()
-  const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-  const allSubs = [
-    ...userSubscriptions.value.map(s => ({ ...s, type: 'user', name: s.user_email || `User ${s.user_id}` })),
-    ...orgSubscriptions.value.map(s => ({ ...s, type: 'organization', name: s.organization_name || `Org ${s.organization_id}` }))
-  ]
-
-  return allSubs
-    .filter(sub => {
-      if (sub.is_permanent_free || !sub.end_date || sub.status !== 'active') return false
-      const endDate = new Date(sub.end_date)
-      return endDate > now && endDate <= thirtyDaysLater
-    })
-    .map(sub => {
-      const endDate = new Date(sub.end_date)
-      const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
-      return { ...sub, days_left: daysLeft }
-    })
-    .sort((a, b) => a.days_left - b.days_left)
-})
-
-// Computed - Overdue subscriptions
-const overdueSubscriptions = computed(() => {
-  const now = new Date()
-
-  const allSubs = [
-    ...userSubscriptions.value.map(s => ({ ...s, type: 'user', name: s.user_email || `User ${s.user_id}` })),
-    ...orgSubscriptions.value.map(s => ({ ...s, type: 'organization', name: s.organization_name || `Org ${s.organization_id}` }))
-  ]
-
-  return allSubs
-    .filter(sub => {
-      if (sub.is_permanent_free || !sub.end_date) return false
-      const endDate = new Date(sub.end_date)
-      return endDate < now && sub.status === 'expired'
-    })
-    .sort((a, b) => new Date(a.end_date) - new Date(b.end_date))
-})
+  const end = new Date(endDate)
+  return Math.ceil((end - now) / (1000 * 60 * 60 * 24))
+}
 
 // Methods
 async function loadSubscriptions() {
@@ -626,6 +714,31 @@ async function loadSubscriptions() {
     console.error('Failed to load subscriptions:', error)
   } finally {
     loading.value = false
+  }
+}
+
+async function loadExpiringExpired() {
+  // Load expiring subscriptions
+  loadingExpiring.value = true
+  loadingExpired.value = true
+
+  try {
+    const [expiringUsersRes, expiringOrgsRes, expiredUsersRes, expiredOrgsRes] = await Promise.all([
+      axios.get(`/api/admin/subscriptions/users/expiring?days=${expiringDays.value}`),
+      axios.get(`/api/admin/subscriptions/organizations/expiring?days=${expiringDays.value}`),
+      axios.get('/api/admin/subscriptions/users/expired'),
+      axios.get('/api/admin/subscriptions/organizations/expired')
+    ])
+
+    expiringUserSubscriptions.value = expiringUsersRes.data.subscriptions || []
+    expiringOrgSubscriptions.value = expiringOrgsRes.data.subscriptions || []
+    expiredUserSubscriptions.value = expiredUsersRes.data.subscriptions || []
+    expiredOrgSubscriptions.value = expiredOrgsRes.data.subscriptions || []
+  } catch (error) {
+    console.error('Failed to load expiring/expired subscriptions:', error)
+  } finally {
+    loadingExpiring.value = false
+    loadingExpired.value = false
   }
 }
 
@@ -669,14 +782,17 @@ function openCancelDialog(subscription, type) {
 
 function handleSubscriptionCreated() {
   loadSubscriptions()
+  loadExpiringExpired()
 }
 
 function handleMarkedAsPaid() {
   loadSubscriptions()
+  loadExpiringExpired()
 }
 
 function handleCancelled() {
   loadSubscriptions()
+  loadExpiringExpired()
 }
 
 async function togglePermanent(subscription, type) {
@@ -741,8 +857,20 @@ function getDaysLeftColor(days) {
   return 'info'
 }
 
+// Watch for tab changes to load expiring/expired data when needed
+watch(activeTab, (newTab) => {
+  if (newTab === 'expiring' || newTab === 'overdue') {
+    // Only load if we haven't already (or want to refresh)
+    if (expiringUserSubscriptions.value.length === 0 && expiredUserSubscriptions.value.length === 0) {
+      loadExpiringExpired()
+    }
+  }
+})
+
 onMounted(() => {
   loadSubscriptions()
+  // Also load expiring/expired data in case user navigates directly to those tabs
+  loadExpiringExpired()
 })
 </script>
 
