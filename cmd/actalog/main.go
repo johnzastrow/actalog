@@ -274,11 +274,17 @@ func main() {
 
 	// Create admin notification service for user event emails and in-app notifications
 	stdLogger := log.New(appLogger.Writer(), "[AdminNotify] ", 0)
+	// Pass nil explicitly for email service interface to avoid typed-nil issue
+	// (a typed nil *email.Service assigned to interface is not nil)
+	var adminEmailSvc email.EmailService
+	if emailService != nil {
+		adminEmailSvc = emailService
+	}
 	adminNotificationService := service.NewAdminNotificationService(
 		userRepo,
 		userSettingsRepo,
 		notificationRepo,
-		emailService, // may be nil if email not configured
+		adminEmailSvc,
 		emailLogService,
 		appURL,
 		stdLogger,
