@@ -4,16 +4,17 @@ import "time"
 
 // UserSettings represents user preferences and settings
 type UserSettings struct {
-	ID                      int64     `json:"id"`
-	UserID                  int64     `json:"user_id"`
-	NotificationPreferences string    `json:"notification_preferences"` // JSON format
-	DataExportFormat        string    `json:"data_export_format"`       // JSON, CSV
-	Theme                   string    `json:"theme"`                    // light, dark
-	WeightUnit              string    `json:"weight_unit"`              // lbs, kg
-	DistanceUnit            string    `json:"distance_unit"`            // miles, km
-	Timezone                string    `json:"timezone"`                 // IANA timezone identifier
-	CreatedAt               time.Time `json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	ID                          int64     `json:"id"`
+	UserID                      int64     `json:"user_id"`
+	NotificationPreferences     string    `json:"notification_preferences"`       // JSON format
+	DataExportFormat            string    `json:"data_export_format"`             // JSON, CSV
+	Theme                       string    `json:"theme"`                          // light, dark
+	WeightUnit                  string    `json:"weight_unit"`                    // lbs, kg
+	DistanceUnit                string    `json:"distance_unit"`                  // miles, km
+	Timezone                    string    `json:"timezone"`                       // IANA timezone identifier
+	AdminUserEventNotifications bool      `json:"admin_user_event_notifications"` // Admins: receive user event emails
+	CreatedAt                   time.Time `json:"created_at"`
+	UpdatedAt                   time.Time `json:"updated_at"`
 }
 
 // UserSettingsRepository defines the interface for user settings data access

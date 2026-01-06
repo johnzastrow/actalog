@@ -272,6 +272,24 @@ func main() {
 		cfg.Security.AccountLockoutDuration,
 	)
 
+	// Create admin notification service for user event emails
+	var adminNotificationService *service.AdminNotificationService
+	if emailService != nil {
+		stdLogger := log.New(appLogger.Writer(), "[AdminNotify] ", 0)
+		adminNotificationService = service.NewAdminNotificationService(
+			userRepo,
+			userSettingsRepo,
+			emailService,
+			emailLogService,
+			appURL,
+			stdLogger,
+		)
+		userService.SetAdminNotificationService(adminNotificationService)
+		appLogger.Info("Admin notification service: enabled")
+	} else {
+		appLogger.Info("Admin notification service: disabled (no email service)")
+	}
+
 	notificationService := service.NewNotificationService(
 		notificationRepo,
 		orgRepo,

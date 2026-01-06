@@ -362,6 +362,84 @@ func (r *SQLiteUserRepository) Count() (int64, error) {
 	return count, err
 }
 
+// ListAdmins returns all users with admin role
+func (r *SQLiteUserRepository) ListAdmins() ([]*domain.User, error) {
+	query := rebindQuery(`
+		SELECT id, email, password_hash, name, profile_image, role,
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
+		FROM users
+		WHERE role = 'admin'
+		ORDER BY created_at ASC
+	`)
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		user := &domain.User{}
+		var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+		var disabledByUserID sql.NullInt64
+		var disableReason sql.NullString
+
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Name,
+			&user.ProfileImage,
+			&user.Role,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&lastLoginAt,
+			&user.EmailVerified,
+			&emailVerifiedAt,
+			&user.FailedLoginAttempts,
+			&lockedAt,
+			&lockedUntil,
+			&user.AccountDisabled,
+			&disabledAt,
+			&disabledByUserID,
+			&disableReason,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Handle nullable fields
+		if lastLoginAt.Valid {
+			user.LastLoginAt = &lastLoginAt.Time
+		}
+		if emailVerifiedAt.Valid {
+			user.EmailVerifiedAt = &emailVerifiedAt.Time
+		}
+		if lockedAt.Valid {
+			user.LockedAt = &lockedAt.Time
+		}
+		if lockedUntil.Valid {
+			user.LockedUntil = &lockedUntil.Time
+		}
+		if disabledAt.Valid {
+			user.DisabledAt = &disabledAt.Time
+		}
+		if disabledByUserID.Valid {
+			user.DisabledByUserID = &disabledByUserID.Int64
+		}
+		if disableReason.Valid {
+			user.DisableReason = &disableReason.String
+		}
+
+		users = append(users, user)
+	}
+
+	return users, rows.Err()
+}
+
 // Account Security Methods
 
 // IncrementFailedAttempts increments the failed login attempts counter

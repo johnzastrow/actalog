@@ -1565,6 +1565,53 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.20.0",
+		Description: "Add admin_user_event_notifications column to user_settings for admin email preferences",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if column already exists
+			hasColumn, err := checkColumnExists(db, driver, "user_settings", "admin_user_event_notifications")
+			if err != nil {
+				return fmt.Errorf("failed to check for admin_user_event_notifications column: %w", err)
+			}
+			if hasColumn {
+				fmt.Println("✓ admin_user_event_notifications column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add column with default value TRUE (admins receive notifications by default)
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications INTEGER NOT NULL DEFAULT 1`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add admin_user_event_notifications column: %w", err)
+			}
+			fmt.Println("✓ Added admin_user_event_notifications column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN admin_user_event_notifications"); err != nil {
+					return fmt.Errorf("failed to drop admin_user_event_notifications column: %w", err)
+				}
+				fmt.Println("✓ Dropped admin_user_event_notifications column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, admin_user_event_notifications column remains")
+			}
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

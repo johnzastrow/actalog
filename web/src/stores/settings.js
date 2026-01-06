@@ -30,6 +30,10 @@ export const useSettingsStore = defineStore('settings', () => {
     return settings.value?.theme || 'light'
   })
 
+  const adminUserEventNotifications = computed(() => {
+    return settings.value?.admin_user_event_notifications ?? true
+  })
+
   // Actions
   async function fetchSettings() {
     loading.value = true
@@ -105,6 +109,13 @@ export const useSettingsStore = defineStore('settings', () => {
     })
   }
 
+  async function updateAdminUserEventNotifications(enabled) {
+    return updateSettings({
+      ...settings.value,
+      admin_user_event_notifications: enabled
+    })
+  }
+
   function detectBrowserTimezone() {
     return getBrowserTimezone()
   }
@@ -128,12 +139,14 @@ export const useSettingsStore = defineStore('settings', () => {
     distanceUnit,
     dataExportFormat,
     theme,
+    adminUserEventNotifications,
     // Actions
     fetchSettings,
     updateSettings,
     updateTimezone,
     updateWeightUnit,
     updateDistanceUnit,
+    updateAdminUserEventNotifications,
     detectBrowserTimezone
   }
 })

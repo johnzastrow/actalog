@@ -21,7 +21,8 @@ func NewSQLiteUserSettingsRepository(db *sql.DB) domain.UserSettingsRepository {
 func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSettings, error) {
 	query := rebindQuery(`
 		SELECT id, user_id, notification_preferences, data_export_format, theme,
-		       weight_unit, distance_unit, timezone, created_at, updated_at
+		       weight_unit, distance_unit, timezone, admin_user_event_notifications,
+		       created_at, updated_at
 		FROM user_settings
 		WHERE user_id = ?
 	`)
@@ -36,6 +37,7 @@ func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSe
 		&settings.WeightUnit,
 		&settings.DistanceUnit,
 		&settings.Timezone,
+		&settings.AdminUserEventNotifications,
 		&settings.CreatedAt,
 		&settings.UpdatedAt,
 	)
@@ -55,8 +57,9 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 	query := rebindQuery(`
 		INSERT INTO user_settings (
 			user_id, notification_preferences, data_export_format, theme,
-			weight_unit, distance_unit, timezone, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			weight_unit, distance_unit, timezone, admin_user_event_notifications,
+			created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 
 	now := time.Now()
@@ -74,6 +77,7 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 			settings.WeightUnit,
 			settings.DistanceUnit,
 			settings.Timezone,
+			settings.AdminUserEventNotifications,
 			settings.CreatedAt,
 			settings.UpdatedAt,
 		).Scan(&settings.ID)
@@ -89,6 +93,7 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 		settings.WeightUnit,
 		settings.DistanceUnit,
 		settings.Timezone,
+		settings.AdminUserEventNotifications,
 		settings.CreatedAt,
 		settings.UpdatedAt,
 	)
@@ -110,7 +115,8 @@ func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) err
 	query := rebindQuery(`
 		UPDATE user_settings
 		SET notification_preferences = ?, data_export_format = ?, theme = ?,
-		    weight_unit = ?, distance_unit = ?, timezone = ?, updated_at = ?
+		    weight_unit = ?, distance_unit = ?, timezone = ?,
+		    admin_user_event_notifications = ?, updated_at = ?
 		WHERE user_id = ?
 	`)
 
@@ -124,6 +130,7 @@ func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) err
 		settings.WeightUnit,
 		settings.DistanceUnit,
 		settings.Timezone,
+		settings.AdminUserEventNotifications,
 		settings.UpdatedAt,
 		settings.UserID,
 	)

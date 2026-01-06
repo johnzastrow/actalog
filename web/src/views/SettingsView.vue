@@ -289,6 +289,40 @@
         </div>
       </v-card>
 
+      <!-- Admin Settings Card (only visible to admins) -->
+      <v-card
+        v-if="authStore.user?.role === 'admin'"
+        elevation="0"
+        rounded="lg"
+        class="pa-3 mb-3"
+        bg-color="surface"
+      >
+        <h2 class="text-body-1 font-weight-bold mb-3">Admin Settings</h2>
+        <v-list bg-color="transparent" density="compact">
+          <v-list-item>
+            <template #prepend>
+              <v-icon color="primary">mdi-email-alert</v-icon>
+            </template>
+            <v-list-item-title class="font-weight-medium">
+              User Event Notifications
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Receive email when users register or change
+            </v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="adminUserEventNotifications"
+                color="primary"
+                hide-details
+                density="compact"
+                :loading="adminNotifLoading"
+                @update:model-value="saveAdminUserEventNotifications"
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-card>
+
       <!-- Data Management Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-2" >Data Management</h2>
@@ -596,6 +630,8 @@ const weightUnit = ref('lbs')
 const timezone = ref('America/New_York')
 const timezoneOptions = ref(getTimezoneOptions())
 const timezoneLoading = ref(false)
+const adminUserEventNotifications = ref(true)
+const adminNotifLoading = ref(false)
 
 const profileForm = ref({
   name: '',
@@ -650,6 +686,7 @@ onMounted(async () => {
     await settingsStore.fetchSettings()
     timezone.value = settingsStore.timezone
     weightUnit.value = settingsStore.weightUnit
+    adminUserEventNotifications.value = settingsStore.adminUserEventNotifications
   } catch (err) {
     console.error('Failed to fetch user settings:', err)
   }
@@ -796,6 +833,23 @@ const detectTimezone = () => {
   // Update the options list if browser timezone isn't in the list
   timezoneOptions.value = getTimezoneOptions()
   saveTimezone()
+}
+
+// Admin settings
+const saveAdminUserEventNotifications = async (enabled) => {
+  adminNotifLoading.value = true
+  try {
+    await settingsStore.updateAdminUserEventNotifications(enabled)
+    successMessage.value = enabled
+      ? 'You will receive admin notifications'
+      : 'Admin notifications disabled'
+  } catch {
+    errors.value.general = 'Failed to save notification preference. Please try again.'
+    // Revert the toggle
+    adminUserEventNotifications.value = !enabled
+  } finally {
+    adminNotifLoading.value = false
+  }
 }
 
 // Data management

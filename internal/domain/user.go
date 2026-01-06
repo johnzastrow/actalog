@@ -58,6 +58,7 @@ type UserRepository interface {
 	Delete(id int64) error
 	List(limit, offset int) ([]*User, error)
 	Count() (int64, error)
+	ListAdmins() ([]*User, error)
 
 	// Account security methods
 	IncrementFailedAttempts(userID int64) error
