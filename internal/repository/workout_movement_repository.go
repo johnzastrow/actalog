@@ -289,6 +289,9 @@ func (r *WorkoutMovementRepository) DeleteByWorkoutID(workoutID int64) error {
 // GetPersonalRecords retrieves all personal records for a user
 // Updated to work with new schema where user_workouts is the junction table
 func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.PersonalRecord, error) {
+	// Note: All selected columns must be either in GROUP BY or use aggregate functions
+	// for PostgreSQL compatibility. The workout_id/date returned are from the most recent
+	// workout containing this movement, not necessarily the workout with the PR value.
 	query := rebindQuery(`
 		SELECT
 			m.id as movement_id,
@@ -296,9 +299,9 @@ func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.
 			MAX(ws.weight) as max_weight,
 			MAX(ws.reps) as max_reps,
 			MIN(ws.time) as best_time,
-			uw.id as user_workout_id,
-			ws.workout_id,
-			uw.workout_date
+			MAX(uw.id) as user_workout_id,
+			MAX(ws.workout_id) as workout_id,
+			MAX(uw.workout_date) as workout_date
 		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
 		INNER JOIN movements m ON ws.movement_id = m.id
@@ -318,6 +321,7 @@ func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.
 		var maxWeight sql.NullFloat64
 		var maxReps sql.NullInt64
 		var bestTime sql.NullInt64
+		var workoutDateStr sql.NullString // MAX() returns string in SQLite
 
 		err := rows.Scan(
 			&pr.MovementID,
@@ -327,7 +331,7 @@ func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.
 			&bestTime,
 			&pr.UserWorkoutID,
 			&pr.WorkoutID,
-			&pr.WorkoutDate,
+			&workoutDateStr,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan personal record: %w", err)
@@ -343,6 +347,15 @@ func (r *WorkoutMovementRepository) GetPersonalRecords(userID int64) ([]*domain.
 		if bestTime.Valid {
 			t := int(bestTime.Int64)
 			pr.BestTime = &t
+		}
+		if workoutDateStr.Valid {
+			// Parse date string - try common formats
+			for _, layout := range []string{"2006-01-02T15:04:05Z", "2006-01-02 15:04:05", "2006-01-02"} {
+				if t, err := time.Parse(layout, workoutDateStr.String); err == nil {
+					pr.WorkoutDate = t
+					break
+				}
+			}
 		}
 
 		records = append(records, pr)
