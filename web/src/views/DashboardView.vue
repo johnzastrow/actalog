@@ -88,42 +88,6 @@
         </v-col>
       </v-row>
 
-      <!-- Quick Actions -->
-      <v-row dense class="mb-1">
-        <v-col cols="6">
-          <v-card
-            elevation="0"
-            rounded
-            class="pa-1 text-center"
-            bg-color="primary"
-            style="cursor: pointer"
-            @click="openQuickLog"
-          >
-            <v-icon size="28" class="mb-1">mdi-lightning-bolt</v-icon>
-            <div class="text-body-2 font-weight-bold">Quick Log</div>
-            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
-              Fast entry
-            </div>
-          </v-card>
-        </v-col>
-        <v-col cols="6">
-          <v-card
-            elevation="0"
-            rounded
-            class="pa-1 text-center"
-            bg-color="primary"
-            style="cursor: pointer"
-            @click="$router.push('/workouts/calendar')"
-          >
-            <v-icon size="28" class="mb-1">mdi-calendar-month</v-icon>
-            <div class="text-body-2 font-weight-bold">Calendar</div>
-            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
-              View by date
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-
       <!-- Additional Stats -->
       <v-row dense class="mb-1">
         <v-col cols="6">
@@ -201,6 +165,38 @@
               </div>
             </div>
           </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Quick Actions -->
+      <v-row dense class="mb-2">
+        <v-col cols="6">
+          <v-btn
+            block
+            size="large"
+            class="quick-action-btn"
+            @click="openQuickLog"
+          >
+            <v-icon start size="24">mdi-lightning-bolt</v-icon>
+            <div class="d-flex flex-column align-start">
+              <span class="text-body-2 font-weight-bold">Quick Log</span>
+              <span class="text-caption" style="opacity: 0.8; font-size: 9px; line-height: 1">Fast entry</span>
+            </div>
+          </v-btn>
+        </v-col>
+        <v-col cols="6">
+          <v-btn
+            block
+            size="large"
+            class="quick-action-btn"
+            @click="$router.push('/workouts/calendar')"
+          >
+            <v-icon start size="24">mdi-calendar-month</v-icon>
+            <div class="d-flex flex-column align-start">
+              <span class="text-body-2 font-weight-bold">Calendar</span>
+              <span class="text-caption" style="opacity: 0.8; font-size: 9px; line-height: 1">View by date</span>
+            </div>
+          </v-btn>
         </v-col>
       </v-row>
 
@@ -1291,4 +1287,30 @@ onMounted(() => {
 
 <style scoped>
 /* Dashboard specific styles */
+
+/* Quick action buttons - distinct background that works in all themes */
+.quick-action-btn {
+  background-color: rgb(var(--v-theme-primary)) !important;
+  color: white !important;
+  height: 56px !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.quick-action-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.quick-action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+.quick-action-btn .v-icon {
+  color: white !important;
+}
 </style>
