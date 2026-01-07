@@ -72,9 +72,7 @@
           <!-- Description -->
           <div v-if="parsedData.description" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
-            <p class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
-              {{ parsedData.description }}
-            </p>
+            <markdown-renderer :content="parsedData.description" />
           </div>
 
           <!-- Difficulty -->
@@ -291,6 +289,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -46,6 +46,8 @@
           v-model="template.description"
           label="Description (Optional)"
           placeholder="Add any notes or instructions for this template"
+          hint="Format text using Markdown"
+          persistent-hint
           variant="outlined"
           density="compact"
           rounded="lg"

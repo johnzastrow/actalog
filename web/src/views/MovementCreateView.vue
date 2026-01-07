@@ -123,6 +123,8 @@
           v-model="movement.description"
           label="Movement Description *"
           placeholder="Describe the movement execution, key technique points, and setup..."
+          hint="Format text using Markdown"
+          persistent-hint
           variant="outlined"
           density="compact"
           rounded="lg"

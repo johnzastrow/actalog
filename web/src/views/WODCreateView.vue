@@ -91,6 +91,8 @@
           v-model="wod.description"
           label="Description"
           placeholder="Describe the WOD workout, movements, and instructions"
+          hint="Format text using Markdown"
+          persistent-hint
           variant="outlined"
           density="compact"
           rounded="lg"
