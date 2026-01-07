@@ -201,7 +201,7 @@ async function markAsPaid() {
     emit('update:modelValue', false)
   } catch (err) {
     console.error('Failed to mark subscription as paid:', err)
-    error.value = err.response?.data?.error || 'Failed to mark subscription as paid'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to mark subscription as paid'
   } finally {
     loading.value = false
   }
