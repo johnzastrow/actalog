@@ -225,3 +225,37 @@
 .font-jetbrainsmono {
   --app-font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
 }
+
+/* ============================================
+   Override Vuetify's hardcoded Roboto font
+   ============================================ */
+
+/* Target Vuetify application and all components */
+.v-application,
+.v-application .v-btn,
+.v-application .v-card,
+.v-application .v-card-title,
+.v-application .v-card-subtitle,
+.v-application .v-card-text,
+.v-application .v-list-item,
+.v-application .v-list-item-title,
+.v-application .v-list-item-subtitle,
+.v-application .v-text-field,
+.v-application .v-select,
+.v-application .v-textarea,
+.v-application .v-chip,
+.v-application .v-tab,
+.v-application .v-alert,
+.v-application .v-snackbar,
+.v-application .v-dialog,
+.v-application .v-menu,
+.v-application .v-tooltip,
+.v-application .v-bottom-navigation,
+.v-application .v-app-bar,
+.v-application .v-navigation-drawer,
+.v-application input,
+.v-application textarea,
+.v-application button,
+.v-application label {
+  font-family: var(--app-font-family) !important;
+}
