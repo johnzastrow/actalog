@@ -533,11 +533,12 @@ func (r *SQLiteUserSubscriptionRepository) scanSubscriptionRows(rows *sql.Rows) 
 	var subscriptions []*domain.UserSubscription
 	for rows.Next() {
 		var sub domain.UserSubscription
+		var userEmail, userName sql.NullString
 		err := rows.Scan(
 			&sub.ID,
 			&sub.UserID,
-			&sub.UserEmail,
-			&sub.UserName,
+			&userEmail,
+			&userName,
 			&sub.SubscriptionType,
 			&sub.Status,
 			&sub.IsPermanentFree,
@@ -555,6 +556,8 @@ func (r *SQLiteUserSubscriptionRepository) scanSubscriptionRows(rows *sql.Rows) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan subscription: %w", err)
 		}
+		sub.UserEmail = userEmail.String
+		sub.UserName = userName.String
 		subscriptions = append(subscriptions, &sub)
 	}
 
@@ -586,11 +589,12 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 	var subscriptions []*domain.UserSubscription
 	for rows.Next() {
 		var sub domain.UserSubscription
+		var userEmail, userName sql.NullString
 		err := rows.Scan(
 			&sub.ID,
 			&sub.UserID,
-			&sub.UserEmail,
-			&sub.UserName,
+			&userEmail,
+			&userName,
 			&sub.SubscriptionType,
 			&sub.Status,
 			&sub.IsPermanentFree,
@@ -608,6 +612,8 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user subscription: %w", err)
 		}
+		sub.UserEmail = userEmail.String
+		sub.UserName = userName.String
 		subscriptions = append(subscriptions, &sub)
 	}
 
