@@ -9,6 +9,7 @@ import { usePwaStore } from '@/stores/pwa'
 // MDI icons - must be imported for icon font to work
 import '@mdi/font/css/materialdesignicons.css'
 import './assets/main.css'
+import './assets/fonts.css'
 
 const app = createApp(App)
 const pinia = createPinia()

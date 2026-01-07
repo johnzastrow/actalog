@@ -9,6 +9,7 @@ type UserSettings struct {
 	NotificationPreferences     string    `json:"notification_preferences"`       // JSON format
 	DataExportFormat            string    `json:"data_export_format"`             // JSON, CSV
 	Theme                       string    `json:"theme"`                          // light, dark
+	FontFamily                  string    `json:"font_family"`                    // system, inter, roboto, lato, firasans, lexend, opendyslexic, atkinson, sourceserif, jetbrainsmono
 	WeightUnit                  string    `json:"weight_unit"`                    // lbs, kg
 	DistanceUnit                string    `json:"distance_unit"`                  // miles, km
 	Timezone                    string    `json:"timezone"`                       // IANA timezone identifier

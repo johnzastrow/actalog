@@ -212,6 +212,70 @@
           </v-row>
         </div>
 
+        <v-divider class="my-3" />
+
+        <!-- Font Selection -->
+        <div class="mb-3">
+          <div class="d-flex align-center mb-2">
+            <v-icon color="primary" class="mr-2">mdi-format-font</v-icon>
+            <span class="font-weight-medium">Font</span>
+          </div>
+          <p class="text-caption text-medium-emphasis mb-2">
+            Choose a font that works best for you
+          </p>
+
+          <!-- Accessibility fonts badge -->
+          <v-chip
+            v-if="fontStore.accessibilityFonts.length > 0"
+            size="small"
+            color="info"
+            variant="tonal"
+            class="mb-2"
+            prepend-icon="mdi-human-greeting-proximity"
+          >
+            {{ fontStore.accessibilityFonts.length }} accessibility options
+          </v-chip>
+
+          <!-- Font Grid -->
+          <v-row dense class="mt-1">
+            <v-col
+              v-for="font in fontStore.availableFonts"
+              :key="font.id"
+              cols="6"
+            >
+              <v-card
+                :color="fontStore.currentFont === font.id ? 'primary' : 'surface-variant'"
+                :variant="fontStore.currentFont === font.id ? 'flat' : 'outlined'"
+                class="pa-2 text-center font-card"
+                style="cursor: pointer; min-height: 70px"
+                @click="changeFontFamily(font.id)"
+              >
+                <v-icon
+                  :color="fontStore.currentFont === font.id ? 'white' : ''"
+                  size="18"
+                >
+                  {{ font.icon }}
+                </v-icon>
+                <div
+                  class="text-caption mt-1"
+                  :class="fontStore.currentFont === font.id ? 'text-white' : ''"
+                >
+                  {{ font.name }}
+                </div>
+                <v-chip
+                  v-if="font.accessibility"
+                  size="x-small"
+                  :color="fontStore.currentFont === font.id ? 'white' : 'info'"
+                  :variant="fontStore.currentFont === font.id ? 'outlined' : 'tonal'"
+                  class="mt-1"
+                >
+                  A11y
+                </v-chip>
+              </v-card>
+            </v-col>
+          </v-row>
+        </div>
+
         <v-divider class="mb-3" />
 
         <v-list bg-color="transparent" density="compact">
@@ -612,6 +676,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { useThemeStore } from '@/stores/theme'
+import { useFontStore } from '@/stores/font'
 import { useSettingsStore } from '@/stores/settings'
 import axios from '@/utils/axios'
 import { getTimezoneOptions, getBrowserTimezone } from '@/utils/timezone'
@@ -621,6 +686,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
 const themeStore = useThemeStore()
+const fontStore = useFontStore()
 const settingsStore = useSettingsStore()
 const activeTab = ref('profile')
 
@@ -833,6 +899,16 @@ const detectTimezone = () => {
   // Update the options list if browser timezone isn't in the list
   timezoneOptions.value = getTimezoneOptions()
   saveTimezone()
+}
+
+const changeFontFamily = async (fontId) => {
+  try {
+    await settingsStore.updateFontFamily(fontId)
+    successMessage.value = 'Font updated!'
+  } catch (err) {
+    errors.value.general = 'Failed to save font preference.'
+    console.error('Failed to save font:', err)
+  }
 }
 
 // Admin settings

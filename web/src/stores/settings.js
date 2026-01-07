@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from '@/utils/axios'
 import { getBrowserTimezone, TIMEZONE_OPTIONS } from '@/utils/timezone'
+import { useFontStore } from '@/stores/font'
 
 export const useSettingsStore = defineStore('settings', () => {
   // State
@@ -30,6 +31,10 @@ export const useSettingsStore = defineStore('settings', () => {
     return settings.value?.theme || 'light'
   })
 
+  const fontFamily = computed(() => {
+    return settings.value?.font_family || 'system'
+  })
+
   const adminUserEventNotifications = computed(() => {
     return settings.value?.admin_user_event_notifications ?? true
   })
@@ -42,6 +47,11 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       const response = await axios.get('/api/users/settings')
       settings.value = response.data
+
+      // Sync font with font store
+      const fontStore = useFontStore()
+      fontStore.syncFromSettings(response.data.font_family)
+
       return settings.value
     } catch (err) {
       console.error('Failed to fetch settings:', err)
@@ -109,6 +119,23 @@ export const useSettingsStore = defineStore('settings', () => {
     })
   }
 
+  async function updateFontFamily(newFont) {
+    const validFonts = ['system', 'inter', 'roboto', 'lato', 'firasans', 'lexend', 'opendyslexic', 'atkinson', 'sourceserif', 'jetbrainsmono']
+    if (!validFonts.includes(newFont)) {
+      error.value = 'Invalid font family'
+      throw new Error('Invalid font family')
+    }
+
+    // Update font store immediately for instant feedback
+    const fontStore = useFontStore()
+    fontStore.setFont(newFont)
+
+    return updateSettings({
+      ...settings.value,
+      font_family: newFont
+    })
+  }
+
   async function updateAdminUserEventNotifications(enabled) {
     return updateSettings({
       ...settings.value,
@@ -139,6 +166,7 @@ export const useSettingsStore = defineStore('settings', () => {
     distanceUnit,
     dataExportFormat,
     theme,
+    fontFamily,
     adminUserEventNotifications,
     // Actions
     fetchSettings,
@@ -146,6 +174,7 @@ export const useSettingsStore = defineStore('settings', () => {
     updateTimezone,
     updateWeightUnit,
     updateDistanceUnit,
+    updateFontFamily,
     updateAdminUserEventNotifications,
     detectBrowserTimezone
   }

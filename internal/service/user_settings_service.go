@@ -35,6 +35,7 @@ func (s *UserSettingsService) GetSettings(userID int64) (*domain.UserSettings, e
 			NotificationPreferences: "{}",
 			DataExportFormat:        "JSON",
 			Theme:                   "light",
+			FontFamily:              "system",
 			WeightUnit:              "lbs",
 			DistanceUnit:            "miles",
 			Timezone:                "America/New_York",
@@ -60,6 +61,7 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 	oldNotificationPrefs := existing.NotificationPreferences
 	oldDataExportFormat := existing.DataExportFormat
 	oldTheme := existing.Theme
+	oldFontFamily := existing.FontFamily
 	oldWeightUnit := existing.WeightUnit
 	oldDistanceUnit := existing.DistanceUnit
 	oldTimezone := existing.Timezone
@@ -68,6 +70,7 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 	existing.NotificationPreferences = updates.NotificationPreferences
 	existing.DataExportFormat = updates.DataExportFormat
 	existing.Theme = updates.Theme
+	existing.FontFamily = updates.FontFamily
 	existing.WeightUnit = updates.WeightUnit
 	existing.DistanceUnit = updates.DistanceUnit
 	existing.Timezone = updates.Timezone
@@ -88,6 +91,8 @@ func (s *UserSettingsService) UpdateSettings(userID int64, userEmail string, upd
 				"data_export_format_new":       existing.DataExportFormat,
 				"theme_old":                    oldTheme,
 				"theme_new":                    existing.Theme,
+				"font_family_old":              oldFontFamily,
+				"font_family_new":              existing.FontFamily,
 				"weight_unit_old":              oldWeightUnit,
 				"weight_unit_new":              existing.WeightUnit,
 				"distance_unit_old":            oldDistanceUnit,

@@ -94,8 +94,38 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Find more attractive icons for the navigation bar - replaced with Font Awesome icons (fa-house-chimney, fa-arrow-trend-up, fa-person-running, fa-circle-user)
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
   - [x] Develop a theme called "Sunrise" based on colors from sunset image (added to vuetify.js and theme.js)
-  - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue) 
-  - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others. 
+  - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue)
+  - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others.
+
+- [ ] `[HIGH]` **User-Customizable Fonts** *(Plan: `.claude/plans/typed-mapping-treasure.md`)*
+  - Self-hosted web fonts with 10 options (including accessibility fonts)
+  - Backend sync via user_settings table + localStorage cache
+  - All fonts use SIL OFL 1.1 or Apache 2.0 (free for commercial use, self-hosting allowed)
+  - **Font options (with preview links):**
+    - System Default - uses current system font stack from App.vue (no loading)
+    - [Inter](https://rsms.me/inter/) - modern, highly readable UI font
+    - [Roboto](https://fonts.google.com/specimen/Roboto) - Material Design standard
+    - [Lato](https://fonts.google.com/specimen/Lato) - warm humanist sans-serif
+    - [Fira Sans](https://fonts.google.com/specimen/Fira+Sans) - Mozilla's UI font, slightly condensed
+    - [Lexend](https://fonts.google.com/specimen/Lexend) - optimized for reading fluency
+    - [OpenDyslexic](https://opendyslexic.org/) - dyslexia-friendly (A11y)
+    - [Atkinson Hyperlegible](https://brailleinstitute.org/freefont) - low vision optimized (A11y)
+    - [Source Serif Pro](https://fonts.google.com/specimen/Source+Serif+4) - classic serif
+    - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) - developer monospace
+  - **Backend changes:**
+    - [ ] Add `font_family` field to `internal/domain/user_settings.go`
+    - [ ] Add migration 0.21.0 in `internal/repository/migrations.go`
+    - [ ] Update SQL queries in `internal/repository/user_settings_repository.go`
+    - [ ] Add default + audit logging in `internal/service/user_settings_service.go`
+  - **Frontend changes:**
+    - [ ] Download fonts to `web/public/fonts/` (woff2 format) - use https://gwfh.mranftl.com/fonts
+    - [ ] Create `web/src/assets/fonts.css` with @font-face declarations
+    - [ ] Create `web/src/stores/font.js` (font store)
+    - [ ] Update `web/src/stores/settings.js` (add fontFamily sync)
+    - [ ] Update `web/src/App.vue` (use CSS variable `--app-font-family`)
+    - [ ] Update `web/src/main.js` (import fonts.css)
+    - [ ] Add font selector UI in `web/src/views/SettingsView.vue`
+  - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
 #### Backend Improvements

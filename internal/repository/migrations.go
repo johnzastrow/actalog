@@ -1612,6 +1612,53 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.21.0",
+		Description: "Add font_family column to user_settings for customizable fonts",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if column already exists
+			hasColumn, err := checkColumnExists(db, driver, "user_settings", "font_family")
+			if err != nil {
+				return fmt.Errorf("failed to check for font_family column: %w", err)
+			}
+			if hasColumn {
+				fmt.Println("✓ font_family column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add column with default value 'system' (uses native OS fonts)
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family TEXT DEFAULT 'system'`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family VARCHAR(50) DEFAULT 'system'`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family VARCHAR(50) DEFAULT 'system'`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add font_family column: %w", err)
+			}
+			fmt.Println("✓ Added font_family column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN font_family"); err != nil {
+					return fmt.Errorf("failed to drop font_family column: %w", err)
+				}
+				fmt.Println("✓ Dropped font_family column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, font_family column remains")
+			}
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 
