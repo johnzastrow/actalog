@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0-beta] - 2026-01-08
+
+### Changed - UI Visual Refresh
+
+- **Form Input Style Update**
+  - Changed default form input variant from `outlined` to `solo` (filled background, no border)
+  - Cleaner, more modern appearance for text fields, selects, textareas, autocomplete, and combobox
+  - Updated 43 Vue files to remove explicit `variant="outlined"` attributes
+
+- **Card Border Removal**
+  - Removed global card borders for a cleaner look
+  - Cards now rely on elevation/shadow and background contrast
+  - Removed inline border styles from all components
+
+### Added - Myst Grayscale Theme
+
+- **New Theme: Myst**
+  - Elegant grayscale theme with light-gray background
+  - Dark text on light backgrounds for readability
+  - Inverted buttons (dark buttons with white text)
+  - Professional, colorless aesthetic
+  - Added to theme selector with fog icon
+
 ## [0.19.0-beta] - 2026-01-07
 
 ### Added - User-Customizable Fonts
