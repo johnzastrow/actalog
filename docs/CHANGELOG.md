@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0-beta] - 2026-01-07
+
+### Added - User-Customizable Fonts
+
+- **10 Font Options for User Preference**
+  - System Default (device's native font stack)
+  - Inter, Roboto, Lato, Fira Sans (modern UI fonts)
+  - Lexend (optimized for reading fluency)
+  - OpenDyslexic, Atkinson Hyperlegible (accessibility fonts)
+  - Source Serif Pro (classic serif)
+  - JetBrains Mono (developer monospace)
+
+- **Self-Hosted Web Fonts**
+  - All fonts bundled as woff2 files in `web/public/fonts/`
+  - No external CDN dependencies
+  - All fonts licensed under SIL OFL 1.1 or Apache 2.0
+
+- **Backend Integration**
+  - New `font_family` field in user_settings domain model
+  - Database migration v0.21.0 adds font_family column
+  - Syncs font preference across devices
+
+- **Frontend Implementation**
+  - New `font.js` Pinia store for font state management
+  - CSS variable `--app-font-family` for dynamic switching
+  - Font selector UI in Settings view
+  - localStorage caching for instant load on return visits
+  - Vuetify component overrides for consistent font application
+
+### Added - Markdown Support for Descriptions
+
+- **Description Fields Support Markdown Formatting**
+  - Movements, WODs, and workout templates now render Markdown
+  - Added "Format text using Markdown" hint to all description textareas
+  - MovementDetailView updated to use MarkdownRenderer component
+
 ### Added - Admin Notification System for User Events
 
 - **Email Notifications for Administrators**
