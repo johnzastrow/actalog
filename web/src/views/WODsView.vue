@@ -276,9 +276,7 @@
             <div class="text-caption font-weight-bold mb-1 text-medium-emphasis">
               DESCRIPTION
             </div>
-            <div class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
-              {{ selectedWOD.description }}
-            </div>
+            <markdown-renderer :content="selectedWOD.description" />
           </div>
 
           <!-- Reference URL -->
@@ -346,6 +344,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const activeTab = ref(null) // No default active tab on WODs page
