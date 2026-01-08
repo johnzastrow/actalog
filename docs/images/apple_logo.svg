@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
-   sodipodi:docname="logo2.svg"
+   sodipodi:docname="apple_logo.svg"
    inkscape:export-filename="logo2b.png"
    inkscape:export-xdpi="201.15752"
    inkscape:export-ydpi="201.15752"
@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="in"
-     inkscape:zoom="0.13308473"
-     inkscape:cx="-4557.2473"
-     inkscape:cy="1529.1011"
+     inkscape:zoom="1.5056818"
+     inkscape:cx="-32.21132"
+     inkscape:cy="366.27924"
      inkscape:window-width="2560"
      inkscape:window-height="1389"
      inkscape:window-x="-9"
@@ -57,12 +57,19 @@
        height="208.5434"
        id="rect1" />
   </defs>
+  <rect
+     style="display:inline;fill:#00bcd4;stroke:#00bcd4;stroke-width:0.24353"
+     id="rect2"
+     width="381.67505"
+     height="381.67505"
+     x="24.470301"
+     y="25.162487" />
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
     <ellipse
-       style="fill:#00bcd4;fill-opacity:1;stroke:none;stroke-width:2.20963;stroke-linecap:round;stroke-linejoin:round"
+       style="display:none;fill:#00add4;fill-opacity:1;stroke:none;stroke-width:2.20963;stroke-linecap:round;stroke-linejoin:round"
        id="path1"
        cx="216"
        cy="216"

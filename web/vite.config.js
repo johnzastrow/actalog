@@ -49,7 +49,14 @@ export default defineConfig({
     vuetify({ autoImport: true }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: [
+        'favicon.ico',
+        'robots.txt',
+        'apple-touch-icon.png',
+        'apple-touch-icon-120x120.png',
+        'apple-touch-icon-152x152.png',
+        'apple-touch-icon-167x167.png'
+      ],
       manifest: {
         name: 'ActaLog - CrossFit Workout Tracker',
         short_name: 'ActaLog',
@@ -117,6 +124,12 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          {
+            src: '/icons/icon-1024x1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },
