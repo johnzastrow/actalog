@@ -42,6 +42,12 @@ export const useThemeStore = defineStore('theme', () => {
       name: 'Sunrise',
       icon: 'mdi-weather-sunset-up',
       description: 'Purple clouds, golden horizon, coral sky'
+    },
+    {
+      id: 'myst',
+      name: 'Myst',
+      icon: 'mdi-weather-fog',
+      description: 'Elegant grayscale theme'
     }
   ]
 

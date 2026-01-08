@@ -153,6 +153,31 @@ const sunriseTheme = {
   }
 }
 
+// Myst Theme - Elegant grayscale with dark text on light backgrounds
+const mystTheme = {
+  dark: false,
+  colors: {
+    primary: '#2d2d2d',      // Near-black for buttons (inverted)
+    secondary: '#505050',    // Dark gray
+    accent: '#3a3a3a',       // Charcoal accent
+    teal: '#4a4a4a',         // Gray replacement for teal
+    error: '#1a1a1a',        // Black for errors
+    warning: '#666666',      // Medium gray for warnings
+    info: '#555555',         // Dark gray for info
+    success: '#3d3d3d',      // Dark gray for success
+    background: '#f5f5f5',   // Light gray background
+    surface: '#ffffff',      // White surface
+    'on-primary': '#ffffff', // White text on dark buttons
+    'on-secondary': '#ffffff',
+    'on-accent': '#ffffff',
+    'on-teal': '#ffffff',
+    'on-background': '#1a1a1a', // Near-black text
+    'on-surface': '#1a1a1a',
+    gold: '#888888',         // Medium gray for gold replacement
+    border: '#d0d0d0',       // Light gray border
+  }
+}
+
 export default createVuetify({
   icons: {
     defaultSet: 'mdi',
@@ -170,6 +195,7 @@ export default createVuetify({
       ocean: oceanTheme,
       sunset: sunsetTheme,
       sunrise: sunriseTheme,
+      myst: mystTheme,
     },
     variations: {
       colors: ['primary', 'secondary', 'accent'],
