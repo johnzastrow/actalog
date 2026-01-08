@@ -37,7 +37,7 @@
                 item-title="email"
                 item-value="id"
                 label="Select user"
-                variant="outlined"
+                
                 density="compact"
                 :disabled="loading"
               >

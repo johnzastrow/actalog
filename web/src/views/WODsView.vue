@@ -148,7 +148,7 @@
             v-model="wodForm.name"
             label="WOD Name *"
             placeholder="e.g., My Custom Fran, Saturday Special"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-fire"
             required
@@ -158,7 +158,7 @@
             v-model="wodForm.type"
             :items="wodTypes"
             label="WOD Type"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-tag"
             placeholder="Select type (optional)"
@@ -168,7 +168,7 @@
             v-model="wodForm.regime"
             :items="regimes"
             label="Regime"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-dumbbell"
             placeholder="Select regime (optional)"
@@ -178,7 +178,7 @@
             v-model="wodForm.score_type"
             :items="scoreTypes"
             label="Score Type"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-timer"
             placeholder="Select score type (optional)"
@@ -188,7 +188,7 @@
             v-model="wodForm.source"
             label="Source"
             placeholder="e.g., CrossFit, Other Coach, Self-created"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-book"
           />
@@ -197,7 +197,7 @@
             v-model="wodForm.description"
             label="Description / Instructions *"
             placeholder="Describe the WOD in detail (e.g., 21-15-9 reps for time of Thrusters and Pull-ups)"
-            variant="outlined"
+            
             density="comfortable"
             rows="4"
             prepend-inner-icon="mdi-text"
@@ -208,7 +208,7 @@
             v-model="wodForm.url"
             label="Reference URL"
             placeholder="https://www.crossfit.com/workout/..."
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-link"
             type="url"
@@ -218,7 +218,7 @@
             v-model="wodForm.notes"
             label="Additional Notes"
             placeholder="Any additional notes or modifications..."
-            variant="outlined"
+            
             density="comfortable"
             rows="2"
             prepend-inner-icon="mdi-note-text"

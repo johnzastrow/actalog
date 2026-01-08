@@ -190,17 +190,27 @@ export default createVuetify({
       style: 'text-transform: none;',
     },
     VTextField: {
-      variant: 'outlined',
+      variant: 'solo',
       density: 'comfortable',
       rounded: 'sm',
     },
     VSelect: {
-      variant: 'outlined',
+      variant: 'solo',
       density: 'comfortable',
       rounded: 'sm',
     },
     VTextarea: {
-      variant: 'outlined',
+      variant: 'solo',
+      density: 'comfortable',
+      rounded: 'sm',
+    },
+    VAutocomplete: {
+      variant: 'solo',
+      density: 'comfortable',
+      rounded: 'sm',
+    },
+    VCombobox: {
+      variant: 'solo',
       density: 'comfortable',
       rounded: 'sm',
     },

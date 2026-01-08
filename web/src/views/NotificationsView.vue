@@ -151,7 +151,7 @@
           v-if="hasMore"
           block
           color="primary"
-          variant="outlined"
+          
           rounded="lg"
           class="mt-3"
           :loading="loadingMore"

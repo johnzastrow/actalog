@@ -87,7 +87,7 @@
           <!-- Source -->
           <div class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Source</p>
-            <v-chip size="small" color="info" variant="outlined">
+            <v-chip size="small" color="info" >
               {{ wod.source }}
             </v-chip>
           </div>
@@ -115,7 +115,7 @@
               :href="wod.url"
               target="_blank"
               color="primary"
-              variant="outlined"
+              
               prepend-icon="mdi-play-circle"
               size="small"
               rounded="lg"
@@ -195,7 +195,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -207,7 +207,7 @@
               <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -221,7 +221,7 @@
                 <label class="text-caption">Score Type (from WOD)</label>
                 <v-text-field
                   v-model="quickLogData.wod.scoreType"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   readonly
@@ -236,7 +236,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.timeHours"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -248,7 +248,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.timeMinutes"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -260,7 +260,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.timeSecondsInput"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -278,7 +278,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.rounds"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -290,7 +290,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.reps"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -305,7 +305,7 @@
                 <v-text-field
                   v-model.number="quickLogData.wod.weight"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -319,7 +319,7 @@
                 <label class="text-caption">Notes</label>
                 <v-textarea
                   v-model="quickLogData.wod.notes"
-                  variant="outlined"
+                  
                   density="compact"
                   rows="2"
                   hide-details

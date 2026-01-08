@@ -29,7 +29,7 @@
           <v-text-field
             v-model="profileForm.name"
             label="Name"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.name"
@@ -44,7 +44,7 @@
             v-model="profileForm.email"
             label="Email"
             type="email"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.email"
@@ -61,7 +61,7 @@
             v-model="profileForm.birthday"
             label="Birthday"
             type="date"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.birthday"
@@ -96,7 +96,7 @@
             v-model="passwordForm.currentPassword"
             label="Current Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.currentPassword"
@@ -111,7 +111,7 @@
             v-model="passwordForm.newPassword"
             label="New Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.newPassword"
@@ -128,7 +128,7 @@
             v-model="passwordForm.confirmPassword"
             label="Confirm New Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.confirmPassword"
@@ -308,7 +308,7 @@
               <v-select
                 v-model="weightUnit"
                 :items="['lbs', 'kg']"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 style="max-width: 100px"
@@ -334,7 +334,7 @@
             :items="timezoneOptions"
             item-title="label"
             item-value="value"
-            variant="outlined"
+            
             density="compact"
             hide-details
             :loading="timezoneLoading"
@@ -469,7 +469,7 @@
           <v-text-field
             v-model="deleteConfirmation"
             label='Type "DELETE" to confirm'
-            variant="outlined"
+            
             density="compact"
             class="mt-3"
           />
@@ -510,7 +510,7 @@
               label="Select backup file"
               accept=".json"
               prepend-icon="mdi-file-upload"
-              variant="outlined"
+              
               density="compact"
               :error-messages="importErrors.file"
               show-size

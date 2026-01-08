@@ -388,7 +388,7 @@
             <v-btn
               block
               size="large"
-              variant="outlined"
+              
               color="medium-emphasis"
               rounded="lg"
               class="font-weight-bold"

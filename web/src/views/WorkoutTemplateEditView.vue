@@ -30,7 +30,7 @@
           v-model="template.name"
           label="Template Name"
           placeholder="e.g., Upper Body Strength"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -48,7 +48,7 @@
           placeholder="Add any notes or instructions for this template"
           hint="Format text using Markdown"
           persistent-hint
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="3"
@@ -68,7 +68,7 @@
             <v-btn
               size="small"
               color="secondary"
-              variant="outlined"
+              
               prepend-icon="mdi-library"
               style="text-transform: none"
               @click="browseMovements"
@@ -102,7 +102,6 @@
             elevation="0"
             rounded="lg"
             class="mb-2 pa-3"
-            style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
@@ -123,7 +122,7 @@
               item-title="name"
               item-value="id"
               label="Select Movement"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               :loading="loadingMovements"
@@ -142,7 +141,7 @@
                   v-model.number="movement.sets"
                   label="Sets"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="1"
@@ -154,7 +153,7 @@
                   v-model.number="movement.reps"
                   label="Reps"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="1"
@@ -166,7 +165,7 @@
                   v-model.number="movement.rest_seconds"
                   label="Rest (s)"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="0"
@@ -179,7 +178,7 @@
               v-model="movement.notes"
               label="Notes (Optional)"
               placeholder="e.g., Tempo: 3-1-1-0, RPE 8"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               rows="2"
@@ -199,7 +198,7 @@
             <v-btn
               size="small"
               color="secondary"
-              variant="outlined"
+              
               prepend-icon="mdi-library"
               style="text-transform: none"
               @click="browseWODs"
@@ -233,7 +232,6 @@
             elevation="0"
             rounded="lg"
             class="mb-2 pa-3"
-            style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
@@ -254,7 +252,7 @@
               item-title="name"
               item-value="id"
               label="Select WOD"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               :loading="loadingWODs"
@@ -281,7 +279,7 @@
               v-model="wod.notes"
               label="Notes (Optional)"
               placeholder="e.g., Scaling options, time cap"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               rows="2"
@@ -311,7 +309,7 @@
           v-if="isEditMode"
           block
           color="error"
-          variant="outlined"
+          
           size="large"
           rounded="lg"
           class="mt-2"

@@ -25,7 +25,7 @@
           <v-col cols="6">
             <v-btn
               block
-              variant="outlined"
+              
               color="primary"
               rounded
               style="text-transform: none"
@@ -38,7 +38,7 @@
           <v-col cols="6">
             <v-btn
               block
-              variant="outlined"
+              
               color="primary"
               rounded
               style="text-transform: none"
@@ -206,7 +206,7 @@
             v-model="newTemplate.name"
             label="Template Name"
             placeholder="e.g., Monday Strength, Hero WOD"
-            variant="outlined"
+            
             density="comfortable"
             prepend-inner-icon="mdi-clipboard-text"
             required
@@ -215,7 +215,7 @@
             v-model="newTemplate.notes"
             label="Description / Notes"
             placeholder="Describe the workout template..."
-            variant="outlined"
+            
             density="comfortable"
             rows="3"
             prepend-inner-icon="mdi-note-text"

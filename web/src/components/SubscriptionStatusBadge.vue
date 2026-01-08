@@ -120,7 +120,7 @@
     <v-card-actions v-if="!subscriptionStore.hasAccess">
       <v-btn
         color="primary"
-        variant="outlined"
+        
         size="small"
         prepend-icon="mdi-email"
         @click="contactAdmin"

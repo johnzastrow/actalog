@@ -49,7 +49,7 @@
 
           <!-- Total Time -->
           <div v-if="workout.total_time" class="mt-3">
-            <v-chip color="primary" variant="outlined" size="small">
+            <v-chip color="primary"  size="small">
               <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
               {{ formatTime(workout.total_time) }}
             </v-chip>
@@ -88,7 +88,7 @@
               :key="index"
               elevation="0"
               class="mb-2 pa-2"
-              style="background-color: rgb(var(--v-theme-background)); border: 1px solid #e0e0e0"
+              style="background-color: rgb(var(--v-theme-background))"
               rounded="lg"
             >
               <div class="d-flex align-center">
@@ -223,7 +223,7 @@
             <v-btn
               block
               color="error"
-              variant="outlined"
+              
               size="large"
               rounded="lg"
               prepend-icon="mdi-delete"

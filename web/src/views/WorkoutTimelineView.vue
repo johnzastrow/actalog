@@ -15,7 +15,7 @@
             :items="typeOptions"
             label="Type"
             density="compact"
-            variant="outlined"
+            
             clearable
             hide-details
             class="flex-grow-1"
@@ -25,7 +25,7 @@
             :items="movementOptions"
             label="Movement"
             density="compact"
-            variant="outlined"
+            
             clearable
             hide-details
             class="flex-grow-1"

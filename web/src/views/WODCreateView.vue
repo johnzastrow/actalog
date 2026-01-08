@@ -16,7 +16,7 @@
           v-model="wod.name"
           label="WOD Name"
           placeholder="e.g., Fran, Murph, My Custom WOD"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -33,7 +33,7 @@
           v-model="wod.source"
           :items="sources"
           label="Source"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.source"
@@ -49,7 +49,7 @@
           v-model="wod.type"
           :items="wodTypes"
           label="WOD Type"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -63,7 +63,7 @@
           v-model="wod.regime"
           :items="regimes"
           label="Regime"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -77,7 +77,7 @@
           v-model="wod.score_type"
           :items="scoreTypes"
           label="Score Type"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -93,7 +93,7 @@
           placeholder="Describe the WOD workout, movements, and instructions"
           hint="Format text using Markdown"
           persistent-hint
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="6"
@@ -110,7 +110,7 @@
           v-model="wod.url"
           label="Video URL (Optional)"
           placeholder="https://youtube.com/..."
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -124,7 +124,7 @@
           v-model="wod.notes"
           label="Notes (Optional)"
           placeholder="Any additional notes or scaling options"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="3"
@@ -154,7 +154,7 @@
           v-if="isEditMode && !wod.is_standard"
           block
           color="error"
-          variant="outlined"
+          
           size="large"
           rounded="lg"
           class="mt-2"

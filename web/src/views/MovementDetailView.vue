@@ -122,7 +122,7 @@
               :href="parsedData.videoUrl"
               target="_blank"
               color="primary"
-              variant="outlined"
+              
               prepend-icon="mdi-play-circle"
               size="small"
               rounded="lg"
@@ -173,7 +173,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -185,7 +185,7 @@
               <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -200,7 +200,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.sets"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -211,7 +211,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.reps"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -222,7 +222,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.weight"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -234,7 +234,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.time"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -245,7 +245,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.distance"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -256,7 +256,7 @@
                 <label class="text-caption">Notes</label>
                 <v-textarea
                   v-model="quickLogData.movement.notes"
-                  variant="outlined"
+                  
                   density="compact"
                   rows="2"
                   hide-details

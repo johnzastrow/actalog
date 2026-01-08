@@ -139,7 +139,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface));  border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-dumbbell</v-icon>
@@ -153,7 +153,7 @@
                   v-model.number="movement.sets"
                   type="number"
                   label="Sets"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -164,7 +164,7 @@
                   v-model.number="movement.reps"
                   type="number"
                   label="Reps"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -175,7 +175,7 @@
                   v-model.number="movement.weight"
                   type="number"
                   label="Weight (lbs)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -189,7 +189,7 @@
                   v-model.number="movement.time"
                   type="number"
                   label="Time (sec)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -200,7 +200,7 @@
                   v-model.number="movement.distance"
                   type="number"
                   label="Distance (m)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -211,7 +211,7 @@
             <v-textarea
               v-model="movement.notes"
               label="Notes"
-              variant="outlined"
+              
               density="compact"
               hide-details
               rows="2"
@@ -231,7 +231,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface));  border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-flag-checkered</v-icon>
@@ -244,7 +244,7 @@
             <v-text-field
               :model-value="wod.wod_score_type_display || wod.score_type"
               label="Score Type"
-              variant="outlined"
+              
               density="compact"
               hide-details
               readonly
@@ -260,7 +260,7 @@
                     v-model.number="wod.time_hours"
                     type="number"
                     label="Hours"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -272,7 +272,7 @@
                     v-model.number="wod.time_minutes"
                     type="number"
                     label="Minutes"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -284,7 +284,7 @@
                     v-model.number="wod.time_seconds"
                     type="number"
                     label="Seconds"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -302,7 +302,7 @@
                     v-model.number="wod.rounds"
                     type="number"
                     label="Rounds"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -313,7 +313,7 @@
                     v-model.number="wod.reps"
                     type="number"
                     label="Reps"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -328,7 +328,7 @@
                 v-model.number="wod.weight"
                 type="number"
                 label="Weight (lbs)"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 min="0"
@@ -339,7 +339,7 @@
             <v-textarea
               v-model="wod.notes"
               label="Notes"
-              variant="outlined"
+              
               density="compact"
               hide-details
               rows="2"
@@ -405,7 +405,7 @@
         <!-- Quick Browse Templates Button (hide if came from Quick Log with template) -->
         <v-btn
           v-if="!isEditMode && !route.query.template"
-          variant="outlined"
+          
           color="primary"
           size="large"
           block

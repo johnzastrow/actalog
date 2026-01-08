@@ -45,7 +45,7 @@
               v-model="email"
               label="Email Address"
               type="email"
-              variant="outlined"
+              
               prepend-inner-icon="mdi-email"
               class="mb-4"
               :disabled="resending"
@@ -65,7 +65,7 @@
           </div>
 
           <v-btn
-            variant="outlined"
+            
             color="primary"
             size="large"
             rounded

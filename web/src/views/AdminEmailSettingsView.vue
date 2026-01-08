@@ -102,7 +102,7 @@
               type="email"
               placeholder="Enter email address to test"
               prepend-inner-icon="mdi-email"
-              variant="outlined"
+              
               density="comfortable"
               :disabled="sending || !config.enabled"
               :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'Invalid email format']"

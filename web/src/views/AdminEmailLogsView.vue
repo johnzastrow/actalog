@@ -60,7 +60,7 @@
                     label="Email Type"
                     :items="emailTypes"
                     clearable
-                    variant="outlined"
+                    
                     density="compact"
                   />
                 </v-col>
@@ -69,7 +69,7 @@
                     v-model="filters.recipient"
                     label="Recipient"
                     clearable
-                    variant="outlined"
+                    
                     density="compact"
                     prepend-inner-icon="mdi-email-search"
                   />
@@ -80,7 +80,7 @@
                     label="Status"
                     :items="statusOptions"
                     clearable
-                    variant="outlined"
+                    
                     density="compact"
                   />
                 </v-col>

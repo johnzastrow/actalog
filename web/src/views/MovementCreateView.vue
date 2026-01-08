@@ -30,7 +30,7 @@
           v-model="movement.name"
           label="Movement Name *"
           placeholder="e.g., Barbell Back Squat"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -47,7 +47,7 @@
           v-model="movement.type"
           :items="movementTypes"
           label="Movement Type *"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.type"
@@ -63,7 +63,7 @@
           v-model="movement.difficulty"
           :items="difficultyLevels"
           label="Difficulty Level"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -78,7 +78,7 @@
           v-model="movement.equipment"
           label="Equipment Required"
           placeholder="e.g., Barbell, Squat Rack"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -92,7 +92,7 @@
           v-model="movement.primaryMuscles"
           label="Primary Muscle Groups"
           placeholder="e.g., Quadriceps, Glutes, Core"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -125,7 +125,7 @@
           placeholder="Describe the movement execution, key technique points, and setup..."
           hint="Format text using Markdown"
           persistent-hint
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="4"
@@ -142,7 +142,7 @@
           v-model="movement.coachingCues"
           label="Coaching Cues"
           placeholder="e.g., Keep chest up, drive through heels, maintain neutral spine..."
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="3"
@@ -158,7 +158,7 @@
           v-model="movement.videoUrl"
           label="Video Tutorial URL"
           placeholder="https://youtube.com/watch?v=..."
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           type="url"
@@ -173,7 +173,7 @@
           v-model="movement.scalingOptions"
           label="Scaling/Modifications"
           placeholder="Beginner: Goblet squat&#10;Intermediate: Front squat&#10;Advanced: Pause squat"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="3"
@@ -204,7 +204,7 @@
           v-if="isEditMode"
           block
           color="error"
-          variant="outlined"
+          
           size="large"
           rounded="lg"
           class="mt-2"

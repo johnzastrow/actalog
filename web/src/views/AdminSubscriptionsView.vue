@@ -36,7 +36,7 @@
                     v-model="userFilters.search"
                     label="Search by email"
                     prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-text-field>
@@ -46,7 +46,7 @@
                     v-model="userFilters.status"
                     label="Status"
                     :items="statusOptions"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-select>
@@ -56,7 +56,7 @@
                     v-model="userFilters.type"
                     label="Type"
                     :items="typeOptions"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-select>
@@ -189,7 +189,7 @@
                     v-model="orgFilters.search"
                     label="Search by organization name"
                     prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-text-field>
@@ -199,7 +199,7 @@
                     v-model="orgFilters.status"
                     label="Status"
                     :items="statusOptions"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-select>
@@ -209,7 +209,7 @@
                     v-model="orgFilters.type"
                     label="Type"
                     :items="typeOptions"
-                    variant="outlined"
+                    
                     density="compact"
                     clearable
                   ></v-select>
@@ -329,7 +329,7 @@
                 v-model="expiringDays"
                 :items="expiringDaysOptions"
                 label="Days ahead"
-                variant="outlined"
+                
                 density="compact"
                 style="max-width: 150px;"
                 @update:model-value="loadExpiringExpired"

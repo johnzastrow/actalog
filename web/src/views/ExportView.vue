@@ -152,7 +152,7 @@
           type="date"
           color="primary"
           density="compact"
-          variant="outlined"
+          
           hide-details
           class="mb-2"
         />
@@ -163,7 +163,7 @@
           type="date"
           color="primary"
           density="compact"
-          variant="outlined"
+          
           hide-details
           class="mb-3"
         />

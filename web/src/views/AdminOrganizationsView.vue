@@ -98,13 +98,13 @@
               v-model="formData.name"
               label="Name"
               required
-              variant="outlined"
+              
               density="comfortable"
             />
             <v-textarea
               v-model="formData.description"
               label="Description (optional)"
-              variant="outlined"
+              
               density="comfortable"
               rows="3"
             />

@@ -29,7 +29,7 @@
               :items="eventTypes"
               label="Event Type"
               clearable
-              variant="outlined"
+              
               density="compact"
               hide-details
               @update:model-value="loadLogs"
@@ -40,7 +40,7 @@
               v-model="filterUserEmail"
               label="User Email"
               clearable
-              variant="outlined"
+              
               density="compact"
               prepend-inner-icon="mdi-magnify"
               hide-details
@@ -142,7 +142,7 @@
         </div>
         <div class="d-flex gap-2">
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset === 0"
             @click="previousPage"
@@ -151,7 +151,7 @@
             Previous
           </v-btn>
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset + limit >= total"
             @click="nextPage"

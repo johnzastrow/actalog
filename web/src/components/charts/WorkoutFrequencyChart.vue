@@ -2,7 +2,7 @@
   <v-card elevation="0" rounded="lg" class="pa-4" bg-color="surface">
     <div class="d-flex align-center justify-space-between mb-3">
       <h3 class="text-h6" style="color: rgb(var(--v-theme-on-surface))">Workout Frequency</h3>
-      <v-btn-toggle v-model="timeRange" mandatory variant="outlined" density="compact">
+      <v-btn-toggle v-model="timeRange" mandatory  density="compact">
         <v-btn value="30">30d</v-btn>
         <v-btn value="90">90d</v-btn>
         <v-btn value="180">6m</v-btn>

@@ -8,7 +8,7 @@
 
       <v-card-text>
         <!-- Basic Information -->
-        <v-card variant="outlined" class="mb-3">
+        <v-card  class="mb-3">
           <v-card-subtitle class="font-weight-bold">Basic Information</v-card-subtitle>
           <v-card-text>
             <v-list density="compact">
@@ -48,7 +48,7 @@
         </v-card>
 
         <!-- Dates -->
-        <v-card variant="outlined" class="mb-3">
+        <v-card  class="mb-3">
           <v-card-subtitle class="font-weight-bold">Subscription Dates</v-card-subtitle>
           <v-card-text>
             <v-list density="compact">
@@ -91,7 +91,7 @@
         </v-card>
 
         <!-- Cancellation Info (if cancelled) -->
-        <v-card v-if="subscription.cancelled_at" variant="outlined" color="warning" class="mb-3">
+        <v-card v-if="subscription.cancelled_at"  color="warning" class="mb-3">
           <v-card-subtitle class="font-weight-bold">Cancellation Information</v-card-subtitle>
           <v-card-text>
             <v-list density="compact">
@@ -106,7 +106,7 @@
         </v-card>
 
         <!-- Notes -->
-        <v-card v-if="subscription.notes" variant="outlined" class="mb-3">
+        <v-card v-if="subscription.notes"  class="mb-3">
           <v-card-subtitle class="font-weight-bold">Admin Notes</v-card-subtitle>
           <v-card-text>
             {{ subscription.notes }}
@@ -114,7 +114,7 @@
         </v-card>
 
         <!-- Metadata -->
-        <v-card variant="outlined">
+        <v-card >
           <v-card-subtitle class="font-weight-bold">Metadata</v-card-subtitle>
           <v-card-text>
             <v-list density="compact">

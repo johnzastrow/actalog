@@ -62,10 +62,8 @@ h6 { font-size: 1rem; font-weight: 500; }
 .p-3 { padding: 1.5rem; }
 .p-4 { padding: 2rem; }
 
-/* Custom card styling */
-.v-card {
-  border: 1px solid rgb(var(--v-theme-border));
-}
+/* Custom card styling - removed borders for cleaner modern look */
+/* Cards now rely on elevation/shadow and background contrast */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {

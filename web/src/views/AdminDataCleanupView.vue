@@ -167,7 +167,7 @@
                 v-model.number="editForm.time_minutes"
                 label="Minutes"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 min="0"
                 class="mb-2"
@@ -176,7 +176,7 @@
                 v-model.number="editForm.time_seconds"
                 label="Seconds"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 min="0"
                 max="59"
@@ -190,7 +190,7 @@
                 v-model.number="editForm.rounds"
                 label="Rounds"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 min="0"
                 class="mb-2"
@@ -199,7 +199,7 @@
                 v-model.number="editForm.reps"
                 label="Reps"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 min="0"
                 class="mb-2"
@@ -212,7 +212,7 @@
                 v-model.number="editForm.weight"
                 label="Weight (lbs)"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 min="0"
                 step="0.5"
@@ -224,7 +224,7 @@
             <v-textarea
               v-model="editForm.notes"
               label="Notes (optional)"
-              variant="outlined"
+              
               density="compact"
               rows="3"
               class="mt-2"

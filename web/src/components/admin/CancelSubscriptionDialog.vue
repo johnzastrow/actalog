@@ -20,7 +20,7 @@
           <v-textarea
             v-model="cancellationReason"
             label="Cancellation Reason"
-            variant="outlined"
+            
             density="compact"
             rows="3"
             :rules="[v => !!v || 'Cancellation reason is required']"

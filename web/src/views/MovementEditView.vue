@@ -43,7 +43,7 @@
           v-model="movement.name"
           label="Movement Name"
           placeholder="e.g., Banded Pull-ups, Assault Bike"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -59,7 +59,7 @@
           v-model="movement.movement_type"
           :items="movementTypes"
           label="Movement Type"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -73,7 +73,7 @@
           v-model="movement.primary_muscle_group"
           :items="muscleGroups"
           label="Primary Muscle Group"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -89,7 +89,7 @@
           placeholder="Add any notes, form cues, or scaling options"
           hint="Format text using Markdown"
           persistent-hint
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           rows="3"
@@ -130,7 +130,7 @@
           v-model="movement.video_url"
           label="Video URL"
           placeholder="https://youtube.com/watch?v=..."
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -144,7 +144,7 @@
           v-model="movement.demo_image_url"
           label="Demo Image URL"
           placeholder="https://example.com/image.jpg"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
         >
@@ -163,7 +163,7 @@
           :items="commonEquipment"
           label="Equipment Required"
           placeholder="Select or type custom equipment"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           multiple
@@ -195,7 +195,7 @@
               v-model.number="movement.rx_weight_male"
               label="RX Male (lbs)"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="0"
@@ -206,7 +206,7 @@
               v-model.number="movement.rx_weight_female"
               label="RX Female (lbs)"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="0"
@@ -220,7 +220,7 @@
               v-model.number="movement.scaled_weight_male"
               label="Scaled Male (lbs)"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="0"
@@ -231,7 +231,7 @@
               v-model.number="movement.scaled_weight_female"
               label="Scaled Female (lbs)"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="0"
@@ -259,7 +259,7 @@
           v-if="isEditMode && movement.is_custom"
           block
           color="error"
-          variant="outlined"
+          
           size="large"
           rounded="lg"
           class="mt-2"

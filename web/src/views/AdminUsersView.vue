@@ -35,7 +35,7 @@
           density="compact"
           label="Search users..."
           prepend-inner-icon="mdi-magnify"
-          variant="outlined"
+          
           hide-details
           single-line
           clearable
@@ -216,7 +216,7 @@
         </div>
         <div class="d-flex gap-2">
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset === 0"
             @click="previousPage"
@@ -225,7 +225,7 @@
             Previous
           </v-btn>
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset + limit >= total"
             @click="nextPage"
@@ -250,7 +250,7 @@
             label="Reason (optional)"
             placeholder="Enter reason for disabling this account..."
             rows="3"
-            variant="outlined"
+            
           />
         </v-card-text>
         <v-card-actions>

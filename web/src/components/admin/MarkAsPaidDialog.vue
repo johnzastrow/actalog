@@ -24,7 +24,7 @@
             v-model="paymentDate"
             label="Payment Date"
             type="date"
-            variant="outlined"
+            
             density="compact"
             :rules="[v => !!v || 'Payment date is required']"
             prepend-inner-icon="mdi-calendar"
@@ -40,7 +40,7 @@
             :items="durationOptions"
             item-title="label"
             item-value="value"
-            variant="outlined"
+            
             density="compact"
             prepend-inner-icon="mdi-calendar-clock"
             class="mb-3"
@@ -52,7 +52,7 @@
             v-model.number="customDays"
             label="Duration (days)"
             type="number"
-            variant="outlined"
+            
             density="compact"
             :rules="[v => v > 0 || 'Duration must be greater than 0']"
             prepend-inner-icon="mdi-counter"

@@ -44,7 +44,7 @@
           elevation="1"
           rounded="lg"
           class="pa-3 mb-2 workout-card"
-          style="cursor: pointer; border: 1px solid #e0e0e0"
+          style="cursor: pointer"
           @click="viewWorkout(workout)"
         >
           <div class="d-flex align-center">
