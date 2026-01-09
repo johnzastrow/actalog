@@ -213,10 +213,14 @@ These features can be added after the core frontend is complete:
 - [x] `[HIGH]` **User Workout Service Tests** - Complete coverage with PR detection
 - [x] `[HIGH]` **Wodify Import Service Tests** - Duplicate handling and error recovery
 - [x] `[HIGH]` **Most Service Tests Complete** - 13 services at 100% coverage
-- [ ] `[HIGH]` **Add handler unit tests** - Handler coverage at 72.6%
+- [x] `[HIGH]` **Add handler unit tests** - Handler coverage at 72.6%
   - [x] benchmark_handler_test.go (17 tests, 53-100% coverage per method)
-  - [x] settings_handler_test.go, admin_handler_test.go, performance_handler_test.go, data_change_log_handler_test.go, organization_handler_test.go
-  - [ ] auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
+  - [x] auth_handler_test.go (63-100% coverage, comprehensive with mock service)
+  - [x] user_workout_handler_test.go (32-100% coverage)
+  - [x] movement_handler_test.go (59-100% coverage)
+  - [x] wod_handler_test.go (84-100% coverage)
+  - [x] subscription_handler_test.go (28-69% coverage)
+  - [x] All other handlers have tests: settings, admin, performance, data_change_log, organization, etc.
 - [ ] `[MEDIUM]` **Improve user_service coverage** - Currently 61.9%, target 80%+
 - [ ] `[MEDIUM]` **Improve import_service coverage** - Currently 60.8%, target 80%+
 - [ ] `[LOW]` **Add repository unit tests** - All repository implementations
