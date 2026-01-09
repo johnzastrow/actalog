@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-01
-> **Current Version:** 0.17.0-beta (Build 72)
+> **Last Updated:** 2026-01-09
+> **Current Version:** 0.22.0-beta (Build 8)
 
 ---
 
@@ -63,28 +63,35 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 ### High Priority
 
-#### Comprehensive Benchmark Endpoint *(Plan: `.claude/plans/typed-mapping-treasure.md`)*
-- [ ] `[HIGH]` **Create `/api/benchmark` endpoint for system-wide performance testing**
+#### Comprehensive Benchmark Endpoint *(Completed v0.22.0)*
+- [x] `[HIGH]` **Create `/api/benchmark` endpoint for system-wide performance testing**
   - Exercises database, serialization, business logic, and concurrency through synthetic operations
   - Uses isolated `benchmark_data` table (never touches real user data)
   - Auto-cleanup after runs, user-scoped data isolation
   - JWT authentication required
   - **Backend implementation:**
-    - [ ] Domain model (`internal/domain/benchmark.go`) - BenchmarkData entity, result structs, repository interface
-    - [ ] Migration 0.22.0 (`internal/repository/migrations.go`) - benchmark_data table with indexes
-    - [ ] Repository (`internal/repository/benchmark_repository.go`) - CRUD + batch operations
-    - [ ] Service (`internal/service/benchmark_service.go`) - 18+ benchmark operations
-    - [ ] Handler (`internal/handler/benchmark_handler.go`) - POST /benchmark, GET /benchmark/status
-    - [ ] Route registration (`cmd/actalog/main.go`) - wire up handler
+    - [x] Domain model (`internal/domain/benchmark.go`) - BenchmarkData entity, result structs, repository interface
+    - [x] Migration 0.22.0 (`internal/repository/migrations.go`) - benchmark_data table with indexes
+    - [x] Migration 0.23.0 - Extended fields for stress testing (large_text, json_blob, uuid)
+    - [x] Repository (`internal/repository/benchmark_repository.go`) - CRUD + batch operations
+    - [x] Service (`internal/service/benchmark_service.go`) - 18+ benchmark operations
+    - [x] Handler (`internal/handler/benchmark_handler.go`) - POST /benchmark, GET /benchmark/status
+    - [x] Route registration (`cmd/actalog/main.go`) - wire up handler
   - **Benchmark operations:**
     - Database: Insert, BulkInsert(100), SelectByID, SelectByKey, SelectList, SelectFiltered, Update, Delete
     - Serialization: Marshal/Unmarshal small & large JSON
     - Business Logic: 1RM calculations (1000x), validation, string/date operations
     - Concurrent (optional): 10 parallel reads, 5 writes, mixed operations
-  - **Benchmark tool integration (`actalog-benchmark`):**
-    - [ ] Add `/api/benchmark` caller (`internal/metrics/benchmark_api.go`)
-    - [ ] Add BenchmarkAPIResult to types.go
-    - [ ] Update reporters to include benchmark API results
+  - **Configurable record count:**
+    - [x] `?records=N` query parameter (default: 1000, max: 500000)
+    - [x] Complex benchmark data (5-10KB text, nested JSON blobs)
+    - [x] Server timeout configuration for large record counts
+  - **Benchmark tool integration (`actalog-benchmark` v0.7.0):**
+    - [x] Add `/api/benchmark` caller (`internal/metrics/benchmark_api.go`)
+    - [x] Add BenchmarkAPIResult to types.go
+    - [x] Update reporters to include benchmark API results
+    - [x] Add `--benchmark-records` flag for configurable record count
+    - [x] Comparison reports include server-side benchmark results
 
 #### Subscription System (Backend Complete - v0.14.0, Frontend Complete - v0.17.0)
 - [x] `[HIGH]` **Frontend Subscription Status Display**
@@ -100,8 +107,9 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Mark subscription as paid button/action (MarkAsPaidDialog.vue)
   - [x] Cancel subscription with reason input (CancelSubscriptionDialog.vue)
   - [x] View subscription history (SubscriptionDetailDialog.vue)
-  - [ ] List expiring subscriptions (next 30 days)
-  - [ ] List overdue/expired subscriptions
+  - [x] List expiring subscriptions API (backend complete v0.19.0)
+  - [x] List overdue/expired subscriptions API (backend complete v0.19.0)
+  - [ ] Frontend UI for expiring/expired subscription lists
 
 - [x] `[HIGH]` **Read-Only Mode UI Feedback**
   - [x] Graceful handling of HTTP 402 Payment Required responses (subscription.js store)
@@ -120,34 +128,26 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue)
   - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others.
 
-- [ ] `[HIGH]` **User-Customizable Fonts** *(Plan: `.claude/plans/typed-mapping-treasure.md`)*
+- [x] `[HIGH]` **User-Customizable Fonts** *(Completed v0.19.0)*
   - Self-hosted web fonts with 10 options (including accessibility fonts)
   - Backend sync via user_settings table + localStorage cache
   - All fonts use SIL OFL 1.1 or Apache 2.0 (free for commercial use, self-hosting allowed)
-  - **Font options (with preview links):**
-    - System Default - uses current system font stack from App.vue (no loading)
-    - [Inter](https://rsms.me/inter/) - modern, highly readable UI font
-    - [Roboto](https://fonts.google.com/specimen/Roboto) - Material Design standard
-    - [Lato](https://fonts.google.com/specimen/Lato) - warm humanist sans-serif
-    - [Fira Sans](https://fonts.google.com/specimen/Fira+Sans) - Mozilla's UI font, slightly condensed
-    - [Lexend](https://fonts.google.com/specimen/Lexend) - optimized for reading fluency
-    - [OpenDyslexic](https://opendyslexic.org/) - dyslexia-friendly (A11y)
-    - [Atkinson Hyperlegible](https://brailleinstitute.org/freefont) - low vision optimized (A11y)
-    - [Source Serif Pro](https://fonts.google.com/specimen/Source+Serif+4) - classic serif
-    - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) - developer monospace
+  - **Font options:**
+    - System Default, Inter, Roboto, Lato, Fira Sans, Lexend
+    - OpenDyslexic (A11y), Atkinson Hyperlegible (A11y)
+    - Source Serif Pro, JetBrains Mono
   - **Backend changes:**
-    - [ ] Add `font_family` field to `internal/domain/user_settings.go`
-    - [ ] Add migration 0.21.0 in `internal/repository/migrations.go`
-    - [ ] Update SQL queries in `internal/repository/user_settings_repository.go`
-    - [ ] Add default + audit logging in `internal/service/user_settings_service.go`
+    - [x] Add `font_family` field to `internal/domain/user_settings.go`
+    - [x] Add migration 0.21.0 in `internal/repository/migrations.go`
+    - [x] Update SQL queries in `internal/repository/user_settings_repository.go`
+    - [x] Add default + audit logging in `internal/service/user_settings_service.go`
   - **Frontend changes:**
-    - [ ] Download fonts to `web/public/fonts/` (woff2 format) - use https://gwfh.mranftl.com/fonts
-    - [ ] Create `web/src/assets/fonts.css` with @font-face declarations
-    - [ ] Create `web/src/stores/font.js` (font store)
-    - [ ] Update `web/src/stores/settings.js` (add fontFamily sync)
-    - [ ] Update `web/src/App.vue` (use CSS variable `--app-font-family`)
-    - [ ] Update `web/src/main.js` (import fonts.css)
-    - [ ] Add font selector UI in `web/src/views/SettingsView.vue`
+    - [x] Download fonts to `web/public/fonts/` (woff2 format)
+    - [x] Create `web/src/assets/fonts.css` with @font-face declarations
+    - [x] Create `web/src/stores/font.js` (font store)
+    - [x] Update `web/src/stores/settings.js` (add fontFamily sync)
+    - [x] Update `web/src/App.vue` (use CSS variable `--app-font-family`)
+    - [x] Add font selector UI in `web/src/views/SettingsView.vue`
   - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
@@ -260,9 +260,14 @@ These features can be added after the core frontend is complete:
 
 #### Documentation & Marketing
 - [ ] `[High]` **Enhance App Documentation with Screenshots**
-- [ ]  `[High]` Get the static web site generator working and serving public pages
-  - [ ] Add more information about features and functions in the app
-  - [ ] Insert place holders for screenshots demonstrating all available themes and major features. Include captions and all marketing text
+- [x] `[High]` Static site deployed to GitHub Pages (https://johnzastrow.github.io/actalog/)
+  - [x] Home page with feature highlights and theme gallery
+  - [x] For Admins page with subscription and announcement features
+  - [x] For Developers page with tech stack, architecture, and deployment guide
+  - [x] Performance & Benchmarks section added (v0.22.0) - minimum resources, load test results
+  - [x] FAQ page
+  - [x] Auto-deploy via GitHub Actions on push to main
+  - [ ] Add more screenshots demonstrating all available themes
   - [ ] Show desktop vs mobile responsive views
   - [ ] Document key user flows with visual guides
 
@@ -324,13 +329,51 @@ These features can be added after the core frontend is complete:
 |------|------|-------------|
 | `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
 
-*Last scanned: 2025-12-22*
+*Last scanned: 2026-01-09*
 
 **Note:** Calendar view (WorkoutCalendarView.vue) and PR notification system are implemented.
 
 ---
 
 ## Completed Releases
+
+### v0.22.0-beta (2026-01-09)
+
+**Status:** Comprehensive benchmark endpoint with configurable stress testing.
+
+**Completed:**
+- [x] **Benchmark API Endpoint**
+  - [x] `POST /api/benchmark` - Full system benchmark with 18+ operations
+  - [x] `GET /api/benchmark/status` - Quick status check
+  - [x] `DELETE /api/admin/benchmark/data` - Admin cleanup
+  - [x] Isolated `benchmark_data` table (never touches production data)
+  - [x] Auto-cleanup after runs
+
+- [x] **Configurable Record Count**
+  - [x] `?records=N` query parameter (default: 1000, max: 500000)
+  - [x] Complex benchmark data (5-10KB text, nested JSON, UUIDs)
+  - [x] Migration 0.23.0 for extended benchmark fields
+
+- [x] **Server Timeout Configuration**
+  - [x] Fixed EOF errors on long-running benchmarks
+  - [x] Updated default SERVER_WRITE_TIMEOUT to 60s
+  - [x] Buffered JSON response with explicit Content-Length
+
+- [x] **Benchmark Tool Integration (actalog-benchmark v0.7.0)**
+  - [x] `--benchmark-records` flag for configurable record count
+  - [x] Server-side benchmark comparison in reports
+  - [x] Enhanced error display with word wrapping
+
+- [x] **Static Site Updates**
+  - [x] Performance & Benchmarks section on For Developers page
+  - [x] Updated version to 0.22.0-beta
+  - [x] Added Myst theme (7 total themes)
+
+**Files Created:** `internal/domain/benchmark.go`, `internal/repository/benchmark_repository.go`, `internal/service/benchmark_service.go`, `internal/handler/benchmark_handler.go`
+
+**Files Modified:** `internal/repository/migrations.go` (0.22.0, 0.23.0), `configs/config.go`, `.env.example`, `site/tech.html`, `site/index.html`
+
+---
 
 ### v0.16.0-beta (2025-12-20)
 
