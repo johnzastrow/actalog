@@ -132,9 +132,9 @@ func TestDataChangeLogService_List(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		limit      int
-		offset     int
+		name   string
+		limit  int
+		offset int
 	}{
 		{"default values", 0, -1},
 		{"over max limit", 200, 0},

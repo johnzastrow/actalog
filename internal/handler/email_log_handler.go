@@ -173,9 +173,9 @@ func (h *EmailLogHandler) CleanupEmailLogs(w http.ResponseWriter, r *http.Reques
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"message":         "Email logs cleaned up successfully",
-		"deleted_count":   deleted,
-		"retention_days":  service.EmailLogRetentionDays,
+		"message":        "Email logs cleaned up successfully",
+		"deleted_count":  deleted,
+		"retention_days": service.EmailLogRetentionDays,
 	})
 }
 

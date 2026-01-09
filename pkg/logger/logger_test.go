@@ -388,8 +388,8 @@ func TestParseFormat(t *testing.T) {
 	}{
 		{"json", FormatJSON},
 		{"text", FormatText},
-		{"JSON", FormatText},  // Case-sensitive, defaults to text
-		{"", FormatText},      // Empty - defaults to text
+		{"JSON", FormatText}, // Case-sensitive, defaults to text
+		{"", FormatText},     // Empty - defaults to text
 		{"invalid", FormatText},
 	}
 
@@ -901,12 +901,12 @@ func TestLogger_FormatJSON_WithComplexFields(t *testing.T) {
 
 	// Log with complex field types
 	fields := Fields{
-		"string":  "value",
-		"int":     123,
-		"float":   3.14,
-		"bool":    true,
-		"nested":  map[string]interface{}{"key": "val"},
-		"array":   []int{1, 2, 3},
+		"string": "value",
+		"int":    123,
+		"float":  3.14,
+		"bool":   true,
+		"nested": map[string]interface{}{"key": "val"},
+		"array":  []int{1, 2, 3},
 	}
 	l.InfoWithFields(fields, "complex fields test")
 	l.Close()

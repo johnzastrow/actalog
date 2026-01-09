@@ -63,6 +63,29 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 ### High Priority
 
+#### Comprehensive Benchmark Endpoint *(Plan: `.claude/plans/typed-mapping-treasure.md`)*
+- [ ] `[HIGH]` **Create `/api/benchmark` endpoint for system-wide performance testing**
+  - Exercises database, serialization, business logic, and concurrency through synthetic operations
+  - Uses isolated `benchmark_data` table (never touches real user data)
+  - Auto-cleanup after runs, user-scoped data isolation
+  - JWT authentication required
+  - **Backend implementation:**
+    - [ ] Domain model (`internal/domain/benchmark.go`) - BenchmarkData entity, result structs, repository interface
+    - [ ] Migration 0.22.0 (`internal/repository/migrations.go`) - benchmark_data table with indexes
+    - [ ] Repository (`internal/repository/benchmark_repository.go`) - CRUD + batch operations
+    - [ ] Service (`internal/service/benchmark_service.go`) - 18+ benchmark operations
+    - [ ] Handler (`internal/handler/benchmark_handler.go`) - POST /benchmark, GET /benchmark/status
+    - [ ] Route registration (`cmd/actalog/main.go`) - wire up handler
+  - **Benchmark operations:**
+    - Database: Insert, BulkInsert(100), SelectByID, SelectByKey, SelectList, SelectFiltered, Update, Delete
+    - Serialization: Marshal/Unmarshal small & large JSON
+    - Business Logic: 1RM calculations (1000x), validation, string/date operations
+    - Concurrent (optional): 10 parallel reads, 5 writes, mixed operations
+  - **Benchmark tool integration (`actalog-benchmark`):**
+    - [ ] Add `/api/benchmark` caller (`internal/metrics/benchmark_api.go`)
+    - [ ] Add BenchmarkAPIResult to types.go
+    - [ ] Update reporters to include benchmark API results
+
 #### Subscription System (Backend Complete - v0.14.0, Frontend Complete - v0.17.0)
 - [x] `[HIGH]` **Frontend Subscription Status Display**
   - [x] Add subscription status badge to user profile/settings (SubscriptionStatusBadge.vue in SettingsView)

@@ -1080,10 +1080,10 @@ func TestMovementService_UpdateAsAdmin_ValidationError(t *testing.T) {
 	repo.Create(movement)
 
 	tests := []struct {
-		name      string
-		movement  *domain.Movement
-		wantErr   bool
-		errType   error
+		name     string
+		movement *domain.Movement
+		wantErr  bool
+		errType  error
 	}{
 		{
 			name: "empty name",

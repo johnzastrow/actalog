@@ -30,7 +30,7 @@ func NewUserWorkoutHandler(userWorkoutService *service.UserWorkoutService, l *lo
 // LogWorkoutRequest represents a request to log a workout instance
 // @Description Request to log a workout (either from template or ad-hoc)
 type LogWorkoutRequest struct {
-	WorkoutID   *int64  `json:"workout_id,omitempty" example:"1"`       // Template ID (optional for ad-hoc workouts)
+	WorkoutID   *int64  `json:"workout_id,omitempty" example:"1"`      // Template ID (optional for ad-hoc workouts)
 	WorkoutName *string `json:"workout_name,omitempty" example:"Fran"` // Name for ad-hoc workouts (required if workout_id is null)
 	WorkoutDate string  `json:"workout_date" example:"2024-01-15"`     // YYYY-MM-DD format
 	WorkoutType *string `json:"workout_type,omitempty" example:"AMRAP"`
@@ -58,12 +58,12 @@ type MovementPerformance struct {
 // @Description Performance data recorded for a WOD in a workout
 type WODPerformance struct {
 	WODID       int64    `json:"wod_id" example:"1"`
-	ScoreType   *string  `json:"score_type,omitempty" example:"Time"`          // Time, Rounds+Reps, Max Weight
-	ScoreValue  *string  `json:"score_value,omitempty" example:"12:30"`        // Formatted score
-	TimeSeconds *int     `json:"time_seconds,omitempty" example:"750"`         // For time-based WODs
-	Rounds      *int     `json:"rounds,omitempty" example:"5"`                 // For AMRAP
-	Reps        *int     `json:"reps,omitempty" example:"12"`                  // Remaining reps in AMRAP
-	Weight      *float64 `json:"weight,omitempty" example:"225.0"`             // For max weight WODs
+	ScoreType   *string  `json:"score_type,omitempty" example:"Time"`   // Time, Rounds+Reps, Max Weight
+	ScoreValue  *string  `json:"score_value,omitempty" example:"12:30"` // Formatted score
+	TimeSeconds *int     `json:"time_seconds,omitempty" example:"750"`  // For time-based WODs
+	Rounds      *int     `json:"rounds,omitempty" example:"5"`          // For AMRAP
+	Reps        *int     `json:"reps,omitempty" example:"12"`           // Remaining reps in AMRAP
+	Weight      *float64 `json:"weight,omitempty" example:"225.0"`      // For max weight WODs
 	Notes       string   `json:"notes,omitempty" example:"PR attempt"`
 	OrderIndex  int      `json:"order_index" example:"0"`
 }

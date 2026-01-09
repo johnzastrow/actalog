@@ -301,8 +301,8 @@ func (h *SubscriptionHandler) GetOrganizationSubscriptions(w http.ResponseWriter
 // MarkUserSubscriptionAsPaidRequest represents a request to mark a subscription as paid
 // @Description Request to mark a subscription as paid
 type MarkUserSubscriptionAsPaidRequest struct {
-	PaymentDate  *string `json:"payment_date" example:"2024-01-15"`  // Optional: defaults to now
-	DurationDays *int    `json:"duration_days" example:"30"` // Optional: custom duration in days
+	PaymentDate  *string `json:"payment_date" example:"2024-01-15"` // Optional: defaults to now
+	DurationDays *int    `json:"duration_days" example:"30"`        // Optional: custom duration in days
 }
 
 // MarkUserSubscriptionAsPaid marks a user subscription as paid (admin only)

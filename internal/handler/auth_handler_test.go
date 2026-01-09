@@ -760,7 +760,7 @@ func createTestUserService() *service.UserService {
 		"test-jwt-secret-key-1234567890",
 		time.Hour*24,
 		time.Hour*24*7,
-		true,  // allowRegistration
+		true, // allowRegistration
 		mockEmailService,
 		"http://localhost:3000",
 		false, // requireVerification

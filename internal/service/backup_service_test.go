@@ -3161,9 +3161,9 @@ func TestBackupService_ListBackups_WithValidBackups(t *testing.T) {
 	zipWriter := zip.NewWriter(zipFile)
 	backupData := domain.BackupData{
 		Metadata: domain.BackupMetadata{
-			Filename:    "actalog_backup_20250101_120000.zip",
-			TotalUsers:  5,
-			Version:     "1.0.0",
+			Filename:   "actalog_backup_20250101_120000.zip",
+			TotalUsers: 5,
+			Version:    "1.0.0",
 		},
 	}
 	dataJSON, _ := json.Marshal(backupData)

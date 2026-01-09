@@ -27,23 +27,23 @@ func NewPRHandler(db *sql.DB, l *logger.Logger) *PRHandler {
 // PersonalRecord represents a unified PR from either movements or WODs
 // @Description Personal record from movements or WODs
 type PersonalRecord struct {
-	Type          string   `json:"type" example:"movement"`                      // "movement" or "wod"
+	Type          string   `json:"type" example:"movement"` // "movement" or "wod"
 	ID            int64    `json:"id" example:"1"`
 	UserWorkoutID int64    `json:"user_workout_id" example:"100"`
 	WorkoutDate   string   `json:"workout_date" example:"2024-01-15"`
-	Name          string   `json:"name" example:"Back Squat"`                     // Movement name or WOD name
+	Name          string   `json:"name" example:"Back Squat"`                       // Movement name or WOD name
 	MovementType  *string  `json:"movement_type,omitempty" example:"weightlifting"` // For movements: weightlifting, gymnastics, etc.
-	Weight        *float64 `json:"weight,omitempty" example:"315.0"`              // For movements (actual weight lifted)
-	Sets          *int     `json:"sets,omitempty" example:"5"`                    // For movements
-	Reps          *int     `json:"reps,omitempty" example:"5"`                    // For movements
-	Time          *int     `json:"time,omitempty" example:"120"`                  // For movements (seconds) OR WOD time
-	Distance      *float64 `json:"distance,omitempty"`                            // For movements
-	Calculated1RM *float64 `json:"calculated_1rm,omitempty" example:"354.4"`      // Calculated one-rep max for movements
-	Formula       *string  `json:"formula,omitempty" example:"Epley (2-10 reps)"` // Which formula was used
-	ScoreValue    *string  `json:"score_value,omitempty" example:"12:30"`         // For WODs
-	Division      *string  `json:"division,omitempty" example:"rx"`               // For WODs (rx, scaled, etc.)
-	WODType       *string  `json:"wod_type,omitempty" example:"For Time"`         // For WODs
-	WODScoreType  *string  `json:"wod_score_type,omitempty" example:"time"`       // For WODs
+	Weight        *float64 `json:"weight,omitempty" example:"315.0"`                // For movements (actual weight lifted)
+	Sets          *int     `json:"sets,omitempty" example:"5"`                      // For movements
+	Reps          *int     `json:"reps,omitempty" example:"5"`                      // For movements
+	Time          *int     `json:"time,omitempty" example:"120"`                    // For movements (seconds) OR WOD time
+	Distance      *float64 `json:"distance,omitempty"`                              // For movements
+	Calculated1RM *float64 `json:"calculated_1rm,omitempty" example:"354.4"`        // Calculated one-rep max for movements
+	Formula       *string  `json:"formula,omitempty" example:"Epley (2-10 reps)"`   // Which formula was used
+	ScoreValue    *string  `json:"score_value,omitempty" example:"12:30"`           // For WODs
+	Division      *string  `json:"division,omitempty" example:"rx"`                 // For WODs (rx, scaled, etc.)
+	WODType       *string  `json:"wod_type,omitempty" example:"For Time"`           // For WODs
+	WODScoreType  *string  `json:"wod_score_type,omitempty" example:"time"`         // For WODs
 }
 
 // MovementPRSummary represents PR summary for a specific movement

@@ -132,10 +132,10 @@ func TestAuditLogService_List(t *testing.T) {
 		wantLimit  int
 		wantOffset int
 	}{
-		{"default values", 0, -1, 50, 0},    // Invalid limit defaults to 50
-		{"over max limit", 200, 0, 50, 0},   // Over 100 defaults to 50
-		{"valid limit", 10, 0, 10, 0},       // Valid limit stays
-		{"negative offset", 10, -5, 10, 0},  // Negative offset becomes 0
+		{"default values", 0, -1, 50, 0},   // Invalid limit defaults to 50
+		{"over max limit", 200, 0, 50, 0},  // Over 100 defaults to 50
+		{"valid limit", 10, 0, 10, 0},      // Valid limit stays
+		{"negative offset", 10, -5, 10, 0}, // Negative offset becomes 0
 		{"valid pagination", 10, 10, 10, 10},
 	}
 

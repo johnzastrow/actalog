@@ -100,13 +100,13 @@ type SendResult struct {
 
 // EmailConfigInfo represents email configuration for display (with masked password)
 type EmailConfigInfo struct {
-	SMTPHost     string `json:"smtp_host"`
-	SMTPPort     int    `json:"smtp_port"`
-	SMTPUser     string `json:"smtp_user"`
-	FromAddress  string `json:"from_address"`
-	FromName     string `json:"from_name"`
-	Enabled      bool   `json:"enabled"`
-	TLSMode      string `json:"tls_mode"` // "TLS", "STARTTLS", "Plain"
+	SMTPHost    string `json:"smtp_host"`
+	SMTPPort    int    `json:"smtp_port"`
+	SMTPUser    string `json:"smtp_user"`
+	FromAddress string `json:"from_address"`
+	FromName    string `json:"from_name"`
+	Enabled     bool   `json:"enabled"`
+	TLSMode     string `json:"tls_mode"` // "TLS", "STARTTLS", "Plain"
 }
 
 // extractEmailAddress extracts the email address from a string that may contain a display name

@@ -158,11 +158,11 @@ func TestRateLimit_Middleware(t *testing.T) {
 
 func TestGetIP(t *testing.T) {
 	tests := []struct {
-		name           string
-		xForwardedFor  string
-		xRealIP        string
-		remoteAddr     string
-		expectedIP     string
+		name          string
+		xForwardedFor string
+		xRealIP       string
+		remoteAddr    string
+		expectedIP    string
 	}{
 		{
 			name:       "use RemoteAddr when no headers",
@@ -214,7 +214,7 @@ func TestFormatRetryAfter(t *testing.T) {
 		duration time.Duration
 		expected string
 	}{
-		{0, "1"},                  // Minimum 1 second
+		{0, "1"},                      // Minimum 1 second
 		{500 * time.Millisecond, "1"}, // Less than 1 second rounds to 1
 		{1 * time.Second, "1"},
 		{5 * time.Second, "5"},

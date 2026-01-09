@@ -47,9 +47,9 @@ func TestMovementHandler_Create_MissingFields(t *testing.T) {
 	handler := &MovementHandler{}
 
 	tests := []struct {
-		name       string
-		body       string
-		wantError  string
+		name      string
+		body      string
+		wantError string
 	}{
 		{
 			name:      "missing name",

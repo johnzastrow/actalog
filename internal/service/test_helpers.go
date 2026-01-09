@@ -174,19 +174,19 @@ func (m *mockUserWorkoutRepo) GetActiveUsersThisMonth(userID int64) ([]map[strin
 
 // Mock WorkoutRepository
 type mockWorkoutRepo struct {
-	workouts                        map[int64]*domain.Workout
-	nextID                          int64
-	getByIDError                    error
-	createError                     error
-	updateError                     error
-	deleteError                     error
-	listByUserError                 error
-	listStandardError               error
-	listAllUserCreatedError         error
-	listUserCreatedWithInfoError    error
-	listUserCreatedFilteredError    error
-	countAllUserCreatedError        error
-	getByIDWithDetailsError         error
+	workouts                     map[int64]*domain.Workout
+	nextID                       int64
+	getByIDError                 error
+	createError                  error
+	updateError                  error
+	deleteError                  error
+	listByUserError              error
+	listStandardError            error
+	listAllUserCreatedError      error
+	listUserCreatedWithInfoError error
+	listUserCreatedFilteredError error
+	countAllUserCreatedError     error
+	getByIDWithDetailsError      error
 }
 
 func newMockWorkoutRepo() *mockWorkoutRepo {
@@ -381,10 +381,10 @@ func (m *mockWorkoutRepo) CopyToStandard(id int64, newName string) (*domain.Work
 
 // Mock WorkoutMovementRepository
 type mockWorkoutMovementRepo struct {
-	movements             map[int64]*domain.WorkoutMovement
-	nextID                int64
-	maxWeights            map[int64]map[int64]*float64 // userID -> movementID -> maxWeight
-	createError           error
+	movements              map[int64]*domain.WorkoutMovement
+	nextID                 int64
+	maxWeights             map[int64]map[int64]*float64 // userID -> movementID -> maxWeight
+	createError            error
 	deleteByWorkoutIDError error
 }
 
@@ -489,16 +489,16 @@ func (m *mockWorkoutMovementRepo) DeleteByWorkout(workoutID int64) error {
 
 // Mock UserWorkoutMovementRepository
 type mockUserWorkoutMovementRepo struct {
-	movements                        map[int64]*domain.UserWorkoutMovement
-	nextID                           int64
-	createError                      error
-	createBatchError                 error
-	deleteByUserWorkoutIDError       error
-	getPRMovementsError              error
-	updatePRFlagError                error
-	getAllPerformancesError          error
-	getByUserWorkoutIDError          error
-	previousPerformances             map[int64][]*domain.UserWorkoutMovement // movementID -> performances
+	movements                  map[int64]*domain.UserWorkoutMovement
+	nextID                     int64
+	createError                error
+	createBatchError           error
+	deleteByUserWorkoutIDError error
+	getPRMovementsError        error
+	updatePRFlagError          error
+	getAllPerformancesError    error
+	getByUserWorkoutIDError    error
+	previousPerformances       map[int64][]*domain.UserWorkoutMovement // movementID -> performances
 }
 
 func newMockUserWorkoutMovementRepo() *mockUserWorkoutMovementRepo {
@@ -626,7 +626,7 @@ type mockUserWorkoutWODRepo struct {
 	getBestTimeError           error
 	getBestRoundsRepsError     error
 	getByUserWorkoutIDError    error
-	bestTimes                  map[int64]*int            // wodID -> bestTime
+	bestTimes                  map[int64]*int // wodID -> bestTime
 	bestRoundsReps             map[int64]struct{ rounds, reps *int }
 }
 

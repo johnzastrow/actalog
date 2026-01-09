@@ -217,11 +217,11 @@ func TestOrganizationService_Update(t *testing.T) {
 			wantErr:     false,
 		},
 		{
-			name:        "non-existent organization",
-			id:          999,
-			newName:     "Test",
-			wantErr:     true,
-			errType:     ErrOrganizationNotFound,
+			name:    "non-existent organization",
+			id:      999,
+			newName: "Test",
+			wantErr: true,
+			errType: ErrOrganizationNotFound,
 		},
 	}
 
@@ -386,11 +386,11 @@ func TestOrganizationService_AssignUserToOrganization(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "assign to non-existent organization",
-			userID:      user.ID,
-			orgID:       999,
-			wantErr:     true,
-			errType:     ErrOrganizationNotFound,
+			name:    "assign to non-existent organization",
+			userID:  user.ID,
+			orgID:   999,
+			wantErr: true,
+			errType: ErrOrganizationNotFound,
 		},
 		{
 			name:    "assign non-existent user",

@@ -24,10 +24,10 @@ func createTestAuditLogService() *service.AuditLogService {
 
 // MockMovementRepository is a mock implementation of MovementRepository
 type MockMovementRepository struct {
-	movements      []*domain.Movement
-	shouldError    bool
-	errorToReturn  error
-	searchResults  []*domain.Movement
+	movements     []*domain.Movement
+	shouldError   bool
+	errorToReturn error
+	searchResults []*domain.Movement
 }
 
 func NewMockMovementRepository() *MockMovementRepository {

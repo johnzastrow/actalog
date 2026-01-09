@@ -159,10 +159,10 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		email     string
-		wantUser  bool
-		wantName  string
+		name     string
+		email    string
+		wantUser bool
+		wantName string
 	}{
 		{
 			name:     "existing email",

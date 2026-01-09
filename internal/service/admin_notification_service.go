@@ -28,11 +28,11 @@ type UserEventInfo struct {
 	TargetUserID int64
 	TargetEmail  string
 	TargetName   string
-	ActorUserID  *int64            // nil for self-registration
-	ActorEmail   string            // empty for self-registration
-	ActorName    string            // empty for self-registration
+	ActorUserID  *int64               // nil for self-registration
+	ActorEmail   string               // empty for self-registration
+	ActorName    string               // empty for self-registration
 	Changes      map[string][2]string // field -> [old, new]
-	Reason       string            // for disable events
+	Reason       string               // for disable events
 	Timestamp    time.Time
 }
 

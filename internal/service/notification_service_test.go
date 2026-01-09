@@ -590,32 +590,32 @@ func TestNotificationService_ShouldNotifyUser(t *testing.T) {
 	service := NewNotificationService(nil, nil, nil, nil, nil)
 
 	tests := []struct {
-		name            string
-		settings        *domain.UserSettings
+		name             string
+		settings         *domain.UserSettings
 		notificationType string
-		isAchievingUser bool
-		want            bool
+		isAchievingUser  bool
+		want             bool
 	}{
 		{
-			name:            "nil settings - should default to true",
-			settings:        nil,
+			name:             "nil settings - should default to true",
+			settings:         nil,
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "empty preferences - should default to true",
-			settings:        &domain.UserSettings{NotificationPreferences: ""},
+			name:             "empty preferences - should default to true",
+			settings:         &domain.UserSettings{NotificationPreferences: ""},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "invalid JSON - should default to true",
-			settings:        &domain.UserSettings{NotificationPreferences: "not valid json"},
+			name:             "invalid JSON - should default to true",
+			settings:         &domain.UserSettings{NotificationPreferences: "not valid json"},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
 			name: "pr_achievements disabled",
@@ -623,8 +623,8 @@ func TestNotificationService_ShouldNotifyUser(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"enabled":false}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            false,
+			isAchievingUser:  true,
+			want:             false,
 		},
 		{
 			name: "pr_achievements enabled with in_app true",
@@ -632,8 +632,8 @@ func TestNotificationService_ShouldNotifyUser(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"enabled":true,"in_app":true}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
 			name: "gym_mate_prs disabled",
@@ -641,8 +641,8 @@ func TestNotificationService_ShouldNotifyUser(t *testing.T) {
 				NotificationPreferences: `{"gym_mate_prs":{"enabled":false}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: false,
-			want:            false,
+			isAchievingUser:  false,
+			want:             false,
 		},
 	}
 
@@ -660,25 +660,25 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 	service := NewNotificationService(nil, nil, nil, nil, nil)
 
 	tests := []struct {
-		name            string
-		settings        *domain.UserSettings
+		name             string
+		settings         *domain.UserSettings
 		notificationType string
-		isAchievingUser bool
-		want            bool
+		isAchievingUser  bool
+		want             bool
 	}{
 		{
-			name:            "nil settings - own achievement defaults to true",
-			settings:        nil,
+			name:             "nil settings - own achievement defaults to true",
+			settings:         nil,
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "nil settings - gym mate defaults to false",
-			settings:        nil,
+			name:             "nil settings - gym mate defaults to false",
+			settings:         nil,
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: false,
-			want:            false,
+			isAchievingUser:  false,
+			want:             false,
 		},
 		{
 			name: "email explicitly enabled",
@@ -686,8 +686,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"email":true}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
 			name: "email explicitly disabled",
@@ -695,8 +695,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"email":false}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            false,
+			isAchievingUser:  true,
+			want:             false,
 		},
 		{
 			name: "weekly_streak email enabled for own achievement",
@@ -704,8 +704,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"weekly_streak":{"email":true}}`,
 			},
 			notificationType: domain.NotificationTypeWeeklyStreak,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
 			name: "wod_milestones email disabled",
@@ -713,8 +713,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"wod_milestones":{"email":false}}`,
 			},
 			notificationType: domain.NotificationTypeWODMilestone,
-			isAchievingUser: true,
-			want:            false,
+			isAchievingUser:  true,
+			want:             false,
 		},
 		{
 			name: "gym_mate_streaks email enabled",
@@ -722,8 +722,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"gym_mate_streaks":{"email":true}}`,
 			},
 			notificationType: domain.NotificationTypeWeeklyStreak,
-			isAchievingUser: false,
-			want:            true,
+			isAchievingUser:  false,
+			want:             true,
 		},
 		{
 			name: "gym_mate_milestones email enabled",
@@ -731,29 +731,29 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"gym_mate_milestones":{"email":true}}`,
 			},
 			notificationType: domain.NotificationTypeWODMilestone,
-			isAchievingUser: false,
-			want:            true,
+			isAchievingUser:  false,
+			want:             true,
 		},
 		{
-			name:            "invalid JSON defaults based on isAchievingUser",
-			settings:        &domain.UserSettings{NotificationPreferences: "not valid json"},
+			name:             "invalid JSON defaults based on isAchievingUser",
+			settings:         &domain.UserSettings{NotificationPreferences: "not valid json"},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "unknown type for own achievement",
-			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			name:             "unknown type for own achievement",
+			settings:         &domain.UserSettings{NotificationPreferences: `{}`},
 			notificationType: "unknown_type",
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "unknown type for gym mate",
-			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			name:             "unknown type for gym mate",
+			settings:         &domain.UserSettings{NotificationPreferences: `{}`},
 			notificationType: "unknown_type",
-			isAchievingUser: false,
-			want:            false,
+			isAchievingUser:  false,
+			want:             false,
 		},
 		{
 			name: "preference exists but email not specified - defaults based on isAchievingUser",
@@ -761,8 +761,8 @@ func TestNotificationService_ShouldEmailUser(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"enabled":true}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 	}
 
@@ -780,11 +780,11 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 	service := NewNotificationService(nil, nil, nil, nil, nil)
 
 	tests := []struct {
-		name            string
-		settings        *domain.UserSettings
+		name             string
+		settings         *domain.UserSettings
 		notificationType string
-		isAchievingUser bool
-		want            bool
+		isAchievingUser  bool
+		want             bool
 	}{
 		{
 			name: "weekly_streak enabled",
@@ -792,8 +792,8 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"weekly_streak":{"enabled":true,"in_app":true}}`,
 			},
 			notificationType: domain.NotificationTypeWeeklyStreak,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
 			name: "wod_milestones disabled",
@@ -801,8 +801,8 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"wod_milestones":{"enabled":false}}`,
 			},
 			notificationType: domain.NotificationTypeWODMilestone,
-			isAchievingUser: true,
-			want:            false,
+			isAchievingUser:  true,
+			want:             false,
 		},
 		{
 			name: "gym_mate_streaks enabled",
@@ -810,8 +810,8 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"gym_mate_streaks":{"enabled":true,"in_app":true}}`,
 			},
 			notificationType: domain.NotificationTypeWeeklyStreak,
-			isAchievingUser: false,
-			want:            true,
+			isAchievingUser:  false,
+			want:             true,
 		},
 		{
 			name: "gym_mate_milestones disabled",
@@ -819,8 +819,8 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"gym_mate_milestones":{"enabled":false}}`,
 			},
 			notificationType: domain.NotificationTypeWODMilestone,
-			isAchievingUser: false,
-			want:            false,
+			isAchievingUser:  false,
+			want:             false,
 		},
 		{
 			name: "enabled true but in_app false",
@@ -828,8 +828,8 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"enabled":true,"in_app":false}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            false,
+			isAchievingUser:  true,
+			want:             false,
 		},
 		{
 			name: "enabled true but in_app not specified",
@@ -837,22 +837,22 @@ func TestNotificationService_ShouldNotifyUser_MoreCases(t *testing.T) {
 				NotificationPreferences: `{"pr_achievements":{"enabled":true}}`,
 			},
 			notificationType: domain.NotificationTypePRAchievement,
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "unknown type for own user defaults to true",
-			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			name:             "unknown type for own user defaults to true",
+			settings:         &domain.UserSettings{NotificationPreferences: `{}`},
 			notificationType: "unknown_type",
-			isAchievingUser: true,
-			want:            true,
+			isAchievingUser:  true,
+			want:             true,
 		},
 		{
-			name:            "unknown type for gym mate defaults to true",
-			settings:        &domain.UserSettings{NotificationPreferences: `{}`},
+			name:             "unknown type for gym mate defaults to true",
+			settings:         &domain.UserSettings{NotificationPreferences: `{}`},
 			notificationType: "unknown_type",
-			isAchievingUser: false,
-			want:            true,
+			isAchievingUser:  false,
+			want:             true,
 		},
 	}
 
@@ -944,7 +944,7 @@ func TestNotificationService_CreateNotification_UserSkipsByPreference(t *testing
 
 	// Set user preferences to disable PR notifications
 	settingsRepo.settings[user.ID] = &domain.UserSettings{
-		UserID: user.ID,
+		UserID:                  user.ID,
 		NotificationPreferences: `{"pr_achievements":{"enabled":false}}`,
 	}
 

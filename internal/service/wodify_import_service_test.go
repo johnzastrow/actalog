@@ -464,9 +464,9 @@ func TestWodifyImportService_DetermineWorkoutType(t *testing.T) {
 			want: "gymnastics",
 		},
 		{
-			name: "empty",
+			name:         "empty",
 			performances: []domain.WodifyPerformanceRow{},
-			want: "metcon", // default
+			want:         "metcon", // default
 		},
 	}
 
