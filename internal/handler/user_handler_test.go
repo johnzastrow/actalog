@@ -7,65 +7,16 @@ import (
 )
 
 func TestNewUserHandler(t *testing.T) {
-	// Test constructor with nil dependencies
-	handler := NewUserHandler(nil, nil)
-
+	handler := NewUserHandler(nil, createTestLogger())
 	if handler == nil {
-		t.Error("NewUserHandler() should not return nil")
-	}
-
-	if handler.userService != nil {
-		t.Error("userService should be nil when passed nil")
-	}
-
-	if handler.logger != nil {
-		t.Error("logger should be nil when passed nil")
+		t.Fatal("NewUserHandler() should not return nil")
 	}
 }
 
-func TestUpdateProfileRequest_Struct(t *testing.T) {
-	req := UpdateProfileRequest{
-		Name:     "Test User",
-		Email:    "test@example.com",
-		Birthday: "1990-05-15",
-	}
-
-	if req.Name != "Test User" {
-		t.Errorf("Name = %q, want %q", req.Name, "Test User")
-	}
-	if req.Email != "test@example.com" {
-		t.Errorf("Email = %q, want %q", req.Email, "test@example.com")
-	}
-	if req.Birthday != "1990-05-15" {
-		t.Errorf("Birthday = %q, want %q", req.Birthday, "1990-05-15")
-	}
-
-	// Test empty struct
-	req2 := UpdateProfileRequest{}
-	if req2.Name != "" || req2.Email != "" || req2.Birthday != "" {
-		t.Error("Empty UpdateProfileRequest should have all fields empty")
-	}
-}
-
-func TestProfileResponse_Struct(t *testing.T) {
-	user := map[string]interface{}{
-		"id":    1,
-		"email": "test@example.com",
-	}
-	resp := ProfileResponse{
-		User: user,
-	}
-
-	if resp.User == nil {
-		t.Error("User should not be nil")
-	}
-
-	// Test nil user
-	resp2 := ProfileResponse{User: nil}
-	if resp2.User != nil {
-		t.Error("User should be nil")
-	}
-}
+// Removed struct field assignment tests:
+// - TestUpdateProfileRequest_Struct
+// - TestProfileResponse_Struct
+// These tests verified Go struct assignment works, not business logic.
 
 func TestUserHandler_UpdateProfile_Unauthorized(t *testing.T) {
 	handler := &UserHandler{}

@@ -231,21 +231,4 @@ func TestFormatRetryAfter(t *testing.T) {
 	}
 }
 
-func TestFormatInt(t *testing.T) {
-	tests := []struct {
-		input    int
-		expected string
-	}{
-		{0, "0"},
-		{1, "1"},
-		{100, "100"},
-		{-5, "-5"},
-	}
-
-	for _, tt := range tests {
-		result := formatInt(tt.input)
-		if result != tt.expected {
-			t.Errorf("formatInt(%d) = %q, want %q", tt.input, result, tt.expected)
-		}
-	}
-}
+// Removed: TestFormatInt - tested strconv.Itoa wrapper, trivial helper

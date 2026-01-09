@@ -165,50 +165,8 @@ func TestMessage_HTML(t *testing.T) {
 	}
 }
 
-func TestConfig_Defaults(t *testing.T) {
-	cfg := Config{}
-
-	// Empty config should have zero values
-	if cfg.SMTPHost != "" {
-		t.Errorf("default SMTPHost = %q, want empty", cfg.SMTPHost)
-	}
-
-	if cfg.SMTPPort != 0 {
-		t.Errorf("default SMTPPort = %d, want 0", cfg.SMTPPort)
-	}
-
-	if cfg.SMTPUser != "" {
-		t.Errorf("default SMTPUser = %q, want empty", cfg.SMTPUser)
-	}
-
-	if cfg.SMTPPassword != "" {
-		t.Errorf("default SMTPPassword = %q, want empty", cfg.SMTPPassword)
-	}
-
-	if cfg.FromAddress != "" {
-		t.Errorf("default FromAddress = %q, want empty", cfg.FromAddress)
-	}
-
-	if cfg.FromName != "" {
-		t.Errorf("default FromName = %q, want empty", cfg.FromName)
-	}
-}
-
-func TestEmailService_Interface(t *testing.T) {
-	// Verify that *Service implements EmailService interface
-	cfg := Config{
-		SMTPHost:    "smtp.example.com",
-		SMTPPort:    587,
-		FromAddress: "test@example.com",
-	}
-
-	logger := log.New(os.Stdout, "", log.LstdFlags)
-	var svc EmailService = NewService(cfg, logger)
-
-	if svc == nil {
-		t.Fatal("Service should implement EmailService interface")
-	}
-}
+// Removed: TestConfig_Defaults - tested Go zero values, not business logic
+// Removed: TestEmailService_Interface - tested interface assignment, compiler verifies this
 
 func TestMessage_MultipleRecipients(t *testing.T) {
 	msg := Message{
@@ -598,91 +556,10 @@ func TestService_sendWithTLS_ConnectionError(t *testing.T) {
 	}
 }
 
-// TestConfig_Ports tests common SMTP port configurations
-func TestConfig_Ports(t *testing.T) {
-	tests := []struct {
-		name        string
-		port        int
-		description string
-	}{
-		{"port 25", 25, "Standard SMTP"},
-		{"port 465", 465, "SMTPS (TLS)"},
-		{"port 587", 587, "Submission (STARTTLS)"},
-		{"port 2525", 2525, "Alternative SMTP"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{
-				SMTPHost: "smtp.example.com",
-				SMTPPort: tt.port,
-			}
-
-			if cfg.SMTPPort != tt.port {
-				t.Errorf("SMTPPort = %d, want %d", cfg.SMTPPort, tt.port)
-			}
-		})
-	}
-}
-
-// TestMessage_EmptyFields tests message with empty fields
-func TestMessage_EmptyFields(t *testing.T) {
-	msg := Message{}
-
-	if msg.To != nil {
-		t.Error("Empty Message.To should be nil")
-	}
-
-	if msg.Subject != "" {
-		t.Error("Empty Message.Subject should be empty string")
-	}
-
-	if msg.Body != "" {
-		t.Error("Empty Message.Body should be empty string")
-	}
-
-	if msg.IsHTML != false {
-		t.Error("Empty Message.IsHTML should be false")
-	}
-}
-
-// TestMessage_LongBody tests message with very long body
-func TestMessage_LongBody(t *testing.T) {
-	longBody := strings.Repeat("This is a test sentence. ", 1000)
-
-	msg := Message{
-		To:      []string{"test@example.com"},
-		Subject: "Long Email",
-		Body:    longBody,
-		IsHTML:  false,
-	}
-
-	if len(msg.Body) != len(longBody) {
-		t.Errorf("Body length = %d, want %d", len(msg.Body), len(longBody))
-	}
-}
-
-// TestMessage_SpecialCharacters tests message with special characters
-func TestMessage_SpecialCharacters(t *testing.T) {
-	msg := Message{
-		To:      []string{"test@example.com"},
-		Subject: "Test: Special Characters! @#$%^&*()",
-		Body:    "Body with émojis 🎉 and ünïcödé characters: 中文, 日本語, العربية",
-		IsHTML:  false,
-	}
-
-	if !strings.Contains(msg.Subject, "@#$%^&*()") {
-		t.Error("Subject should preserve special characters")
-	}
-
-	if !strings.Contains(msg.Body, "🎉") {
-		t.Error("Body should preserve emoji")
-	}
-
-	if !strings.Contains(msg.Body, "中文") {
-		t.Error("Body should preserve Chinese characters")
-	}
-}
+// Removed: TestConfig_Ports - tested struct field assignment
+// Removed: TestMessage_EmptyFields - tested Go zero values
+// Removed: TestMessage_LongBody - tested string length
+// Removed: TestMessage_SpecialCharacters - tested strings.Contains
 
 // TestService_Logger tests that service uses provided logger
 func TestService_Logger(t *testing.T) {
@@ -1298,24 +1175,7 @@ func TestEmailConfigInfo(t *testing.T) {
 	}
 }
 
-// TestTimeoutConstants tests the timeout constants are defined
-func TestTimeoutConstants(t *testing.T) {
-	if ConnectionTimeout != 10*time.Second {
-		t.Errorf("ConnectionTimeout = %v, want 10s", ConnectionTimeout)
-	}
-
-	if AuthTimeout != 5*time.Second {
-		t.Errorf("AuthTimeout = %v, want 5s", AuthTimeout)
-	}
-
-	if SendTimeout != 30*time.Second {
-		t.Errorf("SendTimeout = %v, want 30s", SendTimeout)
-	}
-
-	if OverallTimeout != 60*time.Second {
-		t.Errorf("OverallTimeout = %v, want 60s", OverallTimeout)
-	}
-}
+// Removed: TestTimeoutConstants - tested constant values, compiler verifies these
 
 // TestService_SendWithDebug_MultipleRecipients tests sending to multiple recipients
 func TestService_SendWithDebug_MultipleRecipients(t *testing.T) {
@@ -1621,26 +1481,7 @@ func TestService_sendWithTLS_NilAuth(t *testing.T) {
 	}
 }
 
-// TestSMTPDebugInfo_EmptyFields tests SMTPDebugInfo with empty fields
-func TestSMTPDebugInfo_EmptyFields(t *testing.T) {
-	debug := SMTPDebugInfo{}
-
-	if debug.ConnectionHost != "" {
-		t.Error("Empty SMTPDebugInfo.ConnectionHost should be empty")
-	}
-
-	if debug.ConnectionPort != 0 {
-		t.Error("Empty SMTPDebugInfo.ConnectionPort should be 0")
-	}
-
-	if debug.Success {
-		t.Error("Empty SMTPDebugInfo.Success should be false")
-	}
-
-	if debug.SMTPResponses != nil {
-		t.Error("Empty SMTPDebugInfo.SMTPResponses should be nil")
-	}
-}
+// Removed: TestSMTPDebugInfo_EmptyFields - tested Go zero values
 
 // TestService_GetConfig_MaskedPassword verifies password is not exposed
 func TestService_GetConfig_MaskedPassword(t *testing.T) {

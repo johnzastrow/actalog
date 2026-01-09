@@ -11,140 +11,19 @@ import (
 var errMockFailure = errors.New("mock failure")
 
 func TestNewSubscriptionHandler(t *testing.T) {
-	// Test constructor with nil dependencies
-	handler := NewSubscriptionHandler(nil, nil)
-
+	handler := NewSubscriptionHandler(nil, createTestLogger())
 	if handler == nil {
-		t.Error("NewSubscriptionHandler() should not return nil")
-	}
-
-	if handler.subscriptionService != nil {
-		t.Error("subscriptionService should be nil when passed nil")
-	}
-
-	if handler.logger != nil {
-		t.Error("logger should be nil when passed nil")
+		t.Fatal("NewSubscriptionHandler() should not return nil")
 	}
 }
 
-func TestCreateUserSubscriptionRequest_Struct(t *testing.T) {
-	req := CreateUserSubscriptionRequest{
-		UserID:           123,
-		SubscriptionType: "monthly",
-		IsPermanentFree:  false,
-		Notes:            "Test subscription",
-	}
-
-	if req.UserID != 123 {
-		t.Errorf("UserID = %d, want 123", req.UserID)
-	}
-	if req.SubscriptionType != "monthly" {
-		t.Errorf("SubscriptionType = %q, want %q", req.SubscriptionType, "monthly")
-	}
-	if req.IsPermanentFree != false {
-		t.Error("IsPermanentFree should be false")
-	}
-	if req.Notes != "Test subscription" {
-		t.Errorf("Notes = %q, want %q", req.Notes, "Test subscription")
-	}
-}
-
-func TestCreateUserSubscriptionRequest_PermanentFree(t *testing.T) {
-	req := CreateUserSubscriptionRequest{
-		UserID:           456,
-		SubscriptionType: "free",
-		IsPermanentFree:  true,
-		Notes:            "Lifetime free",
-	}
-
-	if req.IsPermanentFree != true {
-		t.Error("IsPermanentFree should be true")
-	}
-}
-
-func TestCreateOrganizationSubscriptionRequest_Struct(t *testing.T) {
-	req := CreateOrganizationSubscriptionRequest{
-		OrganizationID:   789,
-		SubscriptionType: "annual",
-		IsPermanentFree:  false,
-		Notes:            "Org subscription",
-	}
-
-	if req.OrganizationID != 789 {
-		t.Errorf("OrganizationID = %d, want 789", req.OrganizationID)
-	}
-	if req.SubscriptionType != "annual" {
-		t.Errorf("SubscriptionType = %q, want %q", req.SubscriptionType, "annual")
-	}
-	if req.IsPermanentFree != false {
-		t.Error("IsPermanentFree should be false")
-	}
-	if req.Notes != "Org subscription" {
-		t.Errorf("Notes = %q, want %q", req.Notes, "Org subscription")
-	}
-}
-
-func TestCancelSubscriptionRequest_Struct(t *testing.T) {
-	req := CancelSubscriptionRequest{
-		Reason: "User requested cancellation",
-	}
-
-	if req.Reason != "User requested cancellation" {
-		t.Errorf("Reason = %q, want %q", req.Reason, "User requested cancellation")
-	}
-
-	// Test empty reason
-	req2 := CancelSubscriptionRequest{}
-	if req2.Reason != "" {
-		t.Errorf("Reason = %q, want empty", req2.Reason)
-	}
-}
-
-func TestMarkUserSubscriptionAsPaidRequest_Struct(t *testing.T) {
-	paymentDate := "2024-01-15"
-	durationDays := 30
-
-	req := MarkUserSubscriptionAsPaidRequest{
-		PaymentDate:  &paymentDate,
-		DurationDays: &durationDays,
-	}
-
-	if req.PaymentDate == nil || *req.PaymentDate != "2024-01-15" {
-		t.Errorf("PaymentDate = %v, want 2024-01-15", req.PaymentDate)
-	}
-	if req.DurationDays == nil || *req.DurationDays != 30 {
-		t.Errorf("DurationDays = %v, want 30", req.DurationDays)
-	}
-}
-
-func TestMarkUserSubscriptionAsPaidRequest_NilFields(t *testing.T) {
-	req := MarkUserSubscriptionAsPaidRequest{}
-
-	if req.PaymentDate != nil {
-		t.Error("PaymentDate should be nil")
-	}
-	if req.DurationDays != nil {
-		t.Error("DurationDays should be nil")
-	}
-}
-
-func TestSetUserSubscriptionPermanentRequest_Struct(t *testing.T) {
-	req := SetUserSubscriptionPermanentRequest{
-		IsPermanent: true,
-	}
-
-	if req.IsPermanent != true {
-		t.Error("IsPermanent should be true")
-	}
-
-	req2 := SetUserSubscriptionPermanentRequest{
-		IsPermanent: false,
-	}
-
-	if req2.IsPermanent != false {
-		t.Error("IsPermanent should be false")
-	}
-}
+// Removed struct field assignment tests:
+// - TestCreateUserSubscriptionRequest_Struct, TestCreateUserSubscriptionRequest_PermanentFree
+// - TestCreateOrganizationSubscriptionRequest_Struct
+// - TestCancelSubscriptionRequest_Struct
+// - TestMarkUserSubscriptionAsPaidRequest_Struct, TestMarkUserSubscriptionAsPaidRequest_NilFields
+// - TestSetUserSubscriptionPermanentRequest_Struct
+// These tests verified Go struct assignment works, not business logic.
 
 func TestSubscriptionHandler_GetMySubscriptionStatus_Unauthorized(t *testing.T) {
 	handler := &SubscriptionHandler{}
@@ -156,24 +35,6 @@ func TestSubscriptionHandler_GetMySubscriptionStatus_Unauthorized(t *testing.T) 
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestSubscriptionHandler_GetMySubscriptionStatus_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/subscription/status", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.GetMySubscriptionStatus(rr, req)
 }
 
 func TestSubscriptionHandler_CreateUserSubscription_Unauthorized(t *testing.T) {
@@ -224,24 +85,6 @@ func TestSubscriptionHandler_CreateUserSubscription_MissingType(t *testing.T) {
 	assertBodyContains(t, rr, "subscription_type is required")
 }
 
-func TestSubscriptionHandler_CreateUserSubscription_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user", `{"user_id": 2, "subscription_type": "monthly"}`, 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.CreateUserSubscription(rr, req)
-}
-
 func TestSubscriptionHandler_CreateOrganizationSubscription_Unauthorized(t *testing.T) {
 	handler := &SubscriptionHandler{}
 
@@ -288,24 +131,6 @@ func TestSubscriptionHandler_CreateOrganizationSubscription_MissingType(t *testi
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "subscription_type is required")
-}
-
-func TestSubscriptionHandler_CreateOrganizationSubscription_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization", `{"organization_id": 1, "subscription_type": "monthly"}`, 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.CreateOrganizationSubscription(rr, req)
 }
 
 func TestSubscriptionHandler_GetUserSubscriptions_InvalidID(t *testing.T) {
@@ -556,218 +381,6 @@ func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_InvalidJSON(t 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 }
 
-func TestSubscriptionHandler_ListAllUserSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users", "")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListAllUserSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_ListAllOrganizationSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations", "")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListAllOrganizationSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_AllSubscriptionTypes(t *testing.T) {
-	testCases := []struct {
-		name             string
-		subscriptionType string
-	}{
-		{"free", "free"},
-		{"monthly", "monthly"},
-		{"annual", "annual"},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			req := CreateUserSubscriptionRequest{
-				UserID:           1,
-				SubscriptionType: tc.subscriptionType,
-			}
-
-			if req.SubscriptionType != tc.subscriptionType {
-				t.Errorf("SubscriptionType = %q, want %q", req.SubscriptionType, tc.subscriptionType)
-			}
-		})
-	}
-}
-
-func TestSubscriptionHandler_GetUserSubscriptions_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/1", "")
-	req = addChiURLParam(req, "user_id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.GetUserSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_GetOrganizationSubscriptions_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/1", "")
-	req = addChiURLParam(req, "org_id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.GetOrganizationSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/mark-paid", `{}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.MarkUserSubscriptionAsPaid(rr, req)
-}
-
-func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/mark-paid", `{}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.MarkOrganizationSubscriptionAsPaid(rr, req)
-}
-
-func TestSubscriptionHandler_CancelUserSubscription_ValidIDWithReason(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel", `{"reason": "Customer requested"}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.CancelUserSubscription(rr, req)
-}
-
-func TestSubscriptionHandler_CancelOrganizationSubscription_ValidIDWithReason(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel", `{"reason": "Org requested"}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.CancelOrganizationSubscription(rr, req)
-}
-
-func TestSubscriptionHandler_SetUserSubscriptionPermanent_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/permanent", `{"is_permanent": true}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.SetUserSubscriptionPermanent(rr, req)
-}
-
-func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidID(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/permanent", `{"is_permanent": true}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil subscriptionService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.SetOrganizationSubscriptionPermanent(rr, req)
-}
-
 // Additional tests for Cancel subscription with valid IDs and empty reason
 
 func TestSubscriptionHandler_CancelUserSubscription_ValidIDEmptyReason(t *testing.T) {
@@ -848,245 +461,32 @@ func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidIDInvalid
 	assertBodyContains(t, rr, "Invalid request body")
 }
 
-// Tests with different IDs
-
-func TestSubscriptionHandler_GetUserSubscriptions_DifferentIDs(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("user_id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/"+id, "")
-			req = addChiURLParam(req, "user_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetUserSubscriptions requires service")
-				}
-			}()
-
-			handler.GetUserSubscriptions(rr, req)
-		})
-	}
-}
-
-func TestSubscriptionHandler_GetOrganizationSubscriptions_DifferentIDs(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("org_id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/"+id, "")
-			req = addChiURLParam(req, "org_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetOrganizationSubscriptions requires service")
-				}
-			}()
-
-			handler.GetOrganizationSubscriptions(rr, req)
-		})
-	}
-}
-
-func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_DifferentIDs(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("subscription_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/"+id+"/mark-paid", `{}`, 1, "admin@example.com", "admin")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("MarkUserSubscriptionAsPaid requires service")
-				}
-			}()
-
-			handler.MarkUserSubscriptionAsPaid(rr, req)
-		})
-	}
-}
-
-func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_DifferentIDs(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("subscription_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/"+id+"/mark-paid", `{}`, 1, "admin@example.com", "admin")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("MarkOrganizationSubscriptionAsPaid requires service")
-				}
-			}()
-
-			handler.MarkOrganizationSubscriptionAsPaid(rr, req)
-		})
-	}
-}
-
-// Tests for ListExpiringUserSubscriptions
-func TestSubscriptionHandler_ListExpiringUserSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expiring", "", 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListExpiringUserSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_ListExpiringUserSubscriptions_QueryParam(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testCases := []struct {
-		name string
-		days string
-	}{
-		{"default", ""},
-		{"7 days", "7"},
-		{"30 days", "30"},
-		{"60 days", "60"},
-		{"invalid", "abc"}, // Falls back to default
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			url := "/api/admin/subscriptions/users/expiring"
-			if tc.days != "" {
-				url += "?days=" + tc.days
-			}
-			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListExpiringUserSubscriptions requires service")
-				}
-			}()
-
-			handler.ListExpiringUserSubscriptions(rr, req)
-		})
-	}
-}
-
-// Tests for ListExpiredUserSubscriptions
-func TestSubscriptionHandler_ListExpiredUserSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expired", "", 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListExpiredUserSubscriptions(rr, req)
-}
-
-// Tests for ListExpiringOrganizationSubscriptions
-func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expiring", "", 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListExpiringOrganizationSubscriptions(rr, req)
-}
-
-func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_QueryParam(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	testCases := []struct {
-		name string
-		days string
-	}{
-		{"default", ""},
-		{"14 days", "14"},
-		{"90 days", "90"},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			url := "/api/admin/subscriptions/organizations/expiring"
-			if tc.days != "" {
-				url += "?days=" + tc.days
-			}
-			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListExpiringOrganizationSubscriptions requires service")
-				}
-			}()
-
-			handler.ListExpiringOrganizationSubscriptions(rr, req)
-		})
-	}
-}
-
-// Tests for ListExpiredOrganizationSubscriptions
-func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_NilService(t *testing.T) {
-	handler := &SubscriptionHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expired", "", 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil subscriptionService")
-		}
-	}()
-
-	handler.ListExpiredOrganizationSubscriptions(rr, req)
-}
+// Removed 23 panic-expectation tests:
+// - TestSubscriptionHandler_GetMySubscriptionStatus_NilService
+// - TestSubscriptionHandler_CreateUserSubscription_NilService
+// - TestSubscriptionHandler_CreateOrganizationSubscription_NilService
+// - TestSubscriptionHandler_ListAllUserSubscriptions_NilService
+// - TestSubscriptionHandler_ListAllOrganizationSubscriptions_NilService
+// - TestSubscriptionHandler_AllSubscriptionTypes (struct assignment test)
+// - TestSubscriptionHandler_GetUserSubscriptions_ValidID
+// - TestSubscriptionHandler_GetOrganizationSubscriptions_ValidID
+// - TestSubscriptionHandler_MarkUserSubscriptionAsPaid_ValidID
+// - TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ValidID
+// - TestSubscriptionHandler_CancelUserSubscription_ValidIDWithReason
+// - TestSubscriptionHandler_CancelOrganizationSubscription_ValidIDWithReason
+// - TestSubscriptionHandler_SetUserSubscriptionPermanent_ValidID
+// - TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_ValidID
+// - TestSubscriptionHandler_GetUserSubscriptions_DifferentIDs
+// - TestSubscriptionHandler_GetOrganizationSubscriptions_DifferentIDs
+// - TestSubscriptionHandler_MarkUserSubscriptionAsPaid_DifferentIDs
+// - TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_DifferentIDs
+// - TestSubscriptionHandler_ListExpiringUserSubscriptions_NilService
+// - TestSubscriptionHandler_ListExpiringUserSubscriptions_QueryParam
+// - TestSubscriptionHandler_ListExpiredUserSubscriptions_NilService
+// - TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_NilService
+// - TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_QueryParam
+// - TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_NilService
+// These tests verified nil pointer panics, not business logic.
 
 // =============================================================================
 // Success Path Tests with Real Service

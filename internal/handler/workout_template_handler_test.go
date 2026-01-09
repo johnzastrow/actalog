@@ -129,61 +129,6 @@ func TestWorkoutTemplateHandler_DeleteTemplate_InvalidID(t *testing.T) {
 	assertBodyContains(t, rr, "Invalid template ID")
 }
 
-// Tests for ListStandardTemplates
-
-func TestWorkoutTemplateHandler_ListStandardTemplates_NilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/templates/standard", "")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ListStandardTemplates requires service")
-		}
-	}()
-
-	handler.ListStandardTemplates(rr, req)
-}
-
-// Tests for ListMyTemplates with service
-
-func TestWorkoutTemplateHandler_ListMyTemplates_NilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/templates/mine", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ListMyTemplates requires service")
-		}
-	}()
-
-	handler.ListMyTemplates(rr, req)
-}
-
-// Test GetTemplate with valid ID but nil service
-
-func TestWorkoutTemplateHandler_GetTemplate_ValidIDNilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/templates/1", "")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetTemplate requires service")
-		}
-	}()
-
-	handler.GetTemplate(rr, req)
-}
-
 // Test NewWorkoutTemplateHandler
 
 func TestNewWorkoutTemplateHandler(t *testing.T) {
@@ -221,135 +166,14 @@ func TestWorkoutTemplateHandler_UpdateTemplate_MissingName(t *testing.T) {
 	assertBodyContains(t, rr, "Template name is required")
 }
 
-// Test DeleteTemplate with valid ID
-
-func TestWorkoutTemplateHandler_DeleteTemplate_ValidIDNilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/templates/1", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("DeleteTemplate requires service")
-		}
-	}()
-
-	handler.DeleteTemplate(rr, req)
-}
-
-func TestWorkoutTemplateHandler_CreateTemplate_ValidInputNilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/templates",
-		`{"name": "Test Template", "description": "A test template"}`,
-		1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("CreateTemplate requires service")
-		}
-	}()
-
-	handler.CreateTemplate(rr, req)
-}
-
-func TestWorkoutTemplateHandler_UpdateTemplate_ValidInputNilService(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPut, "/api/templates/1",
-		`{"name": "Updated Template", "description": "Updated description"}`,
-		1, "test@example.com", "user")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UpdateTemplate requires service")
-		}
-	}()
-
-	handler.UpdateTemplate(rr, req)
-}
-
-func TestWorkoutTemplateHandler_ListStandardTemplates_WithPagination(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"default", "/api/templates/standard"},
-		{"with limit", "/api/templates/standard?limit=10"},
-		{"with offset", "/api/templates/standard?offset=5"},
-		{"with both", "/api/templates/standard?limit=20&offset=10"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, tt.query, "")
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListStandardTemplates requires service")
-				}
-			}()
-
-			handler.ListStandardTemplates(rr, req)
-		})
-	}
-}
-
-func TestWorkoutTemplateHandler_ListMyTemplates_WithPagination(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"default", "/api/templates/mine"},
-		{"with limit", "/api/templates/mine?limit=10"},
-		{"with offset", "/api/templates/mine?offset=5"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "test@example.com", "user")
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListMyTemplates requires service")
-				}
-			}()
-
-			handler.ListMyTemplates(rr, req)
-		})
-	}
-}
-
-func TestWorkoutTemplateHandler_GetTemplate_DifferentIDs(t *testing.T) {
-	handler := &WorkoutTemplateHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/templates/"+id, "")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetTemplate requires service")
-				}
-			}()
-
-			handler.GetTemplate(rr, req)
-		})
-	}
-}
+// Removed 9 panic-expectation tests:
+// - TestWorkoutTemplateHandler_ListStandardTemplates_NilService
+// - TestWorkoutTemplateHandler_ListMyTemplates_NilService
+// - TestWorkoutTemplateHandler_GetTemplate_ValidIDNilService
+// - TestWorkoutTemplateHandler_DeleteTemplate_ValidIDNilService
+// - TestWorkoutTemplateHandler_CreateTemplate_ValidInputNilService
+// - TestWorkoutTemplateHandler_UpdateTemplate_ValidInputNilService
+// - TestWorkoutTemplateHandler_ListStandardTemplates_WithPagination (4 subtests)
+// - TestWorkoutTemplateHandler_ListMyTemplates_WithPagination (3 subtests)
+// - TestWorkoutTemplateHandler_GetTemplate_DifferentIDs (3 subtests)
+// These tests verified nil pointer panics, not business logic.
