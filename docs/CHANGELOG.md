@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0-beta] - 2026-01-09
+
+### Added - Benchmark API Endpoint
+
+- **Comprehensive Benchmark Endpoint**
+  - New `POST /api/benchmark` endpoint for API performance testing
+  - Exercises database, serialization, and business logic operations
+  - Uses isolated `benchmark_data` table (no production data affected)
+  - Auto-cleanup of benchmark data after each run
+
+- **Database Benchmarks** (9 operations)
+  - Single insert, bulk insert (100 records)
+  - Select by ID, select by key (index lookup)
+  - List with pagination, filtered queries
+  - Update and delete operations
+  - User-scoped cleanup
+
+- **Serialization Benchmarks** (4 operations)
+  - JSON marshal/unmarshal for small payloads (1 object)
+  - JSON marshal/unmarshal for large payloads (100 objects)
+
+- **Business Logic Benchmarks** (5 operations)
+  - 1RM calculations using prmath package (1000 iterations)
+  - Intensity calculations (1000 iterations)
+  - Input validation (100 iterations)
+  - String operations (1000 iterations)
+  - Date operations with timezone handling (1000 iterations)
+
+- **Concurrent Benchmarks** (3 operations, optional)
+  - Parallel reads (10 goroutines)
+  - Parallel writes (5 goroutines)
+  - Mixed read/write operations (10 goroutines)
+  - Enable with `?concurrent=true` query parameter
+
+- **Supporting Endpoints**
+  - `GET /api/benchmark/status` - Quick status check
+  - `DELETE /api/admin/benchmark/data` - Admin cleanup of all benchmark data
+
+### Added - PWA 1.2.0 Features
+
+- **Improved Update Flow**
+  - Changed from `autoUpdate` to `prompt` registerType
+  - User-controlled updates via UpdatePrompt component
+  - Better state management in PWA store
+
+- **PWA Assets Generator**
+  - New `pwa-assets.config.js` for automatic icon generation
+  - Generate all icons from single source image
+  - New npm script: `npm run generate-pwa-icons`
+
+- **Enhanced Caching**
+  - Added caching for local fonts (1 year expiration)
+  - Added caching for uploaded images (7 days, StaleWhileRevalidate)
+  - Extended glob patterns for font files (woff, ttf)
+
+### Changed
+
+- **Database Migration 0.22.0**
+  - Added `benchmark_data` table for safe read/write testing
+  - Indexes on `test_key` and `created_by` columns
+  - Foreign key to users table with CASCADE delete
+
 ## [0.21.0-beta] - 2026-01-09
 
 ### Added - Frontend Testing Framework

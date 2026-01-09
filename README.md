@@ -2,7 +2,7 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
-[![Version](https://img.shields.io/badge/version-0.21.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.22.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
