@@ -41,6 +41,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Mixed read/write operations (10 goroutines)
   - Enable with `?concurrent=true` query parameter
 
+- **Configurable Record Count**
+  - New `records` query parameter for `/api/benchmark` endpoint
+  - Default: 1,000 records, Maximum: 500,000 records
+  - Example: `POST /api/benchmark?records=10000`
+  - Scales database operations to stress-test the system
+
+- **Complex Benchmark Data**
+  - Large text fields (5-10KB random text with paragraphs)
+  - Nested JSON blobs (5-level deep structures with arrays)
+  - UUID test keys for uniqueness
+  - Random numeric values (floats, integers, booleans)
+  - Realistic data to push serialization and storage
+
 - **Supporting Endpoints**
   - `GET /api/benchmark/status` - Quick status check
   - `DELETE /api/admin/benchmark/data` - Admin cleanup of all benchmark data
@@ -68,6 +81,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `benchmark_data` table for safe read/write testing
   - Indexes on `test_key` and `created_by` columns
   - Foreign key to users table with CASCADE delete
+
+- **Server Timeout Defaults**
+  - Updated default SERVER_READ_TIMEOUT from 15s to 30s
+  - Updated default SERVER_WRITE_TIMEOUT from 15s to 60s
+  - Supports long-running benchmark API requests without EOF errors
+
+### Fixed
+
+- **EOF Errors on Long-Running Benchmark Requests**
+  - Fixed HTTP client receiving EOF when benchmark takes >15 seconds
+  - Root cause: SERVER_WRITE_TIMEOUT was set too low for large record counts
+  - Added explicit Content-Length header to avoid chunked encoding issues
+  - For 100k+ records, recommend SERVER_WRITE_TIMEOUT=120s or higher
 
 ## [0.21.0-beta] - 2026-01-09
 
