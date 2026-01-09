@@ -105,13 +105,24 @@ type ConcurrentBenchmarkResult struct {
 	MixedOps       *OperationResult `json:"mixed_operations"`
 }
 
+// SystemInfo contains information about the runtime environment
+type SystemInfo struct {
+	GoVersion       string `json:"go_version"`
+	GoOS            string `json:"go_os"`
+	GoArch          string `json:"go_arch"`
+	OSVersion       string `json:"os_version,omitempty"`
+	NumCPU          int    `json:"num_cpu"`
+	DatabaseVersion string `json:"database_version"`
+	DatabaseDriver  string `json:"database_driver"`
+}
+
 // BenchmarkSuiteResult contains the complete benchmark results
 type BenchmarkSuiteResult struct {
-	Timestamp       time.Time `json:"timestamp"`
-	Version         string    `json:"version"`
-	DatabaseDriver  string    `json:"database_driver"`
-	TotalDurationMs float64   `json:"total_duration_ms"`
-	Overall         string    `json:"overall"` // "pass", "fail", "degraded"
+	Timestamp       time.Time   `json:"timestamp"`
+	Version         string      `json:"version"`
+	SystemInfo      *SystemInfo `json:"system_info"`
+	TotalDurationMs float64     `json:"total_duration_ms"`
+	Overall         string      `json:"overall"` // "pass", "fail", "degraded"
 
 	Database      *DatabaseBenchmarkResult      `json:"database"`
 	Serialization *SerializationBenchmarkResult `json:"serialization"`

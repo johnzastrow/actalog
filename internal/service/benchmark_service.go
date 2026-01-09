@@ -1,8 +1,12 @@
 package service
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -30,12 +34,20 @@ func (s *BenchmarkService) RunBenchmark(userID int64, options domain.BenchmarkOp
 	startTime := time.Now()
 
 	result := &domain.BenchmarkSuiteResult{
-		Timestamp:      startTime,
-		Version:        version.Version(),
-		DatabaseDriver: s.repo.Driver(),
-		Database:       &domain.DatabaseBenchmarkResult{},
-		Serialization:  &domain.SerializationBenchmarkResult{},
-		BusinessLogic:  &domain.BusinessLogicBenchmarkResult{},
+		Timestamp: startTime,
+		Version:   version.Version(),
+		SystemInfo: &domain.SystemInfo{
+			GoVersion:       runtime.Version(),
+			GoOS:            runtime.GOOS,
+			GoArch:          runtime.GOARCH,
+			OSVersion:       getOSVersion(),
+			NumCPU:          runtime.NumCPU(),
+			DatabaseDriver:  s.repo.Driver(),
+			DatabaseVersion: s.repo.DatabaseVersion(),
+		},
+		Database:      &domain.DatabaseBenchmarkResult{},
+		Serialization: &domain.SerializationBenchmarkResult{},
+		BusinessLogic: &domain.BusinessLogicBenchmarkResult{},
 	}
 
 	// Run database benchmarks
@@ -856,4 +868,79 @@ func (s *BenchmarkService) GetBenchmarkStatus() (map[string]interface{}, error) 
 // CleanupAllBenchmarkData removes all benchmark data (admin only)
 func (s *BenchmarkService) CleanupAllBenchmarkData() error {
 	return s.repo.DeleteAll()
+}
+
+// getOSVersion returns a detailed OS version string
+func getOSVersion() string {
+	switch runtime.GOOS {
+	case "linux":
+		return getLinuxVersion()
+	case "darwin":
+		return getDarwinVersion()
+	case "windows":
+		return getWindowsVersion()
+	default:
+		return runtime.GOOS
+	}
+}
+
+// getLinuxVersion reads /etc/os-release for Linux distribution info
+func getLinuxVersion() string {
+	// Try /etc/os-release first (most modern distros)
+	file, err := os.Open("/etc/os-release")
+	if err == nil {
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		var prettyName string
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "PRETTY_NAME=") {
+				prettyName = strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
+				break
+			}
+		}
+		if prettyName != "" {
+			// Try to get kernel version too
+			if out, err := exec.Command("uname", "-r").Output(); err == nil {
+				return prettyName + " (kernel " + strings.TrimSpace(string(out)) + ")"
+			}
+			return prettyName
+		}
+	}
+
+	// Fallback to lsb_release
+	if out, err := exec.Command("lsb_release", "-d", "-s").Output(); err == nil {
+		desc := strings.TrimSpace(string(out))
+		if out, err := exec.Command("uname", "-r").Output(); err == nil {
+			return desc + " (kernel " + strings.TrimSpace(string(out)) + ")"
+		}
+		return desc
+	}
+
+	// Final fallback to uname
+	if out, err := exec.Command("uname", "-a").Output(); err == nil {
+		return strings.TrimSpace(string(out))
+	}
+
+	return "Linux"
+}
+
+// getDarwinVersion returns macOS version info
+func getDarwinVersion() string {
+	if out, err := exec.Command("sw_vers", "-productName").Output(); err == nil {
+		name := strings.TrimSpace(string(out))
+		if ver, err := exec.Command("sw_vers", "-productVersion").Output(); err == nil {
+			return name + " " + strings.TrimSpace(string(ver))
+		}
+		return name
+	}
+	return "macOS"
+}
+
+// getWindowsVersion returns Windows version info
+func getWindowsVersion() string {
+	if out, err := exec.Command("cmd", "/c", "ver").Output(); err == nil {
+		return strings.TrimSpace(string(out))
+	}
+	return "Windows"
 }

@@ -389,6 +389,40 @@ func (r *BenchmarkRepository) Driver() string {
 	return r.driver
 }
 
+// DatabaseVersion returns the database server version
+func (r *BenchmarkRepository) DatabaseVersion() string {
+	var version string
+	var query string
+
+	switch r.driver {
+	case "sqlite3":
+		query = "SELECT sqlite_version()"
+	case "postgres":
+		query = "SELECT version()"
+	case "mysql":
+		query = "SELECT version()"
+	default:
+		return "unknown"
+	}
+
+	err := r.db.QueryRow(query).Scan(&version)
+	if err != nil {
+		return "unknown"
+	}
+
+	// For PostgreSQL, the version string is verbose, extract just the version
+	if r.driver == "postgres" && len(version) > 0 {
+		// PostgreSQL returns something like "PostgreSQL 16.2 on x86_64-pc-linux-gnu..."
+		// Extract just the version number
+		parts := strings.Fields(version)
+		if len(parts) >= 2 {
+			return parts[0] + " " + parts[1]
+		}
+	}
+
+	return version
+}
+
 // rebindQueryBenchmark converts ? placeholders to $1, $2, etc. for PostgreSQL
 // This is a helper function for complex queries
 func rebindQueryBenchmark(query string, driver string) string {
