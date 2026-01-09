@@ -36,7 +36,29 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
-*(none currently)*
+### Test Suite Cleanup
+
+**Status:** Planning complete, implementation pending
+**Tracking:** See `docs/TEST_CLEANUP.md` for detailed checklist
+
+**Summary:** Code review identified ~130 tests with anti-patterns that should be removed or rewritten:
+
+| Category | Count | Action |
+|----------|-------|--------|
+| Struct field assignment tests | ~40 | DELETE |
+| Panic-expectation tests | ~70 | REWRITE with mocks |
+| No-assertion tests | ~10 | FIX or DELETE |
+| Language feature tests | ~10 | DELETE |
+
+**Key files to clean:**
+- [ ] `internal/handler/admin_handler_test.go` - 20+ tests
+- [ ] `internal/handler/auth_handler_test.go` - 25+ tests
+- [ ] `internal/handler/movement_handler_test.go` - 15+ tests
+- [ ] `internal/handler/pr_handler_test.go` - 15+ tests
+- [ ] `internal/handler/wod_handler_test.go` - 20+ tests
+- [ ] `pkg/email/email_test.go` - 15+ tests to delete
+
+**Estimated effort:** 4-6 hours
 
 ### CI/Lint Fixes (Deferred)
 
