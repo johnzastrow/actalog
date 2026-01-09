@@ -46,9 +46,9 @@
           v-model="template.description"
           label="Description (Optional)"
           placeholder="Add any notes or instructions for this template"
-          hint="Format text using Markdown"
+          hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
           persistent-hint
-          
+
           density="compact"
           rounded="lg"
           rows="3"

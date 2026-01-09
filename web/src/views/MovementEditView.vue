@@ -87,9 +87,9 @@
           v-model="movement.description"
           label="Description (Optional)"
           placeholder="Add any notes, form cues, or scaling options"
-          hint="Format text using Markdown"
+          hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
           persistent-hint
-          
+
           density="compact"
           rounded="lg"
           rows="3"

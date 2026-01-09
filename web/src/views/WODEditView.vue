@@ -112,9 +112,9 @@
           v-model="wod.description"
           label="Description"
           placeholder="Describe the WOD, modifications, or notes"
-          hint="Format text using Markdown"
+          hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
           persistent-hint
-          
+
           density="compact"
           rounded="lg"
           rows="3"

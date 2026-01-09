@@ -73,7 +73,8 @@
                   />
                   <v-divider />
                   <div class="text-caption text-medium-emphasis pa-2 px-4">
-                    Supports markdown: **bold**, *italic*, [links](url), lists, etc.
+                    <strong>Markdown supported:</strong> **bold**, *italic*, [link text](url), `code`,
+                    lists (use * or - for bullets, 1. 2. 3. for numbered), > for quotes, ### for headings
                   </div>
                 </v-window-item>
 
