@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -77,8 +78,18 @@ func (h *BenchmarkHandler) RunBenchmark(w http.ResponseWriter, r *http.Request) 
 	h.logger.Info("Benchmark completed: user_id=%d overall=%s duration_ms=%.2f ops=%d success=%d failed=%d records=%d",
 		userID, result.Overall, result.TotalDurationMs, result.TotalOperations, result.SuccessfulOperations, result.FailedOperations, result.RecordCount)
 
+	// Buffer the JSON response to set Content-Length header
+	// This avoids chunked transfer encoding issues with long-running requests
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(result); err != nil {
+		h.logger.Error("Failed to encode benchmark result: error=%v", err)
+		http.Error(w, "Failed to encode result", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.Write(buf.Bytes())
 }
 
 // GetBenchmarkStatus handles GET /api/benchmark/status
