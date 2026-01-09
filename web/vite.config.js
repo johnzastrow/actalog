@@ -48,14 +48,18 @@ export default defineConfig({
     vue(),
     vuetify({ autoImport: true }),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Use 'prompt' for user-controlled updates (works with UpdatePrompt.vue)
+      // User decides when to apply updates instead of auto-reload
+      registerType: 'prompt',
       includeAssets: [
         'favicon.ico',
         'robots.txt',
         'apple-touch-icon.png',
         'apple-touch-icon-120x120.png',
         'apple-touch-icon-152x152.png',
-        'apple-touch-icon-167x167.png'
+        'apple-touch-icon-167x167.png',
+        'logo.svg',
+        'logo.png'
       ],
       manifest: {
         name: 'ActaLog - CrossFit Workout Tracker',
@@ -135,12 +139,12 @@ export default defineConfig({
       },
       workbox: {
         globDirectory: 'dist',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+        // Note: skipWaiting and clientsClaim removed for prompt mode
+        // User controls when to apply updates via UpdatePrompt.vue
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -214,6 +218,36 @@ export default defineConfig({
               statuses: [0, 200]
             },
             networkTimeoutSeconds: 5
+          }
+        },
+        // Cache local fonts with long expiration
+        {
+          urlPattern: /\/fonts\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'local-fonts-cache',
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        // Cache uploaded images with StaleWhileRevalidate
+        {
+          urlPattern: /\/uploads\/.*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'uploads-cache',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
           }
         }
         ]

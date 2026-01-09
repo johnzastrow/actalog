@@ -120,9 +120,9 @@
           :items="logs"
           :loading="loading"
           :items-per-page="itemsPerPage"
-          @update:items-per-page="updateItemsPerPage"
           :items-per-page-options="[10, 20, 50, 100]"
           class="elevation-0"
+          @update:items-per-page="updateItemsPerPage"
         >
           <!-- Timestamp Column -->
           <template #item.created_at="{ item }">

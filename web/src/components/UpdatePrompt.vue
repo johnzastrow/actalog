@@ -29,7 +29,7 @@
         variant="flat"
         size="small"
         color="primary"
-        :loading="isUpdating"
+        :loading="pwaStore.isUpdating"
         @click="applyUpdate"
       >
         Update Now
@@ -39,16 +39,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { usePwaStore } from '@/stores/pwa'
 
 const pwaStore = usePwaStore()
-const isUpdating = ref(false)
 
 async function applyUpdate() {
-  isUpdating.value = true
   await pwaStore.applyUpdate()
-  // The page will reload, so we don't need to reset isUpdating
+  // The page will reload after the service worker activates
 }
 
 function dismissUpdate() {
