@@ -126,7 +126,7 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
   - [x] Develop a theme called "Sunrise" based on colors from sunset image (added to vuetify.js and theme.js)
   - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue)
-  - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others.
+  - [x] Add more helper text to form controls throughout the app - Added markdown hints to textarea fields in WODCreateView, WODEditView, MovementCreateView, MovementEditView, WorkoutTemplateEditView, AdminAnnouncementsView (v0.22.0)
 
 - [x] `[HIGH]` **User-Customizable Fonts** *(Completed v0.19.0)*
   - Self-hosted web fonts with 10 options (including accessibility fonts)
@@ -170,7 +170,7 @@ The following lint issues need to be resolved to re-enable strict linting:
 - [x] `[HIGH]` **Database Query Optimization** - Added audit_logs indexes (migration 0.17.0), optimized GetUsageStats (3→1 query), GetActiveUsersThisMonth (3→2 queries), ListByUserWithDetails N+1 fix (6N+1→5 queries)
 - [x] `[HIGH]` **Error Handling Consistency** - Centralized error handling in internal/handler/errors.go with HTTPError type and 30+ service error mappings
 - [x] `[HIGH]` **Structured Logging** - Added JSON format support to pkg/logger with InfoWithFields, ErrorWithFields, and FieldLogger chaining
-- [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
+- [x] `[HIGH]` **Comprehensive API Documentation** - OpenAPI/Swagger documentation at `/docs/swagger.json` (v0.22.0)
 - [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
 ## Future Enhancements (Post-MVP)
@@ -213,7 +213,10 @@ These features can be added after the core frontend is complete:
 - [x] `[HIGH]` **User Workout Service Tests** - Complete coverage with PR detection
 - [x] `[HIGH]` **Wodify Import Service Tests** - Duplicate handling and error recovery
 - [x] `[HIGH]` **Most Service Tests Complete** - 13 services at 100% coverage
-- [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
+- [ ] `[HIGH]` **Add handler unit tests** - Handler coverage at 72.6%
+  - [x] benchmark_handler_test.go (17 tests, 53-100% coverage per method)
+  - [x] settings_handler_test.go, admin_handler_test.go, performance_handler_test.go, data_change_log_handler_test.go, organization_handler_test.go
+  - [ ] auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
 - [ ] `[MEDIUM]` **Improve user_service coverage** - Currently 61.9%, target 80%+
 - [ ] `[MEDIUM]` **Improve import_service coverage** - Currently 60.8%, target 80%+
 - [ ] `[LOW]` **Add repository unit tests** - All repository implementations
