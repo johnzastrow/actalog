@@ -2,6 +2,7 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
+[![Version](https://img.shields.io/badge/version-0.21.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -83,6 +84,18 @@ For the full backlog and lower-priority items see [TODO.md](docs/TODO.md). For r
    # Terminal 2
    cd web
    npm run dev
+   ```
+
+1. **Run tests**
+
+   ```bash
+   # Backend tests
+   make test
+
+   # Frontend tests
+   cd web
+   npm run test:run        # Single run
+   npm run test:coverage   # With coverage report
    ```
 
 1. **Access the application**

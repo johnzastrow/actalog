@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0-beta] - 2026-01-09
+
+### Added - Frontend Testing Framework
+
+- **Vitest Testing Setup**
+  - Installed Vitest with Vue Test Utils, jsdom, and v8 coverage
+  - Created `vitest.config.js` with Vue/Vuetify support
+  - Added test setup file with jsdom mocks (ResizeObserver, matchMedia, IntersectionObserver)
+  - New npm scripts: `test`, `test:run`, `test:coverage`
+
+- **Example Tests**
+  - `src/utils/timezone.test.js` - 20 tests for timezone utilities
+  - `src/components/UserAvatar.test.js` - 11 tests for component rendering
+
+### Fixed - CI/CD and Code Quality
+
+- **Linting Issues Resolved**
+  - Fixed gofmt formatting across all Go files
+  - Updated `.golangci.yml` with relaxed thresholds for complex query builders
+  - Added `font_family` column to base database schema for all drivers
+
+### Updated - Dependencies
+
+- **Go Dependencies**
+  - `github.com/jackc/pgx/v5` 5.7.4 → 5.8.0
+  - `github.com/mattn/go-sqlite3` 1.14.32 → 1.14.33
+
+- **Frontend Dependencies**
+  - `vuetify` 3.10.11 → 3.11.6
+  - `eslint-plugin-vue` 9.33.0 → 10.6.2
+  - `vite-plugin-pwa` 0.21.2 → 1.2.0
+  - Updated dev-dependencies group (4 packages)
+
 ## [0.20.0-beta] - 2026-01-08
 
 ### Changed - UI Visual Refresh
