@@ -1659,6 +1659,92 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.22.0",
+		Description: "Add benchmark_data table for API benchmarking",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if table already exists
+			hasTable, err := checkTableExists(db, driver, "benchmark_data")
+			if err != nil {
+				return fmt.Errorf("failed to check for benchmark_data table: %w", err)
+			}
+			if hasTable {
+				fmt.Println("✓ benchmark_data table already exists, skipping creation")
+				return nil
+			}
+
+			var createSQL string
+			switch driver {
+			case "sqlite3":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					test_key TEXT NOT NULL,
+					test_value TEXT,
+					num_value REAL DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value INTEGER DEFAULT 0,
+					created_by INTEGER NOT NULL,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_benchmark_data_test_key ON benchmark_data(test_key);
+				CREATE INDEX idx_benchmark_data_created_by ON benchmark_data(created_by);
+				`
+			case "postgres":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id BIGSERIAL PRIMARY KEY,
+					test_key VARCHAR(255) NOT NULL,
+					test_value TEXT,
+					num_value DOUBLE PRECISION DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value BOOLEAN DEFAULT FALSE,
+					created_by BIGINT NOT NULL,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_benchmark_data_test_key ON benchmark_data(test_key);
+				CREATE INDEX idx_benchmark_data_created_by ON benchmark_data(created_by);
+				`
+			case "mysql":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					test_key VARCHAR(255) NOT NULL,
+					test_value TEXT,
+					num_value DOUBLE DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value BOOLEAN DEFAULT FALSE,
+					created_by BIGINT NOT NULL,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_benchmark_data_test_key (test_key),
+					INDEX idx_benchmark_data_created_by (created_by),
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createSQL); err != nil {
+				return fmt.Errorf("failed to create benchmark_data table: %w", err)
+			}
+			fmt.Println("✓ Created benchmark_data table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS benchmark_data"); err != nil {
+				return fmt.Errorf("failed to drop benchmark_data table: %w", err)
+			}
+			fmt.Println("✓ Dropped benchmark_data table")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

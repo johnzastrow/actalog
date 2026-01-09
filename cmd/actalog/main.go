@@ -222,6 +222,9 @@ func main() {
 	orgSubscriptionRepo := repository.NewSQLiteOrganizationSubscriptionRepository(db)
 	subscriptionAccessRepo := repository.NewSubscriptionAccessRepository(userSubscriptionRepo, orgSubscriptionRepo, orgRepo)
 
+	// Benchmark repository
+	benchmarkRepo := repository.NewBenchmarkRepository(db, cfg.Database.Driver)
+
 	// Initialize email service
 	var emailService *email.Service
 	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
@@ -368,6 +371,9 @@ func main() {
 		auditLogRepo,
 	)
 
+	// Benchmark service
+	benchmarkService := service.NewBenchmarkService(benchmarkRepo)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -394,6 +400,7 @@ func main() {
 	notificationLikeHandler := handler.NewNotificationLikeHandler(notificationLikeService)
 	emailHandler := handler.NewEmailHandler(emailService, emailLogService, appLogger)
 	emailLogHandler := handler.NewEmailLogHandler(emailLogService, appLogger)
+	benchmarkHandler := handler.NewBenchmarkHandler(benchmarkService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -585,6 +592,10 @@ func main() {
 			// Subscription status (user-accessible)
 			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
 
+			// Benchmark routes (authenticated)
+			r.Post("/benchmark", benchmarkHandler.RunBenchmark)
+			r.Get("/benchmark/status", benchmarkHandler.GetBenchmarkStatus)
+
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
@@ -620,6 +631,9 @@ func main() {
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
 				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)
 				r.Put("/data-cleanup/wod-record/{id}", adminHandler.UpdateWODRecord)
+
+				// Benchmark data cleanup (admin only)
+				r.Delete("/benchmark/data", benchmarkHandler.CleanupBenchmarkData)
 
 				// Audit log routes (admin only)
 				r.Get("/audit-logs", auditLogHandler.ListAuditLogs)
