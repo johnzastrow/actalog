@@ -36,7 +36,7 @@ func NewBenchmarkHandler(service *service.BenchmarkService, logger *logger.Logge
 // @Param        concurrent query bool false "Include concurrent operation tests (default: false)"
 // @Param        cleanup query bool false "Skip cleanup after run if set to false (default: true)"
 // @Param        records query int false "Number of records to generate for benchmark testing (default: 1000, max: 500000)"
-// @Success      200 {object} domain.BenchmarkSuiteResult "Benchmark results"
+// @Success      200 {object} map[string]interface{} "Benchmark results"
 // @Failure      401 {object} ErrorResponse "Unauthorized"
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /benchmark [post]

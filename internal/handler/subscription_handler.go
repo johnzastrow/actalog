@@ -89,7 +89,7 @@ func (h *SubscriptionHandler) GetMySubscriptionStatus(w http.ResponseWriter, r *
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request body CreateUserSubscriptionRequest true "Subscription details"
-// @Success      201 {object} domain.UserSubscription "Created subscription"
+// @Success      201 {object} map[string]interface{} "Created subscription"
 // @Failure      400 {object} ErrorResponse "Invalid request"
 // @Failure      403 {object} ErrorResponse "Cannot modify own subscription"
 // @Failure      409 {object} ErrorResponse "Active subscription exists"
@@ -162,7 +162,7 @@ func (h *SubscriptionHandler) CreateUserSubscription(w http.ResponseWriter, r *h
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request body CreateOrganizationSubscriptionRequest true "Subscription details"
-// @Success      201 {object} domain.OrganizationSubscription "Created subscription"
+// @Success      201 {object} map[string]interface{} "Created subscription"
 // @Failure      400 {object} ErrorResponse "Invalid request"
 // @Failure      409 {object} ErrorResponse "Active subscription exists"
 // @Failure      500 {object} ErrorResponse "Internal server error"

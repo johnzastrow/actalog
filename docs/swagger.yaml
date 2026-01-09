@@ -1,6 +1,6 @@
 basePath: /api
 definitions:
-  domain.AuditLog:
+  github_com_johnzastrow_actalog_internal_domain.AuditLog:
     properties:
       created_at:
         type: string
@@ -29,7 +29,7 @@ definitions:
         description: User who performed the action (NULL for system)
         type: integer
     type: object
-  domain.BackupMetadata:
+  github_com_johnzastrow_actalog_internal_domain.BackupMetadata:
     properties:
       created_at:
         type: string
@@ -55,7 +55,7 @@ definitions:
       version:
         type: string
     type: object
-  domain.DataChangeLog:
+  github_com_johnzastrow_actalog_internal_domain.DataChangeLog:
     properties:
       after_values:
         description: JSON of record after change (NULL for deletes)
@@ -90,7 +90,7 @@ definitions:
         description: User who made the change
         type: integer
     type: object
-  domain.Movement:
+  github_com_johnzastrow_actalog_internal_domain.Movement:
     properties:
       created_at:
         type: string
@@ -107,11 +107,11 @@ definitions:
       name:
         type: string
       type:
-        $ref: '#/definitions/domain.MovementType'
+        $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.MovementType'
       updated_at:
         type: string
     type: object
-  domain.MovementType:
+  github_com_johnzastrow_actalog_internal_domain.MovementType:
     enum:
     - weightlifting
     - bodyweight
@@ -123,113 +123,11 @@ definitions:
     - MovementTypeBodyweight
     - MovementTypeCardio
     - MovementTypeGymnastics
-  domain.Organization:
+  github_com_johnzastrow_actalog_internal_domain.UserSettings:
     properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  domain.OrganizationSubscription:
-    properties:
-      cancelled_at:
-        type: string
-      cancelled_reason:
-        type: string
-      created_at:
-        type: string
-      created_by_user_id:
-        type: integer
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_permanent_free:
+      admin_user_event_notifications:
+        description: 'Admins: receive user event emails'
         type: boolean
-      last_payment_date:
-        type: string
-      next_billing_date:
-        type: string
-      notes:
-        type: string
-      organization_id:
-        type: integer
-      organization_name:
-        description: Joined from organizations table
-        type: string
-      start_date:
-        type: string
-      status:
-        $ref: '#/definitions/domain.SubscriptionStatus'
-      subscription_type:
-        $ref: '#/definitions/domain.SubscriptionType'
-      updated_at:
-        type: string
-    type: object
-  domain.SubscriptionStatus:
-    enum:
-    - active
-    - expired
-    - cancelled
-    type: string
-    x-enum-varnames:
-    - SubscriptionStatusActive
-    - SubscriptionStatusExpired
-    - SubscriptionStatusCancelled
-  domain.SubscriptionType:
-    enum:
-    - free
-    - monthly
-    - annual
-    type: string
-    x-enum-varnames:
-    - SubscriptionTypeFree
-    - SubscriptionTypeMonthly
-    - SubscriptionTypeAnnual
-  domain.User:
-    properties:
-      account_disabled:
-        description: Expose so client knows
-        type: boolean
-      birthday:
-        type: string
-      created_at:
-        type: string
-      disable_reason:
-        description: Reason for account disable
-        type: string
-      disabled_at:
-        type: string
-      disabled_by_user_id:
-        type: integer
-      email:
-        type: string
-      email_verified:
-        type: boolean
-      email_verified_at:
-        type: string
-      id:
-        type: integer
-      last_login_at:
-        type: string
-      name:
-        type: string
-      profile_image:
-        type: string
-      role:
-        description: user, admin
-        type: string
-      updated_at:
-        type: string
-    type: object
-  domain.UserSettings:
-    properties:
       created_at:
         type: string
       data_export_format:
@@ -237,6 +135,10 @@ definitions:
         type: string
       distance_unit:
         description: miles, km
+        type: string
+      font_family:
+        description: system, inter, roboto, lato, firasans, lexend, opendyslexic,
+          atkinson, sourceserif, jetbrainsmono
         type: string
       id:
         type: integer
@@ -246,6 +148,9 @@ definitions:
       theme:
         description: light, dark
         type: string
+      timezone:
+        description: IANA timezone identifier
+        type: string
       updated_at:
         type: string
       user_id:
@@ -254,46 +159,7 @@ definitions:
         description: lbs, kg
         type: string
     type: object
-  domain.UserSubscription:
-    properties:
-      cancelled_at:
-        type: string
-      cancelled_reason:
-        type: string
-      created_at:
-        type: string
-      created_by_user_id:
-        type: integer
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_permanent_free:
-        type: boolean
-      last_payment_date:
-        type: string
-      next_billing_date:
-        type: string
-      notes:
-        type: string
-      start_date:
-        type: string
-      status:
-        $ref: '#/definitions/domain.SubscriptionStatus'
-      subscription_type:
-        $ref: '#/definitions/domain.SubscriptionType'
-      updated_at:
-        type: string
-      user_email:
-        description: Joined from users table
-        type: string
-      user_id:
-        type: integer
-      user_name:
-        description: Joined from users table
-        type: string
-    type: object
-  domain.UserWorkoutMovement:
+  github_com_johnzastrow_actalog_internal_domain.UserWorkoutMovement:
     properties:
       created_at:
         type: string
@@ -307,7 +173,7 @@ definitions:
         type: boolean
       movement:
         allOf:
-        - $ref: '#/definitions/domain.Movement'
+        - $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         description: Related data (loaded via joins)
       movement_id:
         description: References movements table
@@ -342,7 +208,7 @@ definitions:
         description: From user_workouts.workout_date
         type: string
     type: object
-  domain.UserWorkoutWOD:
+  github_com_johnzastrow_actalog_internal_domain.UserWorkoutWOD:
     properties:
       created_at:
         type: string
@@ -381,7 +247,7 @@ definitions:
         type: number
       wod:
         allOf:
-        - $ref: '#/definitions/domain.WOD'
+        - $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WOD'
         description: Related data (loaded via joins)
       wod_id:
         description: References wods table
@@ -399,7 +265,7 @@ definitions:
         description: From user_workouts.workout_date
         type: string
     type: object
-  domain.WOD:
+  github_com_johnzastrow_actalog_internal_domain.WOD:
     properties:
       created_at:
         type: string
@@ -437,7 +303,7 @@ definitions:
         description: Optional video or reference URL
         type: string
     type: object
-  domain.Workout:
+  github_com_johnzastrow_actalog_internal_domain.Workout:
     properties:
       created_at:
         type: string
@@ -450,7 +316,7 @@ definitions:
         description: Related data (not stored directly in workout table, loaded via
           joins)
         items:
-          $ref: '#/definitions/domain.WorkoutMovement'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutMovement'
         type: array
       name:
         description: Template name (e.g., "Monday Strength", "Hero WOD")
@@ -463,10 +329,10 @@ definitions:
       wods:
         description: WODs in this template
         items:
-          $ref: '#/definitions/domain.WorkoutWODWithDetails'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails'
         type: array
     type: object
-  domain.WorkoutMovement:
+  github_com_johnzastrow_actalog_internal_domain.WorkoutMovement:
     properties:
       created_at:
         type: string
@@ -483,7 +349,7 @@ definitions:
         type: boolean
       movement:
         allOf:
-        - $ref: '#/definitions/domain.Movement'
+        - $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         description: Related data
       movement_id:
         description: References movements table
@@ -509,7 +375,7 @@ definitions:
         description: References workout template
         type: integer
     type: object
-  domain.WorkoutWODWithDetails:
+  github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails:
     properties:
       created_at:
         type: string
@@ -546,7 +412,7 @@ definitions:
         description: References workout template
         type: integer
     type: object
-  handler.AuthResponse:
+  internal_handler.AuthResponse:
     description: Authentication response containing JWT token and user info
     properties:
       refresh_token:
@@ -557,14 +423,14 @@ definitions:
         type: string
       user: {}
     type: object
-  handler.CancelSubscriptionRequest:
+  internal_handler.CancelSubscriptionRequest:
     description: Request to cancel a subscription
     properties:
       reason:
         example: User requested cancellation
         type: string
     type: object
-  handler.ChangePasswordRequest:
+  internal_handler.ChangePasswordRequest:
     description: Password change request
     properties:
       new_password:
@@ -574,12 +440,12 @@ definitions:
         example: currentPassword123
         type: string
     type: object
-  handler.CopyToStandardRequest:
+  internal_handler.CopyToStandardRequest:
     properties:
       new_name:
         type: string
     type: object
-  handler.CreateAnnouncementRequest:
+  internal_handler.CreateAnnouncementRequest:
     description: Admin announcement request
     properties:
       message:
@@ -600,7 +466,7 @@ definitions:
         example: System Update
         type: string
     type: object
-  handler.CreateMovementRequest:
+  internal_handler.CreateMovementRequest:
     description: Request to create a new custom movement
     properties:
       description:
@@ -613,7 +479,7 @@ definitions:
         example: strength
         type: string
     type: object
-  handler.CreateOrganizationSubscriptionRequest:
+  internal_handler.CreateOrganizationSubscriptionRequest:
     description: Request to create an organization subscription (admin only)
     properties:
       is_permanent_free:
@@ -629,7 +495,7 @@ definitions:
         example: annual
         type: string
     type: object
-  handler.CreateUserSubscriptionRequest:
+  internal_handler.CreateUserSubscriptionRequest:
     description: Request to create a user subscription (admin only)
     properties:
       is_permanent_free:
@@ -646,7 +512,7 @@ definitions:
         example: 1
         type: integer
     type: object
-  handler.CreateWODRequest:
+  internal_handler.CreateWODRequest:
     description: Request to create a new WOD
     properties:
       description:
@@ -672,7 +538,7 @@ definitions:
       url:
         type: string
     type: object
-  handler.ErrorResponse:
+  internal_handler.ErrorResponse:
     description: Error response returned when a request fails
     properties:
       error:
@@ -682,20 +548,20 @@ definitions:
         example: Invalid credentials
         type: string
     type: object
-  handler.ForgotPasswordRequest:
+  internal_handler.ForgotPasswordRequest:
     description: Request to initiate password reset
     properties:
       email:
         example: john@example.com
         type: string
     type: object
-  handler.LogWorkoutRequest:
+  internal_handler.LogWorkoutRequest:
     description: Request to log a workout (either from template or ad-hoc)
     properties:
       movements:
         description: Performance data
         items:
-          $ref: '#/definitions/handler.MovementPerformance'
+          $ref: '#/definitions/internal_handler.MovementPerformance'
         type: array
       notes:
         example: Felt strong today
@@ -706,7 +572,7 @@ definitions:
         type: integer
       wods:
         items:
-          $ref: '#/definitions/handler.WODPerformance'
+          $ref: '#/definitions/internal_handler.WODPerformance'
         type: array
       workout_date:
         description: YYYY-MM-DD format
@@ -724,7 +590,7 @@ definitions:
         example: AMRAP
         type: string
     type: object
-  handler.LoginRequest:
+  internal_handler.LoginRequest:
     description: User login request body
     properties:
       email:
@@ -737,7 +603,7 @@ definitions:
         example: true
         type: boolean
     type: object
-  handler.MarkUserSubscriptionAsPaidRequest:
+  internal_handler.MarkUserSubscriptionAsPaidRequest:
     description: Request to mark a subscription as paid
     properties:
       duration_days:
@@ -749,22 +615,22 @@ definitions:
         example: "2024-01-15"
         type: string
     type: object
-  handler.MessageResponse:
+  internal_handler.MessageResponse:
     description: Generic message response
     properties:
       message:
         example: Operation completed successfully
         type: string
     type: object
-  handler.MovementListResponse:
+  internal_handler.MovementListResponse:
     description: List of movements
     properties:
       movements:
         items:
-          $ref: '#/definitions/domain.Movement'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         type: array
     type: object
-  handler.MovementPerformance:
+  internal_handler.MovementPerformance:
     description: Performance data recorded for a movement in a workout
     properties:
       distance:
@@ -793,19 +659,19 @@ definitions:
         example: 135.5
         type: number
     type: object
-  handler.ProfileResponse:
+  internal_handler.ProfileResponse:
     description: User profile data
     properties:
       user: {}
     type: object
-  handler.RefreshTokenRequest:
+  internal_handler.RefreshTokenRequest:
     description: Request to refresh access token
     properties:
       refresh_token:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  handler.RegisterRequest:
+  internal_handler.RegisterRequest:
     description: User registration request body
     properties:
       email:
@@ -818,14 +684,14 @@ definitions:
         example: securePassword123
         type: string
     type: object
-  handler.ResendVerificationRequest:
+  internal_handler.ResendVerificationRequest:
     description: Request to resend verification email
     properties:
       email:
         example: john@example.com
         type: string
     type: object
-  handler.ResetPasswordRequest:
+  internal_handler.ResetPasswordRequest:
     description: Request to complete password reset with token
     properties:
       new_password:
@@ -835,26 +701,26 @@ definitions:
         example: abc123def456
         type: string
     type: object
-  handler.RevokeTokenRequest:
+  internal_handler.RevokeTokenRequest:
     description: Request to revoke a refresh token (logout)
     properties:
       refresh_token:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  handler.SetUserSubscriptionPermanentRequest:
+  internal_handler.SetUserSubscriptionPermanentRequest:
     description: Request to set subscription permanent status
     properties:
       is_permanent:
         example: true
         type: boolean
     type: object
-  handler.UpdateLoggedWorkoutRequest:
+  internal_handler.UpdateLoggedWorkoutRequest:
     description: Request to update an existing logged workout
     properties:
       movements:
         items:
-          $ref: '#/definitions/handler.MovementPerformance'
+          $ref: '#/definitions/internal_handler.MovementPerformance'
         type: array
       notes:
         example: Updated notes
@@ -864,7 +730,7 @@ definitions:
         type: integer
       wods:
         items:
-          $ref: '#/definitions/handler.WODPerformance'
+          $ref: '#/definitions/internal_handler.WODPerformance'
         type: array
       workout_name:
         description: For ad-hoc workouts
@@ -874,7 +740,7 @@ definitions:
         example: EMOM
         type: string
     type: object
-  handler.UpdateProfileRequest:
+  internal_handler.UpdateProfileRequest:
     description: User profile update request
     properties:
       birthday:
@@ -888,7 +754,7 @@ definitions:
         example: John Doe
         type: string
     type: object
-  handler.UpdateWODRecordRequest:
+  internal_handler.UpdateWODRecordRequest:
     properties:
       notes:
         type: string
@@ -901,7 +767,7 @@ definitions:
       weight:
         type: number
     type: object
-  handler.UpdateWODRequest:
+  internal_handler.UpdateWODRequest:
     description: Request to update an existing WOD
     properties:
       description:
@@ -927,7 +793,7 @@ definitions:
       url:
         type: string
     type: object
-  handler.UserWorkoutResponse:
+  internal_handler.UserWorkoutResponse:
     description: Complete logged workout with performance data
     properties:
       created_at:
@@ -939,7 +805,7 @@ definitions:
       movements:
         description: Template movements
         items:
-          $ref: '#/definitions/domain.WorkoutMovement'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutMovement'
         type: array
       notes:
         example: Felt great
@@ -947,12 +813,12 @@ definitions:
       performance_movements:
         description: Actual performance
         items:
-          $ref: '#/definitions/domain.UserWorkoutMovement'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.UserWorkoutMovement'
         type: array
       performance_wods:
         description: Actual performance
         items:
-          $ref: '#/definitions/domain.UserWorkoutWOD'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.UserWorkoutWOD'
         type: array
       total_time:
         example: 1200
@@ -966,7 +832,7 @@ definitions:
       wods:
         description: Template WODs
         items:
-          $ref: '#/definitions/domain.WorkoutWODWithDetails'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails'
         type: array
       workout_date:
         example: "2024-01-15"
@@ -985,15 +851,15 @@ definitions:
         example: For Time
         type: string
     type: object
-  handler.WODListResponse:
+  internal_handler.WODListResponse:
     description: List of WODs
     properties:
       wods:
         items:
-          $ref: '#/definitions/handler.WODResponse'
+          $ref: '#/definitions/internal_handler.WODResponse'
         type: array
     type: object
-  handler.WODPerformance:
+  internal_handler.WODPerformance:
     description: Performance data recorded for a WOD in a workout
     properties:
       notes:
@@ -1030,7 +896,7 @@ definitions:
         example: 1
         type: integer
     type: object
-  handler.WODResponse:
+  internal_handler.WODResponse:
     description: WOD details response
     properties:
       created_at:
@@ -1084,7 +950,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: https://actalog.com/terms/
   title: ActaLog API
-  version: 0.17.0
+  version: 0.22.0
 paths:
   /admin/audit-logs/cleanup:
     post:
@@ -1109,15 +975,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Cleanup old audit logs (Admin)
@@ -1139,7 +1005,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List backups (Admin)
@@ -1160,11 +1026,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create backup (Admin)
@@ -1192,15 +1058,15 @@ paths:
         "400":
           description: Invalid filename
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete backup (Admin)
@@ -1226,19 +1092,19 @@ paths:
         "400":
           description: Invalid filename
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Backup not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Download backup (Admin)
@@ -1261,15 +1127,15 @@ paths:
         "200":
           description: Backup metadata
           schema:
-            $ref: '#/definitions/domain.BackupMetadata'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.BackupMetadata'
         "400":
           description: Invalid filename
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Backup not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get backup metadata (Admin)
@@ -1303,15 +1169,15 @@ paths:
         "400":
           description: Invalid request or filename
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Restore backup (Admin)
@@ -1339,20 +1205,51 @@ paths:
         "400":
           description: Invalid file or format
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Upload backup (Admin)
       tags:
       - backups
+  /admin/benchmark/data:
+    delete:
+      consumes:
+      - application/json
+      description: Delete all benchmark data from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cleanup result
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cleanup all benchmark data (Admin)
+      tags:
+      - benchmark
   /admin/data-change-logs/cleanup:
     post:
       consumes:
@@ -1376,15 +1273,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Cleanup old data change logs (Admin)
@@ -1402,26 +1299,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateAnnouncementRequest'
+          $ref: '#/definitions/internal_handler.CreateAnnouncementRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Announcement created
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Admin access required
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create announcement (Admin)
@@ -1452,7 +1349,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List organizations (Admin)
@@ -1475,19 +1372,20 @@ paths:
         "201":
           description: Created organization
           schema:
-            $ref: '#/definitions/domain.Organization'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Organization name exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create organization (Admin)
@@ -1510,23 +1408,23 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid organization ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Organization has assigned users
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete organization (Admin)
@@ -1548,19 +1446,20 @@ paths:
         "200":
           description: Organization details
           schema:
-            $ref: '#/definitions/domain.Organization'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid organization ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get organization (Admin)
@@ -1588,23 +1487,24 @@ paths:
         "200":
           description: Updated organization
           schema:
-            $ref: '#/definitions/domain.Organization'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Organization name exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update organization (Admin)
@@ -1632,15 +1532,15 @@ paths:
         "400":
           description: Invalid organization ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get organization users (Admin)
@@ -1662,7 +1562,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List all organization subscriptions (Admin)
@@ -1678,26 +1578,27 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateOrganizationSubscriptionRequest'
+          $ref: '#/definitions/internal_handler.CreateOrganizationSubscriptionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created subscription
           schema:
-            $ref: '#/definitions/domain.OrganizationSubscription'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Active subscription exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create organization subscription (Admin)
@@ -1719,26 +1620,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CancelSubscriptionRequest'
+          $ref: '#/definitions/internal_handler.CancelSubscriptionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request or missing reason
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Cancel organization subscription (Admin)
@@ -1760,26 +1661,26 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/handler.MarkUserSubscriptionAsPaidRequest'
+          $ref: '#/definitions/internal_handler.MarkUserSubscriptionAsPaidRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Cannot mark free subscription as paid
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Mark organization subscription as paid (Admin)
@@ -1801,26 +1702,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.SetUserSubscriptionPermanentRequest'
+          $ref: '#/definitions/internal_handler.SetUserSubscriptionPermanentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Set organization subscription permanent status (Admin)
@@ -1848,14 +1749,64 @@ paths:
         "400":
           description: Invalid organization ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get organization subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/expired:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of expired or overdue organization subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expired subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expired organization subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/expiring:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of organization subscriptions expiring within the specified
+        number of days
+      parameters:
+      - description: 'Number of days to look ahead (default: 30)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expiring subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expiring organization subscriptions (Admin)
       tags:
       - admin
   /admin/subscriptions/users:
@@ -1874,7 +1825,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List all user subscriptions (Admin)
@@ -1890,30 +1841,31 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateUserSubscriptionRequest'
+          $ref: '#/definitions/internal_handler.CreateUserSubscriptionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created subscription
           schema:
-            $ref: '#/definitions/domain.UserSubscription'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot modify own subscription
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Active subscription exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create user subscription (Admin)
@@ -1935,30 +1887,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CancelSubscriptionRequest'
+          $ref: '#/definitions/internal_handler.CancelSubscriptionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request or missing reason
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot modify own subscription
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Cancel user subscription (Admin)
@@ -1979,30 +1931,30 @@ paths:
         in: body
         name: request
         schema:
-          $ref: '#/definitions/handler.MarkUserSubscriptionAsPaidRequest'
+          $ref: '#/definitions/internal_handler.MarkUserSubscriptionAsPaidRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Cannot mark free subscription as paid
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot modify own subscription
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Mark user subscription as paid (Admin)
@@ -2024,30 +1976,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.SetUserSubscriptionPermanentRequest'
+          $ref: '#/definitions/internal_handler.SetUserSubscriptionPermanentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot modify own subscription
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Subscription not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Set user subscription permanent status (Admin)
@@ -2075,14 +2027,64 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/expired:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of expired or overdue user subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expired subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expired user subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/expiring:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of user subscriptions expiring within the specified
+        number of days
+      parameters:
+      - description: 'Number of days to look ahead (default: 30)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expiring subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expiring user subscriptions (Admin)
       tags:
       - admin
   /admin/user-created/movements:
@@ -2122,7 +2124,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List user-created movements (Admin)
@@ -2144,30 +2146,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CopyToStandardRequest'
+          $ref: '#/definitions/internal_handler.CopyToStandardRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created standard movement
           schema:
-            $ref: '#/definitions/domain.Movement'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Movement not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Name already exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Copy movement to standard (Admin)
@@ -2210,7 +2212,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List user-created WODs (Admin)
@@ -2232,30 +2234,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CopyToStandardRequest'
+          $ref: '#/definitions/internal_handler.CopyToStandardRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created standard WOD
           schema:
-            $ref: '#/definitions/domain.WOD'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WOD'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: WOD not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Name already exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Copy WOD to standard (Admin)
@@ -2294,7 +2296,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List user-created workouts (Admin)
@@ -2316,30 +2318,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CopyToStandardRequest'
+          $ref: '#/definitions/internal_handler.CopyToStandardRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created standard workout
           schema:
-            $ref: '#/definitions/domain.Workout'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Workout'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Workout not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Name already exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Copy workout to standard (Admin)
@@ -2370,7 +2372,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List users (Admin)
@@ -2393,11 +2395,11 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID or cannot delete
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete user (Admin)
@@ -2419,15 +2421,16 @@ paths:
         "200":
           description: User details
           schema:
-            $ref: '#/definitions/domain.User'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user details (Admin)
@@ -2455,15 +2458,15 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID or cannot disable
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Disable user account (Admin)
@@ -2486,15 +2489,15 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Enable user account (Admin)
@@ -2523,19 +2526,19 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User or organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Assign user to organization (Admin)
@@ -2563,19 +2566,19 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User or organization not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Remove user from organization (Admin)
@@ -2603,15 +2606,15 @@ paths:
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user organizations (Admin)
@@ -2640,15 +2643,15 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID or role
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Change user role (Admin)
@@ -2677,15 +2680,15 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Toggle email verification (Admin)
@@ -2708,15 +2711,15 @@ paths:
         "200":
           description: Success message
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid user ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Unlock user account (Admin)
@@ -2738,7 +2741,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Detect WOD score type mismatches (Admin)
@@ -2760,7 +2763,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Fix WOD score type mismatches (Admin)
@@ -2782,7 +2785,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.UpdateWODRecordRequest'
+          $ref: '#/definitions/internal_handler.UpdateWODRecordRequest'
       produces:
       - application/json
       responses:
@@ -2794,15 +2797,15 @@ paths:
         "400":
           description: Invalid request or score type mismatch
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Record not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update WOD record (Admin)
@@ -2857,15 +2860,15 @@ paths:
         "400":
           description: Invalid parameters
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List audit logs (Admin)
@@ -2888,19 +2891,19 @@ paths:
         "200":
           description: Audit log entry
           schema:
-            $ref: '#/definitions/domain.AuditLog'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.AuditLog'
         "400":
           description: Invalid ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Audit log not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get audit log entry (Admin)
@@ -2918,22 +2921,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.ForgotPasswordRequest'
+          $ref: '#/definitions/internal_handler.ForgotPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Reset email sent if address exists
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to process request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Request password reset
       tags:
       - auth
@@ -2949,26 +2952,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.LoginRequest'
+          $ref: '#/definitions/internal_handler.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Successfully authenticated
           schema:
-            $ref: '#/definitions/handler.AuthResponse'
+            $ref: '#/definitions/internal_handler.AuthResponse'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Invalid email or password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: User login
       tags:
       - auth
@@ -2983,26 +2986,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.RefreshTokenRequest'
+          $ref: '#/definitions/internal_handler.RefreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: New access token
           schema:
-            $ref: '#/definitions/handler.AuthResponse'
+            $ref: '#/definitions/internal_handler.AuthResponse'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Invalid or expired refresh token
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to refresh token
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Refresh access token
       tags:
       - auth
@@ -3017,26 +3020,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.RegisterRequest'
+          $ref: '#/definitions/internal_handler.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Successfully registered
           schema:
-            $ref: '#/definitions/handler.AuthResponse'
+            $ref: '#/definitions/internal_handler.AuthResponse'
         "400":
           description: Invalid request or validation error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Registration is closed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Email already exists
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -3051,22 +3054,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.ResendVerificationRequest'
+          $ref: '#/definitions/internal_handler.ResendVerificationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Verification email sent if applicable
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request or already verified
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to resend verification email
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Resend verification email
       tags:
       - auth
@@ -3081,22 +3084,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.ResetPasswordRequest'
+          $ref: '#/definitions/internal_handler.ResetPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Password reset successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid token, expired token, or weak password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to reset password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Reset password
       tags:
       - auth
@@ -3111,26 +3114,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.RevokeTokenRequest'
+          $ref: '#/definitions/internal_handler.RevokeTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Token revoked successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Refresh token not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to revoke token
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Revoke refresh token
       tags:
       - auth
@@ -3151,18 +3154,85 @@ paths:
         "200":
           description: Email verified successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid or expired token, or already verified
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to verify email
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Verify email address
       tags:
       - auth
+  /benchmark:
+    post:
+      consumes:
+      - application/json
+      description: Execute the full benchmark suite to test database, serialization,
+        and business logic performance
+      parameters:
+      - description: 'Include concurrent operation tests (default: false)'
+        in: query
+        name: concurrent
+        type: boolean
+      - description: 'Skip cleanup after run if set to false (default: true)'
+        in: query
+        name: cleanup
+        type: boolean
+      - description: 'Number of records to generate for benchmark testing (default:
+          1000, max: 500000)'
+        in: query
+        name: records
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Benchmark results
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Run benchmark suite
+      tags:
+      - benchmark
+  /benchmark/status:
+    get:
+      consumes:
+      - application/json
+      description: Quick status check for the benchmark system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Benchmark status
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get benchmark status
+      tags:
+      - benchmark
   /data-change-logs:
     get:
       consumes:
@@ -3216,15 +3286,15 @@ paths:
         "400":
           description: Invalid parameters
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List data change logs (Admin)
@@ -3247,19 +3317,19 @@ paths:
         "200":
           description: Data change log entry
           schema:
-            $ref: '#/definitions/domain.DataChangeLog'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.DataChangeLog'
         "400":
           description: Invalid ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Log not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get data change log (Admin)
@@ -3300,15 +3370,15 @@ paths:
         "400":
           description: Invalid entity_id
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get entity history (Admin)
@@ -3343,11 +3413,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Export movements
@@ -3383,15 +3453,15 @@ paths:
         "400":
           description: Invalid date format
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Export user workouts
@@ -3426,11 +3496,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Export WODs
@@ -3466,15 +3536,15 @@ paths:
         "400":
           description: Invalid file
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Import failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Confirm movement import
@@ -3502,11 +3572,11 @@ paths:
         "400":
           description: Invalid file or validation failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Preview movement import
@@ -3542,15 +3612,15 @@ paths:
         "400":
           description: Invalid file
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Import failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Confirm user workout import
@@ -3578,11 +3648,11 @@ paths:
         "400":
           description: Invalid file or validation failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Preview user workout import
@@ -3618,15 +3688,15 @@ paths:
         "400":
           description: Invalid file
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Import failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Confirm Wodify import
@@ -3654,15 +3724,15 @@ paths:
         "400":
           description: Invalid file
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Preview failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Preview Wodify import
@@ -3698,15 +3768,15 @@ paths:
         "400":
           description: Invalid file
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Import failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Confirm WOD import
@@ -3734,11 +3804,11 @@ paths:
         "400":
           description: Invalid file or validation failed
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Preview WOD import
@@ -3755,11 +3825,11 @@ paths:
         "200":
           description: List of all movements
           schema:
-            $ref: '#/definitions/handler.MovementListResponse'
+            $ref: '#/definitions/internal_handler.MovementListResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: List all movements
       tags:
       - movements
@@ -3773,26 +3843,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateMovementRequest'
+          $ref: '#/definitions/internal_handler.CreateMovementRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created movement
           schema:
-            $ref: '#/definitions/domain.Movement'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a custom movement
@@ -3815,23 +3885,23 @@ paths:
         "200":
           description: Movement deleted successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid movement ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot delete standard movement
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a movement
@@ -3853,19 +3923,19 @@ paths:
         "200":
           description: Movement details
           schema:
-            $ref: '#/definitions/domain.Movement'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         "400":
           description: Invalid movement ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Movement not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Get movement by ID
       tags:
       - movements
@@ -3884,30 +3954,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateMovementRequest'
+          $ref: '#/definitions/internal_handler.CreateMovementRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Updated movement
           schema:
-            $ref: '#/definitions/domain.Movement'
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Cannot modify standard movement
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a movement
@@ -3934,15 +4004,15 @@ paths:
         "200":
           description: Matching movements
           schema:
-            $ref: '#/definitions/handler.MovementListResponse'
+            $ref: '#/definitions/internal_handler.MovementListResponse'
         "400":
           description: Missing query parameter
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Search movements
       tags:
       - movements
@@ -3957,11 +4027,11 @@ paths:
         "200":
           description: List of standard movements
           schema:
-            $ref: '#/definitions/handler.MovementListResponse'
+            $ref: '#/definitions/internal_handler.MovementListResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: List standard movements
       tags:
       - movements
@@ -3990,11 +4060,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List notifications
@@ -4017,19 +4087,19 @@ paths:
         "200":
           description: Notification deleted
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid notification ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete notification
@@ -4054,15 +4124,15 @@ paths:
         "400":
           description: Invalid notification ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Unlike notification
@@ -4084,23 +4154,23 @@ paths:
         "201":
           description: Notification liked
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid notification ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Already liked
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Like notification
@@ -4128,11 +4198,11 @@ paths:
         "400":
           description: Invalid notification ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get notification likes
@@ -4155,19 +4225,19 @@ paths:
         "200":
           description: Marked as read
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid notification ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Mark notification as read
@@ -4189,11 +4259,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get unread notification count
@@ -4210,15 +4280,15 @@ paths:
         "200":
           description: All marked as read
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Mark all notifications as read
@@ -4249,11 +4319,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List unread notifications
@@ -4282,15 +4352,15 @@ paths:
         "400":
           description: Invalid movement ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get movement performance history
@@ -4322,15 +4392,15 @@ paths:
         "400":
           description: Missing search query
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Unified search for movements and WODs
@@ -4358,15 +4428,15 @@ paths:
         "400":
           description: Invalid WOD ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get WOD performance history
@@ -4393,11 +4463,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get all personal records
@@ -4424,11 +4494,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get movements with PRs
@@ -4456,19 +4526,19 @@ paths:
         "400":
           description: Missing or invalid movement ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Movement not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Toggle movement PR flag
@@ -4490,11 +4560,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List active sessions
@@ -4517,15 +4587,15 @@ paths:
         "200":
           description: Session revoked
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid session ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Revoke session
@@ -4548,15 +4618,15 @@ paths:
         "200":
           description: All sessions revoked
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Revoke all sessions
@@ -4573,15 +4643,16 @@ paths:
         "200":
           description: User settings
           schema:
-            $ref: '#/definitions/domain.UserSettings'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user settings
@@ -4597,26 +4668,27 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.UserSettings'
+          $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.UserSettings'
       produces:
       - application/json
       responses:
         "200":
           description: Updated settings
           schema:
-            $ref: '#/definitions/domain.UserSettings'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user settings
@@ -4639,11 +4711,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get active users this month
@@ -4665,11 +4737,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get my subscription status
@@ -4700,7 +4772,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List standard workout templates
@@ -4728,15 +4800,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create workout template
@@ -4761,15 +4833,15 @@ paths:
         "400":
           description: Invalid template ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Not the template owner
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete workout template
@@ -4796,11 +4868,11 @@ paths:
         "400":
           description: Invalid template ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Template not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get workout template
@@ -4833,15 +4905,15 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update workout template
@@ -4858,15 +4930,15 @@ paths:
         "200":
           description: Avatar deleted successfully
           schema:
-            $ref: '#/definitions/handler.ProfileResponse'
+            $ref: '#/definitions/internal_handler.ProfileResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to delete avatar
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete avatar image
@@ -4888,19 +4960,19 @@ paths:
         "200":
           description: Avatar uploaded successfully
           schema:
-            $ref: '#/definitions/handler.ProfileResponse'
+            $ref: '#/definitions/internal_handler.ProfileResponse'
         "400":
           description: No file provided, file too large, or invalid file type
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to save avatar
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Upload avatar image
@@ -4917,26 +4989,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.ChangePasswordRequest'
+          $ref: '#/definitions/internal_handler.ChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Password changed successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid request or weak password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized or incorrect current password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Failed to change password
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Change password
@@ -4967,11 +5039,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get my audit logs
@@ -4988,19 +5060,19 @@ paths:
         "200":
           description: User profile
           schema:
-            $ref: '#/definitions/handler.ProfileResponse'
+            $ref: '#/definitions/internal_handler.ProfileResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -5016,34 +5088,34 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.UpdateProfileRequest'
+          $ref: '#/definitions/internal_handler.UpdateProfileRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Profile updated successfully
           schema:
-            $ref: '#/definitions/handler.ProfileResponse'
+            $ref: '#/definitions/internal_handler.ProfileResponse'
         "400":
           description: Invalid request body or birthday format
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "409":
           description: Email already in use
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user profile
@@ -5073,11 +5145,11 @@ paths:
         "200":
           description: List of WODs
           schema:
-            $ref: '#/definitions/handler.WODListResponse'
+            $ref: '#/definitions/internal_handler.WODListResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List all WODs
@@ -5093,26 +5165,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateWODRequest'
+          $ref: '#/definitions/internal_handler.CreateWODRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created WOD
           schema:
-            $ref: '#/definitions/handler.WODResponse'
+            $ref: '#/definitions/internal_handler.WODResponse'
         "400":
           description: Invalid request body or missing name
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a custom WOD
@@ -5135,23 +5207,23 @@ paths:
         "200":
           description: WOD deleted successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid WOD ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden - cannot delete this WOD
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a WOD
@@ -5173,15 +5245,15 @@ paths:
         "200":
           description: WOD details
           schema:
-            $ref: '#/definitions/handler.WODResponse'
+            $ref: '#/definitions/internal_handler.WODResponse'
         "400":
           description: Invalid WOD ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Get WOD by ID
       tags:
       - wods
@@ -5201,30 +5273,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.UpdateWODRequest'
+          $ref: '#/definitions/internal_handler.UpdateWODRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Updated WOD
           schema:
-            $ref: '#/definitions/handler.WODResponse'
+            $ref: '#/definitions/internal_handler.WODResponse'
         "400":
           description: Invalid request body
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden - not your WOD
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a WOD
@@ -5250,15 +5322,15 @@ paths:
         "200":
           description: List of user's custom WODs
           schema:
-            $ref: '#/definitions/handler.WODListResponse'
+            $ref: '#/definitions/internal_handler.WODListResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List my custom WODs
@@ -5281,15 +5353,15 @@ paths:
         "200":
           description: Matching WODs
           schema:
-            $ref: '#/definitions/handler.WODListResponse'
+            $ref: '#/definitions/internal_handler.WODListResponse'
         "400":
           description: Missing search query
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: Search WODs
       tags:
       - wods
@@ -5313,11 +5385,11 @@ paths:
         "200":
           description: List of standard WODs
           schema:
-            $ref: '#/definitions/handler.WODListResponse'
+            $ref: '#/definitions/internal_handler.WODListResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: List standard WODs
       tags:
       - wods
@@ -5355,15 +5427,15 @@ paths:
         "400":
           description: Invalid date format
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List logged workouts
@@ -5380,26 +5452,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.LogWorkoutRequest'
+          $ref: '#/definitions/internal_handler.LogWorkoutRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Workout logged successfully
           schema:
-            $ref: '#/definitions/handler.UserWorkoutResponse'
+            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
         "400":
           description: Invalid request body or missing required fields
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Log a workout
@@ -5422,23 +5494,23 @@ paths:
         "200":
           description: Workout deleted successfully
           schema:
-            $ref: '#/definitions/handler.MessageResponse'
+            $ref: '#/definitions/internal_handler.MessageResponse'
         "400":
           description: Invalid workout ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden - not your workout
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a logged workout
@@ -5460,19 +5532,19 @@ paths:
         "200":
           description: Logged workout details
           schema:
-            $ref: '#/definitions/handler.UserWorkoutResponse'
+            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
         "400":
           description: Invalid workout ID
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get a logged workout
@@ -5493,34 +5565,34 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.UpdateLoggedWorkoutRequest'
+          $ref: '#/definitions/internal_handler.UpdateLoggedWorkoutRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Updated workout details
           schema:
-            $ref: '#/definitions/handler.UserWorkoutResponse'
+            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "403":
           description: Forbidden - not your workout
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "404":
           description: Workout not found
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a logged workout
@@ -5551,11 +5623,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List my workout templates
@@ -5582,11 +5654,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get personal records
@@ -5609,11 +5681,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Retroactively flag PRs
@@ -5646,15 +5718,15 @@ paths:
         "400":
           description: Invalid year or month
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
+            $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get monthly workout stats

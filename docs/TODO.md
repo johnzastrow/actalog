@@ -109,7 +109,7 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] View subscription history (SubscriptionDetailDialog.vue)
   - [x] List expiring subscriptions API (backend complete v0.19.0)
   - [x] List overdue/expired subscriptions API (backend complete v0.19.0)
-  - [ ] Frontend UI for expiring/expired subscription lists
+  - [x] Frontend UI for expiring/expired subscription lists (AdminSubscriptionsView.vue tabs)
 
 - [x] `[HIGH]` **Read-Only Mode UI Feedback**
   - [x] Graceful handling of HTTP 402 Payment Required responses (subscription.js store)

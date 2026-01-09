@@ -331,7 +331,7 @@ func (h *AdminUserHandler) ToggleEmailVerification(w http.ResponseWriter, r *htt
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id path int true "User ID"
-// @Success      200 {object} domain.User "User details"
+// @Success      200 {object} map[string]interface{} "User details"
 // @Failure      400 {object} ErrorResponse "Invalid user ID"
 // @Failure      404 {object} ErrorResponse "User not found"
 // @Router       /admin/users/{id} [get]

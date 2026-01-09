@@ -31,7 +31,7 @@ func NewOrganizationHandler(orgService *service.OrganizationService, logger *log
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request body object true "Organization name and description"
-// @Success      201 {object} domain.Organization "Created organization"
+// @Success      201 {object} map[string]interface{} "Created organization"
 // @Failure      400 {object} ErrorResponse "Invalid request"
 // @Failure      409 {object} ErrorResponse "Organization name exists"
 // @Failure      500 {object} ErrorResponse "Internal server error"
@@ -124,7 +124,7 @@ func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.R
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id path int true "Organization ID"
-// @Success      200 {object} domain.Organization "Organization details"
+// @Success      200 {object} map[string]interface{} "Organization details"
 // @Failure      400 {object} ErrorResponse "Invalid organization ID"
 // @Failure      404 {object} ErrorResponse "Organization not found"
 // @Failure      500 {object} ErrorResponse "Internal server error"
@@ -160,7 +160,7 @@ func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Req
 // @Security     BearerAuth
 // @Param        id path int true "Organization ID"
 // @Param        request body object true "Updated organization details"
-// @Success      200 {object} domain.Organization "Updated organization"
+// @Success      200 {object} map[string]interface{} "Updated organization"
 // @Failure      400 {object} ErrorResponse "Invalid request"
 // @Failure      404 {object} ErrorResponse "Organization not found"
 // @Failure      409 {object} ErrorResponse "Organization name exists"

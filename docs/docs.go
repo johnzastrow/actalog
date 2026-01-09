@@ -64,19 +64,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -111,7 +111,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -144,13 +144,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -194,19 +194,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file or format",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -249,25 +249,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid filename",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Backup not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -309,19 +309,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid filename",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -358,19 +358,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Backup metadata",
                         "schema": {
-                            "$ref": "#/definitions/domain.BackupMetadata"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.BackupMetadata"
                         }
                     },
                     "400": {
                         "description": "Invalid filename",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Backup not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -423,19 +423,68 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request or filename",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/benchmark/data": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete all benchmark data from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "benchmark"
+                ],
+                "summary": "Cleanup all benchmark data (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "Cleanup result",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -481,19 +530,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -524,7 +573,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateAnnouncementRequest"
+                            "$ref": "#/definitions/internal_handler.CreateAnnouncementRequest"
                         }
                     }
                 ],
@@ -532,25 +581,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Announcement created",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Admin access required",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -599,7 +648,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -636,25 +685,26 @@ const docTemplate = `{
                     "201": {
                         "description": "Created organization",
                         "schema": {
-                            "$ref": "#/definitions/domain.Organization"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Organization name exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -691,25 +741,26 @@ const docTemplate = `{
                     "200": {
                         "description": "Organization details",
                         "schema": {
-                            "$ref": "#/definitions/domain.Organization"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid organization ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -753,31 +804,32 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated organization",
                         "schema": {
-                            "$ref": "#/definitions/domain.Organization"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Organization name exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -812,31 +864,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid organization ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Organization has assigned users",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -880,19 +932,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid organization ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -927,7 +979,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -956,7 +1008,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateOrganizationSubscriptionRequest"
+                            "$ref": "#/definitions/internal_handler.CreateOrganizationSubscriptionRequest"
                         }
                     }
                 ],
@@ -964,25 +1016,104 @@ const docTemplate = `{
                     "201": {
                         "description": "Created subscription",
                         "schema": {
-                            "$ref": "#/definitions/domain.OrganizationSubscription"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Active subscription exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/organizations/expired": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of expired or overdue organization subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List expired organization subscriptions (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "Expired subscriptions list",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/organizations/expiring": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of organization subscriptions expiring within the specified number of days",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List expiring organization subscriptions (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of days to look ahead (default: 30)",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expiring subscriptions list",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1020,7 +1151,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CancelSubscriptionRequest"
+                            "$ref": "#/definitions/internal_handler.CancelSubscriptionRequest"
                         }
                     }
                 ],
@@ -1028,25 +1159,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request or missing reason",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1083,7 +1214,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/handler.MarkUserSubscriptionAsPaidRequest"
+                            "$ref": "#/definitions/internal_handler.MarkUserSubscriptionAsPaidRequest"
                         }
                     }
                 ],
@@ -1091,25 +1222,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Cannot mark free subscription as paid",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1147,7 +1278,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.SetUserSubscriptionPermanentRequest"
+                            "$ref": "#/definitions/internal_handler.SetUserSubscriptionPermanentRequest"
                         }
                     }
                 ],
@@ -1155,25 +1286,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1217,13 +1348,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid organization ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1258,7 +1389,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1287,7 +1418,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateUserSubscriptionRequest"
+                            "$ref": "#/definitions/internal_handler.CreateUserSubscriptionRequest"
                         }
                     }
                 ],
@@ -1295,31 +1426,110 @@ const docTemplate = `{
                     "201": {
                         "description": "Created subscription",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserSubscription"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot modify own subscription",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Active subscription exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users/expired": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of expired or overdue user subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List expired user subscriptions (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "Expired subscriptions list",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users/expiring": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of user subscriptions expiring within the specified number of days",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List expiring user subscriptions (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of days to look ahead (default: 30)",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expiring subscriptions list",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1357,7 +1567,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CancelSubscriptionRequest"
+                            "$ref": "#/definitions/internal_handler.CancelSubscriptionRequest"
                         }
                     }
                 ],
@@ -1365,31 +1575,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request or missing reason",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot modify own subscription",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1426,7 +1636,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/handler.MarkUserSubscriptionAsPaidRequest"
+                            "$ref": "#/definitions/internal_handler.MarkUserSubscriptionAsPaidRequest"
                         }
                     }
                 ],
@@ -1434,31 +1644,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Cannot mark free subscription as paid",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot modify own subscription",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1496,7 +1706,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.SetUserSubscriptionPermanentRequest"
+                            "$ref": "#/definitions/internal_handler.SetUserSubscriptionPermanentRequest"
                         }
                     }
                 ],
@@ -1504,31 +1714,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot modify own subscription",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Subscription not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1572,13 +1782,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1645,7 +1855,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1683,7 +1893,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CopyToStandardRequest"
+                            "$ref": "#/definitions/internal_handler.CopyToStandardRequest"
                         }
                     }
                 ],
@@ -1691,31 +1901,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created standard movement",
                         "schema": {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Movement not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Name already exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1782,7 +1992,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1820,7 +2030,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CopyToStandardRequest"
+                            "$ref": "#/definitions/internal_handler.CopyToStandardRequest"
                         }
                     }
                 ],
@@ -1828,31 +2038,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created standard WOD",
                         "schema": {
-                            "$ref": "#/definitions/domain.WOD"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WOD"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "WOD not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Name already exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1913,7 +2123,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1951,7 +2161,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CopyToStandardRequest"
+                            "$ref": "#/definitions/internal_handler.CopyToStandardRequest"
                         }
                     }
                 ],
@@ -1959,31 +2169,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created standard workout",
                         "schema": {
-                            "$ref": "#/definitions/domain.Workout"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Workout"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Workout not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Name already exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2032,7 +2242,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2069,19 +2279,20 @@ const docTemplate = `{
                     "200": {
                         "description": "User details",
                         "schema": {
-                            "$ref": "#/definitions/domain.User"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2116,13 +2327,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID or cannot delete",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2167,19 +2378,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID or cannot disable",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2216,19 +2427,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2274,25 +2485,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User or organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2336,25 +2547,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User or organization not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2398,19 +2609,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2456,19 +2667,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID or role",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2514,19 +2725,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2563,19 +2774,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Success message",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2610,7 +2821,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2645,7 +2856,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2683,7 +2894,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.UpdateWODRecordRequest"
+                            "$ref": "#/definitions/internal_handler.UpdateWODRecordRequest"
                         }
                     }
                 ],
@@ -2698,19 +2909,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request or score type mismatch",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Record not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2795,19 +3006,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid parameters",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2844,25 +3055,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Audit log entry",
                         "schema": {
-                            "$ref": "#/definitions/domain.AuditLog"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.AuditLog"
                         }
                     },
                     "400": {
                         "description": "Invalid ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Audit log not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2888,7 +3099,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ForgotPasswordRequest"
+                            "$ref": "#/definitions/internal_handler.ForgotPasswordRequest"
                         }
                     }
                 ],
@@ -2896,19 +3107,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Reset email sent if address exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to process request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2934,7 +3145,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginRequest"
+                            "$ref": "#/definitions/internal_handler.LoginRequest"
                         }
                     }
                 ],
@@ -2942,25 +3153,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully authenticated",
                         "schema": {
-                            "$ref": "#/definitions/handler.AuthResponse"
+                            "$ref": "#/definitions/internal_handler.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid email or password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -2986,7 +3197,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.RefreshTokenRequest"
+                            "$ref": "#/definitions/internal_handler.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -2994,25 +3205,25 @@ const docTemplate = `{
                     "200": {
                         "description": "New access token",
                         "schema": {
-                            "$ref": "#/definitions/handler.AuthResponse"
+                            "$ref": "#/definitions/internal_handler.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid or expired refresh token",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to refresh token",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3038,7 +3249,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.RegisterRequest"
+                            "$ref": "#/definitions/internal_handler.RegisterRequest"
                         }
                     }
                 ],
@@ -3046,25 +3257,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Successfully registered",
                         "schema": {
-                            "$ref": "#/definitions/handler.AuthResponse"
+                            "$ref": "#/definitions/internal_handler.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request or validation error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Registration is closed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Email already exists",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3090,7 +3301,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ResendVerificationRequest"
+                            "$ref": "#/definitions/internal_handler.ResendVerificationRequest"
                         }
                     }
                 ],
@@ -3098,19 +3309,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Verification email sent if applicable",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request or already verified",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to resend verification email",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3136,7 +3347,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ResetPasswordRequest"
+                            "$ref": "#/definitions/internal_handler.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -3144,19 +3355,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Password reset successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid token, expired token, or weak password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to reset password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3182,7 +3393,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.RevokeTokenRequest"
+                            "$ref": "#/definitions/internal_handler.RevokeTokenRequest"
                         }
                     }
                 ],
@@ -3190,25 +3401,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Token revoked successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Refresh token not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to revoke token",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3240,19 +3451,121 @@ const docTemplate = `{
                     "200": {
                         "description": "Email verified successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid or expired token, or already verified",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to verify email",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/benchmark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Execute the full benchmark suite to test database, serialization, and business logic performance",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "benchmark"
+                ],
+                "summary": "Run benchmark suite",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Include concurrent operation tests (default: false)",
+                        "name": "concurrent",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Skip cleanup after run if set to false (default: true)",
+                        "name": "cleanup",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to generate for benchmark testing (default: 1000, max: 500000)",
+                        "name": "records",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Benchmark results",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/benchmark/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Quick status check for the benchmark system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "benchmark"
+                ],
+                "summary": "Get benchmark status",
+                "responses": {
+                    "200": {
+                        "description": "Benchmark status",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3343,19 +3656,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid parameters",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3418,19 +3731,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid entity_id",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3467,25 +3780,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Data change log entry",
                         "schema": {
-                            "$ref": "#/definitions/domain.DataChangeLog"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.DataChangeLog"
                         }
                     },
                     "400": {
                         "description": "Invalid ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Log not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3540,13 +3853,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3601,19 +3914,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid date format",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3668,13 +3981,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3730,19 +4043,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Import failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3786,13 +4099,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file or validation failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3848,19 +4161,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Import failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3904,13 +4217,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file or validation failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -3966,19 +4279,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Import failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4022,19 +4335,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Preview failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4090,19 +4403,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Import failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4146,13 +4459,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid file or validation failed",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4175,13 +4488,13 @@ const docTemplate = `{
                     "200": {
                         "description": "List of all movements",
                         "schema": {
-                            "$ref": "#/definitions/handler.MovementListResponse"
+                            "$ref": "#/definitions/internal_handler.MovementListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4210,7 +4523,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateMovementRequest"
+                            "$ref": "#/definitions/internal_handler.CreateMovementRequest"
                         }
                     }
                 ],
@@ -4218,25 +4531,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created movement",
                         "schema": {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4274,19 +4587,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Matching movements",
                         "schema": {
-                            "$ref": "#/definitions/handler.MovementListResponse"
+                            "$ref": "#/definitions/internal_handler.MovementListResponse"
                         }
                     },
                     "400": {
                         "description": "Missing query parameter",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4309,13 +4622,13 @@ const docTemplate = `{
                     "200": {
                         "description": "List of standard movements",
                         "schema": {
-                            "$ref": "#/definitions/handler.MovementListResponse"
+                            "$ref": "#/definitions/internal_handler.MovementListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4347,25 +4660,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Movement details",
                         "schema": {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     },
                     "400": {
                         "description": "Invalid movement ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Movement not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4401,7 +4714,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateMovementRequest"
+                            "$ref": "#/definitions/internal_handler.CreateMovementRequest"
                         }
                     }
                 ],
@@ -4409,31 +4722,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated movement",
                         "schema": {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot modify standard movement",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4468,31 +4781,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Movement deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid movement ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Cannot delete standard movement",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4541,13 +4854,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4582,13 +4895,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4616,19 +4929,19 @@ const docTemplate = `{
                     "200": {
                         "description": "All marked as read",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4677,13 +4990,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4720,25 +5033,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Notification deleted",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid notification ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4775,31 +5088,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Notification liked",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid notification ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Already liked",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4837,19 +5150,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid notification ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4893,13 +5206,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid notification ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4936,25 +5249,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Marked as read",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid notification ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -4998,19 +5311,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid movement ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5060,19 +5373,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Missing search query",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5116,19 +5429,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid WOD ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5171,13 +5484,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5220,13 +5533,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5270,25 +5583,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Missing or invalid movement ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Movement not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5323,13 +5636,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5367,19 +5680,19 @@ const docTemplate = `{
                     "200": {
                         "description": "All sessions revoked",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5416,19 +5729,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Session revoked",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid session ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5456,19 +5769,20 @@ const docTemplate = `{
                     "200": {
                         "description": "User settings",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserSettings"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5497,7 +5811,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UserSettings"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.UserSettings"
                         }
                     }
                 ],
@@ -5505,25 +5819,26 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated settings",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserSettings"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5558,13 +5873,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5599,13 +5914,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5654,7 +5969,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5698,19 +6013,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5754,13 +6069,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid template ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Template not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5811,19 +6126,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5861,19 +6176,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid template ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Not the template owner",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5910,25 +6225,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Avatar uploaded successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.ProfileResponse"
+                            "$ref": "#/definitions/internal_handler.ProfileResponse"
                         }
                     },
                     "400": {
                         "description": "No file provided, file too large, or invalid file type",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to save avatar",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5954,19 +6269,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Avatar deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.ProfileResponse"
+                            "$ref": "#/definitions/internal_handler.ProfileResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to delete avatar",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -5997,7 +6312,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ChangePasswordRequest"
+                            "$ref": "#/definitions/internal_handler.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -6005,25 +6320,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Password changed successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request or weak password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized or incorrect current password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Failed to change password",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6072,13 +6387,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6106,25 +6421,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User profile",
                         "schema": {
-                            "$ref": "#/definitions/handler.ProfileResponse"
+                            "$ref": "#/definitions/internal_handler.ProfileResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6153,7 +6468,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.UpdateProfileRequest"
+                            "$ref": "#/definitions/internal_handler.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -6161,37 +6476,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Profile updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.ProfileResponse"
+                            "$ref": "#/definitions/internal_handler.ProfileResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body or birthday format",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Email already in use",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6239,13 +6554,13 @@ const docTemplate = `{
                     "200": {
                         "description": "List of WODs",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODListResponse"
+                            "$ref": "#/definitions/internal_handler.WODListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6274,7 +6589,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateWODRequest"
+                            "$ref": "#/definitions/internal_handler.CreateWODRequest"
                         }
                     }
                 ],
@@ -6282,25 +6597,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created WOD",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODResponse"
+                            "$ref": "#/definitions/internal_handler.WODResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body or missing name",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6342,19 +6657,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of user's custom WODs",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODListResponse"
+                            "$ref": "#/definitions/internal_handler.WODListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6386,19 +6701,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Matching WODs",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODListResponse"
+                            "$ref": "#/definitions/internal_handler.WODListResponse"
                         }
                     },
                     "400": {
                         "description": "Missing search query",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6435,13 +6750,13 @@ const docTemplate = `{
                     "200": {
                         "description": "List of standard WODs",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODListResponse"
+                            "$ref": "#/definitions/internal_handler.WODListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6473,19 +6788,19 @@ const docTemplate = `{
                     "200": {
                         "description": "WOD details",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODResponse"
+                            "$ref": "#/definitions/internal_handler.WODResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid WOD ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6521,7 +6836,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.UpdateWODRequest"
+                            "$ref": "#/definitions/internal_handler.UpdateWODRequest"
                         }
                     }
                 ],
@@ -6529,31 +6844,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated WOD",
                         "schema": {
-                            "$ref": "#/definitions/handler.WODResponse"
+                            "$ref": "#/definitions/internal_handler.WODResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden - not your WOD",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6588,31 +6903,31 @@ const docTemplate = `{
                     "200": {
                         "description": "WOD deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid WOD ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden - cannot delete this WOD",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6673,19 +6988,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid date format",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6714,7 +7029,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.LogWorkoutRequest"
+                            "$ref": "#/definitions/internal_handler.LogWorkoutRequest"
                         }
                     }
                 ],
@@ -6722,25 +7037,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Workout logged successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.UserWorkoutResponse"
+                            "$ref": "#/definitions/internal_handler.UserWorkoutResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request body or missing required fields",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6789,13 +7104,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6838,13 +7153,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6879,13 +7194,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6936,19 +7251,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid year or month",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -6985,25 +7300,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Logged workout details",
                         "schema": {
-                            "$ref": "#/definitions/handler.UserWorkoutResponse"
+                            "$ref": "#/definitions/internal_handler.UserWorkoutResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid workout ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -7039,7 +7354,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.UpdateLoggedWorkoutRequest"
+                            "$ref": "#/definitions/internal_handler.UpdateLoggedWorkoutRequest"
                         }
                     }
                 ],
@@ -7047,37 +7362,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated workout details",
                         "schema": {
-                            "$ref": "#/definitions/handler.UserWorkoutResponse"
+                            "$ref": "#/definitions/internal_handler.UserWorkoutResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden - not your workout",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Workout not found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -7112,31 +7427,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Workout deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/handler.MessageResponse"
+                            "$ref": "#/definitions/internal_handler.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid workout ID",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden - not your workout",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -7144,7 +7459,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.AuditLog": {
+        "github_com_johnzastrow_actalog_internal_domain.AuditLog": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7184,7 +7499,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.BackupMetadata": {
+        "github_com_johnzastrow_actalog_internal_domain.BackupMetadata": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7223,7 +7538,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.DataChangeLog": {
+        "github_com_johnzastrow_actalog_internal_domain.DataChangeLog": {
             "type": "object",
             "properties": {
                 "after_values": {
@@ -7272,7 +7587,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.Movement": {
+        "github_com_johnzastrow_actalog_internal_domain.Movement": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7296,14 +7611,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/domain.MovementType"
+                    "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.MovementType"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "domain.MovementType": {
+        "github_com_johnzastrow_actalog_internal_domain.MovementType": {
             "type": "string",
             "enum": [
                 "weightlifting",
@@ -7318,162 +7633,13 @@ const docTemplate = `{
                 "MovementTypeGymnastics"
             ]
         },
-        "domain.Organization": {
+        "github_com_johnzastrow_actalog_internal_domain.UserSettings": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.OrganizationSubscription": {
-            "type": "object",
-            "properties": {
-                "cancelled_at": {
-                    "type": "string"
-                },
-                "cancelled_reason": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by_user_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_permanent_free": {
+                "admin_user_event_notifications": {
+                    "description": "Admins: receive user event emails",
                     "type": "boolean"
                 },
-                "last_payment_date": {
-                    "type": "string"
-                },
-                "next_billing_date": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "organization_id": {
-                    "type": "integer"
-                },
-                "organization_name": {
-                    "description": "Joined from organizations table",
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/domain.SubscriptionStatus"
-                },
-                "subscription_type": {
-                    "$ref": "#/definitions/domain.SubscriptionType"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.SubscriptionStatus": {
-            "type": "string",
-            "enum": [
-                "active",
-                "expired",
-                "cancelled"
-            ],
-            "x-enum-varnames": [
-                "SubscriptionStatusActive",
-                "SubscriptionStatusExpired",
-                "SubscriptionStatusCancelled"
-            ]
-        },
-        "domain.SubscriptionType": {
-            "type": "string",
-            "enum": [
-                "free",
-                "monthly",
-                "annual"
-            ],
-            "x-enum-varnames": [
-                "SubscriptionTypeFree",
-                "SubscriptionTypeMonthly",
-                "SubscriptionTypeAnnual"
-            ]
-        },
-        "domain.User": {
-            "type": "object",
-            "properties": {
-                "account_disabled": {
-                    "description": "Expose so client knows",
-                    "type": "boolean"
-                },
-                "birthday": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "disable_reason": {
-                    "description": "Reason for account disable",
-                    "type": "string"
-                },
-                "disabled_at": {
-                    "type": "string"
-                },
-                "disabled_by_user_id": {
-                    "type": "integer"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "email_verified": {
-                    "type": "boolean"
-                },
-                "email_verified_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_login_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profile_image": {
-                    "type": "string"
-                },
-                "role": {
-                    "description": "user, admin",
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.UserSettings": {
-            "type": "object",
-            "properties": {
                 "created_at": {
                     "type": "string"
                 },
@@ -7485,6 +7651,10 @@ const docTemplate = `{
                     "description": "miles, km",
                     "type": "string"
                 },
+                "font_family": {
+                    "description": "system, inter, roboto, lato, firasans, lexend, opendyslexic, atkinson, sourceserif, jetbrainsmono",
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -7494,6 +7664,10 @@ const docTemplate = `{
                 },
                 "theme": {
                     "description": "light, dark",
+                    "type": "string"
+                },
+                "timezone": {
+                    "description": "IANA timezone identifier",
                     "type": "string"
                 },
                 "updated_at": {
@@ -7508,65 +7682,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserSubscription": {
-            "type": "object",
-            "properties": {
-                "cancelled_at": {
-                    "type": "string"
-                },
-                "cancelled_reason": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by_user_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_permanent_free": {
-                    "type": "boolean"
-                },
-                "last_payment_date": {
-                    "type": "string"
-                },
-                "next_billing_date": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/domain.SubscriptionStatus"
-                },
-                "subscription_type": {
-                    "$ref": "#/definitions/domain.SubscriptionType"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_email": {
-                    "description": "Joined from users table",
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "user_name": {
-                    "description": "Joined from users table",
-                    "type": "string"
-                }
-            }
-        },
-        "domain.UserWorkoutMovement": {
+        "github_com_johnzastrow_actalog_internal_domain.UserWorkoutMovement": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7587,7 +7703,7 @@ const docTemplate = `{
                     "description": "Related data (loaded via joins)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     ]
                 },
@@ -7637,7 +7753,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserWorkoutWOD": {
+        "github_com_johnzastrow_actalog_internal_domain.UserWorkoutWOD": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7692,7 +7808,7 @@ const docTemplate = `{
                     "description": "Related data (loaded via joins)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/domain.WOD"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WOD"
                         }
                     ]
                 },
@@ -7718,7 +7834,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.WOD": {
+        "github_com_johnzastrow_actalog_internal_domain.WOD": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7771,7 +7887,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.Workout": {
+        "github_com_johnzastrow_actalog_internal_domain.Workout": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7788,7 +7904,7 @@ const docTemplate = `{
                     "description": "Related data (not stored directly in workout table, loaded via joins)",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.WorkoutMovement"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutMovement"
                     }
                 },
                 "name": {
@@ -7806,12 +7922,12 @@ const docTemplate = `{
                     "description": "WODs in this template",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.WorkoutWODWithDetails"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails"
                     }
                 }
             }
         },
-        "domain.WorkoutMovement": {
+        "github_com_johnzastrow_actalog_internal_domain.WorkoutMovement": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7836,7 +7952,7 @@ const docTemplate = `{
                     "description": "Related data",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/domain.Movement"
+                            "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                         }
                     ]
                 },
@@ -7874,7 +7990,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.WorkoutWODWithDetails": {
+        "github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7927,7 +8043,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.AuthResponse": {
+        "internal_handler.AuthResponse": {
             "description": "Authentication response containing JWT token and user info",
             "type": "object",
             "properties": {
@@ -7942,7 +8058,7 @@ const docTemplate = `{
                 "user": {}
             }
         },
-        "handler.CancelSubscriptionRequest": {
+        "internal_handler.CancelSubscriptionRequest": {
             "description": "Request to cancel a subscription",
             "type": "object",
             "properties": {
@@ -7952,7 +8068,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ChangePasswordRequest": {
+        "internal_handler.ChangePasswordRequest": {
             "description": "Password change request",
             "type": "object",
             "properties": {
@@ -7966,7 +8082,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CopyToStandardRequest": {
+        "internal_handler.CopyToStandardRequest": {
             "type": "object",
             "properties": {
                 "new_name": {
@@ -7974,7 +8090,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CreateAnnouncementRequest": {
+        "internal_handler.CreateAnnouncementRequest": {
             "description": "Admin announcement request",
             "type": "object",
             "properties": {
@@ -8003,7 +8119,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CreateMovementRequest": {
+        "internal_handler.CreateMovementRequest": {
             "description": "Request to create a new custom movement",
             "type": "object",
             "properties": {
@@ -8021,7 +8137,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CreateOrganizationSubscriptionRequest": {
+        "internal_handler.CreateOrganizationSubscriptionRequest": {
             "description": "Request to create an organization subscription (admin only)",
             "type": "object",
             "properties": {
@@ -8043,7 +8159,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CreateUserSubscriptionRequest": {
+        "internal_handler.CreateUserSubscriptionRequest": {
             "description": "Request to create a user subscription (admin only)",
             "type": "object",
             "properties": {
@@ -8066,7 +8182,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CreateWODRequest": {
+        "internal_handler.CreateWODRequest": {
             "description": "Request to create a new WOD",
             "type": "object",
             "properties": {
@@ -8102,7 +8218,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ErrorResponse": {
+        "internal_handler.ErrorResponse": {
             "description": "Error response returned when a request fails",
             "type": "object",
             "properties": {
@@ -8116,7 +8232,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ForgotPasswordRequest": {
+        "internal_handler.ForgotPasswordRequest": {
             "description": "Request to initiate password reset",
             "type": "object",
             "properties": {
@@ -8126,7 +8242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.LogWorkoutRequest": {
+        "internal_handler.LogWorkoutRequest": {
             "description": "Request to log a workout (either from template or ad-hoc)",
             "type": "object",
             "properties": {
@@ -8134,7 +8250,7 @@ const docTemplate = `{
                     "description": "Performance data",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.MovementPerformance"
+                        "$ref": "#/definitions/internal_handler.MovementPerformance"
                     }
                 },
                 "notes": {
@@ -8149,7 +8265,7 @@ const docTemplate = `{
                 "wods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.WODPerformance"
+                        "$ref": "#/definitions/internal_handler.WODPerformance"
                     }
                 },
                 "workout_date": {
@@ -8173,7 +8289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.LoginRequest": {
+        "internal_handler.LoginRequest": {
             "description": "User login request body",
             "type": "object",
             "properties": {
@@ -8191,7 +8307,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.MarkUserSubscriptionAsPaidRequest": {
+        "internal_handler.MarkUserSubscriptionAsPaidRequest": {
             "description": "Request to mark a subscription as paid",
             "type": "object",
             "properties": {
@@ -8207,7 +8323,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.MessageResponse": {
+        "internal_handler.MessageResponse": {
             "description": "Generic message response",
             "type": "object",
             "properties": {
@@ -8217,19 +8333,19 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.MovementListResponse": {
+        "internal_handler.MovementListResponse": {
             "description": "List of movements",
             "type": "object",
             "properties": {
                 "movements": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.Movement"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement"
                     }
                 }
             }
         },
-        "handler.MovementPerformance": {
+        "internal_handler.MovementPerformance": {
             "description": "Performance data recorded for a movement in a workout",
             "type": "object",
             "properties": {
@@ -8268,14 +8384,14 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ProfileResponse": {
+        "internal_handler.ProfileResponse": {
             "description": "User profile data",
             "type": "object",
             "properties": {
                 "user": {}
             }
         },
-        "handler.RefreshTokenRequest": {
+        "internal_handler.RefreshTokenRequest": {
             "description": "Request to refresh access token",
             "type": "object",
             "properties": {
@@ -8285,7 +8401,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.RegisterRequest": {
+        "internal_handler.RegisterRequest": {
             "description": "User registration request body",
             "type": "object",
             "properties": {
@@ -8303,7 +8419,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ResendVerificationRequest": {
+        "internal_handler.ResendVerificationRequest": {
             "description": "Request to resend verification email",
             "type": "object",
             "properties": {
@@ -8313,7 +8429,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ResetPasswordRequest": {
+        "internal_handler.ResetPasswordRequest": {
             "description": "Request to complete password reset with token",
             "type": "object",
             "properties": {
@@ -8327,7 +8443,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.RevokeTokenRequest": {
+        "internal_handler.RevokeTokenRequest": {
             "description": "Request to revoke a refresh token (logout)",
             "type": "object",
             "properties": {
@@ -8337,7 +8453,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.SetUserSubscriptionPermanentRequest": {
+        "internal_handler.SetUserSubscriptionPermanentRequest": {
             "description": "Request to set subscription permanent status",
             "type": "object",
             "properties": {
@@ -8347,14 +8463,14 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.UpdateLoggedWorkoutRequest": {
+        "internal_handler.UpdateLoggedWorkoutRequest": {
             "description": "Request to update an existing logged workout",
             "type": "object",
             "properties": {
                 "movements": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.MovementPerformance"
+                        "$ref": "#/definitions/internal_handler.MovementPerformance"
                     }
                 },
                 "notes": {
@@ -8368,7 +8484,7 @@ const docTemplate = `{
                 "wods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.WODPerformance"
+                        "$ref": "#/definitions/internal_handler.WODPerformance"
                     }
                 },
                 "workout_name": {
@@ -8382,7 +8498,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.UpdateProfileRequest": {
+        "internal_handler.UpdateProfileRequest": {
             "description": "User profile update request",
             "type": "object",
             "properties": {
@@ -8401,7 +8517,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.UpdateWODRecordRequest": {
+        "internal_handler.UpdateWODRecordRequest": {
             "type": "object",
             "properties": {
                 "notes": {
@@ -8421,7 +8537,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.UpdateWODRequest": {
+        "internal_handler.UpdateWODRequest": {
             "description": "Request to update an existing WOD",
             "type": "object",
             "properties": {
@@ -8457,7 +8573,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.UserWorkoutResponse": {
+        "internal_handler.UserWorkoutResponse": {
             "description": "Complete logged workout with performance data",
             "type": "object",
             "properties": {
@@ -8473,7 +8589,7 @@ const docTemplate = `{
                     "description": "Template movements",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.WorkoutMovement"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutMovement"
                     }
                 },
                 "notes": {
@@ -8484,14 +8600,14 @@ const docTemplate = `{
                     "description": "Actual performance",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.UserWorkoutMovement"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.UserWorkoutMovement"
                     }
                 },
                 "performance_wods": {
                     "description": "Actual performance",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.UserWorkoutWOD"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.UserWorkoutWOD"
                     }
                 },
                 "total_time": {
@@ -8510,7 +8626,7 @@ const docTemplate = `{
                     "description": "Template WODs",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.WorkoutWODWithDetails"
+                        "$ref": "#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails"
                     }
                 },
                 "workout_date": {
@@ -8536,19 +8652,19 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.WODListResponse": {
+        "internal_handler.WODListResponse": {
             "description": "List of WODs",
             "type": "object",
             "properties": {
                 "wods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.WODResponse"
+                        "$ref": "#/definitions/internal_handler.WODResponse"
                     }
                 }
             }
         },
-        "handler.WODPerformance": {
+        "internal_handler.WODPerformance": {
             "description": "Performance data recorded for a WOD in a workout",
             "type": "object",
             "properties": {
@@ -8596,7 +8712,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.WODResponse": {
+        "internal_handler.WODResponse": {
             "description": "WOD details response",
             "type": "object",
             "properties": {
@@ -8664,7 +8780,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "0.17.0",
+	Version:          "0.22.0",
 	Host:             "localhost:8080",
 	BasePath:         "/api",
 	Schemes:          []string{},

@@ -1,7 +1,7 @@
 // Package main is the entry point for ActaLog application
 //
 // @title           ActaLog API
-// @version         0.17.0
+// @version         0.22.0
 // @description     ActaLog is a mobile-first CrossFit workout tracker API. It provides endpoints for user authentication, workout logging, movement tracking, personal records, and administrative functions.
 // @termsOfService  https://actalog.com/terms/
 //
@@ -67,6 +67,9 @@
 //
 // @tag.name audit
 // @tag.description Audit log operations
+//
+// @tag.name benchmark
+// @tag.description System performance benchmarking
 package main
 
 import (

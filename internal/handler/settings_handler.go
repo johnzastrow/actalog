@@ -31,7 +31,7 @@ func NewSettingsHandler(settingsService *service.UserSettingsService, logger *lo
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} domain.UserSettings "User settings"
+// @Success      200 {object} map[string]interface{} "User settings"
 // @Failure      401 {object} ErrorResponse "Unauthorized"
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /settings [get]
@@ -66,7 +66,7 @@ func (h *SettingsHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request body domain.UserSettings true "Updated settings"
-// @Success      200 {object} domain.UserSettings "Updated settings"
+// @Success      200 {object} map[string]interface{} "Updated settings"
 // @Failure      400 {object} ErrorResponse "Invalid request"
 // @Failure      401 {object} ErrorResponse "Unauthorized"
 // @Failure      500 {object} ErrorResponse "Internal server error"
