@@ -2,8 +2,11 @@ package service
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	mathrand "math/rand"
 	"os"
 	"os/exec"
 	"runtime"
@@ -16,6 +19,27 @@ import (
 	"github.com/johnzastrow/actalog/pkg/prmath"
 	"github.com/johnzastrow/actalog/pkg/version"
 )
+
+// Categories for benchmark data
+var benchmarkCategories = []string{
+	"strength", "cardio", "flexibility", "endurance", "power",
+	"balance", "agility", "speed", "coordination", "reaction",
+}
+
+// JSON blob templates for complex data generation
+type complexJSONData struct {
+	Metadata    map[string]interface{} `json:"metadata"`
+	Measurements []measurement         `json:"measurements"`
+	Tags        []string               `json:"tags"`
+	Attributes  map[string]string      `json:"attributes"`
+}
+
+type measurement struct {
+	Name      string    `json:"name"`
+	Value     float64   `json:"value"`
+	Unit      string    `json:"unit"`
+	Timestamp time.Time `json:"timestamp"`
+}
 
 // BenchmarkService handles benchmark operations
 type BenchmarkService struct {
@@ -33,9 +57,19 @@ func NewBenchmarkService(repo *repository.BenchmarkRepository) *BenchmarkService
 func (s *BenchmarkService) RunBenchmark(userID int64, options domain.BenchmarkOptions) (*domain.BenchmarkSuiteResult, error) {
 	startTime := time.Now()
 
+	// Validate and set record count
+	recordCount := options.RecordCount
+	if recordCount <= 0 {
+		recordCount = domain.DefaultRecordCount
+	}
+	if recordCount > domain.MaxRecordCount {
+		recordCount = domain.MaxRecordCount
+	}
+
 	result := &domain.BenchmarkSuiteResult{
-		Timestamp: startTime,
-		Version:   version.Version(),
+		Timestamp:   startTime,
+		Version:     version.Version(),
+		RecordCount: recordCount,
 		SystemInfo: &domain.SystemInfo{
 			GoVersion:       runtime.Version(),
 			GoOS:            runtime.GOOS,
@@ -50,19 +84,19 @@ func (s *BenchmarkService) RunBenchmark(userID int64, options domain.BenchmarkOp
 		BusinessLogic: &domain.BusinessLogicBenchmarkResult{},
 	}
 
-	// Run database benchmarks
-	s.runDatabaseBenchmarks(userID, result)
+	// Run database benchmarks with configurable record count
+	s.runDatabaseBenchmarks(userID, recordCount, result)
 
-	// Run serialization benchmarks
-	s.runSerializationBenchmarks(result)
+	// Run serialization benchmarks with complex data
+	s.runSerializationBenchmarks(recordCount, result)
 
-	// Run business logic benchmarks
-	s.runBusinessLogicBenchmarks(result)
+	// Run business logic benchmarks scaled by record count
+	s.runBusinessLogicBenchmarks(recordCount, result)
 
 	// Run concurrent benchmarks if requested
 	if options.IncludeConcurrent {
 		result.Concurrent = &domain.ConcurrentBenchmarkResult{}
-		s.runConcurrentBenchmarks(userID, result)
+		s.runConcurrentBenchmarks(userID, recordCount, result)
 	}
 
 	// Cleanup if requested (default behavior)
@@ -88,12 +122,12 @@ func (s *BenchmarkService) RunBenchmark(userID int64, options domain.BenchmarkOp
 }
 
 // runDatabaseBenchmarks runs all database-related benchmarks
-func (s *BenchmarkService) runDatabaseBenchmarks(userID int64, result *domain.BenchmarkSuiteResult) {
-	// 1. Single insert
+func (s *BenchmarkService) runDatabaseBenchmarks(userID int64, recordCount int, result *domain.BenchmarkSuiteResult) {
+	// 1. Single insert with complex data
 	result.Database.Insert = s.benchmarkInsert(userID)
 
-	// 2. Bulk insert (100 records)
-	result.Database.BulkInsert = s.benchmarkBulkInsert(userID, 100)
+	// 2. Bulk insert (configurable record count)
+	result.Database.BulkInsert = s.benchmarkBulkInsert(userID, recordCount)
 
 	// 3. Select by ID
 	result.Database.SelectByID = s.benchmarkSelectByID()
@@ -101,11 +135,12 @@ func (s *BenchmarkService) runDatabaseBenchmarks(userID int64, result *domain.Be
 	// 4. Select by key
 	result.Database.SelectByKey = s.benchmarkSelectByKey()
 
-	// 5. Select list (pagination)
-	result.Database.SelectList = s.benchmarkSelectList()
+	// 5. Select list (pagination) - scale with record count
+	listSize := min(recordCount, 1000)
+	result.Database.SelectList = s.benchmarkSelectList(listSize)
 
 	// 6. Select filtered
-	result.Database.SelectFiltered = s.benchmarkSelectFiltered(userID)
+	result.Database.SelectFiltered = s.benchmarkSelectFiltered(userID, listSize)
 
 	// 7. Update
 	result.Database.Update = s.benchmarkUpdate()
@@ -114,17 +149,10 @@ func (s *BenchmarkService) runDatabaseBenchmarks(userID int64, result *domain.Be
 	result.Database.Delete = s.benchmarkDelete()
 }
 
-// benchmarkInsert tests single record insertion
+// benchmarkInsert tests single record insertion with complex data
 func (s *BenchmarkService) benchmarkInsert(userID int64) *domain.OperationResult {
 	start := time.Now()
-	data := &domain.BenchmarkData{
-		TestKey:   fmt.Sprintf("bench_insert_%d", time.Now().UnixNano()),
-		TestValue: "single insert test",
-		NumValue:  3.14159,
-		IntValue:  42,
-		BoolValue: true,
-		CreatedBy: userID,
-	}
+	data := generateComplexBenchmarkData(userID, 0)
 
 	err := s.repo.Create(data)
 	duration := float64(time.Since(start).Microseconds()) / 1000.0
@@ -146,20 +174,13 @@ func (s *BenchmarkService) benchmarkInsert(userID int64) *domain.OperationResult
 	}
 }
 
-// benchmarkBulkInsert tests batch record insertion
+// benchmarkBulkInsert tests batch record insertion with complex data
 func (s *BenchmarkService) benchmarkBulkInsert(userID int64, count int) *domain.OperationResult {
 	start := time.Now()
 
 	data := make([]*domain.BenchmarkData, count)
 	for i := 0; i < count; i++ {
-		data[i] = &domain.BenchmarkData{
-			TestKey:   fmt.Sprintf("bench_bulk_%d_%d", time.Now().UnixNano(), i),
-			TestValue: fmt.Sprintf("bulk insert test record %d", i),
-			NumValue:  float64(i) * 1.5,
-			IntValue:  i,
-			BoolValue: i%2 == 0,
-			CreatedBy: userID,
-		}
+		data[i] = generateComplexBenchmarkData(userID, i)
 	}
 
 	err := s.repo.CreateBatch(data)
@@ -250,10 +271,10 @@ func (s *BenchmarkService) benchmarkSelectByKey() *domain.OperationResult {
 	}
 }
 
-// benchmarkSelectList tests pagination
-func (s *BenchmarkService) benchmarkSelectList() *domain.OperationResult {
+// benchmarkSelectList tests pagination with configurable size
+func (s *BenchmarkService) benchmarkSelectList(listSize int) *domain.OperationResult {
 	start := time.Now()
-	items, err := s.repo.List(50, 0)
+	items, err := s.repo.List(listSize, 0)
 	duration := float64(time.Since(start).Microseconds()) / 1000.0
 
 	if err != nil {
@@ -273,13 +294,19 @@ func (s *BenchmarkService) benchmarkSelectList() *domain.OperationResult {
 	}
 }
 
-// benchmarkSelectFiltered tests filtered queries
-func (s *BenchmarkService) benchmarkSelectFiltered(userID int64) *domain.OperationResult {
+// benchmarkSelectFiltered tests filtered queries with multiple conditions
+func (s *BenchmarkService) benchmarkSelectFiltered(userID int64, listSize int) *domain.OperationResult {
 	start := time.Now()
+
+	// Use multiple filters to stress test query building
+	category := benchmarkCategories[0]
+	minPriority := 50
 	filters := domain.BenchmarkFilters{
-		CreatedBy: &userID,
+		CreatedBy:   &userID,
+		Category:    &category,
+		MinPriority: &minPriority,
 	}
-	items, err := s.repo.ListFiltered(filters, 50, 0)
+	items, err := s.repo.ListFiltered(filters, listSize, 0)
 	duration := float64(time.Since(start).Microseconds()) / 1000.0
 
 	if err != nil {
@@ -393,40 +420,24 @@ func (s *BenchmarkService) cleanupBenchmarkData(userID int64) *domain.OperationR
 	}
 }
 
-// runSerializationBenchmarks runs JSON serialization benchmarks
-func (s *BenchmarkService) runSerializationBenchmarks(result *domain.BenchmarkSuiteResult) {
-	// Create sample data
-	smallData := &domain.BenchmarkData{
-		ID:        1,
-		TestKey:   "serialization_test",
-		TestValue: "test value for serialization",
-		NumValue:  123.456,
-		IntValue:  789,
-		BoolValue: true,
-		CreatedBy: 1,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+// runSerializationBenchmarks runs JSON serialization benchmarks with complex data
+func (s *BenchmarkService) runSerializationBenchmarks(recordCount int, result *domain.BenchmarkSuiteResult) {
+	// Create complex sample data
+	smallData := generateComplexBenchmarkData(1, 0)
+	smallData.ID = 1
+
+	// Scale the large data set based on record count (use 10% of record count, min 100, max 10000)
+	largeCount := max(100, min(recordCount/10, 10000))
+	largeData := make([]*domain.BenchmarkData, largeCount)
+	for i := 0; i < largeCount; i++ {
+		largeData[i] = generateComplexBenchmarkData(1, i)
+		largeData[i].ID = int64(i)
 	}
 
-	largeData := make([]*domain.BenchmarkData, 100)
-	for i := 0; i < 100; i++ {
-		largeData[i] = &domain.BenchmarkData{
-			ID:        int64(i),
-			TestKey:   fmt.Sprintf("key_%d", i),
-			TestValue: fmt.Sprintf("value_%d with some extra text to make it realistic", i),
-			NumValue:  float64(i) * 1.23456,
-			IntValue:  i * 10,
-			BoolValue: i%2 == 0,
-			CreatedBy: 1,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-	}
-
-	// Marshal small
+	// Marshal small (single complex record)
 	result.Serialization.MarshalSmall = s.benchmarkMarshal("marshal_small", smallData)
 
-	// Marshal large
+	// Marshal large (many complex records)
 	result.Serialization.MarshalLarge = s.benchmarkMarshal("marshal_large", largeData)
 
 	// Unmarshal small
@@ -480,22 +491,25 @@ func (s *BenchmarkService) benchmarkUnmarshal(operation string, data []byte, tar
 	}
 }
 
-// runBusinessLogicBenchmarks runs business logic benchmarks
-func (s *BenchmarkService) runBusinessLogicBenchmarks(result *domain.BenchmarkSuiteResult) {
+// runBusinessLogicBenchmarks runs business logic benchmarks scaled by record count
+func (s *BenchmarkService) runBusinessLogicBenchmarks(recordCount int, result *domain.BenchmarkSuiteResult) {
+	// Scale iterations based on record count (use record count directly for compute benchmarks)
+	iterations := recordCount
+
 	// 1RM calculations
-	result.BusinessLogic.OneRMCalcs = s.benchmark1RMCalculations(1000)
+	result.BusinessLogic.OneRMCalcs = s.benchmark1RMCalculations(iterations)
 
 	// Intensity calculations
-	result.BusinessLogic.IntensityCalcs = s.benchmarkIntensityCalculations(1000)
+	result.BusinessLogic.IntensityCalcs = s.benchmarkIntensityCalculations(iterations)
 
-	// Input validation
-	result.BusinessLogic.Validation = s.benchmarkValidation(100)
+	// Input validation (1/10 of iterations as it's more complex)
+	result.BusinessLogic.Validation = s.benchmarkValidation(iterations / 10)
 
 	// String operations
-	result.BusinessLogic.StringOps = s.benchmarkStringOperations(1000)
+	result.BusinessLogic.StringOps = s.benchmarkStringOperations(iterations)
 
 	// Date operations
-	result.BusinessLogic.DateOps = s.benchmarkDateOperations(1000)
+	result.BusinessLogic.DateOps = s.benchmarkDateOperations(iterations)
 }
 
 func (s *BenchmarkService) benchmark1RMCalculations(iterations int) *domain.OperationResult {
@@ -632,16 +646,20 @@ func (s *BenchmarkService) benchmarkDateOperations(iterations int) *domain.Opera
 	}
 }
 
-// runConcurrentBenchmarks runs concurrent operation benchmarks
-func (s *BenchmarkService) runConcurrentBenchmarks(userID int64, result *domain.BenchmarkSuiteResult) {
+// runConcurrentBenchmarks runs concurrent operation benchmarks scaled by record count
+func (s *BenchmarkService) runConcurrentBenchmarks(userID int64, recordCount int, result *domain.BenchmarkSuiteResult) {
+	// Scale goroutines based on record count (min 10, max 100)
+	goroutines := max(10, min(recordCount/100, 100))
+	writeGoroutines := max(5, min(recordCount/200, 50))
+
 	// Parallel reads
-	result.Concurrent.ParallelReads = s.benchmarkParallelReads(10)
+	result.Concurrent.ParallelReads = s.benchmarkParallelReads(goroutines)
 
 	// Parallel writes
-	result.Concurrent.ParallelWrites = s.benchmarkParallelWrites(userID, 5)
+	result.Concurrent.ParallelWrites = s.benchmarkParallelWrites(userID, writeGoroutines)
 
 	// Mixed operations
-	result.Concurrent.MixedOps = s.benchmarkMixedOperations(userID, 10)
+	result.Concurrent.MixedOps = s.benchmarkMixedOperations(userID, goroutines)
 }
 
 func (s *BenchmarkService) benchmarkParallelReads(goroutines int) *domain.OperationResult {
@@ -943,4 +961,132 @@ func getWindowsVersion() string {
 		return strings.TrimSpace(string(out))
 	}
 	return "Windows"
+}
+
+// generateComplexBenchmarkData creates a complex benchmark data record with large, random data
+func generateComplexBenchmarkData(userID int64, index int) *domain.BenchmarkData {
+	now := time.Now()
+
+	return &domain.BenchmarkData{
+		TestKey:    fmt.Sprintf("bench_%d_%d_%s", now.UnixNano(), index, generateRandomString(8)),
+		TestValue:  fmt.Sprintf("benchmark test value %d with random: %s", index, generateRandomString(32)),
+		NumValue:   generateRandomFloat(),
+		IntValue:   generateRandomInt(1000000),
+		BoolValue:  index%2 == 0,
+		LargeText:  generateLargeText(index),
+		JsonBlob:   generateComplexJSON(index),
+		ExtraFloat: generateRandomFloat() * 1000,
+		ExtraInt:   generateRandomInt(10000000),
+		Category:   benchmarkCategories[index%len(benchmarkCategories)],
+		Priority:   generateRandomInt(100),
+		CreatedBy:  userID,
+	}
+}
+
+// generateLargeText creates a large text field (5-10KB) for stress testing
+func generateLargeText(seed int) string {
+	// Generate 5-10KB of text
+	targetSize := 5000 + (seed % 5000)
+	var sb strings.Builder
+	sb.Grow(targetSize)
+
+	paragraphs := []string{
+		"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ",
+		"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. ",
+		"The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! Sphinx of black quartz, judge my vow. ",
+		"Benchmark data record %d: This is a test string containing various characters and numbers like 12345 and special chars @#$%. Testing database performance with complex text data. ",
+		"Performance metrics collection in progress. Measuring insert, update, select, and delete operations. Analyzing query execution times and database throughput. ",
+	}
+
+	for sb.Len() < targetSize {
+		para := paragraphs[(seed+sb.Len())%len(paragraphs)]
+		if strings.Contains(para, "%d") {
+			para = fmt.Sprintf(para, seed)
+		}
+		sb.WriteString(para)
+	}
+
+	return sb.String()[:targetSize]
+}
+
+// generateComplexJSON creates a complex JSON blob for stress testing
+func generateComplexJSON(seed int) string {
+	now := time.Now()
+
+	data := complexJSONData{
+		Metadata: map[string]interface{}{
+			"version":    "1.0",
+			"created_at": now.Format(time.RFC3339),
+			"seed":       seed,
+			"random_id":  generateRandomString(16),
+			"nested": map[string]interface{}{
+				"level1": map[string]interface{}{
+					"level2": map[string]interface{}{
+						"value": generateRandomFloat(),
+						"text":  generateRandomString(64),
+					},
+				},
+			},
+		},
+		Measurements: make([]measurement, 10),
+		Tags:         make([]string, 20),
+		Attributes:   make(map[string]string),
+	}
+
+	// Generate measurements
+	for i := 0; i < 10; i++ {
+		data.Measurements[i] = measurement{
+			Name:      fmt.Sprintf("measurement_%d", i),
+			Value:     generateRandomFloat() * 100,
+			Unit:      []string{"kg", "lbs", "reps", "seconds", "meters"}[i%5],
+			Timestamp: now.Add(time.Duration(-i) * time.Hour),
+		}
+	}
+
+	// Generate tags
+	for i := 0; i < 20; i++ {
+		data.Tags[i] = fmt.Sprintf("tag_%d_%s", i, generateRandomString(8))
+	}
+
+	// Generate attributes
+	for i := 0; i < 30; i++ {
+		data.Attributes[fmt.Sprintf("attr_%d", i)] = generateRandomString(32)
+	}
+
+	jsonBytes, _ := json.Marshal(data)
+	return string(jsonBytes)
+}
+
+// generateRandomString creates a random string of specified length
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			// Fallback to math/rand if crypto/rand fails
+			result[i] = charset[mathrand.Intn(len(charset))]
+		} else {
+			result[i] = charset[n.Int64()]
+		}
+	}
+	return string(result)
+}
+
+// generateRandomFloat creates a random float64 value
+func generateRandomFloat() float64 {
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return mathrand.Float64() * 1000
+	}
+	return float64(n.Int64()) / 1000.0
+}
+
+// generateRandomInt creates a random integer value up to max
+func generateRandomInt(maxVal int) int {
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(maxVal)))
+	if err != nil {
+		return mathrand.Intn(maxVal)
+	}
+	return int(n.Int64())
 }

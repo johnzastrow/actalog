@@ -31,9 +31,9 @@ func (r *BenchmarkRepository) Create(data *domain.BenchmarkData) error {
 
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query := `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-		result, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.CreatedBy, data.CreatedAt, data.UpdatedAt)
+		query := `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		result, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.LargeText, data.JsonBlob, data.ExtraFloat, data.ExtraInt, data.Category, data.Priority, data.CreatedBy, data.CreatedAt, data.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create benchmark data: %w", err)
 		}
@@ -44,9 +44,9 @@ func (r *BenchmarkRepository) Create(data *domain.BenchmarkData) error {
 		data.ID = id
 
 	case "postgres":
-		query := `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-		err := r.db.QueryRow(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.CreatedBy, data.CreatedAt, data.UpdatedAt).Scan(&data.ID)
+		query := `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`
+		err := r.db.QueryRow(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.LargeText, data.JsonBlob, data.ExtraFloat, data.ExtraInt, data.Category, data.Priority, data.CreatedBy, data.CreatedAt, data.UpdatedAt).Scan(&data.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create benchmark data: %w", err)
 		}
@@ -80,11 +80,11 @@ func (r *BenchmarkRepository) CreateBatch(data []*domain.BenchmarkData) error {
 	var query string
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		query = `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	case "postgres":
-		query = `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+		query = `INSERT INTO benchmark_data (test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", r.driver)
 	}
@@ -98,7 +98,7 @@ func (r *BenchmarkRepository) CreateBatch(data []*domain.BenchmarkData) error {
 	for _, d := range data {
 		d.CreatedAt = now
 		d.UpdatedAt = now
-		_, err := stmt.Exec(d.TestKey, d.TestValue, d.NumValue, d.IntValue, d.BoolValue, d.CreatedBy, d.CreatedAt, d.UpdatedAt)
+		_, err := stmt.Exec(d.TestKey, d.TestValue, d.NumValue, d.IntValue, d.BoolValue, d.LargeText, d.JsonBlob, d.ExtraFloat, d.ExtraInt, d.Category, d.Priority, d.CreatedBy, d.CreatedAt, d.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to insert benchmark data: %w", err)
 		}
@@ -116,19 +116,20 @@ func (r *BenchmarkRepository) GetByID(id int64) (*domain.BenchmarkData, error) {
 	var query string
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data WHERE id = ?`
 	case "postgres":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data WHERE id = $1`
 	default:
 		return nil, fmt.Errorf("unsupported database driver: %s", r.driver)
 	}
 
 	data := &domain.BenchmarkData{}
-	var testValue sql.NullString
+	var testValue, largeText, jsonBlob, category sql.NullString
 	err := r.db.QueryRow(query, id).Scan(
 		&data.ID, &data.TestKey, &testValue, &data.NumValue, &data.IntValue, &data.BoolValue,
+		&largeText, &jsonBlob, &data.ExtraFloat, &data.ExtraInt, &category, &data.Priority,
 		&data.CreatedBy, &data.CreatedAt, &data.UpdatedAt,
 	)
 
@@ -141,6 +142,15 @@ func (r *BenchmarkRepository) GetByID(id int64) (*domain.BenchmarkData, error) {
 
 	if testValue.Valid {
 		data.TestValue = testValue.String
+	}
+	if largeText.Valid {
+		data.LargeText = largeText.String
+	}
+	if jsonBlob.Valid {
+		data.JsonBlob = jsonBlob.String
+	}
+	if category.Valid {
+		data.Category = category.String
 	}
 
 	return data, nil
@@ -151,19 +161,20 @@ func (r *BenchmarkRepository) GetByKey(testKey string) (*domain.BenchmarkData, e
 	var query string
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data WHERE test_key = ? LIMIT 1`
 	case "postgres":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data WHERE test_key = $1 LIMIT 1`
 	default:
 		return nil, fmt.Errorf("unsupported database driver: %s", r.driver)
 	}
 
 	data := &domain.BenchmarkData{}
-	var testValue sql.NullString
+	var testValue, largeText, jsonBlob, category sql.NullString
 	err := r.db.QueryRow(query, testKey).Scan(
 		&data.ID, &data.TestKey, &testValue, &data.NumValue, &data.IntValue, &data.BoolValue,
+		&largeText, &jsonBlob, &data.ExtraFloat, &data.ExtraInt, &category, &data.Priority,
 		&data.CreatedBy, &data.CreatedAt, &data.UpdatedAt,
 	)
 
@@ -177,6 +188,15 @@ func (r *BenchmarkRepository) GetByKey(testKey string) (*domain.BenchmarkData, e
 	if testValue.Valid {
 		data.TestValue = testValue.String
 	}
+	if largeText.Valid {
+		data.LargeText = largeText.String
+	}
+	if jsonBlob.Valid {
+		data.JsonBlob = jsonBlob.String
+	}
+	if category.Valid {
+		data.Category = category.String
+	}
 
 	return data, nil
 }
@@ -186,10 +206,10 @@ func (r *BenchmarkRepository) List(limit, offset int) ([]*domain.BenchmarkData, 
 	var query string
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data ORDER BY id LIMIT ? OFFSET ?`
 	case "postgres":
-		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+		query = `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 			FROM benchmark_data ORDER BY id LIMIT $1 OFFSET $2`
 	default:
 		return nil, fmt.Errorf("unsupported database driver: %s", r.driver)
@@ -204,9 +224,10 @@ func (r *BenchmarkRepository) List(limit, offset int) ([]*domain.BenchmarkData, 
 	var results []*domain.BenchmarkData
 	for rows.Next() {
 		data := &domain.BenchmarkData{}
-		var testValue sql.NullString
+		var testValue, largeText, jsonBlob, category sql.NullString
 		err := rows.Scan(
 			&data.ID, &data.TestKey, &testValue, &data.NumValue, &data.IntValue, &data.BoolValue,
+			&largeText, &jsonBlob, &data.ExtraFloat, &data.ExtraInt, &category, &data.Priority,
 			&data.CreatedBy, &data.CreatedAt, &data.UpdatedAt,
 		)
 		if err != nil {
@@ -214,6 +235,15 @@ func (r *BenchmarkRepository) List(limit, offset int) ([]*domain.BenchmarkData, 
 		}
 		if testValue.Valid {
 			data.TestValue = testValue.String
+		}
+		if largeText.Valid {
+			data.LargeText = largeText.String
+		}
+		if jsonBlob.Valid {
+			data.JsonBlob = jsonBlob.String
+		}
+		if category.Valid {
+			data.Category = category.String
 		}
 		results = append(results, data)
 	}
@@ -223,7 +253,7 @@ func (r *BenchmarkRepository) List(limit, offset int) ([]*domain.BenchmarkData, 
 
 // ListFiltered retrieves benchmark data with filters
 func (r *BenchmarkRepository) ListFiltered(filters domain.BenchmarkFilters, limit, offset int) ([]*domain.BenchmarkData, error) {
-	query := `SELECT id, test_key, test_value, num_value, int_value, bool_value, created_by, created_at, updated_at
+	query := `SELECT id, test_key, test_value, num_value, int_value, bool_value, large_text, json_blob, extra_float, extra_int, category, priority, created_by, created_at, updated_at
 		FROM benchmark_data WHERE 1=1`
 
 	args := []interface{}{}
@@ -260,7 +290,27 @@ func (r *BenchmarkRepository) ListFiltered(filters domain.BenchmarkFilters, limi
 		argIndex++
 	}
 
-	query += " ORDER BY id"
+	if filters.Category != nil {
+		if r.driver == "postgres" {
+			query += fmt.Sprintf(" AND category = $%d", argIndex)
+		} else {
+			query += " AND category = ?"
+		}
+		args = append(args, *filters.Category)
+		argIndex++
+	}
+
+	if filters.MinPriority != nil {
+		if r.driver == "postgres" {
+			query += fmt.Sprintf(" AND priority >= $%d", argIndex)
+		} else {
+			query += " AND priority >= ?"
+		}
+		args = append(args, *filters.MinPriority)
+		argIndex++
+	}
+
+	query += " ORDER BY priority DESC, id"
 
 	// Add pagination
 	if r.driver == "postgres" {
@@ -279,9 +329,10 @@ func (r *BenchmarkRepository) ListFiltered(filters domain.BenchmarkFilters, limi
 	var results []*domain.BenchmarkData
 	for rows.Next() {
 		data := &domain.BenchmarkData{}
-		var testValue sql.NullString
+		var testValue, largeText, jsonBlob, category sql.NullString
 		err := rows.Scan(
 			&data.ID, &data.TestKey, &testValue, &data.NumValue, &data.IntValue, &data.BoolValue,
+			&largeText, &jsonBlob, &data.ExtraFloat, &data.ExtraInt, &category, &data.Priority,
 			&data.CreatedBy, &data.CreatedAt, &data.UpdatedAt,
 		)
 		if err != nil {
@@ -289,6 +340,15 @@ func (r *BenchmarkRepository) ListFiltered(filters domain.BenchmarkFilters, limi
 		}
 		if testValue.Valid {
 			data.TestValue = testValue.String
+		}
+		if largeText.Valid {
+			data.LargeText = largeText.String
+		}
+		if jsonBlob.Valid {
+			data.JsonBlob = jsonBlob.String
+		}
+		if category.Valid {
+			data.Category = category.String
 		}
 		results = append(results, data)
 	}
@@ -303,17 +363,17 @@ func (r *BenchmarkRepository) Update(data *domain.BenchmarkData) error {
 	var query string
 	switch r.driver {
 	case "sqlite3", "mysql":
-		query = `UPDATE benchmark_data SET test_key = ?, test_value = ?, num_value = ?, int_value = ?, bool_value = ?, updated_at = ?
+		query = `UPDATE benchmark_data SET test_key = ?, test_value = ?, num_value = ?, int_value = ?, bool_value = ?, large_text = ?, json_blob = ?, extra_float = ?, extra_int = ?, category = ?, priority = ?, updated_at = ?
 			WHERE id = ?`
-		_, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.UpdatedAt, data.ID)
+		_, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.LargeText, data.JsonBlob, data.ExtraFloat, data.ExtraInt, data.Category, data.Priority, data.UpdatedAt, data.ID)
 		if err != nil {
 			return fmt.Errorf("failed to update benchmark data: %w", err)
 		}
 
 	case "postgres":
-		query = `UPDATE benchmark_data SET test_key = $1, test_value = $2, num_value = $3, int_value = $4, bool_value = $5, updated_at = $6
-			WHERE id = $7`
-		_, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.UpdatedAt, data.ID)
+		query = `UPDATE benchmark_data SET test_key = $1, test_value = $2, num_value = $3, int_value = $4, bool_value = $5, large_text = $6, json_blob = $7, extra_float = $8, extra_int = $9, category = $10, priority = $11, updated_at = $12
+			WHERE id = $13`
+		_, err := r.db.Exec(query, data.TestKey, data.TestValue, data.NumValue, data.IntValue, data.BoolValue, data.LargeText, data.JsonBlob, data.ExtraFloat, data.ExtraInt, data.Category, data.Priority, data.UpdatedAt, data.ID)
 		if err != nil {
 			return fmt.Errorf("failed to update benchmark data: %w", err)
 		}

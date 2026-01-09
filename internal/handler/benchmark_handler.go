@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
@@ -33,6 +34,7 @@ func NewBenchmarkHandler(service *service.BenchmarkService, logger *logger.Logge
 // @Security     BearerAuth
 // @Param        concurrent query bool false "Include concurrent operation tests (default: false)"
 // @Param        cleanup query bool false "Skip cleanup after run if set to false (default: true)"
+// @Param        records query int false "Number of records to generate for benchmark testing (default: 1000, max: 500000)"
 // @Success      200 {object} domain.BenchmarkSuiteResult "Benchmark results"
 // @Failure      401 {object} ErrorResponse "Unauthorized"
 // @Failure      500 {object} ErrorResponse "Internal server error"
@@ -45,13 +47,25 @@ func (h *BenchmarkHandler) RunBenchmark(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Parse record count from query parameters
+	recordCount := domain.DefaultRecordCount
+	if recordsStr := r.URL.Query().Get("records"); recordsStr != "" {
+		if parsed, err := strconv.Atoi(recordsStr); err == nil && parsed > 0 {
+			recordCount = parsed
+			if recordCount > domain.MaxRecordCount {
+				recordCount = domain.MaxRecordCount
+			}
+		}
+	}
+
 	// Parse options from query parameters
 	options := domain.BenchmarkOptions{
 		IncludeConcurrent: r.URL.Query().Get("concurrent") == "true",
 		Cleanup:           r.URL.Query().Get("cleanup") != "false", // Default to true
+		RecordCount:       recordCount,
 	}
 
-	h.logger.Info("Running benchmark suite: user_id=%d concurrent=%v cleanup=%v", userID, options.IncludeConcurrent, options.Cleanup)
+	h.logger.Info("Running benchmark suite: user_id=%d concurrent=%v cleanup=%v records=%d", userID, options.IncludeConcurrent, options.Cleanup, options.RecordCount)
 
 	result, err := h.service.RunBenchmark(userID, options)
 	if err != nil {
@@ -60,8 +74,8 @@ func (h *BenchmarkHandler) RunBenchmark(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.logger.Info("Benchmark completed: user_id=%d overall=%s duration_ms=%.2f ops=%d success=%d failed=%d",
-		userID, result.Overall, result.TotalDurationMs, result.TotalOperations, result.SuccessfulOperations, result.FailedOperations)
+	h.logger.Info("Benchmark completed: user_id=%d overall=%s duration_ms=%.2f ops=%d success=%d failed=%d records=%d",
+		userID, result.Overall, result.TotalDurationMs, result.TotalOperations, result.SuccessfulOperations, result.FailedOperations, result.RecordCount)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)

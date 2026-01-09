@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -1742,6 +1743,82 @@ var migrations = []Migration{
 				return fmt.Errorf("failed to drop benchmark_data table: %w", err)
 			}
 			fmt.Println("✓ Dropped benchmark_data table")
+			return nil
+		},
+	},
+	// Migration 0.23.0: Add extended fields to benchmark_data for stress testing
+	{
+		Version:     "0.23.0",
+		Description: "Add extended benchmark_data fields for stress testing",
+		Up: func(db *sql.DB, driver string) error {
+			var alterSQL string
+
+			switch driver {
+			case "sqlite3":
+				// SQLite requires separate ALTER TABLE statements for each column
+				alterStatements := []string{
+					`ALTER TABLE benchmark_data ADD COLUMN large_text TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN json_blob TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_float REAL DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_int INTEGER DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN category TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN priority INTEGER DEFAULT 0`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add column: %w", err)
+						}
+					}
+				}
+				// Add indexes for new columns
+				db.Exec(`CREATE INDEX IF NOT EXISTS idx_benchmark_data_category ON benchmark_data(category)`)
+				db.Exec(`CREATE INDEX IF NOT EXISTS idx_benchmark_data_priority ON benchmark_data(priority)`)
+			case "postgres":
+				alterSQL = `
+				ALTER TABLE benchmark_data
+					ADD COLUMN IF NOT EXISTS large_text TEXT DEFAULT '',
+					ADD COLUMN IF NOT EXISTS json_blob TEXT DEFAULT '',
+					ADD COLUMN IF NOT EXISTS extra_float DOUBLE PRECISION DEFAULT 0,
+					ADD COLUMN IF NOT EXISTS extra_int INTEGER DEFAULT 0,
+					ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT '',
+					ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0;
+				CREATE INDEX IF NOT EXISTS idx_benchmark_data_category ON benchmark_data(category);
+				CREATE INDEX IF NOT EXISTS idx_benchmark_data_priority ON benchmark_data(priority);
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to alter benchmark_data table: %w", err)
+				}
+			case "mysql":
+				// MySQL doesn't have IF NOT EXISTS for columns, check individually
+				alterStatements := []string{
+					`ALTER TABLE benchmark_data ADD COLUMN large_text TEXT`,
+					`ALTER TABLE benchmark_data ADD COLUMN json_blob TEXT`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_float DOUBLE DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_int INT DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN category VARCHAR(100) DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN priority INT DEFAULT 0`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+				db.Exec(`CREATE INDEX idx_benchmark_data_category ON benchmark_data(category)`)
+				db.Exec(`CREATE INDEX idx_benchmark_data_priority ON benchmark_data(priority)`)
+			}
+
+			fmt.Println("✓ Added extended benchmark_data columns")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, skip for SQLite
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE benchmark_data DROP COLUMN IF EXISTS large_text, DROP COLUMN IF EXISTS json_blob, DROP COLUMN IF EXISTS extra_float, DROP COLUMN IF EXISTS extra_int, DROP COLUMN IF EXISTS category, DROP COLUMN IF EXISTS priority`)
+			case "mysql":
+				db.Exec(`ALTER TABLE benchmark_data DROP COLUMN large_text, DROP COLUMN json_blob, DROP COLUMN extra_float, DROP COLUMN extra_int, DROP COLUMN category, DROP COLUMN priority`)
+			}
+			fmt.Println("✓ Removed extended benchmark_data columns")
 			return nil
 		},
 	},
