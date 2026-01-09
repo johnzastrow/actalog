@@ -2120,3 +2120,243 @@ func createTestEmailLogService() *service.EmailLogService {
 	emailLogRepo := NewMockEmailLogRepository()
 	return service.NewEmailLogService(emailLogRepo)
 }
+
+// MockOrganizationSubscriptionRepository is a mock implementation of OrganizationSubscriptionRepository
+type MockOrganizationSubscriptionRepository struct {
+	subscriptions []*domain.OrganizationSubscription
+	shouldError   bool
+	errorToReturn error
+}
+
+func NewMockOrganizationSubscriptionRepository() *MockOrganizationSubscriptionRepository {
+	return &MockOrganizationSubscriptionRepository{
+		subscriptions: []*domain.OrganizationSubscription{},
+	}
+}
+
+func (m *MockOrganizationSubscriptionRepository) SetError(err error) {
+	m.shouldError = true
+	m.errorToReturn = err
+}
+
+func (m *MockOrganizationSubscriptionRepository) ClearError() {
+	m.shouldError = false
+	m.errorToReturn = nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) Create(sub *domain.OrganizationSubscription) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	sub.ID = int64(len(m.subscriptions) + 1)
+	m.subscriptions = append(m.subscriptions, sub)
+	return nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) GetByID(id int64) (*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, sub := range m.subscriptions {
+		if sub.ID == id {
+			return sub, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) GetActiveByOrganizationID(orgID int64) (*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, sub := range m.subscriptions {
+		if sub.OrganizationID == orgID && sub.Status == "active" {
+			return sub, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) GetByOrganizationID(orgID int64) ([]*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.OrganizationSubscription
+	for _, sub := range m.subscriptions {
+		if sub.OrganizationID == orgID {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) Update(sub *domain.OrganizationSubscription) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, s := range m.subscriptions {
+		if s.ID == sub.ID {
+			m.subscriptions[i] = sub
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) Delete(id int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, sub := range m.subscriptions {
+		if sub.ID == id {
+			m.subscriptions = append(m.subscriptions[:i], m.subscriptions[i+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) ListAll() ([]*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	return m.subscriptions, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) ListExpiring(days int) ([]*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.OrganizationSubscription
+	deadline := time.Now().AddDate(0, 0, days)
+	for _, sub := range m.subscriptions {
+		if sub.Status == "active" && sub.EndDate != nil && sub.EndDate.Before(deadline) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) ListExpired() ([]*domain.OrganizationSubscription, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.OrganizationSubscription
+	now := time.Now()
+	for _, sub := range m.subscriptions {
+		if sub.Status == "expired" || (sub.EndDate != nil && sub.EndDate.Before(now)) {
+			result = append(result, sub)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	return nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) MarkAsExpired(id int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	return nil
+}
+
+func (m *MockOrganizationSubscriptionRepository) Cancel(id int64, reason string, adminUserID int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	return nil
+}
+
+// MockSubscriptionAccessRepository is a mock implementation of SubscriptionAccessRepository
+type MockSubscriptionAccessRepository struct {
+	hasAccess     bool
+	shouldError   bool
+	errorToReturn error
+}
+
+func NewMockSubscriptionAccessRepository() *MockSubscriptionAccessRepository {
+	return &MockSubscriptionAccessRepository{
+		hasAccess: true,
+	}
+}
+
+func (m *MockSubscriptionAccessRepository) SetError(err error) {
+	m.shouldError = true
+	m.errorToReturn = err
+}
+
+func (m *MockSubscriptionAccessRepository) ClearError() {
+	m.shouldError = false
+	m.errorToReturn = nil
+}
+
+func (m *MockSubscriptionAccessRepository) CheckUserAccess(userID int64) (*domain.SubscriptionAccessResult, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	return &domain.SubscriptionAccessResult{
+		HasAccess:        m.hasAccess,
+		Source:           "user",
+		UserSubscription: nil,
+		OrgSubscriptions: nil,
+		ExpiresAt:        nil,
+	}, nil
+}
+
+// createTestSubscriptionService creates a SubscriptionService with mock repositories
+func createTestSubscriptionService() *service.SubscriptionService {
+	userSubRepo := NewMockUserSubscriptionRepository()
+	orgSubRepo := NewMockOrganizationSubscriptionRepository()
+	accessRepo := NewMockSubscriptionAccessRepository()
+	auditLogRepo := NewMockAuditLogRepository()
+	userRepo := NewMockUserRepository()
+	orgRepo := NewMockOrganizationRepository()
+
+	return service.NewSubscriptionService(
+		userSubRepo,
+		orgSubRepo,
+		accessRepo,
+		auditLogRepo,
+		userRepo,
+		orgRepo,
+	)
+}
+
+// subscriptionMocks holds references to all mocks for a SubscriptionService
+type subscriptionMocks struct {
+	userSubRepo  *MockUserSubscriptionRepository
+	orgSubRepo   *MockOrganizationSubscriptionRepository
+	accessRepo   *MockSubscriptionAccessRepository
+	auditLogRepo *MockAuditLogRepository
+	userRepo     *MockUserRepository
+	orgRepo      *MockOrganizationRepository
+}
+
+// createTestSubscriptionServiceWithMocks creates a SubscriptionService with mock repositories
+// and returns both the service and the mocks for testing error paths
+func createTestSubscriptionServiceWithMocks() (*service.SubscriptionService, *subscriptionMocks) {
+	mocks := &subscriptionMocks{
+		userSubRepo:  NewMockUserSubscriptionRepository(),
+		orgSubRepo:   NewMockOrganizationSubscriptionRepository(),
+		accessRepo:   NewMockSubscriptionAccessRepository(),
+		auditLogRepo: NewMockAuditLogRepository(),
+		userRepo:     NewMockUserRepository(),
+		orgRepo:      NewMockOrganizationRepository(),
+	}
+
+	svc := service.NewSubscriptionService(
+		mocks.userSubRepo,
+		mocks.orgSubRepo,
+		mocks.accessRepo,
+		mocks.auditLogRepo,
+		mocks.userRepo,
+		mocks.orgRepo,
+	)
+
+	return svc, mocks
+}

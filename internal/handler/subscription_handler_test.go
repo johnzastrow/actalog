@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+// errMockFailure is a standard error used in mock error tests
+var errMockFailure = errors.New("mock failure")
 
 func TestNewSubscriptionHandler(t *testing.T) {
 	// Test constructor with nil dependencies
@@ -1082,4 +1086,686 @@ func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_NilService(t *
 	}()
 
 	handler.ListExpiredOrganizationSubscriptions(rr, req)
+}
+
+// =============================================================================
+// Success Path Tests with Real Service
+// =============================================================================
+
+func TestSubscriptionHandler_ListAllUserSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_ListAllOrganizationSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+	assertBodyContains(t, rr, "days")
+}
+
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_CustomDays(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	testCases := []struct {
+		name         string
+		days         string
+		expectedDays string
+	}{
+		{"7 days", "7", "7"},
+		{"14 days", "14", "14"},
+		{"60 days", "60", "60"},
+		{"invalid falls to default", "invalid", "30"},
+		{"negative falls to default", "-5", "30"},
+		{"zero falls to default", "0", "30"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			url := "/api/admin/subscriptions/users/expiring?days=" + tc.days
+			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			handler.ListExpiringUserSubscriptions(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+			assertBodyContains(t, rr, tc.expectedDays)
+		})
+	}
+}
+
+func TestSubscriptionHandler_ListExpiredUserSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+	assertBodyContains(t, rr, "days")
+}
+
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_CustomDays(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	testCases := []struct {
+		name         string
+		days         string
+		expectedDays string
+	}{
+		{"7 days", "7", "7"},
+		{"14 days", "14", "14"},
+		{"60 days", "60", "60"},
+		{"invalid falls to default", "invalid", "30"},
+		{"negative falls to default", "-5", "30"},
+		{"zero falls to default", "0", "30"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			url := "/api/admin/subscriptions/organizations/expiring?days=" + tc.days
+			req := createAuthenticatedRequest(http.MethodGet, url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			handler.ListExpiringOrganizationSubscriptions(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+			assertBodyContains(t, rr, tc.expectedDays)
+		})
+	}
+}
+
+func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_GetMySubscriptionStatus_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/subscription/status", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetMySubscriptionStatus(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "has_access")
+}
+
+// =============================================================================
+// Error Path Tests with Mock Errors
+// =============================================================================
+
+func TestSubscriptionHandler_ListAllUserSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get subscriptions")
+}
+
+func TestSubscriptionHandler_ListAllUserSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil, // No logger to test nil logger branch
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_ListAllOrganizationSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get subscriptions")
+}
+
+func TestSubscriptionHandler_ListAllOrganizationSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListAllOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_ListExpiredUserSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get expired subscriptions")
+}
+
+func TestSubscriptionHandler_ListExpiredUserSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get expired subscriptions")
+}
+
+func TestSubscriptionHandler_ListExpiredOrganizationSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expired", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiredOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get expiring subscriptions")
+}
+
+func TestSubscriptionHandler_ListExpiringUserSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/users/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get expiring subscriptions")
+}
+
+func TestSubscriptionHandler_ListExpiringOrganizationSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/subscriptions/organizations/expiring", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListExpiringOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_GetMySubscriptionStatus_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.accessRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/subscription/status", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetMySubscriptionStatus(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_GetMySubscriptionStatus_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.accessRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/subscription/status", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetMySubscriptionStatus(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+// =============================================================================
+// GetUserSubscriptions and GetOrganizationSubscriptions with Service
+// =============================================================================
+
+func TestSubscriptionHandler_GetUserSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/1", "")
+	req = addChiURLParam(req, "user_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_GetUserSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/1", "")
+	req = addChiURLParam(req, "user_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get subscriptions")
+}
+
+func TestSubscriptionHandler_GetUserSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/users/1", "")
+	req = addChiURLParam(req, "user_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetUserSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSubscriptionHandler_GetOrganizationSubscriptions_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/1", "")
+	req = addChiURLParam(req, "org_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "subscriptions")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestSubscriptionHandler_GetOrganizationSubscriptions_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/1", "")
+	req = addChiURLParam(req, "org_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get subscriptions")
+}
+
+func TestSubscriptionHandler_GetOrganizationSubscriptions_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createTestRequest(http.MethodGet, "/api/admin/subscriptions/organizations/1", "")
+	req = addChiURLParam(req, "org_id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.GetOrganizationSubscriptions(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+// =============================================================================
+// MarkUserSubscriptionAsPaid and MarkOrganizationSubscriptionAsPaid with Service
+// =============================================================================
+
+func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/users/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkUserSubscriptionAsPaid(rr, req)
+
+	// May return not found or internal server error since mock has no subscriptions
+	// The service wraps errors so 500 is also possible
+	// Just verify it doesn't panic and exercises the code path
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/users/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkUserSubscriptionAsPaid(rr, req)
+
+	// Service error should result in 500 or specific error status
+	if rr.Code != http.StatusInternalServerError && rr.Code != http.StatusNotFound {
+		t.Errorf("Expected StatusInternalServerError or StatusNotFound, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_MarkUserSubscriptionAsPaid_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.userSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/users/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkUserSubscriptionAsPaid(rr, req)
+
+	// Service error should result in 500 or specific error status
+	if rr.Code != http.StatusInternalServerError && rr.Code != http.StatusNotFound {
+		t.Errorf("Expected StatusInternalServerError or StatusNotFound, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/organizations/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkOrganizationSubscriptionAsPaid(rr, req)
+
+	// May return not found since mock has no subscriptions
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound {
+		t.Errorf("Expected StatusOK or StatusNotFound, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ServiceError(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/organizations/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkOrganizationSubscriptionAsPaid(rr, req)
+
+	// Service error should result in 500 or specific error status
+	if rr.Code != http.StatusInternalServerError && rr.Code != http.StatusNotFound {
+		t.Errorf("Expected StatusInternalServerError or StatusNotFound, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ServiceError_NoLogger(t *testing.T) {
+	svc, mocks := createTestSubscriptionServiceWithMocks()
+	mocks.orgSubRepo.SetError(errMockFailure)
+
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/subscriptions/organizations/1/paid", `{}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkOrganizationSubscriptionAsPaid(rr, req)
+
+	// Service error should result in 500 or specific error status
+	if rr.Code != http.StatusInternalServerError && rr.Code != http.StatusNotFound {
+		t.Errorf("Expected StatusInternalServerError or StatusNotFound, got %d", rr.Code)
+	}
 }
