@@ -52,37 +52,10 @@ func TestNewSettingsHandler(t *testing.T) {
 	}
 }
 
-func TestSettingsHandler_GetSettings_NilService(t *testing.T) {
-	handler := &SettingsHandler{}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetSettings requires service")
-		}
-	}()
-
-	handler.GetSettings(rr, req)
-}
-
-func TestSettingsHandler_UpdateSettings_NilService(t *testing.T) {
-	handler := &SettingsHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", `{"theme": "dark"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry with valid JSON
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UpdateSettings requires service")
-		}
-	}()
-
-	handler.UpdateSettings(rr, req)
-}
+// Removed 2 panic-expectation tests:
+// - TestSettingsHandler_GetSettings_NilService
+// - TestSettingsHandler_UpdateSettings_NilService
+// These tests verified nil pointer panics, not business logic.
 
 // Tests with mock service
 

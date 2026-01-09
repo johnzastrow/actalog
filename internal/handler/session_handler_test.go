@@ -62,54 +62,11 @@ func TestNewSessionHandler(t *testing.T) {
 	}
 }
 
-func TestSessionHandler_ListSessions_NilService(t *testing.T) {
-	handler := &SessionHandler{}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/sessions", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ListSessions requires service")
-		}
-	}()
-
-	handler.ListSessions(rr, req)
-}
-
-func TestSessionHandler_RevokeSession_ValidIDNilService(t *testing.T) {
-	handler := &SessionHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/sessions/1", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry with valid ID
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("RevokeSession requires service")
-		}
-	}()
-
-	handler.RevokeSession(rr, req)
-}
-
-func TestSessionHandler_RevokeAllSessions_NilService(t *testing.T) {
-	handler := &SessionHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/sessions/revoke-all", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("RevokeAllSessions requires service")
-		}
-	}()
-
-	handler.RevokeAllSessions(rr, req)
-}
+// Removed 3 panic-expectation tests:
+// - TestSessionHandler_ListSessions_NilService
+// - TestSessionHandler_RevokeSession_ValidIDNilService
+// - TestSessionHandler_RevokeAllSessions_NilService
+// These tests verified nil pointer panics, not business logic.
 
 // Tests with mock service
 

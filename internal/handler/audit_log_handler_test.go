@@ -150,113 +150,12 @@ func TestNewAuditLogHandler(t *testing.T) {
 	}
 }
 
-func TestAuditLogHandler_GetMyAuditLogs_WithPaginationParams(t *testing.T) {
-	handler := &AuditLogHandler{
-		logger: createTestLogger(),
-	}
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"default pagination", "/api/users/me/audit-logs"},
-		{"with limit", "/api/users/me/audit-logs?limit=25"},
-		{"with offset", "/api/users/me/audit-logs?offset=10"},
-		{"with both", "/api/users/me/audit-logs?limit=25&offset=10"},
-		{"with invalid limit", "/api/users/me/audit-logs?limit=abc"},
-		{"with invalid offset", "/api/users/me/audit-logs?offset=xyz"},
-		{"with zero limit", "/api/users/me/audit-logs?limit=0"},
-		{"with negative offset", "/api/users/me/audit-logs?offset=-5"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "test@example.com", "user")
-			rr := httptest.NewRecorder()
-
-			// Without service, will panic - tests param parsing paths
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetMyAuditLogs requires service - params were parsed")
-				}
-			}()
-
-			handler.GetMyAuditLogs(rr, req)
-		})
-	}
-}
-
-func TestAuditLogHandler_GetAuditLog_ValidID(t *testing.T) {
-	handler := &AuditLogHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/audit-logs/1", "", 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without service, will panic
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetAuditLog requires service")
-		}
-	}()
-
-	handler.GetAuditLog(rr, req)
-}
-
-func TestAuditLogHandler_ListAuditLogs_WithAllParams(t *testing.T) {
-	handler := &AuditLogHandler{
-		logger: createTestLogger(),
-	}
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"with valid user_id", "/api/audit-logs?user_id=1"},
-		{"with valid target_user_id", "/api/audit-logs?target_user_id=2"},
-		{"with event_type", "/api/audit-logs?event_type=login"},
-		{"with ip_address", "/api/audit-logs?ip_address=192.168.1.1"},
-		{"with valid dates", "/api/audit-logs?start_date=2024-01-01T00:00:00Z&end_date=2024-12-31T23:59:59Z"},
-		{"with pagination", "/api/audit-logs?limit=10&offset=5"},
-		{"with all params", "/api/audit-logs?user_id=1&event_type=login&limit=20&offset=0"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodGet, tt.query, "", 1, "admin@example.com", "admin")
-			rr := httptest.NewRecorder()
-
-			// Without service, will panic - tests param parsing paths
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListAuditLogs requires service - params were parsed")
-				}
-			}()
-
-			handler.ListAuditLogs(rr, req)
-		})
-	}
-}
-
-func TestAuditLogHandler_CleanupOldLogs_ValidRetentionDays(t *testing.T) {
-	handler := &AuditLogHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/audit-logs/cleanup", `{"retention_days": 30}`, 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	// Without service, will panic
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("CleanupOldLogs requires service")
-		}
-	}()
-
-	handler.CleanupOldLogs(rr, req)
-}
+// Removed 4 panic-expectation tests:
+// - TestAuditLogHandler_GetMyAuditLogs_WithPaginationParams (8 subtests)
+// - TestAuditLogHandler_GetAuditLog_ValidID
+// - TestAuditLogHandler_ListAuditLogs_WithAllParams (7 subtests)
+// - TestAuditLogHandler_CleanupOldLogs_ValidRetentionDays
+// These tests verified nil pointer panics, not business logic.
 
 // Tests with mock service
 

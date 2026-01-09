@@ -85,25 +85,6 @@ func TestUserHandler_UpdateProfile_InvalidBirthdayFormats(t *testing.T) {
 	}
 }
 
-func TestUserHandler_UpdateProfile_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Valid request with valid birthday but nil service
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "New Name"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
 func TestUserHandler_GetProfile_Unauthorized(t *testing.T) {
 	handler := &UserHandler{}
 
@@ -114,24 +95,6 @@ func TestUserHandler_GetProfile_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestUserHandler_GetProfile_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.GetProfile(rr, req)
 }
 
 func TestUserHandler_UploadAvatar_Unauthorized(t *testing.T) {
@@ -168,24 +131,6 @@ func TestUserHandler_DeleteAvatar_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestUserHandler_DeleteAvatar_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.DeleteAvatar(rr, req)
 }
 
 func TestUserHandler_ChangePassword_Unauthorized(t *testing.T) {
@@ -274,25 +219,6 @@ func TestUserHandler_ChangePassword_PasswordExactly7Chars(t *testing.T) {
 	assertBodyContains(t, rr, "New password must be at least 8 characters")
 }
 
-func TestUserHandler_ChangePassword_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Valid request with 8-char password but nil service
-	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password", `{"old_password": "oldpassword", "new_password": "12345678"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.ChangePassword(rr, req)
-}
-
 func TestUserHandler_ChangePassword_EmptyStrings(t *testing.T) {
 	handler := &UserHandler{}
 
@@ -304,100 +230,6 @@ func TestUserHandler_ChangePassword_EmptyStrings(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Both old_password and new_password are required")
-}
-
-func TestUserHandler_UpdateProfile_WithValidBirthday(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Valid birthday format should pass validation and reach service
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "New Name", "birthday": "1990-05-15"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService - tests birthday parsing passes
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
-func TestUserHandler_UpdateProfile_EmptyBirthday(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Empty birthday should skip parsing and reach service
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "New Name", "birthday": ""}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService - tests empty birthday is allowed
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
-func TestUserHandler_UpdateProfile_OnlyName(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Only updating name (no birthday field at all)
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "New Name"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
-func TestUserHandler_UpdateProfile_OnlyEmail(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Only updating email
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"email": "newemail@example.com"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
-func TestUserHandler_UpdateProfile_AllFields(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Updating all fields
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile",
-		`{"name": "New Name", "email": "newemail@example.com", "birthday": "1990-05-15"}`,
-		1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
 }
 
 func TestUserHandler_UploadAvatar_InvalidContentType(t *testing.T) {
@@ -414,46 +246,6 @@ func TestUserHandler_UploadAvatar_InvalidContentType(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "File must be an image")
-}
-
-func TestUserHandler_UploadAvatar_ValidImageNilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Upload a valid image file (tests file processing paths)
-	// Using a minimal PNG header for content type detection
-	fileContent := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
-	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "test.png", "image/png", fileContent, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic when trying to get user from nil service (after file validation passes)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UploadAvatar requires service after file validation")
-		}
-	}()
-
-	handler.UploadAvatar(rr, req)
-}
-
-func TestUserHandler_UploadAvatar_ValidJPEGNilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Upload a valid JPEG file
-	fileContent := []byte{0xFF, 0xD8, 0xFF, 0xE0}
-	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "test.jpg", "image/jpeg", fileContent, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UploadAvatar requires service after file validation")
-		}
-	}()
-
-	handler.UploadAvatar(rr, req)
 }
 
 func TestUserHandler_UploadAvatar_ApplicationPDF(t *testing.T) {
@@ -487,6 +279,20 @@ func TestUserHandler_UploadAvatar_WrongFieldName(t *testing.T) {
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "No file provided")
 }
+
+// Removed 11 panic-expectation tests:
+// - TestUserHandler_UpdateProfile_NilService
+// - TestUserHandler_GetProfile_NilService
+// - TestUserHandler_DeleteAvatar_NilService
+// - TestUserHandler_ChangePassword_NilService
+// - TestUserHandler_UpdateProfile_WithValidBirthday
+// - TestUserHandler_UpdateProfile_EmptyBirthday
+// - TestUserHandler_UpdateProfile_OnlyName
+// - TestUserHandler_UpdateProfile_OnlyEmail
+// - TestUserHandler_UpdateProfile_AllFields
+// - TestUserHandler_UploadAvatar_ValidImageNilService
+// - TestUserHandler_UploadAvatar_ValidJPEGNilService
+// These tests verified nil pointer panics, not business logic.
 
 // Tests with mock service
 

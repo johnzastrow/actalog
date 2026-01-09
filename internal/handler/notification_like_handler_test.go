@@ -76,40 +76,6 @@ func TestNewNotificationLikeHandler(t *testing.T) {
 	}
 }
 
-func TestNotificationLikeHandler_LikeNotification_ValidIDNilService(t *testing.T) {
-	handler := &NotificationLikeHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/notifications/1/like", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry with valid ID
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("LikeNotification requires service")
-		}
-	}()
-
-	handler.LikeNotification(rr, req)
-}
-
-func TestNotificationLikeHandler_GetNotificationLikes_ValidIDNilService(t *testing.T) {
-	handler := &NotificationLikeHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/notifications/1/likes", "")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry with valid ID
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetNotificationLikes requires service")
-		}
-	}()
-
-	handler.GetNotificationLikes(rr, req)
-}
-
 // Tests with mock service
 
 func TestNotificationLikeHandler_LikeNotification_Success(t *testing.T) {
@@ -181,19 +147,8 @@ func TestNotificationLikeHandler_GetNotificationLikes_Success(t *testing.T) {
 	assertBodyContains(t, rr, "count")
 }
 
-func TestNotificationLikeHandler_UnlikeNotification_ValidIDNilService(t *testing.T) {
-	handler := &NotificationLikeHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/notifications/1/like", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry with valid ID
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UnlikeNotification requires service")
-		}
-	}()
-
-	handler.UnlikeNotification(rr, req)
-}
+// Removed 3 panic-expectation tests:
+// - TestNotificationLikeHandler_LikeNotification_ValidIDNilService
+// - TestNotificationLikeHandler_GetNotificationLikes_ValidIDNilService
+// - TestNotificationLikeHandler_UnlikeNotification_ValidIDNilService
+// These tests verified nil pointer panics, not business logic.

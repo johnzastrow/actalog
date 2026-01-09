@@ -61,56 +61,11 @@ func TestNewWodifyImportHandler(t *testing.T) {
 	}
 }
 
-func TestWodifyImportHandler_PreviewWodifyImport_WithFileNilService(t *testing.T) {
-	handler := &WodifyImportHandler{}
-
-	content := []byte("Date,Workout Name,Duration,Notes\n2024-01-15,Fran,5:30,Great workout")
-	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/preview",
-		"file", "wodify_export.csv", "text/csv", content, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("PreviewWodifyImport requires service")
-		}
-	}()
-
-	handler.PreviewWodifyImport(rr, req)
-}
-
-func TestWodifyImportHandler_ConfirmWodifyImport_WithFileNilService(t *testing.T) {
-	handler := &WodifyImportHandler{}
-
-	content := []byte("Date,Workout Name,Duration,Notes\n2024-01-15,Fran,5:30,Great workout")
-	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/confirm",
-		"file", "wodify_export.csv", "text/csv", content, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ConfirmWodifyImport requires service")
-		}
-	}()
-
-	handler.ConfirmWodifyImport(rr, req)
-}
-
-func TestWodifyImportHandler_PreviewWodifyImport_EmptyFile(t *testing.T) {
-	handler := &WodifyImportHandler{}
-
-	content := []byte("")
-	req := createMultipartRequest(http.MethodPost, "/api/import/wodify/preview",
-		"file", "empty.csv", "text/csv", content, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("PreviewWodifyImport handles empty file")
-		}
-	}()
-
-	handler.PreviewWodifyImport(rr, req)
-}
+// Removed 3 panic-expectation tests:
+// - TestWodifyImportHandler_PreviewWodifyImport_WithFileNilService
+// - TestWodifyImportHandler_ConfirmWodifyImport_WithFileNilService
+// - TestWodifyImportHandler_PreviewWodifyImport_EmptyFile
+// These tests verified nil pointer panics, not business logic.
 
 func TestWodifyImportHandler_PreviewWodifyImport_WrongFieldName(t *testing.T) {
 	handler := &WodifyImportHandler{}

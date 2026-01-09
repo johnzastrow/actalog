@@ -259,56 +259,6 @@ func TestWorkoutWODHandler_AddWODToWorkout_MissingWODIDWithValidWorkoutID(t *tes
 	assertBodyContains(t, rr, "WOD ID is required")
 }
 
-func TestWorkoutWODHandler_AddWODToWorkout_ValidInputNilService(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts/1/wods",
-		`{"wod_id": 10, "order_index": 1}`, 1, "test@example.com", "user")
-	req = addChiURLParam(req, "workout_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("AddWODToWorkout requires service")
-		}
-	}()
-
-	handler.AddWODToWorkout(rr, req)
-}
-
-func TestWorkoutWODHandler_AddWODToWorkout_WithDivision(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts/1/wods",
-		`{"wod_id": 10, "order_index": 1, "division": "Rx"}`, 1, "test@example.com", "user")
-	req = addChiURLParam(req, "workout_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("AddWODToWorkout requires service")
-		}
-	}()
-
-	handler.AddWODToWorkout(rr, req)
-}
-
-func TestWorkoutWODHandler_RemoveWODFromWorkout_ValidIDNilService(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/workout-wods/1", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "workout_wod_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("RemoveWODFromWorkout requires service")
-		}
-	}()
-
-	handler.RemoveWODFromWorkout(rr, req)
-}
-
 func TestWorkoutWODHandler_UpdateWorkoutWOD_ValidIDInvalidJSON(t *testing.T) {
 	handler := &WorkoutWODHandler{}
 
@@ -322,165 +272,16 @@ func TestWorkoutWODHandler_UpdateWorkoutWOD_ValidIDInvalidJSON(t *testing.T) {
 	assertBodyContains(t, rr, "Invalid request body")
 }
 
-func TestWorkoutWODHandler_UpdateWorkoutWOD_ValidInputNilService(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPut, "/api/workout-wods/1",
-		`{"score_value": "10:30", "division": "Scaled"}`, 1, "test@example.com", "user")
-	req = addChiURLParam(req, "workout_wod_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UpdateWorkoutWOD requires service")
-		}
-	}()
-
-	handler.UpdateWorkoutWOD(rr, req)
-}
-
-func TestWorkoutWODHandler_ToggleWODPR_ValidIDNilService(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/workout-wods/1/toggle-pr", "", 1, "test@example.com", "user")
-	req = addChiURLParam(req, "workout_wod_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ToggleWODPR requires service")
-		}
-	}()
-
-	handler.ToggleWODPR(rr, req)
-}
-
-func TestWorkoutWODHandler_ListWODsForWorkout_ValidIDNilService(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/workouts/1/wods", "")
-	req = addChiURLParam(req, "workout_id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ListWODsForWorkout requires service")
-		}
-	}()
-
-	handler.ListWODsForWorkout(rr, req)
-}
-
-// Tests with different IDs
-
-func TestWorkoutWODHandler_AddWODToWorkout_DifferentIDs(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("workout_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodPost, "/api/workouts/"+id+"/wods",
-				`{"wod_id": 5, "order_index": 0}`, 1, "test@example.com", "user")
-			req = addChiURLParam(req, "workout_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("AddWODToWorkout requires service")
-				}
-			}()
-
-			handler.AddWODToWorkout(rr, req)
-		})
-	}
-}
-
-func TestWorkoutWODHandler_RemoveWODFromWorkout_DifferentIDs(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("workout_wod_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodDelete, "/api/workout-wods/"+id, "", 1, "test@example.com", "user")
-			req = addChiURLParam(req, "workout_wod_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("RemoveWODFromWorkout requires service")
-				}
-			}()
-
-			handler.RemoveWODFromWorkout(rr, req)
-		})
-	}
-}
-
-func TestWorkoutWODHandler_UpdateWorkoutWOD_DifferentIDs(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("workout_wod_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodPut, "/api/workout-wods/"+id,
-				`{"score_value": "5:00"}`, 1, "test@example.com", "user")
-			req = addChiURLParam(req, "workout_wod_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("UpdateWorkoutWOD requires service")
-				}
-			}()
-
-			handler.UpdateWorkoutWOD(rr, req)
-		})
-	}
-}
-
-func TestWorkoutWODHandler_ToggleWODPR_DifferentIDs(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("workout_wod_id_"+id, func(t *testing.T) {
-			req := createAuthenticatedRequest(http.MethodPost, "/api/workout-wods/"+id+"/toggle-pr", "", 1, "test@example.com", "user")
-			req = addChiURLParam(req, "workout_wod_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ToggleWODPR requires service")
-				}
-			}()
-
-			handler.ToggleWODPR(rr, req)
-		})
-	}
-}
-
-func TestWorkoutWODHandler_ListWODsForWorkout_DifferentIDs(t *testing.T) {
-	handler := &WorkoutWODHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("workout_id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/workouts/"+id+"/wods", "")
-			req = addChiURLParam(req, "workout_id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListWODsForWorkout requires service")
-				}
-			}()
-
-			handler.ListWODsForWorkout(rr, req)
-		})
-	}
-}
+// Removed 11 panic-expectation tests:
+// - TestWorkoutWODHandler_AddWODToWorkout_ValidInputNilService
+// - TestWorkoutWODHandler_AddWODToWorkout_WithDivision
+// - TestWorkoutWODHandler_RemoveWODFromWorkout_ValidIDNilService
+// - TestWorkoutWODHandler_UpdateWorkoutWOD_ValidInputNilService
+// - TestWorkoutWODHandler_ToggleWODPR_ValidIDNilService
+// - TestWorkoutWODHandler_ListWODsForWorkout_ValidIDNilService
+// - TestWorkoutWODHandler_AddWODToWorkout_DifferentIDs (3 subtests)
+// - TestWorkoutWODHandler_RemoveWODFromWorkout_DifferentIDs (3 subtests)
+// - TestWorkoutWODHandler_UpdateWorkoutWOD_DifferentIDs (3 subtests)
+// - TestWorkoutWODHandler_ToggleWODPR_DifferentIDs (3 subtests)
+// - TestWorkoutWODHandler_ListWODsForWorkout_DifferentIDs (3 subtests)
+// These tests verified nil pointer panics, not business logic.

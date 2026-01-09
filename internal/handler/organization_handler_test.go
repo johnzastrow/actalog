@@ -214,24 +214,6 @@ func TestOrganizationHandler_GetOrganizationUsers_InvalidOrgID(t *testing.T) {
 	assertBodyContains(t, rr, "Invalid organization ID")
 }
 
-// Tests for ListOrganizations
-
-func TestOrganizationHandler_ListOrganizations_NilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/organizations", "")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("ListOrganizations requires service")
-		}
-	}()
-
-	handler.ListOrganizations(rr, req)
-}
-
 // Test NewOrganizationHandler
 
 func TestNewOrganizationHandler(t *testing.T) {
@@ -239,25 +221,6 @@ func TestNewOrganizationHandler(t *testing.T) {
 	if handler == nil {
 		t.Error("NewOrganizationHandler should return a non-nil handler")
 	}
-}
-
-// Test GetOrganization with valid ID
-
-func TestOrganizationHandler_GetOrganization_ValidIDNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/organizations/1", "")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetOrganization requires service")
-		}
-	}()
-
-	handler.GetOrganization(rr, req)
 }
 
 // Test UpdateOrganization with valid JSON
@@ -273,42 +236,6 @@ func TestOrganizationHandler_UpdateOrganization_ValidIDInvalidJSON(t *testing.T)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid request body")
-}
-
-func TestOrganizationHandler_UpdateOrganization_ValidInputNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/organizations/1", `{"name": "Test Org"}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UpdateOrganization requires service")
-		}
-	}()
-
-	handler.UpdateOrganization(rr, req)
-}
-
-// Test DeleteOrganization with valid ID
-
-func TestOrganizationHandler_DeleteOrganization_ValidIDNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/organizations/1", "", 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("DeleteOrganization requires service")
-		}
-	}()
-
-	handler.DeleteOrganization(rr, req)
 }
 
 // Test AssignUserToOrganization with valid JSON
@@ -355,222 +282,22 @@ func TestOrganizationHandler_RemoveUserFromOrganization_InvalidOrgID(t *testing.
 	assertBodyContains(t, rr, "Invalid organization ID")
 }
 
-// Test GetUserOrganizations with valid ID
-
-func TestOrganizationHandler_GetUserOrganizations_ValidIDNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/users/1/organizations", "")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetUserOrganizations requires service")
-		}
-	}()
-
-	handler.GetUserOrganizations(rr, req)
-}
-
-// Test GetOrganizationUsers with valid ID
-
-func TestOrganizationHandler_GetOrganizationUsers_ValidIDNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createTestRequest(http.MethodGet, "/api/admin/organizations/1/users", "")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("GetOrganizationUsers requires service")
-		}
-	}()
-
-	handler.GetOrganizationUsers(rr, req)
-}
-
-// Additional tests for RemoveUserFromOrganization with valid IDs
-
-func TestOrganizationHandler_RemoveUserFromOrganization_ValidIDsNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/users/1/organization/2", "", 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	req = addChiURLParam(req, "org_id", "2")
-	rr := httptest.NewRecorder()
-
-	// Without a service, will panic - tests function entry
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("RemoveUserFromOrganization requires service")
-		}
-	}()
-
-	handler.RemoveUserFromOrganization(rr, req)
-}
-
-// Tests for CreateOrganization with valid input
-
-func TestOrganizationHandler_CreateOrganization_ValidInputNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/organizations",
-		`{"name": "Test Org", "description": "A test organization"}`, 1, "admin@example.com", "admin")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("CreateOrganization requires service")
-		}
-	}()
-
-	handler.CreateOrganization(rr, req)
-}
-
-// Tests for AssignUserToOrganization with valid input
-
-func TestOrganizationHandler_AssignUserToOrganization_ValidInputNilService(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/organization",
-		`{"organization_id": 2}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("AssignUserToOrganization requires service")
-		}
-	}()
-
-	handler.AssignUserToOrganization(rr, req)
-}
-
-// Tests for ListOrganizations with pagination
-
-func TestOrganizationHandler_ListOrganizations_WithPagination(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"default", "/api/admin/organizations"},
-		{"with limit", "/api/admin/organizations?limit=10"},
-		{"with offset", "/api/admin/organizations?offset=5"},
-		{"with both", "/api/admin/organizations?limit=20&offset=10"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, tt.query, "")
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("ListOrganizations requires service")
-				}
-			}()
-
-			handler.ListOrganizations(rr, req)
-		})
-	}
-}
-
-// Tests for GetOrganization with different IDs
-
-func TestOrganizationHandler_GetOrganization_DifferentIDs(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/admin/organizations/"+id, "")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetOrganization requires service")
-				}
-			}()
-
-			handler.GetOrganization(rr, req)
-		})
-	}
-}
-
-// Tests for UpdateOrganization with description
-
-func TestOrganizationHandler_UpdateOrganization_WithDescription(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/organizations/1",
-		`{"name": "Updated Org", "description": "Updated description"}`, 1, "admin@example.com", "admin")
-	req = addChiURLParam(req, "id", "1")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Log("UpdateOrganization requires service")
-		}
-	}()
-
-	handler.UpdateOrganization(rr, req)
-}
-
-// Tests for GetUserOrganizations with different IDs
-
-func TestOrganizationHandler_GetUserOrganizations_DifferentIDs(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("user_id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/admin/users/"+id+"/organizations", "")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetUserOrganizations requires service")
-				}
-			}()
-
-			handler.GetUserOrganizations(rr, req)
-		})
-	}
-}
-
-// Tests for GetOrganizationUsers with different IDs
-
-func TestOrganizationHandler_GetOrganizationUsers_DifferentIDs(t *testing.T) {
-	handler := &OrganizationHandler{}
-
-	testIDs := []string{"1", "10", "100"}
-
-	for _, id := range testIDs {
-		t.Run("org_id_"+id, func(t *testing.T) {
-			req := createTestRequest(http.MethodGet, "/api/admin/organizations/"+id+"/users", "")
-			req = addChiURLParam(req, "id", id)
-			rr := httptest.NewRecorder()
-
-			defer func() {
-				if r := recover(); r == nil {
-					t.Log("GetOrganizationUsers requires service")
-				}
-			}()
-
-			handler.GetOrganizationUsers(rr, req)
-		})
-	}
-}
+// Removed 14 panic-expectation tests:
+// - TestOrganizationHandler_ListOrganizations_NilService
+// - TestOrganizationHandler_GetOrganization_ValidIDNilService
+// - TestOrganizationHandler_UpdateOrganization_ValidInputNilService
+// - TestOrganizationHandler_DeleteOrganization_ValidIDNilService
+// - TestOrganizationHandler_GetUserOrganizations_ValidIDNilService
+// - TestOrganizationHandler_GetOrganizationUsers_ValidIDNilService
+// - TestOrganizationHandler_RemoveUserFromOrganization_ValidIDsNilService
+// - TestOrganizationHandler_CreateOrganization_ValidInputNilService
+// - TestOrganizationHandler_AssignUserToOrganization_ValidInputNilService
+// - TestOrganizationHandler_ListOrganizations_WithPagination (4 subtests)
+// - TestOrganizationHandler_GetOrganization_DifferentIDs (3 subtests)
+// - TestOrganizationHandler_UpdateOrganization_WithDescription
+// - TestOrganizationHandler_GetUserOrganizations_DifferentIDs (3 subtests)
+// - TestOrganizationHandler_GetOrganizationUsers_DifferentIDs (3 subtests)
+// These tests verified nil pointer panics, not business logic.
 
 // MockUserRepositoryForOrg is a mock that returns nil,nil for not found (matching real repo behavior)
 type MockUserRepositoryForOrg struct {
