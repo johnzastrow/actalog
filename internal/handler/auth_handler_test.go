@@ -709,3 +709,36 @@ func TestAuthHandler_Login_WithRememberMeFalse(t *testing.T) {
 	assertStatusCode(t, loginRR, http.StatusOK)
 	assertBodyContains(t, loginRR, "token")
 }
+
+func TestAuthHandler_Login_WithRememberMeTrue(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewAuthHandler(userService, createTestLogger())
+
+	// First register a user
+	registerBody := `{"name": "Remember True User", "email": "rememberTrue@example.com", "password": "password123"}`
+	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
+	regRR := httptest.NewRecorder()
+	handler.Register(regRR, regReq)
+
+	// Login with remember_me true
+	loginBody := `{"email": "rememberTrue@example.com", "password": "password123", "remember_me": true}`
+	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
+	loginRR := httptest.NewRecorder()
+	handler.Login(loginRR, loginReq)
+
+	assertStatusCode(t, loginRR, http.StatusOK)
+	assertBodyContains(t, loginRR, "token")
+}
+
+func TestAuthHandler_Login_NonExistentUserReturnsUnauthorized(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewAuthHandler(userService, createTestLogger())
+
+	// Login with non-existent user
+	loginBody := `{"email": "nonexistent@example.com", "password": "password123"}`
+	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
+	loginRR := httptest.NewRecorder()
+	handler.Login(loginRR, loginReq)
+
+	assertStatusCode(t, loginRR, http.StatusUnauthorized)
+}

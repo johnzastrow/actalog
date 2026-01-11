@@ -3,7 +3,13 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/repository"
+	"github.com/johnzastrow/actalog/internal/service"
 )
 
 func TestUserWorkoutHandler_LogWorkout_Unauthorized(t *testing.T) {
@@ -363,3 +369,404 @@ func TestUserWorkoutHandler_UpdateLoggedWorkout_ValidIDInvalidJSON(t *testing.T)
 // - TestUserWorkoutHandler_ListLoggedWorkouts_OnlyStartDate
 // - TestUserWorkoutHandler_ListLoggedWorkouts_OnlyEndDate
 // These tests verified nil pointer panics, not business logic.
+
+// ===== Tests with real database =====
+
+func createTestUserWorkoutHandler(t *testing.T) (*UserWorkoutHandler, int64, func()) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+
+	// Create repositories
+	userRepo := repository.NewSQLiteUserRepository(db)
+	userWorkoutRepo := repository.NewUserWorkoutRepository(db)
+	workoutRepo := repository.NewWorkoutRepository(db)
+	workoutMovementRepo := repository.NewWorkoutMovementRepository(db)
+	userWorkoutMovementRepo := repository.NewUserWorkoutMovementRepository(db)
+	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
+	wodRepo := repository.NewWODRepository(db)
+	auditLogRepo := repository.NewAuditLogRepository(db, "sqlite3")
+	movementRepo := repository.NewMovementRepository(db)
+	orgRepo := repository.NewOrganizationRepository(db)
+	notificationRepo := repository.NewNotificationRepository(db)
+	userSettingsRepo := repository.NewSQLiteUserSettingsRepository(db)
+
+	// Create test user
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "workouttest@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "user",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := userRepo.Create(testUser); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Create test movement
+	movement := &domain.Movement{
+		Name:        "Back Squat",
+		Type:        "weightlifting",
+		Description: "Barbell back squat",
+		IsStandard:  true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := movementRepo.Create(movement); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create movement: %v", err)
+	}
+
+	// Create test WOD
+	wod := &domain.WOD{
+		Name:        "Fran",
+		Type:        "For Time",
+		ScoreType:   "Time (HH:MM:SS)",
+		Description: "21-15-9 Thrusters and Pull-ups",
+		IsStandard:  true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := wodRepo.Create(wod); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create WOD: %v", err)
+	}
+
+	// Create test workout template
+	testNotes := "Test workout notes"
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		Notes:     &testNotes,
+		CreatedBy: &testUser.ID,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := workoutRepo.Create(workout); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	// Create notification service (required by UserWorkoutService)
+	// Pass nil for emailService since we won't send emails in tests
+	notificationService := service.NewNotificationService(notificationRepo, orgRepo, userRepo, userSettingsRepo, nil)
+
+	// Create UserWorkoutService
+	userWorkoutService := service.NewUserWorkoutService(
+		userWorkoutRepo,
+		workoutRepo,
+		workoutMovementRepo,
+		userWorkoutMovementRepo,
+		userWorkoutWODRepo,
+		wodRepo,
+		auditLogRepo,
+		movementRepo,
+		notificationService,
+		userRepo,
+		orgRepo,
+	)
+
+	handler := NewUserWorkoutHandler(userWorkoutService, createTestLogger())
+	return handler, testUser.ID, cleanup
+}
+
+func TestUserWorkoutHandler_LogWorkout_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.LogWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_LogWorkout_WithAdHocName(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	body := `{"workout_name": "My Custom Workout", "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.LogWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_ListLoggedWorkouts_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Now list workouts
+	req = createAuthenticatedRequest(http.MethodGet, "/api/workouts", "", userID, "workouttest@example.com", "user")
+	rr = httptest.NewRecorder()
+
+	handler.ListLoggedWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+	if !strings.Contains(rr.Body.String(), "workouts") {
+		t.Error("Response should contain 'workouts' field")
+	}
+}
+
+func TestUserWorkoutHandler_ListLoggedWorkouts_WithDateRange(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// Log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+
+	// List with date range
+	req = createAuthenticatedRequest(http.MethodGet, "/api/workouts?start_date=2024-01-01&end_date=2024-01-31", "", userID, "workouttest@example.com", "user")
+	rr = httptest.NewRecorder()
+
+	handler.ListLoggedWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestUserWorkoutHandler_GetLoggedWorkout_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Now get the workout
+	req = createAuthenticatedRequest(http.MethodGet, "/api/workouts/1", "", userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr = httptest.NewRecorder()
+
+	handler.GetLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_GetLoggedWorkout_NotFound(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/999", "", userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.GetLoggedWorkout(rr, req)
+
+	// Handler returns 500 with error message for not found
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestUserWorkoutHandler_DeleteLoggedWorkout_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Now delete it
+	req = createAuthenticatedRequest(http.MethodDelete, "/api/workouts/1", "", userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr = httptest.NewRecorder()
+
+	handler.DeleteLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "deleted successfully")
+}
+
+func TestUserWorkoutHandler_DeleteLoggedWorkout_NotFound(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/workouts/999", "", userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.DeleteLoggedWorkout(rr, req)
+
+	// Handler returns 500 with error message for not found
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestUserWorkoutHandler_GetMonthlyStats_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// Log some workouts
+	for i := 1; i <= 3; i++ {
+		body := `{"workout_id": 1, "workout_date": "2024-01-` + string(rune('0'+i)) + `5"}`
+		req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+		rr := httptest.NewRecorder()
+		handler.LogWorkout(rr, req)
+	}
+
+	// Get monthly stats
+	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/stats/monthly?year=2024&month=1", "", userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetMonthlyStats(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_GetPersonalRecords_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/personal-records", "", userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_GetPersonalRecords_WithLimit(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/personal-records?limit=5", "", userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestUserWorkoutHandler_RetroactiveFlagPRs_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts/retroactive-prs", "", userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.RetroactiveFlagPRs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "flagged")
+}
+
+func TestUserWorkoutHandler_GetActiveUsersStats_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/stats/active-users-this-month", "", userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetActiveUsersStats(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestUserWorkoutHandler_UpdateLoggedWorkout_Success(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Now update it (total_time is in seconds as integer)
+	updateBody := `{"workout_name": "Updated Workout", "notes": "Updated notes", "total_time": 2700}`
+	req = createAuthenticatedRequest(http.MethodPut, "/api/workouts/1", updateBody, userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr = httptest.NewRecorder()
+
+	handler.UpdateLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "updated")
+}
+
+func TestUserWorkoutHandler_UpdateLoggedWorkout_NotFound(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	updateBody := `{"workout_name": "Updated Workout"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/workouts/999", updateBody, userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+}
+
+func TestUserWorkoutHandler_UpdateLoggedWorkout_WithMovements(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Update with movements
+	updateBody := `{"workout_name": "Updated", "movements": [{"movement_id": 1, "sets": 5, "reps": 5, "weight": 225.0}]}`
+	req = createAuthenticatedRequest(http.MethodPut, "/api/workouts/1", updateBody, userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr = httptest.NewRecorder()
+
+	handler.UpdateLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestUserWorkoutHandler_UpdateLoggedWorkout_WithWODs(t *testing.T) {
+	handler, userID, cleanup := createTestUserWorkoutHandler(t)
+	defer cleanup()
+
+	// First, log a workout
+	body := `{"workout_id": 1, "workout_date": "2024-01-15"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/workouts", body, userID, "workouttest@example.com", "user")
+	rr := httptest.NewRecorder()
+	handler.LogWorkout(rr, req)
+	assertStatusCode(t, rr, http.StatusCreated)
+
+	// Update with WODs (Fran is time-based, need time_seconds)
+	updateBody := `{"workout_name": "Updated", "wods": [{"wod_id": 1, "time_seconds": 330}]}`
+	req = createAuthenticatedRequest(http.MethodPut, "/api/workouts/1", updateBody, userID, "workouttest@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr = httptest.NewRecorder()
+
+	handler.UpdateLoggedWorkout(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
