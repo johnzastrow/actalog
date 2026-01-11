@@ -4,8 +4,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/repository"
+	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
 )
 
@@ -634,4 +637,491 @@ func TestAdminHandler_UpdateWODRecord_RepoUpdateError(t *testing.T) {
 
 	// Update mock to fail on Update call
 	assertStatusCode(t, rr, http.StatusOK) // First successful scenario, need different approach
+}
+
+// ===== Tests for ListUserCreatedWODs, ListUserCreatedMovements, ListUserCreatedWorkouts =====
+
+func createAdminTestWODService() *service.WODService {
+	mockWODRepo := NewMockWODRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	// Create a DataChangeLogService for the test
+	mockDataChangeLogRepo := NewMockDataChangeLogRepository()
+	dataChangeLogService := service.NewDataChangeLogService(mockDataChangeLogRepo)
+	return service.NewWODService(mockWODRepo, dataChangeLogService, mockAuditLogRepo)
+}
+
+func createAdminTestMovementService() *service.MovementService {
+	mockMovementRepo := NewMockMovementRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	// Create a DataChangeLogService for the test
+	mockDataChangeLogRepo := NewMockDataChangeLogRepository()
+	dataChangeLogService := service.NewDataChangeLogService(mockDataChangeLogRepo)
+	return service.NewMovementService(mockMovementRepo, dataChangeLogService, mockAuditLogRepo)
+}
+
+func createAdminTestWorkoutTemplateService() *service.WorkoutTemplateService {
+	mockWorkoutRepo := NewMockWorkoutRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	// WorkoutTemplateService doesn't need WorkoutMovementRepository and WorkoutWODRepository for ListUserCreatedWorkouts
+	// Pass nil for these as they're not used in the functions we're testing
+	return service.NewWorkoutTemplateService(mockWorkoutRepo, nil, nil, mockAuditLogRepo)
+}
+
+func TestAdminHandler_ListUserCreatedWODs_Success(t *testing.T) {
+	wodService := createAdminTestWODService()
+
+	handler := &AdminHandler{
+		wodService: wodService,
+		logger:     createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/wods", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestAdminHandler_ListUserCreatedWODs_WithPagination(t *testing.T) {
+	wodService := createAdminTestWODService()
+
+	handler := &AdminHandler{
+		wodService: wodService,
+		logger:     createTestLogger(),
+	}
+
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"with limit", "/api/admin/user-created/wods?limit=10"},
+		{"with offset", "/api/admin/user-created/wods?offset=5"},
+		{"with limit and offset", "/api/admin/user-created/wods?limit=10&offset=5"},
+		{"with search", "/api/admin/user-created/wods?search=custom"},
+		{"with score_type", "/api/admin/user-created/wods?score_type=Time"},
+		{"with creator", "/api/admin/user-created/wods?creator=user@example.com"},
+		{"with all filters", "/api/admin/user-created/wods?limit=10&offset=0&search=custom&score_type=Time&creator=user@example.com"},
+		{"with invalid limit", "/api/admin/user-created/wods?limit=abc"},
+		{"with invalid offset", "/api/admin/user-created/wods?offset=abc"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tc.url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			handler.ListUserCreatedWODs(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestAdminHandler_ListUserCreatedWODs_ServiceError(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockWODRepo.SetError(ErrMockInternalError)
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	mockDataChangeLogRepo := NewMockDataChangeLogRepository()
+	dataChangeLogService := service.NewDataChangeLogService(mockDataChangeLogRepo)
+	wodService := service.NewWODService(mockWODRepo, dataChangeLogService, mockAuditLogRepo)
+
+	handler := &AdminHandler{
+		wodService: wodService,
+		logger:     createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/wods", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to list user-created WODs")
+}
+
+func TestAdminHandler_ListUserCreatedMovements_Success(t *testing.T) {
+	movementService := createAdminTestMovementService()
+
+	handler := &AdminHandler{
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/movements", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestAdminHandler_ListUserCreatedMovements_WithPagination(t *testing.T) {
+	movementService := createAdminTestMovementService()
+
+	handler := &AdminHandler{
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"with limit", "/api/admin/user-created/movements?limit=10"},
+		{"with offset", "/api/admin/user-created/movements?offset=5"},
+		{"with limit and offset", "/api/admin/user-created/movements?limit=10&offset=5"},
+		{"with search", "/api/admin/user-created/movements?search=custom"},
+		{"with type", "/api/admin/user-created/movements?type=weightlifting"},
+		{"with creator", "/api/admin/user-created/movements?creator=user@example.com"},
+		{"with all filters", "/api/admin/user-created/movements?limit=10&offset=0&search=custom&type=weightlifting&creator=user@example.com"},
+		{"with invalid limit", "/api/admin/user-created/movements?limit=abc"},
+		{"with invalid offset", "/api/admin/user-created/movements?offset=abc"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tc.url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			handler.ListUserCreatedMovements(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestAdminHandler_ListUserCreatedMovements_ServiceError(t *testing.T) {
+	mockMovementRepo := NewMockMovementRepository()
+	mockMovementRepo.SetError(ErrMockInternalError)
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	mockDataChangeLogRepo := NewMockDataChangeLogRepository()
+	dataChangeLogService := service.NewDataChangeLogService(mockDataChangeLogRepo)
+	movementService := service.NewMovementService(mockMovementRepo, dataChangeLogService, mockAuditLogRepo)
+
+	handler := &AdminHandler{
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/movements", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to list user-created movements")
+}
+
+func TestAdminHandler_ListUserCreatedWorkouts_Success(t *testing.T) {
+	workoutTemplateService := createAdminTestWorkoutTemplateService()
+
+	handler := &AdminHandler{
+		workoutTemplateService: workoutTemplateService,
+		logger:                 createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/workouts", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+}
+
+func TestAdminHandler_ListUserCreatedWorkouts_WithPagination(t *testing.T) {
+	workoutTemplateService := createAdminTestWorkoutTemplateService()
+
+	handler := &AdminHandler{
+		workoutTemplateService: workoutTemplateService,
+		logger:                 createTestLogger(),
+	}
+
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"with limit", "/api/admin/user-created/workouts?limit=10"},
+		{"with offset", "/api/admin/user-created/workouts?offset=5"},
+		{"with limit and offset", "/api/admin/user-created/workouts?limit=10&offset=5"},
+		{"with search", "/api/admin/user-created/workouts?search=custom"},
+		{"with creator", "/api/admin/user-created/workouts?creator=user@example.com"},
+		{"with all filters", "/api/admin/user-created/workouts?limit=10&offset=0&search=custom&creator=user@example.com"},
+		{"with invalid limit", "/api/admin/user-created/workouts?limit=abc"},
+		{"with invalid offset", "/api/admin/user-created/workouts?offset=abc"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, tc.url, "", 1, "admin@example.com", "admin")
+			rr := httptest.NewRecorder()
+
+			handler.ListUserCreatedWorkouts(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestAdminHandler_ListUserCreatedWorkouts_ServiceError(t *testing.T) {
+	mockWorkoutRepo := NewMockWorkoutRepository()
+	mockWorkoutRepo.SetError(ErrMockInternalError)
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	workoutTemplateService := service.NewWorkoutTemplateService(mockWorkoutRepo, nil, nil, mockAuditLogRepo)
+
+	handler := &AdminHandler{
+		workoutTemplateService: workoutTemplateService,
+		logger:                 createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/user-created/workouts", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ListUserCreatedWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to list user-created workouts")
+}
+
+// ===== Tests for DetectWODScoreTypeMismatches and FixWODScoreTypeMismatches =====
+
+func createTestAdminHandlerWithDB(t *testing.T) (*AdminHandler, func()) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+
+	// Create test user
+	userRepo := repository.NewSQLiteUserRepository(db)
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "admintest@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "admin",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := userRepo.Create(testUser); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Create WODs of different score types
+	_, err = db.Exec(`
+		INSERT INTO wods (name, type, score_type, description, created_by, created_at, updated_at)
+		VALUES
+			('Time WOD', 'For Time', 'Time (HH:MM:SS)', 'Time-based WOD', 1, ?, ?),
+			('Rounds WOD', 'AMRAP', 'Rounds+Reps', 'Rounds-based WOD', 1, ?, ?),
+			('Max Weight WOD', 'Max Weight', 'Max Weight', 'Weight-based WOD', 1, ?, ?)
+	`, now, now, now, now, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create WODs: %v", err)
+	}
+
+	// Create a workout
+	_, err = db.Exec(`
+		INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+		VALUES ('Test Workout', 'Test notes', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	// Create a user workout
+	_, err = db.Exec(`
+		INSERT INTO user_workouts (user_id, workout_id, workout_date, created_at, updated_at)
+		VALUES (1, 1, ?, ?, ?)
+	`, now.Format("2006-01-02"), now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create user workout: %v", err)
+	}
+
+	// Create repositories
+	userWorkoutWODRepo := repository.NewUserWorkoutWODRepository(db)
+	wodRepo := repository.NewWODRepository(db)
+	movementRepo := repository.NewMovementRepository(db)
+	workoutRepo := repository.NewWorkoutRepository(db)
+
+	handler := NewAdminHandler(
+		db,
+		userWorkoutWODRepo,
+		wodRepo,
+		movementRepo,
+		workoutRepo,
+		userRepo,
+		nil, // wodService - not needed for these tests
+		nil, // movementService - not needed for these tests
+		nil, // workoutTemplateService - not needed for these tests
+		createTestLogger(),
+	)
+
+	return handler, cleanup
+}
+
+func TestAdminHandler_DetectWODScoreTypeMismatches_Success_NoMismatches(t *testing.T) {
+	handler, cleanup := createTestAdminHandlerWithDB(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/wod-mismatches", "", 1, "admintest@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.DetectWODScoreTypeMismatches(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+	assertBodyContains(t, rr, "mismatches")
+	assertBodyContains(t, rr, "count")
+}
+
+func TestAdminHandler_DetectWODScoreTypeMismatches_WithMismatches(t *testing.T) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	// Create test user
+	userRepo := repository.NewSQLiteUserRepository(db)
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "admintest@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "admin",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := userRepo.Create(testUser); err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Create a time-based WOD
+	_, err = db.Exec(`
+		INSERT INTO wods (name, type, score_type, description, created_by, created_at, updated_at)
+		VALUES ('Time WOD', 'For Time', 'Time (HH:MM:SS)', 'Time-based WOD', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		t.Fatalf("Failed to create WOD: %v", err)
+	}
+
+	// Create a workout and user workout
+	_, err = db.Exec(`
+		INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+		VALUES ('Test Workout', 'Test notes', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO user_workouts (user_id, workout_id, workout_date, created_at, updated_at)
+		VALUES (1, 1, ?, ?, ?)
+	`, now.Format("2006-01-02"), now, now)
+	if err != nil {
+		t.Fatalf("Failed to create user workout: %v", err)
+	}
+
+	// Create a mismatched record: Time-based WOD with rounds instead of time_seconds
+	_, err = db.Exec(`
+		INSERT INTO user_workout_wods (user_workout_id, wod_id, rounds, reps, order_index, created_at, updated_at)
+		VALUES (1, 1, 10, 5, 0, ?, ?)
+	`, now, now)
+	if err != nil {
+		t.Fatalf("Failed to create mismatched WOD record: %v", err)
+	}
+
+	handler := NewAdminHandler(
+		db,
+		repository.NewUserWorkoutWODRepository(db),
+		repository.NewWODRepository(db),
+		repository.NewMovementRepository(db),
+		repository.NewWorkoutRepository(db),
+		userRepo,
+		nil, nil, nil,
+		createTestLogger(),
+	)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/wod-mismatches", "", 1, "admintest@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.DetectWODScoreTypeMismatches(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+	// Should find at least one mismatch
+	assertBodyContains(t, rr, "mismatches")
+}
+
+func TestAdminHandler_FixWODScoreTypeMismatches_Success(t *testing.T) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	// Create test user
+	userRepo := repository.NewSQLiteUserRepository(db)
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "admintest@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "admin",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := userRepo.Create(testUser); err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Create a time-based WOD
+	_, err = db.Exec(`
+		INSERT INTO wods (name, type, score_type, description, created_by, created_at, updated_at)
+		VALUES ('Time WOD', 'For Time', 'Time (HH:MM:SS)', 'Time-based WOD', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		t.Fatalf("Failed to create WOD: %v", err)
+	}
+
+	// Create a workout and user workout
+	_, err = db.Exec(`
+		INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+		VALUES ('Test Workout', 'Test notes', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO user_workouts (user_id, workout_id, workout_date, created_at, updated_at)
+		VALUES (1, 1, ?, ?, ?)
+	`, now.Format("2006-01-02"), now, now)
+	if err != nil {
+		t.Fatalf("Failed to create user workout: %v", err)
+	}
+
+	handler := NewAdminHandler(
+		db,
+		repository.NewUserWorkoutWODRepository(db),
+		repository.NewWODRepository(db),
+		repository.NewMovementRepository(db),
+		repository.NewWorkoutRepository(db),
+		userRepo,
+		nil, nil, nil,
+		createTestLogger(),
+	)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/wod-mismatches/fix", "", 1, "admintest@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.FixWODScoreTypeMismatches(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+	assertBodyContains(t, rr, "deleted_count")
+	assertBodyContains(t, rr, "total_found")
 }

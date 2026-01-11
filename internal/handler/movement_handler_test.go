@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/johnzastrow/actalog/internal/service"
 )
 
 func TestMovementHandler_Search_MissingQuery(t *testing.T) {
@@ -477,4 +479,207 @@ func TestMovementHandler_GetByID_NoLogger(t *testing.T) {
 	handler.GetByID(rr, req)
 
 	assertStatusCode(t, rr, http.StatusOK)
+}
+
+// =============================================
+// Service-based tests for Create, Update, Delete
+// =============================================
+
+// createTestMovementService creates a MovementService with mock repositories
+func createTestMovementService() *service.MovementService {
+	mockMovementRepo := NewMockMovementRepository()
+	mockDataChangeLogRepo := NewMockDataChangeLogRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	dataChangeLogService := service.NewDataChangeLogService(mockDataChangeLogRepo)
+	return service.NewMovementService(mockMovementRepo, dataChangeLogService, mockAuditLogRepo)
+}
+
+func TestMovementHandler_Create_Success(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	body := `{"name": "New Movement", "type": "weightlifting", "description": "A new test movement"}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/movements", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.Create(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertBodyContains(t, rr, "New Movement")
+}
+
+func TestMovementHandler_Create_WithAllFields(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	body := `{
+		"name": "Complex Movement",
+		"type": "gymnastics",
+		"description": "A complex gymnastics movement",
+		"equipment": "Rings",
+		"video_url": "https://example.com/video"
+	}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/movements", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.Create(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+}
+
+func TestMovementHandler_Update_Success(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Update a user-created movement (ID 4 is created by user 1)
+	body := `{"name": "Updated Movement", "type": "strength", "description": "Updated description"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/movements/4", body, 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "4")
+	rr := httptest.NewRecorder()
+
+	handler.Update(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestMovementHandler_Update_AsAdmin(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Admin can update standard movements
+	body := `{"name": "Admin Updated", "type": "weightlifting", "description": "Admin update"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/movements/1", body, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.Update(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestMovementHandler_Update_StandardMovementAsUser(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Non-admin trying to update standard movement (ID 1)
+	body := `{"name": "Unauthorized Update", "type": "strength"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/movements/1", body, 1, "user@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.Update(rr, req)
+
+	// Should fail - can't update standard movements as non-admin
+	assertStatusCode(t, rr, http.StatusForbidden)
+	assertBodyContains(t, rr, "Cannot modify standard movement")
+}
+
+func TestMovementHandler_Delete_Success(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Delete user-created movement (ID 4)
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/movements/4", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "4")
+	rr := httptest.NewRecorder()
+
+	handler.Delete(rr, req)
+
+	// Should succeed
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNoContent {
+		t.Errorf("Expected success, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestMovementHandler_Delete_AsAdmin(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Admin deleting a user-created movement (ID 4)
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/movements/4", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "4")
+	rr := httptest.NewRecorder()
+
+	handler.Delete(rr, req)
+
+	// Should succeed
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNoContent {
+		t.Errorf("Expected success, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestMovementHandler_Delete_NotFound(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Try to delete non-existent movement (ID 999)
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/movements/999", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.Delete(rr, req)
+
+	// Should fail - movement not found
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestMovementHandler_Delete_StandardMovement(t *testing.T) {
+	mockRepo := NewMockMovementRepository()
+	movementService := createTestMovementService()
+	handler := &MovementHandler{
+		movementRepo:    mockRepo,
+		movementService: movementService,
+		logger:          createTestLogger(),
+	}
+
+	// Non-admin trying to delete standard movement (ID 1)
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/movements/1", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.Delete(rr, req)
+
+	// Should fail - can't delete standard movements as non-admin
+	assertStatusCode(t, rr, http.StatusForbidden)
+	assertBodyContains(t, rr, "Cannot delete standard movement")
 }

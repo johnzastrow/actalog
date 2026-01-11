@@ -31,11 +31,13 @@ type MockMovementRepository struct {
 }
 
 func NewMockMovementRepository() *MockMovementRepository {
+	userID := int64(1)
 	return &MockMovementRepository{
 		movements: []*domain.Movement{
 			{ID: 1, Name: "Back Squat", Type: "weightlifting", IsStandard: true},
 			{ID: 2, Name: "Deadlift", Type: "weightlifting", IsStandard: true},
 			{ID: 3, Name: "Bench Press", Type: "weightlifting", IsStandard: true},
+			{ID: 4, Name: "My Custom Movement", Type: "bodyweight", IsStandard: false, CreatedBy: &userID},
 		},
 	}
 }
@@ -1156,6 +1158,10 @@ func NewMockDataChangeLogRepository() *MockDataChangeLogRepository {
 	return &MockDataChangeLogRepository{
 		logs: []*domain.DataChangeLog{},
 	}
+}
+
+func (m *MockDataChangeLogRepository) AddLog(log *domain.DataChangeLog) {
+	m.logs = append(m.logs, log)
 }
 
 func (m *MockDataChangeLogRepository) SetError(err error) {
@@ -2359,4 +2365,148 @@ func createTestSubscriptionServiceWithMocks() (*service.SubscriptionService, *su
 	)
 
 	return svc, mocks
+}
+
+// ===== MockUserWorkoutRepository =====
+
+type MockUserWorkoutRepository struct {
+	userWorkouts  []*domain.UserWorkout
+	shouldError   bool
+	errorToReturn error
+}
+
+func NewMockUserWorkoutRepository() *MockUserWorkoutRepository {
+	return &MockUserWorkoutRepository{
+		userWorkouts: []*domain.UserWorkout{},
+	}
+}
+
+func (m *MockUserWorkoutRepository) SetError(err error) {
+	m.shouldError = true
+	m.errorToReturn = err
+}
+
+func (m *MockUserWorkoutRepository) Create(userWorkout *domain.UserWorkout) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	userWorkout.ID = int64(len(m.userWorkouts) + 1)
+	m.userWorkouts = append(m.userWorkouts, userWorkout)
+	return nil
+}
+
+func (m *MockUserWorkoutRepository) GetByID(id int64) (*domain.UserWorkout, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, uw := range m.userWorkouts {
+		if uw.ID == id {
+			return uw, nil
+		}
+	}
+	return nil, ErrMockNotFound
+}
+
+func (m *MockUserWorkoutRepository) GetByIDWithDetails(id int64, userID int64) (*domain.UserWorkoutWithDetails, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, uw := range m.userWorkouts {
+		if uw.ID == id && uw.UserID == userID {
+			return &domain.UserWorkoutWithDetails{
+				UserWorkout: *uw,
+				Movements:   []*domain.WorkoutMovement{},
+				WODs:        []*domain.WorkoutWODWithDetails{},
+			}, nil
+		}
+	}
+	return nil, ErrMockNotFound
+}
+
+func (m *MockUserWorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*domain.UserWorkout, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.UserWorkout
+	for _, uw := range m.userWorkouts {
+		if uw.UserID == userID {
+			result = append(result, uw)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockUserWorkoutRepository) ListByUserWithDetails(userID int64, limit, offset int) ([]*domain.UserWorkoutWithDetails, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.UserWorkoutWithDetails
+	for _, uw := range m.userWorkouts {
+		if uw.UserID == userID {
+			result = append(result, &domain.UserWorkoutWithDetails{
+				UserWorkout: *uw,
+				Movements:   []*domain.WorkoutMovement{},
+				WODs:        []*domain.WorkoutWODWithDetails{},
+			})
+		}
+	}
+	return result, nil
+}
+
+func (m *MockUserWorkoutRepository) ListByUserAndDateRange(userID int64, startDate, endDate time.Time) ([]*domain.UserWorkout, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.UserWorkout
+	for _, uw := range m.userWorkouts {
+		if uw.UserID == userID {
+			result = append(result, uw)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockUserWorkoutRepository) Update(userWorkout *domain.UserWorkout) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, uw := range m.userWorkouts {
+		if uw.ID == userWorkout.ID {
+			m.userWorkouts[i] = userWorkout
+			return nil
+		}
+	}
+	return ErrMockNotFound
+}
+
+func (m *MockUserWorkoutRepository) Delete(id int64, userID int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, uw := range m.userWorkouts {
+		if uw.ID == id && uw.UserID == userID {
+			m.userWorkouts = append(m.userWorkouts[:i], m.userWorkouts[i+1:]...)
+			return nil
+		}
+	}
+	return ErrMockNotFound
+}
+
+func (m *MockUserWorkoutRepository) GetByUserWorkoutDate(userID, workoutID int64, date time.Time) (*domain.UserWorkout, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, uw := range m.userWorkouts {
+		if uw.UserID == userID && uw.WorkoutID != nil && *uw.WorkoutID == workoutID {
+			return uw, nil
+		}
+	}
+	return nil, ErrMockNotFound
+}
+
+func (m *MockUserWorkoutRepository) GetActiveUsersThisMonth(userID int64) ([]map[string]interface{}, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	return []map[string]interface{}{}, nil
 }
