@@ -589,3 +589,68 @@ func TestUserRepository_AccountDisabling(t *testing.T) {
 		}
 	})
 }
+
+// NOTE: GetByResetToken and GetByVerificationToken are stub implementations
+// that always return nil - they use separate token tables in the actual implementation.
+// Tests for these would just verify they return nil, so we skip testing them.
+
+func TestUserRepository_ListAdmins(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("failed to setup test db: %v", err)
+	}
+	defer cleanup()
+
+	repo := NewSQLiteUserRepository(db)
+
+	// Initially no admins
+	admins, err := repo.ListAdmins()
+	if err != nil {
+		t.Fatalf("ListAdmins() error = %v", err)
+	}
+	if len(admins) != 0 {
+		t.Errorf("ListAdmins() should return empty initially, got %d", len(admins))
+	}
+
+	// Create some users with different roles
+	users := []struct {
+		email string
+		role  string
+	}{
+		{"admin1@example.com", "admin"},
+		{"admin2@example.com", "admin"},
+		{"user1@example.com", "user"},
+		{"user2@example.com", "user"},
+		{"admin3@example.com", "admin"},
+	}
+
+	for _, u := range users {
+		user := &domain.User{
+			Email:        u.email,
+			PasswordHash: "hash123",
+			Name:         u.email,
+			Role:         u.role,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		if err := repo.Create(user); err != nil {
+			t.Fatalf("failed to create user %s: %v", u.email, err)
+		}
+	}
+
+	// List admins - should only get admins
+	admins, err = repo.ListAdmins()
+	if err != nil {
+		t.Fatalf("ListAdmins() error = %v", err)
+	}
+	if len(admins) != 3 {
+		t.Errorf("ListAdmins() returned %d admins, want 3", len(admins))
+	}
+
+	// Verify all returned users are admins
+	for _, admin := range admins {
+		if admin.Role != "admin" {
+			t.Errorf("ListAdmins() returned non-admin user: %s with role %s", admin.Email, admin.Role)
+		}
+	}
+}

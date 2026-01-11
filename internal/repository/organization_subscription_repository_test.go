@@ -577,6 +577,88 @@ func TestOrganizationSubscriptionRepository_PermanentFree(t *testing.T) {
 	}
 }
 
+func TestOrganizationSubscriptionRepository_ListAll(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	orgRepo := NewOrganizationRepository(db)
+	subRepo := NewSQLiteOrganizationSubscriptionRepository(db)
+
+	// Initially should have no subscriptions
+	subs, err := subRepo.ListAll()
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(subs) != 0 {
+		t.Errorf("ListAll() should return empty list initially, got %d", len(subs))
+	}
+
+	// Create test organizations
+	org1 := &domain.Organization{Name: "Org 1", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org2 := &domain.Organization{Name: "Org 2", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	org3 := &domain.Organization{Name: "Org 3", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	orgRepo.Create(org1)
+	orgRepo.Create(org2)
+	orgRepo.Create(org3)
+
+	now := time.Now()
+
+	// Create subscriptions for different organizations with different types
+	endDate1 := now.AddDate(0, 1, 0)
+	sub1 := &domain.OrganizationSubscription{
+		OrganizationID:   org1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		StartDate:        now,
+		EndDate:          &endDate1,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	endDate2 := now.AddDate(1, 0, 0)
+	sub2 := &domain.OrganizationSubscription{
+		OrganizationID:   org2.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		StartDate:        now,
+		EndDate:          &endDate2,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	sub3 := &domain.OrganizationSubscription{
+		OrganizationID:   org3.ID,
+		SubscriptionType: domain.SubscriptionTypeFree,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  true,
+		StartDate:        now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Test ListAll returns all subscriptions
+	subs, err = subRepo.ListAll()
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(subs) != 3 {
+		t.Errorf("ListAll() returned %d subscriptions, want 3", len(subs))
+	}
+
+	// Verify all subscriptions have organization name populated (from JOIN)
+	for _, sub := range subs {
+		if sub.OrganizationName == "" {
+			t.Errorf("ListAll() subscription %d should have OrganizationName populated", sub.ID)
+		}
+	}
+}
+
 func TestOrganizationSubscriptionRepository_ListExpiring(t *testing.T) {
 	db, cleanup, err := SetupTestDB()
 	if err != nil {

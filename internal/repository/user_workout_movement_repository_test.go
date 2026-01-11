@@ -568,3 +568,166 @@ func TestUserWorkoutMovementRepository_GetPRMovements(t *testing.T) {
 		}
 	}
 }
+
+func TestUserWorkoutMovementRepository_GetAllPerformancesForMovement(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	movementRepo := NewMovementRepository(db)
+	userWorkoutRepo := NewUserWorkoutRepository(db)
+	uwmRepo := NewUserWorkoutMovementRepository(db)
+
+	// Setup
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	userRepo.Create(user)
+
+	movement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
+	movementRepo.Create(movement)
+
+	// Create multiple workouts with different weights and dates
+	weights := []float64{225.0, 250.0, 275.0, 300.0, 315.0}
+	for i, w := range weights {
+		userWorkout := &domain.UserWorkout{
+			UserID:      user.ID,
+			WorkoutDate: time.Now().AddDate(0, 0, -30+i*5), // Spread over time
+		}
+		userWorkoutRepo.Create(userWorkout)
+
+		weight := w
+		reps := 5
+		uwm := &domain.UserWorkoutMovement{
+			UserWorkoutID: userWorkout.ID,
+			MovementID:    movement.ID,
+			Weight:        &weight,
+			Reps:          &reps,
+			IsPR:          i == 4, // Last one is PR
+			OrderIndex:    0,
+		}
+		uwmRepo.Create(uwm)
+	}
+
+	// Get all performances (nil excludeWorkoutID means don't exclude any)
+	performances, err := uwmRepo.GetAllPerformancesForMovement(user.ID, movement.ID, nil)
+	if err != nil {
+		t.Fatalf("GetAllPerformancesForMovement() error = %v", err)
+	}
+	if len(performances) != 5 {
+		t.Errorf("GetAllPerformancesForMovement() returned %d performances, want 5", len(performances))
+	}
+
+	// Test for non-existent user
+	performances, err = uwmRepo.GetAllPerformancesForMovement(999, movement.ID, nil)
+	if err != nil {
+		t.Fatalf("GetAllPerformancesForMovement(999) error = %v", err)
+	}
+	if len(performances) != 0 {
+		t.Errorf("GetAllPerformancesForMovement(999) returned %d performances, want 0", len(performances))
+	}
+
+	// Test for non-existent movement
+	performances, err = uwmRepo.GetAllPerformancesForMovement(user.ID, 999, nil)
+	if err != nil {
+		t.Fatalf("GetAllPerformancesForMovement(movement=999) error = %v", err)
+	}
+	if len(performances) != 0 {
+		t.Errorf("GetAllPerformancesForMovement(movement=999) returned %d performances, want 0", len(performances))
+	}
+}
+
+func TestUserWorkoutMovementRepository_GetByUserIDAndMovementID(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	movementRepo := NewMovementRepository(db)
+	userWorkoutRepo := NewUserWorkoutRepository(db)
+	uwmRepo := NewUserWorkoutMovementRepository(db)
+
+	// Setup
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	userRepo.Create(user)
+
+	movement1 := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
+	movement2 := &domain.Movement{Name: "Deadlift", Type: domain.MovementTypeWeightlifting}
+	movementRepo.Create(movement1)
+	movementRepo.Create(movement2)
+
+	// Create workouts with both movements
+	for i := 0; i < 3; i++ {
+		userWorkout := &domain.UserWorkout{
+			UserID:      user.ID,
+			WorkoutDate: time.Now().AddDate(0, 0, -i),
+		}
+		userWorkoutRepo.Create(userWorkout)
+
+		// Add movement1
+		weight1 := float64(225 + i*25)
+		uwm1 := &domain.UserWorkoutMovement{
+			UserWorkoutID: userWorkout.ID,
+			MovementID:    movement1.ID,
+			Weight:        &weight1,
+			OrderIndex:    0,
+		}
+		uwmRepo.Create(uwm1)
+
+		// Add movement2
+		weight2 := float64(315 + i*25)
+		uwm2 := &domain.UserWorkoutMovement{
+			UserWorkoutID: userWorkout.ID,
+			MovementID:    movement2.ID,
+			Weight:        &weight2,
+			OrderIndex:    1,
+		}
+		uwmRepo.Create(uwm2)
+	}
+
+	// Get by user ID and movement1 ID (limit 100)
+	performances, err := uwmRepo.GetByUserIDAndMovementID(user.ID, movement1.ID, 100)
+	if err != nil {
+		t.Fatalf("GetByUserIDAndMovementID() error = %v", err)
+	}
+	if len(performances) != 3 {
+		t.Errorf("GetByUserIDAndMovementID(movement1) returned %d performances, want 3", len(performances))
+	}
+
+	// Verify all are for the right movement
+	for _, p := range performances {
+		if p.MovementID != movement1.ID {
+			t.Errorf("Movement ID = %d, want %d", p.MovementID, movement1.ID)
+		}
+	}
+
+	// Get by user ID and movement2 ID
+	performances, err = uwmRepo.GetByUserIDAndMovementID(user.ID, movement2.ID, 100)
+	if err != nil {
+		t.Fatalf("GetByUserIDAndMovementID(movement2) error = %v", err)
+	}
+	if len(performances) != 3 {
+		t.Errorf("GetByUserIDAndMovementID(movement2) returned %d performances, want 3", len(performances))
+	}
+
+	// Test for non-existent user
+	performances, err = uwmRepo.GetByUserIDAndMovementID(999, movement1.ID, 100)
+	if err != nil {
+		t.Fatalf("GetByUserIDAndMovementID(999) error = %v", err)
+	}
+	if len(performances) != 0 {
+		t.Errorf("GetByUserIDAndMovementID(999) returned %d performances, want 0", len(performances))
+	}
+
+	// Test with limit
+	performances, err = uwmRepo.GetByUserIDAndMovementID(user.ID, movement1.ID, 2)
+	if err != nil {
+		t.Fatalf("GetByUserIDAndMovementID(limit=2) error = %v", err)
+	}
+	if len(performances) != 2 {
+		t.Errorf("GetByUserIDAndMovementID(limit=2) returned %d performances, want 2", len(performances))
+	}
+}

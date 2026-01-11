@@ -732,6 +732,88 @@ func TestUserSubscriptionRepository_ListExpiring(t *testing.T) {
 	}
 }
 
+func TestUserSubscriptionRepository_ListAll(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	subRepo := NewSQLiteUserSubscriptionRepository(db)
+
+	// Initially should have no subscriptions
+	subs, err := subRepo.ListAll()
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(subs) != 0 {
+		t.Errorf("ListAll() should return empty list initially, got %d", len(subs))
+	}
+
+	// Create test users
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
+	userRepo.Create(user1)
+	userRepo.Create(user2)
+	userRepo.Create(user3)
+
+	now := time.Now()
+
+	// Create subscriptions for different users with different types
+	endDate1 := now.AddDate(0, 1, 0)
+	sub1 := &domain.UserSubscription{
+		UserID:           user1.ID,
+		SubscriptionType: domain.SubscriptionTypeMonthly,
+		Status:           domain.SubscriptionStatusActive,
+		StartDate:        now,
+		EndDate:          &endDate1,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub1)
+
+	endDate2 := now.AddDate(1, 0, 0)
+	sub2 := &domain.UserSubscription{
+		UserID:           user2.ID,
+		SubscriptionType: domain.SubscriptionTypeAnnual,
+		Status:           domain.SubscriptionStatusActive,
+		StartDate:        now,
+		EndDate:          &endDate2,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub2)
+
+	sub3 := &domain.UserSubscription{
+		UserID:           user3.ID,
+		SubscriptionType: domain.SubscriptionTypeFree,
+		Status:           domain.SubscriptionStatusActive,
+		IsPermanentFree:  true,
+		StartDate:        now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	subRepo.Create(sub3)
+
+	// Test ListAll returns all subscriptions
+	subs, err = subRepo.ListAll()
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(subs) != 3 {
+		t.Errorf("ListAll() returned %d subscriptions, want 3", len(subs))
+	}
+
+	// Verify all subscriptions have user email populated (from JOIN)
+	for _, sub := range subs {
+		if sub.UserEmail == "" {
+			t.Errorf("ListAll() subscription %d should have UserEmail populated", sub.ID)
+		}
+	}
+}
+
 func TestUserSubscriptionRepository_ListExpired(t *testing.T) {
 	db, cleanup, err := SetupTestDB()
 	if err != nil {
