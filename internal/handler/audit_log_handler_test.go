@@ -269,6 +269,36 @@ func TestAuditLogHandler_GetMyAuditLogs_Success(t *testing.T) {
 	assertBodyContains(t, rr, "logs")
 }
 
+func TestAuditLogHandler_GetMyAuditLogs_WithPagination(t *testing.T) {
+	mockService := createTestAuditLogService()
+	handler := NewAuditLogHandler(mockService, createTestLogger())
+
+	tests := []struct {
+		name     string
+		query    string
+		wantCode int
+	}{
+		{"with valid limit", "?limit=10", http.StatusOK},
+		{"with valid offset", "?offset=5", http.StatusOK},
+		{"with both params", "?limit=10&offset=5", http.StatusOK},
+		{"with invalid limit", "?limit=abc", http.StatusOK},
+		{"with negative limit", "?limit=-1", http.StatusOK},
+		{"with invalid offset", "?offset=abc", http.StatusOK},
+		{"with negative offset", "?offset=-1", http.StatusOK},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, "/api/users/me/audit-logs"+tt.query, "", 1, "user@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			handler.GetMyAuditLogs(rr, req)
+
+			assertStatusCode(t, rr, tt.wantCode)
+		})
+	}
+}
+
 func TestAuditLogHandler_CleanupOldLogs_Success(t *testing.T) {
 	mockService := createTestAuditLogService()
 	handler := NewAuditLogHandler(mockService, createTestLogger())

@@ -264,6 +264,37 @@ func TestAdminUserHandler_ListUsers_Success(t *testing.T) {
 	assertBodyContains(t, rr, "total")
 }
 
+func TestAdminUserHandler_ListUsers_WithPagination(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewAdminUserHandler(userService, createTestLogger())
+
+	tests := []struct {
+		name     string
+		query    string
+		wantCode int
+	}{
+		{"with valid limit", "?limit=10", http.StatusOK},
+		{"with valid offset", "?offset=5", http.StatusOK},
+		{"with both params", "?limit=10&offset=5", http.StatusOK},
+		{"with invalid limit", "?limit=abc", http.StatusOK},     // falls back to default
+		{"with negative limit", "?limit=-1", http.StatusOK},     // falls back to default
+		{"with invalid offset", "?offset=abc", http.StatusOK},   // falls back to default
+		{"with negative offset", "?offset=-1", http.StatusOK},   // falls back to default
+		{"with zero limit", "?limit=0", http.StatusOK},          // falls back to default
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createTestRequest(http.MethodGet, "/api/admin/users"+tt.query, "")
+			rr := httptest.NewRecorder()
+
+			handler.ListUsers(rr, req)
+
+			assertStatusCode(t, rr, tt.wantCode)
+		})
+	}
+}
+
 func TestAdminUserHandler_UnlockUser_UserNotFound(t *testing.T) {
 	userService := createTestUserService()
 	handler := NewAdminUserHandler(userService, createTestLogger())

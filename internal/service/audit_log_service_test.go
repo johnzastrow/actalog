@@ -666,3 +666,67 @@ func TestAuditLogService_LogOrgSubscriptionCancelled(t *testing.T) {
 		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrgSubscriptionCancelled)
 	}
 }
+
+func TestAuditLogService_GetByUserID_LimitValidation(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	userID := int64(1)
+	_ = repo.Create(&domain.AuditLog{EventType: domain.EventLoginSuccess, UserID: &userID})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByUserID(userID, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByUserID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByUserID() returned nil")
+			}
+		})
+	}
+}
+
+func TestAuditLogService_GetByTargetUserID_LimitValidation(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	targetUserID := int64(2)
+	_ = repo.Create(&domain.AuditLog{EventType: domain.EventAccountDisabled, TargetUserID: &targetUserID})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByTargetUserID(targetUserID, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByTargetUserID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByTargetUserID() returned nil")
+			}
+		})
+	}
+}
