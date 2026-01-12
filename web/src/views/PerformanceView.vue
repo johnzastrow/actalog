@@ -838,10 +838,16 @@ const loadingWods = ref(false)
 const heaviestLifts = computed(() => {
   if (!selectedItem.value || selectedItem.value.type !== 'movement') return []
 
-  // Get all unique weight records, sorted by weight descending
+  // Get all unique weight records, sorted by weight descending, then by date descending
   const weightRecords = performanceData.value
     .filter(p => p.weight)
-    .sort((a, b) => b.weight - a.weight)
+    .sort((a, b) => {
+      // Primary sort: weight descending
+      const weightDiff = b.weight - a.weight
+      if (weightDiff !== 0) return weightDiff
+      // Secondary sort: date descending (most recent first)
+      return new Date(b.workout_date) - new Date(a.workout_date)
+    })
 
   // Get top 3 unique weights
   const seen = new Set()
@@ -899,21 +905,24 @@ const bestWODPerformances = computed(() => {
     validData = performanceData.value
   }
 
-  // Sort by best performance based on score type
+  // Sort by best performance based on score type, with date as secondary sort (most recent first)
   const sorted = [...validData].sort((a, b) => {
+    let scoreDiff = 0
     if (wodScoreType.includes('Time')) {
       // Time-based (lower is better)
-      return a.time_seconds - b.time_seconds
+      scoreDiff = a.time_seconds - b.time_seconds
     } else if (wodScoreType.includes('Rounds')) {
       // Rounds+Reps (higher is better)
       const aTotal = (a.rounds || 0) * 1000 + (a.reps || 0)
       const bTotal = (b.rounds || 0) * 1000 + (b.reps || 0)
-      return bTotal - aTotal
+      scoreDiff = bTotal - aTotal
     } else if (wodScoreType.includes('Weight')) {
       // Weight (higher is better)
-      return b.weight - a.weight
+      scoreDiff = b.weight - a.weight
     }
-    return 0
+    // Secondary sort: date descending (most recent first) for equal scores
+    if (scoreDiff !== 0) return scoreDiff
+    return new Date(b.workout_date) - new Date(a.workout_date)
   })
 
   return sorted.slice(0, 3)
