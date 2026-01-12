@@ -82,7 +82,8 @@ func (m *MockMovementRepository) GetByName(name string) (*domain.Movement, error
 			return mov, nil
 		}
 	}
-	return nil, ErrMockNotFound
+	// Return nil, nil when not found (no duplicate) - consistent with real repo behavior
+	return nil, nil
 }
 
 func (m *MockMovementRepository) ListAll() ([]*domain.Movement, error) {

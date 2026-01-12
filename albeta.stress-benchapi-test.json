@@ -1,0 +1,259 @@
+{
+  "timestamp": "2026-01-09T19:55:48.406264396Z",
+  "target": "https://albeta.fluidgrid.site",
+  "version": "0.22.0-beta",
+  "connectivity": {
+    "dns_ms": 2.016,
+    "tcp_ms": 62.276,
+    "tls_ms": 63.577,
+    "total_ms": 127.869,
+    "connected": true
+  },
+  "health": {
+    "status": "healthy",
+    "response_ms": 54.777,
+    "http_status": 200
+  },
+  "endpoints": [
+    {
+      "path": "/api/version",
+      "response_ms": 50.997,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/health",
+      "response_ms": 74.472,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/workouts",
+      "response_ms": 102.383,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/movements",
+      "response_ms": 60.55,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/wods",
+      "response_ms": 58.878,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/pr-movements",
+      "response_ms": 57.448,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/notifications/count",
+      "response_ms": 55.08,
+      "status": 200,
+      "success": true
+    }
+  ],
+  "frontend": {
+    "index_html": {
+      "path": "/",
+      "size_kb": 1.83984375,
+      "response_ms": 50.427,
+      "status": 200,
+      "success": true,
+      "type": "html"
+    },
+    "total_size_kb": 928.4287109375,
+    "total_time_ms": 163.698,
+    "assets": [
+      {
+        "path": "/assets/index-C4t112GQ.js",
+        "size_kb": 257.0302734375,
+        "response_ms": 60.638,
+        "status": 200,
+        "success": true,
+        "type": "js"
+      },
+      {
+        "path": "/assets/index-CC4drQsf.css",
+        "size_kb": 669.55859375,
+        "response_ms": 52.633,
+        "status": 200,
+        "success": true,
+        "type": "css"
+      }
+    ]
+  },
+  "load_test": {
+    "concurrent": 50,
+    "duration_sec": 300,
+    "total_requests": 251462,
+    "successful": 251414,
+    "failed": 48,
+    "rps": 838.2030252528821,
+    "latency_p50_ms": 57.431,
+    "latency_p95_ms": 77.951,
+    "latency_p99_ms": 100.35672999999989,
+    "min_latency_ms": 0.468,
+    "max_latency_ms": 1251.558,
+    "avg_latency_ms": 59.639789984173106
+  },
+  "benchmark_api": {
+    "success": true,
+    "http_status": 200,
+    "total_duration_ms": 118.65,
+    "response": {
+      "timestamp": "2026-01-09T19:55:50.237144466Z",
+      "version": "0.22.0-beta",
+      "system_info": {
+        "go_version": "go1.24.0",
+        "go_os": "linux",
+        "go_arch": "amd64",
+        "os_version": "Alpine Linux v3.23 (kernel 6.8.0-90-generic)",
+        "num_cpu": 1,
+        "database_version": "10.11.13-MariaDB-0ubuntu0.24.04.1",
+        "database_driver": "mysql"
+      },
+      "total_duration_ms": 66.436,
+      "overall": "pass",
+      "record_count": 0,
+      "database": {
+        "bulk_insert": {
+          "operation": "bulk_insert",
+          "success": true,
+          "duration_ms": 28.078,
+          "records_affected": 100
+        },
+        "cleanup": {
+          "operation": "cleanup",
+          "success": true,
+          "duration_ms": 1.529
+        },
+        "delete": {
+          "operation": "delete",
+          "success": true,
+          "duration_ms": 0.792,
+          "records_affected": 1
+        },
+        "insert": {
+          "operation": "insert",
+          "success": true,
+          "duration_ms": 2.358,
+          "records_affected": 1
+        },
+        "select_by_id": {
+          "operation": "select_by_id",
+          "success": true,
+          "duration_ms": 0.375,
+          "records_affected": 1
+        },
+        "select_by_key": {
+          "operation": "select_by_key",
+          "success": true,
+          "duration_ms": 0.388,
+          "records_affected": 1
+        },
+        "select_filtered": {
+          "operation": "select_filtered",
+          "success": true,
+          "duration_ms": 0.711,
+          "records_affected": 50
+        },
+        "select_list": {
+          "operation": "select_list",
+          "success": true,
+          "duration_ms": 0.588,
+          "records_affected": 50
+        },
+        "update": {
+          "operation": "update",
+          "success": true,
+          "duration_ms": 0.63,
+          "records_affected": 1
+        }
+      },
+      "serialization": {
+        "marshal_large": {
+          "operation": "marshal_large",
+          "success": true,
+          "duration_ms": 0.238
+        },
+        "marshal_small": {
+          "operation": "marshal_small",
+          "success": true,
+          "duration_ms": 0.018
+        },
+        "unmarshal_large": {
+          "operation": "unmarshal_large",
+          "success": true,
+          "duration_ms": 0.606
+        },
+        "unmarshal_small": {
+          "operation": "unmarshal_small",
+          "success": true,
+          "duration_ms": 0.017
+        }
+      },
+      "business_logic": {
+        "date_operations": {
+          "operation": "date_operations",
+          "success": true,
+          "duration_ms": 0.712,
+          "records_affected": 1000
+        },
+        "intensity_calculations": {
+          "operation": "intensity_calculations",
+          "success": true,
+          "duration_ms": 0,
+          "records_affected": 1000
+        },
+        "one_rm_calculations": {
+          "operation": "one_rm_calculations",
+          "success": true,
+          "duration_ms": 0.014,
+          "records_affected": 1000
+        },
+        "string_operations": {
+          "operation": "string_operations",
+          "success": true,
+          "duration_ms": 1.378,
+          "records_affected": 1000
+        },
+        "validation": {
+          "operation": "validation",
+          "success": true,
+          "duration_ms": 0.005,
+          "records_affected": 100
+        }
+      },
+      "concurrent": {
+        "mixed_operations": {
+          "operation": "mixed_operations",
+          "success": true,
+          "duration_ms": 9.222,
+          "records_affected": 10
+        },
+        "parallel_reads": {
+          "operation": "parallel_reads",
+          "success": true,
+          "duration_ms": 7.374,
+          "records_affected": 10
+        },
+        "parallel_writes": {
+          "operation": "parallel_writes",
+          "success": true,
+          "duration_ms": 7.062,
+          "records_affected": 5
+        }
+      },
+      "total_operations": 21,
+      "successful_operations": 21,
+      "failed_operations": 0
+    }
+  },
+  "overall": "pass"
+}

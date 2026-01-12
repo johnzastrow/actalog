@@ -1125,3 +1125,259 @@ func TestAdminHandler_FixWODScoreTypeMismatches_Success(t *testing.T) {
 	assertBodyContains(t, rr, "deleted_count")
 	assertBodyContains(t, rr, "total_found")
 }
+
+// Tests for CopyWODToStandard with different error scenarios
+func TestAdminHandler_CopyWODToStandard_Success(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	// Add a user-created WOD that can be copied
+	mockWODRepo.wods = append(mockWODRepo.wods, &domain.WOD{
+		ID:         1,
+		Name:       "User WOD",
+		ScoreType:  "For Time",
+		IsStandard: false,
+		CreatedBy:  intPtr(1),
+	})
+
+	wodService := service.NewWODService(mockWODRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		mockWODRepo,
+		nil,
+		nil,
+		nil,
+		wodService, nil, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/1/copy-to-standard", `{"new_name": "Standard Fran"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWODToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertBodyContains(t, rr, "Standard Fran")
+}
+
+func TestAdminHandler_CopyWODToStandard_NotFound(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	// No WODs in repo, so ID 999 won't be found
+	wodService := service.NewWODService(mockWODRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		mockWODRepo,
+		nil,
+		nil,
+		nil,
+		wodService, nil, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/999/copy-to-standard", `{"new_name": "Standard WOD"}`)
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWODToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestAdminHandler_CopyWODToStandard_DuplicateName(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	// Add an existing STANDARD WOD with the same name
+	mockWODRepo.wods = append(mockWODRepo.wods, &domain.WOD{
+		ID:         1,
+		Name:       "Fran",
+		ScoreType:  "For Time",
+		IsStandard: true,
+	})
+
+	// Add a user-created WOD to copy
+	mockWODRepo.wods = append(mockWODRepo.wods, &domain.WOD{
+		ID:         2,
+		Name:       "User Fran",
+		ScoreType:  "For Time",
+		IsStandard: false,
+		CreatedBy:  intPtr(1),
+	})
+
+	wodService := service.NewWODService(mockWODRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		mockWODRepo,
+		nil,
+		nil,
+		nil,
+		wodService, nil, nil,
+		createTestLogger(),
+	)
+
+	// Try to copy with a name that already exists as standard
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/2/copy-to-standard", `{"new_name": "Fran"}`)
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWODToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusConflict)
+	assertBodyContains(t, rr, "already exists")
+}
+
+func TestAdminHandler_CopyWODToStandard_EmptyName(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	mockWODRepo.wods = append(mockWODRepo.wods, &domain.WOD{
+		ID:         1,
+		Name:       "User WOD",
+		ScoreType:  "For Time",
+		IsStandard: false,
+	})
+
+	wodService := service.NewWODService(mockWODRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		mockWODRepo,
+		nil,
+		nil,
+		nil,
+		wodService, nil, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/wods/1/copy-to-standard", `{"new_name": "   "}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyWODToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+// Tests for CopyMovementToStandard with different error scenarios
+func TestAdminHandler_CopyMovementToStandard_Success(t *testing.T) {
+	mockMovementRepo := NewMockMovementRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	// Add a user-created movement
+	mockMovementRepo.movements = append(mockMovementRepo.movements, &domain.Movement{
+		ID:         1,
+		Name:       "User Movement",
+		Type:       "Weightlifting",
+		IsStandard: false,
+		CreatedBy:  intPtr(1),
+	})
+
+	movementService := service.NewMovementService(mockMovementRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		nil,
+		mockMovementRepo,
+		nil,
+		nil,
+		nil, movementService, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/1/copy-to-standard", `{"new_name": "Standard Snatch"}`)
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CopyMovementToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+	assertBodyContains(t, rr, "Standard Snatch")
+}
+
+func TestAdminHandler_CopyMovementToStandard_NotFound(t *testing.T) {
+	mockMovementRepo := NewMockMovementRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	movementService := service.NewMovementService(mockMovementRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		nil,
+		mockMovementRepo,
+		nil,
+		nil,
+		nil, movementService, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/999/copy-to-standard", `{"new_name": "Standard Movement"}`)
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.CopyMovementToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestAdminHandler_CopyMovementToStandard_DuplicateName(t *testing.T) {
+	mockMovementRepo := NewMockMovementRepository()
+	mockAuditRepo := NewMockAuditLogRepository()
+
+	// Add an existing STANDARD movement with the same name
+	mockMovementRepo.movements = append(mockMovementRepo.movements, &domain.Movement{
+		ID:         1,
+		Name:       "Deadlift",
+		Type:       "Weightlifting",
+		IsStandard: true,
+	})
+
+	// Add a user-created movement
+	mockMovementRepo.movements = append(mockMovementRepo.movements, &domain.Movement{
+		ID:         2,
+		Name:       "User Deadlift",
+		Type:       "Weightlifting",
+		IsStandard: false,
+		CreatedBy:  intPtr(1),
+	})
+
+	movementService := service.NewMovementService(mockMovementRepo, nil, mockAuditRepo)
+
+	handler := NewAdminHandler(
+		nil,
+		nil,
+		nil,
+		mockMovementRepo,
+		nil,
+		nil,
+		nil, movementService, nil,
+		createTestLogger(),
+	)
+
+	req := createTestRequest(http.MethodPost, "/api/admin/movements/2/copy-to-standard", `{"new_name": "Deadlift"}`)
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.CopyMovementToStandard(rr, req)
+
+	assertStatusCode(t, rr, http.StatusConflict)
+	assertBodyContains(t, rr, "already exists")
+}
+
+// Helper to create int pointer
+func intPtr(i int64) *int64 {
+	return &i
+}

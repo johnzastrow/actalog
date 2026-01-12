@@ -3,7 +3,9 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 )
@@ -674,5 +676,116 @@ func (m *MockBackupServiceWithUploadMetadataError) DeleteBackup(filename string,
 }
 
 func (m *MockBackupServiceWithUploadMetadataError) RestoreBackup(filename string, restoredByUserID int64, mode domain.RestoreMode) (*domain.RestoreResult, error) {
+	return nil, nil
+}
+
+// Tests for DownloadBackup handler
+func TestBackupHandler_DownloadBackup_ServiceError(t *testing.T) {
+	mockService := NewMockBackupService()
+	mockService.SetError(ErrMockInternalError)
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/backups/test.zip/download", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "test.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DownloadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "Backup not found")
+}
+
+func TestBackupHandler_DownloadBackup_Success(t *testing.T) {
+	// Create a temporary file to serve
+	tmpFile, err := os.CreateTemp("", "backup_test_*.zip")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	// Write some content to the file
+	content := []byte("test backup content")
+	if _, err := tmpFile.Write(content); err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Create a mock that returns the temp file path
+	mockService := &MockBackupServiceWithFilePath{filePath: tmpFile.Name()}
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/backups/backup.zip/download", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "backup.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DownloadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Should have correct content type for zip files
+	if rr.Header().Get("Content-Type") != "application/zip" {
+		t.Errorf("Expected Content-Type application/zip, got %s", rr.Header().Get("Content-Type"))
+	}
+	// Should have Content-Disposition header
+	if rr.Header().Get("Content-Disposition") == "" {
+		t.Error("Expected Content-Disposition header to be set")
+	}
+}
+
+func TestBackupHandler_DownloadBackup_FileStatError(t *testing.T) {
+	// Use a path that doesn't exist
+	mockService := &MockBackupServiceWithFilePath{filePath: "/nonexistent/path/file.zip"}
+	mockAuditRepo := NewMockAuditLogRepository()
+	handler := NewBackupHandler(mockService, mockAuditRepo)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/admin/backups/backup.zip/download", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "filename", "backup.zip")
+	rr := httptest.NewRecorder()
+
+	handler.DownloadBackup(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get file info")
+}
+
+// MockBackupServiceWithFilePath returns a specific file path for download
+type MockBackupServiceWithFilePath struct {
+	filePath string
+}
+
+func (m *MockBackupServiceWithFilePath) CreateBackup(createdByUserID int64) (string, error) {
+	return "test.zip", nil
+}
+
+func (m *MockBackupServiceWithFilePath) ListBackups() ([]domain.BackupMetadata, error) {
+	return []domain.BackupMetadata{}, nil
+}
+
+func (m *MockBackupServiceWithFilePath) GetBackupMetadata(filename string) (*domain.BackupMetadata, error) {
+	return &domain.BackupMetadata{
+		Filename:       filename,
+		FileSize:       1024,
+		CreatedAt:      time.Now(),
+		CreatedByEmail: "admin@example.com",
+		Version:        "0.17.0",
+		DatabaseDriver: "sqlite3",
+		DatabaseName:   "test.db",
+	}, nil
+}
+
+func (m *MockBackupServiceWithFilePath) DownloadBackup(filename string) (string, error) {
+	return m.filePath, nil
+}
+
+func (m *MockBackupServiceWithFilePath) UploadBackup(file interface{}, filename string, uploadedByUserID int64) (string, error) {
+	return "", nil
+}
+
+func (m *MockBackupServiceWithFilePath) DeleteBackup(filename string, deletedByUserID int64) error {
+	return nil
+}
+
+func (m *MockBackupServiceWithFilePath) RestoreBackup(filename string, restoredByUserID int64, mode domain.RestoreMode) (*domain.RestoreResult, error) {
 	return nil, nil
 }
