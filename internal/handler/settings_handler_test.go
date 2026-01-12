@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/johnzastrow/actalog/internal/service"
 )
 
 func TestSettingsHandler_GetSettings_Unauthorized(t *testing.T) {
@@ -170,4 +172,70 @@ func TestSettingsHandler_UpdateSettings_WithFontFamily(t *testing.T) {
 	handler.UpdateSettings(rr, req)
 
 	assertStatusCode(t, rr, http.StatusOK)
+}
+
+// Helper to create a settings service that returns errors
+func createTestUserSettingsServiceWithError() *service.UserSettingsService {
+	settingsRepo := NewMockUserSettingsRepository()
+	settingsRepo.SetError(ErrMockInternalError)
+	auditLogRepo := NewMockAuditLogRepository()
+	return service.NewUserSettingsService(settingsRepo, auditLogRepo)
+}
+
+func TestSettingsHandler_GetSettings_ServiceError(t *testing.T) {
+	settingsService := createTestUserSettingsServiceWithError()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to retrieve settings")
+}
+
+func TestSettingsHandler_GetSettings_ServiceErrorNoLogger(t *testing.T) {
+	settingsService := createTestUserSettingsServiceWithError()
+	handler := &SettingsHandler{
+		settingsService: settingsService,
+		logger:          nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestSettingsHandler_UpdateSettings_ServiceError(t *testing.T) {
+	settingsService := createTestUserSettingsServiceWithError()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	body := `{"theme": "dark"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to update settings")
+}
+
+func TestSettingsHandler_UpdateSettings_ServiceErrorNoLogger(t *testing.T) {
+	settingsService := createTestUserSettingsServiceWithError()
+	handler := &SettingsHandler{
+		settingsService: settingsService,
+		logger:          nil,
+	}
+
+	body := `{"theme": "dark"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
 }

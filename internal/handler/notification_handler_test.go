@@ -519,3 +519,68 @@ func TestNotificationHandler_CreateAnnouncement_NoLogger(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusCreated)
 }
+
+// Helper to create a notification service that returns errors
+func createTestNotificationServiceWithError() *service.NotificationService {
+	mockNotificationRepo := NewMockNotificationRepository()
+	mockNotificationRepo.SetError(ErrMockInternalError)
+	mockOrgRepo := NewMockOrganizationRepository()
+	mockUserRepo := NewMockUserRepository()
+	mockSettingsRepo := NewMockUserSettingsRepository()
+	mockEmailService := NewMockEmailService()
+
+	return service.NewNotificationService(
+		mockNotificationRepo,
+		mockOrgRepo,
+		mockUserRepo,
+		mockSettingsRepo,
+		mockEmailService,
+	)
+}
+
+func TestNotificationHandler_GetUnreadCount_ServiceError(t *testing.T) {
+	notificationService := createTestNotificationServiceWithError()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/notifications/count", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetUnreadCount(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to get unread count")
+}
+
+func TestNotificationHandler_GetUnreadCount_ServiceErrorNoLogger(t *testing.T) {
+	notificationService := createTestNotificationServiceWithError()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/notifications/count", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetUnreadCount(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestNotificationHandler_MarkAllAsRead_ServiceError(t *testing.T) {
+	notificationService := createTestNotificationServiceWithError()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/notifications/read-all", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.MarkAllAsRead(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+	assertBodyContains(t, rr, "Failed to mark all notifications as read")
+}
