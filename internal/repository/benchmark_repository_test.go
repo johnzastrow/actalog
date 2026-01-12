@@ -993,3 +993,64 @@ func TestBenchmarkRepository_DatabaseVersion_UnsupportedDriver(t *testing.T) {
 		t.Errorf("DatabaseVersion() = %q, want %q for unsupported driver", version, "unknown")
 	}
 }
+
+func TestRebindQueryBenchmark(t *testing.T) {
+	tests := []struct {
+		name     string
+		query    string
+		driver   string
+		expected string
+	}{
+		{
+			name:     "postgres with single placeholder",
+			query:    "SELECT * FROM users WHERE id = ?",
+			driver:   "postgres",
+			expected: "SELECT * FROM users WHERE id = $1",
+		},
+		{
+			name:     "postgres with multiple placeholders",
+			query:    "SELECT * FROM users WHERE id = ? AND name = ? AND active = ?",
+			driver:   "postgres",
+			expected: "SELECT * FROM users WHERE id = $1 AND name = $2 AND active = $3",
+		},
+		{
+			name:     "postgres with insert placeholders",
+			query:    "INSERT INTO users (a, b, c, d) VALUES (?, ?, ?, ?)",
+			driver:   "postgres",
+			expected: "INSERT INTO users (a, b, c, d) VALUES ($1, $2, $3, $4)",
+		},
+		{
+			name:     "postgres with no placeholders",
+			query:    "SELECT * FROM users",
+			driver:   "postgres",
+			expected: "SELECT * FROM users",
+		},
+		{
+			name:     "sqlite3 unchanged",
+			query:    "SELECT * FROM users WHERE id = ?",
+			driver:   "sqlite3",
+			expected: "SELECT * FROM users WHERE id = ?",
+		},
+		{
+			name:     "mysql unchanged",
+			query:    "SELECT * FROM users WHERE id = ? AND name = ?",
+			driver:   "mysql",
+			expected: "SELECT * FROM users WHERE id = ? AND name = ?",
+		},
+		{
+			name:     "empty driver unchanged",
+			query:    "SELECT * FROM users WHERE id = ?",
+			driver:   "",
+			expected: "SELECT * FROM users WHERE id = ?",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := rebindQueryBenchmark(tt.query, tt.driver)
+			if result != tt.expected {
+				t.Errorf("rebindQueryBenchmark() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}

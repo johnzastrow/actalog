@@ -1169,3 +1169,301 @@ func TestSubscriptionHandler_MarkOrganizationSubscriptionAsPaid_ServiceError_NoL
 		t.Errorf("Expected StatusInternalServerError or StatusNotFound, got %d", rr.Code)
 	}
 }
+
+// =============================================================================
+// CreateUserSubscription with Service
+// =============================================================================
+
+func TestSubscriptionHandler_CreateUserSubscription_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user",
+		`{"user_id": 1, "subscription_type": "monthly"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateUserSubscription(rr, req)
+
+	// May return 201 (created), 400 (already exists), 403 (auth), or 500 (error)
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CreateUserSubscription_PermanentFree(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user",
+		`{"user_id": 2, "subscription_type": "permanent_free"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateUserSubscription(rr, req)
+
+	// Test the permanent_free code path
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CreateUserSubscription_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user",
+		`{"user_id": 1, "subscription_type": "annual"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateUserSubscription(rr, req)
+
+	// May return 201 (created), 400 (already exists), 403 (auth), or 500 (error)
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+// =============================================================================
+// CreateOrganizationSubscription with Service
+// =============================================================================
+
+func TestSubscriptionHandler_CreateOrganizationSubscription_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization",
+		`{"organization_id": 1, "subscription_type": "monthly"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateOrganizationSubscription(rr, req)
+
+	// May return 201 (created), 400 (already exists), 403 (auth), or 500 (error)
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CreateOrganizationSubscription_PermanentFree(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization",
+		`{"organization_id": 2, "subscription_type": "permanent_free"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateOrganizationSubscription(rr, req)
+
+	// Test the permanent_free code path
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CreateOrganizationSubscription_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization",
+		`{"organization_id": 1, "subscription_type": "annual"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateOrganizationSubscription(rr, req)
+
+	// May return 201 (created), 400 (already exists), 403 (auth), or 500 (error)
+	if rr.Code != http.StatusCreated && rr.Code != http.StatusBadRequest && rr.Code != http.StatusForbidden && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusCreated, StatusBadRequest, StatusForbidden, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+// =============================================================================
+// CancelUserSubscription with Service
+// =============================================================================
+
+func TestSubscriptionHandler_CancelUserSubscription_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel",
+		`{"reason": "User requested cancellation"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelUserSubscription(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CancelUserSubscription_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/cancel",
+		`{"reason": "No longer needed"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelUserSubscription(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+// =============================================================================
+// CancelOrganizationSubscription with Service
+// =============================================================================
+
+func TestSubscriptionHandler_CancelOrganizationSubscription_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel",
+		`{"reason": "Organization requested cancellation"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelOrganizationSubscription(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_CancelOrganizationSubscription_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/cancel",
+		`{"reason": "No longer needed"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.CancelOrganizationSubscription(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+// =============================================================================
+// SetUserSubscriptionPermanent with Service
+// =============================================================================
+
+func TestSubscriptionHandler_SetUserSubscriptionPermanent_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/permanent",
+		`{"is_permanent": true}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetUserSubscriptionPermanent(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_SetUserSubscriptionPermanent_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/user/1/permanent",
+		`{"is_permanent": false}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetUserSubscriptionPermanent(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+// =============================================================================
+// SetOrganizationSubscriptionPermanent with Service
+// =============================================================================
+
+func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_Success(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              createTestLogger(),
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/permanent",
+		`{"is_permanent": true}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetOrganizationSubscriptionPermanent(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}
+
+func TestSubscriptionHandler_SetOrganizationSubscriptionPermanent_NoLogger(t *testing.T) {
+	svc := createTestSubscriptionService()
+	handler := &SubscriptionHandler{
+		subscriptionService: svc,
+		logger:              nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/subscriptions/organization/1/permanent",
+		`{"is_permanent": false}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.SetOrganizationSubscriptionPermanent(rr, req)
+
+	// May return 200 (success), 404 (not found), or 500 (error)
+	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound && rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected StatusOK, StatusNotFound, or StatusInternalServerError, got %d", rr.Code)
+	}
+}

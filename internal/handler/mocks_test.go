@@ -2510,3 +2510,149 @@ func (m *MockUserWorkoutRepository) GetActiveUsersThisMonth(userID int64) ([]map
 	}
 	return []map[string]interface{}{}, nil
 }
+
+// ===== MockWorkoutWODRepository =====
+
+type MockWorkoutWODRepository struct {
+	workoutWODs   []*domain.WorkoutWOD
+	shouldError   bool
+	errorToReturn error
+}
+
+func NewMockWorkoutWODRepository() *MockWorkoutWODRepository {
+	return &MockWorkoutWODRepository{
+		workoutWODs: []*domain.WorkoutWOD{},
+	}
+}
+
+func (m *MockWorkoutWODRepository) SetError(err error) {
+	m.shouldError = true
+	m.errorToReturn = err
+}
+
+func (m *MockWorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	workoutWOD.ID = int64(len(m.workoutWODs) + 1)
+	m.workoutWODs = append(m.workoutWODs, workoutWOD)
+	return nil
+}
+
+func (m *MockWorkoutWODRepository) GetByID(id int64) (*domain.WorkoutWOD, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, ww := range m.workoutWODs {
+		if ww.ID == id {
+			return ww, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockWorkoutWODRepository) ListByWorkout(workoutID int64) ([]*domain.WorkoutWOD, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.WorkoutWOD
+	for _, ww := range m.workoutWODs {
+		if ww.WorkoutID == workoutID {
+			result = append(result, ww)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockWorkoutWODRepository) ListByWorkoutWithDetails(workoutID int64) ([]*domain.WorkoutWODWithDetails, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	var result []*domain.WorkoutWODWithDetails
+	for _, ww := range m.workoutWODs {
+		if ww.WorkoutID == workoutID {
+			result = append(result, &domain.WorkoutWODWithDetails{
+				WorkoutWOD: *ww,
+				WODName:    "Test WOD",
+			})
+		}
+	}
+	return result, nil
+}
+
+func (m *MockWorkoutWODRepository) Update(workoutWOD *domain.WorkoutWOD) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, ww := range m.workoutWODs {
+		if ww.ID == workoutWOD.ID {
+			m.workoutWODs[i] = workoutWOD
+			return nil
+		}
+	}
+	return ErrMockNotFound
+}
+
+func (m *MockWorkoutWODRepository) Delete(id int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for i, ww := range m.workoutWODs {
+		if ww.ID == id {
+			m.workoutWODs = append(m.workoutWODs[:i], m.workoutWODs[i+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *MockWorkoutWODRepository) DeleteByWorkout(workoutID int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	var remaining []*domain.WorkoutWOD
+	for _, ww := range m.workoutWODs {
+		if ww.WorkoutID != workoutID {
+			remaining = append(remaining, ww)
+		}
+	}
+	m.workoutWODs = remaining
+	return nil
+}
+
+func (m *MockWorkoutWODRepository) TogglePR(id int64) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	for _, ww := range m.workoutWODs {
+		if ww.ID == id {
+			ww.IsPR = !ww.IsPR
+			return nil
+		}
+	}
+	return ErrMockNotFound
+}
+
+// createTestWorkoutWODService creates a WorkoutWODService with mock repositories for testing
+func createTestWorkoutWODService() *service.WorkoutWODService {
+	mockWorkoutWODRepo := NewMockWorkoutWODRepository()
+	mockWorkoutRepo := NewMockWorkoutRepository()
+	mockWODRepo := NewMockWODRepository()
+
+	// Add a test workout template with a known creator
+	userID := int64(1)
+	mockWorkoutRepo.workouts = append(mockWorkoutRepo.workouts, &domain.Workout{
+		ID:        1,
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	})
+
+	// Add a test WOD
+	mockWODRepo.wods = append(mockWODRepo.wods, &domain.WOD{
+		ID:        1,
+		Name:      "Test WOD",
+		ScoreType: "Time (HH:MM:SS)",
+	})
+
+	return service.NewWorkoutWODService(mockWorkoutWODRepo, mockWorkoutRepo, mockWODRepo)
+}

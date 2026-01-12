@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -291,4 +292,101 @@ func TestLogSuccess(t *testing.T) {
 func TestLogError(t *testing.T) {
 	// Just verify it doesn't panic
 	logError("TEST", "Test message %s", "arg")
+}
+
+func TestGetSQLiteSchema(t *testing.T) {
+	schema := getSQLiteSchema()
+
+	// Verify schema is not empty
+	if schema == "" {
+		t.Error("getSQLiteSchema() returned empty string")
+	}
+
+	// Verify schema contains expected tables
+	expectedTables := []string{
+		"CREATE TABLE IF NOT EXISTS users",
+		"CREATE TABLE IF NOT EXISTS refresh_tokens",
+		"CREATE TABLE IF NOT EXISTS user_settings",
+		"CREATE TABLE IF NOT EXISTS audit_logs",
+		"CREATE TABLE IF NOT EXISTS workouts",
+		"CREATE TABLE IF NOT EXISTS movements",
+		"CREATE TABLE IF NOT EXISTS workout_movements",
+	}
+
+	for _, table := range expectedTables {
+		if !strings.Contains(schema, table) {
+			t.Errorf("getSQLiteSchema() missing expected table: %s", table)
+		}
+	}
+}
+
+func TestGetPostgreSQLSchema(t *testing.T) {
+	schema := getPostgreSQLSchema()
+
+	// Verify schema is not empty
+	if schema == "" {
+		t.Error("getPostgreSQLSchema() returned empty string")
+	}
+
+	// Verify schema contains expected tables
+	expectedTables := []string{
+		"CREATE TABLE IF NOT EXISTS users",
+		"CREATE TABLE IF NOT EXISTS refresh_tokens",
+		"CREATE TABLE IF NOT EXISTS user_settings",
+		"CREATE TABLE IF NOT EXISTS audit_logs",
+		"CREATE TABLE IF NOT EXISTS workouts",
+		"CREATE TABLE IF NOT EXISTS movements",
+		"CREATE TABLE IF NOT EXISTS workout_movements",
+	}
+
+	for _, table := range expectedTables {
+		if !strings.Contains(schema, table) {
+			t.Errorf("getPostgreSQLSchema() missing expected table: %s", table)
+		}
+	}
+
+	// Verify PostgreSQL-specific syntax
+	if !strings.Contains(schema, "BIGSERIAL PRIMARY KEY") {
+		t.Error("getPostgreSQLSchema() should use BIGSERIAL for auto-increment")
+	}
+	if !strings.Contains(schema, "TIMESTAMP") {
+		t.Error("getPostgreSQLSchema() should use TIMESTAMP for datetime fields")
+	}
+}
+
+func TestGetMySQLSchema(t *testing.T) {
+	schema := getMySQLSchema()
+
+	// Verify schema is not empty
+	if schema == "" {
+		t.Error("getMySQLSchema() returned empty string")
+	}
+
+	// Verify schema contains expected tables
+	expectedTables := []string{
+		"CREATE TABLE IF NOT EXISTS users",
+		"CREATE TABLE IF NOT EXISTS refresh_tokens",
+		"CREATE TABLE IF NOT EXISTS user_settings",
+		"CREATE TABLE IF NOT EXISTS audit_logs",
+		"CREATE TABLE IF NOT EXISTS workouts",
+		"CREATE TABLE IF NOT EXISTS movements",
+		"CREATE TABLE IF NOT EXISTS workout_movements",
+	}
+
+	for _, table := range expectedTables {
+		if !strings.Contains(schema, table) {
+			t.Errorf("getMySQLSchema() missing expected table: %s", table)
+		}
+	}
+
+	// Verify MySQL-specific syntax
+	if !strings.Contains(schema, "AUTO_INCREMENT") {
+		t.Error("getMySQLSchema() should use AUTO_INCREMENT for auto-increment")
+	}
+	if !strings.Contains(schema, "ENGINE=InnoDB") {
+		t.Error("getMySQLSchema() should use InnoDB engine")
+	}
+	if !strings.Contains(schema, "utf8mb4") {
+		t.Error("getMySQLSchema() should use utf8mb4 charset")
+	}
 }

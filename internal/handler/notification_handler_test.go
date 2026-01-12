@@ -411,3 +411,111 @@ func TestNotificationHandler_GetUnreadCount_NoLogger(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusOK)
 }
+
+func TestNotificationHandler_ListUnreadNotifications_WithPagination(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+		logger:              createTestLogger(),
+	}
+
+	tests := []struct {
+		name     string
+		query    string
+		wantCode int
+	}{
+		{"with valid limit", "?limit=10", http.StatusOK},
+		{"with valid offset", "?offset=5", http.StatusOK},
+		{"with both params", "?limit=10&offset=5", http.StatusOK},
+		{"with invalid limit", "?limit=abc", http.StatusOK},
+		{"with negative limit", "?limit=-1", http.StatusOK},
+		{"with invalid offset", "?offset=abc", http.StatusOK},
+		{"with negative offset", "?offset=-1", http.StatusOK},
+		{"with zero limit", "?limit=0", http.StatusOK},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, "/api/notifications/unread"+tt.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			handler.ListUnreadNotifications(rr, req)
+
+			assertStatusCode(t, rr, tt.wantCode)
+		})
+	}
+}
+
+func TestNotificationHandler_ListUnreadNotifications_NoLogger(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/notifications/unread", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ListUnreadNotifications(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestNotificationHandler_MarkAllAsRead_NoLogger(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/notifications/read-all", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.MarkAllAsRead(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestNotificationHandler_MarkAsRead_NoLogger(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/notifications/1/read", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.MarkAsRead(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestNotificationHandler_DeleteNotification_NoLogger(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+	}
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/notifications/1", "", 1, "test@example.com", "user")
+	req = addChiURLParam(req, "id", "1")
+	rr := httptest.NewRecorder()
+
+	handler.DeleteNotification(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestNotificationHandler_CreateAnnouncement_NoLogger(t *testing.T) {
+	notificationService := createTestNotificationService()
+	handler := &NotificationHandler{
+		notificationService: notificationService,
+	}
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/notifications/announce",
+		`{"title": "Test", "message": "Test message", "target_type": "all"}`,
+		1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.CreateAnnouncement(rr, req)
+
+	assertStatusCode(t, rr, http.StatusCreated)
+}

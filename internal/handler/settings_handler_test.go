@@ -114,3 +114,60 @@ func TestSettingsHandler_GetSettings_CreatesDefaults(t *testing.T) {
 	assertBodyContains(t, rr, "light") // default theme
 	assertBodyContains(t, rr, "lbs")   // default weight unit
 }
+
+func TestSettingsHandler_GetSettings_NoLogger(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := &SettingsHandler{
+		settingsService: settingsService,
+		logger:          nil,
+	}
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/settings", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSettingsHandler_UpdateSettings_NoLogger(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := &SettingsHandler{
+		settingsService: settingsService,
+		logger:          nil,
+	}
+
+	body := `{"theme": "dark"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSettingsHandler_UpdateSettings_WithTimezone(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	body := `{"theme": "dark", "timezone": "America/New_York"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestSettingsHandler_UpdateSettings_WithFontFamily(t *testing.T) {
+	settingsService := createTestUserSettingsService()
+	handler := NewSettingsHandler(settingsService, createTestLogger())
+
+	body := `{"theme": "light", "font_family": "Source Serif Pro"}`
+	req := createAuthenticatedRequest(http.MethodPut, "/api/settings", body, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateSettings(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
