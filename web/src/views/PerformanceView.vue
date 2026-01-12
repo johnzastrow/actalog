@@ -76,116 +76,149 @@
 
         <!-- MOVEMENT-SPECIFIC CONTENT -->
         <template v-if="selectedItem.type === 'movement'">
-          <!-- Heaviest Lifts (Top 3 Maxes) -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="primary" size="small" class="mr-1">mdi-trophy</v-icon>
-              Heaviest Lifts
-            </h2>
+          <v-expansion-panels v-model="expandedPanels" multiple class="mb-3">
+            <!-- 1. Best Estimated 1RM -->
+            <v-expansion-panel value="best1rm" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="warning" size="small" class="mr-2">mdi-arm-flex</v-icon>
+                <span class="text-body-1 font-weight-bold">Best Estimated 1RM</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+                <div v-else-if="!best1RM" class="text-center py-4">
+                  <p class="text-caption text-disabled">No weight/reps data available</p>
+                </div>
 
-            <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
-              <p class="text-caption text-disabled">No performance data yet</p>
-            </div>
-
-            <div v-else>
-              <v-row>
-                <v-col v-for="(lift, index) in heaviestLifts" :key="index" cols="4">
-                  <div class="text-center">
-                    <v-chip
-                      :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
-                      size="small"
-                      class="mb-2"
-                      label
-                    >
-                      #{{ index + 1 }}
-                    </v-chip>
-                    <div class="font-weight-bold text-h6" >
-                      {{ lift.weight }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                      lbs
-                    </div>
-                    <div v-if="lift.reps" class="text-caption text-disabled">
-                      {{ lift.reps }} reps
-                    </div>
+                <div v-else class="text-center">
+                  <div class="font-weight-bold text-h4" style="color: rgb(var(--v-theme-warning))">
+                    {{ Math.round(best1RM) }}
                   </div>
-                </v-col>
-              </v-row>
-            </div>
-          </v-card>
+                  <div class="text-caption mb-2 text-medium-emphasis">
+                    lbs (estimated)
+                  </div>
+                  <v-chip
+                    v-if="bestFormula"
+                    size="x-small"
+                    color="grey-lighten-2"
+                    label
+                    class="text-caption"
+                  >
+                    {{ bestFormula }}
+                  </v-chip>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-          <!-- Best Estimated 1RM -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="warning" size="small" class="mr-1">mdi-arm-flex</v-icon>
-              Best Estimated 1RM
-            </h2>
+            <!-- 2. Percent of Best (NEW) -->
+            <v-expansion-panel v-if="showPercentOfBest" value="percentOfBest" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-percent</v-icon>
+                <span class="text-body-1 font-weight-bold">Percent of Best</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <v-table density="compact">
+                  <thead>
+                    <tr>
+                      <th class="text-left">% of Heaviest</th>
+                      <th class="text-right">Weight (lbs)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="pct in percentages" :key="pct.percent">
+                      <td>{{ pct.percent }}%</td>
+                      <td class="text-right font-weight-bold">{{ pct.weight }}</td>
+                    </tr>
+                  </tbody>
+                </v-table>
+                <div class="text-caption text-medium-emphasis mt-2 text-center">
+                  Based on heaviest lift: {{ heaviestWeight }} lbs
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+            <!-- 3. Heaviest Lifts -->
+            <v-expansion-panel value="heaviestLifts" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-trophy</v-icon>
+                <span class="text-body-1 font-weight-bold">Heaviest Lifts</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-else-if="!best1RM" class="text-center py-4">
-              <p class="text-caption text-disabled">No weight/reps data available</p>
-            </div>
+                <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
+                  <p class="text-caption text-disabled">No performance data yet</p>
+                </div>
 
-            <div v-else class="text-center">
-              <div class="font-weight-bold text-h4" style="color: rgb(var(--v-theme-warning))">
-                {{ Math.round(best1RM) }}
-              </div>
-              <div class="text-caption mb-2 text-medium-emphasis">
-                lbs (estimated)
-              </div>
-              <v-chip
-                v-if="bestFormula"
-                size="x-small"
-                color="grey-lighten-2"
-                label
-                class="text-caption"
-              >
-                {{ bestFormula }}
-              </v-chip>
-            </div>
-          </v-card>
+                <div v-else>
+                  <v-row>
+                    <v-col v-for="(lift, index) in heaviestLifts" :key="index" cols="4">
+                      <div class="text-center">
+                        <v-chip
+                          :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
+                          size="small"
+                          class="mb-2"
+                          label
+                        >
+                          #{{ index + 1 }}
+                        </v-chip>
+                        <div class="font-weight-bold text-h6">
+                          {{ lift.weight }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          lbs
+                        </div>
+                        <div v-if="lift.reps" class="text-caption text-disabled">
+                          {{ lift.reps }} reps
+                        </div>
+                      </div>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-          <!-- Rep Scheme Dropdown Filter -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <v-select
-              v-model="selectedRepScheme"
-              :items="repSchemes"
-              label="Filter by Rep Scheme"
-              
-              density="comfortable"
-              rounded="lg"
-              hide-details
-              @update:model-value="filterChart"
-            >
-              <template #prepend-inner>
-                <v-icon color="primary" size="small">mdi-filter</v-icon>
-              </template>
-            </v-select>
-          </v-card>
+            <!-- 4. Performance Chart (with Rep Scheme filter inside) -->
+            <v-expansion-panel value="performanceChart" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-chart-line</v-icon>
+                <span class="text-body-1 font-weight-bold">Performance Chart</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <!-- Rep Scheme Filter -->
+                <v-select
+                  v-model="selectedRepScheme"
+                  :items="repSchemes"
+                  label="Filter by Rep Scheme"
+                  density="comfortable"
+                  rounded="lg"
+                  hide-details
+                  class="mb-3"
+                  @update:model-value="filterChart"
+                >
+                  <template #prepend-inner>
+                    <v-icon color="primary" size="small">mdi-filter</v-icon>
+                  </template>
+                </v-select>
 
-          <!-- Performance Chart -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+                <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
+                  <p class="text-caption text-disabled">No data for selected filter</p>
+                </div>
 
-            <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
-              <p class="text-caption text-disabled">No data for selected filter</p>
-            </div>
-
-            <div v-else style="height: 250px; position: relative; width: 100%">
-              <canvas ref="chartCanvas" style="width: 100%; height: 100%"></canvas>
-            </div>
-          </v-card>
+                <div v-else style="height: 250px; position: relative; width: 100%">
+                  <canvas ref="chartCanvas" style="width: 100%; height: 100%"></canvas>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </template>
 
         <!-- WOD-SPECIFIC CONTENT -->
@@ -311,6 +344,17 @@
                       </span>
                     </div>
                   </div>
+
+                  <!-- RPE Chip -->
+                  <v-chip
+                    v-if="entry.rpe"
+                    size="x-small"
+                    :color="getRPEColor(entry.rpe)"
+                    variant="flat"
+                    class="ml-2"
+                  >
+                    {{ getRPEShortLabel(entry.rpe) }}
+                  </v-chip>
 
                   <!-- PR Badge -->
                   <v-chip
@@ -706,6 +750,7 @@ import axios from '@/utils/axios'
 import { Chart, registerables } from 'chart.js'
 import { useSettingsStore } from '@/stores/settings'
 import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
+import { getRPEColor, getRPEShortLabel } from '@/utils/rpe'
 
 Chart.register(...registerables)
 
@@ -745,6 +790,9 @@ const bestFormula = ref(null) // Formula used for best 1RM
 // Movement-specific
 const selectedRepScheme = ref('All')
 const repSchemes = ref(['All'])
+
+// Expansion panels state - default expanded panels
+const expandedPanels = ref(['heaviestLifts', 'percentOfBest'])
 
 // Chart instances
 const chartCanvas = ref(null)
@@ -808,6 +856,28 @@ const heaviestLifts = computed(() => {
   }
 
   return top3
+})
+
+// Computed: Heaviest Weight (for Percent of Best calculations)
+const heaviestWeight = computed(() => {
+  if (heaviestLifts.value.length === 0) return null
+  return heaviestLifts.value[0].weight
+})
+
+// Computed: Show Percent of Best section (only for movements with weight data)
+const showPercentOfBest = computed(() => {
+  return heaviestWeight.value && heaviestWeight.value > 0
+})
+
+// Computed: Percentage calculations based on heaviest lift
+const percentages = computed(() => {
+  if (!heaviestWeight.value) return []
+  // Standard percentages for strength training
+  const percents = [95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 25]
+  return percents.map(pct => ({
+    percent: pct,
+    weight: Math.round(heaviestWeight.value * (pct / 100))
+  }))
 })
 
 // Computed: Best WOD Performances (Top 3)
