@@ -464,6 +464,60 @@ func TestNotificationService_NotifyPRAchievement(t *testing.T) {
 	}
 }
 
+func TestNotificationService_NotifyPRAchievement_WithWODName(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+	settingsRepo := newTestUserSettingsRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, settingsRepo, nil)
+
+	user := &domain.User{Email: "user@example.com", Name: "Test User"}
+	userRepo.Create(user)
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user}
+
+	wodName := "Fran"
+	err := service.NotifyPRAchievement(user.ID, "Test User", nil, &wodName, "3:45", &orgID)
+	if err != nil {
+		t.Errorf("NotifyPRAchievement() with WOD name error = %v", err)
+		return
+	}
+
+	notifications, _ := notifRepo.GetByUserID(user.ID, 10, 0)
+	if len(notifications) == 0 {
+		t.Error("NotifyPRAchievement() with WOD name did not create notification")
+	}
+}
+
+func TestNotificationService_NotifyPRAchievement_NoMovementOrWOD(t *testing.T) {
+	notifRepo := newTestNotificationRepo()
+	orgRepo := newTestNotificationOrgRepo()
+	userRepo := newMockUserRepo()
+	settingsRepo := newTestUserSettingsRepo()
+
+	service := NewNotificationService(notifRepo, orgRepo, userRepo, settingsRepo, nil)
+
+	user := &domain.User{Email: "user@example.com", Name: "Test User"}
+	userRepo.Create(user)
+
+	orgID := int64(1)
+	orgRepo.orgUsers[orgID] = []*domain.User{user}
+
+	// Test with neither movement nor WOD name
+	err := service.NotifyPRAchievement(user.ID, "Test User", nil, nil, "New PR!", &orgID)
+	if err != nil {
+		t.Errorf("NotifyPRAchievement() without movement/WOD error = %v", err)
+		return
+	}
+
+	notifications, _ := notifRepo.GetByUserID(user.ID, 10, 0)
+	if len(notifications) == 0 {
+		t.Error("NotifyPRAchievement() without movement/WOD did not create notification")
+	}
+}
+
 func TestNotificationService_NotifyWeeklyStreak(t *testing.T) {
 	notifRepo := newTestNotificationRepo()
 	orgRepo := newTestNotificationOrgRepo()
