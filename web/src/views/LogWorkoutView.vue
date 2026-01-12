@@ -211,13 +211,32 @@
             <v-textarea
               v-model="movement.notes"
               label="Notes"
-              
+
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
             />
+            <v-select
+              v-model="movement.rpe"
+              :items="RPE_OPTIONS"
+              item-title="title"
+              item-value="value"
+              label="RPE (Effort)"
+              density="compact"
+              hide-details
+              clearable
+              class="mt-2"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :subtitle="item.raw.description">
+                  <template #prepend>
+                    <v-icon :color="item.raw.color" size="small">mdi-circle</v-icon>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </v-card>
         </div>
 
@@ -339,13 +358,32 @@
             <v-textarea
               v-model="wod.notes"
               label="Notes"
-              
+
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
             />
+            <v-select
+              v-model="wod.rpe"
+              :items="RPE_OPTIONS"
+              item-title="title"
+              item-value="value"
+              label="RPE (Effort)"
+              density="compact"
+              hide-details
+              clearable
+              class="mt-2"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :subtitle="item.raw.description">
+                  <template #prepend>
+                    <v-icon :color="item.raw.color" size="small">mdi-circle</v-icon>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </v-card>
         </div>
 
@@ -455,6 +493,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import { RPE_OPTIONS } from '@/utils/rpe'
 
 const router = useRouter()
 const route = useRoute()
@@ -535,6 +574,7 @@ function initializePerformanceArrays() {
       time: null,
       distance: null,
       notes: '',
+      rpe: null,
       order_index: index
     }))
   } else {
@@ -569,6 +609,7 @@ function initializePerformanceArrays() {
         reps: null,
         weight: null,
         notes: '',
+        rpe: null,
         order_index: index
       }
     })
@@ -665,7 +706,7 @@ async function onTemplateSelected(templateId) {
 // Build movements payload
 function buildMovementsPayload() {
   return movementPerformance.value
-    .filter(m => m.sets || m.reps || m.weight || m.time || m.distance || m.notes)
+    .filter(m => m.sets || m.reps || m.weight || m.time || m.distance || m.notes || m.rpe)
     .map(m => ({
       movement_id: m.movement_id,
       sets: m.sets || null,
@@ -674,6 +715,7 @@ function buildMovementsPayload() {
       time: m.time || null,
       distance: m.distance || null,
       notes: m.notes || '',
+      rpe: m.rpe || null,
       order_index: m.order_index
     }))
 }
@@ -687,6 +729,7 @@ function buildWODsPayload() {
         wod_id: w.wod_id,
         score_type: w.score_type,
         notes: w.notes || '',
+        rpe: w.rpe || null,
         order_index: w.order_index
       }
 
@@ -749,6 +792,7 @@ async function loadWorkoutForEdit(workoutId) {
         time: m.time_seconds,
         distance: m.distance,
         notes: m.notes || '',
+        rpe: m.rpe || null,
         order_index: index
       }))
       console.log('Populated movementPerformance:', movementPerformance.value)
@@ -774,6 +818,7 @@ async function loadWorkoutForEdit(workoutId) {
           reps: w.reps,
           weight: w.weight,
           notes: w.notes || '',
+          rpe: w.rpe || null,
           order_index: index
         }
       })

@@ -23,17 +23,17 @@ func (r *UserWorkoutWODRepository) Create(uww *domain.UserWorkoutWOD) error {
 	uww.CreatedAt = time.Now()
 	uww.UpdatedAt = time.Now()
 
-	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	if currentDriver == "postgres" {
 		query += " RETURNING id"
-		err := r.db.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
+		err := r.db.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.RPE, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create user workout WOD: %w", err)
 		}
 	} else {
-		result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+		result, err := r.db.Exec(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.RPE, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create user workout WOD: %w", err)
 		}
@@ -65,22 +65,22 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 
 	if currentDriver == "postgres" {
 		// Postgres: use RETURNING id with individual QueryRow calls
-		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`)
+		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`)
 
 		for _, uww := range wods {
 			uww.CreatedAt = now
 			uww.UpdatedAt = now
 
-			err := tx.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
+			err := tx.QueryRow(query, uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.RPE, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt).Scan(&uww.ID)
 			if err != nil {
 				return fmt.Errorf("failed to insert user workout WOD: %w", err)
 			}
 		}
 	} else {
 		// SQLite/MySQL: use prepared statement with LastInsertId
-		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		query := rebindQuery(`INSERT INTO user_workout_wods (user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 		stmt, err := tx.Prepare(query)
 		if err != nil {
@@ -92,7 +92,7 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 			uww.CreatedAt = now
 			uww.UpdatedAt = now
 
-			result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
+			result, err := stmt.Exec(uww.UserWorkoutID, uww.WODID, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.RPE, uww.IsPR, uww.OrderIndex, uww.CreatedAt, uww.UpdatedAt)
 			if err != nil {
 				return fmt.Errorf("failed to insert user workout WOD: %w", err)
 			}
@@ -114,7 +114,7 @@ func (r *UserWorkoutWODRepository) CreateBatch(wods []*domain.UserWorkoutWOD) er
 
 // GetByID retrieves a user workout WOD by ID
 func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, error) {
-	query := rebindQuery(`SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, is_pr, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, user_workout_id, wod_id, score_type, score_value, time_seconds, rounds, reps, weight, notes, rpe, is_pr, order_index, created_at, updated_at
 	          FROM user_workout_wods WHERE id = ?`)
 
 	uww := &domain.UserWorkoutWOD{}
@@ -124,8 +124,9 @@ func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, er
 	var rounds sql.NullInt64
 	var reps sql.NullInt64
 	var weight sql.NullFloat64
+	var rpe sql.NullInt64
 
-	err := r.db.QueryRow(query, id).Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight, &uww.Notes, &uww.IsPR, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight, &uww.Notes, &rpe, &uww.IsPR, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -154,6 +155,10 @@ func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, er
 	if weight.Valid {
 		uww.Weight = &weight.Float64
 	}
+	if rpe.Valid {
+		r := int(rpe.Int64)
+		uww.RPE = &r
+	}
 
 	return uww, nil
 }
@@ -162,7 +167,7 @@ func (r *UserWorkoutWODRepository) GetByID(id int64) (*domain.UserWorkoutWOD, er
 func (r *UserWorkoutWODRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutWOD, error) {
 	query := rebindQuery(`
 		SELECT uww.id, uww.user_workout_id, uww.wod_id, uww.score_type, uww.score_value, uww.time_seconds, uww.rounds, uww.reps, uww.weight,
-		       uww.notes, uww.order_index, uww.created_at, uww.updated_at,
+		       uww.notes, uww.rpe, uww.order_index, uww.created_at, uww.updated_at,
 		       w.id as wod_id, w.name, w.source, w.type, w.regime, w.score_type as wod_score_type, w.description, w.url, w.notes as wod_notes, w.is_standard, w.created_by, w.created_at, w.updated_at
 		FROM user_workout_wods uww
 		JOIN wods w ON uww.wod_id = w.id
@@ -186,12 +191,13 @@ func (r *UserWorkoutWODRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*d
 		var rounds sql.NullInt64
 		var reps sql.NullInt64
 		var weight sql.NullFloat64
+		var rpe sql.NullInt64
 		var wodURL sql.NullString
 		var wodNotes sql.NullString
 		var createdBy sql.NullInt64
 
 		err := rows.Scan(&uww.ID, &uww.UserWorkoutID, &uww.WODID, &scoreType, &scoreValue, &timeSeconds, &rounds, &reps, &weight,
-			&uww.Notes, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
+			&uww.Notes, &rpe, &uww.OrderIndex, &uww.CreatedAt, &uww.UpdatedAt,
 			&uww.WOD.ID, &uww.WOD.Name, &uww.WOD.Source, &uww.WOD.Type, &uww.WOD.Regime, &uww.WOD.ScoreType, &uww.WOD.Description, &wodURL, &wodNotes, &uww.WOD.IsStandard, &createdBy, &uww.WOD.CreatedAt, &uww.WOD.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user workout WOD: %w", err)
@@ -217,6 +223,10 @@ func (r *UserWorkoutWODRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*d
 		}
 		if weight.Valid {
 			uww.Weight = &weight.Float64
+		}
+		if rpe.Valid {
+			r := int(rpe.Int64)
+			uww.RPE = &r
 		}
 		if wodURL.Valid {
 			uww.WOD.URL = &wodURL.String
@@ -244,10 +254,10 @@ func (r *UserWorkoutWODRepository) Update(uww *domain.UserWorkoutWOD) error {
 	uww.UpdatedAt = time.Now()
 
 	query := rebindQuery(`UPDATE user_workout_wods
-	          SET score_type = ?, score_value = ?, time_seconds = ?, rounds = ?, reps = ?, weight = ?, notes = ?, order_index = ?, updated_at = ?
+	          SET score_type = ?, score_value = ?, time_seconds = ?, rounds = ?, reps = ?, weight = ?, notes = ?, rpe = ?, order_index = ?, updated_at = ?
 	          WHERE id = ?`)
 
-	result, err := r.db.Exec(query, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.OrderIndex, uww.UpdatedAt, uww.ID)
+	result, err := r.db.Exec(query, uww.ScoreType, uww.ScoreValue, uww.TimeSeconds, uww.Rounds, uww.Reps, uww.Weight, uww.Notes, uww.RPE, uww.OrderIndex, uww.UpdatedAt, uww.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update user workout WOD: %w", err)
 	}

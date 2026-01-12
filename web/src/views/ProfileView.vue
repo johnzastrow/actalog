@@ -708,9 +708,9 @@ function filterPRsByPeriod(prMovements, workouts, period) {
 async function fetchStats() {
   loadingStats.value = true
   try {
-    // Fetch workouts for stats
+    // Fetch workouts for stats - use high limit to get all workouts for accurate All Time stats
     const [workoutsRes, prsRes, templatesRes] = await Promise.all([
-      axios.get('/api/workouts').catch(() => ({ data: { workouts: [] } })),
+      axios.get('/api/workouts?limit=10000').catch(() => ({ data: { workouts: [] } })),
       axios.get('/api/pr-movements').catch(() => ({ data: { movements: [] } })),
       axios.get('/api/workouts/my-templates').catch(() => ({ data: { workouts: [] } }))
     ])

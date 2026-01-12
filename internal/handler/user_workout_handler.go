@@ -51,6 +51,7 @@ type MovementPerformance struct {
 	Time       *int     `json:"time,omitempty" example:"300"` // in seconds
 	Distance   *float64 `json:"distance,omitempty" example:"1000"`
 	Notes      string   `json:"notes,omitempty" example:"Used belt"`
+	RPE        *int     `json:"rpe,omitempty" example:"8"` // Rate of Perceived Exertion (2-10)
 	OrderIndex int      `json:"order_index" example:"0"`
 }
 
@@ -65,6 +66,7 @@ type WODPerformance struct {
 	Reps        *int     `json:"reps,omitempty" example:"12"`           // Remaining reps in AMRAP
 	Weight      *float64 `json:"weight,omitempty" example:"225.0"`      // For max weight WODs
 	Notes       string   `json:"notes,omitempty" example:"PR attempt"`
+	RPE         *int     `json:"rpe,omitempty" example:"9"` // Rate of Perceived Exertion (2-10)
 	OrderIndex  int      `json:"order_index" example:"0"`
 }
 
@@ -174,6 +176,7 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 				Time:       m.Time,
 				Distance:   m.Distance,
 				Notes:      m.Notes,
+				RPE:        m.RPE,
 				OrderIndex: m.OrderIndex,
 			}
 		}
@@ -190,6 +193,7 @@ func (h *UserWorkoutHandler) LogWorkout(w http.ResponseWriter, r *http.Request) 
 				Reps:        w.Reps,
 				Weight:      w.Weight,
 				Notes:       w.Notes,
+				RPE:         w.RPE,
 				OrderIndex:  w.OrderIndex,
 			}
 		}
@@ -515,6 +519,7 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 				Time:       m.Time,
 				Distance:   m.Distance,
 				Notes:      m.Notes,
+				RPE:        m.RPE,
 				OrderIndex: m.OrderIndex,
 			}
 		}
@@ -542,6 +547,7 @@ func (h *UserWorkoutHandler) UpdateLoggedWorkout(w http.ResponseWriter, r *http.
 				Reps:        w.Reps,
 				Weight:      w.Weight,
 				Notes:       w.Notes,
+				RPE:         w.RPE,
 				OrderIndex:  w.OrderIndex,
 			}
 		}

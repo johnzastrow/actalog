@@ -98,6 +98,7 @@ type UserWorkoutMovement struct {
 	Time          *int      `json:"time_seconds,omitempty" db:"time"` // in seconds
 	Distance      *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
 	Notes         string    `json:"notes,omitempty" db:"notes"`
+	RPE           *int      `json:"rpe,omitempty" db:"rpe"`       // Rate of Perceived Exertion (2-10 scale)
 	IsPR          bool      `json:"is_pr" db:"is_pr"`             // Personal record flag
 	OrderIndex    int       `json:"order_index" db:"order_index"` // Order in the workout
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`

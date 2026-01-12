@@ -1822,6 +1822,61 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.24.0",
+		Description: "Add RPE (Rate of Perceived Exertion) columns to user workout performance tables",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite requires separate ALTER TABLE statements for each column
+				alterStatements := []string{
+					`ALTER TABLE user_workout_movements ADD COLUMN rpe INTEGER`,
+					`ALTER TABLE user_workout_wods ADD COLUMN rpe INTEGER`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add RPE column: %w", err)
+						}
+					}
+				}
+			case "postgres":
+				alterSQL := `
+				ALTER TABLE user_workout_movements ADD COLUMN IF NOT EXISTS rpe INTEGER;
+				ALTER TABLE user_workout_wods ADD COLUMN IF NOT EXISTS rpe INTEGER;
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to add RPE columns: %w", err)
+				}
+			case "mysql":
+				// MySQL doesn't have IF NOT EXISTS for columns, check individually
+				alterStatements := []string{
+					`ALTER TABLE user_workout_movements ADD COLUMN rpe INT`,
+					`ALTER TABLE user_workout_wods ADD COLUMN rpe INT`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+			}
+
+			fmt.Println("✓ Added RPE columns to user_workout_movements and user_workout_wods tables")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, skip for SQLite
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE user_workout_movements DROP COLUMN IF EXISTS rpe`)
+				db.Exec(`ALTER TABLE user_workout_wods DROP COLUMN IF EXISTS rpe`)
+			case "mysql":
+				db.Exec(`ALTER TABLE user_workout_movements DROP COLUMN rpe`)
+				db.Exec(`ALTER TABLE user_workout_wods DROP COLUMN rpe`)
+			}
+			fmt.Println("✓ Removed RPE columns")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 
