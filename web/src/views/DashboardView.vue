@@ -111,13 +111,14 @@
                 v-for="(day, index) in weekDays"
                 :key="index"
                 class="text-center"
-                style="flex: 1"
+                style="flex: 1; cursor: pointer"
+                @click="handleWeekDayClick(day)"
               >
                 <v-avatar
                   size="24"
                   :color="day.hasWorkout ? 'primary' : 'transparent'"
                   :style="day.hasWorkout ? {} : { border: '2px solid rgb(var(--v-theme-on-surface), 0.3)' }"
-                  class="d-flex align-center justify-center"
+                  class="d-flex align-center justify-center week-day-avatar"
                 >
                   <span
                     class="text-caption font-weight-bold d-flex align-center justify-center"
@@ -711,6 +712,13 @@
       </v-card>
     </v-dialog>
 
+    <!-- Date Workout Detail Dialog -->
+    <DateWorkoutDetailDialog
+      v-model="showDateDialog"
+      :date="selectedWeekDate"
+      :preloaded-workouts="userWorkouts"
+    />
+
     </div>
   </pull-to-refresh>
 </template>
@@ -724,6 +732,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import PullToRefresh from '@/components/PullToRefresh.vue'
+import DateWorkoutDetailDialog from '@/components/DateWorkoutDetailDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -735,6 +744,10 @@ const userWorkouts = ref([])
 const expandedWorkouts = ref(new Set())
 const showRecentWorkouts = ref(false) // Collapsed by default
 const activeUsersStats = ref([])
+
+// Date detail dialog state
+const showDateDialog = ref(false)
+const selectedWeekDate = ref(null)
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -1090,6 +1103,14 @@ function toggleWorkoutExpand(workoutId) {
   expandedWorkouts.value = new Set(expandedWorkouts.value)
 }
 
+// Handle clicking on a week day to show workout details
+function handleWeekDayClick(day) {
+  // Parse the date string (YYYY-MM-DD) into a Date object
+  const [year, month, dayNum] = day.date.split('-').map(Number)
+  selectedWeekDate.value = new Date(year, month - 1, dayNum)
+  showDateDialog.value = true
+}
+
 // Update Quick Log name when date changes
 function updateQuickLogName() {
   if (quickLogData.value.date) {
@@ -1312,5 +1333,15 @@ onMounted(() => {
 
 .quick-action-btn .v-icon {
   color: white !important;
+}
+
+/* Week day avatar hover effect */
+.week-day-avatar {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.week-day-avatar:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

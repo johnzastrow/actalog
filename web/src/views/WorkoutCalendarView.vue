@@ -10,86 +10,21 @@
       <!-- Calendar Component -->
       <workout-calendar :workout-dates="workoutDates" @day-selected="handleDaySelected" />
 
-      <!-- Selected Day Workouts -->
-      <div v-if="selectedDate" class="mt-4">
-        <h3 class="text-h6 mb-3" >
-          {{ formatSelectedDate(selectedDate) }}
-        </h3>
-
-        <div v-if="loadingDayWorkouts" class="text-center py-8">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        </div>
-
-        <div v-else-if="selectedDayWorkouts.length === 0" class="text-center py-8">
-          <v-icon size="48" color="surface-variant">mdi-calendar-blank</v-icon>
-          <p class="mt-2 text-medium-emphasis">No workouts on this day</p>
-        </div>
-
-        <v-card
-          v-for="workout in selectedDayWorkouts"
-          v-else
-          :key="workout.id"
-          elevation="0"
-          rounded="lg"
-          class="mb-3"
-          bg-color="surface"
-          @click="viewWorkout(workout.id)"
-        >
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center mb-2">
-              <div class="text-subtitle-1 font-weight-medium" >
-                {{ workout.workout_name || workout.template_name || 'Workout' }}
-              </div>
-              <v-chip v-if="workout.workout_type" size="small" color="primary" text-color="white">
-                {{ workout.workout_type }}
-              </v-chip>
-            </div>
-
-            <!-- Movements -->
-            <div v-if="workout.movements && workout.movements.length > 0" class="mb-2">
-              <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
-                Movements
-              </div>
-              <div v-for="movement in workout.movements" :key="movement.id" class="d-flex align-center mb-1">
-                <v-icon size="small" :color="movement.is_pr ? 'warning' : 'primary'" class="mr-1">
-                  {{ movement.is_pr ? 'mdi-trophy' : 'mdi-dumbbell' }}
-                </v-icon>
-                <span class="text-body-2" >
-                  {{ movement.movement_name }}
-                  <span v-if="movement.sets" class="text-medium-emphasis">
-                    - {{ movement.sets }}x{{ movement.reps }}
-                    <span v-if="movement.weight">@ {{ movement.weight }}lbs</span>
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <!-- WODs -->
-            <div v-if="workout.wods && workout.wods.length > 0">
-              <div class="text-caption font-weight-medium mb-1 text-medium-emphasis">
-                WODs
-              </div>
-              <div v-for="wod in workout.wods" :key="wod.id" class="d-flex align-center mb-1">
-                <v-icon size="small" :color="wod.is_pr ? 'warning' : 'primary'" class="mr-1">
-                  {{ wod.is_pr ? 'mdi-trophy' : 'mdi-run-fast' }}
-                </v-icon>
-                <span class="text-body-2" >
-                  {{ wod.wod_name }}
-                  <span v-if="wod.score_value" class="text-medium-emphasis">
-                    - {{ wod.score_value }}
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <!-- Notes -->
-            <div v-if="workout.notes" class="mt-2">
-              <div class="text-caption text-disabled">{{ workout.notes }}</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </div>
+      <!-- Instructions -->
+      <v-card elevation="0" rounded="lg" class="mt-4 pa-4 text-center" bg-color="surface">
+        <v-icon size="48" color="primary" class="mb-2">mdi-gesture-tap</v-icon>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Tap any date to view workouts for that day
+        </p>
+      </v-card>
     </div>
+
+    <!-- Date Workout Detail Dialog -->
+    <DateWorkoutDetailDialog
+      v-model="showDateDialog"
+      :date="selectedDate"
+      :preloaded-workouts="workouts"
+    />
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation style="position: fixed; bottom: 0; left: 0; right: 0" elevation="8">
@@ -115,16 +50,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import WorkoutCalendar from '@/components/WorkoutCalendar.vue'
+import DateWorkoutDetailDialog from '@/components/DateWorkoutDetailDialog.vue'
 
-const router = useRouter()
 const workouts = ref([])
 const workoutDates = ref([])
 const selectedDate = ref(null)
-const selectedDayWorkouts = ref([])
-const loadingDayWorkouts = ref(false)
+const showDateDialog = ref(false)
 
 async function fetchWorkouts() {
   try {
@@ -139,34 +72,7 @@ async function fetchWorkouts() {
 
 function handleDaySelected(date) {
   selectedDate.value = date
-  loadingDayWorkouts.value = true
-
-  // Create date string in YYYY-MM-DD format from the selected date (local timezone)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateStr = `${year}-${month}-${day}`
-
-  selectedDayWorkouts.value = workouts.value.filter(w => {
-    // Extract YYYY-MM-DD from workout_date (handles both ISO strings and date objects)
-    const workoutDateStr = w.workout_date.split('T')[0]
-    return workoutDateStr === dateStr
-  })
-
-  loadingDayWorkouts.value = false
-}
-
-function formatSelectedDate(date) {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
-
-function viewWorkout(id) {
-  router.push(`/workouts/${id}`)
+  showDateDialog.value = true
 }
 
 onMounted(() => {
