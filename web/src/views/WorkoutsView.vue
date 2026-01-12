@@ -194,6 +194,13 @@
       </div>
     </v-container>
 
+    <!-- Detail View Dialog -->
+    <DetailViewDialog
+      v-model="showDetailDialog"
+      type="template"
+      :id="selectedTemplateId"
+    />
+
     <!-- Create Template Dialog -->
     <v-dialog v-model="createTemplateDialog" max-width="600">
       <v-card>
@@ -277,6 +284,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const router = useRouter()
 const activeTab = ref('workouts')
@@ -289,6 +297,10 @@ const loading = ref(false)
 const creating = ref(false)
 const error = ref(null)
 const createTemplateDialog = ref(false)
+
+// Detail Dialog state
+const showDetailDialog = ref(false)
+const selectedTemplateId = ref(null)
 
 // New template form
 const newTemplate = ref({
@@ -368,9 +380,8 @@ async function createTemplate() {
 
 // Select template to view details
 function selectTemplate(template) {
-  console.log('View template details:', template.id)
-  // TODO: Navigate to template detail page
-  // router.push(`/workouts/templates/${template.id}`)
+  selectedTemplateId.value = template.id
+  showDetailDialog.value = true
 }
 
 // Log workout from template

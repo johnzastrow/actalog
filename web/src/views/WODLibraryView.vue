@@ -192,6 +192,15 @@
       </v-btn>
     </v-bottom-navigation>
 
+    <!-- Detail View Dialog -->
+    <DetailViewDialog
+      v-model="showDetailDialog"
+      type="wod"
+      :id="selectedWODId"
+      handle-quick-log-externally
+      @quicklog="handleDetailQuickLog"
+    />
+
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
@@ -367,6 +376,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWodsStore } from '@/stores/wods'
 import axios from '@/utils/axios'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -376,6 +386,10 @@ const wodsStore = useWodsStore()
 const searchQuery = ref('')
 const selectedType = ref('all')
 const activeNav = ref('wods')
+
+// Detail Dialog state
+const showDetailDialog = ref(false)
+const selectedWODId = ref(null)
 
 // Quick Log state
 const quickLogDialog = ref(false)
@@ -437,8 +451,9 @@ function handleWODClick(wod) {
       query: { selectedWOD: wod.id }
     })
   } else {
-    // In browse mode, navigate to WOD detail
-    router.push(`/wods/${wod.id}`)
+    // In browse mode, show detail dialog
+    selectedWODId.value = wod.id
+    showDetailDialog.value = true
   }
 }
 
@@ -457,6 +472,13 @@ function createNewWOD() {
 // Edit WOD
 function editWOD(id) {
   router.push(`/wods/${id}/edit`)
+}
+
+// Handle QuickLog from detail dialog
+function handleDetailQuickLog({ data }) {
+  if (data) {
+    openQuickLog(data)
+  }
 }
 
 // Helper functions for Quick Log

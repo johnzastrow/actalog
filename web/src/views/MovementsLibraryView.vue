@@ -188,6 +188,15 @@
       </v-btn>
     </v-bottom-navigation>
 
+    <!-- Detail View Dialog -->
+    <DetailViewDialog
+      v-model="showDetailDialog"
+      type="movement"
+      :id="selectedMovementId"
+      handle-quick-log-externally
+      @quicklog="handleDetailQuickLog"
+    />
+
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
@@ -320,6 +329,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -331,6 +341,10 @@ const error = ref('')
 const searchQuery = ref('')
 const selectedType = ref('all')
 const activeNav = ref('movements')
+
+// Detail Dialog state
+const showDetailDialog = ref(false)
+const selectedMovementId = ref(null)
 
 // Quick Log state
 const quickLogDialog = ref(false)
@@ -427,8 +441,9 @@ function handleMovementClick(movement) {
       query: { selectedMovement: movement.id }
     })
   } else {
-    // In browse mode, navigate to movement detail
-    router.push(`/movements/${movement.id}`)
+    // In browse mode, show detail dialog
+    selectedMovementId.value = movement.id
+    showDetailDialog.value = true
   }
 }
 
@@ -448,6 +463,13 @@ function createNewMovement() {
 // Edit movement
 function editMovement(id) {
   router.push(`/movements/${id}/edit`)
+}
+
+// Handle QuickLog from detail dialog
+function handleDetailQuickLog({ data }) {
+  if (data) {
+    openQuickLog(data)
+  }
 }
 
 // Helper functions for Quick Log
