@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-09
+> **Last Updated:** 2026-01-13
 > **Current Version:** 0.22.0-beta (Build 8)
 
 ---
@@ -297,7 +297,7 @@ These features can be added after the core frontend is complete:
 - [x] `[MEDIUM]` **Calendar View** - WorkoutCalendarView.vue with workout dots and month navigation
 - [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
 - [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
-- [ ] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health
+- [x] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health (v0.22.0)
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
