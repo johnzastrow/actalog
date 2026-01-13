@@ -116,6 +116,14 @@ When testing new features, cycle through all supported databases to ensure compa
 | MariaDB | `192.168.1.234:3306` (user: jcz) |
 | PostgreSQL | `192.168.1.28:5432` |
 
+**Email Testing (SMTP2GO):**
+| Setting | Value |
+|---------|-------|
+| SMTP Server | `mail.smtp2go.com` |
+| SMTP Port | `2525` |
+| SMTP User | `acta@northredoubt.com` |
+| SMTP Password | Set `$SMTP_PASSWORD` env var |
+
 **Docker Testing Commands:**
 ```bash
 # Build Docker image
@@ -130,6 +138,15 @@ docker run -p 8080:8080 -v $(pwd)/data:/app/data \
 docker run --network host \
   -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
   -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with MariaDB + Email enabled
+docker run --network host \
+  -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  -e EMAIL_ENABLED=true -e EMAIL_FROM=acta@northredoubt.com \
+  -e SMTP_HOST=mail.smtp2go.com -e SMTP_PORT=2525 \
+  -e SMTP_USER=acta@northredoubt.com -e SMTP_PASSWORD=$SMTP_PASSWORD \
   ghcr.io/johnzastrow/actalog:dev
 
 # Test with PostgreSQL (use --network host for external DB access)
