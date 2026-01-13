@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Audit Logging Enhancements (2026-01-13)
+
+- **Password Change Audit Logging**
+  - New `password_changed` event logged when users change their password
+  - Captures user email in event details
+  - Works for both browser and API password changes
+
+- **Password Reset Audit Logging**
+  - New `password_reset` event logged when password is reset via token
+  - Tracks which user completed the password reset
+
+- **User Deletion Audit Logging Fix**
+  - Fixed `user_deleted` event to properly log admin deletions
+  - Stores target user info (id, email, name) in details JSON
+  - Handles FK constraint by using nil target_user_id (user already deleted)
+
+- **Duplicate Audit Log Bug Fix**
+  - Fixed bug where SQLite/MySQL audit logs were being inserted twice
+  - Repository Create() was calling both QueryRow and Exec for same INSERT
+  - Now correctly uses Exec with LastInsertId for non-RETURNING databases
+
 ### Added - Admin Metrics Dashboard (2026-01-13)
 
 - **System Metrics Dashboard**
