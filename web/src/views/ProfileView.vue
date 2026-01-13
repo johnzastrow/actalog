@@ -345,6 +345,23 @@
         </h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
+            prepend-icon="mdi-chart-bar"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/metrics')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              System Metrics
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Real-time statistics and health
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-database-refresh"
             rounded
             style="cursor: pointer"
