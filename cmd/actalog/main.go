@@ -397,6 +397,7 @@ func main() {
 		emailService,
 		appURL,
 	)
+	userImportService.SetAuditLogRepo(auditLogRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,7 +11,16 @@ import (
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
+	"github.com/johnzastrow/actalog/pkg/middleware"
 )
+
+// getUserIDFromContext extracts the user ID from the request context
+func getUserIDFromContext(ctx context.Context) int64 {
+	if userID, ok := ctx.Value(middleware.UserIDKey).(int64); ok {
+		return userID
+	}
+	return 0
+}
 
 // UserImportHandler handles user import/export and batch operations
 type UserImportHandler struct {
@@ -83,6 +93,9 @@ func (h *UserImportHandler) PreviewUserImport(w http.ResponseWriter, r *http.Req
 // @Failure      500 {object} ErrorResponse "Import failed"
 // @Router       /admin/users/import/confirm [post]
 func (h *UserImportHandler) ConfirmUserImport(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context for audit logging
+	adminUserID := getUserIDFromContext(r.Context())
+
 	// Parse multipart form
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		h.logger.Error("action=confirm_user_import outcome=failure error=%v", err)
@@ -102,8 +115,8 @@ func (h *UserImportHandler) ConfirmUserImport(w http.ResponseWriter, r *http.Req
 	// Parse options from form data
 	skipDuplicates := r.FormValue("skip_duplicates") == "true"
 
-	// Confirm import
-	result, err := h.userImportService.ConfirmUserImport(file, skipDuplicates)
+	// Confirm import with audit logging
+	result, err := h.userImportService.ConfirmUserImportWithAudit(file, skipDuplicates, adminUserID)
 	if err != nil {
 		h.logger.Error("action=confirm_user_import outcome=failure error=%v", err)
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Import failed: %v", err))
@@ -126,7 +139,10 @@ func (h *UserImportHandler) ConfirmUserImport(w http.ResponseWriter, r *http.Req
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /admin/users/export [get]
 func (h *UserImportHandler) ExportUsers(w http.ResponseWriter, r *http.Request) {
-	data, err := h.userImportService.ExportUsersToCSV()
+	// Get admin user ID from context for audit logging
+	adminUserID := getUserIDFromContext(r.Context())
+
+	data, err := h.userImportService.ExportUsersToCSVWithAudit(adminUserID)
 	if err != nil {
 		h.logger.Error("action=export_users outcome=failure error=%v", err)
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to export users: %v", err))
@@ -243,6 +259,9 @@ type BatchPasswordResetRequest struct {
 // @Failure      500 {object} ErrorResponse "Internal server error"
 // @Router       /admin/users/batch-password-reset [post]
 func (h *UserImportHandler) SendBatchPasswordResetEmails(w http.ResponseWriter, r *http.Request) {
+	// Get admin user ID from context for audit logging
+	adminUserID := getUserIDFromContext(r.Context())
+
 	var req BatchPasswordResetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Error("action=batch_password_reset outcome=failure error=%v", err)
@@ -260,7 +279,7 @@ func (h *UserImportHandler) SendBatchPasswordResetEmails(w http.ResponseWriter, 
 		return
 	}
 
-	result, err := h.userImportService.SendBatchPasswordResetEmails(req.UserIDs)
+	result, err := h.userImportService.SendBatchPasswordResetEmailsWithAudit(req.UserIDs, adminUserID)
 	if err != nil {
 		h.logger.Error("action=batch_password_reset outcome=failure error=%v", err)
 		respondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to send emails: %v", err))

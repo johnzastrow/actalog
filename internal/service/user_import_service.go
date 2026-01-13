@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/csv"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -20,6 +21,7 @@ import (
 type UserImportService struct {
 	userRepo     domain.UserRepository
 	userSubRepo  domain.UserSubscriptionRepository
+	auditLogRepo domain.AuditLogRepository
 	emailService email.EmailService
 	appURL       string
 }
@@ -37,6 +39,38 @@ func NewUserImportService(
 		emailService: emailService,
 		appURL:       appURL,
 	}
+}
+
+// SetAuditLogRepo sets the audit log repository for logging user import actions
+func (s *UserImportService) SetAuditLogRepo(repo domain.AuditLogRepository) {
+	s.auditLogRepo = repo
+}
+
+// logAudit creates an audit log entry if the audit log repository is configured
+func (s *UserImportService) logAudit(adminUserID int64, targetUserID *int64, eventType string, details map[string]interface{}) {
+	if s.auditLogRepo == nil {
+		return
+	}
+
+	var detailsJSON *string
+	if details != nil {
+		jsonBytes, err := json.Marshal(details)
+		if err == nil {
+			jsonStr := string(jsonBytes)
+			detailsJSON = &jsonStr
+		}
+	}
+
+	log := &domain.AuditLog{
+		UserID:       &adminUserID,
+		TargetUserID: targetUserID,
+		EventType:    eventType,
+		Details:      detailsJSON,
+		CreatedAt:    time.Now(),
+	}
+
+	// Best effort - don't fail the operation if audit logging fails
+	_ = s.auditLogRepo.Create(log)
 }
 
 // UserImportRow represents a single row during user import preview
@@ -189,6 +223,11 @@ func (s *UserImportService) validateUserRow(row *UserImportRow) {
 
 // ConfirmUserImport imports users after preview
 func (s *UserImportService) ConfirmUserImport(csvData io.Reader, skipDuplicates bool) (*UserImportResult, error) {
+	return s.ConfirmUserImportWithAudit(csvData, skipDuplicates, 0)
+}
+
+// ConfirmUserImportWithAudit imports users after preview with audit logging
+func (s *UserImportService) ConfirmUserImportWithAudit(csvData io.Reader, skipDuplicates bool, adminUserID int64) (*UserImportResult, error) {
 	// First, run preview to validate
 	preview, err := s.PreviewUserImport(csvData)
 	if err != nil {
@@ -196,6 +235,7 @@ func (s *UserImportService) ConfirmUserImport(csvData io.Reader, skipDuplicates 
 	}
 
 	now := time.Now()
+	var createdUserIDs []int64
 
 	// Process each valid row
 	for i, row := range preview.Rows {
@@ -261,6 +301,26 @@ func (s *UserImportService) ConfirmUserImport(csvData io.Reader, skipDuplicates 
 		}
 
 		preview.CreatedCount++
+		createdUserIDs = append(createdUserIDs, user.ID)
+
+		// Log audit for each imported user
+		if adminUserID > 0 {
+			s.logAudit(adminUserID, &user.ID, domain.EventUserImported, map[string]interface{}{
+				"email": user.Email,
+				"name":  user.Name,
+			})
+		}
+	}
+
+	// Log overall import confirm audit event
+	if adminUserID > 0 {
+		s.logAudit(adminUserID, nil, domain.EventUserImportConfirm, map[string]interface{}{
+			"total_rows":       preview.TotalRows,
+			"created_count":    preview.CreatedCount,
+			"skipped_count":    preview.SkippedCount,
+			"skip_duplicates":  skipDuplicates,
+			"created_user_ids": createdUserIDs,
+		})
 	}
 
 	return preview, nil
@@ -268,6 +328,11 @@ func (s *UserImportService) ConfirmUserImport(csvData io.Reader, skipDuplicates 
 
 // ExportUsersToCSV exports all users to CSV format
 func (s *UserImportService) ExportUsersToCSV() ([]byte, error) {
+	return s.ExportUsersToCSVWithAudit(0)
+}
+
+// ExportUsersToCSVWithAudit exports all users to CSV format with audit logging
+func (s *UserImportService) ExportUsersToCSVWithAudit(adminUserID int64) ([]byte, error) {
 	// Get all users
 	users, err := s.userRepo.List(10000, 0) // Get up to 10000 users
 	if err != nil {
@@ -296,6 +361,13 @@ func (s *UserImportService) ExportUsersToCSV() ([]byte, error) {
 		return nil, fmt.Errorf("CSV writer error: %w", err)
 	}
 
+	// Log audit for user export
+	if adminUserID > 0 {
+		s.logAudit(adminUserID, nil, domain.EventUserExport, map[string]interface{}{
+			"user_count": len(users),
+		})
+	}
+
 	return buf.Bytes(), nil
 }
 
@@ -316,6 +388,11 @@ func (s *UserImportService) ListUsersWithFilter(filter domain.UserListFilter, li
 
 // SendBatchPasswordResetEmails sends password reset emails to selected users
 func (s *UserImportService) SendBatchPasswordResetEmails(userIDs []int64) (*BatchPasswordResetResult, error) {
+	return s.SendBatchPasswordResetEmailsWithAudit(userIDs, 0)
+}
+
+// SendBatchPasswordResetEmailsWithAudit sends password reset emails to selected users with audit logging
+func (s *UserImportService) SendBatchPasswordResetEmailsWithAudit(userIDs []int64, adminUserID int64) (*BatchPasswordResetResult, error) {
 	result := &BatchPasswordResetResult{
 		TotalRequested: len(userIDs),
 		Errors:         []string{},
@@ -324,6 +401,16 @@ func (s *UserImportService) SendBatchPasswordResetEmails(userIDs []int64) (*Batc
 	if s.emailService == nil {
 		return nil, fmt.Errorf("email service is not configured")
 	}
+
+	// Log the batch password reset request
+	if adminUserID > 0 {
+		s.logAudit(adminUserID, nil, domain.EventBatchPasswordResetRequest, map[string]interface{}{
+			"user_ids":        userIDs,
+			"total_requested": len(userIDs),
+		})
+	}
+
+	var sentUserIDs []int64
 
 	for _, userID := range userIDs {
 		// Get user
@@ -371,6 +458,14 @@ func (s *UserImportService) SendBatchPasswordResetEmails(userIDs []int64) (*Batc
 		}
 
 		result.SuccessfullySent++
+		sentUserIDs = append(sentUserIDs, userID)
+
+		// Log audit for each password reset email sent
+		if adminUserID > 0 {
+			s.logAudit(adminUserID, &userID, domain.EventBatchPasswordResetSent, map[string]interface{}{
+				"email": user.Email,
+			})
+		}
 	}
 
 	return result, nil
