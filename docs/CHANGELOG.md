@@ -58,6 +58,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AdminMetricsService` aggregating all metrics
   - `AdminMetricsHandler` for HTTP endpoint
 
+### Added - User Import/Export System (2026-01-13)
+
+- **Bulk User Import from CSV**
+  - New `POST /api/admin/user-management/import/preview` endpoint for CSV validation
+  - New `POST /api/admin/user-management/import/confirm` endpoint to execute import
+  - Two-phase import: preview with validation → confirm to create users
+  - CSV format: `email,name,password` columns required
+  - Duplicate email detection with skip option
+  - Password validation (minimum 8 characters)
+  - All imported users get role `user` and permanent free subscription
+  - Passwords hashed with bcrypt (cost 12)
+
+- **User Export to CSV**
+  - New `GET /api/admin/user-management/export` endpoint
+  - Downloads CSV with all user emails and names
+  - Passwords NOT included for security
+  - Can be used as template for bulk imports
+
+- **Batch Password Reset**
+  - New `GET /api/admin/user-management/filter` endpoint for filtered user listing
+  - New `POST /api/admin/user-management/batch-password-reset` endpoint
+  - Filter users by name/email search and creation date range
+  - Select multiple users and send password reset emails in bulk
+  - Uses existing password reset token system (32-byte tokens, 1-hour expiry)
+  - Maximum 100 users per batch for safety
+
+- **Frontend Components**
+  - `AdminUserImportExportView.vue` - Tabbed interface for import/export/reset
+  - Drag-and-drop CSV upload zone
+  - Import preview table with validation status per row
+  - User selection table with filters and pagination
+  - Updated `AdminView.vue` with User Import/Export navigation card
+  - New route `/admin/users/import-export`
+
+- **Backend Infrastructure**
+  - `UserListFilter` type in domain layer for flexible querying
+  - `ListWithFilter()` and `CountWithFilter()` repository methods
+  - `UserImportService` with preview/confirm/export/filter/batch-reset methods
+  - `UserImportHandler` with multipart form handling (max 10MB)
+  - Automatic subscription creation for imported users
+
+- **Documentation**
+  - Screenshots for all tabs (import, export, password reset, preview)
+  - Updated admin README with User Import/Export section
+  - API endpoint documentation with examples
+
 ## [0.22.0-beta] - 2026-01-09
 
 ### Added - Benchmark API Endpoint
