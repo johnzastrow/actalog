@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Admin Metrics Dashboard (2026-01-13)
+
+- **System Metrics Dashboard**
+  - New `GET /api/admin/metrics` endpoint returning all dashboard metrics
+  - Real-time statistics for admin users
+  - Single API call for efficient frontend consumption
+
+- **User Statistics**
+  - Total users count
+  - Active users this month (users who logged workouts)
+  - New users this month
+  - Disabled users count
+
+- **Workout Statistics**
+  - Total workouts logged across all users
+  - Workouts logged this month
+  - Average workouts per user
+
+- **Content Statistics**
+  - Total movements (standard + user-created)
+  - Total WODs (standard + user-created)
+  - Total workout templates (standard + user-created)
+  - Breakdown of user-created vs standard content
+
+- **Subscription Statistics**
+  - Active subscriptions count
+  - Expiring soon (within 7 days)
+  - Expired subscriptions count
+
+- **System Health**
+  - Recent audit events (24h)
+  - Email success rate
+  - Total emails sent
+  - Failed emails count
+
+- **Workout Trends**
+  - 30-day workout activity chart
+  - Daily workout counts with Chart.js visualization
+
+- **Frontend Components**
+  - `StatCard.vue` - Reusable stat card with icon, value, label, subtitle
+  - `WorkoutTrendsChart.vue` - Bar chart for workout trends
+  - `AdminMetricsDashboardView.vue` - Main dashboard view
+  - Updated `AdminView.vue` with System Metrics card
+
+- **Backend Infrastructure**
+  - Cross-database date helpers for SQLite/PostgreSQL/MySQL
+  - New repository methods: `CountNewThisMonth()`, `CountDisabled()`, `CountActive()`, `CountExpired()`, `CountExpiringSoon()`, `GetWorkoutTrends()`
+  - `AdminMetricsService` aggregating all metrics
+  - `AdminMetricsHandler` for HTTP endpoint
+
 ## [0.22.0-beta] - 2026-01-09
 
 ### Added - Benchmark API Endpoint

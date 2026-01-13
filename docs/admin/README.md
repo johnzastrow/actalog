@@ -1,23 +1,24 @@
 # ActaLog - Administrator Documentation
 
-**Version:** 0.12.2-beta
-**Last Updated:** 2025-11-28
+**Version:** 0.22.0-beta
+**Last Updated:** 2026-01-13
 
 This guide provides comprehensive instructions for ActaLog system administrators. It covers user management, system configuration, backup/restore operations, security best practices, and troubleshooting.
 
 ## Table of Contents
 
 1. [Administrator Overview](#administrator-overview)
-2. [User Account Management](#user-account-management)
-3. [Database Backup and Restore](#database-backup-and-restore)
-4. [Audit Log Monitoring](#audit-log-monitoring)
-5. [Data Change Logs](#data-change-logs)
-6. [System Configuration](#system-configuration)
-7. [Security Best Practices](#security-best-practices)
-8. [Database Management](#database-management)
-9. [Troubleshooting](#troubleshooting)
-10. [API Reference](#api-reference)
-11. [Admin FAQ](#admin-faq)
+2. [System Metrics Dashboard](#system-metrics-dashboard)
+3. [User Account Management](#user-account-management)
+4. [Database Backup and Restore](#database-backup-and-restore)
+5. [Audit Log Monitoring](#audit-log-monitoring)
+6. [Data Change Logs](#data-change-logs)
+7. [System Configuration](#system-configuration)
+8. [Security Best Practices](#security-best-practices)
+9. [Database Management](#database-management)
+10. [Troubleshooting](#troubleshooting)
+11. [API Reference](#api-reference)
+12. [Admin FAQ](#admin-faq)
 
 ---
 
@@ -27,6 +28,7 @@ This guide provides comprehensive instructions for ActaLog system administrators
 
 Administrators have elevated privileges in ActaLog, including:
 - Full user account management (view, unlock, disable, delete, role changes)
+- System metrics dashboard (user stats, workout counts, system health)
 - Database backup creation and restore capabilities
 - Audit log access and cleanup
 - Data change log monitoring (track WOD/Movement modifications)
@@ -43,11 +45,103 @@ Administrators have elevated privileges in ActaLog, including:
 ### Accessing Admin Features
 
 Navigate to **Profile** → **Admin** to access:
+- **System Metrics** - Real-time dashboard with user stats, workout counts, and system health
 - **Admin Users** - User account management
 - **Backups** - Database backup and restore
 - **Audit Logs** - System activity monitoring (authentication, admin actions)
 - **Data Change Logs** - Track modifications to WODs, Movements, and other entities
 - **Data Cleanup** - Maintenance operations
+
+---
+
+## System Metrics Dashboard
+
+The System Metrics Dashboard provides real-time statistics about your ActaLog instance. Access it via **Profile** → **Admin** → **System Metrics**.
+
+### Dashboard Sections
+
+#### User Statistics
+- **Total Users** - Total registered users in the system
+- **Active This Month** - Users who have logged at least one workout this month
+- **New This Month** - Users who registered this month
+- **Disabled Users** - Accounts that have been disabled by administrators
+
+#### Workout Statistics
+- **Total Workouts** - Total workouts logged across all users
+- **Workouts This Month** - Workouts logged in the current month
+- **Avg Per User** - Average number of workouts per user
+
+#### Content Statistics
+- **Total Movements** - All movements in the system (standard + user-created)
+- **Total WODs** - All WODs in the system (standard + user-created)
+- **Workout Templates** - All workout templates (standard + user-created)
+- Each category shows a breakdown of user-created vs standard content
+
+#### Subscription Statistics
+- **Active Subscriptions** - Currently active paid subscriptions
+- **Expiring Soon** - Subscriptions expiring within 7 days
+- **Expired** - Subscriptions that have expired
+
+#### System Health
+- **Audit Events** - Recent audit log entries (security monitoring)
+- **Email Success Rate** - Percentage of successfully sent emails
+- **Emails Sent** - Total emails sent by the system
+- **Failed Emails** - Emails that failed to send
+
+#### Workout Trends Chart
+A 30-day bar chart showing daily workout activity across all users. Includes:
+- Total workouts in the period
+- Average workouts per day
+- Peak day (highest single-day count)
+
+### API Endpoint
+
+```
+GET /api/admin/metrics
+```
+
+Returns all dashboard metrics in a single response. Requires admin authentication.
+
+**Response Example:**
+```json
+{
+  "user_stats": {
+    "total_users": 150,
+    "active_this_month": 42,
+    "new_this_month": 8,
+    "disabled_users": 2
+  },
+  "workout_stats": {
+    "total_workouts": 3456,
+    "workouts_this_month": 234,
+    "avg_workouts_per_user": 23.04
+  },
+  "content_stats": {
+    "total_movements": 182,
+    "user_created_movements": 12,
+    "total_wods": 314,
+    "user_created_wods": 25,
+    "total_workout_templates": 45,
+    "user_created_templates": 15
+  },
+  "subscription_stats": {
+    "active_subscriptions": 45,
+    "expiring_soon": 3,
+    "expired_subscriptions": 8
+  },
+  "system_health": {
+    "recent_audit_events_24h": 156,
+    "email_success_rate": 98.5,
+    "total_emails_sent": 1234,
+    "failed_emails": 12
+  },
+  "workout_trends": [
+    {"period": "2026-01-01", "count": 12},
+    {"period": "2026-01-02", "count": 8},
+    ...
+  ]
+}
+```
 
 ---
 
