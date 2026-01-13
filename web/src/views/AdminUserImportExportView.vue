@@ -471,7 +471,7 @@ const previewImport = async () => {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
 
-    const response = await axios.post('/api/admin/users/import/preview', formData, {
+    const response = await axios.post('/api/admin/user-management/import/preview', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     previewResult.value = response.data
@@ -493,7 +493,7 @@ const confirmImport = async () => {
     formData.append('file', selectedFile.value)
     formData.append('skip_duplicates', skipDuplicates.value.toString())
 
-    const response = await axios.post('/api/admin/users/import/confirm', formData, {
+    const response = await axios.post('/api/admin/user-management/import/confirm', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
@@ -519,7 +519,7 @@ const exportUsers = async () => {
   error.value = null
 
   try {
-    const response = await axios.get('/api/admin/users/export', {
+    const response = await axios.get('/api/admin/user-management/export', {
       responseType: 'blob'
     })
 
@@ -553,7 +553,7 @@ const loadUsers = async () => {
     params.append('limit', limit.value.toString())
     params.append('offset', offset.value.toString())
 
-    const response = await axios.get(`/api/admin/users/filter?${params}`)
+    const response = await axios.get(`/api/admin/user-management/filter?${params}`)
     users.value = response.data.users || []
     totalUsers.value = response.data.count || 0
   } catch (err) {
@@ -607,7 +607,7 @@ const sendPasswordResetEmails = async () => {
   resetResult.value = null
 
   try {
-    const response = await axios.post('/api/admin/users/batch-password-reset', {
+    const response = await axios.post('/api/admin/user-management/batch-password-reset', {
       user_ids: selectedUserIds.value
     })
     resetResult.value = response.data

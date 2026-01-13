@@ -630,7 +630,7 @@ func main() {
 				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
 
 				// User import/export routes (admin only)
-				r.Route("/users", func(r chi.Router) {
+				r.Route("/user-management", func(r chi.Router) {
 					r.Post("/import/preview", userImportHandler.PreviewUserImport)
 					r.Post("/import/confirm", userImportHandler.ConfirmUserImport)
 					r.Get("/export", userImportHandler.ExportUsers)
