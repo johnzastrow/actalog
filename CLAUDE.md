@@ -30,8 +30,8 @@ npm run test:coverage # Tests with coverage
 npm run lint:fix    # Fix linting issues
 
 # Docker
-./docker/build.sh <tag>   # Build image
-./docker/push.sh <tag>    # Push to ghcr.io
+./docker/scripts/build.sh <tag>   # Build image
+./docker/scripts/push.sh <tag>    # Push to ghcr.io
 
 # Migrations
 make migrate-create name=add_feature
@@ -119,21 +119,21 @@ When testing new features, cycle through all supported databases to ensure compa
 **Docker Testing Commands:**
 ```bash
 # Build Docker image
-./docker/build.sh dev
+./docker/scripts/build.sh dev
 
 # Test with SQLite (mount local data directory)
 docker run -p 8080:8080 -v $(pwd)/data:/app/data \
   -e DB_DRIVER=sqlite3 -e DB_NAME=/app/data/actalog.db \
   ghcr.io/johnzastrow/actalog:dev
 
-# Test with MariaDB
-docker run -p 8080:8080 \
+# Test with MariaDB (use --network host for external DB access)
+docker run --network host \
   -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
   -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
   ghcr.io/johnzastrow/actalog:dev
 
-# Test with PostgreSQL
-docker run -p 8080:8080 \
+# Test with PostgreSQL (use --network host for external DB access)
+docker run --network host \
   -e DB_DRIVER=postgres -e DB_HOST=192.168.1.28 -e DB_PORT=5432 \
   -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
   ghcr.io/johnzastrow/actalog:dev
@@ -144,6 +144,29 @@ docker run -p 8080:8080 \
 - Running unit tests (`make test`)
 - Quick iteration during development
 - When Docker overhead is unnecessary
+
+## Process & Port Management
+
+**Before starting any server, always check and clean up:**
+```bash
+# Check what's using port 8080
+lsof -i :8080 | grep LISTEN
+
+# Kill all actalog processes
+pkill -9 -f actalog
+
+# Kill Docker containers on port 8080
+docker ps --filter "publish=8080" -q | xargs -r docker stop
+
+# Full cleanup (processes + containers)
+pkill -9 -f actalog 2>/dev/null; docker stop $(docker ps -q --filter "publish=8080") 2>/dev/null; sleep 1
+```
+
+**Standard startup sequence:**
+1. Kill existing processes: `pkill -9 -f actalog`
+2. Verify port is free: `lsof -i :8080 | grep LISTEN` (should be empty)
+3. Start server
+4. Verify running: `pgrep -f actalog` or `docker ps`
 
 ## Code Style
 
