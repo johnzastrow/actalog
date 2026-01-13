@@ -434,6 +434,14 @@ func (s *UserService) ResetPassword(token, newPassword string) error {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 
+	// Log the password reset
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+		}
+		s.auditLogService.LogEvent(domain.EventPasswordReset, &user.ID, &user.ID, nil, nil, details)
+	}
+
 	return nil
 }
 
@@ -514,7 +522,19 @@ func (s *UserService) ChangePassword(userID int64, oldPassword, newPassword stri
 	}
 
 	// Update password
-	return s.userRepo.UpdatePassword(userID, hashedPassword)
+	if err := s.userRepo.UpdatePassword(userID, hashedPassword); err != nil {
+		return err
+	}
+
+	// Log the password change
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+		}
+		s.auditLogService.LogEvent(domain.EventPasswordChanged, &userID, &userID, nil, nil, details)
+	}
+
+	return nil
 }
 
 // ResendVerificationEmail resends verification email to a user
@@ -1126,13 +1146,16 @@ func (s *UserService) DeleteUser(adminUserID int64, targetUserID int64) error {
 	}
 
 	// Log the deletion
+	// Note: We pass nil for target_user_id since the user has been deleted and the FK constraint would fail
 	if s.auditLogService != nil {
 		details := map[string]interface{}{
 			"admin_email":  adminUser.Email,
 			"target_email": targetEmail,
 			"target_id":    targetUserID,
+			"target_name":  targetName,
 		}
-		s.auditLogService.LogEvent("user_deleted", &adminUserID, &targetUserID, nil, nil, details)
+		// Ignore error - audit logging failure shouldn't block user deletion
+		_ = s.auditLogService.LogEvent(domain.EventUserDeleted, &adminUserID, nil, nil, nil, details)
 	}
 
 	// Notify admins of user deletion
