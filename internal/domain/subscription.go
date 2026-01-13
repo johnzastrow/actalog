@@ -88,6 +88,11 @@ type UserSubscriptionRepository interface {
 	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error
 	MarkAsExpired(id int64) error
 	Cancel(id int64, reason string, adminUserID int64) error
+
+	// Admin metrics
+	CountActive() (int64, error)
+	CountExpired() (int64, error)
+	CountExpiringSoon(days int) (int64, error)
 }
 
 // OrganizationSubscriptionRepository defines repository interface for org subscriptions

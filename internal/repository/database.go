@@ -1131,6 +1131,48 @@ func getTimestampFunc() string {
 	}
 }
 
+// getStartOfMonthExpr returns the database-specific expression for start of current month
+func getStartOfMonthExpr() string {
+	switch currentDriver {
+	case "sqlite3":
+		return "date('now', 'start of month')"
+	case "postgres":
+		return "date_trunc('month', CURRENT_DATE)"
+	case "mysql":
+		return "DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+	default:
+		return "date_trunc('month', CURRENT_DATE)"
+	}
+}
+
+// getDaysAgoExpr returns the database-specific expression for N days ago
+func getDaysAgoExpr(days int) string {
+	switch currentDriver {
+	case "sqlite3":
+		return fmt.Sprintf("date('now', '-%d days')", days)
+	case "postgres":
+		return fmt.Sprintf("CURRENT_DATE - INTERVAL '%d days'", days)
+	case "mysql":
+		return fmt.Sprintf("DATE_SUB(CURDATE(), INTERVAL %d DAY)", days)
+	default:
+		return fmt.Sprintf("CURRENT_DATE - INTERVAL '%d days'", days)
+	}
+}
+
+// getDateExpr returns the database-specific expression to extract date from a datetime column
+func getDateExpr(column string) string {
+	switch currentDriver {
+	case "sqlite3":
+		return fmt.Sprintf("DATE(%s)", column)
+	case "postgres":
+		return fmt.Sprintf("DATE(%s)", column)
+	case "mysql":
+		return fmt.Sprintf("DATE(%s)", column)
+	default:
+		return fmt.Sprintf("DATE(%s)", column)
+	}
+}
+
 // rebindQuery converts ? placeholders to $N for PostgreSQL
 // This allows queries written with ? placeholders to work across all databases
 func rebindQuery(query string) string {

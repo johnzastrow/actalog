@@ -811,6 +811,26 @@ func (m *MockUserRepository) ListAdmins() ([]*domain.User, error) {
 	return admins, nil
 }
 
+func (m *MockUserRepository) CountNewThisMonth() (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	return 0, nil
+}
+
+func (m *MockUserRepository) CountDisabled() (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	var count int64
+	for _, u := range m.users {
+		if u.AccountDisabled {
+			count++
+		}
+	}
+	return count, nil
+}
+
 // MockOrganizationRepository is a mock implementation of OrganizationRepository
 type MockOrganizationRepository struct {
 	organizations []*domain.Organization
@@ -1475,6 +1495,56 @@ func (m *MockUserSubscriptionRepository) ListExpired() ([]*domain.UserSubscripti
 		}
 	}
 	return result, nil
+}
+
+func (m *MockUserSubscriptionRepository) CountActive() (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	var count int64
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *MockUserSubscriptionRepository) CountExpired() (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	var count int64
+	now := time.Now()
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusExpired ||
+			(sub.Status == domain.SubscriptionStatusActive &&
+				!sub.IsPermanentFree &&
+				sub.EndDate != nil &&
+				sub.EndDate.Before(now)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *MockUserSubscriptionRepository) CountExpiringSoon(days int) (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, days)
+	var count int64
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive &&
+			!sub.IsPermanentFree &&
+			sub.EndDate != nil &&
+			sub.EndDate.After(now) &&
+			sub.EndDate.Before(futureDate) {
+			count++
+		}
+	}
+	return count, nil
 }
 
 // MockUserWorkoutWODRepository is a mock implementation of UserWorkoutWODRepository

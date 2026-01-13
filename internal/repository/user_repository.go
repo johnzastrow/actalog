@@ -555,3 +555,19 @@ func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
 	}
 	return nil
 }
+
+// CountNewThisMonth returns the count of users created this month
+func (r *SQLiteUserRepository) CountNewThisMonth() (int64, error) {
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM users WHERE created_at >= %s`, getStartOfMonthExpr())
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountDisabled returns the count of disabled user accounts
+func (r *SQLiteUserRepository) CountDisabled() (int64, error) {
+	query := `SELECT COUNT(*) FROM users WHERE account_disabled = 1`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}

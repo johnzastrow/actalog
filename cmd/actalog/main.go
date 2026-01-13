@@ -377,6 +377,19 @@ func main() {
 	// Benchmark service
 	benchmarkService := service.NewBenchmarkService(benchmarkRepo)
 
+	// Admin metrics service
+	adminMetricsService := service.NewAdminMetricsService(
+		userRepo,
+		userWorkoutRepo,
+		movementRepo,
+		wodRepo,
+		workoutRepo,
+		userSubscriptionRepo,
+		auditLogRepo,
+		emailLogService,
+		appLogger,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -404,6 +417,7 @@ func main() {
 	emailHandler := handler.NewEmailHandler(emailService, emailLogService, appLogger)
 	emailLogHandler := handler.NewEmailLogHandler(emailLogService, appLogger)
 	benchmarkHandler := handler.NewBenchmarkHandler(benchmarkService, appLogger)
+	adminMetricsHandler := handler.NewAdminMetricsHandler(adminMetricsService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -602,6 +616,9 @@ func main() {
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+
+				// Admin metrics dashboard
+				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
 
 				// Backup routes (admin only)
 				r.Post("/backups", backupHandler.CreateBackup)

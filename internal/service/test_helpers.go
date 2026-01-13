@@ -1124,6 +1124,47 @@ func (m *mockUserSubscriptionRepo) ListExpired() ([]*domain.UserSubscription, er
 	return result, nil
 }
 
+func (m *mockUserSubscriptionRepo) CountActive() (int64, error) {
+	var count int64
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockUserSubscriptionRepo) CountExpired() (int64, error) {
+	var count int64
+	now := time.Now()
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusExpired ||
+			(sub.Status == domain.SubscriptionStatusActive &&
+				!sub.IsPermanentFree &&
+				sub.EndDate != nil &&
+				sub.EndDate.Before(now)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *mockUserSubscriptionRepo) CountExpiringSoon(days int) (int64, error) {
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, days)
+	var count int64
+	for _, sub := range m.subscriptions {
+		if sub.Status == domain.SubscriptionStatusActive &&
+			!sub.IsPermanentFree &&
+			sub.EndDate != nil &&
+			sub.EndDate.After(now) &&
+			sub.EndDate.Before(futureDate) {
+			count++
+		}
+	}
+	return count, nil
+}
+
 // Mock OrganizationSubscriptionRepository
 type mockOrganizationSubscriptionRepo struct {
 	subscriptions map[int64]*domain.OrganizationSubscription
@@ -1743,6 +1784,20 @@ func (m *mockUserRepo) DeleteProfileImage(id int64) error {
 // Add Count method to mockUserRepo
 func (m *mockUserRepo) Count() (int64, error) {
 	return int64(len(m.users)), nil
+}
+
+func (m *mockUserRepo) CountNewThisMonth() (int64, error) {
+	return 0, nil
+}
+
+func (m *mockUserRepo) CountDisabled() (int64, error) {
+	var count int64
+	for _, user := range m.users {
+		if user.AccountDisabled {
+			count++
+		}
+	}
+	return count, nil
 }
 
 // Add Count method to mockAuditLogRepo

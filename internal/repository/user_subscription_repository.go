@@ -623,3 +623,62 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 
 	return subscriptions, nil
 }
+
+// CountActive returns the count of active subscriptions
+func (r *SQLiteUserSubscriptionRepository) CountActive() (int64, error) {
+	query := `SELECT COUNT(*) FROM user_subscriptions WHERE status = 'active'`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountExpired returns the count of expired subscriptions
+func (r *SQLiteUserSubscriptionRepository) CountExpired() (int64, error) {
+	query := `SELECT COUNT(*) FROM user_subscriptions WHERE status = 'expired'`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountExpiringSoon returns the count of active subscriptions expiring within N days
+func (r *SQLiteUserSubscriptionRepository) CountExpiringSoon(days int) (int64, error) {
+	var query string
+	switch currentDriver {
+	case "sqlite3":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = 0
+			  AND end_date IS NOT NULL
+			  AND end_date > datetime('now')
+			  AND end_date <= datetime('now', '+%d days')`, days)
+	case "postgres":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = false
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= NOW() + INTERVAL '%d days'`, days)
+	case "mysql":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = 0
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= DATE_ADD(NOW(), INTERVAL %d DAY)`, days)
+	default:
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = false
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= NOW() + INTERVAL '%d days'`, days)
+	}
+
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}

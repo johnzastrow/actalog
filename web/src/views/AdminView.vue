@@ -219,22 +219,23 @@
             </v-card>
           </v-col>
 
-          <!-- Reports (Placeholder) -->
+          <!-- System Metrics -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" disabled>
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/metrics')">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#999" size="32" class="mr-3">mdi-chart-bar</v-icon>
+                <v-icon color="teal" size="32" class="mr-3">mdi-chart-bar</v-icon>
                 <div>
-                  <h3 style="color: #999; font-size: 18px; font-weight: 600">Reports & Analytics</h3>
-                  <p style="color: #999; font-size: 14px; margin: 0">View system statistics</p>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">System Metrics</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">View real-time statistics</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
-              <p style="color: #999; font-size: 13px">
-                Generate reports on user activity, workout trends, and system health.
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Dashboard with user activity, workout trends, content stats, and system health.
               </p>
-              <v-chip size="small" color="#999" class="mt-2">
-                Coming Soon
+              <v-chip size="small" color="teal" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
               </v-chip>
             </v-card>
           </v-col>

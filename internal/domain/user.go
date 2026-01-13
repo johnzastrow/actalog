@@ -68,6 +68,10 @@ type UserRepository interface {
 	IsAccountLocked(userID int64) (bool, *time.Time, error) // Returns locked status and unlock time
 	DisableAccount(userID int64, disabledBy int64, reason string) error
 	EnableAccount(userID int64) error
+
+	// Admin metrics methods
+	CountNewThisMonth() (int64, error)
+	CountDisabled() (int64, error)
 }
 
 // RefreshTokenRepository defines the interface for refresh token data access
