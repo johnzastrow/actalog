@@ -390,6 +390,14 @@ func main() {
 		appLogger,
 	)
 
+	// User import service
+	userImportService := service.NewUserImportService(
+		userRepo,
+		userSubscriptionRepo,
+		emailService,
+		appURL,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -418,6 +426,7 @@ func main() {
 	emailLogHandler := handler.NewEmailLogHandler(emailLogService, appLogger)
 	benchmarkHandler := handler.NewBenchmarkHandler(benchmarkService, appLogger)
 	adminMetricsHandler := handler.NewAdminMetricsHandler(adminMetricsService, appLogger)
+	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -619,6 +628,15 @@ func main() {
 
 				// Admin metrics dashboard
 				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
+
+				// User import/export routes (admin only)
+				r.Route("/users", func(r chi.Router) {
+					r.Post("/import/preview", userImportHandler.PreviewUserImport)
+					r.Post("/import/confirm", userImportHandler.ConfirmUserImport)
+					r.Get("/export", userImportHandler.ExportUsers)
+					r.Get("/filter", userImportHandler.ListUsersWithFilter)
+					r.Post("/batch-password-reset", userImportHandler.SendBatchPasswordResetEmails)
+				})
 
 				// Backup routes (admin only)
 				r.Post("/backups", backupHandler.CreateBackup)

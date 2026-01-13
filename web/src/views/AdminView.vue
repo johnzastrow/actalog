@@ -239,6 +239,27 @@
               </v-chip>
             </v-card>
           </v-col>
+
+          <!-- User Import/Export -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/users/import-export')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="deep-purple" size="32" class="mr-3">mdi-account-arrow-left-outline</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">User Import/Export</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Bulk user management</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Import users from CSV, export user lists, and send batch password reset emails.
+              </p>
+              <v-chip size="small" color="deep-purple" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
         </v-row>
       </v-container>
 

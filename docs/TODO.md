@@ -240,12 +240,20 @@ These features can be added after the core frontend is complete:
 - [ ] `[LOW]` **Add repository unit tests** - All repository implementations
 
 #### Admin Features
-- [ ] `[HIGH]` **User Import/Export System** (Admin only)
-  - [ ] Export users to CSV format
-  - [ ] Import users from CSV (bulk user creation)
-  - [ ] Preview workflow with validation
-  - [ ] Duplicate detection by email
-  - [ ] Welcome emails with password reset
+- [x] `[HIGH]` **User Import/Export System** (Admin only) *(Completed v0.23.0)*
+  - [x] Export users to CSV format (email, name)
+  - [x] Import users from CSV (email, name, password) with preview/confirm workflow
+  - [x] Preview workflow with validation
+  - [x] Duplicate detection by email
+  - [x] Batch password reset emails - select users from filterable list
+  - **Backend files:** `internal/service/user_import_service.go`, `internal/handler/user_import_handler.go`
+  - **Frontend:** `web/src/views/AdminUserImportExportView.vue` with 3 tabs (Import, Export, Password Reset)
+  - **API endpoints:**
+    - `POST /api/admin/users/import/preview` - Preview CSV import
+    - `POST /api/admin/users/import/confirm` - Execute import
+    - `GET /api/admin/users/export` - Download CSV
+    - `GET /api/admin/users/filter` - List users with search/date filters
+    - `POST /api/admin/users/batch-password-reset` - Send reset emails to selected users
 
 - [x] `[HIGH]` **Improved Duplicate Record Detection During Imports** (v0.17.0)
   - [x] Trap duplicate movements during import (check by name)

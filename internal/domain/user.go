@@ -35,6 +35,13 @@ type User struct {
 	LastLoginAt *time.Time `json:"last_login_at,omitempty" db:"last_login_at"`
 }
 
+// UserListFilter represents filter criteria for user listing
+type UserListFilter struct {
+	Search        string     `json:"search,omitempty"`         // Search in name and email
+	CreatedAfter  *time.Time `json:"created_after,omitempty"`  // Users created after this date
+	CreatedBefore *time.Time `json:"created_before,omitempty"` // Users created before this date
+}
+
 // RefreshToken represents a refresh token for "Remember Me" functionality
 type RefreshToken struct {
 	ID         int64      `json:"id" db:"id"`
@@ -72,6 +79,10 @@ type UserRepository interface {
 	// Admin metrics methods
 	CountNewThisMonth() (int64, error)
 	CountDisabled() (int64, error)
+
+	// Filter methods for user import/export
+	ListWithFilter(filter UserListFilter, limit, offset int) ([]*User, error)
+	CountWithFilter(filter UserListFilter) (int64, error)
 }
 
 // RefreshTokenRepository defines the interface for refresh token data access

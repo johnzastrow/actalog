@@ -1800,6 +1800,18 @@ func (m *mockUserRepo) CountDisabled() (int64, error) {
 	return count, nil
 }
 
+func (m *mockUserRepo) ListWithFilter(filter domain.UserListFilter, limit, offset int) ([]*domain.User, error) {
+	var result []*domain.User
+	for _, user := range m.users {
+		result = append(result, user)
+	}
+	return result, nil
+}
+
+func (m *mockUserRepo) CountWithFilter(filter domain.UserListFilter) (int64, error) {
+	return int64(len(m.users)), nil
+}
+
 // Add Count method to mockAuditLogRepo
 func (m *mockAuditLogRepo) Count(filters domain.AuditLogFilters) (int, error) {
 	return len(m.logs), nil

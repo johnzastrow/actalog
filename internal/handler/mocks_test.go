@@ -831,6 +831,21 @@ func (m *MockUserRepository) CountDisabled() (int64, error) {
 	return count, nil
 }
 
+func (m *MockUserRepository) ListWithFilter(filter domain.UserListFilter, limit, offset int) ([]*domain.User, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	// Simple implementation - just return all users
+	return m.users, nil
+}
+
+func (m *MockUserRepository) CountWithFilter(filter domain.UserListFilter) (int64, error) {
+	if m.shouldError {
+		return 0, m.errorToReturn
+	}
+	return int64(len(m.users)), nil
+}
+
 // MockOrganizationRepository is a mock implementation of OrganizationRepository
 type MockOrganizationRepository struct {
 	organizations []*domain.Organization
