@@ -288,7 +288,7 @@
             <v-progress-circular indeterminate color="primary" size="32" />
           </div>
 
-          <div v-else-if="Object.keys(groupedHistory).length === 0" class="text-center py-4">
+          <div v-else-if="groupedHistory.length === 0" class="text-center py-4">
             <v-icon size="48" color="surface-variant">mdi-history</v-icon>
             <p class="text-body-2 mt-2 text-medium-emphasis">No history yet</p>
             <p class="text-caption text-disabled">
@@ -298,13 +298,13 @@
 
           <!-- History Grouped by Year -->
           <div v-else>
-            <div v-for="(entries, year) in groupedHistory" :key="year" class="mb-4">
+            <div v-for="group in groupedHistory" :key="group.year" class="mb-4">
               <v-chip size="small" color="primary" label class="mb-2">
-                {{ year }}
+                {{ group.year }}
               </v-chip>
 
               <v-card
-                v-for="(entry, index) in entries"
+                v-for="(entry, index) in group.entries"
                 :key="index"
                 elevation="0"
                 rounded="lg"
@@ -989,9 +989,9 @@ const wodPerformanceData = computed(() => {
   return performanceData.value
 })
 
-// Computed: History Grouped by Year
+// Computed: History Grouped by Year (returns array to preserve descending year order)
 const groupedHistory = computed(() => {
-  if (!selectedItem.value || performanceData.value.length === 0) return {}
+  if (!selectedItem.value || performanceData.value.length === 0) return []
 
   const grouped = {}
 
@@ -1003,18 +1003,15 @@ const groupedHistory = computed(() => {
     grouped[year].push(entry)
   })
 
-  // Sort years descending
-  const sorted = {}
-  Object.keys(grouped)
+  // Sort years descending and return as array to preserve order
+  return Object.keys(grouped)
     .sort((a, b) => b - a)
-    .forEach(year => {
-      // Sort entries within year by date descending
-      sorted[year] = grouped[year].sort((a, b) =>
+    .map(year => ({
+      year,
+      entries: grouped[year].sort((a, b) =>
         new Date(b.workout_date) - new Date(a.workout_date)
       )
-    })
-
-  return sorted
+    }))
 })
 
 // Search Handler (debounced unified search)
