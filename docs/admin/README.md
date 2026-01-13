@@ -10,15 +10,16 @@ This guide provides comprehensive instructions for ActaLog system administrators
 1. [Administrator Overview](#administrator-overview)
 2. [System Metrics Dashboard](#system-metrics-dashboard)
 3. [User Account Management](#user-account-management)
-4. [Database Backup and Restore](#database-backup-and-restore)
-5. [Audit Log Monitoring](#audit-log-monitoring)
-6. [Data Change Logs](#data-change-logs)
-7. [System Configuration](#system-configuration)
-8. [Security Best Practices](#security-best-practices)
-9. [Database Management](#database-management)
-10. [Troubleshooting](#troubleshooting)
-11. [API Reference](#api-reference)
-12. [Admin FAQ](#admin-faq)
+4. [User Import/Export](#user-importexport)
+5. [Database Backup and Restore](#database-backup-and-restore)
+6. [Audit Log Monitoring](#audit-log-monitoring)
+7. [Data Change Logs](#data-change-logs)
+8. [System Configuration](#system-configuration)
+9. [Security Best Practices](#security-best-practices)
+10. [Database Management](#database-management)
+11. [Troubleshooting](#troubleshooting)
+12. [API Reference](#api-reference)
+13. [Admin FAQ](#admin-faq)
 
 ---
 
@@ -331,6 +332,184 @@ Permanent account suspension (e.g., for policy violations, terminated employees,
 - Cascading deletes configured in database schema
 - Deletes from tables: `users`, `user_workouts`, `workout_movements`, `workout_wods`, `refresh_tokens`, `password_resets`, `email_verification_tokens`, `sessions`
 - Foreign key constraints ensure data integrity
+
+---
+
+## User Import/Export
+
+The User Import/Export feature provides bulk user management capabilities for administrators. Access it via **Profile** → **Admin** → **User Import/Export**.
+
+### Overview
+
+This feature enables administrators to:
+- **Import users from CSV** - Bulk create new user accounts with predefined passwords
+- **Export users to CSV** - Download a list of all users (email, name)
+- **Batch password reset** - Send password reset emails to multiple users at once
+
+### Importing Users from CSV
+
+Import new users in bulk by uploading a CSV file.
+
+![User Import Tab](images/user_import_tab.png)
+
+#### CSV Format Requirements
+
+The CSV file must have these columns in the header row:
+- `email` - User's email address (required, must be unique)
+- `name` - User's display name (required)
+- `password` - Initial password (required, minimum 8 characters)
+
+**Example CSV:**
+```csv
+email,name,password
+john.doe@example.com,John Doe,SecurePass123
+jane.smith@example.com,Jane Smith,Password456
+```
+
+#### Import Process
+
+1. Navigate to **User Import/Export** → **Import** tab
+2. Click the upload zone or drag and drop a CSV file
+3. Click **Preview Import** to validate the file
+4. Review the preview results:
+
+![Import Preview](images/user_import_preview.png)
+
+   - **Total Rows** - Number of data rows in the CSV
+   - **Valid** - Rows that will be imported successfully
+   - **Duplicates** - Emails that already exist in the system
+   - **Invalid** - Rows with validation errors (bad email format, short password, etc.)
+
+5. Optionally check **Skip duplicate emails** (recommended)
+6. Click **Import X Users** to create the accounts
+
+#### What Gets Created
+
+For each valid user imported:
+- User account with role `user`
+- Password hashed with bcrypt (cost 12)
+- Email marked as verified
+- Permanent free subscription created
+
+### Exporting Users to CSV
+
+Download a CSV file containing all user email addresses and names.
+
+![User Export Tab](images/user_export_tab.png)
+
+#### Export Process
+
+1. Navigate to **User Import/Export** → **Export** tab
+2. Click **Download Users CSV**
+3. Save the file to your computer
+
+#### Export Format
+
+The exported CSV contains:
+```csv
+email,name
+john.doe@example.com,John Doe
+jane.smith@example.com,Jane Smith
+```
+
+**Note:** Passwords are NOT included in the export for security reasons.
+
+#### Use Cases
+
+- Create a backup of user email list
+- Use as a template for bulk user import
+- Audit current user accounts
+- Migration to another system
+
+### Batch Password Reset
+
+Send password reset emails to multiple users at once. Useful for:
+- Onboarding users who need to set their own passwords
+- Security incidents requiring password rotation
+- Helping users who have forgotten their passwords
+
+![Password Reset Tab](images/user_password_reset_tab.png)
+
+#### Password Reset Process
+
+1. Navigate to **User Import/Export** → **Password Reset** tab
+2. Use the filters to find users:
+   - **Search** - Filter by name or email
+   - **Created after/before** - Filter by registration date
+3. Select users using checkboxes (or use header checkbox to select all visible)
+4. Click **Send Reset Emails**
+5. Review the results:
+   - **Successfully Sent** - Number of emails sent
+   - **Failed** - Number of failures (with error details)
+
+#### What Happens
+
+For each selected user:
+1. A secure password reset token is generated (32 bytes, 1-hour expiry)
+2. An email is sent with a link to set a new password
+3. The user clicks the link and enters a new password
+
+**Note:** Email service must be configured for this feature to work. If email is disabled, tokens are generated but no emails are sent.
+
+### API Endpoints
+
+#### Preview User Import
+```
+POST /api/admin/user-management/import/preview
+Authorization: Bearer <admin-jwt-token>
+Content-Type: multipart/form-data
+
+file: <users.csv>
+```
+
+#### Confirm User Import
+```
+POST /api/admin/user-management/import/confirm
+Authorization: Bearer <admin-jwt-token>
+Content-Type: multipart/form-data
+
+file: <users.csv>
+skip_duplicates: true
+```
+
+#### Export Users
+```
+GET /api/admin/user-management/export
+Authorization: Bearer <admin-jwt-token>
+```
+
+#### List Users with Filter
+```
+GET /api/admin/user-management/filter?search=john&limit=50&offset=0
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Query Parameters:**
+- `search` - Search in name and email
+- `created_after` - Filter by creation date (YYYY-MM-DD)
+- `created_before` - Filter by creation date (YYYY-MM-DD)
+- `limit` - Results per page (default: 50, max: 1000)
+- `offset` - Pagination offset
+
+#### Batch Password Reset
+```
+POST /api/admin/user-management/batch-password-reset
+Authorization: Bearer <admin-jwt-token>
+Content-Type: application/json
+
+{
+  "user_ids": [1, 2, 3, 4, 5]
+}
+```
+
+**Response:**
+```json
+{
+  "successfully_sent": 4,
+  "failed_count": 1,
+  "errors": ["User ID 3: email service disabled"]
+}
+```
 
 ---
 
@@ -1425,6 +1604,6 @@ A: Monitor:
 
 ---
 
-**Document Version:** 0.12.0-beta
-**Last Updated:** 2025-11-26
+**Document Version:** 0.22.0-beta
+**Last Updated:** 2026-01-13
 **Applicable Versions:** ActaLog 0.10.0-beta and later
