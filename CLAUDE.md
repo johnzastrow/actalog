@@ -30,8 +30,8 @@ npm run test:coverage # Tests with coverage
 npm run lint:fix    # Fix linting issues
 
 # Docker
-./docker/scripts/build.sh <tag>   # Build image
-./docker/scripts/push.sh <tag>    # Push to ghcr.io
+./docker/build.sh <tag>   # Build image
+./docker/push.sh <tag>    # Push to ghcr.io
 
 # Migrations
 make migrate-create name=add_feature
@@ -103,6 +103,47 @@ migrations/       # Database migrations
 - Single port :8080 serves both API and static frontend
 - No separate Node.js process
 - `cmd/actalog/main.go:418-436` handles static file serving
+
+## Feature Testing Workflow
+
+**Default: Test features using Docker with multiple database backends.**
+
+When testing new features, cycle through all supported databases to ensure compatibility:
+
+| Database | Connection |
+|----------|------------|
+| SQLite | Local file: `./data/actalog.db` |
+| MariaDB | `192.168.1.234:3306` (user: jcz) |
+| PostgreSQL | `192.168.1.28:5432` |
+
+**Docker Testing Commands:**
+```bash
+# Build Docker image
+./docker/build.sh dev
+
+# Test with SQLite (mount local data directory)
+docker run -p 8080:8080 -v $(pwd)/data:/app/data \
+  -e DB_DRIVER=sqlite3 -e DB_NAME=/app/data/actalog.db \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with MariaDB
+docker run -p 8080:8080 \
+  -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with PostgreSQL
+docker run -p 8080:8080 \
+  -e DB_DRIVER=postgres -e DB_HOST=192.168.1.28 -e DB_PORT=5432 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:dev
+```
+
+**When to build outside Docker:**
+- Debugging with IDE/debugger
+- Running unit tests (`make test`)
+- Quick iteration during development
+- When Docker overhead is unnecessary
 
 ## Code Style
 
