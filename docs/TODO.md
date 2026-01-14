@@ -304,7 +304,7 @@ These features can be added after the core frontend is complete:
 ### High Priority
 
 #### Documentation & Marketing
-- [ ] `[High]` **Enhance App Documentation with Screenshots**
+- [x] `[High]` **Enhance App Documentation with Screenshots**
 - [x] `[High]` Static site deployed to GitHub Pages (https://johnzastrow.github.io/actalog/)
   - [x] Home page with feature highlights and theme gallery
   - [x] For Admins page with subscription and announcement features
@@ -312,9 +312,9 @@ These features can be added after the core frontend is complete:
   - [x] Performance & Benchmarks section added (v0.22.0) - minimum resources, load test results
   - [x] FAQ page
   - [x] Auto-deploy via GitHub Actions on push to main
-  - [ ] Add more screenshots demonstrating all available themes
-  - [ ] Show desktop vs mobile responsive views
-  - [ ] Document key user flows with visual guides
+  - [x] All 7 themes documented with screenshots (Myst added v0.24.0)
+  - [x] Responsive design & PWA benefits explained in "Works Everywhere" section
+  - [x] User flow guide added ("Your Workout Journey" 3-step visual guide)
 
 
 #### Performance & Analytics
