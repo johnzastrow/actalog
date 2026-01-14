@@ -168,7 +168,7 @@
 
             <!-- Duplicate Groups -->
             <div v-if="entityDuplicates">
-              <v-alert v-if="entityDuplicates.groups.length === 0" type="success" variant="tonal" class="mb-3">
+              <v-alert v-if="!entityDuplicates.groups || entityDuplicates.groups.length === 0" type="success" variant="tonal" class="mb-3">
                 <v-icon start>mdi-check-circle</v-icon>
                 No duplicates found in {{ formatEntityName(selectedEntityType) }}.
               </v-alert>
@@ -176,7 +176,7 @@
               <div v-else>
                 <v-alert type="warning" variant="tonal" class="mb-3">
                   <v-icon start>mdi-content-copy</v-icon>
-                  <strong>{{ entityDuplicates.total_duplicates }} duplicates in {{ entityDuplicates.groups.length }} groups</strong>
+                  <strong>{{ entityDuplicates.total_duplicates }} duplicates in {{ (entityDuplicates.groups || []).length }} groups</strong>
                   <span class="ml-2 text-caption">(scan took {{ entityDuplicates.scan_time }})</span>
                 </v-alert>
 
@@ -341,7 +341,7 @@
               </div>
 
               <!-- FK Updates -->
-              <div v-if="Object.keys(mergePreview.fk_updates).length > 0" class="mb-4">
+              <div v-if="mergePreview.fk_updates && Object.keys(mergePreview.fk_updates).length > 0" class="mb-4">
                 <strong>FK References to Update:</strong>
                 <v-list density="compact" class="mt-2">
                   <v-list-item v-for="(count, table) in mergePreview.fk_updates" :key="table">

@@ -129,6 +129,11 @@ func (s *DataQualityService) ScanForDuplicates(entityType EntityType) (*Duplicat
 		return nil, fmt.Errorf("failed to scan %s duplicates: %w", entityType, err)
 	}
 
+	// Ensure groups is never nil (for JSON serialization)
+	if groups == nil {
+		groups = []*DuplicateGroup{}
+	}
+
 	totalDups := 0
 	for _, g := range groups {
 		totalDups += g.Count
