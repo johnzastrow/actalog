@@ -30,6 +30,27 @@
             </v-card>
           </v-col>
 
+          <!-- Data Quality Checks -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/data-quality')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="teal" size="32" class="mr-3">mdi-database-check</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Data Quality Checks</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Duplicate detection and data issues</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Scan for duplicate records and data quality issues. Merge duplicates safely with FK updates.
+              </p>
+              <v-chip size="small" color="teal" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- User Management -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/users')">

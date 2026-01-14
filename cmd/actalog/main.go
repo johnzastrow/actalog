@@ -399,6 +399,9 @@ func main() {
 	)
 	userImportService.SetAuditLogRepo(auditLogRepo)
 
+	// Data quality service (for duplicate detection and data quality scanning)
+	dataQualityService := service.NewDataQualityService(db, cfg.Database.Driver, auditLogService)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -428,6 +431,7 @@ func main() {
 	benchmarkHandler := handler.NewBenchmarkHandler(benchmarkService, appLogger)
 	adminMetricsHandler := handler.NewAdminMetricsHandler(adminMetricsService, appLogger)
 	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
+	dataQualityHandler := handler.NewDataQualityHandler(dataQualityService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -670,6 +674,17 @@ func main() {
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
 				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)
 				r.Put("/data-cleanup/wod-record/{id}", adminHandler.UpdateWODRecord)
+
+				// Data quality routes (duplicate detection and data quality scanning)
+				r.Route("/data-quality", func(r chi.Router) {
+					r.Get("/full-scan", dataQualityHandler.FullDataQualityScan)
+					r.Get("/duplicates", dataQualityHandler.ScanAllDuplicates)
+					r.Get("/duplicates/summary", dataQualityHandler.GetDuplicateSummary)
+					r.Get("/duplicates/{entity}", dataQualityHandler.ScanDuplicatesByEntity)
+					r.Post("/duplicates/merge/preview", dataQualityHandler.PreviewMerge)
+					r.Post("/duplicates/merge/confirm", dataQualityHandler.ConfirmMerge)
+					r.Get("/issues", dataQualityHandler.ScanDataQuality)
+				})
 
 				// Benchmark data cleanup (admin only)
 				r.Delete("/benchmark/data", benchmarkHandler.CleanupBenchmarkData)
