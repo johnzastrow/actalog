@@ -116,33 +116,45 @@
             </div>
 
             <!-- Issue Summary by Type -->
-            <div v-if="scanned && issuesSummary" class="mt-4">
+            <div v-if="scanned" class="mt-4">
               <h4 style="color: #2c3e50; font-size: 16px; font-weight: 600; margin-bottom: 12px">
-                Issues by Type
+                Data Quality Checks
               </h4>
               <v-row dense>
-                <v-col v-for="(count, issueType) in issuesSummary.by_type" :key="issueType" cols="12" sm="6" md="4">
+                <v-col v-for="checkType in qualityCheckTypes" :key="checkType.value" cols="12" sm="6" md="6" lg="3">
                   <v-card
                     elevation="0"
                     rounded="lg"
                     class="pa-3"
                     style="border: 1px solid rgba(0,0,0,0.12)"
-                    :class="{ 'entity-card-error': count > 0 }"
+                    :class="{
+                      'entity-card-error': getIssueCount(checkType.value) > 0 && checkType.severity === 'error',
+                      'entity-card-warning': getIssueCount(checkType.value) > 0 && checkType.severity === 'warning'
+                    }"
                   >
+                    <div class="d-flex align-center mb-2">
+                      <v-icon
+                        :color="getIssueCount(checkType.value) > 0 ? checkType.severity : 'grey'"
+                        size="24"
+                        class="mr-2"
+                      >
+                        {{ checkType.icon }}
+                      </v-icon>
+                      <div style="font-size: 13px; font-weight: 600">{{ checkType.label }}</div>
+                    </div>
+                    <div style="font-size: 11px; opacity: 0.6; margin-bottom: 8px">{{ checkType.description }}</div>
                     <div class="d-flex align-center justify-space-between">
-                      <div>
-                        <div style="font-size: 12px; text-transform: uppercase; opacity: 0.7">{{ formatIssueType(issueType) }}</div>
-                        <div style="font-size: 20px; font-weight: 600">{{ count }}</div>
-                      </div>
+                      <div style="font-size: 24px; font-weight: 700">{{ getIssueCount(checkType.value) }}</div>
                       <v-btn
-                        v-if="count > 0"
+                        v-if="getIssueCount(checkType.value) > 0"
                         variant="text"
-                        color="error"
+                        :color="checkType.severity"
                         size="small"
-                        @click="viewIssuesByType(issueType)"
+                        @click="viewIssuesByType(checkType.value)"
                       >
                         View
                       </v-btn>
+                      <v-icon v-else color="success" size="20">mdi-check-circle</v-icon>
                     </div>
                   </v-card>
                 </v-col>
@@ -279,15 +291,38 @@
               </v-btn>
             </div>
 
-            <!-- Issue Type Filter -->
+            <!-- Quality Check Type Summary -->
+            <div v-if="issuesSummary" class="mb-4">
+              <div class="d-flex flex-wrap gap-2">
+                <v-chip
+                  v-for="checkType in qualityCheckTypes"
+                  :key="checkType.value"
+                  :color="getIssueCount(checkType.value) > 0 ? checkType.severity : 'default'"
+                  :variant="selectedIssueTypeFilter === checkType.value ? 'flat' : 'outlined'"
+                  @click="selectedIssueTypeFilter = selectedIssueTypeFilter === checkType.value ? null : checkType.value"
+                  style="cursor: pointer"
+                >
+                  <v-icon start size="16">{{ checkType.icon }}</v-icon>
+                  {{ checkType.label }}
+                  <v-badge
+                    :content="getIssueCount(checkType.value)"
+                    :color="getIssueCount(checkType.value) > 0 ? checkType.severity : 'grey'"
+                    inline
+                    class="ml-2"
+                  />
+                </v-chip>
+              </div>
+            </div>
+
+            <!-- Active Filter Indicator -->
             <div v-if="selectedIssueTypeFilter" class="mb-4">
               <v-chip
-                color="error"
+                color="primary"
                 closable
                 @click:close="selectedIssueTypeFilter = null"
               >
                 <v-icon start>mdi-filter</v-icon>
-                {{ formatIssueType(selectedIssueTypeFilter) }}
+                Showing: {{ formatIssueType(selectedIssueTypeFilter) }}
               </v-chip>
             </div>
 
@@ -298,19 +333,20 @@
             <div v-else-if="issuesSummary.total_count === 0">
               <v-alert type="success" variant="tonal">
                 <v-icon start>mdi-check-circle</v-icon>
-                No data quality issues found!
+                All quality checks passed - no issues found!
               </v-alert>
             </div>
 
             <div v-else>
-              <v-alert type="error" variant="tonal" class="mb-4">
-                <v-icon start>mdi-alert-circle</v-icon>
+              <v-alert :type="filteredIssues.length > 0 ? 'error' : 'success'" variant="tonal" class="mb-4">
+                <v-icon start>{{ filteredIssues.length > 0 ? 'mdi-alert-circle' : 'mdi-check-circle' }}</v-icon>
                 <strong>{{ filteredIssues.length }} issues{{ selectedIssueTypeFilter ? ' (filtered)' : '' }}</strong>
                 <span class="ml-2 text-caption">(scan took {{ issuesSummary.scan_time }})</span>
               </v-alert>
 
               <!-- Issues List -->
               <v-data-table
+                v-if="filteredIssues.length > 0"
                 :headers="issueHeaders"
                 :items="filteredIssues"
                 :items-per-page="10"
@@ -441,6 +477,37 @@ const entityTypes = [
   { value: 'user_workouts', label: 'User Workouts' },
   { value: 'users', label: 'Users' },
   { value: 'workouts', label: 'Workout Templates' },
+]
+
+const qualityCheckTypes = [
+  {
+    value: 'orphaned_fk',
+    label: 'Orphaned References',
+    description: 'FK references to deleted records',
+    icon: 'mdi-link-off',
+    severity: 'error'
+  },
+  {
+    value: 'empty_required_field',
+    label: 'Empty Required Fields',
+    description: 'Records with missing required data',
+    icon: 'mdi-text-box-remove',
+    severity: 'error'
+  },
+  {
+    value: 'future_date',
+    label: 'Future Dates',
+    description: 'Workout dates set in the future',
+    icon: 'mdi-calendar-alert',
+    severity: 'warning'
+  },
+  {
+    value: 'invalid_email',
+    label: 'Invalid Emails',
+    description: 'Users with malformed email addresses',
+    icon: 'mdi-email-alert',
+    severity: 'warning'
+  },
 ]
 
 const issueHeaders = [
@@ -592,6 +659,11 @@ const formatDateTime = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const getIssueCount = (issueType) => {
+  if (!issuesSummary.value?.by_type) return 0
+  return issuesSummary.value.by_type[issueType] || 0
 }
 </script>
 
