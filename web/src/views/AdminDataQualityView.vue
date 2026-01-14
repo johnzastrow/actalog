@@ -92,16 +92,16 @@
                     rounded="lg"
                     class="pa-3"
                     style="border: 1px solid rgba(0,0,0,0.12)"
-                    :class="{ 'entity-card-warning': data.duplicate_count > 0 }"
+                    :class="{ 'entity-card-warning': data.total_duplicates > 0 }"
                   >
                     <div class="d-flex align-center justify-space-between">
                       <div>
                         <div style="font-size: 12px; text-transform: uppercase; opacity: 0.7">{{ formatEntityName(entity) }}</div>
-                        <div style="font-size: 20px; font-weight: 600">{{ data.duplicate_count }}</div>
-                        <div style="font-size: 11px; opacity: 0.6">{{ data.group_count }} groups</div>
+                        <div style="font-size: 20px; font-weight: 600">{{ data.total_duplicates }}</div>
+                        <div style="font-size: 11px; opacity: 0.6">{{ (data.groups || []).length }} groups</div>
                       </div>
                       <v-btn
-                        v-if="data.duplicate_count > 0"
+                        v-if="data.total_duplicates > 0"
                         variant="text"
                         color="primary"
                         size="small"
@@ -134,7 +134,15 @@
                         <div style="font-size: 12px; text-transform: uppercase; opacity: 0.7">{{ formatIssueType(issueType) }}</div>
                         <div style="font-size: 20px; font-weight: 600">{{ count }}</div>
                       </div>
-                      <v-icon v-if="count > 0" color="error" size="24">mdi-alert</v-icon>
+                      <v-btn
+                        v-if="count > 0"
+                        variant="text"
+                        color="error"
+                        size="small"
+                        @click="viewIssuesByType(issueType)"
+                      >
+                        View
+                      </v-btn>
                     </div>
                   </v-card>
                 </v-col>
@@ -271,6 +279,18 @@
               </v-btn>
             </div>
 
+            <!-- Issue Type Filter -->
+            <div v-if="selectedIssueTypeFilter" class="mb-4">
+              <v-chip
+                color="error"
+                closable
+                @click:close="selectedIssueTypeFilter = null"
+              >
+                <v-icon start>mdi-filter</v-icon>
+                {{ formatIssueType(selectedIssueTypeFilter) }}
+              </v-chip>
+            </div>
+
             <v-alert v-if="!issuesSummary" type="info" variant="tonal" class="mb-4">
               Click "Scan Issues" to check for data quality problems.
             </v-alert>
@@ -285,14 +305,14 @@
             <div v-else>
               <v-alert type="error" variant="tonal" class="mb-4">
                 <v-icon start>mdi-alert-circle</v-icon>
-                <strong>{{ issuesSummary.total_count }} issues found</strong>
+                <strong>{{ filteredIssues.length }} issues{{ selectedIssueTypeFilter ? ' (filtered)' : '' }}</strong>
                 <span class="ml-2 text-caption">(scan took {{ issuesSummary.scan_time }})</span>
               </v-alert>
 
               <!-- Issues List -->
               <v-data-table
                 :headers="issueHeaders"
-                :items="issuesSummary.issues"
+                :items="filteredIssues"
                 :items-per-page="10"
                 class="elevation-1"
               >
@@ -381,7 +401,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from '@/utils/axios'
 
 // State
@@ -401,9 +421,19 @@ const selectedKeepIds = ref({})
 const mergePreviewDialog = ref(false)
 const mergePreview = ref(null)
 const currentMergeGroup = ref(null)
+const selectedIssueTypeFilter = ref(null)
 
 const totalDuplicates = ref(0)
 const totalIssues = ref(0)
+
+// Computed properties
+const filteredIssues = computed(() => {
+  if (!issuesSummary.value?.issues) return []
+  if (!selectedIssueTypeFilter.value) return issuesSummary.value.issues
+  return issuesSummary.value.issues.filter(
+    issue => issue.issue_type === selectedIssueTypeFilter.value
+  )
+})
 
 const entityTypes = [
   { value: 'movements', label: 'Movements' },
@@ -471,7 +501,17 @@ const scanDataQuality = async () => {
 const viewEntityDuplicates = (entity) => {
   selectedEntityType.value = entity
   activeTab.value = 'duplicates'
-  scanSelectedEntity()
+  // Use cached data from full scan if available
+  if (duplicateSummary.value?.by_entity?.[entity]) {
+    entityDuplicates.value = duplicateSummary.value.by_entity[entity]
+  } else {
+    scanSelectedEntity()
+  }
+}
+
+const viewIssuesByType = (issueType) => {
+  selectedIssueTypeFilter.value = issueType
+  activeTab.value = 'issues'
 }
 
 const previewMerge = async (group) => {
