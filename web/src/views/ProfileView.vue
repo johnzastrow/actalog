@@ -379,6 +379,23 @@
           </v-list-item>
 
           <v-list-item
+            prepend-icon="mdi-database-check"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/data-quality')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Data Quality
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Scan duplicates and data issues
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-account-multiple"
             rounded
             style="cursor: pointer"
