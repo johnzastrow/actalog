@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-13
-> **Current Version:** 0.22.0-beta (Build 8)
+> **Last Updated:** 2026-01-14
+> **Current Version:** 0.24.0-beta
 
 ---
 
@@ -267,23 +267,39 @@ These features can be added after the core frontend is complete:
   - [ ] Frontend UI to review and select action for each duplicate
   - [ ] Batch duplicate resolution UI (apply same action to all)
 
-- [ ] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure**
-  - [ ] Create admin tool to scan for existing duplicates in database
-  - [ ] Detect duplicate movements (same name, same user)
-  - [ ] Detect duplicate WODs (same name, same source)
-  - [ ] Detect duplicate user workouts (same user, same date, same template)
-  - [ ] Generate duplicate report with:
-    - Count of duplicates per table
-    - List of duplicate records with IDs
-    - References/dependencies (what's using each record)
-  - [ ] Safe merge/cleanup procedure:
+- [x] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure** *(Completed v0.24.0)*
+  - [x] Create admin tool to scan for existing duplicates in database
+  - [x] Detect duplicate movements (case-insensitive name matching)
+  - [x] Detect duplicate WODs (case-insensitive name matching)
+  - [x] Detect duplicate user workouts (same user, same date, same name)
+  - [x] Detect duplicate users (case-insensitive email matching)
+  - [x] Detect duplicate workout templates (same name, same user)
+  - [x] Generate duplicate report with:
+    - Count of duplicates per entity type
+    - List of duplicate groups with record IDs
+    - FK reference counts for each record
+  - [x] Safe merge/cleanup procedure:
     - Preview which records will be kept vs deleted
     - Automatically update foreign key references
-    - Preserve data integrity (don't break relationships)
-  - [ ] Admin UI to review and approve cleanup
-  - [ ] Dry-run mode (show what would happen without doing it)
-  - [ ] Backup database before cleanup operation
-  - [ ] Audit log of all cleanup operations
+    - Delete child records from duplicates (movements/WODs)
+    - Preserve data integrity with transaction support
+  - [x] Admin UI to review and approve cleanup (AdminDataQualityView.vue)
+  - [x] Preview mode shows FK impact before confirming
+  - [x] Audit log of all merge operations (duplicate_merge event type)
+  - [x] **Data Quality Issue Detection** - 4 quality checks:
+    - Orphaned FK references (error severity)
+    - Empty required fields (error/warning severity)
+    - Future workout dates (warning severity)
+    - Invalid email formats (warning severity)
+  - **Backend files:** `internal/service/data_quality_service.go`, `internal/handler/data_quality_handler.go`
+  - **Frontend:** `web/src/views/AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - **API endpoints:**
+    - `GET /api/admin/data-quality/duplicates` - Scan all entities
+    - `GET /api/admin/data-quality/duplicates/summary` - Quick summary
+    - `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity
+    - `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge
+    - `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+    - `GET /api/admin/data-quality/issues` - Scan for data quality issues
 
 ### High Priority
 
@@ -365,6 +381,57 @@ These features can be added after the core frontend is complete:
 ---
 
 ## Completed Releases
+
+### v0.24.0-beta (2026-01-14)
+
+**Status:** Data Quality & Duplicate Detection system with merge functionality.
+
+**Completed:**
+- [x] **Data Quality Admin Dashboard**
+  - [x] `AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - [x] Full database scan with summary cards
+  - [x] Duplicates by entity type breakdown
+  - [x] Data quality checks with issue counts
+
+- [x] **Duplicate Detection & Merge**
+  - [x] Scan 5 entity types: movements, WODs, user_workouts, users, workouts
+  - [x] Case-insensitive name/email matching
+  - [x] Composite key matching for user_workouts (user_id + date + name)
+  - [x] Preview merge with FK reference counts
+  - [x] Safe merge with FK updates in transaction
+  - [x] Audit logging of all merge operations
+
+- [x] **Data Quality Issue Detection**
+  - [x] Orphaned FK references (error severity)
+  - [x] Empty required fields (error/warning severity)
+  - [x] Future workout dates (warning severity)
+  - [x] Invalid email formats (warning severity)
+  - [x] Filter chips for issue type filtering
+
+- [x] **Frontend UI Improvements**
+  - [x] Quality check type cards with icons, descriptions, counts
+  - [x] Zero-state display with success checkmarks
+  - [x] Clickable cards to navigate to filtered views
+  - [x] Data Quality link added to admin menu in ProfileView
+
+- [x] **Demo Mode Configuration**
+  - [x] Added DEMO MODE section to .env.example
+  - [x] Documented implemented vs planned features
+  - [x] Current workaround instructions for basic demo setup
+
+**Files Created:** `internal/service/data_quality_service.go`, `internal/handler/data_quality_handler.go`, `web/src/views/AdminDataQualityView.vue`
+
+**Files Modified:** `cmd/actalog/main.go` (routes), `web/src/router/index.js` (route), `web/src/views/ProfileView.vue` (admin menu link), `.env.example` (demo mode)
+
+**API Endpoints:**
+- `GET /api/admin/data-quality/duplicates` - Scan all entities for duplicates
+- `GET /api/admin/data-quality/duplicates/summary` - Quick duplicate summary
+- `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity type
+- `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge operation
+- `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+- `GET /api/admin/data-quality/issues` - Scan for data quality issues
+
+---
 
 ### v0.22.0-beta (2026-01-09)
 

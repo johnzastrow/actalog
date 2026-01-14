@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+*No unreleased changes*
+
+## [0.24.0-beta] - 2026-01-14
+
+### Added - Data Quality & Duplicate Detection System
+
+- **Admin Data Quality Dashboard**
+  - New `AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - Full database scan with summary cards for duplicates and issues
+  - Duplicates by entity type breakdown with clickable View buttons
+  - Data quality checks display with icons, descriptions, and counts
+  - Zero-state display with success checkmarks when no issues found
+
+- **Duplicate Detection Engine**
+  - Scan 5 entity types: movements, WODs, user_workouts, users, workouts
+  - Case-insensitive name matching for movements, WODs, workouts
+  - Case-insensitive email matching for users
+  - Composite key matching for user_workouts (user_id + date + name)
+  - Shows duplicate group count and record count per entity type
+  - FK reference counts displayed for informed merge decisions
+
+- **Duplicate Merge Functionality**
+  - Preview merge operation showing FK impact before execution
+  - Safe merge with FK updates in database transaction
+  - Automatic child record handling (movements/WODs from duplicates)
+  - Audit logging of all merge operations (`duplicate_merge` event type)
+  - Per-entity type merge with keep/delete ID selection
+
+- **Data Quality Issue Detection**
+  - 4 quality check types with severity levels:
+    - Orphaned FK references (error) - FK pointing to deleted records
+    - Empty required fields (error/warning) - Missing user names, movement names, WOD names
+    - Future workout dates (warning) - Workouts scheduled in the future
+    - Invalid email formats (warning) - Malformed email addresses
+  - Filter chips for issue type filtering in Data Issues tab
+  - Clickable cards to navigate from Overview to filtered issue lists
+
+- **API Endpoints**
+  - `GET /api/admin/data-quality/duplicates` - Scan all entities
+  - `GET /api/admin/data-quality/duplicates/summary` - Quick summary
+  - `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity
+  - `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge
+  - `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+  - `GET /api/admin/data-quality/issues` - Scan for quality issues
+
+- **Demo Mode Configuration**
+  - Added DEMO MODE section to `.env.example`
+  - Documented implemented vs planned demo features
+  - Current workaround instructions for basic demo setup
+  - Planned settings: DEMO_MODE, DEMO_USERS, DEMO_RESET_ON_STARTUP, etc.
+
 ### Added - Audit Logging Enhancements (2026-01-13)
 
 - **Password Change Audit Logging**
