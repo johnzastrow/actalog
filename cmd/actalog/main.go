@@ -525,107 +525,121 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWT.SecretKey))
 
-			// Movement management (authenticated)
-			r.Post("/movements", movementHandler.Create)
-			r.Put("/movements/{id}", movementHandler.Update)
-			r.Delete("/movements/{id}", movementHandler.Delete)
+			// ============================================================
+			// ACCOUNT ROUTES - No subscription required
+			// Profile, settings, sessions, and account management
+			// ============================================================
 
-			// User profile routes (authenticated)
+			// User profile routes (always allowed - no subscription required)
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 			r.Post("/users/avatar", userHandler.UploadAvatar)
 			r.Delete("/users/avatar", userHandler.DeleteAvatar)
 
-			// User settings routes (authenticated)
+			// User settings routes (always allowed - no subscription required)
 			r.Get("/users/settings", settingsHandler.GetSettings)
 			r.Put("/users/settings", settingsHandler.UpdateSettings)
 			r.Put("/users/password", userHandler.ChangePassword)
 
-			// User audit log routes (authenticated - own logs only)
+			// User audit log routes (always allowed - own logs only)
 			r.Get("/users/me/audit-logs", auditLogHandler.GetMyAuditLogs)
 
-			// Session management routes (authenticated)
+			// Session management routes (always allowed - security critical)
 			r.Get("/sessions", sessionHandler.ListSessions)
 			r.Delete("/sessions/{id}", sessionHandler.RevokeSession)
 			r.Post("/sessions/revoke-all", sessionHandler.RevokeAllSessions)
 
-			// Notification routes (authenticated)
+			// Subscription status (always allowed - users need to check their status)
+			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
+
+			// Notification read operations (always allowed)
 			r.Get("/notifications", notificationHandler.ListNotifications)
 			r.Get("/notifications/unread", notificationHandler.ListUnreadNotifications)
 			r.Get("/notifications/count", notificationHandler.GetUnreadCount)
 			r.Put("/notifications/{id}/read", notificationHandler.MarkAsRead)
 			r.Put("/notifications/read-all", notificationHandler.MarkAllAsRead)
 			r.Delete("/notifications/{id}", notificationHandler.DeleteNotification)
-
-			// Notification Like routes (authenticated)
-			r.Post("/notifications/{id}/like", notificationLikeHandler.LikeNotification)
-			r.Delete("/notifications/{id}/like", notificationLikeHandler.UnlikeNotification)
 			r.Get("/notifications/{id}/likes", notificationLikeHandler.GetNotificationLikes)
 
-			// Workout Template routes (authenticated)
-			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
-			r.Get("/workouts/my-templates", workoutTemplateHandler.ListMyTemplates)
-			r.Put("/templates/{id}", workoutTemplateHandler.UpdateTemplate)
-			r.Delete("/templates/{id}", workoutTemplateHandler.DeleteTemplate)
+			// ============================================================
+			// FEATURE ROUTES - Subscription required for write operations
+			// Middleware allows read (GET) but blocks write (POST/PUT/DELETE)
+			// for users without active subscription. Admins bypass all checks.
+			// ============================================================
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireActiveSubscription(subscriptionService))
 
-			// User Workout routes (logging workouts) (authenticated)
-			r.Post("/workouts", userWorkoutHandler.LogWorkout)
-			r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
-			r.Get("/workouts/standard", workoutTemplateHandler.ListStandardTemplates)
-			r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
-			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
-			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
-			r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
-			r.Get("/workouts/personal-records", userWorkoutHandler.GetPersonalRecords)
-			r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
+				// Movement management
+				r.Post("/movements", movementHandler.Create)
+				r.Put("/movements/{id}", movementHandler.Update)
+				r.Delete("/movements/{id}", movementHandler.Delete)
 
-			// WOD management (authenticated)
-			r.Get("/wods/my-wods", wodHandler.ListMyWODs)
-			r.Post("/wods", wodHandler.CreateWOD)
-			r.Put("/wods/{id}", wodHandler.UpdateWOD)
-			r.Delete("/wods/{id}", wodHandler.DeleteWOD)
+				// Notification interactions (likes require subscription)
+				r.Post("/notifications/{id}/like", notificationLikeHandler.LikeNotification)
+				r.Delete("/notifications/{id}/like", notificationLikeHandler.UnlikeNotification)
 
-			// Workout WOD linking (authenticated)
-			r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
-			r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
-			r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
-			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
-			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
+				// Workout Template routes
+				r.Post("/templates", workoutTemplateHandler.CreateTemplate)
+				r.Get("/workouts/my-templates", workoutTemplateHandler.ListMyTemplates)
+				r.Put("/templates/{id}", workoutTemplateHandler.UpdateTemplate)
+				r.Delete("/templates/{id}", workoutTemplateHandler.DeleteTemplate)
 
-			// PR tracking routes (authenticated)
-			r.Get("/prs", prHandler.GetPersonalRecords)
-			r.Get("/pr-movements", prHandler.GetPRMovements)
-			r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
+				// User Workout routes (logging workouts)
+				r.Post("/workouts", userWorkoutHandler.LogWorkout)
+				r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
+				r.Get("/workouts/standard", workoutTemplateHandler.ListStandardTemplates)
+				r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
+				r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
+				r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
+				r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
+				r.Get("/workouts/personal-records", userWorkoutHandler.GetPersonalRecords)
+				r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
 
-			// Performance tracking routes (authenticated)
-			r.Get("/performance/search", performanceHandler.UnifiedSearch)
-			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
-			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
+				// WOD management
+				r.Get("/wods/my-wods", wodHandler.ListMyWODs)
+				r.Post("/wods", wodHandler.CreateWOD)
+				r.Put("/wods/{id}", wodHandler.UpdateWOD)
+				r.Delete("/wods/{id}", wodHandler.DeleteWOD)
 
-			// Statistics routes (authenticated)
-			r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
+				// Workout WOD linking
+				r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
+				r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
+				r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
+				r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
+				r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
-			// Export routes (authenticated)
-			r.Get("/export/wods", exportHandler.ExportWODs)
-			r.Get("/export/movements", exportHandler.ExportMovements)
-			r.Get("/export/user-workouts", exportHandler.ExportUserWorkouts)
+				// PR tracking routes
+				r.Get("/prs", prHandler.GetPersonalRecords)
+				r.Get("/pr-movements", prHandler.GetPRMovements)
+				r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
 
-			// Import routes (authenticated)
-			r.Post("/import/wods/preview", importHandler.PreviewWODImport)
-			r.Post("/import/wods/confirm", importHandler.ConfirmWODImport)
-			r.Post("/import/movements/preview", importHandler.PreviewMovementImport)
-			r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
-			r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
-			r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
-			r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
-			r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
+				// Performance tracking routes
+				r.Get("/performance/search", performanceHandler.UnifiedSearch)
+				r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
+				r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
 
-			// Subscription status (user-accessible)
-			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
+				// Statistics routes
+				r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
 
-			// Benchmark routes (authenticated)
-			r.Post("/benchmark", benchmarkHandler.RunBenchmark)
-			r.Get("/benchmark/status", benchmarkHandler.GetBenchmarkStatus)
+				// Export routes (read-only, allowed without subscription)
+				r.Get("/export/wods", exportHandler.ExportWODs)
+				r.Get("/export/movements", exportHandler.ExportMovements)
+				r.Get("/export/user-workouts", exportHandler.ExportUserWorkouts)
+
+				// Import routes (write operations, require subscription)
+				r.Post("/import/wods/preview", importHandler.PreviewWODImport)
+				r.Post("/import/wods/confirm", importHandler.ConfirmWODImport)
+				r.Post("/import/movements/preview", importHandler.PreviewMovementImport)
+				r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
+				r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
+				r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
+				r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
+				r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
+
+				// Benchmark routes
+				r.Post("/benchmark", benchmarkHandler.RunBenchmark)
+				r.Get("/benchmark/status", benchmarkHandler.GetBenchmarkStatus)
+			}) // End of subscription-required routes
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
