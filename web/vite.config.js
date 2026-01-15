@@ -5,6 +5,33 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import fs from 'fs'
 
+/**
+ * Custom plugin to optimize Material Design Icons font loading.
+ * Removes ttf, eot, and woff formats from @font-face, keeping only woff2.
+ * This reduces the bundle size by ~2.9MB.
+ *
+ * woff2 is supported by all modern browsers (Chrome 36+, Firefox 39+,
+ * Safari 12+, Edge 14+, iOS Safari 10+, Android 5+).
+ */
+function mdiWoff2Only() {
+  return {
+    name: 'mdi-woff2-only',
+    enforce: 'pre',
+    transform(code, id) {
+      // Only process the MDI CSS file
+      if (id.includes('@mdi/font') && id.endsWith('.css')) {
+        // Replace the @font-face src with woff2 only
+        const modified = code.replace(
+          /src:\s*url\([^)]+\.eot[^;]*;[\s\S]*?src:\s*url\([^)]+\.eot[^)]*\)[^,]*,\s*url\(([^)]+\.woff2[^)]*)\)[^,]*,\s*url\([^)]+\.woff[^)]*\)[^,]*,\s*url\([^)]+\.ttf[^)]*\)[^;]*;/g,
+          'src: url($1) format("woff2");'
+        )
+        return { code: modified, map: null }
+      }
+      return null
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 
 // Optional local HTTPS support: if `web/certs/<host>.pem` and
@@ -45,6 +72,7 @@ export default defineConfig({
     exclude: []
   },
   plugins: [
+    mdiWoff2Only(), // Must be first to transform MDI CSS before other processing
     vue(),
     vuetify({ autoImport: true }),
     VitePWA({

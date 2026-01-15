@@ -349,7 +349,10 @@ These features can be added after the core frontend is complete:
   - **Status: Fully implemented, works for workout logging**
 
 **Remaining PWA optimizations (deferred):**
-- [ ] `[LOW]` Remove unused MDI font formats (ttf, eot) - saves ~2.9MB
+- [x] `[LOW]` **Remove unused MDI font formats** - Custom Vite plugin `mdiWoff2Only()` strips ttf/eot/woff
+  - Dist size: 6.9MB → 3.8MB (45% reduction)
+  - Precache: 6.9MB → 3.4MB (50% reduction)
+  - Only woff2 (394KB) shipped to production
 - [ ] `[LOW]` Lazy-load accessibility fonts instead of precaching
 - [ ] `[LOW]` Fix accessibility issues (color contrast, touch targets)
 
