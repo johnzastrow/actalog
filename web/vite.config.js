@@ -167,7 +167,14 @@ export default defineConfig({
       },
       workbox: {
         globDirectory: 'dist',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
+        // Precache app shell and assets, but NOT /fonts/ directory (lazy-loaded)
+        // MDI icons in /assets/ are included, accessibility fonts in /fonts/ are loaded on demand
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg}',
+          'assets/*.woff2' // Only MDI icon font, not /fonts/ directory
+        ],
+        // Exclude accessibility fonts from precache - they're lazy-loaded
+        globIgnores: ['fonts/**/*'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,

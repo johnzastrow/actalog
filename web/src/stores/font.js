@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-// Font definitions with metadata
+/**
+ * Font definitions with metadata
+ *
+ * Fonts are lazy-loaded when selected. The cssFile property maps to
+ * the dynamic import path in src/assets/fonts/
+ */
 const AVAILABLE_FONTS = [
   {
     id: 'system',
@@ -9,7 +14,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-laptop',
     description: "Uses your device's native font",
     cssClass: 'font-system',
-    preload: false
+    cssFile: null // No CSS file needed for system fonts
   },
   {
     id: 'inter',
@@ -17,7 +22,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-format-font',
     description: 'Modern, highly readable UI font',
     cssClass: 'font-inter',
-    preload: true
+    cssFile: 'inter'
   },
   {
     id: 'roboto',
@@ -25,7 +30,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-android',
     description: 'Material Design standard',
     cssClass: 'font-roboto',
-    preload: true
+    cssFile: 'roboto'
   },
   {
     id: 'lato',
@@ -33,7 +38,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-format-text',
     description: 'Warm humanist sans-serif',
     cssClass: 'font-lato',
-    preload: true
+    cssFile: 'lato'
   },
   {
     id: 'firasans',
@@ -41,7 +46,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-firefox',
     description: "Mozilla's UI font, slightly condensed",
     cssClass: 'font-firasans',
-    preload: true
+    cssFile: 'fira-sans'
   },
   {
     id: 'lexend',
@@ -49,7 +54,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-book-open-variant',
     description: 'Optimized for reading fluency',
     cssClass: 'font-lexend',
-    preload: true
+    cssFile: 'lexend'
   },
   {
     id: 'opendyslexic',
@@ -57,7 +62,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-human-greeting-proximity',
     description: 'Designed for readers with dyslexia',
     cssClass: 'font-opendyslexic',
-    preload: true,
+    cssFile: 'opendyslexic',
     accessibility: true
   },
   {
@@ -66,7 +71,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-eye',
     description: 'Optimized for low vision (Braille Institute)',
     cssClass: 'font-atkinson',
-    preload: true,
+    cssFile: 'atkinson',
     accessibility: true
   },
   {
@@ -75,7 +80,7 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-format-text-variant',
     description: 'Classic serif typeface',
     cssClass: 'font-sourceserif',
-    preload: true
+    cssFile: 'source-serif'
   },
   {
     id: 'jetbrainsmono',
@@ -83,9 +88,22 @@ const AVAILABLE_FONTS = [
     icon: 'mdi-code-braces',
     description: 'Developer-focused monospace',
     cssClass: 'font-jetbrainsmono',
-    preload: true
+    cssFile: 'jetbrains-mono'
   }
 ]
+
+// Map of font CSS file imports for lazy loading
+const fontImports = {
+  'inter': () => import('@/assets/fonts/inter.css'),
+  'roboto': () => import('@/assets/fonts/roboto.css'),
+  'lato': () => import('@/assets/fonts/lato.css'),
+  'fira-sans': () => import('@/assets/fonts/fira-sans.css'),
+  'lexend': () => import('@/assets/fonts/lexend.css'),
+  'opendyslexic': () => import('@/assets/fonts/opendyslexic.css'),
+  'atkinson': () => import('@/assets/fonts/atkinson.css'),
+  'source-serif': () => import('@/assets/fonts/source-serif.css'),
+  'jetbrains-mono': () => import('@/assets/fonts/jetbrains-mono.css')
+}
 
 // localStorage key for caching
 const STORAGE_KEY = 'actalog-font-family'
@@ -94,6 +112,7 @@ export const useFontStore = defineStore('font', () => {
   // State
   const currentFont = ref(localStorage.getItem(STORAGE_KEY) || 'system')
   const fontsLoaded = ref(new Set(['system'])) // Track which fonts have been loaded
+  const fontLoading = ref(false) // Track loading state
 
   // Computed
   const availableFonts = computed(() => AVAILABLE_FONTS)
@@ -106,12 +125,47 @@ export const useFontStore = defineStore('font', () => {
     return AVAILABLE_FONTS.filter(f => f.accessibility)
   })
 
+  /**
+   * Load font CSS dynamically
+   * @param {string} cssFile - The font CSS file name (without .css extension)
+   * @returns {Promise<boolean>} - Whether the font was loaded successfully
+   */
+  async function loadFontCSS(cssFile) {
+    if (!cssFile || fontsLoaded.value.has(cssFile)) {
+      return true // Already loaded or no CSS needed
+    }
+
+    const importFn = fontImports[cssFile]
+    if (!importFn) {
+      console.warn(`No import function for font CSS: ${cssFile}`)
+      return false
+    }
+
+    try {
+      fontLoading.value = true
+      await importFn()
+      fontsLoaded.value.add(cssFile)
+      console.log(`Font CSS loaded: ${cssFile}`)
+      return true
+    } catch (error) {
+      console.error(`Failed to load font CSS: ${cssFile}`, error)
+      return false
+    } finally {
+      fontLoading.value = false
+    }
+  }
+
   // Actions
-  function setFont(fontId) {
+  async function setFont(fontId) {
     const font = AVAILABLE_FONTS.find(f => f.id === fontId)
     if (!font) {
       console.warn(`Font "${fontId}" not found, defaulting to system`)
       fontId = 'system'
+    }
+
+    // Load font CSS if needed
+    if (font && font.cssFile) {
+      await loadFontCSS(font.cssFile)
     }
 
     currentFont.value = fontId
@@ -119,11 +173,6 @@ export const useFontStore = defineStore('font', () => {
 
     // Apply font class to document
     applyFontClass(fontId)
-
-    // Mark font as loaded
-    if (font && font.preload) {
-      fontsLoaded.value.add(fontId)
-    }
   }
 
   function applyFontClass(fontId) {
@@ -140,36 +189,38 @@ export const useFontStore = defineStore('font', () => {
   }
 
   // Initialize on store creation
-  function initialize() {
+  async function initialize() {
     // Apply saved font on startup
     const savedFont = localStorage.getItem(STORAGE_KEY)
-    if (savedFont) {
-      setFont(savedFont)
+    if (savedFont && savedFont !== 'system') {
+      await setFont(savedFont)
     } else {
       applyFontClass('system')
     }
   }
 
   // Sync with backend settings
-  function syncFromSettings(fontFamily) {
+  async function syncFromSettings(fontFamily) {
     if (fontFamily && fontFamily !== currentFont.value) {
-      setFont(fontFamily)
+      await setFont(fontFamily)
     }
   }
 
-  // Call initialize
+  // Call initialize (async, but we don't wait for it)
   initialize()
 
   return {
     // State
     currentFont,
     fontsLoaded,
+    fontLoading,
     // Computed
     availableFonts,
     currentFontDetails,
     accessibilityFonts,
     // Actions
     setFont,
+    loadFontCSS,
     applyFontClass,
     initialize,
     syncFromSettings

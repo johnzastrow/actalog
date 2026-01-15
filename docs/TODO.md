@@ -353,7 +353,12 @@ These features can be added after the core frontend is complete:
   - Dist size: 6.9MB → 3.8MB (45% reduction)
   - Precache: 6.9MB → 3.4MB (50% reduction)
   - Only woff2 (394KB) shipped to production
-- [ ] `[LOW]` Lazy-load accessibility fonts instead of precaching
+- [x] `[LOW]` **Lazy-load accessibility fonts** - Fonts loaded on-demand when user selects them
+  - Split fonts.css into 9 separate font family CSS files
+  - Font store dynamically imports CSS via Vite's dynamic import
+  - Fonts excluded from precache via globIgnores
+  - Runtime caching (CacheFirst) caches fonts on first use
+  - Precache: 3.4MB → 2.6MB (additional 24% reduction)
 - [ ] `[LOW]` Fix accessibility issues (color contrast, touch targets)
 
 ### Low Priority
