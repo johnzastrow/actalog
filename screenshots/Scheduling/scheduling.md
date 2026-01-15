@@ -244,7 +244,7 @@ Figure 5. Class details. Document all the attributes you see.
 
 <img src="/home/jcz/Github/actionlog/screenshots/Scheduling/image_007.png" style="zoom: 50%;" />
 
-Figure 6. loi
+Figure 6. Example of an athlete class list
 
 
 
