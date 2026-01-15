@@ -213,3 +213,65 @@ code,
   align-items: center;
   min-height: 200px;
 }
+
+/* ============================================
+   Accessibility Fixes
+   ============================================ */
+
+/* Fix color contrast for Vuetify form labels (WCAG 2.1 AA requires 4.5:1)
+   Default Vuetify label colors have insufficient contrast, #666666 has 5.74:1 */
+
+/* Override Vuetify's label opacity to ensure full contrast */
+.v-label {
+  opacity: 1 !important;
+  color: #666666 !important;
+}
+
+.v-field-label {
+  opacity: 1 !important;
+  color: #666666 !important;
+}
+
+/* Target all field variants with high specificity */
+.v-application .v-field .v-field-label,
+.v-application .v-input .v-label,
+.v-theme--light .v-field-label,
+.v-theme--light .v-label {
+  opacity: 1 !important;
+  color: #666666 !important;
+}
+
+/* Dark theme labels also need sufficient contrast */
+.v-theme--dark .v-field-label,
+.v-theme--dark .v-label {
+  opacity: 1 !important;
+  color: #b3b3b3 !important;
+}
+
+/* Ensure placeholder text also has sufficient contrast */
+.v-field input::placeholder,
+.v-field textarea::placeholder {
+  color: #666666 !important;
+  opacity: 1;
+}
+
+/* Fix touch target size for icon buttons (WCAG 2.2 requires 24x24px minimum)
+   Password toggle and other appended icons */
+.v-field__append-inner .v-icon,
+.v-field__prepend-inner .v-icon,
+.v-input__append .v-icon,
+.v-input__prepend .v-icon {
+  min-width: 24px !important;
+  min-height: 24px !important;
+  font-size: 24px !important;
+}
+
+/* Ensure clickable icons have adequate touch area */
+.v-field__append-inner,
+.v-field__prepend-inner {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
