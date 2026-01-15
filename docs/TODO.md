@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-14
+> **Last Updated:** 2026-01-15
 > **Current Version:** 0.24.0-beta
 
 ---
@@ -359,7 +359,7 @@ These features can be added after the core frontend is complete:
   - Fonts excluded from precache via globIgnores
   - Runtime caching (CacheFirst) caches fonts on first use
   - Precache: 3.4MB → 2.6MB (additional 24% reduction)
-- [ ] `[LOW]` Fix accessibility issues (color contrast, touch targets)
+- [x] `[LOW]` Fix accessibility issues (color contrast, touch targets) - Fixed label contrast (#666666 for 5.74:1 ratio), touch target sizes (24x24px min)
 
 ### Low Priority
 
