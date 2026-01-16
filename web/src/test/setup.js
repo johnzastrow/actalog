@@ -15,11 +15,14 @@ config.global.plugins = [vuetify]
 
 // Mock ResizeObserver (not available in jsdom)
 beforeAll(() => {
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }))
+  global.ResizeObserver = class ResizeObserver {
+    constructor(callback) {
+      this.callback = callback
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
 })
 
 // Clean up after each test
@@ -43,11 +46,29 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock IntersectionObserver (not available in jsdom)
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.IntersectionObserver = class IntersectionObserver {
+  constructor(callback) {
+    this.callback = callback
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
 
 // Mock scrollTo (not available in jsdom)
 window.scrollTo = vi.fn()
+
+// Mock visualViewport (not available in jsdom, needed by Vuetify VDialog)
+if (!global.visualViewport) {
+  global.visualViewport = {
+    width: 1024,
+    height: 768,
+    offsetLeft: 0,
+    offsetTop: 0,
+    pageLeft: 0,
+    pageTop: 0,
+    scale: 1,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }
+}
