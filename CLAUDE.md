@@ -30,8 +30,12 @@ npm run test:coverage # Tests with coverage
 npm run lint:fix    # Fix linting issues
 
 # Docker
-./docker/scripts/build.sh <tag>   # Build image
-./docker/scripts/push.sh <tag>    # Push to ghcr.io
+./docker/scripts/build.sh dev     # Build image with dev tag
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:<version>
+./docker/scripts/push.sh dev      # Push dev tag
+./docker/scripts/push.sh latest   # Push latest tag
+./docker/scripts/push.sh <version> # Push version tag (e.g., 0.24.0-beta)
 
 # Migrations
 make migrate-create name=add_feature
@@ -128,6 +132,13 @@ When testing new features, cycle through all supported databases to ensure compa
 ```bash
 # Build Docker image
 ./docker/scripts/build.sh dev
+
+# Tag and push to registry (always push to dev, latest, and version tags)
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:0.24.0-beta  # Use current version
+./docker/scripts/push.sh dev
+./docker/scripts/push.sh latest
+./docker/scripts/push.sh 0.24.0-beta  # Use current version
 
 # Test with SQLite (mount local data directory)
 docker run -p 8080:8080 -v $(pwd)/data:/app/data \
