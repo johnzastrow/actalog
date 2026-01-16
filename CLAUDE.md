@@ -303,6 +303,22 @@ go test -race ./...                         # Race detection
 
 `docs/TODO.md` is the single source of truth. Use `[HIGH]`/`[MEDIUM]`/`[LOW]` markers for backlog. Keep only last 5 completed releases.
 
+## Documentation Updates
+
+**After implementing new features, update these documents:**
+
+1. **`docs/USER_PERMISSIONS.md`** - Update whenever:
+   - Adding new API endpoints
+   - Adding new UI screens/routes
+   - Changing permission requirements (auth, admin, subscription)
+   - Adding new user actions or capabilities
+
+2. **`docs/TODO.md`** - Mark completed items and add new tasks
+
+3. **`docs/CHANGELOG.md`** - Document user-facing changes for releases
+
+4. **`docs/DATABASE_SCHEMA.md`** - Update when adding/modifying tables
+
 ## Troubleshooting
 
 **Frontend dependency issues:**
