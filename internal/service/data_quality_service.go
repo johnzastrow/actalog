@@ -193,30 +193,44 @@ func (s *DataQualityService) scanMovementDuplicates() ([]*DuplicateGroup, error)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query duplicates: %w", err)
 	}
-	defer rows.Close()
 
-	var groups []*DuplicateGroup
+	// Collect all duplicate keys first to avoid nested query deadlock with SQLite
+	type dupKey struct {
+		keyName string
+		count   int
+	}
+	var keys []dupKey
 	for rows.Next() {
 		var keyName string
 		var count int
 		if err := rows.Scan(&keyName, &count); err != nil {
+			rows.Close()
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+		keys = append(keys, dupKey{keyName, count})
+	}
+	rows.Close()
 
-		// Get the actual records for this duplicate group
-		records, err := s.getMovementRecords(keyName)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now fetch details for each duplicate group
+	var groups []*DuplicateGroup
+	for _, k := range keys {
+		records, err := s.getMovementRecords(k.keyName)
 		if err != nil {
 			return nil, err
 		}
 
 		groups = append(groups, &DuplicateGroup{
-			Key:     keyName,
-			Count:   count,
+			Key:     k.keyName,
+			Count:   k.count,
 			Records: records,
 		})
 	}
 
-	return groups, rows.Err()
+	return groups, nil
 }
 
 // getMovementRecords retrieves movement records for a duplicate key
@@ -296,29 +310,44 @@ func (s *DataQualityService) scanWODDuplicates() ([]*DuplicateGroup, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query WOD duplicates: %w", err)
 	}
-	defer rows.Close()
 
-	var groups []*DuplicateGroup
+	// Collect all duplicate keys first to avoid nested query deadlock with SQLite
+	type dupKey struct {
+		keyName string
+		count   int
+	}
+	var keys []dupKey
 	for rows.Next() {
 		var keyName string
 		var count int
 		if err := rows.Scan(&keyName, &count); err != nil {
+			rows.Close()
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+		keys = append(keys, dupKey{keyName, count})
+	}
+	rows.Close()
 
-		records, err := s.getWODRecords(keyName)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now fetch details for each duplicate group
+	var groups []*DuplicateGroup
+	for _, k := range keys {
+		records, err := s.getWODRecords(k.keyName)
 		if err != nil {
 			return nil, err
 		}
 
 		groups = append(groups, &DuplicateGroup{
-			Key:     keyName,
-			Count:   count,
+			Key:     k.keyName,
+			Count:   k.count,
 			Records: records,
 		})
 	}
 
-	return groups, rows.Err()
+	return groups, nil
 }
 
 // getWODRecords retrieves WOD records for a duplicate key
@@ -400,32 +429,49 @@ func (s *DataQualityService) scanUserWorkoutDuplicates() ([]*DuplicateGroup, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to query user workout duplicates: %w", err)
 	}
-	defer rows.Close()
 
-	var groups []*DuplicateGroup
+	// Collect all duplicate keys first to avoid nested query deadlock with SQLite
+	type dupKey struct {
+		userID      int64
+		workoutDate time.Time
+		workoutName string
+		count       int
+	}
+	var keys []dupKey
 	for rows.Next() {
 		var userID int64
 		var workoutDate time.Time
 		var workoutName string
 		var count int
 		if err := rows.Scan(&userID, &workoutDate, &workoutName, &count); err != nil {
+			rows.Close()
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+		keys = append(keys, dupKey{userID, workoutDate, workoutName, count})
+	}
+	rows.Close()
 
-		key := fmt.Sprintf("%d|%s|%s", userID, workoutDate.Format("2006-01-02"), workoutName)
-		records, err := s.getUserWorkoutRecords(userID, workoutDate, workoutName)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now fetch details for each duplicate group
+	var groups []*DuplicateGroup
+	for _, k := range keys {
+		key := fmt.Sprintf("%d|%s|%s", k.userID, k.workoutDate.Format("2006-01-02"), k.workoutName)
+		records, err := s.getUserWorkoutRecords(k.userID, k.workoutDate, k.workoutName)
 		if err != nil {
 			return nil, err
 		}
 
 		groups = append(groups, &DuplicateGroup{
 			Key:     key,
-			Count:   count,
+			Count:   k.count,
 			Records: records,
 		})
 	}
 
-	return groups, rows.Err()
+	return groups, nil
 }
 
 // getUserWorkoutRecords retrieves user workout records for a duplicate key
@@ -505,29 +551,44 @@ func (s *DataQualityService) scanUserDuplicates() ([]*DuplicateGroup, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query user duplicates: %w", err)
 	}
-	defer rows.Close()
 
-	var groups []*DuplicateGroup
+	// Collect all duplicate keys first to avoid nested query deadlock with SQLite
+	type dupKey struct {
+		keyEmail string
+		count    int
+	}
+	var keys []dupKey
 	for rows.Next() {
 		var keyEmail string
 		var count int
 		if err := rows.Scan(&keyEmail, &count); err != nil {
+			rows.Close()
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+		keys = append(keys, dupKey{keyEmail, count})
+	}
+	rows.Close()
 
-		records, err := s.getUserRecords(keyEmail)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now fetch details for each duplicate group
+	var groups []*DuplicateGroup
+	for _, k := range keys {
+		records, err := s.getUserRecords(k.keyEmail)
 		if err != nil {
 			return nil, err
 		}
 
 		groups = append(groups, &DuplicateGroup{
-			Key:     keyEmail,
-			Count:   count,
+			Key:     k.keyEmail,
+			Count:   k.count,
 			Records: records,
 		})
 	}
 
-	return groups, rows.Err()
+	return groups, nil
 }
 
 // getUserRecords retrieves user records for a duplicate key
@@ -604,35 +665,51 @@ func (s *DataQualityService) scanWorkoutDuplicates() ([]*DuplicateGroup, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query workout duplicates: %w", err)
 	}
-	defer rows.Close()
 
-	var groups []*DuplicateGroup
+	// Collect all duplicate keys first to avoid nested query deadlock with SQLite
+	type dupKey struct {
+		keyName   string
+		createdBy sql.NullInt64
+		count     int
+	}
+	var keys []dupKey
 	for rows.Next() {
 		var keyName string
 		var createdBy sql.NullInt64
 		var count int
 		if err := rows.Scan(&keyName, &createdBy, &count); err != nil {
+			rows.Close()
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+		keys = append(keys, dupKey{keyName, createdBy, count})
+	}
+	rows.Close()
 
-		key := keyName
-		if createdBy.Valid {
-			key = fmt.Sprintf("%s|user:%d", keyName, createdBy.Int64)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now fetch details for each duplicate group
+	var groups []*DuplicateGroup
+	for _, k := range keys {
+		key := k.keyName
+		if k.createdBy.Valid {
+			key = fmt.Sprintf("%s|user:%d", k.keyName, k.createdBy.Int64)
 		}
 
-		records, err := s.getWorkoutRecords(keyName, createdBy)
+		records, err := s.getWorkoutRecords(k.keyName, k.createdBy)
 		if err != nil {
 			return nil, err
 		}
 
 		groups = append(groups, &DuplicateGroup{
 			Key:     key,
-			Count:   count,
+			Count:   k.count,
 			Records: records,
 		})
 	}
 
-	return groups, rows.Err()
+	return groups, nil
 }
 
 // getWorkoutRecords retrieves workout records for a duplicate key
