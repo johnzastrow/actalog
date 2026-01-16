@@ -7,7 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-*No unreleased changes*
+### Added - Workout Template Instructions Field
+
+- **Instructions Field for Template Movements**
+  - New `instructions` column on `workout_template_movements` table
+  - Supports markdown-formatted coaching cues, setup notes, and technique reminders
+  - Optional field - movements work without instructions
+  - Preserved through full CRUD lifecycle
+
+- **Instructions Field for Template WODs**
+  - New `instructions` column on `workout_template_wods` table
+  - Allows WOD-specific scaling options, standards, and modifications
+  - Consistent behavior with movement instructions
+
+- **Frontend Updates**
+  - Instructions textarea in `WorkoutTemplateEditView.vue` for both movements and WODs
+  - Instructions display in `WorkoutTemplateDetailDialog.vue` with markdown rendering
+  - Collapsible sections for cleaner UI when instructions are present
+
+- **Backend Updates**
+  - Domain models updated with Instructions field
+  - Repository queries updated to include instructions in all operations
+  - Handler validation for instructions field
+
+- **Comprehensive Test Coverage**
+  - Backend unit tests for service and handler layers
+  - Frontend unit tests in `WorkoutTemplateEditView.test.js` (573 lines)
+  - Integration tests in `workout_template_test.go` covering:
+    - Full CRUD lifecycle for instructions
+    - Special characters (markdown, unicode, HTML-like)
+    - Multiple movements/WODs with different instructions
+    - Optional field behavior (empty/null handling)
+
+### Fixed
+
+- **Repository Query Bug** - Fixed `GetByIDWithDetails` in `workout_repository.go` to include `instructions` column in SELECT queries for both movements and WODs
 
 ## [0.24.0-beta] - 2026-01-14
 
