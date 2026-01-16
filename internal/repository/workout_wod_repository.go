@@ -21,17 +21,17 @@ func (r *WorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
 	workoutWOD.CreatedAt = time.Now()
 	workoutWOD.UpdatedAt = time.Now()
 
-	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, instructions, notes, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	if currentDriver == "postgres" {
 		query += " RETURNING id"
-		err := r.db.QueryRow(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt).Scan(&workoutWOD.ID)
+		err := r.db.QueryRow(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.Instructions, workoutWOD.Notes, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt).Scan(&workoutWOD.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create workout-WOD: %w", err)
 		}
 	} else {
-		result, err := r.db.Exec(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt)
+		result, err := r.db.Exec(query, workoutWOD.WorkoutID, workoutWOD.WODID, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.Instructions, workoutWOD.Notes, workoutWOD.OrderIndex, workoutWOD.CreatedAt, workoutWOD.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create workout-WOD: %w", err)
 		}
@@ -49,13 +49,13 @@ func (r *WorkoutWODRepository) Create(workoutWOD *domain.WorkoutWOD) error {
 
 // GetByID retrieves a workout-WOD by ID
 func (r *WorkoutWODRepository) GetByID(id int64) (*domain.WorkoutWOD, error) {
-	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE id = ?`)
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, instructions, notes, order_index, created_at, updated_at FROM workout_wods WHERE id = ?`)
 
 	workoutWOD := &domain.WorkoutWOD{}
 	var scoreValue sql.NullString
 	var division sql.NullString
 
-	err := r.db.QueryRow(query, id).Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.Instructions, &workoutWOD.Notes, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -75,7 +75,7 @@ func (r *WorkoutWODRepository) GetByID(id int64) (*domain.WorkoutWOD, error) {
 
 // ListByWorkout retrieves all WODs associated with a workout template
 func (r *WorkoutWODRepository) ListByWorkout(workoutID int64) ([]*domain.WorkoutWOD, error) {
-	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at FROM workout_wods WHERE workout_id = ? ORDER BY order_index`)
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, instructions, notes, order_index, created_at, updated_at FROM workout_wods WHERE workout_id = ? ORDER BY order_index`)
 
 	rows, err := r.db.Query(query, workoutID)
 	if err != nil {
@@ -91,7 +91,7 @@ func (r *WorkoutWODRepository) ListByWorkoutWithDetails(workoutID int64) ([]*dom
 	query := rebindQuery(`
 		SELECT
 			ww.id, ww.workout_id, ww.wod_id, ww.score_value, ww.division, ww.is_pr,
-			ww.order_index, ww.created_at, ww.updated_at,
+			ww.instructions, ww.notes, ww.order_index, ww.created_at, ww.updated_at,
 			w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
 			w.score_type as wod_score_type, w.description as wod_description
 		FROM workout_wods ww
@@ -114,10 +114,10 @@ func (r *WorkoutWODRepository) Update(workoutWOD *domain.WorkoutWOD) error {
 
 	query := rebindQuery(`UPDATE workout_wods
 	          SET score_value = ?, division = ?, is_pr = ?,
-	              order_index = ?, updated_at = ?
+	              instructions = ?, notes = ?, order_index = ?, updated_at = ?
 	          WHERE id = ?`)
 
-	result, err := r.db.Exec(query, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.OrderIndex, workoutWOD.UpdatedAt, workoutWOD.ID)
+	result, err := r.db.Exec(query, workoutWOD.ScoreValue, workoutWOD.Division, workoutWOD.IsPR, workoutWOD.Instructions, workoutWOD.Notes, workoutWOD.OrderIndex, workoutWOD.UpdatedAt, workoutWOD.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update workout-WOD: %w", err)
 	}
@@ -162,7 +162,7 @@ func (r *WorkoutWODRepository) GetByWorkoutID(workoutID int64) ([]*domain.Workou
 
 // GetByWODID finds which workouts use this WOD
 func (r *WorkoutWODRepository) GetByWODID(wodID int64) ([]*domain.WorkoutWOD, error) {
-	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, workout_id, wod_id, score_value, division, is_pr, instructions, notes, order_index, created_at, updated_at
 	          FROM workout_wods
 	          WHERE wod_id = ?
 	          ORDER BY created_at DESC`)
@@ -204,8 +204,8 @@ func (r *WorkoutWODRepository) BatchCreate(workoutID int64, wodIDs []int64) erro
 	}
 	defer tx.Rollback()
 
-	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, NULL, NULL, 0, ?, ?, ?)`)
+	query := rebindQuery(`INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, instructions, notes, order_index, created_at, updated_at)
+	          VALUES (?, ?, NULL, NULL, 0, '', '', ?, ?, ?)`)
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -301,7 +301,7 @@ func (r *WorkoutWODRepository) scanWorkoutWODs(rows *sql.Rows) ([]*domain.Workou
 		var scoreValue sql.NullString
 		var division sql.NullString
 
-		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt)
+		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.Instructions, &workoutWOD.Notes, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
 		}
@@ -327,7 +327,7 @@ func (r *WorkoutWODRepository) scanWorkoutWODsWithDetails(rows *sql.Rows) ([]*do
 		var scoreValue sql.NullString
 		var division sql.NullString
 
-		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt,
+		err := rows.Scan(&workoutWOD.ID, &workoutWOD.WorkoutID, &workoutWOD.WODID, &scoreValue, &division, &workoutWOD.IsPR, &workoutWOD.Instructions, &workoutWOD.Notes, &workoutWOD.OrderIndex, &workoutWOD.CreatedAt, &workoutWOD.UpdatedAt,
 			&workoutWOD.WODName, &workoutWOD.WODType, &workoutWOD.WODRegime, &workoutWOD.WODScoreType, &workoutWOD.WODDescription)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout WOD with details: %w", err)

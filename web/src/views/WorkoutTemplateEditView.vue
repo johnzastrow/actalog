@@ -122,7 +122,7 @@
               item-title="name"
               item-value="id"
               label="Select Movement"
-              
+
               density="compact"
               rounded="lg"
               :loading="loadingMovements"
@@ -135,13 +135,32 @@
               </template>
             </v-autocomplete>
 
+            <!-- Instructions first -->
+            <v-textarea
+              v-model="movement.instructions"
+              label="Instructions (Optional)"
+              placeholder="e.g., Setup, form cues, scaling options"
+              hint="Markdown supported: **bold**, *italic*, - lists"
+              persistent-hint
+              density="compact"
+              rounded="lg"
+              rows="2"
+              auto-grow
+              class="mb-2"
+            >
+              <template #prepend-inner>
+                <v-icon color="info" size="small">mdi-clipboard-text-outline</v-icon>
+              </template>
+            </v-textarea>
+
+            <!-- Movement specifics -->
             <v-row dense>
               <v-col cols="4">
                 <v-text-field
                   v-model.number="movement.sets"
                   label="Sets"
                   type="number"
-                  
+
                   density="compact"
                   rounded="lg"
                   min="1"
@@ -153,7 +172,7 @@
                   v-model.number="movement.reps"
                   label="Reps"
                   type="number"
-                  
+
                   density="compact"
                   rounded="lg"
                   min="1"
@@ -165,7 +184,7 @@
                   v-model.number="movement.rest_seconds"
                   label="Rest (s)"
                   type="number"
-                  
+
                   density="compact"
                   rounded="lg"
                   min="0"
@@ -174,11 +193,12 @@
               </v-col>
             </v-row>
 
+            <!-- Notes last -->
             <v-textarea
               v-model="movement.notes"
               label="Notes (Optional)"
               placeholder="e.g., Tempo: 3-1-1-0, RPE 8"
-              
+
               density="compact"
               rounded="lg"
               rows="2"
@@ -276,10 +296,26 @@
             </v-autocomplete>
 
             <v-textarea
+              v-model="wod.instructions"
+              label="Instructions (Optional)"
+              placeholder="e.g., Setup, standards, scaling options"
+              hint="Markdown supported: **bold**, *italic*, - lists"
+              persistent-hint
+              density="compact"
+              rounded="lg"
+              rows="2"
+              auto-grow
+              class="mb-2"
+            >
+              <template #prepend-inner>
+                <v-icon color="info" size="small">mdi-clipboard-text-outline</v-icon>
+              </template>
+            </v-textarea>
+
+            <v-textarea
               v-model="wod.notes"
               label="Notes (Optional)"
-              placeholder="e.g., Scaling options, time cap"
-              
+              placeholder="e.g., Time cap, scaling notes"
               density="compact"
               rounded="lg"
               rows="2"
@@ -423,9 +459,10 @@ async function loadTemplate() {
     template.value = {
       name: data.name || '',
       workout_type: data.workout_type || 'strength',
-      description: data.description || '',
+      description: data.notes || data.description || '',
       wods: (data.wods || []).map(w => ({
         wod_id: w.wod_id,
+        instructions: w.instructions || '',
         notes: w.notes || '',
         order_index: w.order_index
       })),
@@ -434,6 +471,7 @@ async function loadTemplate() {
         sets: m.sets || null,
         reps: m.reps || null,
         rest_seconds: m.rest_seconds || null,
+        instructions: m.instructions || '',
         notes: m.notes || '',
         order_index: m.order_index
       }))
@@ -451,6 +489,7 @@ function addMovement() {
     sets: null,
     reps: null,
     work_time: 60,
+    instructions: '',
     notes: '',
     order_index: template.value.movements.length + 1
   })
@@ -478,6 +517,7 @@ function browseMovements() {
 function addWOD() {
   template.value.wods.push({
     wod_id: null,
+    instructions: '',
     notes: '',
     order_index: template.value.wods.length + 1
   })
@@ -554,7 +594,8 @@ async function saveTemplate() {
       description: template.value.description?.trim() || null,
       wods: template.value.wods.map((w, idx) => ({
         wod_id: w.wod_id,
-        notes: w.notes?.trim() || null,
+        instructions: w.instructions?.trim() || '',
+        notes: w.notes?.trim() || '',
         order_index: idx + 1
       })),
       movements: template.value.movements.map((m, idx) => ({
@@ -562,7 +603,8 @@ async function saveTemplate() {
         sets: m.sets || null,
         reps: m.reps || null,
         work_time: m.work_time || null,
-        notes: m.notes?.trim() || null,
+        instructions: m.instructions?.trim() || '',
+        notes: m.notes?.trim() || '',
         order_index: idx + 1
       }))
     }

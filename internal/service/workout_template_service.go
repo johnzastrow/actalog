@@ -44,15 +44,16 @@ func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, no
 	if len(movements) > 0 {
 		for i, movement := range movements {
 			wm := &domain.WorkoutMovement{
-				WorkoutID:  workout.ID,
-				MovementID: movement.MovementID,
-				Sets:       movement.Sets,
-				Reps:       movement.Reps,
-				Weight:     movement.Weight,
-				Time:       movement.Time,
-				Distance:   movement.Distance,
-				Notes:      movement.Notes,
-				OrderIndex: i + 1,
+				WorkoutID:    workout.ID,
+				MovementID:   movement.MovementID,
+				Sets:         movement.Sets,
+				Reps:         movement.Reps,
+				Weight:       movement.Weight,
+				Time:         movement.Time,
+				Distance:     movement.Distance,
+				Instructions: movement.Instructions,
+				Notes:        movement.Notes,
+				OrderIndex:   i + 1,
 			}
 
 			if err := s.workoutMovementRepo.Create(wm); err != nil {
@@ -65,9 +66,11 @@ func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, no
 	if len(wods) > 0 {
 		for i, wod := range wods {
 			ww := &domain.WorkoutWOD{
-				WorkoutID:  workout.ID,
-				WODID:      wod.WODID,
-				OrderIndex: i + 1,
+				WorkoutID:    workout.ID,
+				WODID:        wod.WODID,
+				Instructions: wod.Instructions,
+				Notes:        wod.Notes,
+				OrderIndex:   i + 1,
 			}
 
 			if err := s.workoutWODRepo.Create(ww); err != nil {
@@ -180,15 +183,16 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 	if len(movements) > 0 {
 		for i, movement := range movements {
 			wm := &domain.WorkoutMovement{
-				WorkoutID:  id,
-				MovementID: movement.MovementID,
-				Sets:       movement.Sets,
-				Reps:       movement.Reps,
-				Weight:     movement.Weight,
-				Time:       movement.Time,
-				Distance:   movement.Distance,
-				Notes:      movement.Notes,
-				OrderIndex: i + 1,
+				WorkoutID:    id,
+				MovementID:   movement.MovementID,
+				Sets:         movement.Sets,
+				Reps:         movement.Reps,
+				Weight:       movement.Weight,
+				Time:         movement.Time,
+				Distance:     movement.Distance,
+				Instructions: movement.Instructions,
+				Notes:        movement.Notes,
+				OrderIndex:   i + 1,
 			}
 
 			if err := s.workoutMovementRepo.Create(wm); err != nil {
@@ -206,9 +210,11 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 	if len(wods) > 0 {
 		for i, wod := range wods {
 			ww := &domain.WorkoutWOD{
-				WorkoutID:  id,
-				WODID:      wod.WODID,
-				OrderIndex: i + 1,
+				WorkoutID:    id,
+				WODID:        wod.WODID,
+				Instructions: wod.Instructions,
+				Notes:        wod.Notes,
+				OrderIndex:   i + 1,
 			}
 
 			if err := s.workoutWODRepo.Create(ww); err != nil {

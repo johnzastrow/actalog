@@ -910,3 +910,243 @@ func TestWorkoutTemplateService_Update_WithWODs(t *testing.T) {
 		t.Errorf("Name = %s, want Updated Name", result.Name)
 	}
 }
+
+// Tests for Instructions field preservation
+
+func TestWorkoutTemplateService_Create_WithInstructions(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	auditLogRepo := newMockAuditLogRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, auditLogRepo)
+
+	// Create a template with movements that have instructions
+	movements := []domain.WorkoutMovement{
+		{
+			MovementID:   1,
+			Sets:         intPtr(3),
+			Reps:         intPtr(10),
+			Weight:       floatPtr(100.0),
+			Instructions: "**Setup:** Stand with feet shoulder-width apart\n* Keep core tight\n* Breathe out on the push",
+			Notes:        "Increase weight next session",
+			OrderIndex:   1,
+		},
+		{
+			MovementID:   2,
+			Sets:         intPtr(4),
+			Reps:         intPtr(8),
+			Weight:       floatPtr(50.0),
+			Instructions: "Focus on **slow eccentric** movement",
+			Notes:        "Rest 90 seconds between sets",
+			OrderIndex:   2,
+		},
+	}
+	wods := []domain.WorkoutWOD{
+		{
+			WODID:        1,
+			Instructions: "## Scaling Options\n- Rx: As written\n- Scaled: 15-12-9 reps",
+			Notes:        "Time cap: 12 minutes",
+			OrderIndex:   1,
+		},
+	}
+
+	result, err := svc.Create(1, "user@example.com", "Template With Instructions", stringPtr("Test notes"), movements, wods)
+	if err != nil {
+		t.Errorf("Create() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Create() returned nil")
+	}
+	if result.Name != "Template With Instructions" {
+		t.Errorf("Name = %s, want Template With Instructions", result.Name)
+	}
+
+	// Verify movements were created with instructions
+	storedMovements, err := workoutMovementRepo.GetByWorkoutID(result.ID)
+	if err != nil {
+		t.Errorf("GetByWorkoutID() error = %v", err)
+	}
+	if len(storedMovements) != 2 {
+		t.Errorf("Expected 2 movements, got %d", len(storedMovements))
+	}
+
+	// Check first movement has instructions
+	found := false
+	for _, m := range storedMovements {
+		if m.MovementID == 1 {
+			found = true
+			if m.Instructions == "" {
+				t.Error("Movement 1 should have instructions")
+			}
+			if m.Notes != "Increase weight next session" {
+				t.Errorf("Movement 1 notes = %s, want 'Increase weight next session'", m.Notes)
+			}
+		}
+	}
+	if !found {
+		t.Error("Movement 1 not found in stored movements")
+	}
+}
+
+func TestWorkoutTemplateService_Update_WithInstructions(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+	auditLogRepo := newMockAuditLogRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, auditLogRepo)
+
+	// Create a workout first
+	userID := int64(1)
+	workout := &domain.Workout{Name: "Original Name", Notes: stringPtr("Original notes"), CreatedBy: &userID}
+	_ = workoutRepo.Create(workout)
+
+	// Update with movements and WODs that have instructions
+	movements := []domain.WorkoutMovement{
+		{
+			MovementID:   1,
+			Sets:         intPtr(5),
+			Reps:         intPtr(5),
+			Instructions: "**Heavy day** - focus on form",
+			Notes:        "Use lifting belt",
+		},
+	}
+	wods := []domain.WorkoutWOD{
+		{
+			WODID:        1,
+			Instructions: "For time, cap at 15 minutes",
+			Notes:        "Scale pull-ups to ring rows if needed",
+		},
+	}
+
+	result, err := svc.Update(workout.ID, 1, "user@example.com", "Updated Name", stringPtr("Updated notes"), movements, wods)
+	if err != nil {
+		t.Errorf("Update() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Update() returned nil")
+	}
+
+	// Verify movements were updated with instructions
+	storedMovements, err := workoutMovementRepo.GetByWorkoutID(result.ID)
+	if err != nil {
+		t.Errorf("GetByWorkoutID() error = %v", err)
+	}
+	if len(storedMovements) != 1 {
+		t.Errorf("Expected 1 movement, got %d", len(storedMovements))
+	}
+	if len(storedMovements) > 0 && storedMovements[0].Instructions == "" {
+		t.Error("Movement should have instructions after update")
+	}
+}
+
+func TestWorkoutTemplateService_Create_AllMovementFields(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a template with all movement fields populated
+	movements := []domain.WorkoutMovement{
+		{
+			MovementID:   1,
+			Sets:         intPtr(3),
+			Reps:         intPtr(10),
+			Weight:       floatPtr(135.5),
+			Time:         intPtr(60),
+			Distance:     floatPtr(400.0),
+			IsRx:         true,
+			IsPR:         false,
+			Instructions: "**Warmup**: Start with empty bar\n- Add weight gradually\n- Focus on depth",
+			Notes:        "Target: 3x10 @ 60% 1RM",
+			OrderIndex:   1,
+		},
+	}
+
+	result, err := svc.Create(1, "user@example.com", "Full Movement Details", nil, movements, nil)
+	if err != nil {
+		t.Errorf("Create() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Create() returned nil")
+	}
+
+	// Verify all fields were stored
+	storedMovements, _ := workoutMovementRepo.GetByWorkoutID(result.ID)
+	if len(storedMovements) != 1 {
+		t.Fatalf("Expected 1 movement, got %d", len(storedMovements))
+	}
+
+	m := storedMovements[0]
+	if m.Sets == nil || *m.Sets != 3 {
+		t.Errorf("Sets = %v, want 3", m.Sets)
+	}
+	if m.Reps == nil || *m.Reps != 10 {
+		t.Errorf("Reps = %v, want 10", m.Reps)
+	}
+	if m.Weight == nil || *m.Weight != 135.5 {
+		t.Errorf("Weight = %v, want 135.5", m.Weight)
+	}
+	if m.Time == nil || *m.Time != 60 {
+		t.Errorf("Time = %v, want 60", m.Time)
+	}
+	if m.Distance == nil || *m.Distance != 400.0 {
+		t.Errorf("Distance = %v, want 400.0", m.Distance)
+	}
+	if m.Instructions == "" {
+		t.Error("Instructions should not be empty")
+	}
+	expectedNotes := "Target: 3x10 @ 60% 1RM"
+	if m.Notes != expectedNotes {
+		t.Errorf("Notes = %s, want '%s'", m.Notes, expectedNotes)
+	}
+}
+
+func TestWorkoutTemplateService_Create_AllWODFields(t *testing.T) {
+	workoutRepo := newMockWorkoutRepo()
+	workoutMovementRepo := newMockWorkoutMovementRepo()
+	workoutWODRepo := newMockWorkoutWODRepo()
+
+	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
+
+	// Create a template with all WOD fields populated
+	scoreValue := "12:35"
+	division := "rx"
+	wods := []domain.WorkoutWOD{
+		{
+			WODID:        1,
+			ScoreValue:   &scoreValue,
+			Division:     &division,
+			IsPR:         true,
+			Instructions: "## Standards\n- Full ROM on each rep\n- No kipping on strict movements\n\n## Scaling\n- Scaled: Reduce reps by 50%",
+			Notes:        "Achieved during open workout 24.1",
+			OrderIndex:   1,
+		},
+	}
+
+	result, err := svc.Create(1, "user@example.com", "Full WOD Details", nil, nil, wods)
+	if err != nil {
+		t.Errorf("Create() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Create() returned nil")
+	}
+
+	// Verify WOD was stored (check via mock)
+	// The mock stores WODs by ID, verify it was created
+	if len(workoutWODRepo.workoutWODs) != 1 {
+		t.Errorf("Expected 1 WOD in mock, got %d", len(workoutWODRepo.workoutWODs))
+	}
+
+	// Check the stored WOD has all fields
+	for _, w := range workoutWODRepo.workoutWODs {
+		if w.Instructions == "" {
+			t.Error("WOD instructions should not be empty")
+		}
+		if w.Notes != "Achieved during open workout 24.1" {
+			t.Errorf("WOD notes = %s, want 'Achieved during open workout 24.1'", w.Notes)
+		}
+	}
+}

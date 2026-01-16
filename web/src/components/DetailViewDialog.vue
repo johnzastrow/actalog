@@ -96,26 +96,91 @@
           <div v-if="entityData.movements?.length" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Movements</p>
             <v-list density="compact" bg-color="transparent" class="py-0">
-              <v-list-item v-for="m in entityData.movements" :key="m.id" class="px-0">
+              <v-list-item v-for="m in entityData.movements" :key="m.id" class="px-0 mb-2">
                 <template #prepend>
-                  <v-icon size="small" color="primary">mdi-weight-lifter</v-icon>
+                  <v-icon size="small" color="primary" class="mt-1">mdi-weight-lifter</v-icon>
                 </template>
-                <v-list-item-title class="text-body-2">
-                  {{ m.movement?.name || 'Movement' }}
-                </v-list-item-title>
+                <div>
+                  <v-list-item-title class="text-body-2 font-weight-medium">
+                    {{ m.movement?.name || 'Movement' }}
+                  </v-list-item-title>
+                  <!-- Instructions first -->
+                  <div v-if="m.instructions" class="mt-2">
+                    <p class="text-caption font-weight-medium mb-1 text-info">
+                      <v-icon size="x-small" class="mr-1">mdi-clipboard-text-outline</v-icon>
+                      Instructions
+                    </p>
+                    <div class="text-caption">
+                      <markdown-renderer :content="m.instructions" />
+                    </div>
+                  </div>
+                  <!-- Movement specifics -->
+                  <div class="d-flex flex-wrap gap-1 mt-1">
+                    <v-chip v-if="m.sets" size="x-small" color="primary" variant="tonal">
+                      {{ m.sets }} sets
+                    </v-chip>
+                    <v-chip v-if="m.reps" size="x-small" color="secondary" variant="tonal">
+                      {{ m.reps }} reps
+                    </v-chip>
+                    <v-chip v-if="m.weight" size="x-small" color="warning" variant="tonal">
+                      {{ m.weight }} {{ m.weight_unit || 'lbs' }}
+                    </v-chip>
+                    <v-chip v-if="m.time" size="x-small" color="info" variant="tonal">
+                      {{ formatTime(m.time) }}
+                    </v-chip>
+                    <v-chip v-if="m.distance" size="x-small" color="success" variant="tonal">
+                      {{ m.distance }} {{ m.distance_unit || 'm' }}
+                    </v-chip>
+                  </div>
+                  <!-- Notes last -->
+                  <p v-if="m.notes" class="text-caption text-medium-emphasis mt-1 mb-0">
+                    <strong>Notes:</strong> {{ m.notes }}
+                  </p>
+                </div>
               </v-list-item>
             </v-list>
           </div>
           <div v-if="entityData.wods?.length" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">WODs</p>
             <v-list density="compact" bg-color="transparent" class="py-0">
-              <v-list-item v-for="w in entityData.wods" :key="w.id" class="px-0">
+              <v-list-item v-for="w in entityData.wods" :key="w.id" class="px-0 mb-2">
                 <template #prepend>
-                  <v-icon size="small" color="#ff5722">mdi-fire</v-icon>
+                  <v-icon size="small" color="#ff5722" class="mt-1">mdi-fire</v-icon>
                 </template>
-                <v-list-item-title class="text-body-2">
-                  {{ w.wod?.name || 'WOD' }}
-                </v-list-item-title>
+                <div>
+                  <v-list-item-title class="text-body-2 font-weight-medium">
+                    {{ w.wod?.name || 'WOD' }}
+                  </v-list-item-title>
+                  <!-- Instructions first -->
+                  <div v-if="w.instructions" class="mt-2">
+                    <p class="text-caption font-weight-medium mb-1 text-info">
+                      <v-icon size="x-small" class="mr-1">mdi-clipboard-text-outline</v-icon>
+                      Instructions
+                    </p>
+                    <div class="text-caption">
+                      <markdown-renderer :content="w.instructions" />
+                    </div>
+                  </div>
+                  <!-- WOD specifics -->
+                  <div class="d-flex flex-wrap gap-1 mt-1">
+                    <v-chip v-if="w.wod?.type" size="x-small" color="secondary" variant="tonal">
+                      {{ w.wod.type }}
+                    </v-chip>
+                    <v-chip v-if="w.wod?.regime" size="x-small" color="primary" variant="tonal">
+                      {{ w.wod.regime }}
+                    </v-chip>
+                    <v-chip v-if="w.wod?.score_type" size="x-small" color="success" variant="tonal">
+                      {{ w.wod.score_type }}
+                    </v-chip>
+                  </div>
+                  <p v-if="w.wod?.description" class="text-caption text-medium-emphasis mt-1 mb-0" style="white-space: pre-wrap;">
+                    {{ w.wod.description }}
+                  </p>
+                  <!-- Notes last -->
+                  <p v-if="w.notes" class="text-caption text-medium-emphasis mt-1 mb-0">
+                    <strong>Notes:</strong> {{ w.notes }}
+                  </p>
+                </div>
               </v-list-item>
             </v-list>
           </div>
@@ -246,6 +311,14 @@ function getMovementTypeColor(type) {
 function capitalizeFirst(str) {
   if (!str) return ''
   return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function formatTime(seconds) {
+  if (!seconds) return ''
+  if (seconds < 60) return `${seconds}s`
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
 }
 
 async function fetchData() {

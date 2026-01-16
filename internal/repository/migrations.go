@@ -1877,6 +1877,58 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.25.0",
+		Description: "Add instructions column to workout_movements and workout_wods for template item instructions",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				alterStatements := []string{
+					`ALTER TABLE workout_movements ADD COLUMN instructions TEXT DEFAULT ''`,
+					`ALTER TABLE workout_wods ADD COLUMN instructions TEXT DEFAULT ''`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add instructions column: %w", err)
+						}
+					}
+				}
+			case "postgres":
+				alterSQL := `
+				ALTER TABLE workout_movements ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT '';
+				ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT '';
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to add instructions columns: %w", err)
+				}
+			case "mysql":
+				alterStatements := []string{
+					`ALTER TABLE workout_movements ADD COLUMN instructions TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN instructions TEXT`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+			}
+
+			fmt.Println("✓ Added instructions columns to workout_movements and workout_wods tables")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE workout_movements DROP COLUMN IF EXISTS instructions`)
+				db.Exec(`ALTER TABLE workout_wods DROP COLUMN IF EXISTS instructions`)
+			case "mysql":
+				db.Exec(`ALTER TABLE workout_movements DROP COLUMN instructions`)
+				db.Exec(`ALTER TABLE workout_wods DROP COLUMN instructions`)
+			}
+			fmt.Println("✓ Removed instructions columns")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

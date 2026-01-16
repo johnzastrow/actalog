@@ -36,20 +36,21 @@ type MovementWithCreator struct {
 // WorkoutMovement represents a movement in a workout template (workout_movements table)
 // WorkoutID references a workout template, not a user-specific workout instance
 type WorkoutMovement struct {
-	ID         int64     `json:"id" db:"id"`
-	WorkoutID  int64     `json:"workout_id" db:"workout_id"`   // References workout template
-	MovementID int64     `json:"movement_id" db:"movement_id"` // References movements table
-	Weight     *float64  `json:"weight,omitempty" db:"weight"` // in lbs or kg
-	Sets       *int      `json:"sets,omitempty" db:"sets"`
-	Reps       *int      `json:"reps,omitempty" db:"reps"`
-	Time       *int      `json:"time,omitempty" db:"time"`         // in seconds
-	Distance   *float64  `json:"distance,omitempty" db:"distance"` // in meters or miles
-	IsRx       bool      `json:"is_rx" db:"is_rx"`                 // Prescribed weight/standard
-	IsPR       bool      `json:"is_pr" db:"is_pr"`                 // Personal record flag
-	Notes      string    `json:"notes,omitempty" db:"notes"`
-	OrderIndex int       `json:"order_index" db:"order_index"` // Order in the workout
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
+	ID           int64     `json:"id" db:"id"`
+	WorkoutID    int64     `json:"workout_id" db:"workout_id"`   // References workout template
+	MovementID   int64     `json:"movement_id" db:"movement_id"` // References movements table
+	Weight       *float64  `json:"weight,omitempty" db:"weight"` // in lbs or kg
+	Sets         *int      `json:"sets,omitempty" db:"sets"`
+	Reps         *int      `json:"reps,omitempty" db:"reps"`
+	Time         *int      `json:"time,omitempty" db:"time"`                 // in seconds
+	Distance     *float64  `json:"distance,omitempty" db:"distance"`         // in meters or miles
+	IsRx         bool      `json:"is_rx" db:"is_rx"`                         // Prescribed weight/standard
+	IsPR         bool      `json:"is_pr" db:"is_pr"`                         // Personal record flag
+	Instructions string    `json:"instructions,omitempty" db:"instructions"` // Markdown instructions for this movement
+	Notes        string    `json:"notes,omitempty" db:"notes"`
+	OrderIndex   int       `json:"order_index" db:"order_index"` // Order in the workout
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data
 	Movement *Movement `json:"movement,omitempty" db:"-"`

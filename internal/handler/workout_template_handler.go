@@ -54,19 +54,21 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		Description *string `json:"description"`
 		Movements   []struct {
-			MovementID int64    `json:"movement_id"`
-			Sets       *int     `json:"sets"`
-			Reps       *int     `json:"reps"`
-			Weight     *float64 `json:"weight"`
-			WorkTime   *int     `json:"work_time"` // Work duration in seconds
-			Distance   *float64 `json:"distance"`
-			Notes      string   `json:"notes"`
-			OrderIndex int      `json:"order_index"`
+			MovementID   int64    `json:"movement_id"`
+			Sets         *int     `json:"sets"`
+			Reps         *int     `json:"reps"`
+			Weight       *float64 `json:"weight"`
+			WorkTime     *int     `json:"work_time"` // Work duration in seconds
+			Distance     *float64 `json:"distance"`
+			Instructions string   `json:"instructions"` // Markdown instructions
+			Notes        string   `json:"notes"`
+			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID      int64  `json:"wod_id"`
-			Notes      string `json:"notes"`
-			OrderIndex int    `json:"order_index"`
+			WODID        int64  `json:"wod_id"`
+			Instructions string `json:"instructions"` // Markdown instructions
+			Notes        string `json:"notes"`
+			OrderIndex   int    `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -84,14 +86,15 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
 		movements[i] = domain.WorkoutMovement{
-			MovementID: m.MovementID,
-			Sets:       m.Sets,
-			Reps:       m.Reps,
-			Weight:     m.Weight,
-			Time:       m.WorkTime, // Map work_time to Time field
-			Distance:   m.Distance,
-			Notes:      m.Notes,
-			OrderIndex: m.OrderIndex,
+			MovementID:   m.MovementID,
+			Sets:         m.Sets,
+			Reps:         m.Reps,
+			Weight:       m.Weight,
+			Time:         m.WorkTime, // Map work_time to Time field
+			Distance:     m.Distance,
+			Instructions: m.Instructions,
+			Notes:        m.Notes,
+			OrderIndex:   m.OrderIndex,
 		}
 	}
 
@@ -99,8 +102,10 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	wods := make([]domain.WorkoutWOD, len(req.WODs))
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
-			WODID:      w.WODID,
-			OrderIndex: w.OrderIndex,
+			WODID:        w.WODID,
+			Instructions: w.Instructions,
+			Notes:        w.Notes,
+			OrderIndex:   w.OrderIndex,
 		}
 	}
 
@@ -280,19 +285,21 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		Description *string `json:"description"`
 		Movements   []struct {
-			MovementID int64    `json:"movement_id"`
-			Sets       *int     `json:"sets"`
-			Reps       *int     `json:"reps"`
-			Weight     *float64 `json:"weight"`
-			WorkTime   *int     `json:"work_time"` // Work duration in seconds
-			Distance   *float64 `json:"distance"`
-			Notes      string   `json:"notes"`
-			OrderIndex int      `json:"order_index"`
+			MovementID   int64    `json:"movement_id"`
+			Sets         *int     `json:"sets"`
+			Reps         *int     `json:"reps"`
+			Weight       *float64 `json:"weight"`
+			WorkTime     *int     `json:"work_time"` // Work duration in seconds
+			Distance     *float64 `json:"distance"`
+			Instructions string   `json:"instructions"` // Markdown instructions
+			Notes        string   `json:"notes"`
+			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID      int64  `json:"wod_id"`
-			Notes      string `json:"notes"`
-			OrderIndex int    `json:"order_index"`
+			WODID        int64  `json:"wod_id"`
+			Instructions string `json:"instructions"` // Markdown instructions
+			Notes        string `json:"notes"`
+			OrderIndex   int    `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -310,14 +317,15 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
 		movements[i] = domain.WorkoutMovement{
-			MovementID: m.MovementID,
-			Sets:       m.Sets,
-			Reps:       m.Reps,
-			Weight:     m.Weight,
-			Time:       m.WorkTime, // Map work_time to Time field
-			Distance:   m.Distance,
-			Notes:      m.Notes,
-			OrderIndex: m.OrderIndex,
+			MovementID:   m.MovementID,
+			Sets:         m.Sets,
+			Reps:         m.Reps,
+			Weight:       m.Weight,
+			Time:         m.WorkTime, // Map work_time to Time field
+			Distance:     m.Distance,
+			Instructions: m.Instructions,
+			Notes:        m.Notes,
+			OrderIndex:   m.OrderIndex,
 		}
 	}
 
@@ -325,8 +333,10 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	wods := make([]domain.WorkoutWOD, len(req.WODs))
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
-			WODID:      w.WODID,
-			OrderIndex: w.OrderIndex,
+			WODID:        w.WODID,
+			Instructions: w.Instructions,
+			Notes:        w.Notes,
+			OrderIndex:   w.OrderIndex,
 		}
 	}
 
