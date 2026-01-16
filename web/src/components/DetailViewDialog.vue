@@ -265,7 +265,7 @@ async function fetchData() {
         endpoint = `/api/movements/${props.id}`
         break
       case 'template':
-        endpoint = `/api/workout-templates/${props.id}`
+        endpoint = `/api/templates/${props.id}`
         break
     }
 
