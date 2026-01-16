@@ -58,17 +58,23 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 			Sets         *int     `json:"sets"`
 			Reps         *int     `json:"reps"`
 			Weight       *float64 `json:"weight"`
+			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
 			WorkTime     *int     `json:"work_time"` // Work duration in seconds
 			Distance     *float64 `json:"distance"`
+			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`  // Personal record flag
 			Instructions string   `json:"instructions"` // Markdown instructions
 			Notes        string   `json:"notes"`
 			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID        int64  `json:"wod_id"`
-			Instructions string `json:"instructions"` // Markdown instructions
-			Notes        string `json:"notes"`
-			OrderIndex   int    `json:"order_index"`
+			WODID        int64   `json:"wod_id"`
+			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
+			Division     *string `json:"division"`    // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			Instructions string  `json:"instructions"` // Markdown instructions
+			Notes        string  `json:"notes"`
+			OrderIndex   int     `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -85,13 +91,20 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	// Convert request movements to domain movements
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
+		// Use Time if provided, otherwise fall back to WorkTime
+		timeVal := m.Time
+		if timeVal == nil {
+			timeVal = m.WorkTime
+		}
 		movements[i] = domain.WorkoutMovement{
 			MovementID:   m.MovementID,
 			Sets:         m.Sets,
 			Reps:         m.Reps,
 			Weight:       m.Weight,
-			Time:         m.WorkTime, // Map work_time to Time field
+			Time:         timeVal,
 			Distance:     m.Distance,
+			IsRx:         m.IsRx,
+			IsPR:         m.IsPR,
 			Instructions: m.Instructions,
 			Notes:        m.Notes,
 			OrderIndex:   m.OrderIndex,
@@ -103,6 +116,9 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
 			WODID:        w.WODID,
+			ScoreValue:   w.ScoreValue,
+			Division:     w.Division,
+			IsPR:         w.IsPR,
 			Instructions: w.Instructions,
 			Notes:        w.Notes,
 			OrderIndex:   w.OrderIndex,
@@ -145,6 +161,10 @@ func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Requ
 	template, err := h.service.GetByIDWithDetails(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if template == nil {
+		http.Error(w, "Template not found", http.StatusNotFound)
 		return
 	}
 
@@ -289,17 +309,23 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 			Sets         *int     `json:"sets"`
 			Reps         *int     `json:"reps"`
 			Weight       *float64 `json:"weight"`
+			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
 			WorkTime     *int     `json:"work_time"` // Work duration in seconds
 			Distance     *float64 `json:"distance"`
+			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`  // Personal record flag
 			Instructions string   `json:"instructions"` // Markdown instructions
 			Notes        string   `json:"notes"`
 			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID        int64  `json:"wod_id"`
-			Instructions string `json:"instructions"` // Markdown instructions
-			Notes        string `json:"notes"`
-			OrderIndex   int    `json:"order_index"`
+			WODID        int64   `json:"wod_id"`
+			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
+			Division     *string `json:"division"`    // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			Instructions string  `json:"instructions"` // Markdown instructions
+			Notes        string  `json:"notes"`
+			OrderIndex   int     `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -316,13 +342,20 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	// Convert request movements to domain movements
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
+		// Use Time if provided, otherwise fall back to WorkTime
+		timeVal := m.Time
+		if timeVal == nil {
+			timeVal = m.WorkTime
+		}
 		movements[i] = domain.WorkoutMovement{
 			MovementID:   m.MovementID,
 			Sets:         m.Sets,
 			Reps:         m.Reps,
 			Weight:       m.Weight,
-			Time:         m.WorkTime, // Map work_time to Time field
+			Time:         timeVal,
 			Distance:     m.Distance,
+			IsRx:         m.IsRx,
+			IsPR:         m.IsPR,
 			Instructions: m.Instructions,
 			Notes:        m.Notes,
 			OrderIndex:   m.OrderIndex,
@@ -334,6 +367,9 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
 			WODID:        w.WODID,
+			ScoreValue:   w.ScoreValue,
+			Division:     w.Division,
+			IsPR:         w.IsPR,
 			Instructions: w.Instructions,
 			Notes:        w.Notes,
 			OrderIndex:   w.OrderIndex,

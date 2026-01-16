@@ -164,8 +164,8 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 
 	// Get WODs from workout_wods table with WOD details
 	wodsQuery := rebindQuery(`
-		SELECT ww.id, ww.workout_id, ww.wod_id, ww.instructions, ww.notes,
-		       ww.order_index, ww.created_at, ww.updated_at,
+		SELECT ww.id, ww.workout_id, ww.wod_id, ww.score_value, ww.division, ww.is_pr,
+		       ww.instructions, ww.notes, ww.order_index, ww.created_at, ww.updated_at,
 		       w.name as wod_name, w.type as wod_type, w.regime as wod_regime,
 		       w.score_type as wod_score_type, w.description as wod_description
 		FROM workout_wods ww
@@ -182,14 +182,23 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 	var wods []*domain.WorkoutWODWithDetails
 	for rows.Next() {
 		wod := &domain.WorkoutWODWithDetails{}
+		var scoreValue sql.NullString
+		var division sql.NullString
 		var instructions sql.NullString
 		var notes sql.NullString
 
-		err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID, &instructions, &notes,
-			&wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
+		err := rows.Scan(&wod.ID, &wod.WorkoutID, &wod.WODID, &scoreValue, &division, &wod.IsPR,
+			&instructions, &notes, &wod.OrderIndex, &wod.CreatedAt, &wod.UpdatedAt,
 			&wod.WODName, &wod.WODType, &wod.WODRegime, &wod.WODScoreType, &wod.WODDescription)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan workout WOD: %w", err)
+		}
+
+		if scoreValue.Valid {
+			wod.ScoreValue = &scoreValue.String
+		}
+		if division.Valid {
+			wod.Division = &division.String
 		}
 
 		if instructions.Valid {
