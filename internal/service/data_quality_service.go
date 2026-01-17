@@ -47,24 +47,24 @@ type DuplicateScanResult struct {
 
 // MergePreview shows what will happen when merging duplicates
 type MergePreview struct {
-	EntityType  EntityType        `json:"entity_type"`
-	KeepID      int64             `json:"keep_id"`
-	DeleteIDs   []int64           `json:"delete_ids"`
-	FKUpdates   map[string]int    `json:"fk_updates"` // table_name -> count of updates
-	CanProceed  bool              `json:"can_proceed"`
-	Warnings    []string          `json:"warnings,omitempty"`
+	EntityType  EntityType         `json:"entity_type"`
+	KeepID      int64              `json:"keep_id"`
+	DeleteIDs   []int64            `json:"delete_ids"`
+	FKUpdates   map[string]int     `json:"fk_updates"` // table_name -> count of updates
+	CanProceed  bool               `json:"can_proceed"`
+	Warnings    []string           `json:"warnings,omitempty"`
 	AffectedIDs map[string][]int64 `json:"affected_ids,omitempty"` // table_name -> IDs that will be updated
 }
 
 // MergeResult contains the result of a merge operation
 type MergeResult struct {
-	EntityType    EntityType     `json:"entity_type"`
-	KeepID        int64          `json:"keep_id"`
-	DeletedIDs    []int64        `json:"deleted_ids"`
-	DeletedCount  int            `json:"deleted_count"`
-	FKUpdates     map[string]int `json:"fk_updates"`
-	Success       bool           `json:"success"`
-	Error         string         `json:"error,omitempty"`
+	EntityType   EntityType     `json:"entity_type"`
+	KeepID       int64          `json:"keep_id"`
+	DeletedIDs   []int64        `json:"deleted_ids"`
+	DeletedCount int            `json:"deleted_count"`
+	FKUpdates    map[string]int `json:"fk_updates"`
+	Success      bool           `json:"success"`
+	Error        string         `json:"error,omitempty"`
 }
 
 // DataQualityIssue represents a data quality problem

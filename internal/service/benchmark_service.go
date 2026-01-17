@@ -28,10 +28,10 @@ var benchmarkCategories = []string{
 
 // JSON blob templates for complex data generation
 type complexJSONData struct {
-	Metadata    map[string]interface{} `json:"metadata"`
-	Measurements []measurement         `json:"measurements"`
-	Tags        []string               `json:"tags"`
-	Attributes  map[string]string      `json:"attributes"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	Measurements []measurement          `json:"measurements"`
+	Tags         []string               `json:"tags"`
+	Attributes   map[string]string      `json:"attributes"`
 }
 
 type measurement struct {

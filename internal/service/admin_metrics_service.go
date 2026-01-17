@@ -8,15 +8,15 @@ import (
 
 // AdminMetricsService provides admin dashboard metrics
 type AdminMetricsService struct {
-	userRepo            domain.UserRepository
-	userWorkoutRepo     *repository.UserWorkoutRepository
-	movementRepo        domain.MovementRepository
-	wodRepo             domain.WODRepository
-	workoutRepo         domain.WorkoutRepository
-	userSubRepo         domain.UserSubscriptionRepository
-	auditLogRepo        domain.AuditLogRepository
-	emailLogService     *EmailLogService
-	logger              *logger.Logger
+	userRepo        domain.UserRepository
+	userWorkoutRepo *repository.UserWorkoutRepository
+	movementRepo    domain.MovementRepository
+	wodRepo         domain.WODRepository
+	workoutRepo     domain.WorkoutRepository
+	userSubRepo     domain.UserSubscriptionRepository
+	auditLogRepo    domain.AuditLogRepository
+	emailLogService *EmailLogService
+	logger          *logger.Logger
 }
 
 // NewAdminMetricsService creates a new admin metrics service

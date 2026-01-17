@@ -276,11 +276,11 @@ func TestAdminUserHandler_ListUsers_WithPagination(t *testing.T) {
 		{"with valid limit", "?limit=10", http.StatusOK},
 		{"with valid offset", "?offset=5", http.StatusOK},
 		{"with both params", "?limit=10&offset=5", http.StatusOK},
-		{"with invalid limit", "?limit=abc", http.StatusOK},     // falls back to default
-		{"with negative limit", "?limit=-1", http.StatusOK},     // falls back to default
-		{"with invalid offset", "?offset=abc", http.StatusOK},   // falls back to default
-		{"with negative offset", "?offset=-1", http.StatusOK},   // falls back to default
-		{"with zero limit", "?limit=0", http.StatusOK},          // falls back to default
+		{"with invalid limit", "?limit=abc", http.StatusOK},   // falls back to default
+		{"with negative limit", "?limit=-1", http.StatusOK},   // falls back to default
+		{"with invalid offset", "?offset=abc", http.StatusOK}, // falls back to default
+		{"with negative offset", "?offset=-1", http.StatusOK}, // falls back to default
+		{"with zero limit", "?limit=0", http.StatusOK},        // falls back to default
 	}
 
 	for _, tt := range tests {

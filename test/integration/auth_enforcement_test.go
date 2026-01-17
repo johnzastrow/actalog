@@ -56,8 +56,8 @@ func setupFullRouter(t *testing.T) (*chi.Mux, func()) {
 		testJWTSecret,
 		24*time.Hour,
 		7*24*time.Hour,
-		true,  // allow registration
-		nil,   // no email service
+		true, // allow registration
+		nil,  // no email service
 		"http://localhost:3000",
 		false, // no email verification
 		5, 15*time.Minute,

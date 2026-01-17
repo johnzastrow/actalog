@@ -6,21 +6,21 @@ import "time"
 // This table is separate from production data and used for benchmarking operations
 // Fields are designed to be large and complex for stress testing
 type BenchmarkData struct {
-	ID          int64     `json:"id" db:"id"`
-	TestKey     string    `json:"test_key" db:"test_key"`
-	TestValue   string    `json:"test_value" db:"test_value"`
-	NumValue    float64   `json:"num_value" db:"num_value"`
-	IntValue    int       `json:"int_value" db:"int_value"`
-	BoolValue   bool      `json:"bool_value" db:"bool_value"`
-	LargeText   string    `json:"large_text" db:"large_text"`     // Large text field for stress testing (up to 10KB)
-	JsonBlob    string    `json:"json_blob" db:"json_blob"`       // Complex JSON data stored as text
-	ExtraFloat  float64   `json:"extra_float" db:"extra_float"`   // Additional numeric field
-	ExtraInt    int       `json:"extra_int" db:"extra_int"`       // Additional integer field
-	Category    string    `json:"category" db:"category"`         // For filtered queries
-	Priority    int       `json:"priority" db:"priority"`         // For sorted queries
-	CreatedBy   int64     `json:"created_by" db:"created_by"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	ID         int64     `json:"id" db:"id"`
+	TestKey    string    `json:"test_key" db:"test_key"`
+	TestValue  string    `json:"test_value" db:"test_value"`
+	NumValue   float64   `json:"num_value" db:"num_value"`
+	IntValue   int       `json:"int_value" db:"int_value"`
+	BoolValue  bool      `json:"bool_value" db:"bool_value"`
+	LargeText  string    `json:"large_text" db:"large_text"`   // Large text field for stress testing (up to 10KB)
+	JsonBlob   string    `json:"json_blob" db:"json_blob"`     // Complex JSON data stored as text
+	ExtraFloat float64   `json:"extra_float" db:"extra_float"` // Additional numeric field
+	ExtraInt   int       `json:"extra_int" db:"extra_int"`     // Additional integer field
+	Category   string    `json:"category" db:"category"`       // For filtered queries
+	Priority   int       `json:"priority" db:"priority"`       // For sorted queries
+	CreatedBy  int64     `json:"created_by" db:"created_by"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // BenchmarkRepository defines the interface for benchmark data access
@@ -61,11 +61,11 @@ type BenchmarkRepository interface {
 
 // BenchmarkFilters represents filter options for querying benchmark data
 type BenchmarkFilters struct {
-	CreatedBy *int64  // Filter by creator user ID
-	TestKey   *string // Filter by test key prefix
-	BoolValue *bool   // Filter by boolean value
-	Category  *string // Filter by category
-	MinPriority *int  // Filter by minimum priority
+	CreatedBy   *int64  // Filter by creator user ID
+	TestKey     *string // Filter by test key prefix
+	BoolValue   *bool   // Filter by boolean value
+	Category    *string // Filter by category
+	MinPriority *int    // Filter by minimum priority
 }
 
 // OperationResult represents the result of a single benchmark operation
@@ -131,7 +131,7 @@ type BenchmarkSuiteResult struct {
 	Version         string      `json:"version"`
 	SystemInfo      *SystemInfo `json:"system_info"`
 	TotalDurationMs float64     `json:"total_duration_ms"`
-	Overall         string      `json:"overall"` // "pass", "fail", "degraded"
+	Overall         string      `json:"overall"`      // "pass", "fail", "degraded"
 	RecordCount     int         `json:"record_count"` // Number of records used in benchmark
 
 	Database      *DatabaseBenchmarkResult      `json:"database"`
