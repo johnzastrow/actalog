@@ -5,6 +5,33 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import fs from 'fs'
 
+/**
+ * Custom plugin to optimize Material Design Icons font loading.
+ * Removes ttf, eot, and woff formats from @font-face, keeping only woff2.
+ * This reduces the bundle size by ~2.9MB.
+ *
+ * woff2 is supported by all modern browsers (Chrome 36+, Firefox 39+,
+ * Safari 12+, Edge 14+, iOS Safari 10+, Android 5+).
+ */
+function mdiWoff2Only() {
+  return {
+    name: 'mdi-woff2-only',
+    enforce: 'pre',
+    transform(code, id) {
+      // Only process the MDI CSS file
+      if (id.includes('@mdi/font') && id.endsWith('.css')) {
+        // Replace the @font-face src with woff2 only
+        const modified = code.replace(
+          /src:\s*url\([^)]+\.eot[^;]*;[\s\S]*?src:\s*url\([^)]+\.eot[^)]*\)[^,]*,\s*url\(([^)]+\.woff2[^)]*)\)[^,]*,\s*url\([^)]+\.woff[^)]*\)[^,]*,\s*url\([^)]+\.ttf[^)]*\)[^;]*;/g,
+          'src: url($1) format("woff2");'
+        )
+        return { code: modified, map: null }
+      }
+      return null
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 
 // Optional local HTTPS support: if `web/certs/<host>.pem` and
@@ -45,11 +72,25 @@ export default defineConfig({
     exclude: []
   },
   plugins: [
+    mdiWoff2Only(), // Must be first to transform MDI CSS before other processing
     vue(),
     vuetify({ autoImport: true }),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      // Use 'prompt' for user-controlled updates (works with UpdatePrompt.vue)
+      // User decides when to apply updates instead of auto-reload
+      registerType: 'prompt',
+      includeAssets: [
+        'favicon.ico',
+        'robots.txt',
+        'apple-touch-icon.png',
+        'apple-touch-icon-120x120.png',
+        'apple-touch-icon-152x152.png',
+        'apple-touch-icon-167x167.png',
+        'apple-touch-icon-180x180.png',
+        'apple-touch-icon-1024x1024.png',
+        'logo.svg',
+        'logo.png'
+      ],
       manifest: {
         name: 'ActaLog - CrossFit Workout Tracker',
         short_name: 'ActaLog',
@@ -117,17 +158,30 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          {
+            src: '/icons/icon-1024x1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },
       workbox: {
         globDirectory: 'dist',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Precache app shell and assets, but NOT /fonts/ directory (lazy-loaded)
+        // MDI icons in /assets/ are included, accessibility fonts in /fonts/ are loaded on demand
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg}',
+          'assets/*.woff2' // Only MDI icon font, not /fonts/ directory
+        ],
+        // Exclude accessibility fonts from precache - they're lazy-loaded
+        globIgnores: ['fonts/**/*'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+        // Note: skipWaiting and clientsClaim removed for prompt mode
+        // User controls when to apply updates via UpdatePrompt.vue
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -201,6 +255,36 @@ export default defineConfig({
               statuses: [0, 200]
             },
             networkTimeoutSeconds: 5
+          }
+        },
+        // Cache local fonts with long expiration
+        {
+          urlPattern: /\/fonts\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'local-fonts-cache',
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        // Cache uploaded images with StaleWhileRevalidate
+        {
+          urlPattern: /\/uploads\/.*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'uploads-cache',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
           }
         }
         ]

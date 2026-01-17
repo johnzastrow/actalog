@@ -16,7 +16,7 @@
             :items="users"
             item-title="email"
             item-value="id"
-            variant="outlined"
+            
             density="compact"
             :loading="loadingUsers"
             :rules="[v => !!v || 'User is required']"
@@ -38,7 +38,7 @@
             :items="organizations"
             item-title="name"
             item-value="id"
-            variant="outlined"
+            
             density="compact"
             :loading="loadingOrgs"
             :rules="[v => !!v || 'Organization is required']"
@@ -51,7 +51,7 @@
             v-model="form.subscription_type"
             label="Subscription Type"
             :items="subscriptionTypes"
-            variant="outlined"
+            
             density="compact"
             :rules="[v => !!v || 'Subscription type is required']"
             prepend-inner-icon="mdi-tag"
@@ -71,7 +71,7 @@
           <v-textarea
             v-model="form.notes"
             label="Admin Notes (Optional)"
-            variant="outlined"
+            
             density="compact"
             rows="3"
             hint="Internal notes about this subscription"

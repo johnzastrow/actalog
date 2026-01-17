@@ -15,7 +15,7 @@
           item-value="id"
           :loading="loadingSearch"
           placeholder="Search for a WOD or Movement..."
-          variant="outlined"
+          
           density="comfortable"
           clearable
           auto-select-first
@@ -76,116 +76,149 @@
 
         <!-- MOVEMENT-SPECIFIC CONTENT -->
         <template v-if="selectedItem.type === 'movement'">
-          <!-- Heaviest Lifts (Top 3 Maxes) -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="primary" size="small" class="mr-1">mdi-trophy</v-icon>
-              Heaviest Lifts
-            </h2>
+          <v-expansion-panels v-model="expandedPanels" multiple class="mb-3">
+            <!-- 1. Best Estimated 1RM -->
+            <v-expansion-panel value="best1rm" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="warning" size="small" class="mr-2">mdi-arm-flex</v-icon>
+                <span class="text-body-1 font-weight-bold">Best Estimated 1RM</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+                <div v-else-if="!best1RM" class="text-center py-4">
+                  <p class="text-caption text-disabled">No weight/reps data available</p>
+                </div>
 
-            <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
-              <p class="text-caption text-disabled">No performance data yet</p>
-            </div>
-
-            <div v-else>
-              <v-row>
-                <v-col v-for="(lift, index) in heaviestLifts" :key="index" cols="4">
-                  <div class="text-center">
-                    <v-chip
-                      :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
-                      size="small"
-                      class="mb-2"
-                      label
-                    >
-                      #{{ index + 1 }}
-                    </v-chip>
-                    <div class="font-weight-bold text-h6" >
-                      {{ lift.weight }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                      lbs
-                    </div>
-                    <div v-if="lift.reps" class="text-caption text-disabled">
-                      {{ lift.reps }} reps
-                    </div>
+                <div v-else class="text-center">
+                  <div class="font-weight-bold text-h4" style="color: rgb(var(--v-theme-warning))">
+                    {{ Math.round(best1RM) }}
                   </div>
-                </v-col>
-              </v-row>
-            </div>
-          </v-card>
+                  <div class="text-caption mb-2 text-medium-emphasis">
+                    lbs (estimated)
+                  </div>
+                  <v-chip
+                    v-if="bestFormula"
+                    size="x-small"
+                    color="grey-lighten-2"
+                    label
+                    class="text-caption"
+                  >
+                    {{ bestFormula }}
+                  </v-chip>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-          <!-- Best Estimated 1RM -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >
-              <v-icon color="warning" size="small" class="mr-1">mdi-arm-flex</v-icon>
-              Best Estimated 1RM
-            </h2>
+            <!-- 2. Percent of Best (NEW) -->
+            <v-expansion-panel v-if="showPercentOfBest" value="percentOfBest" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-percent</v-icon>
+                <span class="text-body-1 font-weight-bold">Percent of Best</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <v-table density="compact">
+                  <thead>
+                    <tr>
+                      <th class="text-left">% of Heaviest</th>
+                      <th class="text-right">Weight (lbs)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="pct in percentages" :key="pct.percent">
+                      <td>{{ pct.percent }}%</td>
+                      <td class="text-right font-weight-bold">{{ pct.weight }}</td>
+                    </tr>
+                  </tbody>
+                </v-table>
+                <div class="text-caption text-medium-emphasis mt-2 text-center">
+                  Based on heaviest lift: {{ heaviestWeight }} lbs
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+            <!-- 3. Heaviest Lifts -->
+            <v-expansion-panel value="heaviestLifts" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-trophy</v-icon>
+                <span class="text-body-1 font-weight-bold">Heaviest Lifts</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-else-if="!best1RM" class="text-center py-4">
-              <p class="text-caption text-disabled">No weight/reps data available</p>
-            </div>
+                <div v-else-if="heaviestLifts.length === 0" class="text-center py-4">
+                  <p class="text-caption text-disabled">No performance data yet</p>
+                </div>
 
-            <div v-else class="text-center">
-              <div class="font-weight-bold text-h4" style="color: rgb(var(--v-theme-warning))">
-                {{ Math.round(best1RM) }}
-              </div>
-              <div class="text-caption mb-2 text-medium-emphasis">
-                lbs (estimated)
-              </div>
-              <v-chip
-                v-if="bestFormula"
-                size="x-small"
-                color="grey-lighten-2"
-                label
-                class="text-caption"
-              >
-                {{ bestFormula }}
-              </v-chip>
-            </div>
-          </v-card>
+                <div v-else>
+                  <v-row>
+                    <v-col v-for="(lift, index) in heaviestLifts" :key="index" cols="4">
+                      <div class="text-center">
+                        <v-chip
+                          :color="index === 0 ? '#ffc107' : index === 1 ? '#9e9e9e' : '#cd7f32'"
+                          size="small"
+                          class="mb-2"
+                          label
+                        >
+                          #{{ index + 1 }}
+                        </v-chip>
+                        <div class="font-weight-bold text-h6">
+                          {{ lift.weight }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          lbs
+                        </div>
+                        <div v-if="lift.reps" class="text-caption text-disabled">
+                          {{ lift.reps }} reps
+                        </div>
+                      </div>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
-          <!-- Rep Scheme Dropdown Filter -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <v-select
-              v-model="selectedRepScheme"
-              :items="repSchemes"
-              label="Filter by Rep Scheme"
-              variant="outlined"
-              density="comfortable"
-              rounded="lg"
-              hide-details
-              @update:model-value="filterChart"
-            >
-              <template #prepend-inner>
-                <v-icon color="primary" size="small">mdi-filter</v-icon>
-              </template>
-            </v-select>
-          </v-card>
+            <!-- 4. Performance Chart (with Rep Scheme filter inside) -->
+            <v-expansion-panel value="performanceChart" elevation="0" rounded="lg" bg-color="surface">
+              <v-expansion-panel-title>
+                <v-icon color="primary" size="small" class="mr-2">mdi-chart-line</v-icon>
+                <span class="text-body-1 font-weight-bold">Performance Chart</span>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <!-- Rep Scheme Filter -->
+                <v-select
+                  v-model="selectedRepScheme"
+                  :items="repSchemes"
+                  label="Filter by Rep Scheme"
+                  density="comfortable"
+                  rounded="lg"
+                  hide-details
+                  class="mb-3"
+                  @update:model-value="filterChart"
+                >
+                  <template #prepend-inner>
+                    <v-icon color="primary" size="small">mdi-filter</v-icon>
+                  </template>
+                </v-select>
 
-          <!-- Performance Chart -->
-          <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
-            <h2 class="text-body-1 font-weight-bold mb-3" >Performance Chart</h2>
+                <div v-if="loadingPerformance" class="text-center py-4">
+                  <v-progress-circular indeterminate color="primary" size="32" />
+                </div>
 
-            <div v-if="loadingPerformance" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary" size="32" />
-            </div>
+                <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
+                  <p class="text-caption text-disabled">No data for selected filter</p>
+                </div>
 
-            <div v-else-if="filteredChartData.length === 0" class="text-center py-4">
-              <p class="text-caption text-disabled">No data for selected filter</p>
-            </div>
-
-            <div v-else style="height: 250px; position: relative; width: 100%">
-              <canvas ref="chartCanvas" style="width: 100%; height: 100%"></canvas>
-            </div>
-          </v-card>
+                <div v-else style="height: 250px; position: relative; width: 100%">
+                  <canvas ref="chartCanvas" style="width: 100%; height: 100%"></canvas>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </template>
 
         <!-- WOD-SPECIFIC CONTENT -->
@@ -255,7 +288,7 @@
             <v-progress-circular indeterminate color="primary" size="32" />
           </div>
 
-          <div v-else-if="Object.keys(groupedHistory).length === 0" class="text-center py-4">
+          <div v-else-if="groupedHistory.length === 0" class="text-center py-4">
             <v-icon size="48" color="surface-variant">mdi-history</v-icon>
             <p class="text-body-2 mt-2 text-medium-emphasis">No history yet</p>
             <p class="text-caption text-disabled">
@@ -265,13 +298,13 @@
 
           <!-- History Grouped by Year -->
           <div v-else>
-            <div v-for="(entries, year) in groupedHistory" :key="year" class="mb-4">
+            <div v-for="group in groupedHistory" :key="group.year" class="mb-4">
               <v-chip size="small" color="primary" label class="mb-2">
-                {{ year }}
+                {{ group.year }}
               </v-chip>
 
               <v-card
-                v-for="(entry, index) in entries"
+                v-for="(entry, index) in group.entries"
                 :key="index"
                 elevation="0"
                 rounded="lg"
@@ -312,6 +345,17 @@
                     </div>
                   </div>
 
+                  <!-- RPE Chip -->
+                  <v-chip
+                    v-if="entry.rpe"
+                    size="x-small"
+                    :color="getRPEColor(entry.rpe)"
+                    variant="flat"
+                    class="ml-2"
+                  >
+                    {{ getRPEShortLabel(entry.rpe) }}
+                  </v-chip>
+
                   <!-- PR Badge -->
                   <v-chip
                     v-if="entry.is_pr"
@@ -346,7 +390,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -361,7 +405,7 @@
               </label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -377,7 +421,7 @@
               <v-text-field
                 v-model.number="quickLogData.totalTime"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., 30"
                 hide-details
@@ -392,7 +436,7 @@
               </label>
               <v-textarea
                 v-model="quickLogData.notes"
-                variant="outlined"
+                
                 density="compact"
                 rows="3"
                 placeholder="How did it feel? Any highlights?"
@@ -412,7 +456,7 @@
                 item-value="id"
                 return-object
                 :loading="loadingMovements || loadingWods"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -466,7 +510,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.sets"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -477,7 +521,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.reps"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -488,7 +532,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.weight"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -500,7 +544,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.time"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -511,7 +555,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.distance"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -522,7 +566,7 @@
                   <label class="text-caption">Notes</label>
                   <v-textarea
                     v-model="quickLogData.movement.notes"
-                    variant="outlined"
+                    
                     density="compact"
                     rows="2"
                     hide-details
@@ -536,7 +580,7 @@
                   <label class="text-caption">Score Type (from WOD)</label>
                   <v-text-field
                     v-model="quickLogData.wod.scoreType"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     readonly
@@ -550,7 +594,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeHours"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -562,7 +606,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeMinutes"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -574,7 +618,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeSecondsInput"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -592,7 +636,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.rounds"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -604,7 +648,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.reps"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -619,7 +663,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.weight"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -633,7 +677,7 @@
                   <label class="text-caption">Notes</label>
                   <v-textarea
                     v-model="quickLogData.wod.notes"
-                    variant="outlined"
+                    
                     density="compact"
                     rows="2"
                     hide-details
@@ -704,9 +748,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import axios from '@/utils/axios'
 import { Chart, registerables } from 'chart.js'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
+import { getRPEColor, getRPEShortLabel } from '@/utils/rpe'
 
 Chart.register(...registerables)
 
+const settingsStore = useSettingsStore()
 const theme = useTheme()
 
 // Get theme colors as hex values for Chart.js
@@ -742,6 +790,9 @@ const bestFormula = ref(null) // Formula used for best 1RM
 // Movement-specific
 const selectedRepScheme = ref('All')
 const repSchemes = ref(['All'])
+
+// Expansion panels state - default expanded panels
+const expandedPanels = ref(['heaviestLifts', 'percentOfBest'])
 
 // Chart instances
 const chartCanvas = ref(null)
@@ -787,10 +838,16 @@ const loadingWods = ref(false)
 const heaviestLifts = computed(() => {
   if (!selectedItem.value || selectedItem.value.type !== 'movement') return []
 
-  // Get all unique weight records, sorted by weight descending
+  // Get all unique weight records, sorted by weight descending, then by date descending
   const weightRecords = performanceData.value
     .filter(p => p.weight)
-    .sort((a, b) => b.weight - a.weight)
+    .sort((a, b) => {
+      // Primary sort: weight descending
+      const weightDiff = b.weight - a.weight
+      if (weightDiff !== 0) return weightDiff
+      // Secondary sort: date descending (most recent first)
+      return new Date(b.workout_date) - new Date(a.workout_date)
+    })
 
   // Get top 3 unique weights
   const seen = new Set()
@@ -805,6 +862,28 @@ const heaviestLifts = computed(() => {
   }
 
   return top3
+})
+
+// Computed: Heaviest Weight (for Percent of Best calculations)
+const heaviestWeight = computed(() => {
+  if (heaviestLifts.value.length === 0) return null
+  return heaviestLifts.value[0].weight
+})
+
+// Computed: Show Percent of Best section (only for movements with weight data)
+const showPercentOfBest = computed(() => {
+  return heaviestWeight.value && heaviestWeight.value > 0
+})
+
+// Computed: Percentage calculations based on heaviest lift
+const percentages = computed(() => {
+  if (!heaviestWeight.value) return []
+  // Standard percentages for strength training
+  const percents = [95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 25]
+  return percents.map(pct => ({
+    percent: pct,
+    weight: Math.round(heaviestWeight.value * (pct / 100))
+  }))
 })
 
 // Computed: Best WOD Performances (Top 3)
@@ -826,21 +905,24 @@ const bestWODPerformances = computed(() => {
     validData = performanceData.value
   }
 
-  // Sort by best performance based on score type
+  // Sort by best performance based on score type, with date as secondary sort (most recent first)
   const sorted = [...validData].sort((a, b) => {
+    let scoreDiff = 0
     if (wodScoreType.includes('Time')) {
       // Time-based (lower is better)
-      return a.time_seconds - b.time_seconds
+      scoreDiff = a.time_seconds - b.time_seconds
     } else if (wodScoreType.includes('Rounds')) {
       // Rounds+Reps (higher is better)
       const aTotal = (a.rounds || 0) * 1000 + (a.reps || 0)
       const bTotal = (b.rounds || 0) * 1000 + (b.reps || 0)
-      return bTotal - aTotal
+      scoreDiff = bTotal - aTotal
     } else if (wodScoreType.includes('Weight')) {
       // Weight (higher is better)
-      return b.weight - a.weight
+      scoreDiff = b.weight - a.weight
     }
-    return 0
+    // Secondary sort: date descending (most recent first) for equal scores
+    if (scoreDiff !== 0) return scoreDiff
+    return new Date(b.workout_date) - new Date(a.workout_date)
   })
 
   return sorted.slice(0, 3)
@@ -907,9 +989,9 @@ const wodPerformanceData = computed(() => {
   return performanceData.value
 })
 
-// Computed: History Grouped by Year
+// Computed: History Grouped by Year (returns array to preserve descending year order)
 const groupedHistory = computed(() => {
-  if (!selectedItem.value || performanceData.value.length === 0) return {}
+  if (!selectedItem.value || performanceData.value.length === 0) return []
 
   const grouped = {}
 
@@ -921,18 +1003,15 @@ const groupedHistory = computed(() => {
     grouped[year].push(entry)
   })
 
-  // Sort years descending
-  const sorted = {}
-  Object.keys(grouped)
+  // Sort years descending and return as array to preserve order
+  return Object.keys(grouped)
     .sort((a, b) => b - a)
-    .forEach(year => {
-      // Sort entries within year by date descending
-      sorted[year] = grouped[year].sort((a, b) =>
+    .map(year => ({
+      year,
+      entries: grouped[year].sort((a, b) =>
         new Date(b.workout_date) - new Date(a.workout_date)
       )
-    })
-
-  return sorted
+    }))
 })
 
 // Search Handler (debounced unified search)
@@ -1595,37 +1674,30 @@ function formatWODScore(performance) {
   return 'N/A'
 }
 
-// Format Date (for display with Today/Yesterday)
+// Format Date using user's timezone (for display with Today/Yesterday)
 function formatDate(dateString) {
+  const tz = settingsStore.timezone
   const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
 
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  // Get today and yesterday in user's timezone
+  const todayStr = getTodayInTimezone(tz)
+  const todayDate = new Date(todayStr)
+  const yesterdayDate = new Date(todayDate)
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
 
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
-
-  if (dateOnly.getTime() === todayOnly.getTime()) {
+  if (datePart === todayStr) {
     return 'Today'
-  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+  } else if (datePart === yesterdayStr) {
     return 'Yesterday'
   } else {
-    const options = { month: 'short', day: 'numeric', year: 'numeric' }
-    return date.toLocaleDateString('en-US', options)
+    return formatDateInTimezone(dateString, tz, 'MMM d, yyyy')
   }
 }
 
 // Format Date for charts (always show actual date with year)
 function formatChartDate(dateString) {
-  const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
-  const options = { month: 'short', day: 'numeric', year: 'numeric' }
-  return date.toLocaleDateString('en-US', options)
+  return formatDateInTimezone(dateString, settingsStore.timezone, 'MMM d, yyyy')
 }
 
 // Format Time

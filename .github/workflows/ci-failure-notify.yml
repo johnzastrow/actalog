@@ -16,26 +16,35 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Render issue body
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          COMMIT_ID: ${{ github.event.workflow_run.head_commit.id }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          SERVER_URL: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
         run: |
-          cat > /tmp/ci_issue.md <<'EOF'
-CI Workflow failure detected
+          cat > /tmp/ci_issue.md << EOF
+          ## CI Workflow failure detected
 
-A CI workflow run has failed. Details:
+          A CI workflow run has failed. Details:
 
-- Workflow: ${{ github.event.workflow_run.name }}
-- Run ID: ${{ github.event.workflow_run.id }}
-- Branch: ${{ github.event.workflow_run.head_branch }}
-- Commit: ${{ github.event.workflow_run.head_commit.id }}
-- Conclusion: ${{ github.event.workflow_run.conclusion }}
+          - **Workflow:** ${WORKFLOW_NAME}
+          - **Run ID:** ${RUN_ID}
+          - **Branch:** ${HEAD_BRANCH}
+          - **Commit:** ${COMMIT_ID}
+          - **Conclusion:** ${CONCLUSION}
 
-Run URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+          **Run URL:** ${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}
 
-Please investigate the failure. If this is intermittent, mark the issue as "flaky" and close when fixed.
+          Please investigate the failure. If this is intermittent, mark the issue as "flaky" and close when fixed.
 
---
-This issue was created automatically by the CI Failure Notify workflow.
-EOF
+          ---
+          *This issue was created automatically by the CI Failure Notify workflow.*
+          EOF
 
       - name: Create issue for failed CI run
         uses: peter-evans/create-issue-from-file@v4
@@ -43,4 +52,4 @@ EOF
           title: "[CI] Workflow failure: ${{ github.event.workflow_run.name }} on ${{ github.event.workflow_run.head_branch }}"
           content-filepath: /tmp/ci_issue.md
           labels: ci,failure,auto
-          assignees: ''
+          assignees: ""

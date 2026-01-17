@@ -35,6 +35,13 @@ type User struct {
 	LastLoginAt *time.Time `json:"last_login_at,omitempty" db:"last_login_at"`
 }
 
+// UserListFilter represents filter criteria for user listing
+type UserListFilter struct {
+	Search        string     `json:"search,omitempty"`         // Search in name and email
+	CreatedAfter  *time.Time `json:"created_after,omitempty"`  // Users created after this date
+	CreatedBefore *time.Time `json:"created_before,omitempty"` // Users created before this date
+}
+
 // RefreshToken represents a refresh token for "Remember Me" functionality
 type RefreshToken struct {
 	ID         int64      `json:"id" db:"id"`
@@ -58,6 +65,7 @@ type UserRepository interface {
 	Delete(id int64) error
 	List(limit, offset int) ([]*User, error)
 	Count() (int64, error)
+	ListAdmins() ([]*User, error)
 
 	// Account security methods
 	IncrementFailedAttempts(userID int64) error
@@ -67,6 +75,14 @@ type UserRepository interface {
 	IsAccountLocked(userID int64) (bool, *time.Time, error) // Returns locked status and unlock time
 	DisableAccount(userID int64, disabledBy int64, reason string) error
 	EnableAccount(userID int64) error
+
+	// Admin metrics methods
+	CountNewThisMonth() (int64, error)
+	CountDisabled() (int64, error)
+
+	// Filter methods for user import/export
+	ListWithFilter(filter UserListFilter, limit, offset int) ([]*User, error)
+	CountWithFilter(filter UserListFilter) (int64, error)
 }
 
 // RefreshTokenRepository defines the interface for refresh token data access

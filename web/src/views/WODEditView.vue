@@ -30,7 +30,7 @@
           v-model="wod.name"
           label="WOD Name"
           placeholder="e.g., Fran, Murph, Helen"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -46,7 +46,7 @@
           v-model="wod.wod_type"
           :items="wodTypes"
           label="WOD Type"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -60,7 +60,7 @@
           v-model="wod.scoring_type"
           :items="scoringTypes"
           label="Scoring Type"
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           class="mb-2"
@@ -76,7 +76,7 @@
               v-model.number="wod.time_cap"
               label="Time Cap (minutes)"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="0"
@@ -89,7 +89,7 @@
               v-model.number="wod.rounds"
               label="Rounds"
               type="number"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               min="1"
@@ -112,7 +112,9 @@
           v-model="wod.description"
           label="Description"
           placeholder="Describe the WOD, modifications, or notes"
-          variant="outlined"
+          hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
+          persistent-hint
+
           density="compact"
           rounded="lg"
           rows="3"
@@ -154,7 +156,6 @@
             elevation="0"
             rounded="lg"
             class="mb-2 pa-3"
-            style="border: 1px solid #e0e0e0"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" class="mr-2">mdi-drag-vertical</v-icon>
@@ -175,7 +176,7 @@
               item-title="name"
               item-value="id"
               label="Select Movement"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               :loading="loadingMovements"
@@ -194,7 +195,7 @@
                   v-model.number="movement.reps"
                   label="Reps"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="1"
@@ -206,7 +207,7 @@
                   v-model.number="movement.rx_weight"
                   label="RX Weight (lbs)"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="0"
@@ -221,7 +222,7 @@
                   v-model.number="movement.scaled_weight"
                   label="Scaled Weight (lbs)"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="0"
@@ -233,7 +234,7 @@
                   v-model.number="movement.distance_meters"
                   label="Distance (m)"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   rounded="lg"
                   min="0"
@@ -246,7 +247,7 @@
               v-model="movement.notes"
               label="Notes (Optional)"
               placeholder="e.g., chest-to-bar, unbroken"
-              variant="outlined"
+              
               density="compact"
               rounded="lg"
               class="mt-2"
@@ -275,7 +276,7 @@
           v-if="isEditMode"
           block
           color="error"
-          variant="outlined"
+          
           size="large"
           rounded="lg"
           class="mt-2"

@@ -661,3 +661,204 @@ func TestAuditLogRepository_ListOrderByCreatedAt(t *testing.T) {
 		}
 	}
 }
+
+func TestAuditLogRepository_Create_UnsupportedDriver(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	// Create repo with unsupported driver
+	auditRepo := NewAuditLogRepository(db, "unsupported_driver")
+
+	log := &domain.AuditLog{
+		EventType: domain.EventLoginSuccess,
+	}
+
+	err = auditRepo.Create(log)
+	if err == nil {
+		t.Error("Create() with unsupported driver should return error")
+	}
+	if err != nil && !contains(err.Error(), "unsupported database driver") {
+		t.Errorf("Create() error = %v, want error containing 'unsupported database driver'", err)
+	}
+}
+
+func TestAuditLogRepository_Count_AllFilters(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	auditRepo := NewAuditLogRepository(db, "sqlite3")
+
+	// Create test users
+	user1 := &domain.User{
+		Email:        "user1@example.com",
+		PasswordHash: "hashedpassword",
+		Name:         "User 1",
+		Role:         "user",
+	}
+	if err := userRepo.Create(user1); err != nil {
+		t.Fatalf("Failed to create user1: %v", err)
+	}
+
+	user2 := &domain.User{
+		Email:        "user2@example.com",
+		PasswordHash: "hashedpassword",
+		Name:         "User 2",
+		Role:         "admin",
+	}
+	if err := userRepo.Create(user2); err != nil {
+		t.Fatalf("Failed to create user2: %v", err)
+	}
+
+	now := time.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	tomorrow := now.AddDate(0, 0, 1)
+	ip1 := "192.168.1.1"
+	ip2 := "10.0.0.1"
+
+	// Create audit logs with various combinations
+	logsData := []struct {
+		userID       *int64
+		targetUserID *int64
+		eventType    string
+		ipAddress    *string
+		createdAt    time.Time
+	}{
+		{&user1.ID, nil, domain.EventLoginSuccess, &ip1, now},
+		{&user1.ID, nil, domain.EventLoginSuccess, &ip1, now},
+		{&user1.ID, nil, domain.EventLogout, &ip1, yesterday},
+		{&user2.ID, &user1.ID, domain.EventAccountDisabled, &ip2, now},
+		{nil, nil, domain.EventAccountLockedAuto, nil, now},
+	}
+
+	for _, l := range logsData {
+		_, err := db.Exec(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, created_at) VALUES (?, ?, ?, ?, ?)`,
+			l.userID, l.targetUserID, l.eventType, l.ipAddress, l.createdAt)
+		if err != nil {
+			t.Fatalf("Failed to create audit log: %v", err)
+		}
+	}
+
+	eventTypeLogin := domain.EventLoginSuccess
+
+	tests := []struct {
+		name      string
+		filters   domain.AuditLogFilters
+		wantCount int
+	}{
+		{
+			name:      "Count by target user ID",
+			filters:   domain.AuditLogFilters{TargetUserID: &user1.ID},
+			wantCount: 1,
+		},
+		{
+			name:      "Count by IP address",
+			filters:   domain.AuditLogFilters{IPAddress: &ip1},
+			wantCount: 3,
+		},
+		{
+			name:      "Count by date range",
+			filters:   domain.AuditLogFilters{StartDate: &yesterday, EndDate: &tomorrow},
+			wantCount: 5,
+		},
+		{
+			name:      "Count with multiple filters",
+			filters:   domain.AuditLogFilters{UserID: &user1.ID, EventType: &eventTypeLogin, IPAddress: &ip1},
+			wantCount: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := auditRepo.Count(tt.filters)
+			if err != nil {
+				t.Errorf("Count() error = %v", err)
+				return
+			}
+			if got != tt.wantCount {
+				t.Errorf("Count() = %d, want %d", got, tt.wantCount)
+			}
+		})
+	}
+}
+
+func TestAuditLogRepository_List_AllFilters(t *testing.T) {
+	db, cleanup, err := SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	userRepo := NewSQLiteUserRepository(db)
+	auditRepo := NewAuditLogRepository(db, "sqlite3")
+
+	// Create test users
+	user1 := &domain.User{
+		Email:        "user1@example.com",
+		PasswordHash: "hashedpassword",
+		Name:         "User 1",
+		Role:         "user",
+	}
+	if err := userRepo.Create(user1); err != nil {
+		t.Fatalf("Failed to create user1: %v", err)
+	}
+
+	user2 := &domain.User{
+		Email:        "user2@example.com",
+		PasswordHash: "hashedpassword",
+		Name:         "User 2",
+		Role:         "admin",
+	}
+	if err := userRepo.Create(user2); err != nil {
+		t.Fatalf("Failed to create user2: %v", err)
+	}
+
+	now := time.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	tomorrow := now.AddDate(0, 0, 1)
+	ip1 := "192.168.1.1"
+
+	// Create audit log with all fields
+	_, err = db.Exec(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, created_at) VALUES (?, ?, ?, ?, ?)`,
+		user1.ID, user2.ID, domain.EventLoginSuccess, ip1, now)
+	if err != nil {
+		t.Fatalf("Failed to create audit log: %v", err)
+	}
+
+	// Test combined filters
+	filters := domain.AuditLogFilters{
+		UserID:       &user1.ID,
+		TargetUserID: &user2.ID,
+		IPAddress:    &ip1,
+		StartDate:    &yesterday,
+		EndDate:      &tomorrow,
+	}
+
+	got, err := auditRepo.List(filters, 100, 0)
+	if err != nil {
+		t.Fatalf("List() with all filters error = %v", err)
+	}
+	if len(got) != 1 {
+		t.Errorf("List() with all filters returned %d logs, want 1", len(got))
+	}
+}
+
+// helper function to check if string contains substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}

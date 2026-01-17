@@ -89,6 +89,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone } from '@/utils/timezone'
+
+const settingsStore = useSettingsStore()
 
 const loading = ref(true)
 const searchQuery = ref('')
@@ -152,11 +156,10 @@ const groupedWODPRs = computed(() => {
   return groups
 })
 
-// Format date (e.g., "Fri, Oct 10, 2024")
+// Format date using user's timezone (e.g., "Fri, Oct 10, 2024")
 const formatDate = (dateString) => {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  return formatDateInTimezone(dateString, settingsStore.timezone, 'EEE, MMM d, yyyy')
 }
 
 // Format movement performance (e.g., "2 x 1 @ 175 lbs")

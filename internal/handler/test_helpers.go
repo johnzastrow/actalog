@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
@@ -54,4 +55,51 @@ func assertBodyContains(t interface{ Errorf(string, ...interface{}) }, rr *httpt
 	if !strings.Contains(rr.Body.String(), expected) {
 		t.Errorf("handler body does not contain %q: got %s", expected, rr.Body.String())
 	}
+}
+
+// addChiURLParam adds a chi URL parameter to a request context
+func addChiURLParam(r *http.Request, key, value string) *http.Request {
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add(key, value)
+	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+}
+
+// addChiURLParams adds multiple chi URL parameters to a request context
+func addChiURLParams(r *http.Request, params map[string]string) *http.Request {
+	rctx := chi.NewRouteContext()
+	for key, value := range params {
+		rctx.URLParams.Add(key, value)
+	}
+	return r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+}
+
+// createUserIDOnlyRequest creates a request with only userID in context (no email or role)
+// Useful for testing "missing role" authorization checks
+func createUserIDOnlyRequest(method, path, body string, userID int64) *http.Request {
+	req := createTestRequest(method, path, body)
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	return req.WithContext(ctx)
+}
+
+// createMultipartRequest creates a multipart form request for file upload testing
+// Returns nil if there's an error creating the request
+func createMultipartRequest(method, path, fieldName, fileName, contentType string, fileContent []byte, userID int64, email, role string) *http.Request {
+	body := &strings.Builder{}
+
+	// Create a simple multipart form body manually
+	boundary := "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+
+	body.WriteString("--" + boundary + "\r\n")
+	body.WriteString("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + fileName + "\"\r\n")
+	body.WriteString("Content-Type: " + contentType + "\r\n\r\n")
+	body.WriteString(string(fileContent))
+	body.WriteString("\r\n--" + boundary + "--\r\n")
+
+	req := httptest.NewRequest(method, path, strings.NewReader(body.String()))
+	req.Header.Set("Content-Type", "multipart/form-data; boundary="+boundary)
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.UserEmailKey, email)
+	ctx = context.WithValue(ctx, middleware.UserRoleKey, role)
+	return req.WithContext(ctx)
 }

@@ -28,7 +28,29 @@ func NewMovementHandler(movementRepo domain.MovementRepository, movementService 
 	}
 }
 
+// CreateMovementRequest represents a movement creation request
+// @Description Request to create a new custom movement
+type CreateMovementRequest struct {
+	Name        string `json:"name" example:"Kettlebell Swing"`
+	Description string `json:"description" example:"A hip hinge movement using a kettlebell"`
+	Type        string `json:"type" example:"strength"`
+}
+
+// MovementListResponse represents a list of movements
+// @Description List of movements
+type MovementListResponse struct {
+	Movements []*domain.Movement `json:"movements"`
+}
+
 // ListAll returns all movements (both standard and custom)
+// @Summary      List all movements
+// @Description  Retrieve all movements including standard and custom
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} MovementListResponse "List of all movements"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements [get]
 func (h *MovementHandler) ListAll(w http.ResponseWriter, r *http.Request) {
 	movements, err := h.movementRepo.ListAll()
 	if err != nil {
@@ -45,6 +67,14 @@ func (h *MovementHandler) ListAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListStandard returns all standard movements
+// @Summary      List standard movements
+// @Description  Retrieve only standard (built-in) movements
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} MovementListResponse "List of standard movements"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements/standard [get]
 func (h *MovementHandler) ListStandard(w http.ResponseWriter, r *http.Request) {
 	movements, err := h.movementRepo.ListStandard()
 	if err != nil {
@@ -61,6 +91,17 @@ func (h *MovementHandler) ListStandard(w http.ResponseWriter, r *http.Request) {
 }
 
 // Search searches for movements by name
+// @Summary      Search movements
+// @Description  Search for movements by name
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Param        q query string true "Search query"
+// @Param        limit query int false "Max results (default 20)"
+// @Success      200 {object} MovementListResponse "Matching movements"
+// @Failure      400 {object} ErrorResponse "Missing query parameter"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements/search [get]
 func (h *MovementHandler) Search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -95,6 +136,17 @@ func (h *MovementHandler) Search(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetByID returns a single movement by ID
+// @Summary      Get movement by ID
+// @Description  Retrieve a single movement by its ID
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Movement ID"
+// @Success      200 {object} domain.Movement "Movement details"
+// @Failure      400 {object} ErrorResponse "Invalid movement ID"
+// @Failure      404 {object} ErrorResponse "Movement not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements/{id} [get]
 func (h *MovementHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -121,6 +173,18 @@ func (h *MovementHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // Create creates a new custom movement
+// @Summary      Create a custom movement
+// @Description  Create a new custom movement (non-standard)
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateMovementRequest true "Movement details"
+// @Success      201 {object} domain.Movement "Created movement"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements [post]
 func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from context for audit logging
 	userID, ok := middleware.GetUserID(r.Context())
@@ -173,6 +237,20 @@ func (h *MovementHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update updates an existing custom movement
+// @Summary      Update a movement
+// @Description  Update an existing movement (admin can update any, users only custom)
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Movement ID"
+// @Param        request body CreateMovementRequest true "Updated movement details"
+// @Success      200 {object} domain.Movement "Updated movement"
+// @Failure      400 {object} ErrorResponse "Invalid request body"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Cannot modify standard movement"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements/{id} [put]
 func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from context for audit logging
 	userID, ok := middleware.GetUserID(r.Context())
@@ -252,6 +330,19 @@ func (h *MovementHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete deletes a custom movement
+// @Summary      Delete a movement
+// @Description  Delete a custom movement (cannot delete standard movements)
+// @Tags         movements
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Movement ID"
+// @Success      200 {object} MessageResponse "Movement deleted successfully"
+// @Failure      400 {object} ErrorResponse "Invalid movement ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Cannot delete standard movement"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /movements/{id} [delete]
 func (h *MovementHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID and email from context for audit logging
 	userID, ok := middleware.GetUserID(r.Context())

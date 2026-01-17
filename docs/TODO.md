@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2025-12-23
-> **Current Version:** 0.17.0-beta (in development)
+> **Last Updated:** 2026-01-15
+> **Current Version:** 0.24.0-beta
 
 ---
 
@@ -36,7 +36,21 @@
 
 *Items currently being worked on. Move items here from Backlog when starting.*
 
-*(none currently)*
+### Test Suite Cleanup *(Completed)*
+
+**Status:** Phase 1 Complete, Phase 2 Complete
+**Tracking:** See `docs/TEST_CLEANUP.md` for detailed summary
+
+**Phase 1 - Removed ~31 low-value tests:**
+- Struct field assignment tests (19)
+- Language feature tests (10)
+- Trivial helper tests (2)
+
+**Phase 2 - Removed ~267 panic-expectation tests:**
+- All handler test files cleaned (24 files total)
+- Panic tests that created nil dependencies removed
+- Validation tests and mock-based tests preserved
+- All tests pass with proper coverage
 
 ### CI/Lint Fixes (Deferred)
 
@@ -63,6 +77,36 @@ The following lint issues need to be resolved to re-enable strict linting:
 
 ### High Priority
 
+#### Comprehensive Benchmark Endpoint *(Completed v0.22.0)*
+- [x] `[HIGH]` **Create `/api/benchmark` endpoint for system-wide performance testing**
+  - Exercises database, serialization, business logic, and concurrency through synthetic operations
+  - Uses isolated `benchmark_data` table (never touches real user data)
+  - Auto-cleanup after runs, user-scoped data isolation
+  - JWT authentication required
+  - **Backend implementation:**
+    - [x] Domain model (`internal/domain/benchmark.go`) - BenchmarkData entity, result structs, repository interface
+    - [x] Migration 0.22.0 (`internal/repository/migrations.go`) - benchmark_data table with indexes
+    - [x] Migration 0.23.0 - Extended fields for stress testing (large_text, json_blob, uuid)
+    - [x] Repository (`internal/repository/benchmark_repository.go`) - CRUD + batch operations
+    - [x] Service (`internal/service/benchmark_service.go`) - 18+ benchmark operations
+    - [x] Handler (`internal/handler/benchmark_handler.go`) - POST /benchmark, GET /benchmark/status
+    - [x] Route registration (`cmd/actalog/main.go`) - wire up handler
+  - **Benchmark operations:**
+    - Database: Insert, BulkInsert(100), SelectByID, SelectByKey, SelectList, SelectFiltered, Update, Delete
+    - Serialization: Marshal/Unmarshal small & large JSON
+    - Business Logic: 1RM calculations (1000x), validation, string/date operations
+    - Concurrent (optional): 10 parallel reads, 5 writes, mixed operations
+  - **Configurable record count:**
+    - [x] `?records=N` query parameter (default: 1000, max: 500000)
+    - [x] Complex benchmark data (5-10KB text, nested JSON blobs)
+    - [x] Server timeout configuration for large record counts
+  - **Benchmark tool integration (`actalog-benchmark` v0.7.0):**
+    - [x] Add `/api/benchmark` caller (`internal/metrics/benchmark_api.go`)
+    - [x] Add BenchmarkAPIResult to types.go
+    - [x] Update reporters to include benchmark API results
+    - [x] Add `--benchmark-records` flag for configurable record count
+    - [x] Comparison reports include server-side benchmark results
+
 #### Subscription System (Backend Complete - v0.14.0, Frontend Complete - v0.17.0)
 - [x] `[HIGH]` **Frontend Subscription Status Display**
   - [x] Add subscription status badge to user profile/settings (SubscriptionStatusBadge.vue in SettingsView)
@@ -77,8 +121,9 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Mark subscription as paid button/action (MarkAsPaidDialog.vue)
   - [x] Cancel subscription with reason input (CancelSubscriptionDialog.vue)
   - [x] View subscription history (SubscriptionDetailDialog.vue)
-  - [ ] List expiring subscriptions (next 30 days)
-  - [ ] List overdue/expired subscriptions
+  - [x] List expiring subscriptions API (backend complete v0.19.0)
+  - [x] List overdue/expired subscriptions API (backend complete v0.19.0)
+  - [x] Frontend UI for expiring/expired subscription lists (AdminSubscriptionsView.vue tabs)
 
 - [x] `[HIGH]` **Read-Only Mode UI Feedback**
   - [x] Graceful handling of HTTP 402 Payment Required responses (subscription.js store)
@@ -94,8 +139,30 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] Find more attractive icons for the navigation bar - replaced with Font Awesome icons (fa-house-chimney, fa-arrow-trend-up, fa-person-running, fa-circle-user)
   - [x] Allow notifications to be marked as read/unread (implemented in NotificationsView.vue)
   - [x] Develop a theme called "Sunrise" based on colors from sunset image (added to vuetify.js and theme.js)
-  - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue) 
-  - [ ] Add more helper text to form controls throughout the app (tooltips, placeholders, descriptions). For example, for fields that support markdown, expand on this one liner we see in Anncouncements: with, "Supports markdown: **bold**, *italic*, [links](url), lists (*, -, and numbers for bullets)" add others. 
+  - [x] Remove the View all link on the Dashboard (removed from DashboardView.vue)
+  - [x] Add more helper text to form controls throughout the app - Added markdown hints to textarea fields in WODCreateView, WODEditView, MovementCreateView, MovementEditView, WorkoutTemplateEditView, AdminAnnouncementsView (v0.22.0)
+
+- [x] `[HIGH]` **User-Customizable Fonts** *(Completed v0.19.0)*
+  - Self-hosted web fonts with 10 options (including accessibility fonts)
+  - Backend sync via user_settings table + localStorage cache
+  - All fonts use SIL OFL 1.1 or Apache 2.0 (free for commercial use, self-hosting allowed)
+  - **Font options:**
+    - System Default, Inter, Roboto, Lato, Fira Sans, Lexend
+    - OpenDyslexic (A11y), Atkinson Hyperlegible (A11y)
+    - Source Serif Pro, JetBrains Mono
+  - **Backend changes:**
+    - [x] Add `font_family` field to `internal/domain/user_settings.go`
+    - [x] Add migration 0.21.0 in `internal/repository/migrations.go`
+    - [x] Update SQL queries in `internal/repository/user_settings_repository.go`
+    - [x] Add default + audit logging in `internal/service/user_settings_service.go`
+  - **Frontend changes:**
+    - [x] Download fonts to `web/public/fonts/` (woff2 format)
+    - [x] Create `web/src/assets/fonts.css` with @font-face declarations
+    - [x] Create `web/src/stores/font.js` (font store)
+    - [x] Update `web/src/stores/settings.js` (add fontFamily sync)
+    - [x] Update `web/src/App.vue` (use CSS variable `--app-font-family`)
+    - [x] Add font selector UI in `web/src/views/SettingsView.vue`
+  - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
 #### Backend Improvements
@@ -113,11 +180,11 @@ The following lint issues need to be resolved to re-enable strict linting:
   - [x] System restore supports merge/skip modes with natural key matching
   - [x] API returns detailed results (records created, updated, skipped)
 - [x] `[HIGH]` **Check for missing indexes** - 83 indexes defined in migrations (foreign keys and commonly queried fields covered)
-- [ ] `[HIGH]` **Audit Log Enhancements** - expand the audit log system to cover more entities and actions (currently covers WOD and Movement changes)
-- [ ] `[HIGH]` **Database Query Optimization** - review slow queries using EXPLAIN plans and optimize as needed (add indexes, rewrite queries, etc.)
-- [ ] `[HIGH]` **Error Handling Consistency** - ensure all handlers and services have consistent error handling and return appropriate HTTP status codes
-- [ ] `[HIGH]` **Structured Logging** - implement structured logging throughout the codebase for better observability (use a logging library that supports JSON output)
-- [ ] `[HIGH]` **Comprehensive API Documentation** - generate OpenAPI/Swagger documentation for all API endpoints and keep it updated with code changes
+- [x] `[HIGH]` **Audit Log Enhancements** - Added 17+ helper methods for comprehensive audit coverage (logout, token refresh, profile updates, user deletion, organization CRUD, subscription lifecycle)
+- [x] `[HIGH]` **Database Query Optimization** - Added audit_logs indexes (migration 0.17.0), optimized GetUsageStats (3→1 query), GetActiveUsersThisMonth (3→2 queries), ListByUserWithDetails N+1 fix (6N+1→5 queries)
+- [x] `[HIGH]` **Error Handling Consistency** - Centralized error handling in internal/handler/errors.go with HTTPError type and 30+ service error mappings
+- [x] `[HIGH]` **Structured Logging** - Added JSON format support to pkg/logger with InfoWithFields, ErrorWithFields, and FieldLogger chaining
+- [x] `[HIGH]` **Comprehensive API Documentation** - OpenAPI/Swagger documentation at `/docs/swagger.json` (v0.22.0)
 - [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
 ## Future Enhancements (Post-MVP)
@@ -154,19 +221,39 @@ These features can be added after the core frontend is complete:
    - Different grace periods for different subscription tiers
 
 
-#### Testing Coverage
+#### Testing Coverage (81.6% Service Layer)
 - [x] `[HIGH]` **Subscription Service Tests** - Comprehensive test suite (internal/service/subscription_service_test.go)
-- [ ] `[HIGH]` **Add handler unit tests** - auth_handler, user_workout_handler, movement_handler, wod_handler, subscription_handler
-- [ ] `[HIGH]` **Add service tests** - movement_service, workout_service, workout_template_service
-- [ ] `[HIGH]` **Add repository unit tests** - All repository implementations
+- [x] `[HIGH]` **Backup Service Tests** - 10 test functions with full restore mode coverage (internal/service/backup_service_test.go)
+- [x] `[HIGH]` **User Workout Service Tests** - Complete coverage with PR detection
+- [x] `[HIGH]` **Wodify Import Service Tests** - Duplicate handling and error recovery
+- [x] `[HIGH]` **Most Service Tests Complete** - 13 services at 100% coverage
+- [x] `[HIGH]` **Add handler unit tests** - Handler coverage at 72.6%
+  - [x] benchmark_handler_test.go (17 tests, 53-100% coverage per method)
+  - [x] auth_handler_test.go (63-100% coverage, comprehensive with mock service)
+  - [x] user_workout_handler_test.go (32-100% coverage)
+  - [x] movement_handler_test.go (59-100% coverage)
+  - [x] wod_handler_test.go (84-100% coverage)
+  - [x] subscription_handler_test.go (28-69% coverage)
+  - [x] All other handlers have tests: settings, admin, performance, data_change_log, organization, etc.
+- [ ] `[MEDIUM]` **Improve user_service coverage** - Currently 61.9%, target 80%+
+- [ ] `[MEDIUM]` **Improve import_service coverage** - Currently 60.8%, target 80%+
+- [ ] `[LOW]` **Add repository unit tests** - All repository implementations
 
 #### Admin Features
-- [ ] `[HIGH]` **User Import/Export System** (Admin only)
-  - [ ] Export users to CSV format
-  - [ ] Import users from CSV (bulk user creation)
-  - [ ] Preview workflow with validation
-  - [ ] Duplicate detection by email
-  - [ ] Welcome emails with password reset
+- [x] `[HIGH]` **User Import/Export System** (Admin only) *(Completed v0.23.0)*
+  - [x] Export users to CSV format (email, name)
+  - [x] Import users from CSV (email, name, password) with preview/confirm workflow
+  - [x] Preview workflow with validation
+  - [x] Duplicate detection by email
+  - [x] Batch password reset emails - select users from filterable list
+  - **Backend files:** `internal/service/user_import_service.go`, `internal/handler/user_import_handler.go`
+  - **Frontend:** `web/src/views/AdminUserImportExportView.vue` with 3 tabs (Import, Export, Password Reset)
+  - **API endpoints:**
+    - `POST /api/admin/users/import/preview` - Preview CSV import
+    - `POST /api/admin/users/import/confirm` - Execute import
+    - `GET /api/admin/users/export` - Download CSV
+    - `GET /api/admin/users/filter` - List users with search/date filters
+    - `POST /api/admin/users/batch-password-reset` - Send reset emails to selected users
 
 - [x] `[HIGH]` **Improved Duplicate Record Detection During Imports** (v0.17.0)
   - [x] Trap duplicate movements during import (check by name)
@@ -180,57 +267,105 @@ These features can be added after the core frontend is complete:
   - [ ] Frontend UI to review and select action for each duplicate
   - [ ] Batch duplicate resolution UI (apply same action to all)
 
-- [ ] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure**
-  - [ ] Create admin tool to scan for existing duplicates in database
-  - [ ] Detect duplicate movements (same name, same user)
-  - [ ] Detect duplicate WODs (same name, same source)
-  - [ ] Detect duplicate user workouts (same user, same date, same template)
-  - [ ] Generate duplicate report with:
-    - Count of duplicates per table
-    - List of duplicate records with IDs
-    - References/dependencies (what's using each record)
-  - [ ] Safe merge/cleanup procedure:
+- [x] `[HIGH]` **Database Duplicate Detection and Cleaning Procedure** *(Completed v0.24.0)*
+  - [x] Create admin tool to scan for existing duplicates in database
+  - [x] Detect duplicate movements (case-insensitive name matching)
+  - [x] Detect duplicate WODs (case-insensitive name matching)
+  - [x] Detect duplicate user workouts (same user, same date, same name)
+  - [x] Detect duplicate users (case-insensitive email matching)
+  - [x] Detect duplicate workout templates (same name, same user)
+  - [x] Generate duplicate report with:
+    - Count of duplicates per entity type
+    - List of duplicate groups with record IDs
+    - FK reference counts for each record
+  - [x] Safe merge/cleanup procedure:
     - Preview which records will be kept vs deleted
     - Automatically update foreign key references
-    - Preserve data integrity (don't break relationships)
-  - [ ] Admin UI to review and approve cleanup
-  - [ ] Dry-run mode (show what would happen without doing it)
-  - [ ] Backup database before cleanup operation
-  - [ ] Audit log of all cleanup operations
+    - Delete child records from duplicates (movements/WODs)
+    - Preserve data integrity with transaction support
+  - [x] Admin UI to review and approve cleanup (AdminDataQualityView.vue)
+  - [x] Preview mode shows FK impact before confirming
+  - [x] Audit log of all merge operations (duplicate_merge event type)
+  - [x] **Data Quality Issue Detection** - 4 quality checks:
+    - Orphaned FK references (error severity)
+    - Empty required fields (error/warning severity)
+    - Future workout dates (warning severity)
+    - Invalid email formats (warning severity)
+  - **Backend files:** `internal/service/data_quality_service.go`, `internal/handler/data_quality_handler.go`
+  - **Frontend:** `web/src/views/AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - **API endpoints:**
+    - `GET /api/admin/data-quality/duplicates` - Scan all entities
+    - `GET /api/admin/data-quality/duplicates/summary` - Quick summary
+    - `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity
+    - `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge
+    - `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+    - `GET /api/admin/data-quality/issues` - Scan for data quality issues
 
 ### High Priority
 
 #### Documentation & Marketing
-- [ ] `[High]` **Enhance App Documentation with Screenshots**
-- [ ]  `[High]` Get the static web site generator working and serving public pages
-  - [ ] Add more information about features and functions in the app
-  - [ ] Insert place holders for screenshots demonstrating all available themes and major features. Include captions and all marketing text
-  - [ ] Show desktop vs mobile responsive views
-  - [ ] Document key user flows with visual guides
+- [x] `[High]` **Enhance App Documentation with Screenshots**
+- [x] `[High]` Static site deployed to GitHub Pages (https://johnzastrow.github.io/actalog/)
+  - [x] Home page with feature highlights and theme gallery
+  - [x] For Admins page with subscription and announcement features
+  - [x] For Developers page with tech stack, architecture, and deployment guide
+  - [x] Performance & Benchmarks section added (v0.22.0) - minimum resources, load test results
+  - [x] FAQ page
+  - [x] Auto-deploy via GitHub Actions on push to main
+  - [x] All 7 themes documented with screenshots (Myst added v0.24.0)
+  - [x] Responsive design & PWA benefits explained in "Works Everywhere" section
+  - [x] User flow guide added ("Your Workout Journey" 3-step visual guide)
 
 
 #### Performance & Analytics
 - [x] `[MEDIUM]` **Calendar View** - WorkoutCalendarView.vue with workout dots and month navigation
 - [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
 - [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
-- [ ] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health
+- [x] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health (v0.22.0)
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
-- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 20 test functions, 70+ test cases
-- [ ] `[MEDIUM]` **Add export/import_service tests**
+- [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 10 test functions covering create/restore/export
+- [x] `[MEDIUM]` **Add wodify_import_service tests** - wodify_import_service_test.go with duplicate handling
+- [ ] `[MEDIUM]` **Add export/import_service tests** - Currently at 60-83% coverage
 - [ ] `[MEDIUM]` **Add admin_handler tests**
 
-#### PWA Enhancements
-- [ ] `[MEDIUM]` Run Lighthouse PWA audit
-- [ ] `[MEDIUM]` Optimize service worker cache size
-- [ ] `[MEDIUM]` Test offline sync end-to-end on mobile devices
+#### PWA Enhancements *(Audited v0.24.0)*
+- [x] `[MEDIUM]` **Lighthouse PWA audit completed** (Jan 2026)
+  - Performance: 56/100 (throttled network), Best Practices: 100/100, SEO: 92/100
+  - PWA features verified: service worker, offline caching, installable manifest
+  - Issues found: color contrast, meta viewport user-scalable, touch target sizes
+- [x] `[MEDIUM]` **Service worker cache analysis completed**
+  - Total precache: 6.9MB (150+ entries)
+  - Material Design Icons: 3.5MB (4 formats) → **Optimization: remove ttf/eot, keep woff2 only (394KB)**
+  - Self-hosted accessibility fonts: 848KB (9 families, 22 files)
+  - JavaScript: 1.5MB (properly chunked), CSS: 848KB
+  - Runtime caching: API responses (NetworkFirst), fonts (CacheFirst), uploads (StaleWhileRevalidate)
+- [x] `[MEDIUM]` **Offline sync implementation reviewed**
+  - IndexedDB storage for workouts, movements, pending sync queue
+  - Axios interceptor saves POST/PUT /api/workouts offline when network unavailable
+  - syncWithServer() replays pending operations when back online
+  - User-controlled updates via UpdatePrompt.vue and pwa.js store
+  - **Status: Fully implemented, works for workout logging**
+
+**Remaining PWA optimizations (deferred):**
+- [x] `[LOW]` **Remove unused MDI font formats** - Custom Vite plugin `mdiWoff2Only()` strips ttf/eot/woff
+  - Dist size: 6.9MB → 3.8MB (45% reduction)
+  - Precache: 6.9MB → 3.4MB (50% reduction)
+  - Only woff2 (394KB) shipped to production
+- [x] `[LOW]` **Lazy-load accessibility fonts** - Fonts loaded on-demand when user selects them
+  - Split fonts.css into 9 separate font family CSS files
+  - Font store dynamically imports CSS via Vite's dynamic import
+  - Fonts excluded from precache via globIgnores
+  - Runtime caching (CacheFirst) caches fonts on first use
+  - Precache: 3.4MB → 2.6MB (additional 24% reduction)
+- [x] `[LOW]` Fix accessibility issues (color contrast, touch targets) - Fixed label contrast (#666666 for 5.74:1 ratio), touch target sizes (24x24px min)
 
 ### Low Priority
 
 #### Testing
-- [ ] `[LOW]` **Add audit_log_service tests**
-- [ ] `[LOW]` **Add wodify_import_service tests**
+- [x] `[LOW]` **Add audit_log_service tests** - 100% coverage achieved
+- [x] `[LOW]` **Add wodify_import_service tests** - 100% coverage achieved
 
 #### Features
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
@@ -265,13 +400,102 @@ These features can be added after the core frontend is complete:
 |------|------|-------------|
 | `web/src/views/WorkoutsView.vue` | 372 | Navigate to template detail page |
 
-*Last scanned: 2025-12-22*
+*Last scanned: 2026-01-09*
 
 **Note:** Calendar view (WorkoutCalendarView.vue) and PR notification system are implemented.
 
 ---
 
 ## Completed Releases
+
+### v0.24.0-beta (2026-01-14)
+
+**Status:** Data Quality & Duplicate Detection system with merge functionality.
+
+**Completed:**
+- [x] **Data Quality Admin Dashboard**
+  - [x] `AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - [x] Full database scan with summary cards
+  - [x] Duplicates by entity type breakdown
+  - [x] Data quality checks with issue counts
+
+- [x] **Duplicate Detection & Merge**
+  - [x] Scan 5 entity types: movements, WODs, user_workouts, users, workouts
+  - [x] Case-insensitive name/email matching
+  - [x] Composite key matching for user_workouts (user_id + date + name)
+  - [x] Preview merge with FK reference counts
+  - [x] Safe merge with FK updates in transaction
+  - [x] Audit logging of all merge operations
+
+- [x] **Data Quality Issue Detection**
+  - [x] Orphaned FK references (error severity)
+  - [x] Empty required fields (error/warning severity)
+  - [x] Future workout dates (warning severity)
+  - [x] Invalid email formats (warning severity)
+  - [x] Filter chips for issue type filtering
+
+- [x] **Frontend UI Improvements**
+  - [x] Quality check type cards with icons, descriptions, counts
+  - [x] Zero-state display with success checkmarks
+  - [x] Clickable cards to navigate to filtered views
+  - [x] Data Quality link added to admin menu in ProfileView
+
+- [x] **Demo Mode Configuration**
+  - [x] Added DEMO MODE section to .env.example
+  - [x] Documented implemented vs planned features
+  - [x] Current workaround instructions for basic demo setup
+
+**Files Created:** `internal/service/data_quality_service.go`, `internal/handler/data_quality_handler.go`, `web/src/views/AdminDataQualityView.vue`
+
+**Files Modified:** `cmd/actalog/main.go` (routes), `web/src/router/index.js` (route), `web/src/views/ProfileView.vue` (admin menu link), `.env.example` (demo mode)
+
+**API Endpoints:**
+- `GET /api/admin/data-quality/duplicates` - Scan all entities for duplicates
+- `GET /api/admin/data-quality/duplicates/summary` - Quick duplicate summary
+- `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity type
+- `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge operation
+- `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+- `GET /api/admin/data-quality/issues` - Scan for data quality issues
+
+---
+
+### v0.22.0-beta (2026-01-09)
+
+**Status:** Comprehensive benchmark endpoint with configurable stress testing.
+
+**Completed:**
+- [x] **Benchmark API Endpoint**
+  - [x] `POST /api/benchmark` - Full system benchmark with 18+ operations
+  - [x] `GET /api/benchmark/status` - Quick status check
+  - [x] `DELETE /api/admin/benchmark/data` - Admin cleanup
+  - [x] Isolated `benchmark_data` table (never touches production data)
+  - [x] Auto-cleanup after runs
+
+- [x] **Configurable Record Count**
+  - [x] `?records=N` query parameter (default: 1000, max: 500000)
+  - [x] Complex benchmark data (5-10KB text, nested JSON, UUIDs)
+  - [x] Migration 0.23.0 for extended benchmark fields
+
+- [x] **Server Timeout Configuration**
+  - [x] Fixed EOF errors on long-running benchmarks
+  - [x] Updated default SERVER_WRITE_TIMEOUT to 60s
+  - [x] Buffered JSON response with explicit Content-Length
+
+- [x] **Benchmark Tool Integration (actalog-benchmark v0.7.0)**
+  - [x] `--benchmark-records` flag for configurable record count
+  - [x] Server-side benchmark comparison in reports
+  - [x] Enhanced error display with word wrapping
+
+- [x] **Static Site Updates**
+  - [x] Performance & Benchmarks section on For Developers page
+  - [x] Updated version to 0.22.0-beta
+  - [x] Added Myst theme (7 total themes)
+
+**Files Created:** `internal/domain/benchmark.go`, `internal/repository/benchmark_repository.go`, `internal/service/benchmark_service.go`, `internal/handler/benchmark_handler.go`
+
+**Files Modified:** `internal/repository/migrations.go` (0.22.0, 0.23.0), `configs/config.go`, `.env.example`, `site/tech.html`, `site/index.html`
+
+---
 
 ### v0.16.0-beta (2025-12-20)
 
@@ -505,9 +729,9 @@ Items to address when time permits:
 
 - [ ] Refactor large view components (DashboardView, PerformanceView) into smaller sub-components
 - [ ] Add comprehensive API documentation (OpenAPI/Swagger)
-- [ ] Improve error handling consistency across handlers
-- [ ] Add structured logging throughout the codebase
-- [ ] Review and optimize database queries with EXPLAIN
+- [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
+- [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
+- [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
 
 ---
 

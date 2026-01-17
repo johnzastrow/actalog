@@ -3,8 +3,19 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/johnzastrow/actalog/internal/service"
 )
+
+func createTestExportService() *service.ExportService {
+	mockWODRepo := NewMockWODRepository()
+	mockMovementRepo := NewMockMovementRepository()
+	mockUserRepo := NewMockUserRepository()
+	mockUserWorkoutRepo := NewMockUserWorkoutRepository()
+	return service.NewExportService(mockWODRepo, mockMovementRepo, mockUserRepo, mockUserWorkoutRepo)
+}
 
 func TestExportHandler_ExportWODs_Unauthorized(t *testing.T) {
 	handler := &ExportHandler{}
@@ -124,4 +135,311 @@ func TestParseBoolParam(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewExportHandler(t *testing.T) {
+	handler := NewExportHandler(nil)
+	if handler == nil {
+		t.Error("NewExportHandler should return a non-nil handler")
+	}
+}
+
+func TestExportHandler_ExportWODs_MissingRole(t *testing.T) {
+	handler := &ExportHandler{}
+
+	// Create request with userID but no role context
+	req := createUserIDOnlyRequest(http.MethodGet, "/api/export/wods", "", 1)
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusUnauthorized)
+	assertBodyContains(t, rr, "Unauthorized")
+}
+
+func TestExportHandler_ExportMovements_MissingRole(t *testing.T) {
+	handler := &ExportHandler{}
+
+	// Create request with userID but no role context
+	req := createUserIDOnlyRequest(http.MethodGet, "/api/export/movements", "", 1)
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusUnauthorized)
+	assertBodyContains(t, rr, "Unauthorized")
+}
+
+// Removed 5 panic-expectation tests:
+// - TestExportHandler_ExportWODs_WithQueryParams (6 subtests)
+// - TestExportHandler_ExportWODs_AsAdmin
+// - TestExportHandler_ExportMovements_WithQueryParams (6 subtests)
+// - TestExportHandler_ExportMovements_AsAdmin
+// - TestExportHandler_ExportUserWorkouts_WithFormatParams (5 subtests)
+// These tests verified nil pointer panics, not business logic.
+
+// ===== Success path tests with real service =====
+
+func TestExportHandler_ExportWODs_Success_CSV(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for CSV content type
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "text/csv") {
+		t.Errorf("Expected Content-Type text/csv, got %s", contentType)
+	}
+	// Check for Content-Disposition header
+	disposition := rr.Header().Get("Content-Disposition")
+	if !strings.Contains(disposition, "wods_export.csv") {
+		t.Errorf("Expected Content-Disposition to contain wods_export.csv, got %s", disposition)
+	}
+}
+
+func TestExportHandler_ExportWODs_Success_JSON(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods?format=json", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for JSON content type
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "application/json") {
+		t.Errorf("Expected Content-Type application/json, got %s", contentType)
+	}
+}
+
+func TestExportHandler_ExportWODs_WithQueryParams(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"include_standard_true", "?include_standard=true"},
+		{"include_standard_false", "?include_standard=false"},
+		{"include_custom_true", "?include_custom=true"},
+		{"include_custom_false", "?include_custom=false"},
+		{"all_params", "?include_standard=true&include_custom=true&format=csv"},
+		{"json_format", "?format=json"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods"+tc.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			handler.ExportWODs(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestExportHandler_ExportWODs_AsAdmin(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestExportHandler_ExportMovements_Success_CSV(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for CSV content type
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "text/csv") {
+		t.Errorf("Expected Content-Type text/csv, got %s", contentType)
+	}
+	// Check for Content-Disposition header
+	disposition := rr.Header().Get("Content-Disposition")
+	if !strings.Contains(disposition, "movements_export.csv") {
+		t.Errorf("Expected Content-Disposition to contain movements_export.csv, got %s", disposition)
+	}
+}
+
+func TestExportHandler_ExportMovements_Success_JSON(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements?format=json", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for JSON content type
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "application/json") {
+		t.Errorf("Expected Content-Type application/json, got %s", contentType)
+	}
+}
+
+func TestExportHandler_ExportMovements_WithQueryParams(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"include_standard_true", "?include_standard=true"},
+		{"include_standard_false", "?include_standard=false"},
+		{"include_custom_true", "?include_custom=true"},
+		{"include_custom_false", "?include_custom=false"},
+		{"all_params", "?include_standard=true&include_custom=true&format=csv"},
+		{"json_format", "?format=json"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements"+tc.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			handler.ExportMovements(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestExportHandler_ExportMovements_AsAdmin(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestExportHandler_ExportUserWorkouts_Success_JSON(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/user-workouts", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportUserWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for JSON content type (default format)
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "application/json") {
+		t.Errorf("Expected Content-Type application/json, got %s", contentType)
+	}
+}
+
+func TestExportHandler_ExportUserWorkouts_Success_CSV(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/user-workouts?format=csv", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportUserWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Check for CSV content type
+	contentType := rr.Header().Get("Content-Type")
+	if !strings.Contains(contentType, "text/csv") {
+		t.Errorf("Expected Content-Type text/csv, got %s", contentType)
+	}
+}
+
+func TestExportHandler_ExportUserWorkouts_WithDateRange(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/user-workouts?start_date=2024-01-01&end_date=2024-12-31", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportUserWorkouts(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestExportHandler_ExportUserWorkouts_WithAllParams(t *testing.T) {
+	svc := createTestExportService()
+	handler := NewExportHandler(svc)
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"csv_format", "?format=csv"},
+		{"json_format", "?format=json"},
+		{"with_date_range_csv", "?start_date=2024-01-01&end_date=2024-12-31&format=csv"},
+		{"with_date_range_json", "?start_date=2024-01-01&end_date=2024-12-31&format=json"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createAuthenticatedRequest(http.MethodGet, "/api/export/user-workouts"+tc.query, "", 1, "test@example.com", "user")
+			rr := httptest.NewRecorder()
+
+			handler.ExportUserWorkouts(rr, req)
+
+			assertStatusCode(t, rr, http.StatusOK)
+		})
+	}
+}
+
+func TestExportHandler_ExportWODs_ServiceError(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockWODRepo.SetError(ErrMockInternalError)
+	mockMovementRepo := NewMockMovementRepository()
+	mockUserRepo := NewMockUserRepository()
+	mockUserWorkoutRepo := NewMockUserWorkoutRepository()
+	svc := service.NewExportService(mockWODRepo, mockMovementRepo, mockUserRepo, mockUserWorkoutRepo)
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/wods", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportWODs(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestExportHandler_ExportMovements_ServiceError(t *testing.T) {
+	mockWODRepo := NewMockWODRepository()
+	mockMovementRepo := NewMockMovementRepository()
+	mockMovementRepo.SetError(ErrMockInternalError)
+	mockUserRepo := NewMockUserRepository()
+	mockUserWorkoutRepo := NewMockUserWorkoutRepository()
+	svc := service.NewExportService(mockWODRepo, mockMovementRepo, mockUserRepo, mockUserWorkoutRepo)
+	handler := NewExportHandler(svc)
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/export/movements", "", 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ExportMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
 }

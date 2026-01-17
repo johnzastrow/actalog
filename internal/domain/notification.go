@@ -7,9 +7,10 @@ import (
 
 // Notification types
 const (
-	NotificationTypePRAchievement = "pr_achievement"
-	NotificationTypeWeeklyStreak  = "weekly_streak"
-	NotificationTypeWODMilestone  = "wod_milestone"
+	NotificationTypePRAchievement  = "pr_achievement"
+	NotificationTypeWeeklyStreak   = "weekly_streak"
+	NotificationTypeWODMilestone   = "wod_milestone"
+	NotificationTypeAdminUserEvent = "admin_user_event"
 )
 
 // Notification represents a notification to a user

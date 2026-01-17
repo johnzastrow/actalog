@@ -71,6 +71,15 @@ type WODMismatch struct {
 }
 
 // DetectWODScoreTypeMismatches detects WOD records that don't match their score_type
+// @Summary      Detect WOD score type mismatches (Admin)
+// @Description  Find WOD records where data doesn't match the expected score_type
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "List of mismatched records"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/wod-mismatches [get]
 func (h *AdminHandler) DetectWODScoreTypeMismatches(w http.ResponseWriter, r *http.Request) {
 	// Get all WOD performance records with WOD definitions
 	// Note: This query needs to be run across all users
@@ -175,6 +184,15 @@ func (h *AdminHandler) DetectWODScoreTypeMismatches(w http.ResponseWriter, r *ht
 }
 
 // FixWODScoreTypeMismatches deletes WOD records that don't match their score_type
+// @Summary      Fix WOD score type mismatches (Admin)
+// @Description  Delete WOD records that don't match their expected score_type
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "Count of deleted records"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/wod-mismatches/fix [post]
 func (h *AdminHandler) FixWODScoreTypeMismatches(w http.ResponseWriter, r *http.Request) {
 	// First, get all mismatches
 	query := `
@@ -270,6 +288,19 @@ type UpdateWODRecordRequest struct {
 }
 
 // UpdateWODRecord updates an individual WOD record
+// @Summary      Update WOD record (Admin)
+// @Description  Update a specific WOD performance record
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "WOD Record ID"
+// @Param        request body UpdateWODRecordRequest true "Updated record data"
+// @Success      200 {object} map[string]interface{} "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request or score type mismatch"
+// @Failure      404 {object} ErrorResponse "Record not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/wod-records/{id} [put]
 func (h *AdminHandler) UpdateWODRecord(w http.ResponseWriter, r *http.Request) {
 	// Get record ID from URL
 	idStr := chi.URLParam(r, "id")
@@ -395,6 +426,20 @@ type CopyToStandardRequest struct {
 }
 
 // ListUserCreatedWODs lists all user-created WODs with creator info
+// @Summary      List user-created WODs (Admin)
+// @Description  Get all user-created WODs with creator information
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Param        search query string false "Search query"
+// @Param        score_type query string false "Filter by score type"
+// @Param        creator query string false "Filter by creator email"
+// @Success      200 {object} map[string]interface{} "List of user-created WODs"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/wods [get]
 func (h *AdminHandler) ListUserCreatedWODs(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination params
 	limit := 100
@@ -431,6 +476,20 @@ func (h *AdminHandler) ListUserCreatedWODs(w http.ResponseWriter, r *http.Reques
 }
 
 // CopyWODToStandard converts a user-created WOD to become a standard WOD
+// @Summary      Copy WOD to standard (Admin)
+// @Description  Create a standard WOD from a user-created WOD
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "WOD ID"
+// @Param        request body CopyToStandardRequest true "New name for standard WOD"
+// @Success      201 {object} domain.WOD "Created standard WOD"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "WOD not found"
+// @Failure      409 {object} ErrorResponse "Name already exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/wods/{id}/copy-to-standard [post]
 func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request) {
 	// Get WOD ID from URL
 	idStr := chi.URLParam(r, "id")
@@ -475,6 +534,20 @@ func (h *AdminHandler) CopyWODToStandard(w http.ResponseWriter, r *http.Request)
 }
 
 // ListUserCreatedMovements lists all user-created movements with creator info
+// @Summary      List user-created movements (Admin)
+// @Description  Get all user-created movements with creator information
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Param        search query string false "Search query"
+// @Param        type query string false "Filter by movement type"
+// @Param        creator query string false "Filter by creator email"
+// @Success      200 {object} map[string]interface{} "List of user-created movements"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/movements [get]
 func (h *AdminHandler) ListUserCreatedMovements(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination params
 	limit := 100
@@ -511,6 +584,20 @@ func (h *AdminHandler) ListUserCreatedMovements(w http.ResponseWriter, r *http.R
 }
 
 // CopyMovementToStandard converts a user-created movement to become a standard movement
+// @Summary      Copy movement to standard (Admin)
+// @Description  Create a standard movement from a user-created movement
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Movement ID"
+// @Param        request body CopyToStandardRequest true "New name for standard movement"
+// @Success      201 {object} domain.Movement "Created standard movement"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "Movement not found"
+// @Failure      409 {object} ErrorResponse "Name already exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/movements/{id}/copy-to-standard [post]
 func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Request) {
 	// Get movement ID from URL
 	idStr := chi.URLParam(r, "id")
@@ -555,6 +642,19 @@ func (h *AdminHandler) CopyMovementToStandard(w http.ResponseWriter, r *http.Req
 }
 
 // ListUserCreatedWorkouts lists all user-created workout templates with creator info
+// @Summary      List user-created workouts (Admin)
+// @Description  Get all user-created workout templates with creator information
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Param        search query string false "Search query"
+// @Param        creator query string false "Filter by creator email"
+// @Success      200 {object} map[string]interface{} "List of user-created workouts"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/workouts [get]
 func (h *AdminHandler) ListUserCreatedWorkouts(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination params
 	limit := 100
@@ -590,6 +690,20 @@ func (h *AdminHandler) ListUserCreatedWorkouts(w http.ResponseWriter, r *http.Re
 }
 
 // CopyWorkoutToStandard converts a user-created workout to become a standard workout
+// @Summary      Copy workout to standard (Admin)
+// @Description  Create a standard workout template from a user-created workout
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Workout ID"
+// @Param        request body CopyToStandardRequest true "New name for standard workout"
+// @Success      201 {object} domain.Workout "Created standard workout"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "Workout not found"
+// @Failure      409 {object} ErrorResponse "Name already exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/user-created/workouts/{id}/copy-to-standard [post]
 func (h *AdminHandler) CopyWorkoutToStandard(w http.ResponseWriter, r *http.Request) {
 	// Get workout ID from URL
 	idStr := chi.URLParam(r, "id")

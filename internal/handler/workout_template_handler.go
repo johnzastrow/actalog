@@ -29,6 +29,18 @@ func NewWorkoutTemplateHandler(service WorkoutTemplateService) *WorkoutTemplateH
 }
 
 // CreateTemplate handles POST /api/templates
+// @Summary      Create workout template
+// @Description  Create a new reusable workout template with movements and WODs
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object true "Template details with movements and WODs"
+// @Success      201 {object} map[string]interface{} "Created template"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates [post]
 func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -42,19 +54,27 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		Description *string `json:"description"`
 		Movements   []struct {
-			MovementID int64    `json:"movement_id"`
-			Sets       *int     `json:"sets"`
-			Reps       *int     `json:"reps"`
-			Weight     *float64 `json:"weight"`
-			WorkTime   *int     `json:"work_time"` // Work duration in seconds
-			Distance   *float64 `json:"distance"`
-			Notes      string   `json:"notes"`
-			OrderIndex int      `json:"order_index"`
+			MovementID   int64    `json:"movement_id"`
+			Sets         *int     `json:"sets"`
+			Reps         *int     `json:"reps"`
+			Weight       *float64 `json:"weight"`
+			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
+			WorkTime     *int     `json:"work_time"` // Work duration in seconds
+			Distance     *float64 `json:"distance"`
+			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`  // Personal record flag
+			Instructions string   `json:"instructions"` // Markdown instructions
+			Notes        string   `json:"notes"`
+			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID      int64  `json:"wod_id"`
-			Notes      string `json:"notes"`
-			OrderIndex int    `json:"order_index"`
+			WODID        int64   `json:"wod_id"`
+			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
+			Division     *string `json:"division"`    // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			Instructions string  `json:"instructions"` // Markdown instructions
+			Notes        string  `json:"notes"`
+			OrderIndex   int     `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -71,15 +91,23 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	// Convert request movements to domain movements
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
+		// Use Time if provided, otherwise fall back to WorkTime
+		timeVal := m.Time
+		if timeVal == nil {
+			timeVal = m.WorkTime
+		}
 		movements[i] = domain.WorkoutMovement{
-			MovementID: m.MovementID,
-			Sets:       m.Sets,
-			Reps:       m.Reps,
-			Weight:     m.Weight,
-			Time:       m.WorkTime, // Map work_time to Time field
-			Distance:   m.Distance,
-			Notes:      m.Notes,
-			OrderIndex: m.OrderIndex,
+			MovementID:   m.MovementID,
+			Sets:         m.Sets,
+			Reps:         m.Reps,
+			Weight:       m.Weight,
+			Time:         timeVal,
+			Distance:     m.Distance,
+			IsRx:         m.IsRx,
+			IsPR:         m.IsPR,
+			Instructions: m.Instructions,
+			Notes:        m.Notes,
+			OrderIndex:   m.OrderIndex,
 		}
 	}
 
@@ -87,8 +115,13 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	wods := make([]domain.WorkoutWOD, len(req.WODs))
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
-			WODID:      w.WODID,
-			OrderIndex: w.OrderIndex,
+			WODID:        w.WODID,
+			ScoreValue:   w.ScoreValue,
+			Division:     w.Division,
+			IsPR:         w.IsPR,
+			Instructions: w.Instructions,
+			Notes:        w.Notes,
+			OrderIndex:   w.OrderIndex,
 		}
 	}
 
@@ -106,6 +139,17 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 }
 
 // GetTemplate handles GET /api/templates/{id}
+// @Summary      Get workout template
+// @Description  Retrieve a specific workout template by ID with full details
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Success      200 {object} map[string]interface{} "Template details"
+// @Failure      400 {object} ErrorResponse "Invalid template ID"
+// @Failure      404 {object} ErrorResponse "Template not found"
+// @Router       /templates/{id} [get]
 func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -119,6 +163,10 @@ func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+	if template == nil {
+		http.Error(w, "Template not found", http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -127,6 +175,18 @@ func (h *WorkoutTemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Requ
 }
 
 // ListMyTemplates handles GET /api/workouts/my-templates
+// @Summary      List my workout templates
+// @Description  Get all workout templates created by the current user
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of user's templates"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /workouts/my-templates [get]
 func (h *WorkoutTemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -167,6 +227,17 @@ func (h *WorkoutTemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.
 }
 
 // ListStandardTemplates handles GET /api/templates
+// @Summary      List standard workout templates
+// @Description  Get all standard (system-provided) workout templates
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 100)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "List of standard templates"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates [get]
 func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r *http.Request) {
 	limit := 100
 	offset := 0
@@ -201,6 +272,19 @@ func (h *WorkoutTemplateHandler) ListStandardTemplates(w http.ResponseWriter, r 
 }
 
 // UpdateTemplate handles PUT /api/templates/{id}
+// @Summary      Update workout template
+// @Description  Update an existing workout template (owner only)
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Param        request body object true "Updated template details"
+// @Success      200 {object} map[string]interface{} "Updated template"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /templates/{id} [put]
 func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -221,19 +305,27 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		Description *string `json:"description"`
 		Movements   []struct {
-			MovementID int64    `json:"movement_id"`
-			Sets       *int     `json:"sets"`
-			Reps       *int     `json:"reps"`
-			Weight     *float64 `json:"weight"`
-			WorkTime   *int     `json:"work_time"` // Work duration in seconds
-			Distance   *float64 `json:"distance"`
-			Notes      string   `json:"notes"`
-			OrderIndex int      `json:"order_index"`
+			MovementID   int64    `json:"movement_id"`
+			Sets         *int     `json:"sets"`
+			Reps         *int     `json:"reps"`
+			Weight       *float64 `json:"weight"`
+			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
+			WorkTime     *int     `json:"work_time"` // Work duration in seconds
+			Distance     *float64 `json:"distance"`
+			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`  // Personal record flag
+			Instructions string   `json:"instructions"` // Markdown instructions
+			Notes        string   `json:"notes"`
+			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
-			WODID      int64  `json:"wod_id"`
-			Notes      string `json:"notes"`
-			OrderIndex int    `json:"order_index"`
+			WODID        int64   `json:"wod_id"`
+			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
+			Division     *string `json:"division"`    // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			Instructions string  `json:"instructions"` // Markdown instructions
+			Notes        string  `json:"notes"`
+			OrderIndex   int     `json:"order_index"`
 		} `json:"wods"`
 	}
 
@@ -250,15 +342,23 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	// Convert request movements to domain movements
 	movements := make([]domain.WorkoutMovement, len(req.Movements))
 	for i, m := range req.Movements {
+		// Use Time if provided, otherwise fall back to WorkTime
+		timeVal := m.Time
+		if timeVal == nil {
+			timeVal = m.WorkTime
+		}
 		movements[i] = domain.WorkoutMovement{
-			MovementID: m.MovementID,
-			Sets:       m.Sets,
-			Reps:       m.Reps,
-			Weight:     m.Weight,
-			Time:       m.WorkTime, // Map work_time to Time field
-			Distance:   m.Distance,
-			Notes:      m.Notes,
-			OrderIndex: m.OrderIndex,
+			MovementID:   m.MovementID,
+			Sets:         m.Sets,
+			Reps:         m.Reps,
+			Weight:       m.Weight,
+			Time:         timeVal,
+			Distance:     m.Distance,
+			IsRx:         m.IsRx,
+			IsPR:         m.IsPR,
+			Instructions: m.Instructions,
+			Notes:        m.Notes,
+			OrderIndex:   m.OrderIndex,
 		}
 	}
 
@@ -266,8 +366,13 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	wods := make([]domain.WorkoutWOD, len(req.WODs))
 	for i, w := range req.WODs {
 		wods[i] = domain.WorkoutWOD{
-			WODID:      w.WODID,
-			OrderIndex: w.OrderIndex,
+			WODID:        w.WODID,
+			ScoreValue:   w.ScoreValue,
+			Division:     w.Division,
+			IsPR:         w.IsPR,
+			Instructions: w.Instructions,
+			Notes:        w.Notes,
+			OrderIndex:   w.OrderIndex,
 		}
 	}
 
@@ -284,6 +389,18 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 }
 
 // DeleteTemplate handles DELETE /api/templates/{id}
+// @Summary      Delete workout template
+// @Description  Delete a workout template (owner only)
+// @Tags         templates
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Template ID"
+// @Success      204 "Template deleted"
+// @Failure      400 {object} ErrorResponse "Invalid template ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      403 {object} ErrorResponse "Not the template owner"
+// @Router       /templates/{id} [delete]
 func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

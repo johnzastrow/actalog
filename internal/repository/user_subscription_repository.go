@@ -415,6 +415,159 @@ func (r *SQLiteUserSubscriptionRepository) Cancel(id int64, reason string, admin
 	return err
 }
 
+// ListExpiring returns active subscriptions expiring within the specified number of days
+func (r *SQLiteUserSubscriptionRepository) ListExpiring(days int) ([]*domain.UserSubscription, error) {
+	// Use database-agnostic date arithmetic
+	var query string
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = false
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > NOW()
+			  AND us.end_date <= NOW() + INTERVAL '1 day' * $1
+			ORDER BY us.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = false
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > NOW()
+			  AND us.end_date <= DATE_ADD(NOW(), INTERVAL ? DAY)
+			ORDER BY us.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE us.status = 'active'
+			  AND us.is_permanent_free = 0
+			  AND us.end_date IS NOT NULL
+			  AND us.end_date > datetime('now')
+			  AND us.end_date <= datetime('now', '+' || ? || ' days')
+			ORDER BY us.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query, days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expiring subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// ListExpired returns subscriptions that are expired or overdue
+func (r *SQLiteUserSubscriptionRepository) ListExpired() ([]*domain.UserSubscription, error) {
+	// Use database-agnostic date comparison
+	var query string
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = false AND us.end_date IS NOT NULL AND us.end_date <= NOW()))
+			ORDER BY us.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = false AND us.end_date IS NOT NULL AND us.end_date <= NOW()))
+			ORDER BY us.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				us.id, us.user_id, u.email, u.name, us.subscription_type, us.status, us.is_permanent_free,
+				us.start_date, us.end_date, us.last_payment_date, us.next_billing_date,
+				us.cancelled_at, us.cancelled_reason, us.notes, us.created_at, us.updated_at, us.created_by_user_id
+			FROM user_subscriptions us
+			LEFT JOIN users u ON us.user_id = u.id
+			WHERE (us.status = 'expired'
+			   OR (us.status = 'active' AND us.is_permanent_free = 0 AND us.end_date IS NOT NULL AND us.end_date <= datetime('now')))
+			ORDER BY us.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expired subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// scanSubscriptionRows is a helper to scan subscription rows with user details
+func (r *SQLiteUserSubscriptionRepository) scanSubscriptionRows(rows *sql.Rows) ([]*domain.UserSubscription, error) {
+	var subscriptions []*domain.UserSubscription
+	for rows.Next() {
+		var sub domain.UserSubscription
+		var userEmail, userName sql.NullString
+		err := rows.Scan(
+			&sub.ID,
+			&sub.UserID,
+			&userEmail,
+			&userName,
+			&sub.SubscriptionType,
+			&sub.Status,
+			&sub.IsPermanentFree,
+			&sub.StartDate,
+			&sub.EndDate,
+			&sub.LastPaymentDate,
+			&sub.NextBillingDate,
+			&sub.CancelledAt,
+			&sub.CancelledReason,
+			&sub.Notes,
+			&sub.CreatedAt,
+			&sub.UpdatedAt,
+			&sub.CreatedByUserID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan subscription: %w", err)
+		}
+		sub.UserEmail = userEmail.String
+		sub.UserName = userName.String
+		subscriptions = append(subscriptions, &sub)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating subscriptions: %w", err)
+	}
+
+	return subscriptions, nil
+}
+
 // ListAll returns all user subscriptions with user details
 func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription, error) {
 	query := rebindQuery(`
@@ -436,11 +589,12 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 	var subscriptions []*domain.UserSubscription
 	for rows.Next() {
 		var sub domain.UserSubscription
+		var userEmail, userName sql.NullString
 		err := rows.Scan(
 			&sub.ID,
 			&sub.UserID,
-			&sub.UserEmail,
-			&sub.UserName,
+			&userEmail,
+			&userName,
 			&sub.SubscriptionType,
 			&sub.Status,
 			&sub.IsPermanentFree,
@@ -458,6 +612,8 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user subscription: %w", err)
 		}
+		sub.UserEmail = userEmail.String
+		sub.UserName = userName.String
 		subscriptions = append(subscriptions, &sub)
 	}
 
@@ -466,4 +622,63 @@ func (r *SQLiteUserSubscriptionRepository) ListAll() ([]*domain.UserSubscription
 	}
 
 	return subscriptions, nil
+}
+
+// CountActive returns the count of active subscriptions
+func (r *SQLiteUserSubscriptionRepository) CountActive() (int64, error) {
+	query := `SELECT COUNT(*) FROM user_subscriptions WHERE status = 'active'`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountExpired returns the count of expired subscriptions
+func (r *SQLiteUserSubscriptionRepository) CountExpired() (int64, error) {
+	query := `SELECT COUNT(*) FROM user_subscriptions WHERE status = 'expired'`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountExpiringSoon returns the count of active subscriptions expiring within N days
+func (r *SQLiteUserSubscriptionRepository) CountExpiringSoon(days int) (int64, error) {
+	var query string
+	switch currentDriver {
+	case "sqlite3":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = 0
+			  AND end_date IS NOT NULL
+			  AND end_date > datetime('now')
+			  AND end_date <= datetime('now', '+%d days')`, days)
+	case "postgres":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = false
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= NOW() + INTERVAL '%d days'`, days)
+	case "mysql":
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = 0
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= DATE_ADD(NOW(), INTERVAL %d DAY)`, days)
+	default:
+		query = fmt.Sprintf(`
+			SELECT COUNT(*) FROM user_subscriptions
+			WHERE status = 'active'
+			  AND is_permanent_free = false
+			  AND end_date IS NOT NULL
+			  AND end_date > NOW()
+			  AND end_date <= NOW() + INTERVAL '%d days'`, days)
+	}
+
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
 }

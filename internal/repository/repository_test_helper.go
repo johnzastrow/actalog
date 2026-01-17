@@ -168,5 +168,45 @@ func getTestAdditionalSchema() string {
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_org_id ON organization_subscriptions(organization_id);
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_status ON organization_subscriptions(status);
 	CREATE INDEX IF NOT EXISTS idx_org_subscriptions_next_billing ON organization_subscriptions(next_billing_date);
+
+	-- Email logs table (from migration v0.18.0)
+	CREATE TABLE IF NOT EXISTS email_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		recipient_email TEXT NOT NULL,
+		email_type TEXT NOT NULL,
+		subject TEXT NOT NULL,
+		success INTEGER NOT NULL DEFAULT 0,
+		error_message TEXT,
+		debug_info TEXT,
+		sent_by_user_id INTEGER,
+		created_at DATETIME NOT NULL,
+		FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_type ON email_logs(email_type);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient_email);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_email_logs_success ON email_logs(success);
+
+	-- Benchmark data table (from migration v0.22.0)
+	CREATE TABLE IF NOT EXISTS benchmark_data (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		test_key TEXT NOT NULL,
+		test_value TEXT,
+		num_value REAL DEFAULT 0,
+		int_value INTEGER DEFAULT 0,
+		bool_value INTEGER DEFAULT 0,
+		large_text TEXT,
+		json_blob TEXT,
+		extra_float REAL DEFAULT 0,
+		extra_int INTEGER DEFAULT 0,
+		category TEXT,
+		priority INTEGER DEFAULT 0,
+		created_by INTEGER NOT NULL,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+	);
+	CREATE INDEX IF NOT EXISTS idx_benchmark_data_test_key ON benchmark_data(test_key);
+	CREATE INDEX IF NOT EXISTS idx_benchmark_data_created_by ON benchmark_data(created_by);
 	`
 }

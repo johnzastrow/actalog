@@ -7,7 +7,7 @@
           v-model="searchQuery"
           label="Search movements"
           placeholder="Search by name..."
-          variant="outlined"
+          
           density="compact"
           rounded="lg"
           clearable
@@ -86,7 +86,7 @@
           elevation="0"
           rounded="lg"
           class="pa-2 mb-2"
-          style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0"
+          style="background-color: rgb(var(--v-theme-surface))"
           :ripple="true"
           @click="handleMovementClick(movement)"
         >
@@ -111,7 +111,7 @@
               <p class="text-caption mb-0 text-medium-emphasis">
                 {{ movement.description }}
               </p>
-              <v-chip size="x-small" :color="getMovementTypeColor(movement.type)" class="mt-1" variant="outlined">
+              <v-chip size="x-small" :color="getMovementTypeColor(movement.type)" class="mt-1" >
                 {{ capitalizeFirst(movement.type) }}
               </v-chip>
             </div>
@@ -188,6 +188,15 @@
       </v-btn>
     </v-bottom-navigation>
 
+    <!-- Detail View Dialog -->
+    <DetailViewDialog
+      v-model="showDetailDialog"
+      type="movement"
+      :id="selectedMovementId"
+      handle-quick-log-externally
+      @quicklog="handleDetailQuickLog"
+    />
+
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
@@ -204,7 +213,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -216,7 +225,7 @@
               <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -231,7 +240,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.sets"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -242,7 +251,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.reps"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -253,7 +262,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.weight"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -265,7 +274,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.time"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -276,7 +285,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.distance"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -287,7 +296,7 @@
                 <label class="text-caption">Notes</label>
                 <v-textarea
                   v-model="quickLogData.movement.notes"
-                  variant="outlined"
+                  
                   density="compact"
                   rows="2"
                   hide-details
@@ -320,6 +329,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -331,6 +341,10 @@ const error = ref('')
 const searchQuery = ref('')
 const selectedType = ref('all')
 const activeNav = ref('movements')
+
+// Detail Dialog state
+const showDetailDialog = ref(false)
+const selectedMovementId = ref(null)
 
 // Quick Log state
 const quickLogDialog = ref(false)
@@ -427,8 +441,9 @@ function handleMovementClick(movement) {
       query: { selectedMovement: movement.id }
     })
   } else {
-    // In browse mode, navigate to movement detail
-    router.push(`/movements/${movement.id}`)
+    // In browse mode, show detail dialog
+    selectedMovementId.value = movement.id
+    showDetailDialog.value = true
   }
 }
 
@@ -448,6 +463,13 @@ function createNewMovement() {
 // Edit movement
 function editMovement(id) {
   router.push(`/movements/${id}/edit`)
+}
+
+// Handle QuickLog from detail dialog
+function handleDetailQuickLog({ data }) {
+  if (data) {
+    openQuickLog(data)
+  }
 }
 
 // Helper functions for Quick Log

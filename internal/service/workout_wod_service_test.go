@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -502,5 +503,389 @@ func TestWorkoutWODService_AddWODToWorkout_NilCreatedBy(t *testing.T) {
 	_, err := svc.AddWODToWorkout(workout.ID, wod.ID, 1, 0, nil)
 	if err != ErrUnauthorized {
 		t.Errorf("AddWODToWorkout() error = %v, want ErrUnauthorized for nil CreatedBy", err)
+	}
+}
+
+// Error path tests
+
+func TestWorkoutWODService_AddWODToWorkout_WorkoutRepoError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	// Set error on workout repo
+	workoutRepo.getByIDError = errors.New("database error")
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	_, err := svc.AddWODToWorkout(1, 1, 1, 0, nil)
+	if err == nil {
+		t.Error("AddWODToWorkout() should return error when workout repo fails")
+	}
+}
+
+func TestWorkoutWODService_AddWODToWorkout_WODRepoError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Set error on WOD repo
+	wodRepo.getByIDError = errors.New("database error")
+
+	_, err := svc.AddWODToWorkout(workout.ID, 1, userID, 0, nil)
+	if err == nil {
+		t.Error("AddWODToWorkout() should return error when WOD repo fails")
+	}
+}
+
+func TestWorkoutWODService_AddWODToWorkout_CreateError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Set error on create
+	workoutWODRepo.createError = errors.New("database error")
+
+	_, err := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+	if err == nil {
+		t.Error("AddWODToWorkout() should return error when create fails")
+	}
+}
+
+func TestWorkoutWODService_RemoveWODFromWorkout_GetByIDError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	// Set error on GetByID
+	workoutWODRepo.getByIDError = errors.New("database error")
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	err := svc.RemoveWODFromWorkout(1, 1)
+	if err == nil {
+		t.Error("RemoveWODFromWorkout() should return error when GetByID fails")
+	}
+}
+
+func TestWorkoutWODService_RemoveWODFromWorkout_GetWorkoutError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on workout repo
+	workoutRepo.getByIDError = errors.New("database error")
+
+	err := svc.RemoveWODFromWorkout(workoutWOD.ID, userID)
+	if err == nil {
+		t.Error("RemoveWODFromWorkout() should return error when get workout fails")
+	}
+}
+
+func TestWorkoutWODService_RemoveWODFromWorkout_DeleteError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on delete
+	workoutWODRepo.deleteError = errors.New("database error")
+
+	err := svc.RemoveWODFromWorkout(workoutWOD.ID, userID)
+	if err == nil {
+		t.Error("RemoveWODFromWorkout() should return error when delete fails")
+	}
+}
+
+func TestWorkoutWODService_RemoveWODFromWorkout_WorkoutNotFound(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Manually create a workoutWOD with a non-existent workout
+	workoutWOD := &domain.WorkoutWOD{
+		WorkoutID: 999, // Non-existent
+		WODID:     1,
+	}
+	_ = workoutWODRepo.Create(workoutWOD)
+
+	err := svc.RemoveWODFromWorkout(workoutWOD.ID, 1)
+	if err == nil {
+		t.Error("RemoveWODFromWorkout() should return error when workout not found")
+	}
+}
+
+func TestWorkoutWODService_UpdateWorkoutWOD_GetByIDError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	// Set error on GetByID
+	workoutWODRepo.getByIDError = errors.New("database error")
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	score := "10:30"
+	err := svc.UpdateWorkoutWOD(1, 1, &score, nil)
+	if err == nil {
+		t.Error("UpdateWorkoutWOD() should return error when GetByID fails")
+	}
+}
+
+func TestWorkoutWODService_UpdateWorkoutWOD_GetWorkoutError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on workout repo
+	workoutRepo.getByIDError = errors.New("database error")
+
+	score := "10:30"
+	err := svc.UpdateWorkoutWOD(workoutWOD.ID, userID, &score, nil)
+	if err == nil {
+		t.Error("UpdateWorkoutWOD() should return error when get workout fails")
+	}
+}
+
+func TestWorkoutWODService_UpdateWorkoutWOD_WorkoutNotFound(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Manually create a workoutWOD with a non-existent workout
+	workoutWOD := &domain.WorkoutWOD{
+		WorkoutID: 999, // Non-existent
+		WODID:     1,
+	}
+	_ = workoutWODRepo.Create(workoutWOD)
+
+	score := "10:30"
+	err := svc.UpdateWorkoutWOD(workoutWOD.ID, 1, &score, nil)
+	if err == nil {
+		t.Error("UpdateWorkoutWOD() should return error when workout not found")
+	}
+}
+
+func TestWorkoutWODService_UpdateWorkoutWOD_UpdateError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on update
+	workoutWODRepo.updateError = errors.New("database error")
+
+	score := "10:30"
+	err := svc.UpdateWorkoutWOD(workoutWOD.ID, userID, &score, nil)
+	if err == nil {
+		t.Error("UpdateWorkoutWOD() should return error when update fails")
+	}
+}
+
+func TestWorkoutWODService_ToggleWODPR_GetByIDError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	// Set error on GetByID
+	workoutWODRepo.getByIDError = errors.New("database error")
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	err := svc.ToggleWODPR(1, 1)
+	if err == nil {
+		t.Error("ToggleWODPR() should return error when GetByID fails")
+	}
+}
+
+func TestWorkoutWODService_ToggleWODPR_GetWorkoutError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on workout repo
+	workoutRepo.getByIDError = errors.New("database error")
+
+	err := svc.ToggleWODPR(workoutWOD.ID, userID)
+	if err == nil {
+		t.Error("ToggleWODPR() should return error when get workout fails")
+	}
+}
+
+func TestWorkoutWODService_ToggleWODPR_WorkoutNotFound(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Manually create a workoutWOD with a non-existent workout
+	workoutWOD := &domain.WorkoutWOD{
+		WorkoutID: 999, // Non-existent
+		WODID:     1,
+	}
+	_ = workoutWODRepo.Create(workoutWOD)
+
+	err := svc.ToggleWODPR(workoutWOD.ID, 1)
+	if err == nil {
+		t.Error("ToggleWODPR() should return error when workout not found")
+	}
+}
+
+func TestWorkoutWODService_ToggleWODPR_ToggleError(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	// Create a workout template owned by user 1
+	userID := int64(1)
+	workout := &domain.Workout{
+		Name:      "Test Workout",
+		CreatedBy: &userID,
+	}
+	_ = workoutRepo.Create(workout)
+
+	// Create a WOD
+	wod := &domain.WOD{Name: "Test WOD"}
+	_ = wodRepo.Create(wod)
+
+	// Add WOD to workout
+	workoutWOD, _ := svc.AddWODToWorkout(workout.ID, wod.ID, userID, 0, nil)
+
+	// Set error on toggle
+	workoutWODRepo.togglePRError = errors.New("database error")
+
+	err := svc.ToggleWODPR(workoutWOD.ID, userID)
+	if err == nil {
+		t.Error("ToggleWODPR() should return error when toggle fails")
+	}
+}
+
+func TestWorkoutWODService_ListWODsForWorkout_Error(t *testing.T) {
+	workoutWODRepo := newMockWorkoutWODRepo()
+	workoutRepo := newMockWorkoutRepo()
+	wodRepo := newMockWODRepo()
+
+	// Set error on list
+	workoutWODRepo.listByWorkoutWithDetailsError = errors.New("database error")
+
+	svc := NewWorkoutWODService(workoutWODRepo, workoutRepo, wodRepo)
+
+	_, err := svc.ListWODsForWorkout(1)
+	if err == nil {
+		t.Error("ListWODsForWorkout() should return error when list fails")
 	}
 }

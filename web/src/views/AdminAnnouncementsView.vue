@@ -38,14 +38,14 @@
               v-model="announcement.title"
               label="Title"
               placeholder="Enter announcement title"
-              variant="outlined"
+              
               density="comfortable"
               :rules="[v => !!v || 'Title is required']"
               class="mb-4"
             />
 
             <!-- Message with Tabs for Edit/Preview -->
-            <v-card variant="outlined" class="mb-4">
+            <v-card  class="mb-4">
               <v-tabs v-model="messageTab" color="primary">
                 <v-tab value="edit">
                   <v-icon class="mr-2">mdi-pencil</v-icon>
@@ -73,7 +73,8 @@
                   />
                   <v-divider />
                   <div class="text-caption text-medium-emphasis pa-2 px-4">
-                    Supports markdown: **bold**, *italic*, [links](url), lists, etc.
+                    <strong>Markdown supported:</strong> **bold**, *italic*, [link text](url), `code`,
+                    lists (use * or - for bullets, 1. 2. 3. for numbered), > for quotes, ### for headings
                   </div>
                 </v-window-item>
 
@@ -94,7 +95,7 @@
               v-model="announcement.targetType"
               label="Send To"
               :items="targetOptions"
-              variant="outlined"
+              
               density="comfortable"
               :rules="[v => !!v || 'Target type is required']"
               class="mb-4"
@@ -108,7 +109,7 @@
               :items="organizations"
               item-title="name"
               item-value="id"
-              variant="outlined"
+              
               density="comfortable"
               multiple
               chips
@@ -126,7 +127,7 @@
               :items="users"
               item-title="email"
               item-value="id"
-              variant="outlined"
+              
               density="comfortable"
               multiple
               chips
@@ -143,7 +144,7 @@
               :items="organizations"
               item-title="name"
               item-value="id"
-              variant="outlined"
+              
               density="comfortable"
               clearable
               :loading="loadingOrganizations"

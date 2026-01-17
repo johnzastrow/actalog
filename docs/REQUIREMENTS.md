@@ -142,6 +142,8 @@ The following design decisions define the core functionality and user experience
 - **First user becomes admin** automatically
 - No coach or gym owner roles initially (future consideration for multi-gym support)
 
+**Detailed permissions matrix**: See [USER_PERMISSIONS.md](USER_PERMISSIONS.md) for the complete action-by-action breakdown of what each role can do.
+
 ### 6. Workout Scheduling
 **Decision**: Future Planning Support
 - Users can schedule workouts on future dates using the calendar

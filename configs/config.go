@@ -103,8 +103,8 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			Host:         getEnv("SERVER_HOST", "0.0.0.0"),
 			Port:         getEnvInt("SERVER_PORT", 8080),
-			ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 15*time.Second),
-			WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 15*time.Second),
+			ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
+			WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 60*time.Second),
 			IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
@@ -135,7 +135,7 @@ func Load() (*Config, error) {
 		},
 		Logging: LoggingConfig{
 			Level:      getEnv("LOG_LEVEL", "info"),
-			Format:     getEnv("LOG_FORMAT", "text"),      // text (default) or json
+			Format:     getEnv("LOG_FORMAT", "text"), // text (default) or json
 			EnableFile: getEnvBool("LOG_FILE_ENABLED", false),
 			FilePath:   getEnv("LOG_FILE_PATH", ""),       // Empty = auto-detect (./logs/actalog.log)
 			MaxSizeMB:  getEnvInt("LOG_MAX_SIZE_MB", 100), // 100MB default

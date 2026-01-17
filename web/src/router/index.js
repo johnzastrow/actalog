@@ -177,6 +177,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
+      path: '/admin/data-quality',
+      name: 'admin-data-quality',
+      component: () => import('@/views/AdminDataQualityView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/admin/users',
       name: 'admin-users',
       component: () => import('@/views/AdminUsersView.vue'),
@@ -222,6 +228,30 @@ const router = createRouter({
       path: '/admin/announcements',
       name: 'admin-announcements',
       component: () => import('@/views/AdminAnnouncementsView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/email-settings',
+      name: 'admin-email-settings',
+      component: () => import('@/views/AdminEmailSettingsView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/email-logs',
+      name: 'admin-email-logs',
+      component: () => import('@/views/AdminEmailLogsView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/metrics',
+      name: 'admin-metrics',
+      component: () => import('@/views/AdminMetricsDashboardView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/users/import-export',
+      name: 'admin-user-import-export',
+      component: () => import('@/views/AdminUserImportExportView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {

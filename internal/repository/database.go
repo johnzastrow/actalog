@@ -436,8 +436,11 @@ func getSQLiteSchema() string {
 		notification_preferences TEXT,
 		data_export_format TEXT DEFAULT 'json',
 		theme TEXT DEFAULT 'light',
+		font_family TEXT DEFAULT 'system',
 		weight_unit TEXT DEFAULT 'lbs',
 		distance_unit TEXT DEFAULT 'meters',
+		timezone TEXT DEFAULT 'America/New_York',
+		admin_user_event_notifications INTEGER NOT NULL DEFAULT 1,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -521,6 +524,8 @@ func getSQLiteSchema() string {
 		score_value TEXT,
 		division TEXT,
 		is_pr INTEGER NOT NULL DEFAULT 0,
+		instructions TEXT DEFAULT '',
+		notes TEXT DEFAULT '',
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
@@ -560,6 +565,7 @@ func getSQLiteSchema() string {
 		time INTEGER,
 		distance REAL,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
@@ -582,6 +588,7 @@ func getSQLiteSchema() string {
 		reps INTEGER,
 		weight REAL,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
@@ -604,6 +611,7 @@ func getSQLiteSchema() string {
 		distance REAL,
 		is_rx INTEGER NOT NULL DEFAULT 0,
 		is_pr INTEGER NOT NULL DEFAULT 0,
+		instructions TEXT DEFAULT '',
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
@@ -667,8 +675,11 @@ func getPostgreSQLSchema() string {
 		notification_preferences TEXT,
 		data_export_format VARCHAR(50) DEFAULT 'json',
 		theme VARCHAR(50) DEFAULT 'light',
+		font_family VARCHAR(50) DEFAULT 'system',
 		weight_unit VARCHAR(20) DEFAULT 'lbs',
 		distance_unit VARCHAR(20) DEFAULT 'meters',
+		timezone VARCHAR(50) DEFAULT 'America/New_York',
+		admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -752,6 +763,8 @@ func getPostgreSQLSchema() string {
 		score_value TEXT,
 		division TEXT,
 		is_pr BOOLEAN NOT NULL DEFAULT false,
+		instructions TEXT DEFAULT '',
+		notes TEXT DEFAULT '',
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -791,6 +804,7 @@ func getPostgreSQLSchema() string {
 		time INTEGER,
 		distance DOUBLE PRECISION,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -813,6 +827,7 @@ func getPostgreSQLSchema() string {
 		reps INTEGER,
 		weight DOUBLE PRECISION,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -835,6 +850,7 @@ func getPostgreSQLSchema() string {
 		distance DOUBLE PRECISION,
 		is_rx BOOLEAN NOT NULL DEFAULT FALSE,
 		is_pr BOOLEAN NOT NULL DEFAULT FALSE,
+		instructions TEXT DEFAULT '',
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -896,8 +912,11 @@ func getMySQLSchema() string {
 		notification_preferences TEXT,
 		data_export_format VARCHAR(50) DEFAULT 'json',
 		theme VARCHAR(50) DEFAULT 'light',
+		font_family VARCHAR(50) DEFAULT 'system',
 		weight_unit VARCHAR(20) DEFAULT 'lbs',
 		distance_unit VARCHAR(20) DEFAULT 'meters',
+		timezone VARCHAR(50) DEFAULT 'America/New_York',
+		admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		INDEX idx_user_settings_user_id (user_id),
@@ -976,6 +995,8 @@ func getMySQLSchema() string {
 		score_value TEXT,
 		division TEXT,
 		is_pr BOOLEAN NOT NULL DEFAULT 0,
+		instructions TEXT DEFAULT '',
+		notes TEXT DEFAULT '',
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1013,6 +1034,7 @@ func getMySQLSchema() string {
 		time INTEGER,
 		distance DOUBLE,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1034,6 +1056,7 @@ func getMySQLSchema() string {
 		reps INTEGER,
 		weight DOUBLE,
 		notes TEXT,
+		rpe INTEGER,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1055,6 +1078,7 @@ func getMySQLSchema() string {
 		distance DOUBLE,
 		is_rx BOOLEAN NOT NULL DEFAULT FALSE,
 		is_pr BOOLEAN NOT NULL DEFAULT FALSE,
+		instructions TEXT DEFAULT '',
 		notes TEXT,
 		order_index INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1113,6 +1137,48 @@ func getTimestampFunc() string {
 		return "NOW()"
 	default:
 		return "CURRENT_TIMESTAMP"
+	}
+}
+
+// getStartOfMonthExpr returns the database-specific expression for start of current month
+func getStartOfMonthExpr() string {
+	switch currentDriver {
+	case "sqlite3":
+		return "date('now', 'start of month')"
+	case "postgres":
+		return "date_trunc('month', CURRENT_DATE)"
+	case "mysql":
+		return "DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+	default:
+		return "date_trunc('month', CURRENT_DATE)"
+	}
+}
+
+// getDaysAgoExpr returns the database-specific expression for N days ago
+func getDaysAgoExpr(days int) string {
+	switch currentDriver {
+	case "sqlite3":
+		return fmt.Sprintf("date('now', '-%d days')", days)
+	case "postgres":
+		return fmt.Sprintf("CURRENT_DATE - INTERVAL '%d days'", days)
+	case "mysql":
+		return fmt.Sprintf("DATE_SUB(CURDATE(), INTERVAL %d DAY)", days)
+	default:
+		return fmt.Sprintf("CURRENT_DATE - INTERVAL '%d days'", days)
+	}
+}
+
+// getDateExpr returns the database-specific expression to extract date from a datetime column
+func getDateExpr(column string) string {
+	switch currentDriver {
+	case "sqlite3":
+		return fmt.Sprintf("DATE(%s)", column)
+	case "postgres":
+		return fmt.Sprintf("DATE(%s)", column)
+	case "mysql":
+		return fmt.Sprintf("DATE(%s)", column)
+	default:
+		return fmt.Sprintf("DATE(%s)", column)
 	}
 }
 

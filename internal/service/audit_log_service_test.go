@@ -132,10 +132,10 @@ func TestAuditLogService_List(t *testing.T) {
 		wantLimit  int
 		wantOffset int
 	}{
-		{"default values", 0, -1, 50, 0},    // Invalid limit defaults to 50
-		{"over max limit", 200, 0, 50, 0},   // Over 100 defaults to 50
-		{"valid limit", 10, 0, 10, 0},       // Valid limit stays
-		{"negative offset", 10, -5, 10, 0},  // Negative offset becomes 0
+		{"default values", 0, -1, 50, 0},   // Invalid limit defaults to 50
+		{"over max limit", 200, 0, 50, 0},  // Over 100 defaults to 50
+		{"valid limit", 10, 0, 10, 0},      // Valid limit stays
+		{"negative offset", 10, -5, 10, 0}, // Negative offset becomes 0
 		{"valid pagination", 10, 10, 10, 10},
 	}
 
@@ -664,5 +664,69 @@ func TestAuditLogService_LogOrgSubscriptionCancelled(t *testing.T) {
 
 	if repo.logs[0].EventType != domain.EventOrgSubscriptionCancelled {
 		t.Errorf("EventType = %s, want %s", repo.logs[0].EventType, domain.EventOrgSubscriptionCancelled)
+	}
+}
+
+func TestAuditLogService_GetByUserID_LimitValidation(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	userID := int64(1)
+	_ = repo.Create(&domain.AuditLog{EventType: domain.EventLoginSuccess, UserID: &userID})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByUserID(userID, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByUserID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByUserID() returned nil")
+			}
+		})
+	}
+}
+
+func TestAuditLogService_GetByTargetUserID_LimitValidation(t *testing.T) {
+	repo := newMockAuditLogRepo()
+	svc := NewAuditLogService(repo)
+
+	targetUserID := int64(2)
+	_ = repo.Create(&domain.AuditLog{EventType: domain.EventAccountDisabled, TargetUserID: &targetUserID})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByTargetUserID(targetUserID, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByTargetUserID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByTargetUserID() returned nil")
+			}
+		})
 	}
 }

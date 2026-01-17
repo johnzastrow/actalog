@@ -72,9 +72,7 @@
           <!-- Description -->
           <div v-if="parsedData.description" class="mb-3">
             <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
-            <p class="text-body-2" style="color: rgb(var(--v-theme-on-surface)); white-space: pre-wrap">
-              {{ parsedData.description }}
-            </p>
+            <markdown-renderer :content="parsedData.description" />
           </div>
 
           <!-- Difficulty -->
@@ -124,7 +122,7 @@
               :href="parsedData.videoUrl"
               target="_blank"
               color="primary"
-              variant="outlined"
+              
               prepend-icon="mdi-play-circle"
               size="small"
               rounded="lg"
@@ -175,7 +173,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -187,7 +185,7 @@
               <label class="text-caption font-weight-bold d-block" >Workout Name *</label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -202,7 +200,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.sets"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -213,7 +211,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.reps"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -224,7 +222,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.weight"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -236,7 +234,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.time"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -247,7 +245,7 @@
                 <v-text-field
                   v-model.number="quickLogData.movement.distance"
                   type="number"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -258,7 +256,7 @@
                 <label class="text-caption">Notes</label>
                 <v-textarea
                   v-model="quickLogData.movement.notes"
-                  variant="outlined"
+                  
                   density="compact"
                   rows="2"
                   hide-details
@@ -291,6 +289,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 const router = useRouter()
 const route = useRoute()

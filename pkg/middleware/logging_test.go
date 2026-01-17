@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/johnzastrow/actalog/pkg/logger"
 )
 
 // mockHTTPLogger captures log messages for testing
@@ -223,4 +225,315 @@ func TestGenerateRequestID(t *testing.T) {
 
 	// Note: IDs might be the same if generated in the same microsecond
 	_ = id2
+}
+
+// ============================================================================
+// Tests for LoggingMiddleware
+// ============================================================================
+
+func TestLoggingMiddleware_Success(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_POSTWithBody(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Read body to verify it was restored
+		body := make([]byte, 1024)
+		n, _ := r.Body.Read(body)
+		if n == 0 {
+			t.Error("Body should be readable after logging middleware")
+		}
+		w.WriteHeader(http.StatusCreated)
+	}))
+
+	req := httptest.NewRequest("POST", "/api/users", strings.NewReader(`{"name": "test", "email": "test@example.com"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusCreated)
+	}
+}
+
+func TestLoggingMiddleware_POSTWithPasswordRedacted(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Request with password field that should be redacted in logs
+	req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email": "test@example.com", "password": "secret123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_ErrorResponse(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "bad request"}`))
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestLoggingMiddleware_ServerError(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "internal error"}`))
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusInternalServerError)
+	}
+}
+
+func TestLoggingMiddleware_Redirect(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusFound)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/redirect", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusFound {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusFound)
+	}
+}
+
+func TestLoggingMiddleware_WithQueryParams(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/search?q=test&limit=10", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_WithUserContext(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	ctx := context.WithValue(req.Context(), "user_id", int64(42))
+	ctx = context.WithValue(ctx, "user_email", "test@example.com")
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_NonJSONBody(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("POST", "/api/upload", strings.NewReader("plain text body"))
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_LongNonJSONBody(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Create a body longer than 200 chars
+	longBody := strings.Repeat("x", 300)
+	req := httptest.NewRequest("POST", "/api/upload", strings.NewReader(longBody))
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_LongErrorResponse(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		// Write a very long error message (> 500 chars)
+		w.Write([]byte(strings.Repeat("error message ", 50)))
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestLoggingMiddleware_HEADRequest(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("HEAD", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestLoggingMiddleware_WithTokenRedacted(t *testing.T) {
+	log := createTestLogger()
+
+	handler := LoggingMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("POST", "/api/auth/refresh", strings.NewReader(`{"token": "secret-refresh-token"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+// ============================================================================
+// Tests for RequestIDMiddleware
+// ============================================================================
+
+func TestRequestIDMiddleware_GeneratesID(t *testing.T) {
+	log := createTestLogger()
+
+	handler := RequestIDMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	requestID := rec.Header().Get("X-Request-ID")
+	if requestID == "" {
+		t.Error("Expected X-Request-ID header to be set")
+	}
+}
+
+func TestRequestIDMiddleware_UsesExistingID(t *testing.T) {
+	log := createTestLogger()
+
+	handler := RequestIDMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	req.Header.Set("X-Request-ID", "existing-request-id-123")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	requestID := rec.Header().Get("X-Request-ID")
+	if requestID != "existing-request-id-123" {
+		t.Errorf("Expected X-Request-ID = 'existing-request-id-123', got %s", requestID)
+	}
+}
+
+func TestRequestIDMiddleware_PassesToHandler(t *testing.T) {
+	log := createTestLogger()
+
+	handlerCalled := false
+	handler := RequestIDMiddleware(log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if !handlerCalled {
+		t.Error("Handler should be called")
+	}
+}
+
+// createTestLogger creates a logger for testing
+func createTestLogger() *logger.Logger {
+	log, _ := logger.New(logger.Config{Level: "debug"})
+	return log
 }

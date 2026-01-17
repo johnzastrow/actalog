@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
@@ -10,12 +11,16 @@ import (
 
 // Extended mock movement repository for testing
 type testMovementRepo struct {
-	movements    map[int64]*domain.Movement
-	nextID       int64
-	createError  error
-	getByIDError error
-	updateError  error
-	deleteError  error
+	movements                     map[int64]*domain.Movement
+	nextID                        int64
+	createError                   error
+	getByIDError                  error
+	updateError                   error
+	deleteError                   error
+	listAllUserCreatedError       error
+	listWithUserInfoError         error
+	listWithUserInfoFilteredError error
+	countError                    error
 }
 
 func newTestMovementRepo() *testMovementRepo {
@@ -86,6 +91,9 @@ func (m *testMovementRepo) ListByUser(userID int64) ([]*domain.Movement, error) 
 }
 
 func (m *testMovementRepo) ListAllUserCreated() ([]*domain.Movement, error) {
+	if m.listAllUserCreatedError != nil {
+		return nil, m.listAllUserCreatedError
+	}
 	var result []*domain.Movement
 	for _, movement := range m.movements {
 		if !movement.IsStandard {
@@ -96,14 +104,61 @@ func (m *testMovementRepo) ListAllUserCreated() ([]*domain.Movement, error) {
 }
 
 func (m *testMovementRepo) ListAllUserCreatedWithUserInfo() ([]*domain.MovementWithCreator, error) {
-	return []*domain.MovementWithCreator{}, nil
+	if m.listWithUserInfoError != nil {
+		return nil, m.listWithUserInfoError
+	}
+	var result []*domain.MovementWithCreator
+	for _, movement := range m.movements {
+		if !movement.IsStandard {
+			creator := &domain.MovementWithCreator{
+				Movement:     *movement,
+				CreatorEmail: "creator@example.com",
+			}
+			result = append(result, creator)
+		}
+	}
+	return result, nil
 }
 
 func (m *testMovementRepo) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, movementType, creator string) ([]*domain.MovementWithCreator, int64, error) {
-	return []*domain.MovementWithCreator{}, 0, nil
+	if m.listWithUserInfoFilteredError != nil {
+		return nil, 0, m.listWithUserInfoFilteredError
+	}
+	var result []*domain.MovementWithCreator
+	for _, movement := range m.movements {
+		if !movement.IsStandard {
+			// Apply filters
+			if search != "" && !matchString(movement.Name, search) {
+				continue
+			}
+			if movementType != "" && string(movement.Type) != movementType {
+				continue
+			}
+			creatorWithInfo := &domain.MovementWithCreator{
+				Movement:     *movement,
+				CreatorEmail: "creator@example.com",
+			}
+			result = append(result, creatorWithInfo)
+		}
+	}
+	count := int64(len(result))
+	// Apply pagination
+	if offset < len(result) {
+		end := offset + limit
+		if end > len(result) {
+			end = len(result)
+		}
+		result = result[offset:end]
+	} else {
+		result = []*domain.MovementWithCreator{}
+	}
+	return result, count, nil
 }
 
 func (m *testMovementRepo) CountAllUserCreated() (int64, error) {
+	if m.countError != nil {
+		return 0, m.countError
+	}
 	count := int64(0)
 	for _, movement := range m.movements {
 		if !movement.IsStandard {
@@ -816,5 +871,455 @@ func TestMovementService_ListAllUserCreated(t *testing.T) {
 		if r.IsStandard {
 			t.Errorf("ListAllUserCreated() returned standard movement: %s", r.Name)
 		}
+	}
+}
+
+func TestMovementService_ListAllUserCreated_ListError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.listAllUserCreatedError = errors.New("database error")
+	service := NewMovementService(repo, nil, nil)
+
+	_, _, err := service.ListAllUserCreated()
+	if err == nil {
+		t.Error("ListAllUserCreated() should return error when repo fails")
+	}
+}
+
+func TestMovementService_ListAllUserCreated_CountError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.countError = errors.New("count error")
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	userID := int64(1)
+	repo.Create(&domain.Movement{Name: "Custom", Type: "strength", IsStandard: false, CreatedBy: &userID})
+
+	_, _, err := service.ListAllUserCreated()
+	if err == nil {
+		t.Error("ListAllUserCreated() should return error when count fails")
+	}
+}
+
+func TestMovementService_ListAllUserCreatedWithUserInfo(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create some movements
+	userID := int64(1)
+	movements := []*domain.Movement{
+		{Name: "Standard 1", Type: "strength", IsStandard: true},
+		{Name: "Custom 1", Type: "strength", IsStandard: false, CreatedBy: &userID},
+		{Name: "Custom 2", Type: "cardio", IsStandard: false, CreatedBy: &userID},
+		{Name: "Standard 2", Type: "gymnastics", IsStandard: true},
+	}
+
+	for _, m := range movements {
+		repo.Create(m)
+	}
+
+	results, count, err := service.ListAllUserCreatedWithUserInfo()
+	if err != nil {
+		t.Errorf("ListAllUserCreatedWithUserInfo() error = %v", err)
+		return
+	}
+
+	if len(results) != 2 {
+		t.Errorf("ListAllUserCreatedWithUserInfo() returned %d results, want 2", len(results))
+	}
+
+	if count != 2 {
+		t.Errorf("ListAllUserCreatedWithUserInfo() count = %d, want 2", count)
+	}
+
+	for _, r := range results {
+		if r.IsStandard {
+			t.Errorf("ListAllUserCreatedWithUserInfo() returned standard movement: %s", r.Name)
+		}
+		if r.CreatorEmail == "" {
+			t.Error("ListAllUserCreatedWithUserInfo() returned empty creator email")
+		}
+	}
+}
+
+func TestMovementService_ListAllUserCreatedWithUserInfo_ListError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.listWithUserInfoError = errors.New("database error")
+	service := NewMovementService(repo, nil, nil)
+
+	_, _, err := service.ListAllUserCreatedWithUserInfo()
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfo() should return error when repo fails")
+	}
+}
+
+func TestMovementService_ListAllUserCreatedWithUserInfo_CountError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.countError = errors.New("count error")
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	userID := int64(1)
+	repo.Create(&domain.Movement{Name: "Custom", Type: "strength", IsStandard: false, CreatedBy: &userID})
+
+	_, _, err := service.ListAllUserCreatedWithUserInfo()
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfo() should return error when count fails")
+	}
+}
+
+func TestMovementService_ListAllUserCreatedWithUserInfoFiltered(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create some movements
+	userID := int64(1)
+	movements := []*domain.Movement{
+		{Name: "Standard 1", Type: "strength", IsStandard: true},
+		{Name: "Back Squat Custom", Type: "strength", IsStandard: false, CreatedBy: &userID},
+		{Name: "Running Custom", Type: "cardio", IsStandard: false, CreatedBy: &userID},
+		{Name: "Front Squat Custom", Type: "strength", IsStandard: false, CreatedBy: &userID},
+		{Name: "Standard 2", Type: "gymnastics", IsStandard: true},
+	}
+
+	for _, m := range movements {
+		repo.Create(m)
+	}
+
+	tests := []struct {
+		name         string
+		limit        int
+		offset       int
+		search       string
+		movementType string
+		creator      string
+		wantCount    int64
+	}{
+		{
+			name:      "no filters",
+			limit:     10,
+			offset:    0,
+			wantCount: 3,
+		},
+		{
+			name:         "filter by type",
+			limit:        10,
+			offset:       0,
+			movementType: "strength",
+			wantCount:    2,
+		},
+		{
+			name:      "filter by search",
+			limit:     10,
+			offset:    0,
+			search:    "Squat",
+			wantCount: 2,
+		},
+		{
+			name:         "filter by type and search",
+			limit:        10,
+			offset:       0,
+			search:       "Squat",
+			movementType: "strength",
+			wantCount:    2,
+		},
+		{
+			name:      "with pagination",
+			limit:     1,
+			offset:    0,
+			wantCount: 3,
+		},
+		{
+			name:      "with offset",
+			limit:     10,
+			offset:    1,
+			wantCount: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			results, count, err := service.ListAllUserCreatedWithUserInfoFiltered(tt.limit, tt.offset, tt.search, tt.movementType, tt.creator)
+			if err != nil {
+				t.Errorf("ListAllUserCreatedWithUserInfoFiltered() error = %v", err)
+				return
+			}
+
+			if count != tt.wantCount {
+				t.Errorf("ListAllUserCreatedWithUserInfoFiltered() count = %d, want %d", count, tt.wantCount)
+			}
+
+			// Verify pagination
+			if tt.limit < int(tt.wantCount) && len(results) > tt.limit {
+				t.Errorf("ListAllUserCreatedWithUserInfoFiltered() returned %d results, limit was %d", len(results), tt.limit)
+			}
+		})
+	}
+}
+
+func TestMovementService_ListAllUserCreatedWithUserInfoFiltered_Error(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.listWithUserInfoFilteredError = errors.New("database error")
+	service := NewMovementService(repo, nil, nil)
+
+	_, _, err := service.ListAllUserCreatedWithUserInfoFiltered(10, 0, "", "", "")
+	if err == nil {
+		t.Error("ListAllUserCreatedWithUserInfoFiltered() should return error when repo fails")
+	}
+}
+
+func TestMovementService_UpdateAsAdmin_ValidationError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a movement
+	movement := &domain.Movement{
+		Name:       "Test Movement",
+		Type:       "strength",
+		IsStandard: true,
+	}
+	repo.Create(movement)
+
+	tests := []struct {
+		name     string
+		movement *domain.Movement
+		wantErr  bool
+		errType  error
+	}{
+		{
+			name: "empty name",
+			movement: &domain.Movement{
+				ID:   movement.ID,
+				Name: "",
+				Type: "strength",
+			},
+			wantErr: true,
+			errType: ErrMovementNameRequired,
+		},
+		{
+			name: "whitespace name",
+			movement: &domain.Movement{
+				ID:   movement.ID,
+				Name: "   ",
+				Type: "strength",
+			},
+			wantErr: true,
+			errType: ErrMovementNameRequired,
+		},
+		{
+			name: "empty type",
+			movement: &domain.Movement{
+				ID:   movement.ID,
+				Name: "Valid Name",
+				Type: "",
+			},
+			wantErr: true,
+			errType: ErrMovementTypeRequired,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.UpdateAsAdmin(tt.movement, 1, "admin@example.com")
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateAsAdmin() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.errType != nil && err != tt.errType {
+				t.Errorf("UpdateAsAdmin() error = %v, want %v", err, tt.errType)
+			}
+		})
+	}
+}
+
+func TestMovementService_UpdateAsAdmin_NotFound(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	movement := &domain.Movement{
+		ID:   999,
+		Name: "Does Not Exist",
+		Type: "strength",
+	}
+
+	err := service.UpdateAsAdmin(movement, 1, "admin@example.com")
+	if err != ErrMovementNotFound {
+		t.Errorf("UpdateAsAdmin() error = %v, want %v", err, ErrMovementNotFound)
+	}
+}
+
+func TestMovementService_UpdateAsAdmin_RepoError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a movement
+	movement := &domain.Movement{
+		Name:       "Test Movement",
+		Type:       "strength",
+		IsStandard: true,
+	}
+	repo.Create(movement)
+
+	// Set update error
+	repo.updateError = errors.New("database error")
+
+	updated := &domain.Movement{
+		ID:   movement.ID,
+		Name: "Updated",
+		Type: "strength",
+	}
+
+	err := service.UpdateAsAdmin(updated, 1, "admin@example.com")
+	if err == nil {
+		t.Error("UpdateAsAdmin() should return error when repo fails")
+	}
+}
+
+func TestMovementService_UpdateAsAdmin_GetByIDError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a movement
+	movement := &domain.Movement{
+		Name:       "Test Movement",
+		Type:       "strength",
+		IsStandard: true,
+	}
+	repo.Create(movement)
+
+	// Set GetByID error
+	repo.getByIDError = errors.New("database error")
+
+	updated := &domain.Movement{
+		ID:   movement.ID,
+		Name: "Updated",
+		Type: "strength",
+	}
+
+	err := service.UpdateAsAdmin(updated, 1, "admin@example.com")
+	if err == nil {
+		t.Error("UpdateAsAdmin() should return error when GetByID fails")
+	}
+}
+
+func TestMovementService_Delete_RepoError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	movement := &domain.Movement{
+		Name:       "Custom Movement",
+		Type:       "strength",
+		IsStandard: false,
+	}
+	repo.Create(movement)
+
+	// Set delete error
+	repo.deleteError = errors.New("database error")
+
+	err := service.Delete(movement.ID, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when repo fails")
+	}
+}
+
+func TestMovementService_Delete_GetByIDError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	movement := &domain.Movement{
+		Name:       "Custom Movement",
+		Type:       "strength",
+		IsStandard: false,
+	}
+	repo.Create(movement)
+
+	// Set GetByID error
+	repo.getByIDError = errors.New("database error")
+
+	err := service.Delete(movement.ID, 1, "user@example.com")
+	if err == nil {
+		t.Error("Delete() should return error when GetByID fails")
+	}
+}
+
+func TestMovementService_Update_RepoError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	movement := &domain.Movement{
+		Name:       "Custom Movement",
+		Type:       "strength",
+		IsStandard: false,
+	}
+	repo.Create(movement)
+
+	// Set update error
+	repo.updateError = errors.New("database error")
+
+	updated := &domain.Movement{
+		ID:   movement.ID,
+		Name: "Updated Custom",
+		Type: "strength",
+	}
+
+	err := service.Update(updated, 1, "user@example.com")
+	if err == nil {
+		t.Error("Update() should return error when repo fails")
+	}
+}
+
+func TestMovementService_Update_GetByIDError(t *testing.T) {
+	repo := newTestMovementRepo()
+	service := NewMovementService(repo, nil, nil)
+
+	// Create a custom movement
+	movement := &domain.Movement{
+		Name:       "Custom Movement",
+		Type:       "strength",
+		IsStandard: false,
+	}
+	repo.Create(movement)
+
+	// Set GetByID error
+	repo.getByIDError = errors.New("database error")
+
+	updated := &domain.Movement{
+		ID:   movement.ID,
+		Name: "Updated Custom",
+		Type: "strength",
+	}
+
+	err := service.Update(updated, 1, "user@example.com")
+	if err == nil {
+		t.Error("Update() should return error when GetByID fails")
+	}
+}
+
+func TestMovementService_GetByID_RepoError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.getByIDError = errors.New("database error")
+	service := NewMovementService(repo, nil, nil)
+
+	_, err := service.GetByID(1)
+	if err == nil {
+		t.Error("GetByID() should return error when repo fails")
+	}
+}
+
+func TestMovementService_Create_RepoError(t *testing.T) {
+	repo := newTestMovementRepo()
+	repo.createError = errors.New("database error")
+	service := NewMovementService(repo, nil, nil)
+
+	movement := &domain.Movement{
+		Name: "Test Movement",
+		Type: "strength",
+	}
+
+	err := service.Create(movement, 1, "user@example.com")
+	if err == nil {
+		t.Error("Create() should return error when repo fails")
 	}
 }

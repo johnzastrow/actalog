@@ -345,6 +345,23 @@
         </h2>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
+            prepend-icon="mdi-chart-bar"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/metrics')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              System Metrics
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Real-time statistics and health
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
             prepend-icon="mdi-database-refresh"
             rounded
             style="cursor: pointer"
@@ -355,6 +372,23 @@
             </v-list-item-title>
             <v-list-item-subtitle class="text-caption text-disabled">
               Fix WOD score_type mismatches
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-database-check"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/data-quality')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Data Quality
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Scan duplicates and data issues
             </v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
@@ -491,6 +525,40 @@
             </v-list-item-title>
             <v-list-item-subtitle class="text-caption text-disabled">
               Manage user and org subscriptions
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-email-cog"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/email-settings')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Email Settings
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              Configure SMTP and email options
+            </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-email-search"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/email-logs')"
+          >
+            <v-list-item-title class="font-weight-medium" >
+              Email Logs
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">
+              View sent email history
             </v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
@@ -674,9 +742,9 @@ function filterPRsByPeriod(prMovements, workouts, period) {
 async function fetchStats() {
   loadingStats.value = true
   try {
-    // Fetch workouts for stats
+    // Fetch workouts for stats - use high limit to get all workouts for accurate All Time stats
     const [workoutsRes, prsRes, templatesRes] = await Promise.all([
-      axios.get('/api/workouts').catch(() => ({ data: { workouts: [] } })),
+      axios.get('/api/workouts?limit=10000').catch(() => ({ data: { workouts: [] } })),
       axios.get('/api/pr-movements').catch(() => ({ data: { movements: [] } })),
       axios.get('/api/workouts/my-templates').catch(() => ({ data: { workouts: [] } }))
     ])

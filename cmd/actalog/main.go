@@ -1,4 +1,75 @@
 // Package main is the entry point for ActaLog application
+//
+// @title           ActaLog API
+// @version         0.22.0
+// @description     ActaLog is a mobile-first CrossFit workout tracker API. It provides endpoints for user authentication, workout logging, movement tracking, personal records, and administrative functions.
+// @termsOfService  https://actalog.com/terms/
+//
+// @contact.name   ActaLog Support
+// @contact.url    https://github.com/johnzastrow/actalog/issues
+// @contact.email  support@actalog.com
+//
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+//
+// @host      localhost:8080
+// @BasePath  /api
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT Bearer token. Format: "Bearer {token}"
+//
+// @tag.name auth
+// @tag.description Authentication and authorization endpoints
+//
+// @tag.name users
+// @tag.description User profile and settings management
+//
+// @tag.name workouts
+// @tag.description Workout logging and history
+//
+// @tag.name movements
+// @tag.description Movement/exercise definitions and management
+//
+// @tag.name wods
+// @tag.description Workout of the Day management
+//
+// @tag.name templates
+// @tag.description Workout template management
+//
+// @tag.name performance
+// @tag.description Performance analytics and statistics
+//
+// @tag.name prs
+// @tag.description Personal records tracking
+//
+// @tag.name notifications
+// @tag.description User notifications and announcements
+//
+// @tag.name sessions
+// @tag.description Session management
+//
+// @tag.name subscriptions
+// @tag.description Subscription and billing management
+//
+// @tag.name organizations
+// @tag.description Organization management
+//
+// @tag.name admin
+// @tag.description Administrative operations (admin only)
+//
+// @tag.name import-export
+// @tag.description Data import and export operations
+//
+// @tag.name backups
+// @tag.description System backup and restore (admin only)
+//
+// @tag.name audit
+// @tag.description Audit log operations
+//
+// @tag.name benchmark
+// @tag.description System performance benchmarking
 package main
 
 import (
@@ -14,7 +85,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/johnzastrow/actalog/configs"
+	_ "github.com/johnzastrow/actalog/docs" // Swagger docs
 	"github.com/johnzastrow/actalog/internal/handler"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
@@ -144,11 +218,15 @@ func main() {
 	orgRepo := repository.NewOrganizationRepository(db)
 	notificationRepo := repository.NewNotificationRepository(db)
 	notificationLikeRepo := repository.NewNotificationLikeRepository(db)
+	emailLogRepo := repository.NewEmailLogRepository(db, cfg.Database.Driver)
 
 	// Subscription repositories
 	userSubscriptionRepo := repository.NewSQLiteUserSubscriptionRepository(db)
 	orgSubscriptionRepo := repository.NewSQLiteOrganizationSubscriptionRepository(db)
 	subscriptionAccessRepo := repository.NewSubscriptionAccessRepository(userSubscriptionRepo, orgSubscriptionRepo, orgRepo)
+
+	// Benchmark repository
+	benchmarkRepo := repository.NewBenchmarkRepository(db, cfg.Database.Driver)
 
 	// Initialize email service
 	var emailService *email.Service
@@ -182,6 +260,7 @@ func main() {
 	// Initialize services
 	auditLogService := service.NewAuditLogService(auditLogRepo)
 	dataChangeLogService := service.NewDataChangeLogService(dataChangeLogRepo)
+	emailLogService := service.NewEmailLogService(emailLogRepo)
 
 	userService := service.NewUserService(
 		userRepo,
@@ -198,6 +277,26 @@ func main() {
 		cfg.Security.MaxLoginAttempts,
 		cfg.Security.AccountLockoutDuration,
 	)
+
+	// Create admin notification service for user event emails and in-app notifications
+	stdLogger := log.New(appLogger.Writer(), "[AdminNotify] ", 0)
+	// Pass nil explicitly for email service interface to avoid typed-nil issue
+	// (a typed nil *email.Service assigned to interface is not nil)
+	var adminEmailSvc email.EmailService
+	if emailService != nil {
+		adminEmailSvc = emailService
+	}
+	adminNotificationService := service.NewAdminNotificationService(
+		userRepo,
+		userSettingsRepo,
+		notificationRepo,
+		adminEmailSvc,
+		emailLogService,
+		appURL,
+		stdLogger,
+	)
+	userService.SetAdminNotificationService(adminNotificationService)
+	appLogger.Info("Admin notification service: enabled (email: %v, in-app: true)", emailService != nil)
 
 	notificationService := service.NewNotificationService(
 		notificationRepo,
@@ -275,6 +374,34 @@ func main() {
 		auditLogRepo,
 	)
 
+	// Benchmark service
+	benchmarkService := service.NewBenchmarkService(benchmarkRepo)
+
+	// Admin metrics service
+	adminMetricsService := service.NewAdminMetricsService(
+		userRepo,
+		userWorkoutRepo,
+		movementRepo,
+		wodRepo,
+		workoutRepo,
+		userSubscriptionRepo,
+		auditLogRepo,
+		emailLogService,
+		appLogger,
+	)
+
+	// User import service
+	userImportService := service.NewUserImportService(
+		userRepo,
+		userSubscriptionRepo,
+		emailService,
+		appURL,
+	)
+	userImportService.SetAuditLogRepo(auditLogRepo)
+
+	// Data quality service (for duplicate detection and data quality scanning)
+	dataQualityService := service.NewDataQualityService(db, cfg.Database.Driver, auditLogService)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -299,6 +426,12 @@ func main() {
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, appLogger)
 	notificationHandler := handler.NewNotificationHandler(notificationService, appLogger)
 	notificationLikeHandler := handler.NewNotificationLikeHandler(notificationLikeService)
+	emailHandler := handler.NewEmailHandler(emailService, emailLogService, appLogger)
+	emailLogHandler := handler.NewEmailLogHandler(emailLogService, appLogger)
+	benchmarkHandler := handler.NewBenchmarkHandler(benchmarkService, appLogger)
+	adminMetricsHandler := handler.NewAdminMetricsHandler(adminMetricsService, appLogger)
+	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
+	dataQualityHandler := handler.NewDataQualityHandler(dataQualityService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -358,6 +491,11 @@ func main() {
 				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name)
 		})
 
+		// Swagger documentation UI (public)
+		r.Get("/docs/*", httpSwagger.Handler(
+			httpSwagger.URL("/api/docs/doc.json"), // The url pointing to API definition
+		))
+
 		// Auth routes (public with rate limiting)
 		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/register", authHandler.Register)
 		r.With(middleware.RateLimit(authRateLimiter)).Post("/auth/login", authHandler.Login)
@@ -387,107 +525,137 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWT.SecretKey))
 
-			// Movement management (authenticated)
-			r.Post("/movements", movementHandler.Create)
-			r.Put("/movements/{id}", movementHandler.Update)
-			r.Delete("/movements/{id}", movementHandler.Delete)
+			// ============================================================
+			// ACCOUNT ROUTES - No subscription required
+			// Profile, settings, sessions, and account management
+			// ============================================================
 
-			// User profile routes (authenticated)
+			// User profile routes (always allowed - no subscription required)
 			r.Get("/users/profile", userHandler.GetProfile)
 			r.Put("/users/profile", userHandler.UpdateProfile)
 			r.Post("/users/avatar", userHandler.UploadAvatar)
 			r.Delete("/users/avatar", userHandler.DeleteAvatar)
 
-			// User settings routes (authenticated)
+			// User settings routes (always allowed - no subscription required)
 			r.Get("/users/settings", settingsHandler.GetSettings)
 			r.Put("/users/settings", settingsHandler.UpdateSettings)
 			r.Put("/users/password", userHandler.ChangePassword)
 
-			// User audit log routes (authenticated - own logs only)
+			// User audit log routes (always allowed - own logs only)
 			r.Get("/users/me/audit-logs", auditLogHandler.GetMyAuditLogs)
 
-			// Session management routes (authenticated)
+			// Session management routes (always allowed - security critical)
 			r.Get("/sessions", sessionHandler.ListSessions)
 			r.Delete("/sessions/{id}", sessionHandler.RevokeSession)
 			r.Post("/sessions/revoke-all", sessionHandler.RevokeAllSessions)
 
-			// Notification routes (authenticated)
+			// Subscription status (always allowed - users need to check their status)
+			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
+
+			// Notification read operations (always allowed)
 			r.Get("/notifications", notificationHandler.ListNotifications)
 			r.Get("/notifications/unread", notificationHandler.ListUnreadNotifications)
 			r.Get("/notifications/count", notificationHandler.GetUnreadCount)
 			r.Put("/notifications/{id}/read", notificationHandler.MarkAsRead)
 			r.Put("/notifications/read-all", notificationHandler.MarkAllAsRead)
 			r.Delete("/notifications/{id}", notificationHandler.DeleteNotification)
-
-			// Notification Like routes (authenticated)
-			r.Post("/notifications/{id}/like", notificationLikeHandler.LikeNotification)
-			r.Delete("/notifications/{id}/like", notificationLikeHandler.UnlikeNotification)
 			r.Get("/notifications/{id}/likes", notificationLikeHandler.GetNotificationLikes)
 
-			// Workout Template routes (authenticated)
-			r.Post("/templates", workoutTemplateHandler.CreateTemplate)
-			r.Get("/workouts/my-templates", workoutTemplateHandler.ListMyTemplates)
-			r.Put("/templates/{id}", workoutTemplateHandler.UpdateTemplate)
-			r.Delete("/templates/{id}", workoutTemplateHandler.DeleteTemplate)
+			// ============================================================
+			// FEATURE ROUTES - Subscription required for write operations
+			// Middleware allows read (GET) but blocks write (POST/PUT/DELETE)
+			// for users without active subscription. Admins bypass all checks.
+			// ============================================================
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireActiveSubscription(subscriptionService))
 
-			// User Workout routes (logging workouts) (authenticated)
-			r.Post("/workouts", userWorkoutHandler.LogWorkout)
-			r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
-			r.Get("/workouts/standard", workoutTemplateHandler.ListStandardTemplates)
-			r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
-			r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
-			r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
-			r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
-			r.Get("/workouts/personal-records", userWorkoutHandler.GetPersonalRecords)
-			r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
+				// Movement management
+				r.Post("/movements", movementHandler.Create)
+				r.Put("/movements/{id}", movementHandler.Update)
+				r.Delete("/movements/{id}", movementHandler.Delete)
 
-			// WOD management (authenticated)
-			r.Get("/wods/my-wods", wodHandler.ListMyWODs)
-			r.Post("/wods", wodHandler.CreateWOD)
-			r.Put("/wods/{id}", wodHandler.UpdateWOD)
-			r.Delete("/wods/{id}", wodHandler.DeleteWOD)
+				// Notification interactions (likes require subscription)
+				r.Post("/notifications/{id}/like", notificationLikeHandler.LikeNotification)
+				r.Delete("/notifications/{id}/like", notificationLikeHandler.UnlikeNotification)
 
-			// Workout WOD linking (authenticated)
-			r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
-			r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
-			r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
-			r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
-			r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
+				// Workout Template routes
+				r.Post("/templates", workoutTemplateHandler.CreateTemplate)
+				r.Get("/workouts/my-templates", workoutTemplateHandler.ListMyTemplates)
+				r.Put("/templates/{id}", workoutTemplateHandler.UpdateTemplate)
+				r.Delete("/templates/{id}", workoutTemplateHandler.DeleteTemplate)
 
-			// PR tracking routes (authenticated)
-			r.Get("/prs", prHandler.GetPersonalRecords)
-			r.Get("/pr-movements", prHandler.GetPRMovements)
-			r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
+				// User Workout routes (logging workouts)
+				r.Post("/workouts", userWorkoutHandler.LogWorkout)
+				r.Get("/workouts", userWorkoutHandler.ListLoggedWorkouts)
+				r.Get("/workouts/standard", workoutTemplateHandler.ListStandardTemplates)
+				r.Get("/workouts/{id}", userWorkoutHandler.GetLoggedWorkout)
+				r.Put("/workouts/{id}", userWorkoutHandler.UpdateLoggedWorkout)
+				r.Delete("/workouts/{id}", userWorkoutHandler.DeleteLoggedWorkout)
+				r.Get("/workouts/stats/monthly", userWorkoutHandler.GetMonthlyStats)
+				r.Get("/workouts/personal-records", userWorkoutHandler.GetPersonalRecords)
+				r.Post("/workouts/retroactive-flag-prs", userWorkoutHandler.RetroactiveFlagPRs)
 
-			// Performance tracking routes (authenticated)
-			r.Get("/performance/search", performanceHandler.UnifiedSearch)
-			r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
-			r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
+				// WOD management
+				r.Get("/wods/my-wods", wodHandler.ListMyWODs)
+				r.Post("/wods", wodHandler.CreateWOD)
+				r.Put("/wods/{id}", wodHandler.UpdateWOD)
+				r.Delete("/wods/{id}", wodHandler.DeleteWOD)
 
-			// Statistics routes (authenticated)
-			r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
+				// Workout WOD linking
+				r.Post("/templates/{workout_id}/wods", workoutWODHandler.AddWODToWorkout)
+				r.Get("/templates/{workout_id}/wods", workoutWODHandler.ListWODsForWorkout)
+				r.Put("/templates/wods/{workout_wod_id}", workoutWODHandler.UpdateWorkoutWOD)
+				r.Delete("/templates/wods/{workout_wod_id}", workoutWODHandler.RemoveWODFromWorkout)
+				r.Post("/templates/wods/{workout_wod_id}/toggle-pr", workoutWODHandler.ToggleWODPR)
 
-			// Export routes (authenticated)
-			r.Get("/export/wods", exportHandler.ExportWODs)
-			r.Get("/export/movements", exportHandler.ExportMovements)
-			r.Get("/export/user-workouts", exportHandler.ExportUserWorkouts)
+				// PR tracking routes
+				r.Get("/prs", prHandler.GetPersonalRecords)
+				r.Get("/pr-movements", prHandler.GetPRMovements)
+				r.Post("/movements/toggle-pr", prHandler.ToggleMovementPR)
 
-			// Import routes (authenticated)
-			r.Post("/import/wods/preview", importHandler.PreviewWODImport)
-			r.Post("/import/wods/confirm", importHandler.ConfirmWODImport)
-			r.Post("/import/movements/preview", importHandler.PreviewMovementImport)
-			r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
-			r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
-			r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
-			r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
-			r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
+				// Performance tracking routes
+				r.Get("/performance/search", performanceHandler.UnifiedSearch)
+				r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
+				r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
 
-			// Subscription status (user-accessible)
-			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
+				// Statistics routes
+				r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)
+
+				// Export routes (read-only, allowed without subscription)
+				r.Get("/export/wods", exportHandler.ExportWODs)
+				r.Get("/export/movements", exportHandler.ExportMovements)
+				r.Get("/export/user-workouts", exportHandler.ExportUserWorkouts)
+
+				// Import routes (write operations, require subscription)
+				r.Post("/import/wods/preview", importHandler.PreviewWODImport)
+				r.Post("/import/wods/confirm", importHandler.ConfirmWODImport)
+				r.Post("/import/movements/preview", importHandler.PreviewMovementImport)
+				r.Post("/import/movements/confirm", importHandler.ConfirmMovementImport)
+				r.Post("/import/user-workouts/preview", importHandler.PreviewUserWorkoutImport)
+				r.Post("/import/user-workouts/confirm", importHandler.ConfirmUserWorkoutImport)
+				r.Post("/import/wodify/preview", wodifyImportHandler.PreviewWodifyImport)
+				r.Post("/import/wodify/confirm", wodifyImportHandler.ConfirmWodifyImport)
+
+				// Benchmark routes
+				r.Post("/benchmark", benchmarkHandler.RunBenchmark)
+				r.Get("/benchmark/status", benchmarkHandler.GetBenchmarkStatus)
+			}) // End of subscription-required routes
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+
+				// Admin metrics dashboard
+				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
+
+				// User import/export routes (admin only)
+				r.Route("/user-management", func(r chi.Router) {
+					r.Post("/import/preview", userImportHandler.PreviewUserImport)
+					r.Post("/import/confirm", userImportHandler.ConfirmUserImport)
+					r.Get("/export", userImportHandler.ExportUsers)
+					r.Get("/filter", userImportHandler.ListUsersWithFilter)
+					r.Post("/batch-password-reset", userImportHandler.SendBatchPasswordResetEmails)
+				})
 
 				// Backup routes (admin only)
 				r.Post("/backups", backupHandler.CreateBackup)
@@ -498,6 +666,21 @@ func main() {
 				r.Delete("/backups/{filename}", backupHandler.DeleteBackup)
 				r.Post("/backups/{filename}/restore", backupHandler.RestoreBackup)
 
+				// Email admin routes (admin only)
+				r.Route("/email", func(r chi.Router) {
+					r.Get("/config", emailHandler.GetEmailConfig)
+					r.Post("/test", emailHandler.SendTestEmail)
+				})
+
+				// Email logs routes (admin only)
+				r.Route("/email-logs", func(r chi.Router) {
+					r.Get("/", emailLogHandler.ListEmailLogs)
+					r.Get("/stats", emailLogHandler.GetEmailStats)
+					r.Get("/failures", emailLogHandler.GetRecentFailures)
+					r.Post("/cleanup", emailLogHandler.CleanupEmailLogs)
+					r.Get("/{id}", emailLogHandler.GetEmailLog)
+				})
+
 				// Announcement routes (admin only)
 				r.Post("/notifications/announce", notificationHandler.CreateAnnouncement)
 
@@ -505,6 +688,20 @@ func main() {
 				r.Get("/data-cleanup/wod-mismatches", adminHandler.DetectWODScoreTypeMismatches)
 				r.Delete("/data-cleanup/wod-mismatches", adminHandler.FixWODScoreTypeMismatches)
 				r.Put("/data-cleanup/wod-record/{id}", adminHandler.UpdateWODRecord)
+
+				// Data quality routes (duplicate detection and data quality scanning)
+				r.Route("/data-quality", func(r chi.Router) {
+					r.Get("/full-scan", dataQualityHandler.FullDataQualityScan)
+					r.Get("/duplicates", dataQualityHandler.ScanAllDuplicates)
+					r.Get("/duplicates/summary", dataQualityHandler.GetDuplicateSummary)
+					r.Get("/duplicates/{entity}", dataQualityHandler.ScanDuplicatesByEntity)
+					r.Post("/duplicates/merge/preview", dataQualityHandler.PreviewMerge)
+					r.Post("/duplicates/merge/confirm", dataQualityHandler.ConfirmMerge)
+					r.Get("/issues", dataQualityHandler.ScanDataQuality)
+				})
+
+				// Benchmark data cleanup (admin only)
+				r.Delete("/benchmark/data", benchmarkHandler.CleanupBenchmarkData)
 
 				// Audit log routes (admin only)
 				r.Get("/audit-logs", auditLogHandler.ListAuditLogs)
@@ -553,6 +750,12 @@ func main() {
 					// List all subscriptions (must come before parameterized routes)
 					r.Get("/users", subscriptionHandler.ListAllUserSubscriptions)
 					r.Get("/organizations", subscriptionHandler.ListAllOrganizationSubscriptions)
+
+					// Expiring and expired subscriptions (must come before parameterized routes)
+					r.Get("/users/expiring", subscriptionHandler.ListExpiringUserSubscriptions)
+					r.Get("/users/expired", subscriptionHandler.ListExpiredUserSubscriptions)
+					r.Get("/organizations/expiring", subscriptionHandler.ListExpiringOrganizationSubscriptions)
+					r.Get("/organizations/expired", subscriptionHandler.ListExpiredOrganizationSubscriptions)
 
 					// User subscriptions
 					r.Post("/user", subscriptionHandler.CreateUserSubscription)

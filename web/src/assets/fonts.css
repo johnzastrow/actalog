@@ -1,0 +1,92 @@
+/* ============================================
+   ActaLog Font System
+
+   Fonts are lazy-loaded when selected by the user.
+   Only the CSS variables and class definitions are loaded upfront.
+   Font files are cached by the service worker on first use.
+   ============================================ */
+
+/* ============================================
+   CSS Variable for Dynamic Font Family
+   ============================================ */
+
+:root {
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Font family classes for dynamic switching */
+.font-system {
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.font-inter {
+  --app-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-roboto {
+  --app-font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-lato {
+  --app-font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-firasans {
+  --app-font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-lexend {
+  --app-font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-opendyslexic {
+  --app-font-family: 'OpenDyslexic', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-atkinson {
+  --app-font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-sourceserif {
+  --app-font-family: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+}
+
+.font-jetbrainsmono {
+  --app-font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+}
+
+/* ============================================
+   Override Vuetify's hardcoded Roboto font
+   ============================================ */
+
+/* Target Vuetify application and all components */
+.v-application,
+.v-application .v-btn,
+.v-application .v-card,
+.v-application .v-card-title,
+.v-application .v-card-subtitle,
+.v-application .v-card-text,
+.v-application .v-list-item,
+.v-application .v-list-item-title,
+.v-application .v-list-item-subtitle,
+.v-application .v-text-field,
+.v-application .v-select,
+.v-application .v-textarea,
+.v-application .v-chip,
+.v-application .v-tab,
+.v-application .v-alert,
+.v-application .v-snackbar,
+.v-application .v-dialog,
+.v-application .v-menu,
+.v-application .v-tooltip,
+.v-application .v-bottom-navigation,
+.v-application .v-app-bar,
+.v-application .v-navigation-drawer,
+.v-application input,
+.v-application textarea,
+.v-application button,
+.v-application label {
+  font-family: var(--app-font-family) !important;
+}

@@ -23,7 +23,18 @@ func NewWodifyImportHandler(wodifyImportService *service.WodifyImportService) *W
 }
 
 // PreviewWodifyImport handles preview of Wodify performance import
-// POST /api/import/wodify/preview
+// @Summary      Preview Wodify import
+// @Description  Validate and preview Wodify performance data import before confirming
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "Wodify export file"
+// @Success      200 {object} map[string]interface{} "Import preview with validation results"
+// @Failure      400 {object} ErrorResponse "Invalid file"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Preview failed"
+// @Router       /import/wodify/preview [post]
 func (h *WodifyImportHandler) PreviewWodifyImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -67,7 +78,20 @@ func (h *WodifyImportHandler) PreviewWodifyImport(w http.ResponseWriter, r *http
 }
 
 // ConfirmWodifyImport handles confirmation of Wodify performance import
-// POST /api/import/wodify/confirm
+// @Summary      Confirm Wodify import
+// @Description  Execute Wodify performance data import after preview
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "Wodify export file"
+// @Param        skip_duplicates formData bool false "Skip duplicate entries"
+// @Param        update_duplicates formData bool false "Update existing duplicates"
+// @Success      200 {object} map[string]interface{} "Import results with counts"
+// @Failure      400 {object} ErrorResponse "Invalid file"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Import failed"
+// @Router       /import/wodify/confirm [post]
 func (h *WodifyImportHandler) ConfirmWodifyImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())

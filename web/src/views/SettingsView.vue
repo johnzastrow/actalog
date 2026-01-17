@@ -29,7 +29,7 @@
           <v-text-field
             v-model="profileForm.name"
             label="Name"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.name"
@@ -44,7 +44,7 @@
             v-model="profileForm.email"
             label="Email"
             type="email"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.email"
@@ -61,7 +61,7 @@
             v-model="profileForm.birthday"
             label="Birthday"
             type="date"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="errors.birthday"
@@ -96,7 +96,7 @@
             v-model="passwordForm.currentPassword"
             label="Current Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.currentPassword"
@@ -111,7 +111,7 @@
             v-model="passwordForm.newPassword"
             label="New Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.newPassword"
@@ -128,7 +128,7 @@
             v-model="passwordForm.confirmPassword"
             label="Confirm New Password"
             type="password"
-            variant="outlined"
+            
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.confirmPassword"
@@ -212,6 +212,70 @@
           </v-row>
         </div>
 
+        <v-divider class="my-3" />
+
+        <!-- Font Selection -->
+        <div class="mb-3">
+          <div class="d-flex align-center mb-2">
+            <v-icon color="primary" class="mr-2">mdi-format-font</v-icon>
+            <span class="font-weight-medium">Font</span>
+          </div>
+          <p class="text-caption text-medium-emphasis mb-2">
+            Choose a font that works best for you
+          </p>
+
+          <!-- Accessibility fonts badge -->
+          <v-chip
+            v-if="fontStore.accessibilityFonts.length > 0"
+            size="small"
+            color="info"
+            variant="tonal"
+            class="mb-2"
+            prepend-icon="mdi-human-greeting-proximity"
+          >
+            {{ fontStore.accessibilityFonts.length }} accessibility options
+          </v-chip>
+
+          <!-- Font Grid -->
+          <v-row dense class="mt-1">
+            <v-col
+              v-for="font in fontStore.availableFonts"
+              :key="font.id"
+              cols="6"
+            >
+              <v-card
+                :color="fontStore.currentFont === font.id ? 'primary' : 'surface-variant'"
+                :variant="fontStore.currentFont === font.id ? 'flat' : 'outlined'"
+                class="pa-2 text-center font-card"
+                style="cursor: pointer; min-height: 70px"
+                @click="changeFontFamily(font.id)"
+              >
+                <v-icon
+                  :color="fontStore.currentFont === font.id ? 'white' : ''"
+                  size="18"
+                >
+                  {{ font.icon }}
+                </v-icon>
+                <div
+                  class="text-caption mt-1"
+                  :class="fontStore.currentFont === font.id ? 'text-white' : ''"
+                >
+                  {{ font.name }}
+                </div>
+                <v-chip
+                  v-if="font.accessibility"
+                  size="x-small"
+                  :color="fontStore.currentFont === font.id ? 'white' : 'info'"
+                  :variant="fontStore.currentFont === font.id ? 'outlined' : 'tonal'"
+                  class="mt-1"
+                >
+                  A11y
+                </v-chip>
+              </v-card>
+            </v-col>
+          </v-row>
+        </div>
+
         <v-divider class="mb-3" />
 
         <v-list bg-color="transparent" density="compact">
@@ -244,11 +308,79 @@
               <v-select
                 v-model="weightUnit"
                 :items="['lbs', 'kg']"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 style="max-width: 100px"
                 @update:model-value="saveWeightUnit"
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+
+        <v-divider class="my-3" />
+
+        <!-- Timezone Selection -->
+        <div>
+          <div class="d-flex align-center mb-2">
+            <v-icon color="primary" class="mr-2">mdi-earth</v-icon>
+            <span class="font-weight-medium">Timezone</span>
+          </div>
+          <p class="text-caption text-medium-emphasis mb-2">
+            Set your timezone to display workout dates correctly
+          </p>
+          <v-autocomplete
+            v-model="timezone"
+            :items="timezoneOptions"
+            item-title="label"
+            item-value="value"
+            
+            density="compact"
+            hide-details
+            :loading="timezoneLoading"
+            class="mb-2"
+            @update:model-value="saveTimezone"
+          />
+          <v-btn
+            variant="text"
+            size="small"
+            color="primary"
+            prepend-icon="mdi-crosshairs-gps"
+            @click="detectTimezone"
+          >
+            Detect browser timezone
+          </v-btn>
+        </div>
+      </v-card>
+
+      <!-- Admin Settings Card (only visible to admins) -->
+      <v-card
+        v-if="authStore.user?.role === 'admin'"
+        elevation="0"
+        rounded="lg"
+        class="pa-3 mb-3"
+        bg-color="surface"
+      >
+        <h2 class="text-body-1 font-weight-bold mb-3">Admin Settings</h2>
+        <v-list bg-color="transparent" density="compact">
+          <v-list-item>
+            <template #prepend>
+              <v-icon color="primary">mdi-email-alert</v-icon>
+            </template>
+            <v-list-item-title class="font-weight-medium">
+              User Event Notifications
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Receive email when users register or change
+            </v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="adminUserEventNotifications"
+                color="primary"
+                hide-details
+                density="compact"
+                :loading="adminNotifLoading"
+                @update:model-value="saveAdminUserEventNotifications"
               />
             </template>
           </v-list-item>
@@ -337,7 +469,7 @@
           <v-text-field
             v-model="deleteConfirmation"
             label='Type "DELETE" to confirm'
-            variant="outlined"
+            
             density="compact"
             class="mt-3"
           />
@@ -378,7 +510,7 @@
               label="Select backup file"
               accept=".json"
               prepend-icon="mdi-file-upload"
-              variant="outlined"
+              
               density="compact"
               :error-messages="importErrors.file"
               show-size
@@ -544,18 +676,28 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { useThemeStore } from '@/stores/theme'
+import { useFontStore } from '@/stores/font'
+import { useSettingsStore } from '@/stores/settings'
 import axios from '@/utils/axios'
+import { getTimezoneOptions, getBrowserTimezone } from '@/utils/timezone'
 import SubscriptionStatusBadge from '@/components/SubscriptionStatusBadge.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
 const themeStore = useThemeStore()
+const fontStore = useFontStore()
+const settingsStore = useSettingsStore()
 const activeTab = ref('profile')
 
 // State
 const notifications = ref(true)
 const weightUnit = ref('lbs')
+const timezone = ref('America/New_York')
+const timezoneOptions = ref(getTimezoneOptions())
+const timezoneLoading = ref(false)
+const adminUserEventNotifications = ref(true)
+const adminNotifLoading = ref(false)
 
 const profileForm = ref({
   name: '',
@@ -589,7 +731,7 @@ const importResult = ref({})
 const skipDuplicates = ref(true)
 
 // Load current user data and preferences
-onMounted(() => {
+onMounted(async () => {
   if (authStore.user) {
     profileForm.value.name = authStore.user.name || ''
     profileForm.value.email = authStore.user.email || ''
@@ -604,6 +746,16 @@ onMounted(() => {
   // Load preferences from localStorage
   notifications.value = localStorage.getItem('notifications') !== 'false'
   weightUnit.value = localStorage.getItem('weightUnit') || 'lbs'
+
+  // Fetch user settings from server
+  try {
+    await settingsStore.fetchSettings()
+    timezone.value = settingsStore.timezone
+    weightUnit.value = settingsStore.weightUnit
+    adminUserEventNotifications.value = settingsStore.adminUserEventNotifications
+  } catch (err) {
+    console.error('Failed to fetch user settings:', err)
+  }
 
   // Fetch subscription status
   subscriptionStore.fetchStatus().catch(err => {
@@ -720,8 +872,60 @@ const saveNotifications = () => {
   localStorage.setItem('notifications', notifications.value.toString())
 }
 
-const saveWeightUnit = () => {
+const saveWeightUnit = async () => {
   localStorage.setItem('weightUnit', weightUnit.value)
+  try {
+    await settingsStore.updateWeightUnit(weightUnit.value)
+  } catch (err) {
+    console.error('Failed to save weight unit:', err)
+  }
+}
+
+const saveTimezone = async () => {
+  timezoneLoading.value = true
+  try {
+    await settingsStore.updateTimezone(timezone.value)
+    successMessage.value = 'Timezone updated successfully!'
+  } catch {
+    errors.value.general = 'Failed to save timezone. Please try again.'
+  } finally {
+    timezoneLoading.value = false
+  }
+}
+
+const detectTimezone = () => {
+  const browserTz = getBrowserTimezone()
+  timezone.value = browserTz
+  // Update the options list if browser timezone isn't in the list
+  timezoneOptions.value = getTimezoneOptions()
+  saveTimezone()
+}
+
+const changeFontFamily = async (fontId) => {
+  try {
+    await settingsStore.updateFontFamily(fontId)
+    successMessage.value = 'Font updated!'
+  } catch (err) {
+    errors.value.general = 'Failed to save font preference.'
+    console.error('Failed to save font:', err)
+  }
+}
+
+// Admin settings
+const saveAdminUserEventNotifications = async (enabled) => {
+  adminNotifLoading.value = true
+  try {
+    await settingsStore.updateAdminUserEventNotifications(enabled)
+    successMessage.value = enabled
+      ? 'You will receive admin notifications'
+      : 'Admin notifications disabled'
+  } catch {
+    errors.value.general = 'Failed to save notification preference. Please try again.'
+    // Revert the toggle
+    adminUserEventNotifications.value = !enabled
+  } finally {
+    adminNotifLoading.value = false
+  }
 }
 
 // Data management

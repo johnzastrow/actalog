@@ -701,3 +701,425 @@ func TestExportService_ExportUserWorkoutsToCSV_WithWODs(t *testing.T) {
 		t.Errorf("performance_type = %s, want wod", records[1][5])
 	}
 }
+
+// Additional JSON export tests for better coverage
+
+func TestExportService_ExportWODsToJSON_CustomOnly(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "custom@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create custom WOD
+	customWOD := &domain.WOD{Name: "My Custom WOD", Source: "Custom", Type: "AMRAP", IsStandard: false, CreatedBy: &user.ID}
+	_ = wodRepo.Create(customWOD)
+
+	// Export custom WODs only
+	data, err := svc.ExportWODsToJSON(user.ID, false, false, true)
+	if err != nil {
+		t.Errorf("ExportWODsToJSON() error = %v", err)
+	}
+
+	// Verify valid JSON and creator email
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 1 {
+		t.Errorf("JSON has %d items, want 1", len(result))
+	}
+
+	// Verify creator email is included
+	if len(result) > 0 {
+		if email, ok := result[0]["created_by_email"].(string); !ok || email != "custom@example.com" {
+			t.Errorf("created_by_email = %v, want custom@example.com", result[0]["created_by_email"])
+		}
+	}
+}
+
+func TestExportService_ExportWODsToJSON_BothStandardAndCustom(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "test@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create standard WOD
+	standardWOD := &domain.WOD{Name: "Fran", IsStandard: true}
+	_ = wodRepo.Create(standardWOD)
+
+	// Create custom WOD
+	customWOD := &domain.WOD{Name: "My WOD", IsStandard: false, CreatedBy: &user.ID}
+	_ = wodRepo.Create(customWOD)
+
+	// Export both standard and custom
+	data, err := svc.ExportWODsToJSON(user.ID, false, true, true)
+	if err != nil {
+		t.Errorf("ExportWODsToJSON() error = %v", err)
+	}
+
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Errorf("JSON has %d items, want 2", len(result))
+	}
+}
+
+func TestExportService_ExportWODsToJSON_AdminAll(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "admin@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create standard WOD
+	standardWOD := &domain.WOD{Name: "Fran", IsStandard: true}
+	_ = wodRepo.Create(standardWOD)
+
+	// Create custom WOD by another user
+	otherUserID := int64(999)
+	customWOD := &domain.WOD{Name: "Other User WOD", IsStandard: false, CreatedBy: &otherUserID}
+	_ = wodRepo.Create(customWOD)
+
+	// Admin exports all
+	data, err := svc.ExportWODsToJSON(user.ID, true, true, true)
+	if err != nil {
+		t.Errorf("ExportWODsToJSON() error = %v", err)
+	}
+
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Errorf("JSON has %d items, want 2", len(result))
+	}
+}
+
+func TestExportService_ExportMovementsToJSON_CustomOnly(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "custom@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create custom movement
+	customMovement := &domain.Movement{Name: "My Custom Movement", Type: domain.MovementTypeWeightlifting, IsStandard: false, CreatedBy: &user.ID}
+	_ = movementRepo.Create(customMovement)
+
+	// Export custom movements only
+	data, err := svc.ExportMovementsToJSON(user.ID, false, false, true)
+	if err != nil {
+		t.Errorf("ExportMovementsToJSON() error = %v", err)
+	}
+
+	// Verify valid JSON and creator email
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 1 {
+		t.Errorf("JSON has %d items, want 1", len(result))
+	}
+
+	// Verify creator email is included
+	if len(result) > 0 {
+		if email, ok := result[0]["created_by_email"].(string); !ok || email != "custom@example.com" {
+			t.Errorf("created_by_email = %v, want custom@example.com", result[0]["created_by_email"])
+		}
+	}
+}
+
+func TestExportService_ExportMovementsToJSON_BothStandardAndCustom(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "test@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create standard movement
+	standardMovement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting, IsStandard: true}
+	_ = movementRepo.Create(standardMovement)
+
+	// Create custom movement
+	customMovement := &domain.Movement{Name: "My Movement", Type: domain.MovementTypeWeightlifting, IsStandard: false, CreatedBy: &user.ID}
+	_ = movementRepo.Create(customMovement)
+
+	// Export both standard and custom
+	data, err := svc.ExportMovementsToJSON(user.ID, false, true, true)
+	if err != nil {
+		t.Errorf("ExportMovementsToJSON() error = %v", err)
+	}
+
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Errorf("JSON has %d items, want 2", len(result))
+	}
+}
+
+func TestExportService_ExportMovementsToJSON_AdminAll(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "admin@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create standard movement
+	standardMovement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting, IsStandard: true}
+	_ = movementRepo.Create(standardMovement)
+
+	// Create custom movement by another user
+	otherUserID := int64(999)
+	customMovement := &domain.Movement{Name: "Other User Movement", Type: domain.MovementTypeWeightlifting, IsStandard: false, CreatedBy: &otherUserID}
+	_ = movementRepo.Create(customMovement)
+
+	// Admin exports all
+	data, err := svc.ExportMovementsToJSON(user.ID, true, true, true)
+	if err != nil {
+		t.Errorf("ExportMovementsToJSON() error = %v", err)
+	}
+
+	var result []map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Errorf("JSON has %d items, want 2", len(result))
+	}
+}
+
+func TestExportService_ExportUserWorkoutsToJSON_WithMovementsAndWODs(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "test@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create user workout
+	workoutName := "Full Workout"
+	totalTime := 3600
+	notes := "Great workout!"
+	workoutType := "strength"
+	workout := &domain.UserWorkout{
+		UserID:      user.ID,
+		WorkoutDate: time.Now(),
+		WorkoutName: &workoutName,
+		TotalTime:   &totalTime,
+		Notes:       &notes,
+		WorkoutType: &workoutType,
+	}
+	_ = userWorkoutRepo.Create(workout)
+
+	// Add details with movements and WODs
+	scoreType := "time"
+	scoreValue := "5:30"
+	timeSeconds := 330
+	rounds := 10
+	reps := 5
+	weight := 135.0
+	userWorkoutRepo.userWorkoutsDetails[workout.ID] = &domain.UserWorkoutWithDetails{
+		UserWorkout: *workout,
+		WorkoutName: workoutName,
+		PerformanceMovements: []*domain.UserWorkoutMovement{
+			{
+				MovementName: "Back Squat",
+				MovementType: "strength",
+				Sets:         intPtr(3),
+				Reps:         intPtr(5),
+				Weight:       floatPtr(225.0),
+				IsPR:         true,
+				OrderIndex:   0,
+			},
+			{
+				MovementName: "Pull-ups",
+				MovementType: "gymnastics",
+				Sets:         intPtr(3),
+				Reps:         intPtr(10),
+				IsPR:         false,
+				OrderIndex:   1,
+			},
+		},
+		PerformanceWODs: []*domain.UserWorkoutWOD{
+			{
+				WODName:     "Fran",
+				WODType:     "For Time",
+				ScoreType:   &scoreType,
+				ScoreValue:  &scoreValue,
+				TimeSeconds: &timeSeconds,
+				Rounds:      &rounds,
+				Reps:        &reps,
+				Weight:      &weight,
+				Notes:       "Felt good",
+				IsPR:        true,
+				OrderIndex:  0,
+			},
+		},
+	}
+
+	// Export to JSON
+	data, err := svc.ExportUserWorkoutsToJSON(user.ID, nil, nil)
+	if err != nil {
+		t.Errorf("ExportUserWorkoutsToJSON() error = %v", err)
+	}
+
+	// Verify JSON structure
+	var result UserWorkoutExport
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Errorf("Failed to parse JSON: %v", err)
+	}
+
+	if result.ExportMetadata.TotalCount != 1 {
+		t.Errorf("TotalCount = %d, want 1", result.ExportMetadata.TotalCount)
+	}
+
+	if len(result.UserWorkouts) != 1 {
+		t.Fatalf("UserWorkouts has %d items, want 1", len(result.UserWorkouts))
+	}
+
+	workout0 := result.UserWorkouts[0]
+
+	// Verify movements
+	if len(workout0.Movements) != 2 {
+		t.Errorf("Movements has %d items, want 2", len(workout0.Movements))
+	}
+
+	// Verify WODs
+	if len(workout0.WODs) != 1 {
+		t.Errorf("WODs has %d items, want 1", len(workout0.WODs))
+	}
+
+	// Verify workout metadata
+	if workout0.WorkoutName == nil || *workout0.WorkoutName != "Full Workout" {
+		t.Errorf("WorkoutName = %v, want Full Workout", workout0.WorkoutName)
+	}
+	if workout0.TotalTime == nil || *workout0.TotalTime != 3600 {
+		t.Errorf("TotalTime = %v, want 3600", workout0.TotalTime)
+	}
+}
+
+func TestExportService_ExportMovementsToCSV_AdminAll(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "admin@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create standard movement
+	standardMovement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting, IsStandard: true}
+	_ = movementRepo.Create(standardMovement)
+
+	// Create custom movement by another user
+	otherUserID := int64(999)
+	customMovement := &domain.Movement{Name: "Other User Movement", Type: domain.MovementTypeWeightlifting, IsStandard: false, CreatedBy: &otherUserID}
+	_ = movementRepo.Create(customMovement)
+
+	// Admin exports all
+	data, err := svc.ExportMovementsToCSV(user.ID, true, true, true)
+	if err != nil {
+		t.Errorf("ExportMovementsToCSV() error = %v", err)
+	}
+
+	reader := csv.NewReader(strings.NewReader(string(data)))
+	records, _ := reader.ReadAll()
+
+	// Should have header + 2 data rows (standard + custom)
+	if len(records) != 3 {
+		t.Errorf("CSV has %d rows, want 3", len(records))
+	}
+}
+
+func TestExportService_ExportUserWorkoutsToCSV_WithDateRange(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	movementRepo := newMockMovementRepo()
+	userRepo := newMockUserRepo()
+	userWorkoutRepo := newMockUserWorkoutRepo()
+
+	svc := NewExportService(wodRepo, movementRepo, userRepo, userWorkoutRepo)
+
+	// Create a user
+	user := &domain.User{Email: "test@example.com"}
+	_ = userRepo.Create(user)
+
+	// Create user workout
+	workoutName := "Dated Workout"
+	workout := &domain.UserWorkout{
+		UserID:      user.ID,
+		WorkoutDate: time.Now().AddDate(0, 0, -3),
+		WorkoutName: &workoutName,
+	}
+	_ = userWorkoutRepo.Create(workout)
+
+	userWorkoutRepo.userWorkoutsDetails[workout.ID] = &domain.UserWorkoutWithDetails{
+		UserWorkout: *workout,
+		WorkoutName: workoutName,
+	}
+
+	// Export with date range
+	startDate := time.Now().AddDate(0, 0, -7)
+	endDate := time.Now()
+	data, err := svc.ExportUserWorkoutsToCSV(user.ID, &startDate, &endDate)
+	if err != nil {
+		t.Errorf("ExportUserWorkoutsToCSV() error = %v", err)
+	}
+
+	// Parse CSV
+	reader := csv.NewReader(strings.NewReader(string(data)))
+	records, _ := reader.ReadAll()
+
+	// Should have header + 1 data row
+	if len(records) < 2 {
+		t.Errorf("CSV has %d rows, want at least 2", len(records))
+	}
+}

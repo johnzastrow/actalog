@@ -5,15 +5,17 @@ import "time"
 // WorkoutWOD represents the junction between a workout template and a WOD
 // A workout template can contain multiple WODs
 type WorkoutWOD struct {
-	ID         int64     `json:"id" db:"id"`
-	WorkoutID  int64     `json:"workout_id" db:"workout_id"`             // References workout template
-	WODID      int64     `json:"wod_id" db:"wod_id"`                     // References WOD
-	ScoreValue *string   `json:"score_value,omitempty" db:"score_value"` // Actual score when logged (time, rounds+reps, weight)
-	Division   *string   `json:"division,omitempty" db:"division"`       // rx, scaled, beginner
-	IsPR       bool      `json:"is_pr" db:"is_pr"`                       // Personal record flag
-	OrderIndex int       `json:"order_index" db:"order_index"`           // Order in workout sequence
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
+	ID           int64     `json:"id" db:"id"`
+	WorkoutID    int64     `json:"workout_id" db:"workout_id"`               // References workout template
+	WODID        int64     `json:"wod_id" db:"wod_id"`                       // References WOD
+	ScoreValue   *string   `json:"score_value,omitempty" db:"score_value"`   // Actual score when logged (time, rounds+reps, weight)
+	Division     *string   `json:"division,omitempty" db:"division"`         // rx, scaled, beginner
+	IsPR         bool      `json:"is_pr" db:"is_pr"`                         // Personal record flag
+	Instructions string    `json:"instructions,omitempty" db:"instructions"` // Markdown instructions for this WOD
+	Notes        string    `json:"notes,omitempty" db:"notes"`               // Notes for this WOD
+	OrderIndex   int       `json:"order_index" db:"order_index"`             // Order in workout sequence
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // WorkoutWODWithDetails includes WOD details

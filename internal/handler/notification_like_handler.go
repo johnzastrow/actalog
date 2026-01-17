@@ -23,6 +23,19 @@ func NewNotificationLikeHandler(likeService *service.NotificationLikeService) *N
 }
 
 // LikeNotification handles POST /api/notifications/{id}/like
+// @Summary      Like notification
+// @Description  Like a notification (e.g., PR announcement)
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Notification ID"
+// @Success      201 {object} MessageResponse "Notification liked"
+// @Failure      400 {object} ErrorResponse "Invalid notification ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      409 {object} ErrorResponse "Already liked"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/{id}/like [post]
 func (h *NotificationLikeHandler) LikeNotification(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -54,6 +67,18 @@ func (h *NotificationLikeHandler) LikeNotification(w http.ResponseWriter, r *htt
 }
 
 // UnlikeNotification handles DELETE /api/notifications/{id}/like
+// @Summary      Unlike notification
+// @Description  Remove like from a notification
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Notification ID"
+// @Success      204 "Like removed"
+// @Failure      400 {object} ErrorResponse "Invalid notification ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/{id}/like [delete]
 func (h *NotificationLikeHandler) UnlikeNotification(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -80,6 +105,17 @@ func (h *NotificationLikeHandler) UnlikeNotification(w http.ResponseWriter, r *h
 }
 
 // GetNotificationLikes handles GET /api/notifications/{id}/likes
+// @Summary      Get notification likes
+// @Description  Get all likes for a notification
+// @Tags         notifications
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Notification ID"
+// @Success      200 {object} map[string]interface{} "Likes list with count"
+// @Failure      400 {object} ErrorResponse "Invalid notification ID"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /notifications/{id}/likes [get]
 func (h *NotificationLikeHandler) GetNotificationLikes(w http.ResponseWriter, r *http.Request) {
 	// Get notification ID from URL parameter
 	notificationIDStr := chi.URLParam(r, "id")

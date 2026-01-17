@@ -139,7 +139,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface));  border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-dumbbell</v-icon>
@@ -153,7 +153,7 @@
                   v-model.number="movement.sets"
                   type="number"
                   label="Sets"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -164,7 +164,7 @@
                   v-model.number="movement.reps"
                   type="number"
                   label="Reps"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -175,7 +175,7 @@
                   v-model.number="movement.weight"
                   type="number"
                   label="Weight (lbs)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -189,7 +189,7 @@
                   v-model.number="movement.time"
                   type="number"
                   label="Time (sec)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -200,7 +200,7 @@
                   v-model.number="movement.distance"
                   type="number"
                   label="Distance (m)"
-                  variant="outlined"
+                  
                   density="compact"
                   hide-details
                   min="0"
@@ -211,13 +211,32 @@
             <v-textarea
               v-model="movement.notes"
               label="Notes"
-              variant="outlined"
+
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
             />
+            <v-select
+              v-model="movement.rpe"
+              :items="RPE_OPTIONS"
+              item-title="title"
+              item-value="value"
+              label="RPE (Effort)"
+              density="compact"
+              hide-details
+              clearable
+              class="mt-2"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :subtitle="item.raw.description">
+                  <template #prepend>
+                    <v-icon :color="item.raw.color" size="small">mdi-circle</v-icon>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </v-card>
         </div>
 
@@ -231,7 +250,7 @@
             :key="index"
             elevation="0"
             class="mb-1 pa-2"
-            style="background-color: rgb(var(--v-theme-surface)); border: 1px solid #e0e0e0; border-radius: 8px"
+            style="background-color: rgb(var(--v-theme-surface));  border-radius: 8px"
           >
             <div class="d-flex align-center mb-2">
               <v-icon color="primary" size="small" class="mr-2">mdi-flag-checkered</v-icon>
@@ -244,7 +263,7 @@
             <v-text-field
               :model-value="wod.wod_score_type_display || wod.score_type"
               label="Score Type"
-              variant="outlined"
+              
               density="compact"
               hide-details
               readonly
@@ -260,7 +279,7 @@
                     v-model.number="wod.time_hours"
                     type="number"
                     label="Hours"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -272,7 +291,7 @@
                     v-model.number="wod.time_minutes"
                     type="number"
                     label="Minutes"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -284,7 +303,7 @@
                     v-model.number="wod.time_seconds"
                     type="number"
                     label="Seconds"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -302,7 +321,7 @@
                     v-model.number="wod.rounds"
                     type="number"
                     label="Rounds"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -313,7 +332,7 @@
                     v-model.number="wod.reps"
                     type="number"
                     label="Reps"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -328,7 +347,7 @@
                 v-model.number="wod.weight"
                 type="number"
                 label="Weight (lbs)"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 min="0"
@@ -339,13 +358,32 @@
             <v-textarea
               v-model="wod.notes"
               label="Notes"
-              variant="outlined"
+
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
               placeholder="How did this feel?"
             />
+            <v-select
+              v-model="wod.rpe"
+              :items="RPE_OPTIONS"
+              item-title="title"
+              item-value="value"
+              label="RPE (Effort)"
+              density="compact"
+              hide-details
+              clearable
+              class="mt-2"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :subtitle="item.raw.description">
+                  <template #prepend>
+                    <v-icon :color="item.raw.color" size="small">mdi-circle</v-icon>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </v-card>
         </div>
 
@@ -405,7 +443,7 @@
         <!-- Quick Browse Templates Button (hide if came from Quick Log with template) -->
         <v-btn
           v-if="!isEditMode && !route.query.template"
-          variant="outlined"
+          
           color="primary"
           size="large"
           block
@@ -455,6 +493,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import { RPE_OPTIONS } from '@/utils/rpe'
 
 const router = useRouter()
 const route = useRoute()
@@ -535,6 +574,7 @@ function initializePerformanceArrays() {
       time: null,
       distance: null,
       notes: '',
+      rpe: null,
       order_index: index
     }))
   } else {
@@ -569,6 +609,7 @@ function initializePerformanceArrays() {
         reps: null,
         weight: null,
         notes: '',
+        rpe: null,
         order_index: index
       }
     })
@@ -665,7 +706,7 @@ async function onTemplateSelected(templateId) {
 // Build movements payload
 function buildMovementsPayload() {
   return movementPerformance.value
-    .filter(m => m.sets || m.reps || m.weight || m.time || m.distance || m.notes)
+    .filter(m => m.sets || m.reps || m.weight || m.time || m.distance || m.notes || m.rpe)
     .map(m => ({
       movement_id: m.movement_id,
       sets: m.sets || null,
@@ -674,6 +715,7 @@ function buildMovementsPayload() {
       time: m.time || null,
       distance: m.distance || null,
       notes: m.notes || '',
+      rpe: m.rpe || null,
       order_index: m.order_index
     }))
 }
@@ -687,6 +729,7 @@ function buildWODsPayload() {
         wod_id: w.wod_id,
         score_type: w.score_type,
         notes: w.notes || '',
+        rpe: w.rpe || null,
         order_index: w.order_index
       }
 
@@ -749,6 +792,7 @@ async function loadWorkoutForEdit(workoutId) {
         time: m.time_seconds,
         distance: m.distance,
         notes: m.notes || '',
+        rpe: m.rpe || null,
         order_index: index
       }))
       console.log('Populated movementPerformance:', movementPerformance.value)
@@ -774,6 +818,7 @@ async function loadWorkoutForEdit(workoutId) {
           reps: w.reps,
           weight: w.weight,
           notes: w.notes || '',
+          rpe: w.rpe || null,
           order_index: index
         }
       })

@@ -436,7 +436,7 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
-			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			t.Errorf("Expected status %d, got %d. Body: %s", http.StatusOK, w.Code, w.Body.String())
 		}
 	})
 }

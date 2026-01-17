@@ -30,6 +30,27 @@
             </v-card>
           </v-col>
 
+          <!-- Data Quality Checks -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/data-quality')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="teal" size="32" class="mr-3">mdi-database-check</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Data Quality Checks</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Duplicate detection and data issues</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Scan for duplicate records and data quality issues. Merge duplicates safely with FK updates.
+              </p>
+              <v-chip size="small" color="teal" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
           <!-- User Management -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/users')">
@@ -198,22 +219,65 @@
             </v-card>
           </v-col>
 
-          <!-- Reports (Placeholder) -->
+          <!-- Email Settings -->
           <v-col cols="12" md="6">
-            <v-card elevation="0" rounded="lg" class="pa-4" disabled>
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/email-settings')">
               <div class="d-flex align-center mb-3">
-                <v-icon color="#999" size="32" class="mr-3">mdi-chart-bar</v-icon>
+                <v-icon color="indigo" size="32" class="mr-3">mdi-email-outline</v-icon>
                 <div>
-                  <h3 style="color: #999; font-size: 18px; font-weight: 600">Reports & Analytics</h3>
-                  <p style="color: #999; font-size: 14px; margin: 0">View system statistics</p>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Email Settings</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Test email configuration and view logs</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
-              <p style="color: #999; font-size: 13px">
-                Generate reports on user activity, workout trends, and system health.
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Test email configuration with detailed SMTP debug output. View history of sent emails.
               </p>
-              <v-chip size="small" color="#999" class="mt-2">
-                Coming Soon
+              <v-chip size="small" color="indigo" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
+          <!-- System Metrics -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/metrics')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="teal" size="32" class="mr-3">mdi-chart-bar</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">System Metrics</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">View real-time statistics</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Dashboard with user activity, workout trends, content stats, and system health.
+              </p>
+              <v-chip size="small" color="teal" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
+              </v-chip>
+            </v-card>
+          </v-col>
+
+          <!-- User Import/Export -->
+          <v-col cols="12" md="6">
+            <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/users/import-export')">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="deep-purple" size="32" class="mr-3">mdi-account-arrow-left-outline</v-icon>
+                <div>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">User Import/Export</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Bulk user management</p>
+                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
+                Import users from CSV, export user lists, and send batch password reset emails.
+              </p>
+              <v-chip size="small" color="deep-purple" class="mt-2">
+                <v-icon start size="small">mdi-chevron-right</v-icon>
+                Open Tool
               </v-chip>
             </v-card>
           </v-col>

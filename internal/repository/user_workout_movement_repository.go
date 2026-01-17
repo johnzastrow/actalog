@@ -23,17 +23,17 @@ func (r *UserWorkoutMovementRepository) Create(uwm *domain.UserWorkoutMovement) 
 	uwm.CreatedAt = time.Now()
 	uwm.UpdatedAt = time.Now()
 
-	query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 	if currentDriver == "postgres" {
 		query += " RETURNING id"
-		err := r.db.QueryRow(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt).Scan(&uwm.ID)
+		err := r.db.QueryRow(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.RPE, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt).Scan(&uwm.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create user workout movement: %w", err)
 		}
 	} else {
-		result, err := r.db.Exec(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt)
+		result, err := r.db.Exec(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.RPE, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create user workout movement: %w", err)
 		}
@@ -65,22 +65,22 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 
 	if currentDriver == "postgres" {
 		// Postgres: use RETURNING id with individual QueryRow calls
-		query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`)
+		query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`)
 
 		for _, uwm := range movements {
 			uwm.CreatedAt = now
 			uwm.UpdatedAt = now
 
-			err := tx.QueryRow(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt).Scan(&uwm.ID)
+			err := tx.QueryRow(query, uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.RPE, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt).Scan(&uwm.ID)
 			if err != nil {
 				return fmt.Errorf("failed to insert user workout movement: %w", err)
 			}
 		}
 	} else {
 		// SQLite/MySQL: use prepared statement with LastInsertId
-		query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		query := rebindQuery(`INSERT INTO user_workout_movements (user_workout_id, movement_id, sets, reps, weight, time, distance, notes, rpe, is_pr, order_index, created_at, updated_at)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 		stmt, err := tx.Prepare(query)
 		if err != nil {
@@ -92,7 +92,7 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 			uwm.CreatedAt = now
 			uwm.UpdatedAt = now
 
-			result, err := stmt.Exec(uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt)
+			result, err := stmt.Exec(uwm.UserWorkoutID, uwm.MovementID, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.RPE, uwm.IsPR, uwm.OrderIndex, uwm.CreatedAt, uwm.UpdatedAt)
 			if err != nil {
 				return fmt.Errorf("failed to insert user workout movement: %w", err)
 			}
@@ -114,7 +114,7 @@ func (r *UserWorkoutMovementRepository) CreateBatch(movements []*domain.UserWork
 
 // GetByID retrieves a user workout movement by ID
 func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMovement, error) {
-	query := rebindQuery(`SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, is_pr, order_index, created_at, updated_at
+	query := rebindQuery(`SELECT id, user_workout_id, movement_id, sets, reps, weight, time, distance, notes, rpe, is_pr, order_index, created_at, updated_at
 	          FROM user_workout_movements WHERE id = ?`)
 
 	uwm := &domain.UserWorkoutMovement{}
@@ -123,8 +123,9 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 	var weight sql.NullFloat64
 	var time sql.NullInt64
 	var distance sql.NullFloat64
+	var rpe sql.NullInt64
 
-	err := r.db.QueryRow(query, id).Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance, &uwm.Notes, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance, &uwm.Notes, &rpe, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -150,6 +151,10 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 	if distance.Valid {
 		uwm.Distance = &distance.Float64
 	}
+	if rpe.Valid {
+		r := int(rpe.Int64)
+		uwm.RPE = &r
+	}
 
 	return uwm, nil
 }
@@ -158,7 +163,7 @@ func (r *UserWorkoutMovementRepository) GetByID(id int64) (*domain.UserWorkoutMo
 func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) ([]*domain.UserWorkoutMovement, error) {
 	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
-		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
+		       uwm.notes, uwm.rpe, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.id as movement_id, m.name, m.description, m.type, m.is_standard, m.created_by, m.created_at, m.updated_at
 		FROM user_workout_movements uwm
 		JOIN movements m ON uwm.movement_id = m.id
@@ -181,10 +186,11 @@ func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) 
 		var weight sql.NullFloat64
 		var time sql.NullInt64
 		var distance sql.NullFloat64
+		var rpe sql.NullInt64
 		var createdBy sql.NullInt64
 
 		err := rows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &time, &distance,
-			&uwm.Notes, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
+			&uwm.Notes, &rpe, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
 			&uwm.Movement.ID, &uwm.Movement.Name, &uwm.Movement.Description, &uwm.Movement.Type, &uwm.Movement.IsStandard, &createdBy, &uwm.Movement.CreatedAt, &uwm.Movement.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user workout movement: %w", err)
@@ -208,6 +214,10 @@ func (r *UserWorkoutMovementRepository) GetByUserWorkoutID(userWorkoutID int64) 
 		if distance.Valid {
 			uwm.Distance = &distance.Float64
 		}
+		if rpe.Valid {
+			r := int(rpe.Int64)
+			uwm.RPE = &r
+		}
 		if createdBy.Valid {
 			cb := createdBy.Int64
 			uwm.Movement.CreatedBy = &cb
@@ -228,10 +238,10 @@ func (r *UserWorkoutMovementRepository) Update(uwm *domain.UserWorkoutMovement) 
 	uwm.UpdatedAt = time.Now()
 
 	query := rebindQuery(`UPDATE user_workout_movements
-	          SET sets = ?, reps = ?, weight = ?, time = ?, distance = ?, notes = ?, order_index = ?, updated_at = ?
+	          SET sets = ?, reps = ?, weight = ?, time = ?, distance = ?, notes = ?, rpe = ?, order_index = ?, updated_at = ?
 	          WHERE id = ?`)
 
-	result, err := r.db.Exec(query, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.OrderIndex, uwm.UpdatedAt, uwm.ID)
+	result, err := r.db.Exec(query, uwm.Sets, uwm.Reps, uwm.Weight, uwm.Time, uwm.Distance, uwm.Notes, uwm.RPE, uwm.OrderIndex, uwm.UpdatedAt, uwm.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update user workout movement: %w", err)
 	}
@@ -310,7 +320,7 @@ func (r *UserWorkoutMovementRepository) GetMaxWeightForMovement(userID, movement
 func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, movementID int64, excludeWorkoutID *int64) ([]*domain.UserWorkoutMovement, error) {
 	query := `
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
-		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at
+		       uwm.notes, uwm.rpe, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at
 		FROM user_workout_movements uwm
 		INNER JOIN user_workouts uw ON uwm.user_workout_id = uw.id
 		WHERE uw.user_id = ? AND uwm.movement_id = ? AND uwm.weight IS NOT NULL AND uwm.reps IS NOT NULL`
@@ -344,6 +354,7 @@ func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, mo
 			&m.Time,
 			&m.Distance,
 			&m.Notes,
+			&m.RPE,
 			&m.IsPR,
 			&m.OrderIndex,
 			&m.CreatedAt,
@@ -366,7 +377,7 @@ func (r *UserWorkoutMovementRepository) GetAllPerformancesForMovement(userID, mo
 func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*domain.UserWorkoutMovement, error) {
 	query := rebindQuery(`
 		SELECT uwm.id, uwm.user_workout_id, uwm.movement_id, uwm.sets, uwm.reps, uwm.weight, uwm.time, uwm.distance,
-		       uwm.notes, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
+		       uwm.notes, uwm.rpe, uwm.is_pr, uwm.order_index, uwm.created_at, uwm.updated_at,
 		       m.name, m.type,
 		       uw.workout_date
 		FROM user_workout_movements uwm
@@ -390,10 +401,11 @@ func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) 
 		var weight sql.NullFloat64
 		var timeVal sql.NullInt64
 		var distance sql.NullFloat64
+		var rpe sql.NullInt64
 		var workoutDate time.Time
 
 		err := rows.Scan(&uwm.ID, &uwm.UserWorkoutID, &uwm.MovementID, &sets, &reps, &weight, &timeVal, &distance,
-			&uwm.Notes, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
+			&uwm.Notes, &rpe, &uwm.IsPR, &uwm.OrderIndex, &uwm.CreatedAt, &uwm.UpdatedAt,
 			&uwm.MovementName, &uwm.MovementType, &workoutDate)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan PR movement: %w", err)
@@ -416,6 +428,10 @@ func (r *UserWorkoutMovementRepository) GetPRMovements(userID int64, limit int) 
 		}
 		if distance.Valid {
 			uwm.Distance = &distance.Float64
+		}
+		if rpe.Valid {
+			r := int(rpe.Int64)
+			uwm.RPE = &r
 		}
 
 		// Assign workout date

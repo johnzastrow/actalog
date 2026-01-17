@@ -132,9 +132,9 @@ func TestDataChangeLogService_List(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		limit      int
-		offset     int
+		name   string
+		limit  int
+		offset int
 	}{
 		{"default values", 0, -1},
 		{"over max limit", 200, 0},
@@ -474,5 +474,78 @@ func TestDataChangeLogService_LogUserDelete(t *testing.T) {
 	}
 	if repo.logs[0].Operation != domain.OperationDelete {
 		t.Errorf("Operation = %s, want %s", repo.logs[0].Operation, domain.OperationDelete)
+	}
+}
+
+func TestDataChangeLogService_GetByEntityID_LimitValidation(t *testing.T) {
+	repo := newMockDataChangeLogRepo()
+	svc := NewDataChangeLogService(repo)
+
+	// Create a log
+	_ = repo.Create(&domain.DataChangeLog{
+		EntityType: "wod",
+		EntityID:   1,
+		Operation:  domain.OperationUpdate,
+	})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByEntityID("wod", 1, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByEntityID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByEntityID() returned nil")
+			}
+		})
+	}
+}
+
+func TestDataChangeLogService_GetByUserID_LimitValidation(t *testing.T) {
+	repo := newMockDataChangeLogRepo()
+	svc := NewDataChangeLogService(repo)
+
+	// Create a log
+	_ = repo.Create(&domain.DataChangeLog{
+		EntityType: "wod",
+		EntityID:   1,
+		UserID:     42,
+		Operation:  domain.OperationUpdate,
+	})
+
+	tests := []struct {
+		name   string
+		limit  int
+		offset int
+	}{
+		{"zero limit", 0, 0},
+		{"negative limit", -1, 0},
+		{"over max limit", 200, 0},
+		{"negative offset", 50, -5},
+		{"valid params", 50, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logs, err := svc.GetByUserID(42, tt.limit, tt.offset)
+			if err != nil {
+				t.Errorf("GetByUserID() error = %v", err)
+			}
+			if logs == nil {
+				t.Error("GetByUserID() returned nil")
+			}
+		})
 	}
 }

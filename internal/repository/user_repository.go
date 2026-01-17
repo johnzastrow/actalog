@@ -362,6 +362,84 @@ func (r *SQLiteUserRepository) Count() (int64, error) {
 	return count, err
 }
 
+// ListAdmins returns all users with admin role
+func (r *SQLiteUserRepository) ListAdmins() ([]*domain.User, error) {
+	query := rebindQuery(`
+		SELECT id, email, password_hash, name, profile_image, role,
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
+		FROM users
+		WHERE role = 'admin'
+		ORDER BY created_at ASC
+	`)
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		user := &domain.User{}
+		var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+		var disabledByUserID sql.NullInt64
+		var disableReason sql.NullString
+
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Name,
+			&user.ProfileImage,
+			&user.Role,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&lastLoginAt,
+			&user.EmailVerified,
+			&emailVerifiedAt,
+			&user.FailedLoginAttempts,
+			&lockedAt,
+			&lockedUntil,
+			&user.AccountDisabled,
+			&disabledAt,
+			&disabledByUserID,
+			&disableReason,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Handle nullable fields
+		if lastLoginAt.Valid {
+			user.LastLoginAt = &lastLoginAt.Time
+		}
+		if emailVerifiedAt.Valid {
+			user.EmailVerifiedAt = &emailVerifiedAt.Time
+		}
+		if lockedAt.Valid {
+			user.LockedAt = &lockedAt.Time
+		}
+		if lockedUntil.Valid {
+			user.LockedUntil = &lockedUntil.Time
+		}
+		if disabledAt.Valid {
+			user.DisabledAt = &disabledAt.Time
+		}
+		if disabledByUserID.Valid {
+			user.DisabledByUserID = &disabledByUserID.Int64
+		}
+		if disableReason.Valid {
+			user.DisableReason = &disableReason.String
+		}
+
+		users = append(users, user)
+	}
+
+	return users, rows.Err()
+}
+
 // Account Security Methods
 
 // IncrementFailedAttempts increments the failed login attempts counter
@@ -476,4 +554,151 @@ func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
 		return fmt.Errorf("failed to enable account: %w", err)
 	}
 	return nil
+}
+
+// CountNewThisMonth returns the count of users created this month
+func (r *SQLiteUserRepository) CountNewThisMonth() (int64, error) {
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM users WHERE created_at >= %s`, getStartOfMonthExpr())
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// CountDisabled returns the count of disabled user accounts
+func (r *SQLiteUserRepository) CountDisabled() (int64, error) {
+	query := `SELECT COUNT(*) FROM users WHERE account_disabled = 1`
+	var count int64
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
+// ListWithFilter retrieves users matching the filter criteria with pagination
+func (r *SQLiteUserRepository) ListWithFilter(filter domain.UserListFilter, limit, offset int) ([]*domain.User, error) {
+	// Build dynamic WHERE clause
+	whereClause := "1=1"
+	args := []interface{}{}
+
+	if filter.Search != "" {
+		searchPattern := "%" + filter.Search + "%"
+		whereClause += " AND (name LIKE ? OR email LIKE ?)"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	if filter.CreatedAfter != nil {
+		whereClause += " AND created_at >= ?"
+		args = append(args, *filter.CreatedAfter)
+	}
+
+	if filter.CreatedBefore != nil {
+		whereClause += " AND created_at <= ?"
+		args = append(args, *filter.CreatedBefore)
+	}
+
+	// Add pagination args
+	args = append(args, limit, offset)
+
+	query := rebindQuery(fmt.Sprintf(`
+		SELECT id, email, password_hash, name, profile_image, role,
+		       created_at, updated_at, last_login_at, email_verified, email_verified_at,
+		       failed_login_attempts, locked_at, locked_until,
+		       account_disabled, disabled_at, disabled_by_user_id, disable_reason
+		FROM users
+		WHERE %s
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?
+	`, whereClause))
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		user := &domain.User{}
+		var lastLoginAt, emailVerifiedAt, lockedAt, lockedUntil, disabledAt sql.NullTime
+		var disabledByUserID sql.NullInt64
+		var disableReason sql.NullString
+
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Name,
+			&user.ProfileImage,
+			&user.Role,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&lastLoginAt,
+			&user.EmailVerified,
+			&emailVerifiedAt,
+			&user.FailedLoginAttempts,
+			&lockedAt,
+			&lockedUntil,
+			&user.AccountDisabled,
+			&disabledAt,
+			&disabledByUserID,
+			&disableReason,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Handle nullable fields
+		if lastLoginAt.Valid {
+			user.LastLoginAt = &lastLoginAt.Time
+		}
+		if emailVerifiedAt.Valid {
+			user.EmailVerifiedAt = &emailVerifiedAt.Time
+		}
+		if lockedAt.Valid {
+			user.LockedAt = &lockedAt.Time
+		}
+		if lockedUntil.Valid {
+			user.LockedUntil = &lockedUntil.Time
+		}
+		if disabledAt.Valid {
+			user.DisabledAt = &disabledAt.Time
+		}
+		if disabledByUserID.Valid {
+			user.DisabledByUserID = &disabledByUserID.Int64
+		}
+		if disableReason.Valid {
+			user.DisableReason = &disableReason.String
+		}
+
+		users = append(users, user)
+	}
+
+	return users, rows.Err()
+}
+
+// CountWithFilter returns the count of users matching the filter criteria
+func (r *SQLiteUserRepository) CountWithFilter(filter domain.UserListFilter) (int64, error) {
+	// Build dynamic WHERE clause
+	whereClause := "1=1"
+	args := []interface{}{}
+
+	if filter.Search != "" {
+		searchPattern := "%" + filter.Search + "%"
+		whereClause += " AND (name LIKE ? OR email LIKE ?)"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	if filter.CreatedAfter != nil {
+		whereClause += " AND created_at >= ?"
+		args = append(args, *filter.CreatedAfter)
+	}
+
+	if filter.CreatedBefore != nil {
+		whereClause += " AND created_at <= ?"
+		args = append(args, *filter.CreatedBefore)
+	}
+
+	query := rebindQuery(fmt.Sprintf(`SELECT COUNT(*) FROM users WHERE %s`, whereClause))
+
+	var count int64
+	err := r.db.QueryRow(query, args...).Scan(&count)
+	return count, err
 }

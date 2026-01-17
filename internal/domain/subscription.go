@@ -80,10 +80,19 @@ type UserSubscriptionRepository interface {
 	Delete(id int64) error
 	ListAll() ([]*UserSubscription, error)
 
+	// Admin listing operations
+	ListExpiring(days int) ([]*UserSubscription, error) // Active subscriptions expiring within N days
+	ListExpired() ([]*UserSubscription, error)          // Expired or overdue subscriptions
+
 	// Admin operations
 	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error
 	MarkAsExpired(id int64) error
 	Cancel(id int64, reason string, adminUserID int64) error
+
+	// Admin metrics
+	CountActive() (int64, error)
+	CountExpired() (int64, error)
+	CountExpiringSoon(days int) (int64, error)
 }
 
 // OrganizationSubscriptionRepository defines repository interface for org subscriptions
@@ -95,6 +104,10 @@ type OrganizationSubscriptionRepository interface {
 	Update(sub *OrganizationSubscription) error
 	Delete(id int64) error
 	ListAll() ([]*OrganizationSubscription, error)
+
+	// Admin listing operations
+	ListExpiring(days int) ([]*OrganizationSubscription, error) // Active subscriptions expiring within N days
+	ListExpired() ([]*OrganizationSubscription, error)          // Expired or overdue subscriptions
 
 	// Admin operations
 	MarkAsPaid(id int64, paymentDate time.Time, adminUserID int64, durationDays *int) error

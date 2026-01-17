@@ -29,7 +29,7 @@
               :items="entityTypes"
               label="Entity Type"
               clearable
-              variant="outlined"
+              
               density="compact"
               hide-details
               @update:model-value="loadLogs"
@@ -41,7 +41,7 @@
               :items="operations"
               label="Operation"
               clearable
-              variant="outlined"
+              
               density="compact"
               hide-details
               @update:model-value="loadLogs"
@@ -52,7 +52,7 @@
               v-model="filterUserEmail"
               label="User Email"
               clearable
-              variant="outlined"
+              
               density="compact"
               prepend-inner-icon="mdi-magnify"
               hide-details
@@ -117,7 +117,7 @@
         <!-- Operation Column -->
         <!-- eslint-disable-next-line vue/valid-v-slot -->
         <template #item.operation="{ item }">
-          <v-chip :color="getOperationColor(item.operation)" size="small" variant="outlined">
+          <v-chip :color="getOperationColor(item.operation)" size="small" >
             <v-icon start size="small">{{ getOperationIcon(item.operation) }}</v-icon>
             {{ formatOperation(item.operation) }}
           </v-chip>
@@ -154,7 +154,7 @@
         </div>
         <div class="d-flex gap-2">
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset === 0"
             @click="previousPage"
@@ -163,7 +163,7 @@
             Previous
           </v-btn>
           <v-btn
-            variant="outlined"
+            
             size="small"
             :disabled="offset + limit >= total"
             @click="nextPage"
@@ -244,7 +244,7 @@
           <v-row>
             <!-- Before Values -->
             <v-col cols="12" md="6">
-              <v-card variant="outlined" class="pa-3" color="error">
+              <v-card  class="pa-3" color="error">
                 <div class="d-flex align-center mb-2">
                   <v-icon color="error" size="small" class="mr-2">mdi-minus-circle</v-icon>
                   <span class="text-subtitle-2 text-error">Before</span>
@@ -255,7 +255,7 @@
 
             <!-- After Values -->
             <v-col cols="12" md="6">
-              <v-card variant="outlined" class="pa-3" :color="selectedLog.operation === 'delete' ? 'grey' : 'success'">
+              <v-card  class="pa-3" :color="selectedLog.operation === 'delete' ? 'grey' : 'success'">
                 <div class="d-flex align-center mb-2">
                   <v-icon :color="selectedLog.operation === 'delete' ? 'grey' : 'success'" size="small" class="mr-2">
                     {{ selectedLog.operation === 'delete' ? 'mdi-delete' : 'mdi-plus-circle' }}

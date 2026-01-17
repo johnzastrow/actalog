@@ -38,7 +38,17 @@ type ImportMovementsConfirmRequest struct {
 const maxUploadSize = 10 * 1024 * 1024 // 10MB
 
 // PreviewWODImport validates and previews WOD CSV import
-// POST /api/import/wods/preview (multipart/form-data with "file" field)
+// @Summary      Preview WOD import
+// @Description  Validate and preview WOD CSV import before confirming
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "CSV file to import"
+// @Success      200 {object} map[string]interface{} "Import preview with validation results"
+// @Failure      400 {object} ErrorResponse "Invalid file or validation failed"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Router       /import/wods/preview [post]
 func (h *ImportHandler) PreviewWODImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -80,7 +90,20 @@ func (h *ImportHandler) PreviewWODImport(w http.ResponseWriter, r *http.Request)
 }
 
 // ConfirmWODImport confirms and executes WOD CSV import
-// POST /api/import/wods/confirm (multipart/form-data with "file", "skip_duplicates", "update_duplicates" fields)
+// @Summary      Confirm WOD import
+// @Description  Execute WOD CSV import after preview
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "CSV file to import"
+// @Param        skip_duplicates formData bool false "Skip duplicate entries"
+// @Param        update_duplicates formData bool false "Update existing duplicates"
+// @Success      200 {object} map[string]interface{} "Import results with counts"
+// @Failure      400 {object} ErrorResponse "Invalid file"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Import failed"
+// @Router       /import/wods/confirm [post]
 func (h *ImportHandler) ConfirmWODImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -126,7 +149,17 @@ func (h *ImportHandler) ConfirmWODImport(w http.ResponseWriter, r *http.Request)
 }
 
 // PreviewMovementImport validates and previews movement CSV import
-// POST /api/import/movements/preview (multipart/form-data with "file" field)
+// @Summary      Preview movement import
+// @Description  Validate and preview movement CSV import before confirming
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "CSV file to import"
+// @Success      200 {object} map[string]interface{} "Import preview with validation results"
+// @Failure      400 {object} ErrorResponse "Invalid file or validation failed"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Router       /import/movements/preview [post]
 func (h *ImportHandler) PreviewMovementImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -168,7 +201,20 @@ func (h *ImportHandler) PreviewMovementImport(w http.ResponseWriter, r *http.Req
 }
 
 // ConfirmMovementImport confirms and executes movement CSV import
-// POST /api/import/movements/confirm (multipart/form-data with "file", "skip_duplicates", "update_duplicates" fields)
+// @Summary      Confirm movement import
+// @Description  Execute movement CSV import after preview
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "CSV file to import"
+// @Param        skip_duplicates formData bool false "Skip duplicate entries"
+// @Param        update_duplicates formData bool false "Update existing duplicates"
+// @Success      200 {object} map[string]interface{} "Import results with counts"
+// @Failure      400 {object} ErrorResponse "Invalid file"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Import failed"
+// @Router       /import/movements/confirm [post]
 func (h *ImportHandler) ConfirmMovementImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -214,7 +260,17 @@ func (h *ImportHandler) ConfirmMovementImport(w http.ResponseWriter, r *http.Req
 }
 
 // PreviewUserWorkoutImport validates and previews user workout JSON import
-// POST /api/import/user-workouts/preview (multipart/form-data with "file" field)
+// @Summary      Preview user workout import
+// @Description  Validate and preview user workout JSON import before confirming
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "JSON file to import"
+// @Success      200 {object} map[string]interface{} "Import preview with validation results"
+// @Failure      400 {object} ErrorResponse "Invalid file or validation failed"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Router       /import/user-workouts/preview [post]
 func (h *ImportHandler) PreviewUserWorkoutImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -255,7 +311,20 @@ func (h *ImportHandler) PreviewUserWorkoutImport(w http.ResponseWriter, r *http.
 }
 
 // ConfirmUserWorkoutImport confirms and executes user workout JSON import
-// POST /api/import/user-workouts/confirm (multipart/form-data with "file", "skip_duplicates" fields)
+// @Summary      Confirm user workout import
+// @Description  Execute user workout JSON import after preview
+// @Tags         import-export
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "JSON file to import"
+// @Param        skip_duplicates formData bool false "Skip duplicate entries"
+// @Param        update_duplicates formData bool false "Update existing duplicates"
+// @Success      200 {object} map[string]interface{} "Import results with counts"
+// @Failure      400 {object} ErrorResponse "Invalid file"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Import failed"
+// @Router       /import/user-workouts/confirm [post]
 func (h *ImportHandler) ConfirmUserWorkoutImport(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())

@@ -26,6 +26,16 @@ func NewSessionHandler(userService *service.UserService, logger *logger.Logger) 
 }
 
 // ListSessions handles GET /api/sessions
+// @Summary      List active sessions
+// @Description  Get all active sessions for the current user
+// @Tags         sessions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "List of active sessions"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /sessions [get]
 func (h *SessionHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -49,6 +59,17 @@ func (h *SessionHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 // RevokeSession handles DELETE /api/sessions/:id
+// @Summary      Revoke session
+// @Description  Revoke a specific session (log out that device)
+// @Tags         sessions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Session ID"
+// @Success      200 {object} MessageResponse "Session revoked"
+// @Failure      400 {object} ErrorResponse "Invalid session ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Router       /sessions/{id} [delete]
 func (h *SessionHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -81,6 +102,17 @@ func (h *SessionHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 }
 
 // RevokeAllSessions handles POST /api/sessions/revoke-all
+// @Summary      Revoke all sessions
+// @Description  Revoke all sessions for the current user (log out everywhere)
+// @Tags         sessions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object false "Options (except_current_session)"
+// @Success      200 {object} MessageResponse "All sessions revoked"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /sessions/revoke-all [post]
 func (h *SessionHandler) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())

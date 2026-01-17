@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -1421,6 +1422,510 @@ var migrations = []Migration{
 				}
 			}
 			fmt.Println("⚠️  Removed audit_logs optimization indexes")
+			return nil
+		},
+	},
+	{
+		Version:     "0.18.0",
+		Description: "Add email_logs table for email audit trail",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if email_logs table already exists
+			hasEmailLogs, err := checkTableExists(db, driver, "email_logs")
+			if err != nil {
+				return fmt.Errorf("failed to check for email_logs table: %w", err)
+			}
+			if hasEmailLogs {
+				fmt.Println("✓ email_logs table already exists, skipping creation")
+				return nil
+			}
+
+			// Create email_logs table
+			var createEmailLogsSQL string
+			switch driver {
+			case "sqlite3":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					recipient_email TEXT NOT NULL,
+					email_type TEXT NOT NULL,
+					subject TEXT NOT NULL,
+					success INTEGER NOT NULL DEFAULT 0,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id INTEGER,
+					created_at DATETIME NOT NULL,
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				);
+				CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+				CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+				CREATE INDEX idx_email_logs_created_at ON email_logs(created_at DESC);
+				CREATE INDEX idx_email_logs_success ON email_logs(success);
+				`
+			case "postgres":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id BIGSERIAL PRIMARY KEY,
+					recipient_email VARCHAR(255) NOT NULL,
+					email_type VARCHAR(50) NOT NULL,
+					subject VARCHAR(500) NOT NULL,
+					success BOOLEAN NOT NULL DEFAULT FALSE,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id BIGINT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				);
+				CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+				CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+				CREATE INDEX idx_email_logs_created_at ON email_logs(created_at DESC);
+				CREATE INDEX idx_email_logs_success ON email_logs(success);
+				`
+			case "mysql":
+				createEmailLogsSQL = `
+				CREATE TABLE email_logs (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					recipient_email VARCHAR(255) NOT NULL,
+					email_type VARCHAR(50) NOT NULL,
+					subject VARCHAR(500) NOT NULL,
+					success BOOLEAN NOT NULL DEFAULT FALSE,
+					error_message TEXT,
+					debug_info TEXT,
+					sent_by_user_id BIGINT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					INDEX idx_email_logs_type (email_type),
+					INDEX idx_email_logs_recipient (recipient_email),
+					INDEX idx_email_logs_created_at (created_at DESC),
+					INDEX idx_email_logs_success (success),
+					FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createEmailLogsSQL); err != nil {
+				return fmt.Errorf("failed to create email_logs table: %w", err)
+			}
+			fmt.Println("✓ Created email_logs table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS email_logs"); err != nil {
+				return fmt.Errorf("failed to drop email_logs table: %w", err)
+			}
+			fmt.Println("⚠️  WARNING: Email logs data has been deleted")
+			return nil
+		},
+	},
+	{
+		Version:     "0.19.0",
+		Description: "Add timezone column to user_settings table",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if timezone column already exists
+			hasTimezone, err := checkColumnExists(db, driver, "user_settings", "timezone")
+			if err != nil {
+				return fmt.Errorf("failed to check for timezone column: %w", err)
+			}
+			if hasTimezone {
+				fmt.Println("✓ timezone column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add timezone column with default value
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone TEXT DEFAULT 'America/New_York'`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone VARCHAR(50) DEFAULT 'America/New_York'`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN timezone VARCHAR(50) DEFAULT 'America/New_York'`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add timezone column: %w", err)
+			}
+			fmt.Println("✓ Added timezone column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, so we skip it
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN timezone"); err != nil {
+					return fmt.Errorf("failed to drop timezone column: %w", err)
+				}
+				fmt.Println("✓ Dropped timezone column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, timezone column remains")
+			}
+			return nil
+		},
+	},
+	{
+		Version:     "0.20.0",
+		Description: "Add admin_user_event_notifications column to user_settings for admin email preferences",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if column already exists
+			hasColumn, err := checkColumnExists(db, driver, "user_settings", "admin_user_event_notifications")
+			if err != nil {
+				return fmt.Errorf("failed to check for admin_user_event_notifications column: %w", err)
+			}
+			if hasColumn {
+				fmt.Println("✓ admin_user_event_notifications column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add column with default value TRUE (admins receive notifications by default)
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications INTEGER NOT NULL DEFAULT 1`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add admin_user_event_notifications column: %w", err)
+			}
+			fmt.Println("✓ Added admin_user_event_notifications column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN admin_user_event_notifications"); err != nil {
+					return fmt.Errorf("failed to drop admin_user_event_notifications column: %w", err)
+				}
+				fmt.Println("✓ Dropped admin_user_event_notifications column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, admin_user_event_notifications column remains")
+			}
+			return nil
+		},
+	},
+	{
+		Version:     "0.21.0",
+		Description: "Add font_family column to user_settings for customizable fonts",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if column already exists
+			hasColumn, err := checkColumnExists(db, driver, "user_settings", "font_family")
+			if err != nil {
+				return fmt.Errorf("failed to check for font_family column: %w", err)
+			}
+			if hasColumn {
+				fmt.Println("✓ font_family column already exists in user_settings, skipping")
+				return nil
+			}
+
+			// Add column with default value 'system' (uses native OS fonts)
+			var alterSQL string
+			switch driver {
+			case "sqlite3":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family TEXT DEFAULT 'system'`
+			case "postgres":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family VARCHAR(50) DEFAULT 'system'`
+			case "mysql":
+				alterSQL = `ALTER TABLE user_settings ADD COLUMN font_family VARCHAR(50) DEFAULT 'system'`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(alterSQL); err != nil {
+				return fmt.Errorf("failed to add font_family column: %w", err)
+			}
+			fmt.Println("✓ Added font_family column to user_settings table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres", "mysql":
+				if _, err := db.Exec("ALTER TABLE user_settings DROP COLUMN font_family"); err != nil {
+					return fmt.Errorf("failed to drop font_family column: %w", err)
+				}
+				fmt.Println("✓ Dropped font_family column from user_settings")
+			case "sqlite3":
+				fmt.Println("⚠️  SQLite does not support DROP COLUMN, font_family column remains")
+			}
+			return nil
+		},
+	},
+	{
+		Version:     "0.22.0",
+		Description: "Add benchmark_data table for API benchmarking",
+		Up: func(db *sql.DB, driver string) error {
+			// Check if table already exists
+			hasTable, err := checkTableExists(db, driver, "benchmark_data")
+			if err != nil {
+				return fmt.Errorf("failed to check for benchmark_data table: %w", err)
+			}
+			if hasTable {
+				fmt.Println("✓ benchmark_data table already exists, skipping creation")
+				return nil
+			}
+
+			var createSQL string
+			switch driver {
+			case "sqlite3":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					test_key TEXT NOT NULL,
+					test_value TEXT,
+					num_value REAL DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value INTEGER DEFAULT 0,
+					created_by INTEGER NOT NULL,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_benchmark_data_test_key ON benchmark_data(test_key);
+				CREATE INDEX idx_benchmark_data_created_by ON benchmark_data(created_by);
+				`
+			case "postgres":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id BIGSERIAL PRIMARY KEY,
+					test_key VARCHAR(255) NOT NULL,
+					test_value TEXT,
+					num_value DOUBLE PRECISION DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value BOOLEAN DEFAULT FALSE,
+					created_by BIGINT NOT NULL,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				);
+				CREATE INDEX idx_benchmark_data_test_key ON benchmark_data(test_key);
+				CREATE INDEX idx_benchmark_data_created_by ON benchmark_data(created_by);
+				`
+			case "mysql":
+				createSQL = `
+				CREATE TABLE benchmark_data (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					test_key VARCHAR(255) NOT NULL,
+					test_value TEXT,
+					num_value DOUBLE DEFAULT 0,
+					int_value INTEGER DEFAULT 0,
+					bool_value BOOLEAN DEFAULT FALSE,
+					created_by BIGINT NOT NULL,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_benchmark_data_test_key (test_key),
+					INDEX idx_benchmark_data_created_by (created_by),
+					FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createSQL); err != nil {
+				return fmt.Errorf("failed to create benchmark_data table: %w", err)
+			}
+			fmt.Println("✓ Created benchmark_data table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			if _, err := db.Exec("DROP TABLE IF EXISTS benchmark_data"); err != nil {
+				return fmt.Errorf("failed to drop benchmark_data table: %w", err)
+			}
+			fmt.Println("✓ Dropped benchmark_data table")
+			return nil
+		},
+	},
+	// Migration 0.23.0: Add extended fields to benchmark_data for stress testing
+	{
+		Version:     "0.23.0",
+		Description: "Add extended benchmark_data fields for stress testing",
+		Up: func(db *sql.DB, driver string) error {
+			var alterSQL string
+
+			switch driver {
+			case "sqlite3":
+				// SQLite requires separate ALTER TABLE statements for each column
+				alterStatements := []string{
+					`ALTER TABLE benchmark_data ADD COLUMN large_text TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN json_blob TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_float REAL DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_int INTEGER DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN category TEXT DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN priority INTEGER DEFAULT 0`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add column: %w", err)
+						}
+					}
+				}
+				// Add indexes for new columns
+				db.Exec(`CREATE INDEX IF NOT EXISTS idx_benchmark_data_category ON benchmark_data(category)`)
+				db.Exec(`CREATE INDEX IF NOT EXISTS idx_benchmark_data_priority ON benchmark_data(priority)`)
+			case "postgres":
+				alterSQL = `
+				ALTER TABLE benchmark_data
+					ADD COLUMN IF NOT EXISTS large_text TEXT DEFAULT '',
+					ADD COLUMN IF NOT EXISTS json_blob TEXT DEFAULT '',
+					ADD COLUMN IF NOT EXISTS extra_float DOUBLE PRECISION DEFAULT 0,
+					ADD COLUMN IF NOT EXISTS extra_int INTEGER DEFAULT 0,
+					ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT '',
+					ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0;
+				CREATE INDEX IF NOT EXISTS idx_benchmark_data_category ON benchmark_data(category);
+				CREATE INDEX IF NOT EXISTS idx_benchmark_data_priority ON benchmark_data(priority);
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to alter benchmark_data table: %w", err)
+				}
+			case "mysql":
+				// MySQL doesn't have IF NOT EXISTS for columns, check individually
+				alterStatements := []string{
+					`ALTER TABLE benchmark_data ADD COLUMN large_text TEXT`,
+					`ALTER TABLE benchmark_data ADD COLUMN json_blob TEXT`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_float DOUBLE DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN extra_int INT DEFAULT 0`,
+					`ALTER TABLE benchmark_data ADD COLUMN category VARCHAR(100) DEFAULT ''`,
+					`ALTER TABLE benchmark_data ADD COLUMN priority INT DEFAULT 0`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+				db.Exec(`CREATE INDEX idx_benchmark_data_category ON benchmark_data(category)`)
+				db.Exec(`CREATE INDEX idx_benchmark_data_priority ON benchmark_data(priority)`)
+			}
+
+			fmt.Println("✓ Added extended benchmark_data columns")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, skip for SQLite
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE benchmark_data DROP COLUMN IF EXISTS large_text, DROP COLUMN IF EXISTS json_blob, DROP COLUMN IF EXISTS extra_float, DROP COLUMN IF EXISTS extra_int, DROP COLUMN IF EXISTS category, DROP COLUMN IF EXISTS priority`)
+			case "mysql":
+				db.Exec(`ALTER TABLE benchmark_data DROP COLUMN large_text, DROP COLUMN json_blob, DROP COLUMN extra_float, DROP COLUMN extra_int, DROP COLUMN category, DROP COLUMN priority`)
+			}
+			fmt.Println("✓ Removed extended benchmark_data columns")
+			return nil
+		},
+	},
+	{
+		Version:     "0.24.0",
+		Description: "Add RPE (Rate of Perceived Exertion) columns to user workout performance tables",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				// SQLite requires separate ALTER TABLE statements for each column
+				alterStatements := []string{
+					`ALTER TABLE user_workout_movements ADD COLUMN rpe INTEGER`,
+					`ALTER TABLE user_workout_wods ADD COLUMN rpe INTEGER`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add RPE column: %w", err)
+						}
+					}
+				}
+			case "postgres":
+				alterSQL := `
+				ALTER TABLE user_workout_movements ADD COLUMN IF NOT EXISTS rpe INTEGER;
+				ALTER TABLE user_workout_wods ADD COLUMN IF NOT EXISTS rpe INTEGER;
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to add RPE columns: %w", err)
+				}
+			case "mysql":
+				// MySQL doesn't have IF NOT EXISTS for columns, check individually
+				alterStatements := []string{
+					`ALTER TABLE user_workout_movements ADD COLUMN rpe INT`,
+					`ALTER TABLE user_workout_wods ADD COLUMN rpe INT`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+			}
+
+			fmt.Println("✓ Added RPE columns to user_workout_movements and user_workout_wods tables")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// SQLite doesn't support DROP COLUMN easily, skip for SQLite
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE user_workout_movements DROP COLUMN IF EXISTS rpe`)
+				db.Exec(`ALTER TABLE user_workout_wods DROP COLUMN IF EXISTS rpe`)
+			case "mysql":
+				db.Exec(`ALTER TABLE user_workout_movements DROP COLUMN rpe`)
+				db.Exec(`ALTER TABLE user_workout_wods DROP COLUMN rpe`)
+			}
+			fmt.Println("✓ Removed RPE columns")
+			return nil
+		},
+	},
+	{
+		Version:     "0.25.0",
+		Description: "Add instructions column to workout_movements and workout_wods for template item instructions",
+		Up: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "sqlite3":
+				alterStatements := []string{
+					`ALTER TABLE workout_movements ADD COLUMN instructions TEXT DEFAULT ''`,
+					`ALTER TABLE workout_wods ADD COLUMN instructions TEXT DEFAULT ''`,
+				}
+				for _, stmt := range alterStatements {
+					if _, err := db.Exec(stmt); err != nil {
+						// Ignore "duplicate column" errors for idempotency
+						if !strings.Contains(err.Error(), "duplicate column") {
+							return fmt.Errorf("failed to add instructions column: %w", err)
+						}
+					}
+				}
+			case "postgres":
+				alterSQL := `
+				ALTER TABLE workout_movements ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT '';
+				ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT '';
+				`
+				if _, err := db.Exec(alterSQL); err != nil {
+					return fmt.Errorf("failed to add instructions columns: %w", err)
+				}
+			case "mysql":
+				alterStatements := []string{
+					`ALTER TABLE workout_movements ADD COLUMN instructions TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN instructions TEXT`,
+				}
+				for _, stmt := range alterStatements {
+					db.Exec(stmt) // Ignore errors for existing columns
+				}
+			}
+
+			fmt.Println("✓ Added instructions columns to workout_movements and workout_wods tables")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			switch driver {
+			case "postgres":
+				db.Exec(`ALTER TABLE workout_movements DROP COLUMN IF EXISTS instructions`)
+				db.Exec(`ALTER TABLE workout_wods DROP COLUMN IF EXISTS instructions`)
+			case "mysql":
+				db.Exec(`ALTER TABLE workout_movements DROP COLUMN instructions`)
+				db.Exec(`ALTER TABLE workout_wods DROP COLUMN instructions`)
+			}
+			fmt.Println("✓ Removed instructions columns")
 			return nil
 		},
 	},

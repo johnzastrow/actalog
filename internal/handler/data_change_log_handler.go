@@ -28,6 +28,18 @@ func NewDataChangeLogHandler(service *service.DataChangeLogService, logger *logg
 }
 
 // GetDataChangeLog handles GET /api/data-change-logs/:id
+// @Summary      Get data change log (Admin)
+// @Description  Retrieve a specific data change log entry by ID
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Data Change Log ID"
+// @Success      200 {object} domain.DataChangeLog "Data change log entry"
+// @Failure      400 {object} ErrorResponse "Invalid ID"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      404 {object} ErrorResponse "Log not found"
+// @Router       /data-change-logs/{id} [get]
 func (h *DataChangeLogHandler) GetDataChangeLog(w http.ResponseWriter, r *http.Request) {
 	// Only admins can access individual data change logs
 	userRole, _ := middleware.GetUserRole(r.Context())
@@ -59,7 +71,26 @@ func (h *DataChangeLogHandler) GetDataChangeLog(w http.ResponseWriter, r *http.R
 }
 
 // ListDataChangeLogs handles GET /api/data-change-logs
-// Query params: entity_type, entity_id, operation, user_id, start_date, end_date, limit, offset
+// @Summary      List data change logs (Admin)
+// @Description  Get a paginated list of data change logs with optional filters
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        entity_type query string false "Filter by entity type"
+// @Param        entity_id query int false "Filter by entity ID"
+// @Param        operation query string false "Filter by operation (create, update, delete)"
+// @Param        user_id query int false "Filter by user ID"
+// @Param        user_email query string false "Filter by user email"
+// @Param        start_date query string false "Filter by start date (RFC3339 or YYYY-MM-DD)"
+// @Param        end_date query string false "Filter by end date (RFC3339 or YYYY-MM-DD)"
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "Data change logs with total count"
+// @Failure      400 {object} ErrorResponse "Invalid parameters"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /data-change-logs [get]
 func (h *DataChangeLogHandler) ListDataChangeLogs(w http.ResponseWriter, r *http.Request) {
 	// Only admins can list all data change logs
 	userRole, _ := middleware.GetUserRole(r.Context())
@@ -179,7 +210,21 @@ func (h *DataChangeLogHandler) ListDataChangeLogs(w http.ResponseWriter, r *http
 }
 
 // GetEntityHistory handles GET /api/data-change-logs/entity/:entity_type/:entity_id
-// Returns the change history for a specific entity
+// @Summary      Get entity history (Admin)
+// @Description  Get the change history for a specific entity
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        entity_type path string true "Entity type (e.g., user, workout, wod)"
+// @Param        entity_id path int true "Entity ID"
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "Entity change history"
+// @Failure      400 {object} ErrorResponse "Invalid entity_id"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /data-change-logs/entity/{entity_type}/{entity_id} [get]
 func (h *DataChangeLogHandler) GetEntityHistory(w http.ResponseWriter, r *http.Request) {
 	// Only admins can view entity history
 	userRole, _ := middleware.GetUserRole(r.Context())
@@ -232,7 +277,18 @@ func (h *DataChangeLogHandler) GetEntityHistory(w http.ResponseWriter, r *http.R
 }
 
 // CleanupOldLogs handles POST /api/admin/data-change-logs/cleanup
-// Admin endpoint to delete old data change logs
+// @Summary      Cleanup old data change logs (Admin)
+// @Description  Delete data change logs older than specified retention period
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object true "Retention days (must be positive)"
+// @Success      200 {object} map[string]interface{} "Deleted count and success message"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      403 {object} ErrorResponse "Forbidden"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/data-change-logs/cleanup [post]
 func (h *DataChangeLogHandler) CleanupOldLogs(w http.ResponseWriter, r *http.Request) {
 	// Only admins can cleanup data change logs
 	userRole, _ := middleware.GetUserRole(r.Context())

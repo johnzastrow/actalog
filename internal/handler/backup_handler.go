@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -27,8 +28,31 @@ func NewBackupHandler(backupService domain.BackupService, auditLogRepo domain.Au
 	}
 }
 
+// getFilenameParam extracts and URL-decodes the filename from the URL path
+func getFilenameParam(r *http.Request) (string, error) {
+	filename := chi.URLParam(r, "filename")
+	if filename == "" {
+		return "", fmt.Errorf("filename is required")
+	}
+	// URL-decode the filename (handles spaces as %20, etc.)
+	decoded, err := url.PathUnescape(filename)
+	if err != nil {
+		return "", fmt.Errorf("invalid filename encoding: %w", err)
+	}
+	return decoded, nil
+}
+
 // CreateBackup creates a new database backup
-// POST /api/admin/backups
+// @Summary      Create backup (Admin)
+// @Description  Create a new database backup
+// @Tags         backups
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      201 {object} map[string]interface{} "Backup created with filename and metadata"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups [post]
 func (h *BackupHandler) CreateBackup(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -59,7 +83,15 @@ func (h *BackupHandler) CreateBackup(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListBackups returns a list of all available backups
-// GET /api/admin/backups
+// @Summary      List backups (Admin)
+// @Description  Get a list of all available backup files
+// @Tags         backups
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "List of backups with count"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups [get]
 func (h *BackupHandler) ListBackups(w http.ResponseWriter, r *http.Request) {
 	backups, err := h.backupService.ListBackups()
 	if err != nil {
@@ -74,11 +106,21 @@ func (h *BackupHandler) ListBackups(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetBackupMetadata returns metadata for a specific backup
-// GET /api/admin/backups/{filename}/metadata
+// @Summary      Get backup metadata (Admin)
+// @Description  Get metadata information for a specific backup file
+// @Tags         backups
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        filename path string true "Backup filename"
+// @Success      200 {object} domain.BackupMetadata "Backup metadata"
+// @Failure      400 {object} ErrorResponse "Invalid filename"
+// @Failure      404 {object} ErrorResponse "Backup not found"
+// @Router       /admin/backups/{filename}/metadata [get]
 func (h *BackupHandler) GetBackupMetadata(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -98,11 +140,23 @@ func (h *BackupHandler) GetBackupMetadata(w http.ResponseWriter, r *http.Request
 }
 
 // DownloadBackup downloads a backup file
-// GET /api/admin/backups/{filename}
+// @Summary      Download backup (Admin)
+// @Description  Download a backup file
+// @Tags         backups
+// @Accept       json
+// @Produce      application/zip
+// @Security     BearerAuth
+// @Param        filename path string true "Backup filename"
+// @Success      200 {file} file "Backup ZIP file"
+// @Failure      400 {object} ErrorResponse "Invalid filename"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      404 {object} ErrorResponse "Backup not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups/{filename} [get]
 func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -162,11 +216,22 @@ func (h *BackupHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteBackup deletes a backup file
-// DELETE /api/admin/backups/{filename}
+// @Summary      Delete backup (Admin)
+// @Description  Delete a backup file
+// @Tags         backups
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        filename path string true "Backup filename"
+// @Success      200 {object} map[string]interface{} "Success message with filename"
+// @Failure      400 {object} ErrorResponse "Invalid filename"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups/{filename} [delete]
 func (h *BackupHandler) DeleteBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -196,7 +261,18 @@ func (h *BackupHandler) DeleteBackup(w http.ResponseWriter, r *http.Request) {
 }
 
 // UploadBackup uploads a backup ZIP file from another system
-// POST /api/admin/backups/upload
+// @Summary      Upload backup (Admin)
+// @Description  Upload a backup ZIP file from another system
+// @Tags         backups
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        file formData file true "Backup ZIP file"
+// @Success      201 {object} map[string]interface{} "Upload success with filename and metadata"
+// @Failure      400 {object} ErrorResponse "Invalid file or format"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups/upload [post]
 func (h *BackupHandler) UploadBackup(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from JWT token in context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -247,11 +323,23 @@ func (h *BackupHandler) UploadBackup(w http.ResponseWriter, r *http.Request) {
 }
 
 // RestoreBackup restores database from a backup file
-// POST /api/admin/backups/{filename}/restore
+// @Summary      Restore backup (Admin)
+// @Description  Restore database from a backup file (requires confirmation)
+// @Tags         backups
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        filename path string true "Backup filename"
+// @Param        request body object true "Restore options (confirm, mode)"
+// @Success      200 {object} map[string]interface{} "Restore result"
+// @Failure      400 {object} ErrorResponse "Invalid request or filename"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/backups/{filename}/restore [post]
 func (h *BackupHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
-	if filename == "" {
-		respondError(w, http.StatusBadRequest, "Filename is required")
+	filename, err := getFilenameParam(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

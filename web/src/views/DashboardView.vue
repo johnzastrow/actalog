@@ -88,42 +88,6 @@
         </v-col>
       </v-row>
 
-      <!-- Quick Actions -->
-      <v-row dense class="mb-1">
-        <v-col cols="6">
-          <v-card
-            elevation="0"
-            rounded
-            class="pa-1 text-center"
-            bg-color="primary"
-            style="cursor: pointer"
-            @click="openQuickLog"
-          >
-            <v-icon size="28" class="mb-1">mdi-lightning-bolt</v-icon>
-            <div class="text-body-2 font-weight-bold">Quick Log</div>
-            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
-              Fast entry
-            </div>
-          </v-card>
-        </v-col>
-        <v-col cols="6">
-          <v-card
-            elevation="0"
-            rounded
-            class="pa-1 text-center"
-            bg-color="primary"
-            style="cursor: pointer"
-            @click="$router.push('/workouts/calendar')"
-          >
-            <v-icon size="28" class="mb-1">mdi-calendar-month</v-icon>
-            <div class="text-body-2 font-weight-bold">Calendar</div>
-            <div class="text-caption" style="opacity: 0.9; font-size: 9px">
-              View by date
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-
       <!-- Additional Stats -->
       <v-row dense class="mb-1">
         <v-col cols="6">
@@ -147,13 +111,14 @@
                 v-for="(day, index) in weekDays"
                 :key="index"
                 class="text-center"
-                style="flex: 1"
+                style="flex: 1; cursor: pointer"
+                @click="handleWeekDayClick(day)"
               >
                 <v-avatar
                   size="24"
                   :color="day.hasWorkout ? 'primary' : 'transparent'"
                   :style="day.hasWorkout ? {} : { border: '2px solid rgb(var(--v-theme-on-surface), 0.3)' }"
-                  class="d-flex align-center justify-center"
+                  class="d-flex align-center justify-center week-day-avatar"
                 >
                   <span
                     class="text-caption font-weight-bold d-flex align-center justify-center"
@@ -201,6 +166,38 @@
               </div>
             </div>
           </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Quick Actions -->
+      <v-row dense class="mb-2">
+        <v-col cols="6">
+          <v-btn
+            block
+            size="large"
+            class="quick-action-btn"
+            @click="openQuickLog"
+          >
+            <v-icon start size="24">mdi-lightning-bolt</v-icon>
+            <div class="d-flex flex-column align-start">
+              <span class="text-body-2 font-weight-bold">Quick Log</span>
+              <span class="text-caption" style="opacity: 0.8; font-size: 9px; line-height: 1">Fast entry</span>
+            </div>
+          </v-btn>
+        </v-col>
+        <v-col cols="6">
+          <v-btn
+            block
+            size="large"
+            class="quick-action-btn"
+            @click="$router.push('/workouts/calendar')"
+          >
+            <v-icon start size="24">mdi-calendar-month</v-icon>
+            <div class="d-flex flex-column align-start">
+              <span class="text-body-2 font-weight-bold">Calendar</span>
+              <span class="text-caption" style="opacity: 0.8; font-size: 9px; line-height: 1">View by date</span>
+            </div>
+          </v-btn>
         </v-col>
       </v-row>
 
@@ -362,7 +359,7 @@
                 <v-btn
                   size="small"
                   color="primary"
-                  variant="outlined"
+                  
                   @click.stop="viewWorkout(workout.id)"
                 >
                   <v-icon start size="small">mdi-open-in-new</v-icon>
@@ -394,7 +391,7 @@
               <v-text-field
                 v-model="quickLogData.date"
                 type="date"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 required
@@ -409,7 +406,7 @@
               </label>
               <v-text-field
                 v-model="quickLogData.name"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., Morning Run, Upper Body, etc."
                 hide-details
@@ -425,7 +422,7 @@
               <v-text-field
                 v-model.number="quickLogData.totalTime"
                 type="number"
-                variant="outlined"
+                
                 density="compact"
                 placeholder="e.g., 30"
                 hide-details
@@ -433,17 +430,17 @@
               />
             </div>
 
-            <!-- Notes -->
+            <!-- Quick Entry -->
             <div class="mb-1">
               <label class="text-caption font-weight-bold d-block" >
-                Notes
+                Quick Entry
               </label>
               <v-textarea
                 v-model="quickLogData.notes"
-                variant="outlined"
+                
                 density="compact"
                 rows="3"
-                placeholder="How did it feel? Any highlights?"
+                placeholder="Enter your workout text here, along with any notes. Or pick a WOD or Movement below."
                 hide-details
               />
             </div>
@@ -459,7 +456,7 @@
                 item-title="displayName"
                 return-object
                 :loading="loadingMovements || loadingWods"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -501,7 +498,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.sets"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -512,7 +509,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.reps"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -523,7 +520,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.weight"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -535,7 +532,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.time"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -546,7 +543,7 @@
                   <v-text-field
                     v-model.number="quickLogData.movement.distance"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -557,7 +554,7 @@
                   <label class="text-caption">Notes</label>
                   <v-textarea
                     v-model="quickLogData.movement.notes"
-                    variant="outlined"
+                    
                     density="compact"
                     rows="2"
                     hide-details
@@ -571,7 +568,7 @@
                   <label class="text-caption">Score Type (from WOD)</label>
                   <v-text-field
                     v-model="quickLogData.wod.scoreType"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     readonly
@@ -585,7 +582,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeHours"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -597,7 +594,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeMinutes"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -609,7 +606,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.timeSecondsInput"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -627,7 +624,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.rounds"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -639,7 +636,7 @@
                     <v-text-field
                       v-model.number="quickLogData.wod.reps"
                       type="number"
-                      variant="outlined"
+                      
                       density="compact"
                       hide-details
                       min="0"
@@ -654,7 +651,7 @@
                   <v-text-field
                     v-model.number="quickLogData.wod.weight"
                     type="number"
-                    variant="outlined"
+                    
                     density="compact"
                     hide-details
                     min="0"
@@ -668,7 +665,7 @@
                   <label class="text-caption">Notes</label>
                   <v-textarea
                     v-model="quickLogData.wod.notes"
-                    variant="outlined"
+                    
                     density="compact"
                     rows="2"
                     hide-details
@@ -715,6 +712,13 @@
       </v-card>
     </v-dialog>
 
+    <!-- Date Workout Detail Dialog -->
+    <DateWorkoutDetailDialog
+      v-model="showDateDialog"
+      :date="selectedWeekDate"
+      :preloaded-workouts="userWorkouts"
+    />
+
     </div>
   </pull-to-refresh>
 </template>
@@ -724,18 +728,26 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import PullToRefresh from '@/components/PullToRefresh.vue'
+import DateWorkoutDetailDialog from '@/components/DateWorkoutDetailDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 
 const loading = ref(false)
 const userWorkouts = ref([])
 const expandedWorkouts = ref(new Set())
 const showRecentWorkouts = ref(false) // Collapsed by default
 const activeUsersStats = ref([])
+
+// Date detail dialog state
+const showDateDialog = ref(false)
+const selectedWeekDate = ref(null)
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -1031,30 +1043,24 @@ async function handleRefresh(done) {
   }
 }
 
-// Format date for display
+// Format date for display using user's timezone
 function formatDate(dateString) {
-  // Parse as local date to avoid timezone conversion issues
-  // Extract YYYY-MM-DD from the date string
+  const tz = settingsStore.timezone
   const datePart = dateString.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  const date = new Date(year, month - 1, day) // Month is 0-indexed
 
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  // Get today and yesterday in user's timezone
+  const todayStr = getTodayInTimezone(tz)
+  const todayDate = new Date(todayStr)
+  const yesterdayDate = new Date(todayDate)
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
 
-  // Reset time parts for comparison
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
-
-  if (dateOnly.getTime() === todayOnly.getTime()) {
+  if (datePart === todayStr) {
     return 'Today'
-  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+  } else if (datePart === yesterdayStr) {
     return 'Yesterday'
   } else {
-    const options = { weekday: 'short', month: 'short', day: 'numeric' }
-    return date.toLocaleDateString('en-US', options)
+    return formatDateInTimezone(dateString, tz, 'EEE, MMM d')
   }
 }
 
@@ -1095,6 +1101,14 @@ function toggleWorkoutExpand(workoutId) {
   }
   // Force reactivity update for Set
   expandedWorkouts.value = new Set(expandedWorkouts.value)
+}
+
+// Handle clicking on a week day to show workout details
+function handleWeekDayClick(day) {
+  // Parse the date string (YYYY-MM-DD) into a Date object
+  const [year, month, dayNum] = day.date.split('-').map(Number)
+  selectedWeekDate.value = new Date(year, month - 1, dayNum)
+  showDateDialog.value = true
 }
 
 // Update Quick Log name when date changes
@@ -1294,4 +1308,40 @@ onMounted(() => {
 
 <style scoped>
 /* Dashboard specific styles */
+
+/* Quick action buttons - distinct background that works in all themes */
+.quick-action-btn {
+  background-color: rgb(var(--v-theme-primary)) !important;
+  color: white !important;
+  height: 56px !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.quick-action-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.quick-action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+.quick-action-btn .v-icon {
+  color: white !important;
+}
+
+/* Week day avatar hover effect */
+.week-day-avatar {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.week-day-avatar:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
 </style>

@@ -180,10 +180,10 @@ func TestAuth_WrongSecret(t *testing.T) {
 
 func TestGetUserID(t *testing.T) {
 	tests := []struct {
-		name     string
-		ctx      context.Context
-		wantID   int64
-		wantOK   bool
+		name   string
+		ctx    context.Context
+		wantID int64
+		wantOK bool
 	}{
 		{
 			name:   "valid userID in context",

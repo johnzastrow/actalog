@@ -35,19 +35,16 @@ func (r *AuditLogRepository) Create(log *domain.AuditLog) error {
 	case "sqlite3", "mysql":
 		query = rebindQuery(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`)
-		err = r.db.QueryRow(query, log.UserID, log.TargetUserID, log.EventType, log.IPAddress, log.UserAgent, log.Details, log.CreatedAt).Scan(&log.ID)
-		if err != nil {
-			// For SQLite/MySQL, INSERT doesn't return ID directly, need to get last insert id
-			result, execErr := r.db.Exec(query, log.UserID, log.TargetUserID, log.EventType, log.IPAddress, log.UserAgent, log.Details, log.CreatedAt)
-			if execErr != nil {
-				return fmt.Errorf("failed to create audit log: %w", execErr)
-			}
-			id, idErr := result.LastInsertId()
-			if idErr != nil {
-				return fmt.Errorf("failed to get audit log ID: %w", idErr)
-			}
-			log.ID = id
+		// SQLite/MySQL don't support RETURNING, so use Exec and get LastInsertId
+		result, execErr := r.db.Exec(query, log.UserID, log.TargetUserID, log.EventType, log.IPAddress, log.UserAgent, log.Details, log.CreatedAt)
+		if execErr != nil {
+			return fmt.Errorf("failed to create audit log: %w", execErr)
 		}
+		id, idErr := result.LastInsertId()
+		if idErr != nil {
+			return fmt.Errorf("failed to get audit log ID: %w", idErr)
+		}
+		log.ID = id
 
 	case "postgres":
 		query = rebindQuery(`INSERT INTO audit_logs (user_id, target_user_id, event_type, ip_address, user_agent, details, created_at)

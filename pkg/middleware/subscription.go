@@ -21,6 +21,7 @@ type SubscriptionService interface {
 
 // RequireActiveSubscription enforces read-only mode when subscription is expired
 // This middleware should be applied AFTER Auth middleware
+// Admin users bypass subscription checks entirely
 func RequireActiveSubscription(subscriptionService SubscriptionService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +29,13 @@ func RequireActiveSubscription(subscriptionService SubscriptionService) func(htt
 			userID, ok := GetUserID(r.Context())
 			if !ok {
 				http.Error(w, `{"error":"Unauthorized: no user context found"}`, http.StatusUnauthorized)
+				return
+			}
+
+			// Admin users bypass subscription checks entirely
+			role, _ := GetUserRole(r.Context())
+			if role == "admin" {
+				next.ServeHTTP(w, r)
 				return
 			}
 

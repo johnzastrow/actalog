@@ -7,6 +7,466 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Workout Template Instructions Field
+
+- **Instructions Field for Template Movements**
+  - New `instructions` column on `workout_template_movements` table
+  - Supports markdown-formatted coaching cues, setup notes, and technique reminders
+  - Optional field - movements work without instructions
+  - Preserved through full CRUD lifecycle
+
+- **Instructions Field for Template WODs**
+  - New `instructions` column on `workout_template_wods` table
+  - Allows WOD-specific scaling options, standards, and modifications
+  - Consistent behavior with movement instructions
+
+- **Frontend Updates**
+  - Instructions textarea in `WorkoutTemplateEditView.vue` for both movements and WODs
+  - Instructions display in `WorkoutTemplateDetailDialog.vue` with markdown rendering
+  - Collapsible sections for cleaner UI when instructions are present
+
+- **Backend Updates**
+  - Domain models updated with Instructions field
+  - Repository queries updated to include instructions in all operations
+  - Handler validation for instructions field
+
+- **Comprehensive Test Coverage**
+  - Backend unit tests for service and handler layers
+  - Frontend unit tests in `WorkoutTemplateEditView.test.js` (573 lines)
+  - Integration tests in `workout_template_test.go` covering:
+    - Full CRUD lifecycle for instructions
+    - Special characters (markdown, unicode, HTML-like)
+    - Multiple movements/WODs with different instructions
+    - Optional field behavior (empty/null handling)
+
+### Fixed
+
+- **Repository Query Bug** - Fixed `GetByIDWithDetails` in `workout_repository.go` to include `instructions` column in SELECT queries for both movements and WODs
+
+## [0.24.0-beta] - 2026-01-14
+
+### Added - Data Quality & Duplicate Detection System
+
+- **Admin Data Quality Dashboard**
+  - New `AdminDataQualityView.vue` with 3 tabs (Overview, Duplicates, Data Issues)
+  - Full database scan with summary cards for duplicates and issues
+  - Duplicates by entity type breakdown with clickable View buttons
+  - Data quality checks display with icons, descriptions, and counts
+  - Zero-state display with success checkmarks when no issues found
+
+- **Duplicate Detection Engine**
+  - Scan 5 entity types: movements, WODs, user_workouts, users, workouts
+  - Case-insensitive name matching for movements, WODs, workouts
+  - Case-insensitive email matching for users
+  - Composite key matching for user_workouts (user_id + date + name)
+  - Shows duplicate group count and record count per entity type
+  - FK reference counts displayed for informed merge decisions
+
+- **Duplicate Merge Functionality**
+  - Preview merge operation showing FK impact before execution
+  - Safe merge with FK updates in database transaction
+  - Automatic child record handling (movements/WODs from duplicates)
+  - Audit logging of all merge operations (`duplicate_merge` event type)
+  - Per-entity type merge with keep/delete ID selection
+
+- **Data Quality Issue Detection**
+  - 4 quality check types with severity levels:
+    - Orphaned FK references (error) - FK pointing to deleted records
+    - Empty required fields (error/warning) - Missing user names, movement names, WOD names
+    - Future workout dates (warning) - Workouts scheduled in the future
+    - Invalid email formats (warning) - Malformed email addresses
+  - Filter chips for issue type filtering in Data Issues tab
+  - Clickable cards to navigate from Overview to filtered issue lists
+
+- **API Endpoints**
+  - `GET /api/admin/data-quality/duplicates` - Scan all entities
+  - `GET /api/admin/data-quality/duplicates/summary` - Quick summary
+  - `GET /api/admin/data-quality/duplicates/{entity}` - Scan specific entity
+  - `POST /api/admin/data-quality/duplicates/merge/preview` - Preview merge
+  - `POST /api/admin/data-quality/duplicates/merge/confirm` - Execute merge
+  - `GET /api/admin/data-quality/issues` - Scan for quality issues
+
+- **Demo Mode Configuration**
+  - Added DEMO MODE section to `.env.example`
+  - Documented implemented vs planned demo features
+  - Current workaround instructions for basic demo setup
+  - Planned settings: DEMO_MODE, DEMO_USERS, DEMO_RESET_ON_STARTUP, etc.
+
+### Added - Audit Logging Enhancements (2026-01-13)
+
+- **Password Change Audit Logging**
+  - New `password_changed` event logged when users change their password
+  - Captures user email in event details
+  - Works for both browser and API password changes
+
+- **Password Reset Audit Logging**
+  - New `password_reset` event logged when password is reset via token
+  - Tracks which user completed the password reset
+
+- **User Deletion Audit Logging Fix**
+  - Fixed `user_deleted` event to properly log admin deletions
+  - Stores target user info (id, email, name) in details JSON
+  - Handles FK constraint by using nil target_user_id (user already deleted)
+
+- **Duplicate Audit Log Bug Fix**
+  - Fixed bug where SQLite/MySQL audit logs were being inserted twice
+  - Repository Create() was calling both QueryRow and Exec for same INSERT
+  - Now correctly uses Exec with LastInsertId for non-RETURNING databases
+
+### Added - Admin Metrics Dashboard (2026-01-13)
+
+- **System Metrics Dashboard**
+  - New `GET /api/admin/metrics` endpoint returning all dashboard metrics
+  - Real-time statistics for admin users
+  - Single API call for efficient frontend consumption
+
+- **User Statistics**
+  - Total users count
+  - Active users this month (users who logged workouts)
+  - New users this month
+  - Disabled users count
+
+- **Workout Statistics**
+  - Total workouts logged across all users
+  - Workouts logged this month
+  - Average workouts per user
+
+- **Content Statistics**
+  - Total movements (standard + user-created)
+  - Total WODs (standard + user-created)
+  - Total workout templates (standard + user-created)
+  - Breakdown of user-created vs standard content
+
+- **Subscription Statistics**
+  - Active subscriptions count
+  - Expiring soon (within 7 days)
+  - Expired subscriptions count
+
+- **System Health**
+  - Recent audit events (24h)
+  - Email success rate
+  - Total emails sent
+  - Failed emails count
+
+- **Workout Trends**
+  - 30-day workout activity chart
+  - Daily workout counts with Chart.js visualization
+
+- **Frontend Components**
+  - `StatCard.vue` - Reusable stat card with icon, value, label, subtitle
+  - `WorkoutTrendsChart.vue` - Bar chart for workout trends
+  - `AdminMetricsDashboardView.vue` - Main dashboard view
+  - Updated `AdminView.vue` with System Metrics card
+
+- **Backend Infrastructure**
+  - Cross-database date helpers for SQLite/PostgreSQL/MySQL
+  - New repository methods: `CountNewThisMonth()`, `CountDisabled()`, `CountActive()`, `CountExpired()`, `CountExpiringSoon()`, `GetWorkoutTrends()`
+  - `AdminMetricsService` aggregating all metrics
+  - `AdminMetricsHandler` for HTTP endpoint
+
+### Added - User Import/Export System (2026-01-13)
+
+- **Bulk User Import from CSV**
+  - New `POST /api/admin/user-management/import/preview` endpoint for CSV validation
+  - New `POST /api/admin/user-management/import/confirm` endpoint to execute import
+  - Two-phase import: preview with validation → confirm to create users
+  - CSV format: `email,name,password` columns required
+  - Duplicate email detection with skip option
+  - Password validation (minimum 8 characters)
+  - All imported users get role `user` and permanent free subscription
+  - Passwords hashed with bcrypt (cost 12)
+
+- **User Export to CSV**
+  - New `GET /api/admin/user-management/export` endpoint
+  - Downloads CSV with all user emails and names
+  - Passwords NOT included for security
+  - Can be used as template for bulk imports
+
+- **Batch Password Reset**
+  - New `GET /api/admin/user-management/filter` endpoint for filtered user listing
+  - New `POST /api/admin/user-management/batch-password-reset` endpoint
+  - Filter users by name/email search and creation date range
+  - Select multiple users and send password reset emails in bulk
+  - Uses existing password reset token system (32-byte tokens, 1-hour expiry)
+  - Maximum 100 users per batch for safety
+
+- **Frontend Components**
+  - `AdminUserImportExportView.vue` - Tabbed interface for import/export/reset
+  - Drag-and-drop CSV upload zone
+  - Import preview table with validation status per row
+  - User selection table with filters and pagination
+  - Updated `AdminView.vue` with User Import/Export navigation card
+  - New route `/admin/users/import-export`
+
+- **Backend Infrastructure**
+  - `UserListFilter` type in domain layer for flexible querying
+  - `ListWithFilter()` and `CountWithFilter()` repository methods
+  - `UserImportService` with preview/confirm/export/filter/batch-reset methods
+  - `UserImportHandler` with multipart form handling (max 10MB)
+  - Automatic subscription creation for imported users
+
+- **Documentation**
+  - Screenshots for all tabs (import, export, password reset, preview)
+  - Updated admin README with User Import/Export section
+  - API endpoint documentation with examples
+
+## [0.22.0-beta] - 2026-01-09
+
+### Added - Benchmark API Endpoint
+
+- **Comprehensive Benchmark Endpoint**
+  - New `POST /api/benchmark` endpoint for API performance testing
+  - Exercises database, serialization, and business logic operations
+  - Uses isolated `benchmark_data` table (no production data affected)
+  - Auto-cleanup of benchmark data after each run
+
+- **Database Benchmarks** (9 operations)
+  - Single insert, bulk insert (100 records)
+  - Select by ID, select by key (index lookup)
+  - List with pagination, filtered queries
+  - Update and delete operations
+  - User-scoped cleanup
+
+- **Serialization Benchmarks** (4 operations)
+  - JSON marshal/unmarshal for small payloads (1 object)
+  - JSON marshal/unmarshal for large payloads (100 objects)
+
+- **Business Logic Benchmarks** (5 operations)
+  - 1RM calculations using prmath package (1000 iterations)
+  - Intensity calculations (1000 iterations)
+  - Input validation (100 iterations)
+  - String operations (1000 iterations)
+  - Date operations with timezone handling (1000 iterations)
+
+- **Concurrent Benchmarks** (3 operations, optional)
+  - Parallel reads (10 goroutines)
+  - Parallel writes (5 goroutines)
+  - Mixed read/write operations (10 goroutines)
+  - Enable with `?concurrent=true` query parameter
+
+- **Configurable Record Count**
+  - New `records` query parameter for `/api/benchmark` endpoint
+  - Default: 1,000 records, Maximum: 500,000 records
+  - Example: `POST /api/benchmark?records=10000`
+  - Scales database operations to stress-test the system
+
+- **Complex Benchmark Data**
+  - Large text fields (5-10KB random text with paragraphs)
+  - Nested JSON blobs (5-level deep structures with arrays)
+  - UUID test keys for uniqueness
+  - Random numeric values (floats, integers, booleans)
+  - Realistic data to push serialization and storage
+
+- **Supporting Endpoints**
+  - `GET /api/benchmark/status` - Quick status check
+  - `DELETE /api/admin/benchmark/data` - Admin cleanup of all benchmark data
+
+### Added - PWA 1.2.0 Features
+
+- **Improved Update Flow**
+  - Changed from `autoUpdate` to `prompt` registerType
+  - User-controlled updates via UpdatePrompt component
+  - Better state management in PWA store
+
+- **PWA Assets Generator**
+  - New `pwa-assets.config.js` for automatic icon generation
+  - Generate all icons from single source image
+  - New npm script: `npm run generate-pwa-icons`
+
+- **Enhanced Caching**
+  - Added caching for local fonts (1 year expiration)
+  - Added caching for uploaded images (7 days, StaleWhileRevalidate)
+  - Extended glob patterns for font files (woff, ttf)
+
+### Changed
+
+- **Database Migration 0.22.0**
+  - Added `benchmark_data` table for safe read/write testing
+  - Indexes on `test_key` and `created_by` columns
+  - Foreign key to users table with CASCADE delete
+
+- **Server Timeout Defaults**
+  - Updated default SERVER_READ_TIMEOUT from 15s to 30s
+  - Updated default SERVER_WRITE_TIMEOUT from 15s to 60s
+  - Supports long-running benchmark API requests without EOF errors
+
+### Fixed
+
+- **EOF Errors on Long-Running Benchmark Requests**
+  - Fixed HTTP client receiving EOF when benchmark takes >15 seconds
+  - Root cause: SERVER_WRITE_TIMEOUT was set too low for large record counts
+  - Added explicit Content-Length header to avoid chunked encoding issues
+  - For 100k+ records, recommend SERVER_WRITE_TIMEOUT=120s or higher
+
+## [0.21.0-beta] - 2026-01-09
+
+### Added - Frontend Testing Framework
+
+- **Vitest Testing Setup**
+  - Installed Vitest with Vue Test Utils, jsdom, and v8 coverage
+  - Created `vitest.config.js` with Vue/Vuetify support
+  - Added test setup file with jsdom mocks (ResizeObserver, matchMedia, IntersectionObserver)
+  - New npm scripts: `test`, `test:run`, `test:coverage`
+
+- **Example Tests**
+  - `src/utils/timezone.test.js` - 20 tests for timezone utilities
+  - `src/components/UserAvatar.test.js` - 11 tests for component rendering
+
+### Fixed - CI/CD and Code Quality
+
+- **Linting Issues Resolved**
+  - Fixed gofmt formatting across all Go files
+  - Updated `.golangci.yml` with relaxed thresholds for complex query builders
+  - Added `font_family` column to base database schema for all drivers
+
+### Updated - Dependencies
+
+- **Go Dependencies**
+  - `github.com/jackc/pgx/v5` 5.7.4 → 5.8.0
+  - `github.com/mattn/go-sqlite3` 1.14.32 → 1.14.33
+
+- **Frontend Dependencies**
+  - `vuetify` 3.10.11 → 3.11.6
+  - `eslint-plugin-vue` 9.33.0 → 10.6.2
+  - `vite-plugin-pwa` 0.21.2 → 1.2.0
+  - Updated dev-dependencies group (4 packages)
+
+## [0.20.0-beta] - 2026-01-08
+
+### Changed - UI Visual Refresh
+
+- **Form Input Style Update**
+  - Changed default form input variant from `outlined` to `solo` (filled background, no border)
+  - Cleaner, more modern appearance for text fields, selects, textareas, autocomplete, and combobox
+  - Updated 43 Vue files to remove explicit `variant="outlined"` attributes
+
+- **Card Border Removal**
+  - Removed global card borders for a cleaner look
+  - Cards now rely on elevation/shadow and background contrast
+  - Removed inline border styles from all components
+
+### Added - Myst Grayscale Theme
+
+- **New Theme: Myst**
+  - Elegant grayscale theme with light-gray background
+  - Dark text on light backgrounds for readability
+  - Inverted buttons (dark buttons with white text)
+  - Professional, colorless aesthetic
+  - Added to theme selector with fog icon
+
+## [0.19.0-beta] - 2026-01-07
+
+### Added - User-Customizable Fonts
+
+- **10 Font Options for User Preference**
+  - System Default (device's native font stack)
+  - Inter, Roboto, Lato, Fira Sans (modern UI fonts)
+  - Lexend (optimized for reading fluency)
+  - OpenDyslexic, Atkinson Hyperlegible (accessibility fonts)
+  - Source Serif Pro (classic serif)
+  - JetBrains Mono (developer monospace)
+
+- **Self-Hosted Web Fonts**
+  - All fonts bundled as woff2 files in `web/public/fonts/`
+  - No external CDN dependencies
+  - All fonts licensed under SIL OFL 1.1 or Apache 2.0
+
+- **Backend Integration**
+  - New `font_family` field in user_settings domain model
+  - Database migration v0.21.0 adds font_family column
+  - Syncs font preference across devices
+
+- **Frontend Implementation**
+  - New `font.js` Pinia store for font state management
+  - CSS variable `--app-font-family` for dynamic switching
+  - Font selector UI in Settings view
+  - localStorage caching for instant load on return visits
+  - Vuetify component overrides for consistent font application
+
+### Added - Markdown Support for Descriptions
+
+- **Description Fields Support Markdown Formatting**
+  - Movements, WODs, and workout templates now render Markdown
+  - Added "Format text using Markdown" hint to all description textareas
+  - MovementDetailView updated to use MarkdownRenderer component
+
+### Added - Admin Notification System for User Events
+
+- **Email Notifications for Administrators**
+  - Notify admins when users are created, modified, or deleted
+  - Events: registration, profile updates, role changes, disable/enable/unlock/delete
+  - Per-admin opt-out setting in user_settings (`admin_user_event_notifications`)
+  - Email includes before/after values for changes
+  - Actor (admin who performed action) excluded from notifications
+
+- **In-App Notifications for Administrators**
+  - Real-time in-app notifications for all admin user events
+  - Notification types: `admin_user_created`, `admin_user_updated`, `admin_user_role_changed`, etc.
+  - Links directly to user management in admin panel
+  - Notifications sent to all admins except the actor
+
+- **New Service: AdminNotificationService**
+  - Centralized admin notification logic
+  - Async email sending (non-blocking)
+  - Graceful degradation when email disabled
+  - Files: `internal/service/admin_notification_service.go`
+
+- **Database Migration v0.20.0**
+  - Added `admin_user_event_notifications` column to `user_settings` table
+
+### Added - Expiring/Expired Subscription Management
+
+- **Admin Dashboard Subscription Views**
+  - List subscriptions expiring within N days (7, 14, 30, 60, 90)
+  - List all expired (overdue) subscriptions
+  - Separate views for user and organization subscriptions
+
+- **New API Endpoints**
+  - `GET /api/admin/subscriptions/users/expiring?days=N` - Expiring user subscriptions
+  - `GET /api/admin/subscriptions/users/expired` - Expired user subscriptions
+  - `GET /api/admin/subscriptions/organizations/expiring?days=N` - Expiring org subscriptions
+  - `GET /api/admin/subscriptions/organizations/expired` - Expired org subscriptions
+
+- **Repository Methods**
+  - Added `ListExpiring(days int)` and `ListExpired()` to both subscription repositories
+  - Multi-database support (SQLite, PostgreSQL, MySQL) with database-native date arithmetic
+
+### Added - User Timezone Support
+
+- **Per-User Timezone Settings**
+  - Users can set their preferred timezone in settings
+  - Dates displayed in user's local timezone throughout the application
+  - Database migration v0.19.0 adds `timezone` column to `user_settings`
+
+- **Frontend Integration**
+  - Timezone selector in Settings view
+  - Utility functions for timezone-aware date formatting
+  - Pinia store for timezone state management
+
+### Fixed - PostgreSQL Compatibility
+
+- **GetPersonalRecords Query Fix**
+  - Added aggregate functions (MAX) to all non-grouped SELECT columns
+  - Fixes PostgreSQL strict GROUP BY enforcement error
+  - Scan workout_date as string and parse to time.Time (MAX returns string in SQLite)
+  - All databases (SQLite, PostgreSQL, MySQL) now work correctly
+
+- **Base Schema Sync**
+  - Added `admin_user_event_notifications` column to base schema for all database types
+  - Ensures fresh database installations have all columns
+
+### Fixed - Test Suite Improvements
+
+- **Test Coverage for Subscription Features**
+  - Repository tests for `ListExpiring` and `ListExpired` methods
+  - Service tests for all 4 new subscription service methods
+  - Handler tests with mock implementations
+
+- **Pre-existing Test Fixes**
+  - Fixed backup handler test case sensitivity ("Filename" → "filename")
+  - Updated WOD service test for removed source validation constraint
+  - Integration test now outputs response body on failure for debugging
+
 ### Added - Merge/Upsert for Database Restore and Import Duplicate Handling
 
 - **Database Restore Modes**
@@ -143,6 +603,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Organization operations logged (from v0.14.0)
 - ✅ Subscription operations logged (from v0.14.0)
 - ✅ User associations logged (from v0.14.0)
+
+### Added - Comprehensive Test Coverage Improvements
+
+- **Service Layer Test Coverage: 81.6% Overall**
+  - 13 services now at 100% coverage
+  - Added comprehensive backup_service tests (10 test functions)
+  - Added wodify_import_service tests with duplicate handling
+  - Fixed mock initialization patterns across test files
+  - Added error injection support to mockUserRepo
+
+- **Backup Service Tests** (`backup_service_test.go`)
+  - `TestBackupService_CreateBackup` - Full backup creation with ZIP archive
+  - `TestBackupService_CreateBackup_UserNotFound` - Error handling for missing user
+  - `TestBackupService_CreateBackup_WithUploads` - Backup with file attachments
+  - `TestBackupService_RestoreBackup` - Replace mode restoration
+  - `TestBackupService_RestoreBackup_MergeMode` - Merge mode with ID remapping
+  - `TestBackupService_RestoreBackup_SkipMode` - Skip mode preserving existing
+  - `TestBackupService_CreateSQLiteDump` - SQLite dump generation
+  - `TestBackupService_ExportAllTables` - JSON export of all tables
+  - Added `setupFullTestDB` helper with complete 20-table schema
+
+- **Test Infrastructure Improvements** (`test_helpers.go`)
+  - Added `getByIDError` field to mockUserRepo for error injection
+  - Fixed mock constructor patterns for proper map initialization
+  - All mocks now use `newMockX()` constructor functions
+
+- **Files Modified:**
+  - `internal/service/test_helpers.go` - Enhanced mockUserRepo with error injection
+  - `internal/service/backup_service_test.go` - 10 new test functions
+  - `internal/service/wodify_import_service_test.go` - Fixed mock initialization
+  - `docs/TESTING.md` - Complete rewrite with current coverage stats
 
 ---
 

@@ -3,178 +3,111 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/repository"
 )
 
 func TestNewPRHandler(t *testing.T) {
-	// Test constructor with nil dependencies
-	handler := NewPRHandler(nil, nil)
-
+	handler := NewPRHandler(nil, createTestLogger())
 	if handler == nil {
-		t.Error("NewPRHandler() should not return nil")
-	}
-
-	if handler.db != nil {
-		t.Error("db should be nil when passed nil")
-	}
-
-	if handler.logger != nil {
-		t.Error("logger should be nil when passed nil")
+		t.Fatal("NewPRHandler() should not return nil")
 	}
 }
 
-func TestPersonalRecord_Struct(t *testing.T) {
-	// Test with all fields
-	weight := 225.0
-	sets := 5
-	reps := 5
-	timeVal := 300
-	distance := 1000.0
-	calc1RM := 253.0
-	formula := "Epley"
-	scoreVal := "10:30"
-	division := "Rx"
-	wodType := "AMRAP"
-	wodScoreType := "Rounds+Reps"
-	movementType := "weightlifting"
-
-	pr := PersonalRecord{
-		Type:          "movement",
-		ID:            1,
-		UserWorkoutID: 100,
-		WorkoutDate:   "2024-01-15",
-		Name:          "Back Squat",
-		MovementType:  &movementType,
-		Weight:        &weight,
-		Sets:          &sets,
-		Reps:          &reps,
-		Time:          &timeVal,
-		Distance:      &distance,
-		Calculated1RM: &calc1RM,
-		Formula:       &formula,
-		ScoreValue:    &scoreVal,
-		Division:      &division,
-		WODType:       &wodType,
-		WODScoreType:  &wodScoreType,
+// createTestPRHandler creates a PR handler with test database and sample data
+func createTestPRHandler(t *testing.T) (*PRHandler, func()) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
 	}
 
-	if pr.Type != "movement" {
-		t.Errorf("Type = %q, want %q", pr.Type, "movement")
+	// Create test user
+	userRepo := repository.NewSQLiteUserRepository(db)
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "prtest@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "user",
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
-	if pr.ID != 1 {
-		t.Errorf("ID = %d, want 1", pr.ID)
+	if err := userRepo.Create(testUser); err != nil {
+		cleanup()
+		t.Fatalf("Failed to create test user: %v", err)
 	}
-	if pr.UserWorkoutID != 100 {
-		t.Errorf("UserWorkoutID = %d, want 100", pr.UserWorkoutID)
+
+	// Create a movement
+	_, err = db.Exec(`
+		INSERT INTO movements (name, type, description, created_at, updated_at)
+		VALUES ('Back Squat', 'weightlifting', 'Barbell back squat', ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create movement: %v", err)
 	}
-	if pr.WorkoutDate != "2024-01-15" {
-		t.Errorf("WorkoutDate = %q, want %q", pr.WorkoutDate, "2024-01-15")
+
+	// Create a workout
+	_, err = db.Exec(`
+		INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
+		VALUES ('Test Workout', 'Test notes', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create workout: %v", err)
 	}
-	if pr.Name != "Back Squat" {
-		t.Errorf("Name = %q, want %q", pr.Name, "Back Squat")
+
+	// Create a user workout
+	_, err = db.Exec(`
+		INSERT INTO user_workouts (user_id, workout_id, workout_date, created_at, updated_at)
+		VALUES (1, 1, ?, ?, ?)
+	`, now.Format("2006-01-02"), now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create user workout: %v", err)
 	}
-	if pr.Weight == nil || *pr.Weight != 225.0 {
-		t.Errorf("Weight = %v, want 225.0", pr.Weight)
+
+	// Create a workout movement with PR
+	_, err = db.Exec(`
+		INSERT INTO workout_movements (workout_id, movement_id, sets, reps, weight, is_pr, order_index, created_at, updated_at)
+		VALUES (1, 1, 5, 5, 315.0, 1, 0, ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create workout movement: %v", err)
 	}
-	if pr.Calculated1RM == nil || *pr.Calculated1RM != 253.0 {
-		t.Errorf("Calculated1RM = %v, want 253.0", pr.Calculated1RM)
+
+	// Create a WOD
+	_, err = db.Exec(`
+		INSERT INTO wods (name, type, score_type, description, created_by, created_at, updated_at)
+		VALUES ('Fran', 'For Time', 'time', '21-15-9 Thrusters and Pull-ups', 1, ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create WOD: %v", err)
 	}
+
+	// Create a workout WOD with PR
+	_, err = db.Exec(`
+		INSERT INTO workout_wods (workout_id, wod_id, score_value, division, is_pr, order_index, created_at, updated_at)
+		VALUES (1, 1, '5:30', 'rx', 1, 0, ?, ?)
+	`, now, now)
+	if err != nil {
+		cleanup()
+		t.Fatalf("Failed to create workout WOD: %v", err)
+	}
+
+	handler := NewPRHandler(db, createTestLogger())
+	return handler, cleanup
 }
 
-func TestPersonalRecord_NilFields(t *testing.T) {
-	pr := PersonalRecord{
-		Type:          "wod",
-		ID:            1,
-		UserWorkoutID: 100,
-		WorkoutDate:   "2024-01-15",
-		Name:          "Fran",
-	}
-
-	if pr.Weight != nil {
-		t.Error("Weight should be nil")
-	}
-	if pr.Sets != nil {
-		t.Error("Sets should be nil")
-	}
-	if pr.Reps != nil {
-		t.Error("Reps should be nil")
-	}
-	if pr.MovementType != nil {
-		t.Error("MovementType should be nil")
-	}
-	if pr.Calculated1RM != nil {
-		t.Error("Calculated1RM should be nil")
-	}
-}
-
-func TestMovementPRSummary_Struct(t *testing.T) {
-	best1RM := 315.0
-	bestFormula := "Brzycki"
-	bestWeight := 275.0
-	bestSets := 3
-	bestReps := 5
-
-	summary := MovementPRSummary{
-		MovementID:   1,
-		MovementName: "Deadlift",
-		MovementType: "weightlifting",
-		PRCount:      12,
-		Best1RM:      &best1RM,
-		BestFormula:  &bestFormula,
-		BestWeight:   &bestWeight,
-		BestSets:     &bestSets,
-		BestReps:     &bestReps,
-		LastPRDate:   "2024-01-20",
-	}
-
-	if summary.MovementID != 1 {
-		t.Errorf("MovementID = %d, want 1", summary.MovementID)
-	}
-	if summary.MovementName != "Deadlift" {
-		t.Errorf("MovementName = %q, want %q", summary.MovementName, "Deadlift")
-	}
-	if summary.MovementType != "weightlifting" {
-		t.Errorf("MovementType = %q, want %q", summary.MovementType, "weightlifting")
-	}
-	if summary.PRCount != 12 {
-		t.Errorf("PRCount = %d, want 12", summary.PRCount)
-	}
-	if summary.Best1RM == nil || *summary.Best1RM != 315.0 {
-		t.Errorf("Best1RM = %v, want 315.0", summary.Best1RM)
-	}
-	if summary.BestFormula == nil || *summary.BestFormula != "Brzycki" {
-		t.Errorf("BestFormula = %v, want Brzycki", summary.BestFormula)
-	}
-	if summary.LastPRDate != "2024-01-20" {
-		t.Errorf("LastPRDate = %q, want %q", summary.LastPRDate, "2024-01-20")
-	}
-}
-
-func TestMovementPRSummary_NilFields(t *testing.T) {
-	summary := MovementPRSummary{
-		MovementID:   1,
-		MovementName: "Pull-ups",
-		MovementType: "gymnastics",
-		PRCount:      5,
-		LastPRDate:   "2024-01-15",
-	}
-
-	if summary.Best1RM != nil {
-		t.Error("Best1RM should be nil")
-	}
-	if summary.BestFormula != nil {
-		t.Error("BestFormula should be nil")
-	}
-	if summary.BestWeight != nil {
-		t.Error("BestWeight should be nil")
-	}
-	if summary.BestSets != nil {
-		t.Error("BestSets should be nil")
-	}
-	if summary.BestReps != nil {
-		t.Error("BestReps should be nil")
-	}
-}
+// Removed struct field assignment tests:
+// - TestPersonalRecord_Struct, TestPersonalRecord_NilFields
+// - TestMovementPRSummary_Struct, TestMovementPRSummary_NilFields
+// These tests verified Go struct assignment works, not business logic.
 
 func TestPRHandler_GetPersonalRecords_Unauthorized(t *testing.T) {
 	handler := &PRHandler{}
@@ -188,78 +121,6 @@ func TestPRHandler_GetPersonalRecords_Unauthorized(t *testing.T) {
 	assertBodyContains(t, rr, "Unauthorized")
 }
 
-func TestPRHandler_GetPersonalRecords_WithLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with valid limit parameter - will panic due to nil db
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=25", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPersonalRecords(rr, req)
-}
-
-func TestPRHandler_GetPersonalRecords_WithInvalidLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with invalid limit parameter - should use default
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=invalid", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPersonalRecords(rr, req)
-}
-
-func TestPRHandler_GetPersonalRecords_WithNegativeLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with negative limit - should use default
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=-5", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPersonalRecords(rr, req)
-}
-
-func TestPRHandler_GetPersonalRecords_WithHighLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with limit > 200 - should cap at 200
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=500", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPersonalRecords(rr, req)
-}
-
 func TestPRHandler_GetPRMovements_Unauthorized(t *testing.T) {
 	handler := &PRHandler{}
 
@@ -270,60 +131,6 @@ func TestPRHandler_GetPRMovements_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestPRHandler_GetPRMovements_WithLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with valid limit parameter
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=10", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPRMovements(rr, req)
-}
-
-func TestPRHandler_GetPRMovements_WithInvalidLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with invalid limit parameter
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=abc", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPRMovements(rr, req)
-}
-
-func TestPRHandler_GetPRMovements_WithHighLimitParam(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	// Test with limit > 100 - should cap at 100
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=500", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPRMovements(rr, req)
 }
 
 func TestPRHandler_ToggleMovementPR_Unauthorized(t *testing.T) {
@@ -391,110 +198,209 @@ func TestPRHandler_ToggleMovementPR_InvalidIDFormats(t *testing.T) {
 	}
 }
 
-func TestPRHandler_ToggleMovementPR_NilDB(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
+// Success path tests with real database
 
-	req := createAuthenticatedRequest(http.MethodPut, "/api/prs/toggle?id=1", "", 1, "test@example.com", "user")
+func TestPRHandler_GetPersonalRecords_Success(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs", "", 1, "prtest@example.com", "user")
 	rr := httptest.NewRecorder()
-
-	// This will panic due to nil db
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.ToggleMovementPR(rr, req)
-}
-
-func TestPRHandler_GetPersonalRecords_NilDB(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil db
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
 
 	handler.GetPersonalRecords(rr, req)
-}
 
-func TestPRHandler_GetPRMovements_NilDB(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "prs") {
+		t.Error("Response should contain 'prs' field")
 	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil db
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
-
-	handler.GetPRMovements(rr, req)
-}
-
-func TestPRHandler_ToggleMovementPR_ZeroID(t *testing.T) {
-	handler := &PRHandler{}
-
-	// Zero as ID should still parse but we can test it
-	req := createAuthenticatedRequest(http.MethodPut, "/api/prs/toggle?id=0", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// Will panic on nil db if ID parses successfully
-	defer func() {
-		if r := recover(); r == nil {
-			// If it doesn't panic, it should at least parse the ID
-			t.Log("ID=0 was parsed successfully (would hit DB check)")
-		}
-	}()
-
-	handler.ToggleMovementPR(rr, req)
-}
-
-func TestPRHandler_GetPersonalRecords_ZeroLimit(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
+	// Should have both movement and WOD PRs
+	if !strings.Contains(body, "Back Squat") {
+		t.Error("Response should contain the movement PR 'Back Squat'")
 	}
+	if !strings.Contains(body, "Fran") {
+		t.Error("Response should contain the WOD PR 'Fran'")
+	}
+	// Check for calculated 1RM
+	if !strings.Contains(body, "calculated_1rm") {
+		t.Error("Response should contain 'calculated_1rm' for weight-based PRs")
+	}
+}
 
-	// Zero limit should use default
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=0", "", 1, "test@example.com", "user")
+func TestPRHandler_GetPersonalRecords_WithLimit(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=1", "", 1, "prtest@example.com", "user")
 	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
 
 	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
 }
 
-func TestPRHandler_GetPRMovements_ZeroLimit(t *testing.T) {
-	handler := &PRHandler{
-		logger: createTestLogger(),
-	}
+func TestPRHandler_GetPersonalRecords_WithHighLimit(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
 
-	// Zero limit should use default
-	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=0", "", 1, "test@example.com", "user")
+	// Request with limit over max (200) - should be capped
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=500", "", 1, "prtest@example.com", "user")
 	rr := httptest.NewRecorder()
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil db")
-		}
-	}()
+	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestPRHandler_GetPersonalRecords_WithInvalidLimit(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	// Request with invalid limit (should use default)
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs?limit=abc", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestPRHandler_GetPRMovements_Success(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
 
 	handler.GetPRMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "movements") {
+		t.Error("Response should contain 'movements' field")
+	}
+	if !strings.Contains(body, "Back Squat") {
+		t.Error("Response should contain 'Back Squat' movement")
+	}
+	if !strings.Contains(body, "pr_count") {
+		t.Error("Response should contain 'pr_count' field")
+	}
+	if !strings.Contains(body, "best_1rm") {
+		t.Error("Response should contain 'best_1rm' field for weightlifting movements")
+	}
+}
+
+func TestPRHandler_GetPRMovements_WithLimit(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=5", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPRMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestPRHandler_GetPRMovements_WithHighLimit(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	// Request with limit over max (100) - should be capped
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs/movements?limit=500", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPRMovements(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestPRHandler_ToggleMovementPR_Success(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	// Toggle the PR for workout_movement id=1
+	req := createAuthenticatedRequest(http.MethodPut, "/api/prs/toggle?id=1", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ToggleMovementPR(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertContentType(t, rr, "application/json")
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "is_pr") {
+		t.Error("Response should contain 'is_pr' field")
+	}
+	if !strings.Contains(body, "message") {
+		t.Error("Response should contain 'message' field")
+	}
+}
+
+func TestPRHandler_ToggleMovementPR_NotFound(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	// Try to toggle a non-existent movement
+	req := createAuthenticatedRequest(http.MethodPut, "/api/prs/toggle?id=9999", "", 1, "prtest@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ToggleMovementPR(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestPRHandler_ToggleMovementPR_WrongUser(t *testing.T) {
+	handler, cleanup := createTestPRHandler(t)
+	defer cleanup()
+
+	// Try to toggle with a different user (user_id=2 instead of 1)
+	req := createAuthenticatedRequest(http.MethodPut, "/api/prs/toggle?id=1", "", 2, "other@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ToggleMovementPR(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+	assertBodyContains(t, rr, "not found")
+}
+
+func TestPRHandler_GetPersonalRecords_EmptyResult(t *testing.T) {
+	db, cleanup, err := repository.SetupTestDB()
+	if err != nil {
+		t.Fatalf("Failed to setup test database: %v", err)
+	}
+	defer cleanup()
+
+	// Create user but no PRs
+	userRepo := repository.NewSQLiteUserRepository(db)
+	now := time.Now()
+	testUser := &domain.User{
+		Email:        "empty@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         "user",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := userRepo.Create(testUser); err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	handler := NewPRHandler(db, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/prs", "", 1, "empty@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetPersonalRecords(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	// Should return empty list
+	body := rr.Body.String()
+	if !strings.Contains(body, "prs") {
+		t.Error("Response should contain 'prs' field")
+	}
 }

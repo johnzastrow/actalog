@@ -249,3 +249,109 @@ func TestRequireActiveSubscription_SubscriptionStatusInContext(t *testing.T) {
 		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
 	}
 }
+
+func TestRequireActiveSubscription_AdminBypass(t *testing.T) {
+	// Admin users should bypass subscription checks entirely
+	// Even with expired/no subscription, admin write operations should succeed
+	expiresAt := time.Now().Add(-24 * time.Hour)
+	svc := &mockSubscriptionService{
+		accessResult: &domain.SubscriptionAccessResult{
+			HasAccess: false, // No access - but admin should bypass
+			Source:    "expired",
+			ExpiresAt: &expiresAt,
+		},
+	}
+
+	handlerCalled := false
+	handler := RequireActiveSubscription(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// All methods should be allowed for admin users, even write operations
+	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	for _, method := range methods {
+		t.Run("admin_"+method, func(t *testing.T) {
+			handlerCalled = false
+			req := httptest.NewRequest(method, "/test", nil)
+			// Add both user ID and admin role to context
+			ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+			ctx = context.WithValue(ctx, UserRoleKey, "admin")
+			req = req.WithContext(ctx)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusOK {
+				t.Errorf("Admin %s status = %d, want %d", method, rec.Code, http.StatusOK)
+			}
+			if !handlerCalled {
+				t.Errorf("Admin %s: handler should be called (admin bypasses subscription)", method)
+			}
+		})
+	}
+}
+
+func TestRequireActiveSubscription_NonAdminRoleStillRequiresSubscription(t *testing.T) {
+	// Non-admin users (role="user" or empty) should still require subscription
+	expiresAt := time.Now().Add(-24 * time.Hour)
+	svc := &mockSubscriptionService{
+		accessResult: &domain.SubscriptionAccessResult{
+			HasAccess: false,
+			Source:    "expired",
+			ExpiresAt: &expiresAt,
+		},
+	}
+
+	handlerCalled := false
+	handler := RequireActiveSubscription(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Test with role="user" - should NOT bypass
+	roles := []string{"user", "", "member", "subscriber"}
+	for _, role := range roles {
+		t.Run("role_"+role+"_POST", func(t *testing.T) {
+			handlerCalled = false
+			req := httptest.NewRequest("POST", "/test", nil)
+			ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+			if role != "" {
+				ctx = context.WithValue(ctx, UserRoleKey, role)
+			}
+			req = req.WithContext(ctx)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			// Write operations should be blocked for non-admin expired subscriptions
+			if rec.Code != http.StatusPaymentRequired {
+				t.Errorf("Non-admin (role=%q) POST status = %d, want %d", role, rec.Code, http.StatusPaymentRequired)
+			}
+			if handlerCalled {
+				t.Errorf("Non-admin (role=%q): handler should NOT be called for write operation", role)
+			}
+		})
+
+		// Read operations should still be allowed
+		t.Run("role_"+role+"_GET", func(t *testing.T) {
+			handlerCalled = false
+			req := httptest.NewRequest("GET", "/test", nil)
+			ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+			if role != "" {
+				ctx = context.WithValue(ctx, UserRoleKey, role)
+			}
+			req = req.WithContext(ctx)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusOK {
+				t.Errorf("Non-admin (role=%q) GET status = %d, want %d", role, rec.Code, http.StatusOK)
+			}
+			if !handlerCalled {
+				t.Errorf("Non-admin (role=%q): handler should be called for read operation", role)
+			}
+		})
+	}
+}

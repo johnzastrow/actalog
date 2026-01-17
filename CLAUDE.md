@@ -9,7 +9,7 @@ ActaLog is a mobile-first CrossFit workout tracker built with:
 - **Frontend:** Vue.js 3, Vuetify 3, Pinia
 - **Architecture:** Clean Architecture with strict layer separation
 
-**Version:** 0.17.0-beta
+**Version:** 0.23.0-beta
 
 ## Quick Reference
 
@@ -25,11 +25,17 @@ make fmt            # Format code
 # Frontend (from web/)
 npm run dev         # Dev server on :3000
 npm run build       # Production build
+npm run test:run    # Run tests once
+npm run test:coverage # Tests with coverage
 npm run lint:fix    # Fix linting issues
 
 # Docker
-./docker/scripts/build.sh <tag>   # Build image
-./docker/scripts/push.sh <tag>    # Push to ghcr.io
+./docker/scripts/build.sh dev     # Build image with dev tag
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:<version>
+./docker/scripts/push.sh dev      # Push dev tag
+./docker/scripts/push.sh latest   # Push latest tag
+./docker/scripts/push.sh <version> # Push version tag (e.g., 0.24.0-beta)
 
 # Migrations
 make migrate-create name=add_feature
@@ -101,6 +107,94 @@ migrations/       # Database migrations
 - Single port :8080 serves both API and static frontend
 - No separate Node.js process
 - `cmd/actalog/main.go:418-436` handles static file serving
+
+## Feature Testing Workflow
+
+**Default: Test features using Docker with multiple database backends.**
+
+When testing new features, cycle through all supported databases to ensure compatibility:
+
+| Database | Connection |
+|----------|------------|
+| SQLite | Local file: `./data/actalog.db` |
+| MariaDB | `192.168.1.234:3306` (user: jcz) |
+| PostgreSQL | `192.168.1.28:5432` |
+
+**Email Testing (SMTP2GO):**
+| Setting | Value |
+|---------|-------|
+| SMTP Server | `mail.smtp2go.com` |
+| SMTP Port | `2525` |
+| SMTP User | `acta@northredoubt.com` |
+| SMTP Password | Set `$SMTP_PASSWORD` env var |
+
+**Docker Testing Commands:**
+```bash
+# Build Docker image
+./docker/scripts/build.sh dev
+
+# Tag and push to registry (always push to dev, latest, and version tags)
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:0.24.0-beta  # Use current version
+./docker/scripts/push.sh dev
+./docker/scripts/push.sh latest
+./docker/scripts/push.sh 0.24.0-beta  # Use current version
+
+# Test with SQLite (mount local data directory)
+docker run -p 8080:8080 -v $(pwd)/data:/app/data \
+  -e DB_DRIVER=sqlite3 -e DB_NAME=/app/data/actalog.db \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with MariaDB (use --network host for external DB access)
+docker run --network host \
+  -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with MariaDB + Email enabled
+docker run --network host \
+  -e DB_DRIVER=mysql -e DB_HOST=192.168.1.234 -e DB_PORT=3306 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  -e EMAIL_ENABLED=true -e EMAIL_FROM=acta@northredoubt.com \
+  -e SMTP_HOST=mail.smtp2go.com -e SMTP_PORT=2525 \
+  -e SMTP_USER=acta@northredoubt.com -e SMTP_PASSWORD=$SMTP_PASSWORD \
+  ghcr.io/johnzastrow/actalog:dev
+
+# Test with PostgreSQL (use --network host for external DB access)
+docker run --network host \
+  -e DB_DRIVER=postgres -e DB_HOST=192.168.1.28 -e DB_PORT=5432 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:dev
+```
+
+**When to build outside Docker:**
+- Debugging with IDE/debugger
+- Running unit tests (`make test`)
+- Quick iteration during development
+- When Docker overhead is unnecessary
+
+## Process & Port Management
+
+**Before starting any server, always check and clean up:**
+```bash
+# Check what's using port 8080
+lsof -i :8080 | grep LISTEN
+
+# Kill all actalog processes
+pkill -9 -f actalog
+
+# Kill Docker containers on port 8080
+docker ps --filter "publish=8080" -q | xargs -r docker stop
+
+# Full cleanup (processes + containers)
+pkill -9 -f actalog 2>/dev/null; docker stop $(docker ps -q --filter "publish=8080") 2>/dev/null; sleep 1
+```
+
+**Standard startup sequence:**
+1. Kill existing processes: `pkill -9 -f actalog`
+2. Verify port is free: `lsof -i :8080 | grep LISTEN` (should be empty)
+3. Start server
+4. Verify running: `pgrep -f actalog` or `docker ps`
 
 ## Code Style
 
@@ -219,6 +313,22 @@ go test -race ./...                         # Race detection
 ## TODO Management
 
 `docs/TODO.md` is the single source of truth. Use `[HIGH]`/`[MEDIUM]`/`[LOW]` markers for backlog. Keep only last 5 completed releases.
+
+## Documentation Updates
+
+**After implementing new features, update these documents:**
+
+1. **`docs/USER_PERMISSIONS.md`** - Update whenever:
+   - Adding new API endpoints
+   - Adding new UI screens/routes
+   - Changing permission requirements (auth, admin, subscription)
+   - Adding new user actions or capabilities
+
+2. **`docs/TODO.md`** - Mark completed items and add new tasks
+
+3. **`docs/CHANGELOG.md`** - Document user-facing changes for releases
+
+4. **`docs/DATABASE_SCHEMA.md`** - Update when adding/modifying tables
 
 ## Troubleshooting
 

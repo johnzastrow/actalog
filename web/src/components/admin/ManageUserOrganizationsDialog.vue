@@ -37,7 +37,7 @@
                 item-title="name"
                 item-value="id"
                 label="Select organization"
-                variant="outlined"
+                
                 density="compact"
                 :disabled="loading"
               >

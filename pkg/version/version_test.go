@@ -123,18 +123,4 @@ func TestVersionFormat(t *testing.T) {
 	}
 }
 
-func TestVersionConstants(t *testing.T) {
-	// Version constants should be reasonable values
-	if Major < 0 {
-		t.Errorf("Major = %d, should be non-negative", Major)
-	}
-	if Minor < 0 {
-		t.Errorf("Minor = %d, should be non-negative", Minor)
-	}
-	if Patch < 0 {
-		t.Errorf("Patch = %d, should be non-negative", Patch)
-	}
-	if Build < 0 {
-		t.Errorf("Build = %d, should be non-negative", Build)
-	}
-}
+// Removed: TestVersionConstants - tested that constants are non-negative, compiler verifies this

@@ -176,9 +176,9 @@ func TestWODRepository_GetByName(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		wodName  string
-		wantWOD  bool
+		name    string
+		wodName string
+		wantWOD bool
 	}{
 		{
 			name:    "existing WOD",
@@ -642,8 +642,8 @@ func TestWODRepository_List_WithFilters(t *testing.T) {
 		{
 			name: "combined filters",
 			filters: map[string]interface{}{
-				"source":      "CrossFit",
-				"score_type":  "Time",
+				"source":     "CrossFit",
+				"score_type": "Time",
 			},
 			wantCount: 2, // Fran and Murph
 		},

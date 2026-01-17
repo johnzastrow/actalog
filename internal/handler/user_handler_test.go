@@ -7,65 +7,16 @@ import (
 )
 
 func TestNewUserHandler(t *testing.T) {
-	// Test constructor with nil dependencies
-	handler := NewUserHandler(nil, nil)
-
+	handler := NewUserHandler(nil, createTestLogger())
 	if handler == nil {
-		t.Error("NewUserHandler() should not return nil")
-	}
-
-	if handler.userService != nil {
-		t.Error("userService should be nil when passed nil")
-	}
-
-	if handler.logger != nil {
-		t.Error("logger should be nil when passed nil")
+		t.Fatal("NewUserHandler() should not return nil")
 	}
 }
 
-func TestUpdateProfileRequest_Struct(t *testing.T) {
-	req := UpdateProfileRequest{
-		Name:     "Test User",
-		Email:    "test@example.com",
-		Birthday: "1990-05-15",
-	}
-
-	if req.Name != "Test User" {
-		t.Errorf("Name = %q, want %q", req.Name, "Test User")
-	}
-	if req.Email != "test@example.com" {
-		t.Errorf("Email = %q, want %q", req.Email, "test@example.com")
-	}
-	if req.Birthday != "1990-05-15" {
-		t.Errorf("Birthday = %q, want %q", req.Birthday, "1990-05-15")
-	}
-
-	// Test empty struct
-	req2 := UpdateProfileRequest{}
-	if req2.Name != "" || req2.Email != "" || req2.Birthday != "" {
-		t.Error("Empty UpdateProfileRequest should have all fields empty")
-	}
-}
-
-func TestProfileResponse_Struct(t *testing.T) {
-	user := map[string]interface{}{
-		"id":    1,
-		"email": "test@example.com",
-	}
-	resp := ProfileResponse{
-		User: user,
-	}
-
-	if resp.User == nil {
-		t.Error("User should not be nil")
-	}
-
-	// Test nil user
-	resp2 := ProfileResponse{User: nil}
-	if resp2.User != nil {
-		t.Error("User should be nil")
-	}
-}
+// Removed struct field assignment tests:
+// - TestUpdateProfileRequest_Struct
+// - TestProfileResponse_Struct
+// These tests verified Go struct assignment works, not business logic.
 
 func TestUserHandler_UpdateProfile_Unauthorized(t *testing.T) {
 	handler := &UserHandler{}
@@ -134,25 +85,6 @@ func TestUserHandler_UpdateProfile_InvalidBirthdayFormats(t *testing.T) {
 	}
 }
 
-func TestUserHandler_UpdateProfile_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Valid request with valid birthday but nil service
-	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "New Name"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.UpdateProfile(rr, req)
-}
-
 func TestUserHandler_GetProfile_Unauthorized(t *testing.T) {
 	handler := &UserHandler{}
 
@@ -163,24 +95,6 @@ func TestUserHandler_GetProfile_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestUserHandler_GetProfile_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.GetProfile(rr, req)
 }
 
 func TestUserHandler_UploadAvatar_Unauthorized(t *testing.T) {
@@ -217,24 +131,6 @@ func TestUserHandler_DeleteAvatar_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestUserHandler_DeleteAvatar_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.DeleteAvatar(rr, req)
 }
 
 func TestUserHandler_ChangePassword_Unauthorized(t *testing.T) {
@@ -323,25 +219,6 @@ func TestUserHandler_ChangePassword_PasswordExactly7Chars(t *testing.T) {
 	assertBodyContains(t, rr, "New password must be at least 8 characters")
 }
 
-func TestUserHandler_ChangePassword_NilService(t *testing.T) {
-	handler := &UserHandler{
-		logger: createTestLogger(),
-	}
-
-	// Valid request with 8-char password but nil service
-	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password", `{"old_password": "oldpassword", "new_password": "12345678"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil userService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userService")
-		}
-	}()
-
-	handler.ChangePassword(rr, req)
-}
-
 func TestUserHandler_ChangePassword_EmptyStrings(t *testing.T) {
 	handler := &UserHandler{}
 
@@ -353,4 +230,177 @@ func TestUserHandler_ChangePassword_EmptyStrings(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Both old_password and new_password are required")
+}
+
+func TestUserHandler_UploadAvatar_InvalidContentType(t *testing.T) {
+	handler := &UserHandler{
+		logger: createTestLogger(),
+	}
+
+	// Upload a non-image file (text file)
+	fileContent := []byte("This is not an image")
+	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "test.txt", "text/plain", fileContent, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UploadAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "File must be an image")
+}
+
+func TestUserHandler_UploadAvatar_ApplicationPDF(t *testing.T) {
+	handler := &UserHandler{
+		logger: createTestLogger(),
+	}
+
+	// Upload a PDF file (not an image)
+	fileContent := []byte("PDF content")
+	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "test.pdf", "application/pdf", fileContent, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UploadAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "File must be an image")
+}
+
+func TestUserHandler_UploadAvatar_WrongFieldName(t *testing.T) {
+	handler := &UserHandler{
+		logger: createTestLogger(),
+	}
+
+	// Upload with wrong field name (not "avatar")
+	fileContent := []byte{0x89, 0x50, 0x4E, 0x47}
+	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "wrong_field", "test.png", "image/png", fileContent, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UploadAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "No file provided")
+}
+
+// Removed 11 panic-expectation tests:
+// - TestUserHandler_UpdateProfile_NilService
+// - TestUserHandler_GetProfile_NilService
+// - TestUserHandler_DeleteAvatar_NilService
+// - TestUserHandler_ChangePassword_NilService
+// - TestUserHandler_UpdateProfile_WithValidBirthday
+// - TestUserHandler_UpdateProfile_EmptyBirthday
+// - TestUserHandler_UpdateProfile_OnlyName
+// - TestUserHandler_UpdateProfile_OnlyEmail
+// - TestUserHandler_UpdateProfile_AllFields
+// - TestUserHandler_UploadAvatar_ValidImageNilService
+// - TestUserHandler_UploadAvatar_ValidJPEGNilService
+// These tests verified nil pointer panics, not business logic.
+
+// Tests with mock service
+
+func TestUserHandler_GetProfile_Success(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.GetProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "email")
+}
+
+func TestUserHandler_GetProfile_NotFound(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	// User ID 999 doesn't exist in mock
+	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 999, "unknown@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.GetProfile(rr, req)
+
+	// Handler returns 500 for user not found
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestUserHandler_UpdateProfile_Success(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "Updated Name"}`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestUserHandler_UpdateProfile_NotFound(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	// User ID 999 doesn't exist in mock
+	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "Updated Name"}`, 999, "unknown@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	// Handler returns 500 for user not found
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestUserHandler_DeleteAvatar_Success(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.DeleteAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+}
+
+func TestUserHandler_DeleteAvatar_NotFound(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	// User ID 999 doesn't exist in mock
+	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 999, "unknown@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.DeleteAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
+}
+
+func TestUserHandler_ChangePassword_WrongOldPassword(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password",
+		`{"old_password": "wrongpassword", "new_password": "newpassword123"}`,
+		1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	handler.ChangePassword(rr, req)
+
+	// Returns 401 when old password doesn't match
+	assertStatusCode(t, rr, http.StatusUnauthorized)
+	assertBodyContains(t, rr, "Current password is incorrect")
+}
+
+func TestUserHandler_ChangePassword_NotFound(t *testing.T) {
+	userService := createTestUserService()
+	handler := NewUserHandler(userService, createTestLogger())
+
+	// User ID 999 doesn't exist in mock
+	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password",
+		`{"old_password": "oldpassword", "new_password": "newpassword123"}`,
+		999, "unknown@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.ChangePassword(rr, req)
+
+	assertStatusCode(t, rr, http.StatusInternalServerError)
 }

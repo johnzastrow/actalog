@@ -41,6 +41,7 @@ RUN go mod download
 # Copy source code
 COPY cmd/ ./cmd/
 COPY configs/ ./configs/
+COPY docs/ ./docs/
 COPY internal/ ./internal/
 COPY pkg/ ./pkg/
 

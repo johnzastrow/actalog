@@ -209,12 +209,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
 import { useNetworkStore } from '@/stores/network'
 import { useSubscriptionStore } from '@/stores/subscription'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone } from '@/utils/timezone'
 import InstallPrompt from '@/components/InstallPrompt.vue'
 import UpdatePrompt from '@/components/UpdatePrompt.vue'
 import SubscriptionExpiredBanner from '@/components/SubscriptionExpiredBanner.vue'
@@ -226,6 +228,7 @@ const theme = useTheme()
 const authStore = useAuthStore()
 const networkStore = useNetworkStore()
 const subscriptionStore = useSubscriptionStore()
+const settingsStore = useSettingsStore()
 
 const activeTab = ref('dashboard')
 const currentDate = ref('')
@@ -272,16 +275,17 @@ const mainStyle = computed(() => {
   }
 })
 
-// Update current date
+// Update current date using user's timezone
 function updateCurrentDate() {
   const now = new Date()
-  currentDate.value = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  const tz = settingsStore.timezone
+  currentDate.value = formatDateInTimezone(now, tz, 'EEE, MMM d, yyyy')
 }
+
+// Watch for timezone changes to update the header date
+watch(() => settingsStore.timezone, () => {
+  updateCurrentDate()
+})
 
 // Fetch unread notification count
 async function fetchUnreadNotificationCount() {
@@ -370,9 +374,7 @@ onBeforeUnmount(() => {
 <style>
 /* Global styles based on requirements */
 * {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--app-font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

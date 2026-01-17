@@ -2,6 +2,7 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
+[![Version](https://img.shields.io/badge/version-0.22.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -13,53 +14,15 @@ ActaLog is an open-source web application designed for CrossFit/Functional Fitne
 
 ## Screenshots
 
-<!--
-Source - https://stackoverflow.com/a
-Posted by alciregi, modified by the community. See post 'Timeline' for change history
-Retrieved 2025-11-23, License - CC BY-SA 4.0
--->
+See the [primary website](https://johnzastrow.github.io/actalog/index.html)
 
-<p align="center">
-<img title="Dashboard with Workout Summary" alt="Dashboard with Workout Summary" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/dash_with_annie.png" width="300"><br>
-1. Dashboard with Workout Summary
-</p><br>
-
-<p align="center">
-<img title="Quick logging the standard Annie WOD" alt="Quick logging the standard Annie WOD" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/quicklog_annie.png" width="300"><br>
-2. Quick logging the standard "Annie" benchmark workout
-</p><br>
-
-<p align="center">
-<img title="Annie WOD details" alt="Annie WOD details" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_workout_details.png" width="300"><br>
-3. Annie WOD details
-</p><br>
-
-<p align="center">
-<img title="Annie performance" alt="Annie performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/annie_performance.png" width="300"><br>
-1. Annie performance over time
-</p><br>
-
-<p align="center">
-<img title="Weight performance" alt="Weight performance" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf1.png" width="300"><br>
-5. Weight performance over time
-</p><br>
-
-<p align="center">
-<img title="Weight performance, cont" alt="Weight performance, cont" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/perf2.png" width="300"><br>
-6. Weight performance over time, cont. Movements can be lifts or other types such as running or rowing, box jumps, air squats, etc.
-</p><br>
-
-<p align="center">
-<img title="Composite workout templates" alt="Composite workout templates" src="https://github.com/johnzastrow/actalog/blob/dc64830e14e2624e7ba35dfd4b6386b620b12230/docs/images/mytemplates.png" width="300"><br>
-7. Workout templates are composite structures that contain a description and zero or more WODS and zero or more movements. Some are supplied as standard in the app, and users can create their own custom templates. Logging a workout against a template records results against all included WODs and movements and they count toward performance tracking. But the workout is only stored once.
-</p><br>
 
 # Videos - be sure to view the full playlist
 
-* [![Overview](https://img.youtube.com/vi/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi/hqdefault.jpg)](https://www.youtube.com/embed/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)
-* [![Registering, Quicklog and User Menus](aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa/hqdefault.jpg)](https://www.youtube.com/embed/aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa)
-* [![Recording custom WODs: can be converted to WODs for all users](Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r/hqdefault.jpg)](https://www.youtube.com/embed/Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r)
-* [![Personal workouts to workouts for all users](IW3manK6iHM?si=qhhh4BiHzcGeHNND/hqdefault.jpg)](https://www.youtube.com/embed/IW3manK6iHM?si=qhhh4BiHzcGeHNND)
+* [Overview](https://www.youtube.com/embed/DfLPpVaMT2g?si=rj8rfLqS_XcnhPdi)
+* [Registering, Quicklog and User Menus](https://www.youtube.com/embed/aMaUYZQMWs0?si=KiUI6Gr28tpd-qRa)
+* [Recording custom WODs: can be converted to WODs for all users](https://www.youtube.com/embed/Tc_LFHwmTsI?si=WanjZu_8WkGfOf8r)
+* [Personal workouts to workouts for all users](https://www.youtube.com/embed/IW3manK6iHM?si=qhhh4BiHzcGeHNND)
 
 
 ## Roadmap — Next priorities
@@ -123,11 +86,74 @@ For the full backlog and lower-priority items see [TODO.md](docs/TODO.md). For r
    npm run dev
    ```
 
+1. **Run tests**
+
+   ```bash
+   # Backend tests
+   make test
+
+   # Frontend tests
+   cd web
+   npm run test:run        # Single run
+   npm run test:coverage   # With coverage report
+   ```
+
 1. **Access the application**
 
    - Frontend: `http://localhost:3000`
    - Backend API: `http://localhost:8080`
    - API Health: `http://localhost:8080/health`
+   - **API Documentation**: `http://localhost:8080/api/docs/`
+
+## API Documentation
+
+ActaLog provides interactive API documentation via Swagger UI, making it easy to explore and test all available endpoints.
+
+### Accessing Swagger UI
+
+Once the server is running, navigate to:
+
+```
+http://localhost:8080/api/docs/
+```
+
+### Features
+
+- **Interactive Documentation**: Browse all 129 API operations across 105 endpoints
+- **Try It Out**: Test endpoints directly from the browser
+- **Request/Response Examples**: See expected request bodies and response formats
+- **Authentication Support**: Authorize with JWT tokens to test protected endpoints
+
+### Authentication
+
+Most endpoints require JWT authentication. To use protected endpoints in Swagger UI:
+
+1. First, call `POST /api/auth/login` with your credentials
+2. Copy the `token` from the response
+3. Click the **Authorize** button (lock icon) at the top of the page
+4. Enter: `Bearer <your-token>` (include the word "Bearer" followed by a space)
+5. Click **Authorize** to apply the token to all requests
+
+### Endpoint Categories
+
+| Tag | Description |
+|-----|-------------|
+| `auth` | Login, register, password reset, token management |
+| `users` | User profile and settings |
+| `workouts` | Workout logging and history |
+| `movements` | Exercise/movement definitions |
+| `wods` | Workout of the Day management |
+| `templates` | Reusable workout templates |
+| `performance` | Analytics and statistics |
+| `prs` | Personal records tracking |
+| `notifications` | User notifications |
+| `sessions` | Session management |
+| `subscriptions` | Subscription management |
+| `organizations` | Organization management |
+| `admin` | Admin-only operations |
+| `import-export` | Data import/export (CSV, JSON) |
+| `backups` | System backup/restore |
+| `audit` | Audit logs |
 
 ### Docker Deployment (Production)
 

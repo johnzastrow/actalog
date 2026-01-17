@@ -60,11 +60,11 @@ This file lists candidate keywords and short notes harvested from the repository
 - common WOD names: Fran, Murph, Helen, Cindy, Annie, DT, Grace, Diane, Karen
 
 ## Where these came from (selected files)
-- Schema & feature analysis: [docs/old/SCHEMA_ANALYSIS.md](docs/old/SCHEMA_ANALYSIS.md)
-- Seeds and imports: [seeds/movements.csv](seeds/movements.csv), [imports/crossfit_wods.csv](imports/crossfit_wods.csv)
-- Docker + deployment docs: [docker/DOCKER.md](docker/DOCKER.md), [docker/docker-compose.yml](docker/docker-compose.yml)
-- PWA / frontend tooling: [web/index.html](web/index.html), [web/vite.config.js](web/vite.config.js)
-- Migration notes: [db_versions/VERSION_DATABASES.md](db_versions/VERSION_DATABASES.md), [docs/old/README.md](docs/old/README.md)
+- Schema & feature analysis: `docs/old/SCHEMA_ANALYSIS.md`
+- Seeds and imports: `seeds/movements.csv`, `imports/crossfit_wods.csv`
+- Docker + deployment docs: `docker/DOCKER.md`, `docker/docker-compose.yml`
+- PWA / frontend tooling: `web/index.html`, `web/vite.config.js`
+- Migration notes: `db_versions/VERSION_DATABASES.md`, `docs/old/README.md`
 
 ---
 

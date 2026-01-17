@@ -25,24 +25,25 @@ func NewPRHandler(db *sql.DB, l *logger.Logger) *PRHandler {
 }
 
 // PersonalRecord represents a unified PR from either movements or WODs
+// @Description Personal record from movements or WODs
 type PersonalRecord struct {
-	Type          string   `json:"type"` // "movement" or "wod"
-	ID            int64    `json:"id"`
-	UserWorkoutID int64    `json:"user_workout_id"`
-	WorkoutDate   string   `json:"workout_date"`
-	Name          string   `json:"name"`                     // Movement name or WOD name
-	MovementType  *string  `json:"movement_type,omitempty"`  // For movements: weightlifting, gymnastics, etc.
-	Weight        *float64 `json:"weight,omitempty"`         // For movements (actual weight lifted)
-	Sets          *int     `json:"sets,omitempty"`           // For movements
-	Reps          *int     `json:"reps,omitempty"`           // For movements
-	Time          *int     `json:"time,omitempty"`           // For movements (seconds) OR WOD time
-	Distance      *float64 `json:"distance,omitempty"`       // For movements
-	Calculated1RM *float64 `json:"calculated_1rm,omitempty"` // Calculated one-rep max for movements
-	Formula       *string  `json:"formula,omitempty"`        // Which formula was used (e.g., "Epley (2-10 reps)")
-	ScoreValue    *string  `json:"score_value,omitempty"`    // For WODs
-	Division      *string  `json:"division,omitempty"`       // For WODs (rx, scaled, etc.)
-	WODType       *string  `json:"wod_type,omitempty"`       // For WODs
-	WODScoreType  *string  `json:"wod_score_type,omitempty"` // For WODs
+	Type          string   `json:"type" example:"movement"` // "movement" or "wod"
+	ID            int64    `json:"id" example:"1"`
+	UserWorkoutID int64    `json:"user_workout_id" example:"100"`
+	WorkoutDate   string   `json:"workout_date" example:"2024-01-15"`
+	Name          string   `json:"name" example:"Back Squat"`                       // Movement name or WOD name
+	MovementType  *string  `json:"movement_type,omitempty" example:"weightlifting"` // For movements: weightlifting, gymnastics, etc.
+	Weight        *float64 `json:"weight,omitempty" example:"315.0"`                // For movements (actual weight lifted)
+	Sets          *int     `json:"sets,omitempty" example:"5"`                      // For movements
+	Reps          *int     `json:"reps,omitempty" example:"5"`                      // For movements
+	Time          *int     `json:"time,omitempty" example:"120"`                    // For movements (seconds) OR WOD time
+	Distance      *float64 `json:"distance,omitempty"`                              // For movements
+	Calculated1RM *float64 `json:"calculated_1rm,omitempty" example:"354.4"`        // Calculated one-rep max for movements
+	Formula       *string  `json:"formula,omitempty" example:"Epley (2-10 reps)"`   // Which formula was used
+	ScoreValue    *string  `json:"score_value,omitempty" example:"12:30"`           // For WODs
+	Division      *string  `json:"division,omitempty" example:"rx"`                 // For WODs (rx, scaled, etc.)
+	WODType       *string  `json:"wod_type,omitempty" example:"For Time"`           // For WODs
+	WODScoreType  *string  `json:"wod_score_type,omitempty" example:"time"`         // For WODs
 }
 
 // MovementPRSummary represents PR summary for a specific movement
@@ -60,6 +61,17 @@ type MovementPRSummary struct {
 }
 
 // GetPersonalRecords retrieves all PRs for the authenticated user
+// @Summary      Get all personal records
+// @Description  Retrieve all personal records (PRs) for movements and WODs
+// @Tags         prs
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 50, max 200)"
+// @Success      200 {object} map[string]interface{} "List of personal records"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /prs [get]
 func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -237,6 +249,17 @@ func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetPRMovements retrieves movements with PR counts for the authenticated user
+// @Summary      Get movements with PRs
+// @Description  Retrieve movements that have personal records with summary stats
+// @Tags         prs
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 20, max 100)"
+// @Success      200 {object} map[string]interface{} "Movement PR summaries"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /prs/movements [get]
 func (h *PRHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -331,6 +354,19 @@ func (h *PRHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) {
 }
 
 // ToggleMovementPR toggles the PR flag for a specific workout_movement
+// @Summary      Toggle movement PR flag
+// @Description  Toggle the personal record flag on a specific workout movement
+// @Tags         prs
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id query int true "Workout movement ID"
+// @Success      200 {object} map[string]interface{} "New PR state"
+// @Failure      400 {object} ErrorResponse "Missing or invalid movement ID"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      404 {object} ErrorResponse "Movement not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /prs/toggle [post]
 func (h *PRHandler) ToggleMovementPR(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

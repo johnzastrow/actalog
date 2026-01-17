@@ -45,7 +45,7 @@
         },
         "description": "Mobile-first CrossFit workout tracker. Track PRs, analyze performance, log WODs.",
         "url": "https://johnzastrow.github.io/actalog/",
-        "softwareVersion": "0.16.0-beta",
+        "softwareVersion": "0.24.0-beta",
         "keywords": ["crossfit", "workout tracker", "WOD", "fitness", "PWA", "PR tracking"]
     }
     </script>
@@ -92,7 +92,7 @@
                     </div>
                     <div class="metric-divider"></div>
                     <div class="metric">
-                        <div class="metric-value" data-target="6">0</div>
+                        <div class="metric-value" data-target="7">0</div>
                         <div class="metric-label">THEMES</div>
                     </div>
                 </div>
@@ -381,8 +381,87 @@
         <div class="diagonal-divider diagonal-divider-reverse"></div>
     </section>
 
+    <!-- User Flow Guide Section -->
+    <section class="features" id="user-flow">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">YOUR WORKOUT JOURNEY</h2>
+                <div class="section-line"></div>
+            </div>
+
+            <p style="text-align: center; color: #888; max-width: 700px; margin: 0 auto 3rem; font-size: 1.1rem;">
+                From logging your first workout to tracking years of progress, ActaLog guides you through every step.
+            </p>
+
+            <!-- Flow Steps -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                <!-- Step 1 -->
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0, 188, 212, 0.2); position: relative;">
+                    <div style="position: absolute; top: -15px; left: 20px; background: #00bcd4; color: #0a1628; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; padding: 0.25rem 0.75rem; border-radius: 8px;">STEP 1</div>
+                    <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin: 1rem 0 0.75rem;">PICK YOUR WORKOUT</h3>
+                    <p style="color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+                        Choose from 314 benchmark WODs or create your own. Filter by type &mdash; The Girls, Heroes, AMRAPs, or For Time workouts.
+                    </p>
+                    <div style="color: #666; font-size: 0.85rem;">
+                        <span style="color: #00bcd4;">&#10132;</span> WOD Library &rarr; Select &rarr; Log Workout
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255, 193, 7, 0.2); position: relative;">
+                    <div style="position: absolute; top: -15px; left: 20px; background: #ffc107; color: #0a1628; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; padding: 0.25rem 0.75rem; border-radius: 8px;">STEP 2</div>
+                    <h3 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin: 1rem 0 0.75rem;">LOG YOUR RESULTS</h3>
+                    <p style="color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+                        Enter your time, score, or reps. Add weights for each movement. Include notes about scaling or how you felt.
+                    </p>
+                    <div style="color: #666; font-size: 0.85rem;">
+                        <span style="color: #ffc107;">&#10132;</span> Time/Score &rarr; Weights &rarr; Notes &rarr; Save
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="background: rgba(15, 29, 46, 0.8); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0, 230, 118, 0.2); position: relative;">
+                    <div style="position: absolute; top: -15px; left: 20px; background: #00e676; color: #0a1628; font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; padding: 0.25rem 0.75rem; border-radius: 8px;">STEP 3</div>
+                    <h3 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin: 1rem 0 0.75rem;">WATCH YOUR PROGRESS</h3>
+                    <p style="color: #888; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+                        PRs detected automatically. View your history by movement. Track streaks and consistency over time.
+                    </p>
+                    <div style="color: #666; font-size: 0.85rem;">
+                        <span style="color: #00e676;">&#10132;</span> Dashboard &rarr; Performance &rarr; Calendar
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="max-width: 900px; margin: 0 auto;">
+                <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">DAILY WORKFLOW</h3>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                    <div style="background: rgba(0, 188, 212, 0.1); border: 1px solid rgba(0, 188, 212, 0.3); border-radius: 12px; padding: 1rem 1.5rem; text-align: center;">
+                        <div style="color: #00bcd4; font-size: 1.5rem; margin-bottom: 0.25rem;">&#128197;</div>
+                        <div style="color: #e0e0e0; font-size: 0.9rem;">Check Dashboard</div>
+                    </div>
+                    <div style="color: #666; font-size: 1.5rem; display: flex; align-items: center;">&rarr;</div>
+                    <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 12px; padding: 1rem 1.5rem; text-align: center;">
+                        <div style="color: #ffc107; font-size: 1.5rem; margin-bottom: 0.25rem;">&#127947;</div>
+                        <div style="color: #e0e0e0; font-size: 0.9rem;">Log Workout</div>
+                    </div>
+                    <div style="color: #666; font-size: 1.5rem; display: flex; align-items: center;">&rarr;</div>
+                    <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 1rem 1.5rem; text-align: center;">
+                        <div style="color: #00e676; font-size: 1.5rem; margin-bottom: 0.25rem;">&#127942;</div>
+                        <div style="color: #e0e0e0; font-size: 0.9rem;">Celebrate PRs</div>
+                    </div>
+                    <div style="color: #666; font-size: 1.5rem; display: flex; align-items: center;">&rarr;</div>
+                    <div style="background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 12px; padding: 1rem 1.5rem; text-align: center;">
+                        <div style="color: #ff6b35; font-size: 1.5rem; margin-bottom: 0.25rem;">&#128200;</div>
+                        <div style="color: #e0e0e0; font-size: 0.9rem;">Review Progress</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Themes Section -->
-    <section class="features" id="themes">
+    <section class="tech" id="themes">
         <div class="features-container">
             <div class="section-header">
                 <h2 class="section-title">MAKE IT YOURS</h2>
@@ -436,6 +515,13 @@
                         <img src="assets/SunriseDashboard.png" alt="Sunrise theme dashboard" style="width: 60px; border-radius: 6px; border: 2px solid rgba(212, 99, 122, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 15px rgba(212, 99, 122, 0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                     </a>
                 </div>
+                <div class="feature-card" style="text-align: center; padding: 1.5rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #37474f 50%, #546e7a 50%); margin: 0 auto 1rem; border: 3px solid #00bcd4;"></div>
+                    <h3 class="feature-title" style="font-size: 1rem; margin-bottom: 1rem;">MYST</h3>
+                    <a href="assets/MystDashboard.png" target="_blank" style="display: inline-block; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <img src="assets/MystDashboard.png" alt="Myst theme dashboard" style="width: 60px; border-radius: 6px; border: 2px solid rgba(0, 188, 212, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 15px rgba(0, 188, 212, 0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -445,13 +531,39 @@
         <div class="tech-container">
             <div class="tech-content" style="max-width: 100%;">
                 <div class="section-header">
-                    <h2 class="section-title">INSTALL THE APP</h2>
+                    <h2 class="section-title">WORKS EVERYWHERE</h2>
                     <div class="section-line"></div>
                 </div>
 
                 <div class="tech-description">
-                    <p>ActaLog is a Progressive Web App (PWA). Install it on your phone for a native app experience &mdash; no app store required.</p>
+                    <p>ActaLog is a Progressive Web App (PWA) with responsive design. Use it on any device, install it like a native app, and train even when you're offline.</p>
                 </div>
+
+                <!-- Technology Benefits -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin: 2rem 0 3rem; max-width: 900px; margin-left: auto; margin-right: auto;">
+                    <div style="text-align: center; padding: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#128241;</div>
+                        <h4 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">RESPONSIVE DESIGN</h4>
+                        <p style="color: #888; font-size: 0.9rem; line-height: 1.5;">Adapts to any screen size. Phone, tablet, or desktop &mdash; the interface adjusts automatically.</p>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#9889;</div>
+                        <h4 style="color: #ffc107; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">INSTANT LOADING</h4>
+                        <p style="color: #888; font-size: 0.9rem; line-height: 1.5;">Service workers cache assets locally. The app loads instantly, even on slow connections.</p>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#128268;</div>
+                        <h4 style="color: #00e676; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">OFFLINE CAPABLE</h4>
+                        <p style="color: #888; font-size: 0.9rem; line-height: 1.5;">Log workouts without internet. Data syncs automatically when you're back online.</p>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#128274;</div>
+                        <h4 style="color: #ff6b35; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">NO APP STORE</h4>
+                        <p style="color: #888; font-size: 0.9rem; line-height: 1.5;">Install directly from your browser. Updates happen automatically &mdash; no manual downloads.</p>
+                    </div>
+                </div>
+
+                <h3 style="color: #00bcd4; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">HOW TO INSTALL</h3>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
                     <!-- iOS Instructions -->
@@ -539,6 +651,7 @@
                         <h4 class="footer-heading">PRODUCT</h4>
                         <a href="features.html">For Admins</a>
                         <a href="#features">Features</a>
+                        <a href="#user-flow">User Guide</a>
                         <a href="#themes">Themes</a>
                     </div>
 
@@ -562,7 +675,7 @@
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2025 ActaLog. Made for athletes, by athletes.</p>
+                <p>&copy; 2026 ActaLog. Made for athletes, by athletes.</p>
             </div>
         </div>
     </footer>

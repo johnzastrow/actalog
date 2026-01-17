@@ -57,7 +57,7 @@
                 v-model="wodSearch"
                 prepend-inner-icon="mdi-magnify"
                 label="Search by name"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -68,7 +68,7 @@
                 v-model="wodScoreTypeFilter"
                 :items="scoreTypeOptions"
                 label="Score Type"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -79,7 +79,7 @@
                 v-model="wodCreatorFilter"
                 prepend-inner-icon="mdi-account"
                 label="Creator email"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -161,11 +161,11 @@
                 Showing {{ wodOffset + 1 }} to {{ Math.min(wodOffset + limit, wodCount) }} of {{ wodCount }} WODs
               </div>
               <div class="d-flex gap-2">
-                <v-btn variant="outlined" size="small" :disabled="wodOffset === 0" @click="previousWodPage">
+                <v-btn  size="small" :disabled="wodOffset === 0" @click="previousWodPage">
                   <v-icon start>mdi-chevron-left</v-icon>
                   Previous
                 </v-btn>
-                <v-btn variant="outlined" size="small" :disabled="wodOffset + limit >= wodCount" @click="nextWodPage">
+                <v-btn  size="small" :disabled="wodOffset + limit >= wodCount" @click="nextWodPage">
                   Next
                   <v-icon end>mdi-chevron-right</v-icon>
                 </v-btn>
@@ -190,7 +190,7 @@
                 v-model="movementSearch"
                 prepend-inner-icon="mdi-magnify"
                 label="Search by name"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -201,7 +201,7 @@
                 v-model="movementTypeFilter"
                 :items="movementTypeOptions"
                 label="Type"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -212,7 +212,7 @@
                 v-model="movementCreatorFilter"
                 prepend-inner-icon="mdi-account"
                 label="Creator email"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -294,11 +294,11 @@
                 Showing {{ movementOffset + 1 }} to {{ Math.min(movementOffset + limit, movementCount) }} of {{ movementCount }} movements
               </div>
               <div class="d-flex gap-2">
-                <v-btn variant="outlined" size="small" :disabled="movementOffset === 0" @click="previousMovementPage">
+                <v-btn  size="small" :disabled="movementOffset === 0" @click="previousMovementPage">
                   <v-icon start>mdi-chevron-left</v-icon>
                   Previous
                 </v-btn>
-                <v-btn variant="outlined" size="small" :disabled="movementOffset + limit >= movementCount" @click="nextMovementPage">
+                <v-btn  size="small" :disabled="movementOffset + limit >= movementCount" @click="nextMovementPage">
                   Next
                   <v-icon end>mdi-chevron-right</v-icon>
                 </v-btn>
@@ -323,7 +323,7 @@
                 v-model="workoutSearch"
                 prepend-inner-icon="mdi-magnify"
                 label="Search by name/notes"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -334,7 +334,7 @@
                 v-model="workoutCreatorFilter"
                 prepend-inner-icon="mdi-account"
                 label="Creator email"
-                variant="outlined"
+                
                 density="compact"
                 hide-details
                 clearable
@@ -409,11 +409,11 @@
                 Showing {{ workoutOffset + 1 }} to {{ Math.min(workoutOffset + limit, workoutCount) }} of {{ workoutCount }} workouts
               </div>
               <div class="d-flex gap-2">
-                <v-btn variant="outlined" size="small" :disabled="workoutOffset === 0" @click="previousWorkoutPage">
+                <v-btn  size="small" :disabled="workoutOffset === 0" @click="previousWorkoutPage">
                   <v-icon start>mdi-chevron-left</v-icon>
                   Previous
                 </v-btn>
-                <v-btn variant="outlined" size="small" :disabled="workoutOffset + limit >= workoutCount" @click="nextWorkoutPage">
+                <v-btn  size="small" :disabled="workoutOffset + limit >= workoutCount" @click="nextWorkoutPage">
                   Next
                   <v-icon end>mdi-chevron-right</v-icon>
                 </v-btn>
@@ -440,7 +440,7 @@
               label="New Name"
               hint="Enter a name for the standard version (leave empty to use original)"
               persistent-hint
-              variant="outlined"
+              
               :placeholder="selectedItem?.name"
             />
           </v-card-text>

@@ -1,6 +1,6 @@
 {
   "name": "actalog-web",
-  "version": "0.16.0",
+  "version": "0.22.0",
   "description": "ActaLog - CrossFit Workout Tracker",
   "private": true,
   "type": "module",
@@ -8,36 +8,46 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write src/",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.js",
+    "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "axios": "^1.7.0",
     "chart.js": "^4.4.0",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "marked": "^17.0.0",
     "pinia": "^2.2.0",
     "vue": "^3.5.0",
     "vue-chartjs": "^5.3.0",
     "vue-router": "^4.4.0",
-    "vuetify": "^3.7.0"
+    "vuetify": "^3.11.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^9.39.2",
+    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-vue": "^5.2.0",
-    "eslint": "^9.15.0",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-vue": "^9.30.0",
+    "eslint-plugin-vue": "^10.6.2",
     "globals": "^15.12.0",
-    "prettier": "^3.3.0",
-    "sass": "^1.80.0",
+    "jsdom": "^27.4.0",
+    "prettier": "^3.7.4",
+    "sass": "^1.97.2",
     "sharp": "^0.34.5",
     "vite": "^6.0.5",
-    "vite-plugin-pwa": "^0.21.1",
+    "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-vuetify": "^2.0.0",
+    "vitest": "^4.0.16",
     "workbox-window": "^7.3.0"
   }
 }

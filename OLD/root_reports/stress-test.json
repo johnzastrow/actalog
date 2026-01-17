@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-01-03T19:46:08.323526606Z",
+  "target": "https://al.fluidgrid.site",
+  "version": "0.17.0-beta",
+  "connectivity": {
+    "dns_ms": 2.285,
+    "tcp_ms": 46.468,
+    "tls_ms": 54.184,
+    "total_ms": 102.937,
+    "connected": true
+  },
+  "health": {
+    "status": "healthy",
+    "response_ms": 53.594,
+    "http_status": 200
+  },
+  "endpoints": [
+    {
+      "path": "/api/version",
+      "response_ms": 49.41,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/health",
+      "response_ms": 49.045,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/workouts",
+      "response_ms": 82.07,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/movements",
+      "response_ms": 69.056,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/wods",
+      "response_ms": 55.378,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/pr-movements",
+      "response_ms": 56.41,
+      "status": 200,
+      "success": true
+    },
+    {
+      "path": "/api/notifications/count",
+      "response_ms": 53.097,
+      "status": 200,
+      "success": true
+    }
+  ],
+  "frontend": {
+    "index_html": {
+      "path": "/",
+      "size_kb": 1.4462890625,
+      "response_ms": 52.483,
+      "status": 200,
+      "success": true,
+      "type": "html"
+    },
+    "total_size_kb": 878.25390625,
+    "total_time_ms": 169.463,
+    "assets": [
+      {
+        "path": "/assets/index-DUIbwD4Q.js",
+        "size_kb": 214.767578125,
+        "response_ms": 55.497,
+        "status": 200,
+        "success": true,
+        "type": "js"
+      },
+      {
+        "path": "/assets/index-3xSvSqMX.css",
+        "size_kb": 662.0400390625,
+        "response_ms": 61.483,
+        "status": 200,
+        "success": true,
+        "type": "css"
+      }
+    ]
+  },
+  "load_test": {
+    "concurrent": 50,
+    "duration_sec": 300,
+    "total_requests": 233773,
+    "successful": 233723,
+    "failed": 50,
+    "rps": 779.2413265635349,
+    "latency_p50_ms": 60.726,
+    "latency_p95_ms": 90.065,
+    "latency_p99_ms": 117.04512,
+    "min_latency_ms": 0.056,
+    "max_latency_ms": 2242.22,
+    "avg_latency_ms": 64.15527696098299
+  },
+  "overall": "pass"
+}

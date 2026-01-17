@@ -30,18 +30,41 @@ func NewUserHandler(userService *service.UserService, l *logger.Logger) *UserHan
 }
 
 // UpdateProfileRequest represents a profile update request
+// @Description User profile update request
 type UpdateProfileRequest struct {
-	Name     string `json:"name,omitempty"`
-	Email    string `json:"email,omitempty"`
-	Birthday string `json:"birthday,omitempty"` // Format: "YYYY-MM-DD" or empty
+	Name     string `json:"name,omitempty" example:"John Doe"`
+	Email    string `json:"email,omitempty" example:"john@example.com"`
+	Birthday string `json:"birthday,omitempty" example:"1990-05-15"` // Format: "YYYY-MM-DD" or empty
 }
 
 // ProfileResponse represents a profile response
+// @Description User profile data
 type ProfileResponse struct {
 	User interface{} `json:"user"`
 }
 
+// ChangePasswordRequest represents a password change request
+// @Description Password change request
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" example:"currentPassword123"`
+	NewPassword string `json:"new_password" example:"newSecurePassword456"`
+}
+
 // UpdateProfile handles profile update requests
+// @Summary      Update user profile
+// @Description  Update the authenticated user's profile information
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body UpdateProfileRequest true "Profile updates"
+// @Success      200 {object} ProfileResponse "Profile updated successfully"
+// @Failure      400 {object} ErrorResponse "Invalid request body or birthday format"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      404 {object} ErrorResponse "User not found"
+// @Failure      409 {object} ErrorResponse "Email already in use"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /users/profile [put]
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -104,6 +127,17 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProfile retrieves the current user's profile
+// @Summary      Get user profile
+// @Description  Retrieve the authenticated user's profile information
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} ProfileResponse "User profile"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      404 {object} ErrorResponse "User not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /users/profile [get]
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := middleware.GetUserID(r.Context())
@@ -139,6 +173,18 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 // UploadAvatar handles avatar image uploads
+// @Summary      Upload avatar image
+// @Description  Upload a new avatar image for the authenticated user (max 5MB)
+// @Tags         users
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        avatar formData file true "Avatar image file"
+// @Success      200 {object} ProfileResponse "Avatar uploaded successfully"
+// @Failure      400 {object} ErrorResponse "No file provided, file too large, or invalid file type"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Failed to save avatar"
+// @Router       /users/avatar [post]
 func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -250,6 +296,16 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteAvatar handles avatar image deletion
+// @Summary      Delete avatar image
+// @Description  Remove the authenticated user's avatar image
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} ProfileResponse "Avatar deleted successfully"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Failed to delete avatar"
+// @Router       /users/avatar [delete]
 func (h *UserHandler) DeleteAvatar(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r.Context())
@@ -302,6 +358,18 @@ func (h *UserHandler) DeleteAvatar(w http.ResponseWriter, r *http.Request) {
 }
 
 // ChangePassword handles password change requests
+// @Summary      Change password
+// @Description  Change the authenticated user's password
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body ChangePasswordRequest true "Current and new password"
+// @Success      200 {object} MessageResponse "Password changed successfully"
+// @Failure      400 {object} ErrorResponse "Invalid request or weak password"
+// @Failure      401 {object} ErrorResponse "Unauthorized or incorrect current password"
+// @Failure      500 {object} ErrorResponse "Failed to change password"
+// @Router       /users/change-password [post]
 func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

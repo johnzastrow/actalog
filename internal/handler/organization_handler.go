@@ -24,6 +24,18 @@ func NewOrganizationHandler(orgService *service.OrganizationService, logger *log
 }
 
 // CreateOrganization handles POST /api/admin/organizations
+// @Summary      Create organization (Admin)
+// @Description  Create a new organization (admin only)
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body object true "Organization name and description"
+// @Success      201 {object} map[string]interface{} "Created organization"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      409 {object} ErrorResponse "Organization name exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations [post]
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
 	adminUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -61,6 +73,17 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 }
 
 // ListOrganizations handles GET /api/admin/organizations
+// @Summary      List organizations (Admin)
+// @Description  Get a paginated list of all organizations
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit query int false "Max results (default 50)"
+// @Param        offset query int false "Skip N results (default 0)"
+// @Success      200 {object} map[string]interface{} "Organizations list with total count"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations [get]
 func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -94,6 +117,18 @@ func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.R
 }
 
 // GetOrganization handles GET /api/admin/organizations/:id
+// @Summary      Get organization (Admin)
+// @Description  Get details of a specific organization
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Organization ID"
+// @Success      200 {object} map[string]interface{} "Organization details"
+// @Failure      400 {object} ErrorResponse "Invalid organization ID"
+// @Failure      404 {object} ErrorResponse "Organization not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations/{id} [get]
 func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -117,6 +152,20 @@ func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Req
 }
 
 // UpdateOrganization handles PUT /api/admin/organizations/:id
+// @Summary      Update organization (Admin)
+// @Description  Update an existing organization's details
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Organization ID"
+// @Param        request body object true "Updated organization details"
+// @Success      200 {object} map[string]interface{} "Updated organization"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "Organization not found"
+// @Failure      409 {object} ErrorResponse "Organization name exists"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations/{id} [put]
 func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.Request) {
 	adminUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -160,6 +209,19 @@ func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.
 }
 
 // DeleteOrganization handles DELETE /api/admin/organizations/:id
+// @Summary      Delete organization (Admin)
+// @Description  Delete an organization (must have no assigned users)
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Organization ID"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid organization ID"
+// @Failure      404 {object} ErrorResponse "Organization not found"
+// @Failure      409 {object} ErrorResponse "Organization has assigned users"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations/{id} [delete]
 func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
 	adminUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -195,6 +257,19 @@ func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.
 }
 
 // AssignUserToOrganization handles POST /api/admin/users/:id/organization
+// @Summary      Assign user to organization (Admin)
+// @Description  Assign a user to an organization
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Param        request body object true "Organization ID to assign"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      404 {object} ErrorResponse "User or organization not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/organization [post]
 func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r *http.Request) {
 	adminUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -244,6 +319,19 @@ func (h *OrganizationHandler) AssignUserToOrganization(w http.ResponseWriter, r 
 }
 
 // RemoveUserFromOrganization handles DELETE /api/admin/users/:id/organization/:org_id
+// @Summary      Remove user from organization (Admin)
+// @Description  Remove a user from an organization
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Param        org_id path int true "Organization ID"
+// @Success      200 {object} MessageResponse "Success message"
+// @Failure      400 {object} ErrorResponse "Invalid ID"
+// @Failure      404 {object} ErrorResponse "User or organization not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/organization/{org_id} [delete]
 func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, r *http.Request) {
 	adminUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -286,6 +374,18 @@ func (h *OrganizationHandler) RemoveUserFromOrganization(w http.ResponseWriter, 
 }
 
 // GetUserOrganizations handles GET /api/admin/users/:id/organizations
+// @Summary      Get user organizations (Admin)
+// @Description  Get all organizations a user belongs to
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "User ID"
+// @Success      200 {object} map[string]interface{} "List of organizations"
+// @Failure      400 {object} ErrorResponse "Invalid user ID"
+// @Failure      404 {object} ErrorResponse "User not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/users/{id}/organizations [get]
 func (h *OrganizationHandler) GetUserOrganizations(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
@@ -312,6 +412,18 @@ func (h *OrganizationHandler) GetUserOrganizations(w http.ResponseWriter, r *htt
 }
 
 // GetOrganizationUsers handles GET /api/admin/organizations/:id/users
+// @Summary      Get organization users (Admin)
+// @Description  Get all users belonging to an organization
+// @Tags         organizations
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "Organization ID"
+// @Success      200 {object} map[string]interface{} "List of users"
+// @Failure      400 {object} ErrorResponse "Invalid organization ID"
+// @Failure      404 {object} ErrorResponse "Organization not found"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /admin/organizations/{id}/users [get]
 func (h *OrganizationHandler) GetOrganizationUsers(w http.ResponseWriter, r *http.Request) {
 	orgIDStr := chi.URLParam(r, "id")
 	orgID, err := strconv.ParseInt(orgIDStr, 10, 64)

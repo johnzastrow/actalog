@@ -33,6 +33,7 @@ type UserService struct {
 	refreshTokenRepo     domain.RefreshTokenRepository
 	userSubRepo          domain.UserSubscriptionRepository
 	auditLogService      *AuditLogService
+	adminNotificationSvc *AdminNotificationService
 	jwtSecret            string
 	jwtExpiration        time.Duration
 	refreshTokenDuration time.Duration
@@ -78,6 +79,12 @@ func NewUserService(
 		maxLoginAttempts:     maxLoginAttempts,
 		lockoutDuration:      lockoutDuration,
 	}
+}
+
+// SetAdminNotificationService sets the admin notification service
+// This is a setter to avoid breaking the existing constructor signature
+func (s *UserService) SetAdminNotificationService(svc *AdminNotificationService) {
+	s.adminNotificationSvc = svc
 }
 
 // Register creates a new user account
@@ -214,6 +221,18 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 		}
 		// Use nil for userID since user is self-registering
 		s.auditLogService.LogEvent(domain.EventUserCreated, nil, &user.ID, nil, nil, details)
+	}
+
+	// Notify admins of new user registration
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventRegistration,
+			TargetUserID: user.ID,
+			TargetEmail:  user.Email,
+			TargetName:   user.Name,
+			ActorUserID:  nil, // Self-registration
+			Timestamp:    time.Now(),
+		})
 	}
 
 	// Note: return user with PasswordHash set for tests that validate hashing
@@ -415,6 +434,14 @@ func (s *UserService) ResetPassword(token, newPassword string) error {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 
+	// Log the password reset
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+		}
+		s.auditLogService.LogEvent(domain.EventPasswordReset, &user.ID, &user.ID, nil, nil, details)
+	}
+
 	return nil
 }
 
@@ -495,7 +522,19 @@ func (s *UserService) ChangePassword(userID int64, oldPassword, newPassword stri
 	}
 
 	// Update password
-	return s.userRepo.UpdatePassword(userID, hashedPassword)
+	if err := s.userRepo.UpdatePassword(userID, hashedPassword); err != nil {
+		return err
+	}
+
+	// Log the password change
+	if s.auditLogService != nil {
+		details := map[string]interface{}{
+			"email": user.Email,
+		}
+		s.auditLogService.LogEvent(domain.EventPasswordChanged, &userID, &userID, nil, nil, details)
+	}
+
+	return nil
 }
 
 // ResendVerificationEmail resends verification email to a user
@@ -726,6 +765,42 @@ func (s *UserService) UpdateProfile(userID int64, name, email string, birthday *
 		s.auditLogService.LogEvent(domain.EventProfileUpdated, &userID, &userID, nil, nil, details)
 	}
 
+	// Notify admins of profile update (only if something actually changed)
+	if s.adminNotificationSvc != nil {
+		changes := make(map[string][2]string)
+		if oldName != user.Name {
+			changes["name"] = [2]string{oldName, user.Name}
+		}
+		if oldEmail != user.Email {
+			changes["email"] = [2]string{oldEmail, user.Email}
+		}
+		oldBirthdayStr := ""
+		newBirthdayStr := ""
+		if oldBirthday != nil {
+			oldBirthdayStr = oldBirthday.Format("2006-01-02")
+		}
+		if user.Birthday != nil {
+			newBirthdayStr = user.Birthday.Format("2006-01-02")
+		}
+		if oldBirthdayStr != newBirthdayStr {
+			changes["birthday"] = [2]string{oldBirthdayStr, newBirthdayStr}
+		}
+
+		if len(changes) > 0 {
+			s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+				EventType:    UserEventProfileUpdate,
+				TargetUserID: user.ID,
+				TargetEmail:  user.Email,
+				TargetName:   user.Name,
+				ActorUserID:  &userID, // User updating their own profile
+				ActorEmail:   user.Email,
+				ActorName:    user.Name,
+				Changes:      changes,
+				Timestamp:    time.Now(),
+			})
+		}
+	}
+
 	// Don't return password hash
 	user.PasswordHash = ""
 
@@ -786,6 +861,20 @@ func (s *UserService) UnlockAccount(adminUserID, targetUserID int64) error {
 		s.auditLogService.LogAccountUnlocked(adminUserID, targetUserID, admin.Email, target.Email)
 	}
 
+	// Notify admins of account unlock
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventUnlock,
+			TargetUserID: target.ID,
+			TargetEmail:  target.Email,
+			TargetName:   target.Name,
+			ActorUserID:  &adminUserID,
+			ActorEmail:   admin.Email,
+			ActorName:    admin.Name,
+			Timestamp:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -817,6 +906,21 @@ func (s *UserService) DisableAccount(adminUserID, targetUserID int64, reason str
 		s.auditLogService.LogAccountDisabled(adminUserID, targetUserID, admin.Email, target.Email, reason)
 	}
 
+	// Notify admins of account disable
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventDisable,
+			TargetUserID: target.ID,
+			TargetEmail:  target.Email,
+			TargetName:   target.Name,
+			ActorUserID:  &adminUserID,
+			ActorEmail:   admin.Email,
+			ActorName:    admin.Name,
+			Reason:       reason,
+			Timestamp:    time.Now(),
+		})
+	}
+
 	return nil
 }
 
@@ -841,6 +945,20 @@ func (s *UserService) EnableAccount(adminUserID, targetUserID int64) error {
 	// Log the enable event
 	if s.auditLogService != nil {
 		s.auditLogService.LogAccountEnabled(adminUserID, targetUserID, admin.Email, target.Email)
+	}
+
+	// Notify admins of account enable
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventEnable,
+			TargetUserID: target.ID,
+			TargetEmail:  target.Email,
+			TargetName:   target.Name,
+			ActorUserID:  &adminUserID,
+			ActorEmail:   admin.Email,
+			ActorName:    admin.Name,
+			Timestamp:    time.Now(),
+		})
 	}
 
 	return nil
@@ -881,6 +999,21 @@ func (s *UserService) ChangeUserRole(adminUserID, targetUserID int64, newRole st
 	// Log the role change
 	if s.auditLogService != nil {
 		s.auditLogService.LogRoleChanged(adminUserID, targetUserID, admin.Email, target.Email, oldRole, newRole)
+	}
+
+	// Notify admins of role change
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventRoleChange,
+			TargetUserID: target.ID,
+			TargetEmail:  target.Email,
+			TargetName:   target.Name,
+			ActorUserID:  &adminUserID,
+			ActorEmail:   admin.Email,
+			ActorName:    admin.Name,
+			Changes:      map[string][2]string{"role": {oldRole, newRole}},
+			Timestamp:    time.Now(),
+		})
 	}
 
 	return nil
@@ -1003,19 +1136,40 @@ func (s *UserService) DeleteUser(adminUserID int64, targetUserID int64) error {
 		return fmt.Errorf("cannot delete your own account")
 	}
 
+	// Store target info before deletion for notification
+	targetEmail := targetUser.Email
+	targetName := targetUser.Name
+
 	// Delete the user (this will cascade delete related data based on DB constraints)
 	if err := s.userRepo.Delete(targetUserID); err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
 
 	// Log the deletion
+	// Note: We pass nil for target_user_id since the user has been deleted and the FK constraint would fail
 	if s.auditLogService != nil {
 		details := map[string]interface{}{
 			"admin_email":  adminUser.Email,
-			"target_email": targetUser.Email,
+			"target_email": targetEmail,
 			"target_id":    targetUserID,
+			"target_name":  targetName,
 		}
-		s.auditLogService.LogEvent("user_deleted", &adminUserID, &targetUserID, nil, nil, details)
+		// Ignore error - audit logging failure shouldn't block user deletion
+		_ = s.auditLogService.LogEvent(domain.EventUserDeleted, &adminUserID, nil, nil, nil, details)
+	}
+
+	// Notify admins of user deletion
+	if s.adminNotificationSvc != nil {
+		s.adminNotificationSvc.NotifyAdminsOfUserEvent(UserEventInfo{
+			EventType:    UserEventDelete,
+			TargetUserID: targetUserID,
+			TargetEmail:  targetEmail,
+			TargetName:   targetName,
+			ActorUserID:  &adminUserID,
+			ActorEmail:   adminUser.Email,
+			ActorName:    adminUser.Name,
+			Timestamp:    time.Now(),
+		})
 	}
 
 	return nil

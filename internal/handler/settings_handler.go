@@ -25,6 +25,16 @@ func NewSettingsHandler(settingsService *service.UserSettingsService, logger *lo
 }
 
 // GetSettings retrieves user settings
+// @Summary      Get user settings
+// @Description  Retrieve the current user's settings
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} map[string]interface{} "User settings"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /settings [get]
 func (h *SettingsHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -49,6 +59,18 @@ func (h *SettingsHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateSettings updates user settings
+// @Summary      Update user settings
+// @Description  Update the current user's settings
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body domain.UserSettings true "Updated settings"
+// @Success      200 {object} map[string]interface{} "Updated settings"
+// @Failure      400 {object} ErrorResponse "Invalid request"
+// @Failure      401 {object} ErrorResponse "Unauthorized"
+// @Failure      500 {object} ErrorResponse "Internal server error"
+// @Router       /settings [put]
 func (h *SettingsHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

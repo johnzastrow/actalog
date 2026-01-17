@@ -433,6 +433,124 @@ func (r *SQLiteOrganizationSubscriptionRepository) ListAll() ([]*domain.Organiza
 	}
 	defer rows.Close()
 
+	return r.scanSubscriptionRows(rows)
+}
+
+// ListExpiring returns active subscriptions expiring within the specified number of days
+func (r *SQLiteOrganizationSubscriptionRepository) ListExpiring(days int) ([]*domain.OrganizationSubscription, error) {
+	var query string
+
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'active'
+			  AND os.is_permanent_free = false
+			  AND os.end_date IS NOT NULL
+			  AND os.end_date > NOW()
+			  AND os.end_date <= NOW() + INTERVAL '1 day' * $1
+			ORDER BY os.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'active'
+			  AND os.is_permanent_free = false
+			  AND os.end_date IS NOT NULL
+			  AND os.end_date > NOW()
+			  AND os.end_date <= DATE_ADD(NOW(), INTERVAL ? DAY)
+			ORDER BY os.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'active'
+			  AND os.is_permanent_free = 0
+			  AND os.end_date IS NOT NULL
+			  AND os.end_date > datetime('now')
+			  AND os.end_date <= datetime('now', '+' || ? || ' days')
+			ORDER BY os.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query, days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expiring organization subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// ListExpired returns expired or overdue subscriptions
+func (r *SQLiteOrganizationSubscriptionRepository) ListExpired() ([]*domain.OrganizationSubscription, error) {
+	var query string
+
+	switch currentDriver {
+	case "postgres":
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'expired'
+			   OR (os.status = 'active' AND os.is_permanent_free = false AND os.end_date IS NOT NULL AND os.end_date <= NOW())
+			ORDER BY os.end_date ASC
+		`
+	case "mysql":
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'expired'
+			   OR (os.status = 'active' AND os.is_permanent_free = false AND os.end_date IS NOT NULL AND os.end_date <= NOW())
+			ORDER BY os.end_date ASC
+		`
+	default: // sqlite3
+		query = `
+			SELECT
+				os.id, os.organization_id, o.name, os.subscription_type, os.status, os.is_permanent_free,
+				os.start_date, os.end_date, os.last_payment_date, os.next_billing_date,
+				os.cancelled_at, os.cancelled_reason, os.notes, os.created_at, os.updated_at, os.created_by_user_id
+			FROM organization_subscriptions os
+			LEFT JOIN organizations o ON os.organization_id = o.id
+			WHERE os.status = 'expired'
+			   OR (os.status = 'active' AND os.is_permanent_free = 0 AND os.end_date IS NOT NULL AND os.end_date <= datetime('now'))
+			ORDER BY os.end_date ASC
+		`
+	}
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query expired organization subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSubscriptionRows(rows)
+}
+
+// scanSubscriptionRows is a helper to scan subscription rows with organization name
+func (r *SQLiteOrganizationSubscriptionRepository) scanSubscriptionRows(rows *sql.Rows) ([]*domain.OrganizationSubscription, error) {
 	var subscriptions []*domain.OrganizationSubscription
 	for rows.Next() {
 		var sub domain.OrganizationSubscription
@@ -460,7 +578,7 @@ func (r *SQLiteOrganizationSubscriptionRepository) ListAll() ([]*domain.Organiza
 		subscriptions = append(subscriptions, &sub)
 	}
 
-	if err = rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating organization subscriptions: %w", err)
 	}
 

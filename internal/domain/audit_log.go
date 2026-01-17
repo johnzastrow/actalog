@@ -92,6 +92,14 @@ const (
 	EventOrgSubscriptionCancelled  = "org_subscription_cancelled"
 	EventOrgSubscriptionExpired    = "org_subscription_expired"
 	EventOrgSubscriptionUpdated    = "org_subscription_updated"
+
+	// User Import/Export Events
+	EventUserImportPreview         = "user_import_preview"
+	EventUserImportConfirm         = "user_import_confirm"
+	EventUserImported              = "user_imported"
+	EventUserExport                = "user_export"
+	EventBatchPasswordResetRequest = "batch_password_reset_request"
+	EventBatchPasswordResetSent    = "batch_password_reset_sent"
 )
 
 // AuditLogRepository defines the interface for audit log data access

@@ -1078,3 +1078,72 @@ func (r *UserWorkoutRepository) scanUserWorkouts(rows *sql.Rows) ([]*domain.User
 
 	return userWorkouts, rows.Err()
 }
+
+// CountAll returns the total count of all user workouts across all users
+func (r *UserWorkoutRepository) CountAll() (int64, error) {
+	var count int64
+	query := `SELECT COUNT(*) FROM user_workouts`
+
+	err := r.db.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count all user workouts: %w", err)
+	}
+
+	return count, nil
+}
+
+// CountThisMonth returns the count of user workouts logged this month
+func (r *UserWorkoutRepository) CountThisMonth() (int64, error) {
+	var count int64
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM user_workouts WHERE workout_date >= %s`, getStartOfMonthExpr())
+
+	err := r.db.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count user workouts this month: %w", err)
+	}
+
+	return count, nil
+}
+
+// CountActiveUsersThisMonth returns the count of distinct users who logged workouts this month
+func (r *UserWorkoutRepository) CountActiveUsersThisMonth() (int64, error) {
+	var count int64
+	query := fmt.Sprintf(`SELECT COUNT(DISTINCT user_id) FROM user_workouts WHERE workout_date >= %s`, getStartOfMonthExpr())
+
+	err := r.db.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count active users this month: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetWorkoutTrends returns daily workout counts for the past N days
+func (r *UserWorkoutRepository) GetWorkoutTrends(days int) ([]domain.WorkoutTrend, error) {
+	dateExpr := getDateExpr("workout_date")
+	daysAgoExpr := getDaysAgoExpr(days)
+
+	query := fmt.Sprintf(`
+		SELECT %s as period, COUNT(*) as count
+		FROM user_workouts
+		WHERE workout_date >= %s
+		GROUP BY %s
+		ORDER BY period`, dateExpr, daysAgoExpr, dateExpr)
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workout trends: %w", err)
+	}
+	defer rows.Close()
+
+	var trends []domain.WorkoutTrend
+	for rows.Next() {
+		var trend domain.WorkoutTrend
+		if err := rows.Scan(&trend.Period, &trend.Count); err != nil {
+			return nil, fmt.Errorf("failed to scan workout trend: %w", err)
+		}
+		trends = append(trends, trend)
+	}
+
+	return trends, rows.Err()
+}
