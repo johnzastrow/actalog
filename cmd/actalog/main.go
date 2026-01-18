@@ -578,6 +578,9 @@ func main() {
 			// User's upcoming reservations (always allowed)
 			r.Get("/users/me/reservations/upcoming", schedulingHandler.GetUserUpcomingReservations)
 
+			// Coach portal routes (for users assigned as coaches)
+			r.Get("/coaches/me/sessions", schedulingHandler.GetCoachSessions)
+
 			// Notification read operations (always allowed)
 			r.Get("/notifications", notificationHandler.ListNotifications)
 			r.Get("/notifications/unread", notificationHandler.ListUnreadNotifications)
@@ -814,6 +817,8 @@ func main() {
 				// Session roster and check-in (admin/coach routes)
 				r.Get("/sessions/{session_id}/roster", schedulingHandler.GetSessionRoster)
 				r.Post("/sessions/{session_id}/check-in/{reservation_id}", schedulingHandler.CheckInReservation)
+				r.Post("/sessions/{session_id}/no-show/{reservation_id}", schedulingHandler.MarkNoShow)
+				r.Post("/sessions/{session_id}/complete", schedulingHandler.CompleteSession)
 
 				// User-organization assignment (admin only)
 				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)

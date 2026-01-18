@@ -833,6 +833,18 @@ func (s *SchedulingService) GetUserReservationHistory(userID int64, limit, offse
 }
 
 // ============================================
+// COACH PORTAL METHODS
+// ============================================
+
+// GetCoachUpcomingSessions retrieves upcoming sessions where the user is assigned as a coach
+func (s *SchedulingService) GetCoachUpcomingSessions(coachUserID int64, limit int) ([]*domain.ClassSession, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	return s.sessionRepo.GetUpcomingByCoachID(coachUserID, limit)
+}
+
+// ============================================
 // HELPER METHODS
 // ============================================
 

@@ -171,6 +171,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/coach',
+      name: 'coach-dashboard',
+      component: () => import('@/views/CoachDashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/settings/export',
       name: 'export-data',
       component: () => import('@/views/ExportView.vue'),

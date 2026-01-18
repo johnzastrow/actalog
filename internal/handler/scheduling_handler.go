@@ -1093,3 +1093,96 @@ func (h *SchedulingHandler) UnassignCoach(w http.ResponseWriter, r *http.Request
 
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Coach unassigned successfully"})
 }
+
+// ============================================
+// COACH PORTAL HANDLERS
+// ============================================
+
+// GetCoachSessions handles GET /api/coaches/me/sessions
+func (h *SchedulingHandler) GetCoachSessions(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit := 20
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	sessions, err := h.schedulingService.GetCoachUpcomingSessions(coachUserID, limit)
+	if err != nil {
+		h.logger.Error("Failed to get coach sessions: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get sessions")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"sessions": sessions,
+		"count":    len(sessions),
+	})
+}
+
+// CompleteSession handles POST /api/sessions/{session_id}/complete
+func (h *SchedulingHandler) CompleteSession(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	if err := h.schedulingService.CompleteSession(userID, sessionID); err != nil {
+		if err == service.ErrClassSessionNotFound {
+			respondError(w, http.StatusNotFound, "Session not found")
+			return
+		}
+		if err == service.ErrSessionNotActive {
+			respondError(w, http.StatusBadRequest, "Session cannot be completed")
+			return
+		}
+		h.logger.Error("Failed to complete session: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to complete session")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Session completed successfully"})
+}
+
+// MarkNoShow handles POST /api/sessions/{session_id}/no-show/{reservation_id}
+func (h *SchedulingHandler) MarkNoShow(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	reservationIDStr := chi.URLParam(r, "reservation_id")
+	reservationID, err := strconv.ParseInt(reservationIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid reservation ID")
+		return
+	}
+
+	if err := h.schedulingService.MarkNoShow(coachUserID, reservationID); err != nil {
+		if err == service.ErrReservationNotFound {
+			respondError(w, http.StatusNotFound, "Reservation not found")
+			return
+		}
+		h.logger.Error("Failed to mark no-show: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to mark no-show")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Marked as no-show successfully"})
+}

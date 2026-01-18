@@ -300,9 +300,16 @@
     </v-dialog>
 
     <!-- Roster Dialog -->
-    <v-dialog v-model="rosterDialog" max-width="600">
+    <v-dialog v-model="rosterDialog" max-width="700">
       <v-card>
-        <v-card-title>Session Roster</v-card-title>
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-clipboard-list" class="mr-2"></v-icon>
+          Session Roster
+          <v-spacer></v-spacer>
+          <v-chip v-if="currentRosterSession" :color="getSessionStatusColor(currentRosterSession.status)" size="small">
+            {{ currentRosterSession.status }}
+          </v-chip>
+        </v-card-title>
         <v-card-text>
           <v-list v-if="roster.length > 0">
             <v-list-item v-for="res in roster" :key="res.id">
@@ -317,8 +324,11 @@
                 <v-chip :color="getReservationStatusColor(res.status)" size="small" class="mr-2">
                   {{ res.status }}
                 </v-chip>
-                <v-btn v-if="res.status === 'reserved'" color="success" size="small" @click="checkInReservation(res)">
+                <v-btn v-if="res.status === 'reserved'" color="success" size="small" class="mr-1" @click="checkInReservation(res)">
                   Check In
+                </v-btn>
+                <v-btn v-if="res.status === 'reserved' || res.status === 'checked_in'" color="error" size="small" variant="tonal" @click="markNoShow(res)">
+                  No Show
                 </v-btn>
               </template>
             </v-list-item>
@@ -326,6 +336,15 @@
           <v-alert v-else type="info" variant="tonal">No reservations for this session.</v-alert>
         </v-card-text>
         <v-card-actions>
+          <v-btn
+            v-if="currentRosterSession && (currentRosterSession.status === 'scheduled' || currentRosterSession.status === 'in_progress')"
+            color="success"
+            variant="flat"
+            @click="completeSession"
+          >
+            <v-icon icon="mdi-check-circle" class="mr-1"></v-icon>
+            Complete Session
+          </v-btn>
           <v-spacer />
           <v-btn @click="rosterDialog = false">Close</v-btn>
         </v-card-actions>
@@ -389,6 +408,7 @@ const sessionForm = ref({ name: '', template_id: null, start_time: '', end_time:
 
 const coachForm = ref({ user_id: null })
 const currentRosterSessionId = ref(null)
+const currentRosterSession = ref(null)
 
 // Initialize
 onMounted(() => {
@@ -602,6 +622,7 @@ async function cancelSession(sess) {
 
 async function viewRoster(sess) {
   currentRosterSessionId.value = sess.id
+  currentRosterSession.value = sess
   try {
     const response = await axios.get(`/api/admin/sessions/${sess.id}/roster`)
     roster.value = response.data.roster || []
@@ -615,9 +636,32 @@ async function checkInReservation(res) {
   try {
     await axios.post(`/api/admin/sessions/${currentRosterSessionId.value}/check-in/${res.id}`)
     successMessage.value = 'Checked in successfully'
-    viewRoster({ id: currentRosterSessionId.value })
+    viewRoster(currentRosterSession.value)
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to check in'
+  }
+}
+
+async function markNoShow(res) {
+  try {
+    await axios.post(`/api/admin/sessions/${currentRosterSessionId.value}/no-show/${res.id}`)
+    successMessage.value = 'Marked as no-show'
+    viewRoster(currentRosterSession.value)
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Failed to mark no-show'
+  }
+}
+
+async function completeSession() {
+  if (!confirm('Are you sure you want to complete this session?')) return
+  try {
+    await axios.post(`/api/admin/sessions/${currentRosterSessionId.value}/complete`)
+    successMessage.value = 'Session completed successfully'
+    currentRosterSession.value.status = 'completed'
+    rosterDialog.value = false
+    fetchSessions()
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Failed to complete session'
   }
 }
 
