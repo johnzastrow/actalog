@@ -208,6 +208,15 @@ erDiagram
     USERS ||--o{ AUDIT_LOGS : performs_actions
     USERS ||--o{ AUDIT_LOGS : is_target_of
     USERS ||--o{ DATA_CHANGE_LOGS : makes_changes
+    USERS ||--o{ USER_SETTINGS : has_preferences
+    USERS ||--o{ USER_ORGANIZATIONS : belongs_to
+    USERS ||--o{ USER_SUBSCRIPTIONS : has_subscription
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ RESERVATIONS : books_classes
+    USERS ||--o{ COACH_ASSIGNMENTS : assigned_as_coach
+    USERS ||--o{ USER_CLASS_CREDITS : has_credits
+    USERS ||--o{ USER_DOCUMENTS : completes_documents
+    USERS ||--o{ WAITLIST_ENTRIES : waits_for_classes
 
     WORKOUTS ||--o{ WORKOUT_MOVEMENTS : contains
     WORKOUTS ||--o{ WORKOUT_WODS : includes
@@ -221,6 +230,32 @@ erDiagram
 
     WODS ||--o{ WORKOUT_WODS : included_in_templates
     WODS ||--o{ USER_WORKOUT_WODS : performed_in
+
+    ORGANIZATIONS ||--o{ USER_ORGANIZATIONS : has_members
+    ORGANIZATIONS ||--o{ ORGANIZATION_SUBSCRIPTIONS : has_subscription
+    ORGANIZATIONS ||--o{ GYM_LOCATIONS : has_locations
+    ORGANIZATIONS ||--o{ CLASS_TEMPLATES : has_class_types
+    ORGANIZATIONS ||--o{ CLASS_SESSIONS : schedules_classes
+    ORGANIZATIONS ||--o{ COACH_ASSIGNMENTS : assigns_coaches
+    ORGANIZATIONS ||--o{ CLASS_PACKAGES : offers_packages
+    ORGANIZATIONS ||--o{ DOCUMENTS : requires_documents
+
+    CLASS_TEMPLATES ||--o{ SCHEDULE_SLOTS : has_recurring_times
+    CLASS_TEMPLATES ||--o{ CLASS_SESSIONS : generates_sessions
+
+    CLASS_SESSIONS ||--o{ RESERVATIONS : has_bookings
+    CLASS_SESSIONS ||--o{ SESSION_COACHES : has_coaches
+    CLASS_SESSIONS ||--o{ WAITLIST_ENTRIES : has_waitlist
+    CLASS_SESSIONS ||--o{ CLASS_NOTIFICATIONS : triggers_notifications
+
+    GYM_LOCATIONS ||--o{ CLASS_SESSIONS : hosts_sessions
+    GYM_LOCATIONS ||--o{ SCHEDULE_SLOTS : used_in_slots
+
+    CLASS_PACKAGES ||--o{ USER_CLASS_CREDITS : purchased_as
+
+    DOCUMENTS ||--o{ USER_DOCUMENTS : completed_by_users
+
+    NOTIFICATIONS ||--o{ NOTIFICATION_LIKES : receives_likes
 
     USERS {
         int64 id PK
@@ -387,6 +422,262 @@ erDiagram
         string ip_address
         timestamp created_at
     }
+
+    ORGANIZATIONS {
+        int64 id PK
+        string name UK
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_ORGANIZATIONS {
+        int64 id PK
+        int64 user_id FK
+        int64 organization_id FK
+        string role
+        timestamp joined_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_SETTINGS {
+        int64 id PK
+        int64 user_id FK
+        text notification_preferences
+        string data_export_format
+        string theme
+        string font_family
+        string weight_unit
+        string distance_unit
+        string timezone
+        boolean admin_user_event_notifications
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATIONS {
+        int64 id PK
+        int64 user_id FK
+        int64 organization_id FK
+        string type
+        string title
+        text message
+        text data
+        timestamp read_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATION_LIKES {
+        int64 id PK
+        int64 notification_id FK
+        int64 user_id FK
+        timestamp created_at
+    }
+
+    GYM_LOCATIONS {
+        int64 id PK
+        int64 organization_id FK
+        string name
+        text description
+        text address
+        int capacity
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CLASS_TEMPLATES {
+        int64 id PK
+        int64 organization_id FK
+        string name
+        text description
+        int64 workout_id FK
+        int duration_minutes
+        int default_capacity
+        string color
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHEDULE_SLOTS {
+        int64 id PK
+        int64 template_id FK
+        int64 location_id FK
+        int day_of_week
+        time start_time
+        int override_capacity
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CLASS_SESSIONS {
+        int64 id PK
+        int64 organization_id FK
+        int64 template_id FK
+        int64 location_id FK
+        string name
+        text description
+        int64 workout_id FK
+        timestamp start_time
+        timestamp end_time
+        int capacity
+        string status
+        timestamp cancelled_at
+        text cancelled_reason
+        timestamp completed_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    COACH_ASSIGNMENTS {
+        int64 id PK
+        int64 organization_id FK
+        int64 user_id FK
+        boolean is_active
+        timestamp assigned_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SESSION_COACHES {
+        int64 id PK
+        int64 session_id FK
+        int64 user_id FK
+        boolean is_lead
+        timestamp created_at
+    }
+
+    RESERVATIONS {
+        int64 id PK
+        int64 session_id FK
+        int64 user_id FK
+        string status
+        timestamp reserved_at
+        timestamp checked_in_at
+        int64 checked_in_by_user_id FK
+        timestamp cancelled_at
+        text cancelled_reason
+        timestamp no_show_marked_at
+        int64 user_workout_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    DOCUMENTS {
+        int64 id PK
+        int64 organization_id FK
+        string name
+        text description
+        string document_type
+        text url
+        boolean is_required
+        int expires_after_days
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_DOCUMENTS {
+        int64 id PK
+        int64 user_id FK
+        int64 document_id FK
+        string status
+        timestamp completed_at
+        timestamp expires_at
+        int64 verified_by_user_id FK
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CLASS_PACKAGES {
+        int64 id PK
+        int64 organization_id FK
+        string name
+        text description
+        int credits
+        int price_cents
+        int validity_days
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_CLASS_CREDITS {
+        int64 id PK
+        int64 user_id FK
+        int64 organization_id FK
+        int64 package_id FK
+        int credits_total
+        int credits_used
+        timestamp purchased_at
+        timestamp expires_at
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WAITLIST_ENTRIES {
+        int64 id PK
+        int64 session_id FK
+        int64 user_id FK
+        int position
+        string status
+        timestamp joined_at
+        timestamp promoted_at
+        timestamp expired_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CLASS_NOTIFICATIONS {
+        int64 id PK
+        int64 user_id FK
+        int64 session_id FK
+        int64 reservation_id FK
+        int64 waitlist_entry_id FK
+        string notification_type
+        string status
+        timestamp scheduled_for
+        timestamp sent_at
+        text error_message
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    EMAIL_LOGS {
+        int64 id PK
+        string recipient_email
+        string email_type
+        string subject
+        boolean success
+        text error_message
+        text debug_info
+        int64 sent_by_user_id FK
+        timestamp created_at
+    }
+
+    BENCHMARK_DATA {
+        int64 id PK
+        string test_key
+        text test_value
+        float num_value
+        int int_value
+        boolean bool_value
+        text large_text
+        text json_blob
+        float extra_float
+        int extra_int
+        string category
+        int priority
+        int64 created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
 ```
 
 ## Logical Data Model
@@ -406,202 +697,195 @@ The ActaLog data model uses a **template-based workout system**:
 7. Users can create custom movements and WODs in addition to standard pre-seeded ones
 8. **Audit Logs** track all security-related events and administrative actions
 
-## Table Definitions
+## Data Dictionary
+
+This section provides detailed field-level documentation including usage context, business meaning, example values, and workflow integration for each table.
+
+---
 
 ### users
 
-Stores user account information, authentication credentials, profile data, and security features.
+**Purpose:** Central user account table storing authentication credentials, profile information, and security state. Every person using ActaLog has exactly one record in this table.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique user identifier |
-| email | VARCHAR(255) | UNIQUE, NOT NULL | User email (login identifier) |
-| password_hash | VARCHAR(255) | NOT NULL | Bcrypt hashed password (cost ≥12) |
-| name | VARCHAR(255) | NOT NULL | User display name |
-| birthday | DATE | NULL | User's birth date (added v0.3.3) |
-| profile_image | TEXT | NULL | URL to profile picture |
-| role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | User role: 'user' or 'admin' |
-| email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | Email verification status (added v0.3.1) |
-| email_verified_at | TIMESTAMP | NULL | When email was verified (added v0.3.1) |
-| failed_login_attempts | INT | NOT NULL, DEFAULT 0 | Count of consecutive failed logins (added v0.4.6) |
-| locked_at | TIMESTAMP | NULL | When account was locked due to failed attempts (added v0.4.6) |
-| locked_until | TIMESTAMP | NULL | When account lock expires (added v0.4.6) |
-| account_disabled | BOOLEAN | NOT NULL, DEFAULT FALSE | Manual disable by admin (added v0.4.6) |
-| disabled_at | TIMESTAMP | NULL | When account was manually disabled (added v0.4.6) |
-| disabled_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who disabled the account (added v0.4.6) |
-| disable_reason | TEXT | NULL | Reason for account disable (added v0.4.7) |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Account creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
-| last_login_at | TIMESTAMP | NULL | Last successful login |
+**Usage Context:** Used for login authentication, profile display, permission checks, and audit trail attribution. The first user to register becomes the system admin.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- UNIQUE INDEX idx_users_email (email)
-- INDEX idx_users_role (role)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated unique identifier. Referenced by all user-owned data (workouts, reservations, etc.). Never exposed to end users; used internally for joins. |
+| email | VARCHAR(255) | UNIQUE, NOT NULL | **Login identifier.** User's email address used for authentication and password reset. Must be verified before account is fully active. Example: `athlete@crossfitgym.com` |
+| password_hash | VARCHAR(255) | NOT NULL | **Security credential.** Bcrypt hash (cost 12) of user's password. Never stored or logged in plain text. Updated when user changes password. |
+| name | VARCHAR(255) | NOT NULL | **Display name.** Shown on leaderboards, coach rosters, and notifications. Athletes set this during registration. Example: `John Smith` |
+| birthday | DATE | NULL | **Profile data.** Optional birth date for age-based competition divisions or birthday notifications. Format: `1990-05-15` |
+| profile_image | TEXT | NULL | **Avatar URL.** Full URL to user's profile picture. Used in roster views and social features. Example: `/uploads/avatars/user_123.jpg` |
+| role | VARCHAR(50) | NOT NULL, DEFAULT 'user' | **Permission level.** Controls access to admin features. Values: `user` (standard athlete), `admin` (full system access). First registered user auto-promoted to admin. |
+| email_verified | BOOLEAN | NOT NULL, DEFAULT FALSE | **Account activation flag.** When FALSE, user cannot access main app features. Set to TRUE after clicking email verification link. |
+| email_verified_at | TIMESTAMP | NULL | **Verification timestamp.** Records when user confirmed email ownership. Used for audit and support troubleshooting. |
+| failed_login_attempts | INT | NOT NULL, DEFAULT 0 | **Security counter.** Incremented on wrong password. Resets to 0 on successful login. At 5 failures, triggers account lockout. |
+| locked_at | TIMESTAMP | NULL | **Lockout start time.** Set when failed_login_attempts reaches threshold. Used to display "account locked" message. |
+| locked_until | TIMESTAMP | NULL | **Lockout expiration.** Account automatically unlocks after this time (default: 15 minutes after locked_at). User can login normally once passed. |
+| account_disabled | BOOLEAN | NOT NULL, DEFAULT FALSE | **Admin ban flag.** When TRUE, user cannot login regardless of credentials. Only admins can set this. Used for policy violations or account termination. |
+| disabled_at | TIMESTAMP | NULL | **Ban timestamp.** When admin disabled the account. Appears in admin audit views. |
+| disabled_by_user_id | BIGINT | FK → users(id) | **Admin attribution.** Which admin disabled this account. Important for accountability in multi-admin environments. |
+| disable_reason | TEXT | NULL | **Ban explanation.** Admin-provided reason for disabling account. Example: `Repeated class no-shows per gym policy` |
+| created_at | TIMESTAMP | NOT NULL | **Registration time.** When user account was created. Used for member tenure reports and anniversary features. |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** Auto-updated on any profile change. Used for cache invalidation and sync. |
+| last_login_at | TIMESTAMP | NULL | **Activity tracking.** Updated on each successful authentication. Admins use this to identify inactive accounts. |
 
-**Foreign Keys:**
-- FOREIGN KEY (disabled_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+**Indexes:** PK(id), UNIQUE(email), INDEX(role)
 
 **Security Features:**
-- **Password hashing:** Bcrypt with cost factor 12
-- **Account lockout:** 5 failed login attempts → 15 minute lock (configurable)
-- **Manual disable:** Admins can disable accounts with reason tracking
-- **Email verification:** Prevents login until email is verified
-- **Audit trail:** All security events logged to audit_logs table
+- **Password hashing:** Bcrypt cost factor 12 (adaptive security)
+- **Account lockout:** 5 failed attempts → 15-minute lock (brute force protection)
+- **Manual disable:** Admins can ban users with documented reasons
+- **Email verification:** Prevents unauthorized account creation
+- **Audit trail:** All auth events logged to audit_logs table
 
 **Business Rules:**
-- First registered user automatically receives 'admin' role
-- JWT tokens used for authentication (stored client-side only, server tracks refresh tokens)
-- Locked accounts automatically unlock after locked_until timestamp
-- Disabled accounts cannot login until re-enabled by admin
-- Admin cannot disable their own account
+- First registered user automatically receives `admin` role
+- Locked accounts auto-unlock after `locked_until` timestamp
+- Disabled accounts require admin intervention to re-enable
+- Admins cannot disable their own account (prevents lockout)
+
+---
 
 ### workouts
 
-Stores reusable workout templates (not instances). Templates can be standard (pre-seeded) or custom (user-created).
+**Purpose:** Reusable workout templates that define what exercises/WODs to perform. Think of these as "blueprints" that users instantiate when they log actual workout sessions.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout template identifier |
-| name | VARCHAR(255) | NOT NULL | Template name (e.g., "Strength Training - Back Squat Focus") |
-| notes | TEXT | NULL | Template description/instructions |
-| created_by | BIGINT | NULL, FOREIGN KEY | User who created template (NULL for standard) |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+**Usage Context:** Coaches create templates for daily programming. Athletes select templates when logging workouts. Standard templates are pre-seeded; users can create custom templates.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- INDEX idx_workouts_created_by (created_by)
-- INDEX idx_workouts_name (name)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced when users log workouts (user_workouts.workout_id) and by class sessions (class_sessions.workout_id). |
+| name | VARCHAR(255) | NOT NULL | **Template title.** Displayed in workout selection lists and history. Should be descriptive. Examples: `Strength - Back Squat 5x5`, `CrossFit Games Open 24.1`, `Recovery Day - Light Cardio` |
+| notes | TEXT | NULL | **Programming notes.** Coach instructions, scaling options, or intent explanation. Displayed to athletes before starting workout. Example: `Focus on perfect form. Scale weight if ROM suffers.` |
+| created_by | BIGINT | FK → users(id) | **Template author.** NULL for system-seeded templates. Allows filtering "my templates" vs "standard templates" in UI. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** When template was first created. Used for sorting "newest templates" view. |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** Updated when template name, notes, or movements are changed. |
 
-**Foreign Keys:**
-- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+**Indexes:** PK(id), INDEX(created_by), INDEX(name)
 
-**Design Note:**
-- Workouts are templates, not instances
-- Templates can include movements (via workout_movements) and/or WODs (via workout_wods)
-- Users instantiate templates via user_workouts when logging actual workout sessions
+**Workflow Integration:**
+- Templates contain movements (via `workout_movements`) and/or WODs (via `workout_wods`)
+- Athletes instantiate templates via `user_workouts` when logging actual sessions
+- Class sessions can reference a workout template for the day's programming
+- Deleting a template is RESTRICTED if any user_workouts reference it
+
+---
 
 ### user_workouts
 
-Stores user-specific workout instances logged on specific dates (instantiations of workout templates).
+**Purpose:** Records of actual workout sessions performed by athletes. Each row represents one workout logged on a specific date.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique workout instance identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id (template) |
-| workout_date | DATE | NOT NULL | Date workout was performed |
-| workout_type | VARCHAR(255) | NULL | Type: strength, metcon, cardio, mixed |
-| total_time | INT | NULL | Total workout duration (seconds) |
-| notes | TEXT | NULL | User's notes for this workout instance |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+**Usage Context:** Primary performance tracking table. Created when athletes log workouts from templates or when coaches check in athletes to classes. Forms the basis of performance history and PR tracking.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- INDEX idx_user_workouts_user_id (user_id)
-- INDEX idx_user_workouts_workout_date (workout_date)
-- INDEX idx_user_workouts_user_date (user_id, workout_date DESC)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by performance data in `user_workout_movements` and `user_workout_wods`. Also linked from `reservations.user_workout_id` for class attendance. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Athlete identifier.** The user who performed this workout. Used for filtering "my workouts" and calculating personal records. CASCADE delete removes workouts when user is deleted. |
+| workout_id | BIGINT | FK → workouts(id) | **Template reference.** Links to the workout template used. Can be NULL for ad-hoc workouts not based on templates. RESTRICT prevents template deletion if referenced. |
+| workout_name | TEXT | NULL | **Denormalized name.** Stores workout name at time of logging. Preserves history if template is later renamed. |
+| workout_date | DATE | NOT NULL | **Performance date.** When the athlete performed the workout. Used for calendar views, weekly summaries, and PR date attribution. Example: `2024-01-15` |
+| workout_type | VARCHAR(255) | NULL | **Classification.** Categorizes the workout for filtering and stats. Values: `strength`, `metcon`, `cardio`, `mixed`, `skills`, `recovery`. Example: `strength` |
+| total_time | INT | NULL | **Duration in seconds.** Total workout time including rest. Used for time-based stats. Example: `3600` (1 hour). Displayed as `60:00` in UI. |
+| notes | TEXT | NULL | **Athlete journal.** Personal notes about how the workout felt, modifications made, or factors affecting performance. Example: `Felt strong today. Increased squat weight 10lbs.` |
+| created_at | TIMESTAMP | NOT NULL | **Log timestamp.** When athlete logged the workout (may differ from workout_date for backdated entries). |
+| updated_at | TIMESTAMP | NOT NULL | **Edit timestamp.** Updated when athlete modifies workout details or adds performance data. |
 
-**Foreign Keys:**
-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-- FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE RESTRICT
+**Indexes:** PK(id), INDEX(user_id), INDEX(workout_date), COMPOSITE(user_id, workout_date DESC)
 
-**Design Note:**
-- Each user_workout is a specific instance of a workout template
-- Performance data (sets, reps, weights) stored in user_workout_movements and user_workout_wods
-- Users can log multiple workouts per day
+**Workflow Integration:**
+- Created manually by athletes logging workouts OR automatically when coaches check in class attendees
+- Performance details stored in `user_workout_movements` (strength work) and `user_workout_wods` (benchmark WODs)
+- Athletes can log multiple workouts per day (morning strength + evening metcon)
+- Linked to class attendance via `reservations.user_workout_id`
+
+---
 
 ### movements
 
-Stores movement/exercise definitions (both standard and user-created).
+**Purpose:** Exercise/movement library containing all trackable exercises. Includes 31 pre-seeded CrossFit movements plus user-created custom movements.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique movement identifier |
-| name | VARCHAR(255) | UNIQUE, NOT NULL | Movement name (e.g., "Back Squat") |
-| description | TEXT | NULL | Movement description/instructions |
-| type | VARCHAR(50) | NOT NULL | Type: weightlifting, cardio, gymnastics, bodyweight |
-| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE for pre-seeded movements, FALSE for user-created |
-| created_by | BIGINT | NULL, FOREIGN KEY | User ID if custom movement (NULL for standard) |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+**Usage Context:** Athletes select movements when building workouts. Used for PR tracking (per-movement personal records), performance history charts, and workout template construction.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- UNIQUE INDEX idx_movements_name (name)
-- INDEX idx_movements_type (type)
-- INDEX idx_movements_standard (is_standard)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by workout_movements and user_workout_movements for tracking which exercises were performed. |
+| name | VARCHAR(255) | UNIQUE, NOT NULL | **Exercise name.** Displayed in movement selection, PR lists, and performance charts. Must be unique system-wide. Examples: `Back Squat`, `Pull-up`, `500m Row`, `Deadlift` |
+| description | TEXT | NULL | **Movement guidance.** Instructions, form cues, or scaling options. Displayed when athlete views movement details. Example: `Barbell on upper back, squat below parallel, drive through heels.` |
+| type | VARCHAR(50) | NOT NULL | **Category for filtering.** Helps athletes find movements in library. Values: `weightlifting` (barbell/dumbbell), `cardio` (row/run/bike), `gymnastics` (muscle-ups/HSPUs), `bodyweight` (push-ups/squats). |
+| is_standard | BOOLEAN | NOT NULL, DEFAULT FALSE | **System vs custom flag.** TRUE for 31 pre-seeded movements, FALSE for user-created. Standard movements cannot be deleted; custom movements only visible to creator. |
+| created_by | BIGINT | FK → users(id) | **Custom movement author.** NULL for standard movements. Allows filtering "my movements" in library view. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** When movement was added to library. |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** Updated when description or type is changed. |
 
-**Foreign Keys:**
-- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+**Indexes:** PK(id), UNIQUE(name), INDEX(type), INDEX(is_standard)
 
-**Standard Movements:**
-The application pre-seeds 31 standard CrossFit movements on first run (see Standard Movements section below).
+**Workflow Integration:**
+- Pre-seeded on first database initialization (31 CrossFit movements)
+- Users add custom movements via Movements Library → Create Movement
+- Deleting a movement is RESTRICTED if any workouts reference it (preserves history)
+- Performance tracked in `user_workout_movements` with 1RM calculation
+
+---
 
 ### workout_movements
 
-Junction table linking workouts to movements with performance details.
+**Purpose:** Junction table defining which movements are included in a workout template, with prescribed weights/reps/sets.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
-| workout_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to workouts.id |
-| movement_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to movements.id |
-| weight | DECIMAL(10,2) | NULL | Weight used (lbs or kg) |
-| sets | INT | NULL | Number of sets |
-| reps | INT | NULL | Reps per set or total reps |
-| time | INT | NULL | Time for movement (seconds) |
-| distance | DECIMAL(10,2) | NULL | Distance (meters, miles, etc.) |
-| is_rx | BOOLEAN | NOT NULL, DEFAULT FALSE | TRUE if performed as prescribed |
-| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | Personal record flag (added v0.3.0) |
-| notes | TEXT | NULL | Movement-specific notes |
-| order_index | INT | NOT NULL, DEFAULT 0 | Order in workout sequence |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Last update time |
+**Usage Context:** Defines the "prescription" for a workout template. When athletes log workouts, these prescriptions are copied to user_workout_movements where they record actual performance.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- INDEX idx_wm_workout_id (workout_id)
-- INDEX idx_wm_movement_id (movement_id)
-- INDEX idx_wm_workout_order (workout_id, order_index)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier for this template-movement link. |
+| workout_id | BIGINT | FK → workouts(id), NOT NULL | **Parent template.** Which workout template this movement belongs to. CASCADE delete removes movements when template is deleted. |
+| movement_id | BIGINT | FK → movements(id), NOT NULL | **Exercise reference.** Which movement is prescribed. RESTRICT prevents movement deletion if used in templates. |
+| weight | DECIMAL(10,2) | NULL | **Prescribed weight.** Target weight in user's preferred unit (lbs/kg). Used as starting point when logging. Example: `185.00` for 185 lbs. |
+| sets | INT | NULL | **Prescribed sets.** Number of sets to perform. Example: `5` for 5x5 protocol. |
+| reps | INT | NULL | **Prescribed reps.** Reps per set or total reps. Example: `5` for 5x5, or `21-15-9` stored as notes. |
+| time | INT | NULL | **Time component (seconds).** For timed efforts like max calories in 60 seconds. Example: `60` for 1-minute max effort. |
+| distance | DECIMAL(10,2) | NULL | **Distance component.** For rowing/running prescriptions. Example: `500.00` for 500m row. Unit depends on user settings. |
+| is_rx | BOOLEAN | NOT NULL, DEFAULT FALSE | **Prescription flag.** TRUE means this is the "Rx" (prescribed) standard. Athlete can choose to scale. |
+| is_pr | BOOLEAN | NOT NULL, DEFAULT FALSE | **PR flag for template.** Rarely used at template level; primarily used in user_workout_movements. |
+| instructions | TEXT | DEFAULT '' | **Movement-specific notes.** Coaching cues for this specific movement within the workout. Example: `Pause at bottom for 2 seconds.` |
+| notes | TEXT | NULL | **Additional details.** Any other information about this movement in the workout. |
+| order_index | INT | NOT NULL, DEFAULT 0 | **Sequence position.** Determines display order. 0 = first movement, 1 = second, etc. Allows reordering movements. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
 
-**Foreign Keys:**
-- FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
-- FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
+**Indexes:** PK(id), INDEX(workout_id), INDEX(movement_id), COMPOSITE(workout_id, order_index)
 
-**PR Auto-Detection:**
-When a workout is created, the system automatically compares weight for each movement against the user's historical max and sets `is_pr=TRUE` if it's a new personal record. Users can also manually toggle the PR flag.
+**Workflow Integration:**
+- Created when coach/athlete adds movements to a workout template
+- Copied to `user_workout_movements` when athlete logs the workout
+- `order_index` determines the sequence shown in workout view
+
+---
 
 ### refresh_tokens
 
-Stores refresh tokens for "Remember Me" functionality (added v0.3.2).
+**Purpose:** Manages persistent login sessions for "Remember Me" functionality. Allows users to stay logged in across browser sessions without re-entering credentials.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique token identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| token | VARCHAR(255) | UNIQUE, NOT NULL | Cryptographically secure token |
-| expires_at | TIMESTAMP | NOT NULL | Token expiration time |
-| created_at | TIMESTAMP | NOT NULL | Token creation time |
-| revoked_at | TIMESTAMP | NULL | When token was revoked (logout) |
-| device_info | TEXT | NULL | Device/browser information |
+**Usage Context:** Created when user checks "Remember Me" during login. Enables automatic JWT renewal. Multiple tokens allow login from multiple devices simultaneously.
 
-**Indexes:**
-- PRIMARY KEY (id)
-- UNIQUE INDEX idx_refresh_tokens_token (token)
-- INDEX idx_refresh_tokens_user_id (user_id)
-- INDEX idx_refresh_tokens_expires (expires_at)
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier for this token record. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Token owner.** Which user this session belongs to. CASCADE delete removes tokens when user is deleted. |
+| token | VARCHAR(255) | UNIQUE, NOT NULL | **Secure session key.** 32-byte cryptographically random string sent in HTTP-only cookie. Used to issue new JWT access tokens. Never logged or displayed. |
+| expires_at | TIMESTAMP | NOT NULL | **Session expiration.** Token becomes invalid after this time (default: 30 days from creation). User must re-login after expiration. |
+| created_at | TIMESTAMP | NOT NULL | **Session start.** When user checked "Remember Me" and logged in. Used for session management UI showing active logins. |
+| revoked_at | TIMESTAMP | NULL | **Logout timestamp.** Set when user explicitly logs out or admin revokes session. Non-null means token is invalid even if not expired. |
+| device_info | TEXT | NULL | **Client identification.** Browser user-agent string captured at login. Displayed in "Active Sessions" view. Example: `Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)...` |
 
-**Foreign Keys:**
-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+**Indexes:** PK(id), UNIQUE(token), INDEX(user_id), INDEX(expires_at)
 
-**Security Notes:**
-- Tokens are 32-byte cryptographically secure random strings
-- Tokens expire after 30 days
-- Users can have multiple active tokens (different devices)
-- Tokens are revoked on logout
+**Security Implementation:**
+- Tokens are 32-byte cryptographically secure random strings (256-bit entropy)
+- Tokens expire after 30 days (configurable)
+- Users can have multiple active tokens (phone + laptop + work computer)
+- Tokens are revoked on explicit logout
+- Admins can revoke all sessions for a user via user management
 
 ### password_resets
 
@@ -803,141 +1087,622 @@ User has write access if:
 - Admin: `GET /api/admin/subscriptions/user/{user_id}` - View subscription history
 - Organization endpoints follow same pattern
 
+---
+
 ### documents
 
-Stores document types that organizations require users to complete (waivers, liability forms, health forms). Added in v0.27.0.
+**Purpose:** Defines document types that gyms require members to complete (waivers, liability forms, health questionnaires). Each gym can have different required documents.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique document identifier |
-| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
-| name | VARCHAR(255) | NOT NULL | Document name (e.g., "Liability Waiver") |
-| description | TEXT | NULL | Description of the document |
-| document_type | VARCHAR(50) | NOT NULL, DEFAULT 'waiver' | Type: waiver, liability, health, other |
-| url | TEXT | NULL | URL to external document (if applicable) |
-| is_required | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether document is required |
-| expires_after_days | INT | NULL | Days until document expires (NULL = never) |
-| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether document is currently active |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Admins create document requirements for their organization. Athletes see pending documents in their dashboard. Completion is tracked in user_documents. Can block class registration if required documents incomplete.
 
-**Indexes:** idx_documents_org_id, idx_documents_active, idx_documents_type
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by user_documents for completion tracking. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Owning gym.** Documents are gym-specific. Different gyms may have different waiver requirements. CASCADE delete removes documents if gym is deleted. |
+| name | VARCHAR(255) | NOT NULL | **Document title.** Displayed to athletes in "Required Documents" list. Examples: `Liability Waiver 2024`, `Health Questionnaire`, `Photo/Video Release` |
+| description | TEXT | NULL | **Instructions for athlete.** What the document covers, how to complete it. Example: `Please read carefully and sign acknowledging the inherent risks of CrossFit training.` |
+| document_type | VARCHAR(50) | NOT NULL, DEFAULT 'waiver' | **Category.** For filtering and reporting. Values: `waiver` (liability), `liability`, `health` (medical questionnaire), `other`. |
+| url | TEXT | NULL | **External link.** URL to PDF or online form (DocuSign, JotForm, etc.). If NULL, document is verified manually by admin. Example: `https://docusign.com/waiver/123` |
+| is_required | BOOLEAN | NOT NULL, DEFAULT TRUE | **Enforcement flag.** When TRUE, athletes may be blocked from booking classes until document is completed. FALSE = optional. |
+| expires_after_days | INT | NULL | **Renewal period.** Days after completion before document must be re-signed. NULL = never expires. Example: `365` for annual waiver renewal. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Availability flag.** FALSE hides document from new signups but preserves existing completion records. Use for retired document versions. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
 
-**Foreign Keys:** organization_id → organizations(id) ON DELETE CASCADE
+**Indexes:** INDEX(organization_id), INDEX(is_active), INDEX(document_type)
+
+**Workflow Integration:**
+- Admins create documents via Admin → Documents → Create
+- Athletes see required documents on Dashboard or during class registration
+- Completion tracked in `user_documents` table
+- Optional: Block class booking if required documents not complete
+
+---
 
 ### user_documents
 
-Tracks which documents each user has completed. Added in v0.27.0.
+**Purpose:** Tracks which documents each athlete has completed, when they expire, and who verified completion.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| document_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to documents.id |
-| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | Status: pending, completed, expired |
-| completed_at | TIMESTAMP | NULL | When document was completed |
-| expires_at | TIMESTAMP | NULL | When completion expires |
-| verified_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who verified completion |
-| notes | TEXT | NULL | Admin notes |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Created when admin marks a document as completed for a user. Used to enforce document requirements before class booking. Expiration dates trigger re-signing reminders.
 
-**Indexes:** idx_user_documents_user_id, idx_user_documents_document_id, idx_user_documents_status, idx_user_documents_expires
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Athlete.** Which user this completion record belongs to. CASCADE delete removes records when user deleted. |
+| document_id | BIGINT | FK → documents(id), NOT NULL | **Document type.** Which document was completed. CASCADE delete removes records if document type deleted. |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | **Completion state.** Values: `pending` (awaiting completion), `completed` (signed/submitted), `expired` (past expires_at, needs renewal). |
+| completed_at | TIMESTAMP | NULL | **Signature timestamp.** When athlete completed the document. Used for audit trail and expiration calculation. |
+| expires_at | TIMESTAMP | NULL | **Expiration date.** Calculated as completed_at + document.expires_after_days. After this date, status changes to `expired`. |
+| verified_by_user_id | BIGINT | FK → users(id) | **Admin verification.** Which admin/coach verified document completion. Important for accountability. |
+| notes | TEXT | NULL | **Admin notes.** Any comments about verification. Example: `Verified original signature on file dated 1/15/2024` |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** When tracking record was created (may differ from completed_at). |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
 
-**Foreign Keys:** user_id → users(id) CASCADE, document_id → documents(id) CASCADE, verified_by_user_id → users(id) SET NULL
+**Indexes:** INDEX(user_id), INDEX(document_id), INDEX(status), INDEX(expires_at)
 
-**Unique Constraint:** (user_id, document_id)
+**Unique Constraint:** (user_id, document_id) - One completion record per user per document type
+
+**Workflow Integration:**
+- Created automatically when athlete's document status needs tracking
+- Updated by admin via Admin → Users → [User] → Documents → Mark Complete
+- Background job can change status to `expired` when expires_at passes
+- Class booking can check for `completed` status on required documents
+
+---
 
 ### class_packages
 
-Stores credit package definitions that can be purchased. Added in v0.27.0.
+**Purpose:** Defines credit packages (class packs) that athletes can purchase. Each package grants a number of credits usable for class reservations.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique package identifier |
-| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
-| name | VARCHAR(255) | NOT NULL | Package name (e.g., "10-Class Pack") |
-| description | TEXT | NULL | Package description |
-| credits | INT | NOT NULL | Number of credits in package |
-| price_cents | INT | NOT NULL, DEFAULT 0 | Price in cents |
-| validity_days | INT | NULL | Days until credits expire (NULL = never) |
-| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether package is available |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Admins create packages for their gym (10-class, 20-class, unlimited). Athletes purchase packages, credits are added to user_class_credits. One credit typically = one class reservation.
 
-**Indexes:** idx_class_packages_org_id, idx_class_packages_active
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by user_class_credits.package_id. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Owning gym.** Packages are gym-specific. Credits from Gym A package can only be used at Gym A. |
+| name | VARCHAR(255) | NOT NULL | **Package title.** Displayed in purchase UI and credit history. Examples: `10-Class Pack`, `Monthly Unlimited`, `Drop-In Single Class` |
+| description | TEXT | NULL | **Marketing copy.** Benefits, restrictions, what's included. Example: `Best value! 10 classes valid for 3 months. Use for any scheduled class.` |
+| credits | INT | NOT NULL | **Credits granted.** Number of class credits when purchased. Example: `10` for 10-class pack, `999` for unlimited. |
+| price_cents | INT | NOT NULL, DEFAULT 0 | **Price in cents.** Stored as integer to avoid floating-point issues. Example: `15000` = $150.00. Used for display/reporting; actual payment handled externally. |
+| validity_days | INT | NULL | **Expiration period.** Days from purchase until credits expire. NULL = never expires. Example: `90` for 3-month validity. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Availability flag.** FALSE removes package from purchase options but preserves existing purchases. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
 
-**Foreign Keys:** organization_id → organizations(id) ON DELETE CASCADE
+**Indexes:** INDEX(organization_id), INDEX(is_active)
+
+**Workflow Integration:**
+- Admins create packages via Admin → Packages → Create
+- Athletes view available packages in Schedule → Buy Credits
+- Admin manually records purchase → creates user_class_credits record
+- Price is for display; actual payment processing is external (Stripe, cash, etc.)
+
+---
 
 ### user_class_credits
 
-Tracks user credit balances from purchased packages. Added in v0.27.0.
+**Purpose:** Tracks athlete credit balances. Each row represents a batch of credits from a package purchase or admin grant.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique credit record identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
-| package_id | BIGINT | NULL, FOREIGN KEY | Reference to class_packages.id (if from package) |
-| credits_total | INT | NOT NULL | Total credits purchased |
-| credits_used | INT | NOT NULL, DEFAULT 0 | Credits consumed |
-| purchased_at | TIMESTAMP | NOT NULL | When credits were purchased |
-| expires_at | TIMESTAMP | NULL | When credits expire |
-| notes | TEXT | NULL | Admin notes |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Created when admin adds credits to an athlete's account (from package purchase or comp credits). Decremented when athlete books classes. Multiple credit batches per user possible (each with different expiration).
 
-**Indexes:** idx_user_class_credits_user_id, idx_user_class_credits_org_id, idx_user_class_credits_expires
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Credit owner.** Which athlete owns these credits. CASCADE delete removes credits when user deleted. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Valid at gym.** Credits can only be used for classes at this organization. |
+| package_id | BIGINT | FK → class_packages(id) | **Source package.** Which package these credits came from. NULL if manually granted by admin. |
+| credits_total | INT | NOT NULL | **Original amount.** Credits granted when purchased/added. Never changes after creation. Example: `10` |
+| credits_used | INT | NOT NULL, DEFAULT 0 | **Consumed amount.** Incremented each time a credit is spent on a reservation. Example: `3` if 3 classes booked. |
+| purchased_at | TIMESTAMP | NOT NULL | **Acquisition date.** When credits were added to account. Used for FIFO credit consumption (oldest credits used first). |
+| expires_at | TIMESTAMP | NULL | **Expiration date.** Credits invalid after this date. Calculated as purchased_at + package.validity_days. NULL = never expires. |
+| notes | TEXT | NULL | **Admin notes.** Reason for credit grant. Example: `Comp credits for class cancellation`, `Won in member challenge` |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** Updated when credits_used changes. |
 
-**Foreign Keys:** user_id → users(id) CASCADE, organization_id → organizations(id) CASCADE, package_id → class_packages(id) SET NULL
+**Indexes:** INDEX(user_id), INDEX(organization_id), INDEX(expires_at)
 
 **Calculated Field:** `credits_remaining = credits_total - credits_used`
 
+**Workflow Integration:**
+- Admin adds credits: Admin → Users → [User] → Add Credits → Select package or enter manual amount
+- Athlete books class → oldest non-expired credits decremented first (FIFO)
+- Athlete cancels reservation → credit returned (credits_used decremented)
+- Expired credits (expires_at < NOW) are skipped during booking
+
+---
+
 ### waitlist_entries
 
-Queue for users waiting for spots in full classes. Added in v0.27.0.
+**Purpose:** Queue for athletes waiting for spots in full classes. When someone cancels, the first waitlisted person is automatically promoted to a reservation.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique waitlist entry identifier |
-| session_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to class_sessions.id |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| position | INT | NOT NULL | Position in waitlist queue |
-| status | VARCHAR(50) | NOT NULL, DEFAULT 'waiting' | Status: waiting, promoted, expired, cancelled |
-| joined_at | TIMESTAMP | NOT NULL | When user joined waitlist |
-| promoted_at | TIMESTAMP | NULL | When promoted to reservation |
-| expired_at | TIMESTAMP | NULL | When entry expired |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Created when athlete clicks "Join Waitlist" on a full class. System monitors cancellations and promotes waitlist entries in order. Athlete notified when promoted.
 
-**Indexes:** idx_waitlist_entries_session_id, idx_waitlist_entries_user_id, idx_waitlist_entries_status, idx_waitlist_entries_position
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| session_id | BIGINT | FK → class_sessions(id), NOT NULL | **Target class.** Which class session the athlete is waiting for. CASCADE delete removes entries when session deleted/cancelled. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Waiting athlete.** Who is on the waitlist. CASCADE delete removes entries when user deleted. |
+| position | INT | NOT NULL | **Queue position.** Lower number = higher priority. 1 = first in line. Recalculated when people leave waitlist. |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'waiting' | **Entry state.** Values: `waiting` (in queue), `promoted` (converted to reservation), `expired` (class started without promotion), `cancelled` (athlete left waitlist). |
+| joined_at | TIMESTAMP | NOT NULL | **Queue entry time.** When athlete joined waitlist. Used for position assignment (earlier = lower position number). |
+| promoted_at | TIMESTAMP | NULL | **Reservation conversion time.** When status changed from `waiting` to `promoted`. NULL if never promoted. |
+| expired_at | TIMESTAMP | NULL | **Expiration time.** When status changed to `expired` (class started). NULL if not expired. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
 
-**Foreign Keys:** session_id → class_sessions(id) CASCADE, user_id → users(id) CASCADE
+**Indexes:** INDEX(session_id), INDEX(user_id), INDEX(status), INDEX(position)
 
-**Unique Constraint:** (session_id, user_id)
+**Unique Constraint:** (session_id, user_id) - Athlete can only be on waitlist once per class
+
+**Workflow Integration:**
+- Athlete joins waitlist: Schedule → [Full Class] → Join Waitlist
+- Someone cancels reservation → system checks waitlist → promotes position 1
+- Promoted athlete receives notification and reservation is created automatically
+- Athlete can leave waitlist voluntarily → positions recalculated for remaining entries
+
+---
 
 ### class_notifications
 
-Notifications for class reminders, waitlist promotions, and cancellations. Added in v0.27.0.
+**Purpose:** Scheduled notifications for class reminders, waitlist promotions, and class changes. Processed by background job that sends emails/push notifications.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique notification identifier |
-| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
-| session_id | BIGINT | NULL, FOREIGN KEY | Reference to class_sessions.id |
-| reservation_id | BIGINT | NULL, FOREIGN KEY | Reference to reservations.id |
-| waitlist_entry_id | BIGINT | NULL, FOREIGN KEY | Reference to waitlist_entries.id |
-| notification_type | VARCHAR(50) | NOT NULL | Type: reminder, waitlist_promoted, class_cancelled, class_updated |
-| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | Status: pending, sent, failed |
-| scheduled_for | TIMESTAMP | NOT NULL | When notification should be sent |
-| sent_at | TIMESTAMP | NULL | When notification was sent |
-| error_message | TEXT | NULL | Error message if failed |
-| created_at | TIMESTAMP | NOT NULL | Record creation time |
-| updated_at | TIMESTAMP | NOT NULL | Last update time |
+**Usage Context:** Created automatically by system events (reservation made, waitlist promoted, class cancelled). Background scheduler processes pending notifications at scheduled_for time.
 
-**Indexes:** idx_class_notifications_user_id, idx_class_notifications_session_id, idx_class_notifications_status, idx_class_notifications_scheduled
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Notification recipient.** Who should receive this notification. CASCADE delete removes notifications when user deleted. |
+| session_id | BIGINT | FK → class_sessions(id) | **Related class.** Which class session this notification is about. Used for email content. |
+| reservation_id | BIGINT | FK → reservations(id) | **Related reservation.** For reminder and check-in notifications. |
+| waitlist_entry_id | BIGINT | FK → waitlist_entries(id) | **Related waitlist entry.** For promotion notifications. |
+| notification_type | VARCHAR(50) | NOT NULL | **Notification category.** Values: `reminder` (upcoming class), `waitlist_promoted` (spot available), `class_cancelled` (class won't happen), `class_updated` (time/details changed). |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | **Delivery state.** Values: `pending` (scheduled, not sent), `sent` (delivered successfully), `failed` (delivery error). |
+| scheduled_for | TIMESTAMP | NOT NULL | **Delivery time.** When notification should be sent. For reminders, typically 1-24 hours before class. |
+| sent_at | TIMESTAMP | NULL | **Actual delivery time.** When notification was successfully sent. NULL if pending or failed. |
+| error_message | TEXT | NULL | **Failure reason.** If status = `failed`, contains error details. Example: `Email bounced: invalid address` |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
 
-**Foreign Keys:** user_id → users(id) CASCADE, session_id → class_sessions(id) CASCADE, reservation_id → reservations(id) CASCADE, waitlist_entry_id → waitlist_entries(id) CASCADE
+**Indexes:** INDEX(user_id), INDEX(session_id), INDEX(status), INDEX(scheduled_for)
+
+**Workflow Integration:**
+- Created automatically when: reservation made (schedule reminder), waitlist promoted, class cancelled/updated
+- Background job queries for `status = 'pending' AND scheduled_for <= NOW()`
+- Job attempts delivery → updates status to `sent` or `failed`
+- Admin can view notification history in Admin → Email Logs
+
+---
+
+### audit_logs
+
+**Purpose:** Security audit trail recording all authentication events, administrative actions, and sensitive operations. Essential for compliance, security investigations, and troubleshooting.
+
+**Usage Context:** Written automatically by backend on login/logout, admin actions, profile changes, etc. Read by admins via Admin → Audit Logs. Supports filtering by user, event type, and date range.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id) | **Acting user.** Who performed the action. NULL for anonymous events (failed login with unknown email). SET NULL preserves log if user deleted. |
+| target_user_id | BIGINT | FK → users(id) | **Affected user.** For admin actions on other users (disable account, change role). NULL if action doesn't affect another user. |
+| event_type | VARCHAR(100) | NOT NULL | **Event category.** Examples: `login_success`, `login_failed`, `logout`, `password_change`, `password_reset_request`, `email_verified`, `account_disabled`, `role_changed`, `subscription_created`. |
+| ip_address | VARCHAR(50) | NULL | **Client IP.** For security analysis and geographic tracking. Supports IPv4 and IPv6. Example: `192.168.1.100`, `2001:db8::1` |
+| user_agent | TEXT | NULL | **Client identification.** Browser/app user agent string. Helps identify device type and detect suspicious access. |
+| details | TEXT | NULL | **Event context.** JSON with additional event-specific information. Example for login: `{"method": "password", "remember_me": true}`. Example for role change: `{"old_role": "user", "new_role": "admin"}` |
+| created_at | TIMESTAMP | NOT NULL | **Event timestamp.** When the event occurred. Used for timeline analysis and filtering. |
+
+**Indexes:** INDEX(user_id), INDEX(target_user_id), INDEX(event_type), INDEX(created_at DESC), COMPOSITE(user_id, event_type, created_at)
+
+**Event Types:**
+- Authentication: `login_success`, `login_failed`, `logout`, `token_refresh`
+- Security: `password_change`, `password_reset_request`, `password_reset_complete`, `account_locked`, `account_unlocked`
+- Admin: `account_disabled`, `account_enabled`, `role_changed`, `subscription_created`, `subscription_cancelled`
+- Profile: `email_change_requested`, `email_verified`, `profile_updated`
+
+---
+
+### benchmark_data
+
+**Purpose:** Test data table for API performance benchmarking and load testing. Contains various data types to simulate realistic payloads.
+
+**Usage Context:** Used by developers for API performance testing. Not used in production workflows. Data created via benchmark API endpoints during load testing.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| test_key | VARCHAR(255) | NOT NULL | **Test identifier.** Key for grouping benchmark runs. Example: `load_test_2024_01_15` |
+| test_value | TEXT | NULL | **String payload.** For testing text field performance. |
+| num_value | DOUBLE | DEFAULT 0 | **Numeric payload.** For testing floating-point operations. |
+| int_value | INTEGER | DEFAULT 0 | **Integer payload.** For testing integer operations and sorting. |
+| bool_value | BOOLEAN | DEFAULT FALSE | **Boolean payload.** For testing boolean filtering. |
+| large_text | TEXT | DEFAULT '' | **Large text payload.** For stress testing with large strings. |
+| json_blob | TEXT | DEFAULT '' | **JSON payload.** For testing JSON serialization/deserialization. |
+| extra_float | DOUBLE | DEFAULT 0 | **Additional numeric field.** For testing multi-column operations. |
+| extra_int | INTEGER | DEFAULT 0 | **Additional integer field.** For testing multi-column sorting. |
+| category | VARCHAR(100) | DEFAULT '' | **Grouping field.** For testing filtered queries. |
+| priority | INTEGER | DEFAULT 0 | **Priority field.** For testing ordered retrieval. |
+| created_by | BIGINT | FK → users(id), NOT NULL | **Test author.** Who ran the benchmark. |
+| created_at | TIMESTAMP | NOT NULL | **Test timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** INDEX(test_key), INDEX(created_by), INDEX(category), INDEX(priority)
+
+---
+
+### class_sessions
+
+**Purpose:** Actual scheduled class instances that athletes can reserve. Each session is a specific class at a specific time (e.g., "CrossFit WOD on Monday Jan 15 at 6:00 AM").
+
+**Usage Context:** Athletes browse sessions in Schedule view, make reservations. Coaches view their assigned sessions, check in athletes. Sessions can be created from templates (recurring) or as one-off events.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by reservations, waitlist_entries, session_coaches. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Hosting gym.** Which organization offers this class. Used for filtering "classes at my gym". |
+| template_id | BIGINT | FK → class_templates(id) | **Source template.** If session was created from a recurring template. NULL for one-off sessions. |
+| location_id | BIGINT | FK → gym_locations(id) | **Physical space.** Where within the gym this class takes place. Example: Main Floor, Studio B. |
+| name | VARCHAR(255) | NOT NULL | **Class title.** Displayed in schedule. Usually inherited from template. Examples: `CrossFit WOD`, `Olympic Lifting`, `Yoga` |
+| description | TEXT | NULL | **Class details.** What to expect, what to bring. Can be overridden from template for special sessions. |
+| workout_id | BIGINT | FK → workouts(id) | **Day's programming.** Links to workout template for this session. Allows athletes to see what movements they'll do. |
+| start_time | TIMESTAMP | NOT NULL | **Class start.** When class begins. Primary filter for schedule display. Stored in UTC, displayed in user's timezone. |
+| end_time | TIMESTAMP | NOT NULL | **Class end.** When class ends. Duration = end_time - start_time. Used for calendar display. |
+| capacity | INTEGER | NOT NULL, DEFAULT 20 | **Max spots.** Maximum number of athletes allowed. When reservations reach capacity, new athletes go to waitlist. |
+| status | VARCHAR(20) | NOT NULL, DEFAULT 'scheduled' | **Session state.** Values: `scheduled` (upcoming), `in_progress` (started), `completed` (finished), `cancelled` (won't happen). |
+| cancelled_at | TIMESTAMP | NULL | **Cancellation time.** When admin/coach cancelled the session. Triggers notifications to reserved athletes. |
+| cancelled_reason | TEXT | NULL | **Cancellation explanation.** Why class was cancelled. Included in notification to athletes. Example: `Coach unavailable due to illness` |
+| completed_at | TIMESTAMP | NULL | **Completion time.** When coach marked session complete. Triggers attendance finalization. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
+
+**Indexes:** INDEX(organization_id), INDEX(template_id), INDEX(start_time), INDEX(status), COMPOSITE(organization_id, start_time, status)
+
+**Status State Machine:**
+```
+scheduled → in_progress → completed
+    ↓
+cancelled
+```
+
+**Workflow Integration:**
+- Created by materializer from templates OR manually by admin
+- Athletes browse via Schedule → [Gym] → [Date Range]
+- Athletes reserve spots → creates reservation record
+- Coach starts class → status = `in_progress`
+- Coach completes class → status = `completed`, user_workouts created for attended athletes
+
+---
+
+### class_templates
+
+**Purpose:** Reusable class type definitions for recurring schedule patterns. Templates define the "what" (class name, duration, capacity) while schedule_slots define the "when" (day/time).
+
+**Usage Context:** Admins create templates for their gym's class offerings. Templates combined with schedule_slots drive automatic session generation. Example: "CrossFit WOD" template + "MWF 6am, 9am, 5pm" slots.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by schedule_slots and class_sessions. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Owning gym.** Templates are gym-specific. |
+| name | VARCHAR(255) | NOT NULL | **Class type name.** What kind of class this is. Examples: `CrossFit WOD`, `Olympic Lifting`, `Fundamentals`, `Open Gym`, `Yoga` |
+| description | TEXT | NULL | **Class description.** What the class involves, skill level, what to bring. Shown when athlete views class details. |
+| workout_id | BIGINT | FK → workouts(id) | **Default workout.** Workout template to use for sessions (can be overridden per session). |
+| duration_minutes | INTEGER | NOT NULL, DEFAULT 60 | **Class length.** How long sessions run. Used to calculate end_time from start_time. Common values: 45, 60, 90. |
+| default_capacity | INTEGER | NOT NULL, DEFAULT 20 | **Default max athletes.** Copied to sessions when created. Can be overridden by schedule_slot or individual session. |
+| color | VARCHAR(20) | DEFAULT '#00bcd4' | **Calendar color.** For visual distinction in schedule UI. Hex color code. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Availability flag.** FALSE hides template from new session creation but preserves existing sessions. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** INDEX(organization_id), INDEX(is_active)
+
+**Workflow Integration:**
+- Admin creates: Admin → Class Templates → Create
+- Admin adds schedule slots: Admin → Class Templates → [Template] → Schedule Slots
+- Materializer runs: Creates class_sessions from template + slots for upcoming dates
+- Sessions inherit template properties but can be individually customized
+
+---
+
+### coach_assignments
+
+**Purpose:** Assigns users as coaches for a specific gym. Coaches have elevated permissions to manage sessions, view rosters, and check in athletes.
+
+**Usage Context:** Admin assigns coaches per organization. Coach role is per-gym (user can be coach at Gym A but regular member at Gym B). Coaches see their dashboard with upcoming sessions.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Gym scope.** Which gym this coach assignment applies to. User can be coach at multiple gyms. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Coach.** Which user is being assigned as coach. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Active status.** FALSE removes coach privileges without deleting history. Use for temporary or ended coach roles. |
+| assigned_at | TIMESTAMP | NOT NULL | **Assignment date.** When user became a coach at this gym. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
+
+**Indexes:** INDEX(organization_id), INDEX(user_id), INDEX(is_active)
+
+**Unique Constraint:** (organization_id, user_id) - User can only have one assignment per gym
+
+**Permissions Granted:**
+- View class rosters and attendee details
+- Check in athletes to classes
+- View athlete workout history (within their gym)
+- Create/edit class sessions (if gym allows)
+
+---
+
+### email_logs
+
+**Purpose:** Audit trail for all outgoing emails from the system. Records delivery status for troubleshooting and compliance.
+
+**Usage Context:** Written automatically when system sends any email (verification, password reset, notifications). Admins view via Admin → Email Logs to debug delivery issues.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| recipient_email | VARCHAR(255) | NOT NULL | **Recipient.** Email address the message was sent to. For searching "what emails did user@example.com receive?" |
+| email_type | VARCHAR(50) | NOT NULL | **Email category.** Values: `verification` (confirm email), `password_reset`, `notification` (announcements), `class_reminder`, `waitlist_promotion`, `class_cancelled`. |
+| subject | VARCHAR(500) | NOT NULL | **Email subject line.** The subject that was sent. Useful for identifying specific emails. |
+| success | BOOLEAN | NOT NULL, DEFAULT FALSE | **Delivery status.** TRUE if SMTP accepted the message. FALSE if sending failed. |
+| error_message | TEXT | NULL | **Failure details.** If success=FALSE, contains error from SMTP server. Example: `550 User not found` |
+| debug_info | TEXT | NULL | **Technical details.** SMTP response, connection info. Used for troubleshooting delivery issues. |
+| sent_by_user_id | BIGINT | FK → users(id) | **Triggering user.** For admin-initiated emails (announcements), which admin sent it. NULL for system-triggered emails. |
+| created_at | TIMESTAMP | NOT NULL | **Send timestamp.** When email was sent (or attempted). |
+
+**Indexes:** INDEX(email_type), INDEX(recipient_email), INDEX(created_at DESC), INDEX(success)
+
+---
+
+### gym_locations
+
+**Purpose:** Physical spaces within a gym where classes take place. Allows scheduling different class types in different areas.
+
+**Usage Context:** Admins define locations for their gym. Sessions and schedule_slots reference locations. Athletes see location in class details. Example: Main Floor (20 capacity), Yoga Studio (15 capacity).
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by class_sessions and schedule_slots. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Owning gym.** Locations are gym-specific. |
+| name | VARCHAR(255) | NOT NULL | **Location name.** Displayed in schedule and class details. Examples: `Main Floor`, `Studio A`, `Outdoor Area`, `Yoga Room` |
+| description | TEXT | NULL | **Location details.** What equipment is there, special instructions. Example: `Air conditioned, has rowers and assault bikes.` |
+| address | TEXT | NULL | **Physical address.** For gyms with multiple buildings or outdoor locations. |
+| capacity | INTEGER | DEFAULT 0 | **Location capacity.** Maximum people that fit. 0 = unlimited. Can override class template capacity if location is smaller. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Availability flag.** FALSE hides location from new session creation (e.g., under renovation). |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** INDEX(organization_id), INDEX(is_active)
+
+---
+
+### notification_likes
+
+**Purpose:** Tracks social engagement (likes) on notifications/announcements. Allows athletes to acknowledge or appreciate gym announcements.
+
+**Usage Context:** Athletes tap "like" on announcements in their notification feed. Like count displayed on announcement. Used for engagement metrics.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| notification_id | BIGINT | FK → notifications(id), NOT NULL | **Liked item.** Which notification received the like. CASCADE delete removes likes when notification deleted. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Liking user.** Who gave the like. CASCADE delete removes likes when user deleted. |
+| created_at | TIMESTAMP | NOT NULL | **Like timestamp.** When user liked the notification. |
+
+**Indexes:** INDEX(notification_id), INDEX(user_id)
+
+**Unique Constraint:** (notification_id, user_id) - One like per user per notification
+
+---
+
+### notifications
+
+**Purpose:** In-app notifications for athletes including gym announcements, PR achievements, workout streaks, and system messages.
+
+**Usage Context:** Created by system events (PR achieved, streak milestone) or admin announcements. Athletes view in Notifications view with read/unread status. Supports organization-scoped announcements.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Recipient.** Which athlete receives this notification. CASCADE delete removes notifications when user deleted. |
+| organization_id | BIGINT | FK → organizations(id) | **Gym context.** For org-specific announcements. NULL for personal notifications (PR achievements). |
+| type | VARCHAR(50) | NOT NULL | **Notification category.** Values: `announcement` (gym news), `pr_achievement` (new PR), `streak` (consistency milestone), `milestone` (achievement unlocked), `system` (app updates). |
+| title | VARCHAR(255) | NOT NULL | **Notification headline.** Bold text in notification list. Example: `New Personal Record!`, `Important Gym Announcement` |
+| message | TEXT | NOT NULL | **Notification body.** Full message content. Example: `You hit a new PR on Back Squat: 275 lbs!` |
+| data | JSON/TEXT | NULL | **Structured payload.** JSON with additional context. For PR: `{"movement_id": 5, "weight": 275, "previous_pr": 265}`. For navigation or deep linking. |
+| read_at | TIMESTAMP | NULL | **Read status.** NULL = unread, timestamp = when user viewed/acknowledged. Used for unread badge count. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** When notification was generated. |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** INDEX(user_id), COMPOSITE(user_id, read_at), INDEX(created_at DESC), INDEX(type)
+
+---
+
+### organizations
+
+**Purpose:** Gym/affiliate/box entities that athletes can belong to. Organizations can have their own class schedules, coaches, packages, and documents.
+
+**Usage Context:** Admins create organizations representing gyms. Athletes join organizations to access schedules and classes. Multi-gym support allows one athlete to belong to multiple gyms.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. Referenced by many tables (classes, coaches, packages, etc.). |
+| name | VARCHAR(255) | UNIQUE, NOT NULL | **Gym name.** Displayed in gym selector, schedules, and membership lists. Examples: `CrossFit Downtown`, `Iron Tribe Fitness`, `F45 Training Studio` |
+| description | TEXT | NULL | **Gym description.** About the gym, location, contact info. Displayed on gym profile/selection page. |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** UNIQUE(name)
+
+**Workflow Integration:**
+- Admin creates gym: Admin → Organizations → Create
+- Athletes join via invitation or admin assignment
+- Membership tracked in `user_organizations` junction table
+- Organization subscription enables write access for all members
+
+---
+
+### reservations
+
+**Purpose:** Athlete bookings for class sessions. Tracks the full lifecycle from reservation through check-in to attendance or no-show.
+
+**Usage Context:** Created when athlete reserves a spot. Coach updates status on check-in. System marks no-shows after class ends. Links to user_workout when athlete completes class.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| session_id | BIGINT | FK → class_sessions(id), NOT NULL | **Reserved class.** Which session the athlete booked. CASCADE delete removes reservations when session cancelled. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Reserving athlete.** Who made the reservation. CASCADE delete removes reservations when user deleted. |
+| status | VARCHAR(20) | NOT NULL, DEFAULT 'reserved' | **Reservation state.** Values: `reserved` (booked, not yet attended), `checked_in` (arrived at class), `cancelled` (athlete cancelled), `no_show` (didn't show up), `attended` (completed class). |
+| reserved_at | TIMESTAMP | NOT NULL | **Booking time.** When athlete made the reservation. Used for check-in deadline calculations. |
+| checked_in_at | TIMESTAMP | NULL | **Arrival time.** When coach marked athlete as arrived. NULL until checked in. |
+| checked_in_by_user_id | BIGINT | FK → users(id) | **Check-in coach.** Which coach confirmed athlete's attendance. Accountability trail. |
+| cancelled_at | TIMESTAMP | NULL | **Cancellation time.** When athlete or admin cancelled. Used for late-cancel policy enforcement. |
+| cancelled_reason | TEXT | NULL | **Cancellation reason.** Why reservation was cancelled. Example: `Late cancel - illness`, `Class cancelled by gym` |
+| no_show_marked_at | TIMESTAMP | NULL | **No-show timestamp.** When system or coach marked athlete as didn't show up. Triggers no-show policy. |
+| user_workout_id | BIGINT | FK → user_workouts(id) | **Workout link.** Links to workout log created when athlete checks in. Connects class attendance to performance tracking. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
+
+**Indexes:** INDEX(session_id), INDEX(user_id), INDEX(status)
+
+**Unique Constraint:** (session_id, user_id) - One reservation per athlete per class
+
+**Status State Machine:**
+```
+reserved → checked_in → attended
+    ↓         ↓
+cancelled   no_show
+```
+
+**Workflow Integration:**
+- Athlete reserves: Schedule → [Class] → Reserve → status = `reserved`
+- Coach checks in: Roster → [Athlete] → Check In → status = `checked_in`, creates user_workout
+- Class completes: status = `attended`, user_workout finalized
+- Athlete cancels before class: status = `cancelled`, credit returned
+- Athlete doesn't show: status = `no_show`, credit may be forfeited per gym policy
+
+---
+
+### schedule_slots
+
+**Purpose:** Recurring time patterns for class templates. Defines the weekly schedule of when classes occur. Combined with templates to generate actual sessions.
+
+**Usage Context:** Admins define slots like "Monday 6:00 AM, Wednesday 6:00 AM, Friday 6:00 AM" for a template. Materializer uses slots to create class_sessions for upcoming weeks.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| template_id | BIGINT | FK → class_templates(id), NOT NULL | **Parent template.** Which class type this slot schedules. CASCADE delete removes slots when template deleted. |
+| location_id | BIGINT | FK → gym_locations(id) | **Location override.** If different from template default. Example: 6am class in Studio A, 5pm class in Main Floor. |
+| day_of_week | INTEGER | NOT NULL | **Weekly day.** 0=Sunday, 1=Monday, ..., 6=Saturday. Used by materializer to place sessions on correct days. |
+| start_time | TIME | NOT NULL | **Daily start time.** What time the class starts. Example: `06:00:00` for 6:00 AM. End time calculated from template.duration_minutes. |
+| override_capacity | INTEGER | NULL | **Capacity override.** If this slot should have different capacity than template default. Example: 6am class limited to 12 due to staffing. |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | **Active flag.** FALSE skips this slot during materialization. Use for temporary schedule changes (holiday closures). |
+| created_at | TIMESTAMP | NOT NULL | **Creation timestamp.** |
+| updated_at | TIMESTAMP | NOT NULL | **Modification timestamp.** |
+
+**Indexes:** INDEX(template_id), INDEX(day_of_week), INDEX(is_active)
+
+**Day of Week Values:**
+| Value | Day |
+|-------|-----|
+| 0 | Sunday |
+| 1 | Monday |
+| 2 | Tuesday |
+| 3 | Wednesday |
+| 4 | Thursday |
+| 5 | Friday |
+| 6 | Saturday |
+
+**Workflow Integration:**
+- Admin creates: Class Templates → [Template] → Add Schedule Slot
+- Materializer: For each active slot, creates class_sessions for next N weeks
+- Schedule changes: Deactivate slots for holidays, reactivate after
+
+---
+
+### session_coaches
+
+**Purpose:** Tracks which coaches are assigned to specific class sessions. Allows multiple coaches per class with lead designation.
+
+**Usage Context:** Coach sees their assigned sessions in Coach Dashboard. Lead coach has primary responsibility. Multiple coaches for larger classes or mentoring.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| session_id | BIGINT | FK → class_sessions(id), NOT NULL | **Assigned class.** Which session the coach is working. CASCADE delete removes assignments when session deleted. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Assigned coach.** Which user is coaching this session. Must have coach_assignments for the gym. |
+| is_lead | BOOLEAN | NOT NULL, DEFAULT FALSE | **Lead coach flag.** TRUE for primary coach responsible for the class. Each session should have one lead coach. |
+| created_at | TIMESTAMP | NOT NULL | **Assignment timestamp.** When coach was assigned to this session. |
+
+**Indexes:** INDEX(session_id), INDEX(user_id)
+
+**Unique Constraint:** (session_id, user_id) - Coach can only be assigned once per session
+
+**Workflow Integration:**
+- Auto-assigned when sessions created from templates (if template has default coach)
+- Manually assigned by admin for substitutions or one-off sessions
+- Lead coach shown prominently in class details
+- Coaches see assigned sessions in their dashboard
+
+---
+
+### user_organizations
+
+**Purpose:** Junction table connecting users to organizations (gym memberships). Enables multi-gym support where athletes can belong to multiple gyms.
+
+**Usage Context:** Created when athlete joins a gym. Used for gym selector, subscription checks, and access control. Role field enables per-gym permissions.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), NOT NULL | **Member.** Which user belongs to the organization. CASCADE delete removes memberships when user deleted. |
+| organization_id | BIGINT | FK → organizations(id), NOT NULL | **Gym.** Which organization the user belongs to. RESTRICT prevents org deletion with members. |
+| role | VARCHAR(50) | DEFAULT 'member' | **Membership role.** Values: `member` (standard athlete), `coach` (elevated permissions - deprecated, use coach_assignments), `admin` (org admin). |
+| joined_at | TIMESTAMP | NOT NULL | **Membership start.** When user became a member. Used for tenure reports. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** |
+
+**Indexes:** INDEX(user_id), INDEX(organization_id), COMPOSITE(user_id, organization_id)
+
+**Unique Constraint:** (user_id, organization_id) - User can only join each org once
+
+**Workflow Integration:**
+- Admin adds member: Admin → Organizations → [Org] → Members → Add
+- Athlete sees gyms in gym selector dropdown
+- Athlete's schedules filtered by their organizations
+- Organization subscription benefits all members
+- Removing membership doesn't delete user, just removes from gym
+
+---
+
+### user_settings
+
+**Purpose:** User preferences for display, units, timezone, and notifications. Separate from users table to allow easy defaults and clean separation.
+
+**Usage Context:** Created automatically for new users with defaults. Updated via Settings view. Applied throughout app for weight display, time formatting, etc.
+
+| Column | Type | Constraints | Usage Context & Business Meaning |
+|--------|------|-------------|----------------------------------|
+| id | BIGINT | PK, AUTO_INCREMENT | System-generated identifier. |
+| user_id | BIGINT | FK → users(id), UNIQUE, NOT NULL | **Settings owner.** One settings record per user. CASCADE delete removes settings when user deleted. |
+| notification_preferences | TEXT | NULL | **Notification config.** JSON object controlling which notifications to receive. Example: `{"email_pr": true, "email_announcements": true, "push_class_reminder": true}` |
+| data_export_format | VARCHAR(50) | DEFAULT 'json' | **Export preference.** Format for workout data export. Values: `json`, `csv`. |
+| theme | VARCHAR(50) | DEFAULT 'light' | **UI theme.** App appearance. Values: `light`, `dark`, `system` (follow device). |
+| font_family | VARCHAR(50) | DEFAULT 'system' | **Font preference.** Display font. Values: `system`, `roboto`, `inter`. |
+| weight_unit | VARCHAR(20) | DEFAULT 'lbs' | **Weight display.** How weights are shown/entered. Values: `lbs` (pounds), `kg` (kilograms). Converts automatically. |
+| distance_unit | VARCHAR(20) | DEFAULT 'meters' | **Distance display.** How distances are shown. Values: `meters`, `miles`, `km`. Used for running/rowing. |
+| timezone | VARCHAR(50) | DEFAULT 'America/New_York' | **User timezone.** IANA timezone for schedule display. Class times converted from UTC. Example: `America/Los_Angeles` |
+| admin_user_event_notifications | BOOLEAN | NOT NULL, DEFAULT TRUE | **Admin email flag.** For admins only: receive emails when new users register, password resets, etc. |
+| created_at | TIMESTAMP | NOT NULL | **Record creation.** |
+| updated_at | TIMESTAMP | NOT NULL | **Last modification.** Updated when user changes any setting. |
+
+**Indexes:** UNIQUE(user_id)
+
+**Workflow Integration:**
+- Created automatically with defaults when user registers
+- User modifies via Settings → Preferences
+- Weight unit applied to all weight displays and inputs (auto-conversion)
+- Timezone applied to all schedule/class time displays
+- Notifications preferences checked before sending any notification
 
 ## Standard Movements
 
