@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Class Scheduling System (Phase 4 Complete)
+
+- **Documents Management**
+  - Gym-specific document types (waivers, liability forms, health forms)
+  - Track required vs optional documents per organization
+  - Document expiration support with configurable validity periods
+  - Admin CRUD for document types
+
+- **User Documents Tracking**
+  - Per-user document completion status (pending, completed, expired)
+  - Expiration date tracking for time-limited documents
+  - User view of pending/completed documents
+  - Admin can mark documents as completed
+
+- **Class Packages (Credit System)**
+  - Flexible credit packages (e.g., "10-Class Pack", "Monthly Unlimited")
+  - Configurable credits per package with validity periods
+  - Price tracking for package purchases
+  - Active/inactive package status
+
+- **User Credits**
+  - Credit balance tracking per user per organization
+  - Credits automatically populated from package when purchasing
+  - Expiration tracking for time-limited credit packages
+  - Available credits calculation excluding expired records
+
+- **Waitlist System**
+  - Join waitlist when class is full
+  - Automatic position tracking
+  - Leave waitlist functionality
+  - Waitlist status indicators (waiting, promoted, expired, cancelled)
+
+- **Class Notifications**
+  - Foundation for class reminders and waitlist promotions
+  - Notification types: reminder, waitlist_promoted, class_cancelled, class_updated
+
+- **Frontend Views**
+  - `MyCreditsView.vue` - User's credits, documents, and waitlist entries
+  - `AdminPackagesView.vue` - Admin management with 3 tabs (Packages, Documents, User Credits)
+  - `ScheduleView.vue` - Added waitlist join/leave buttons and position indicators
+
+- **API Endpoints (Phase 4)**
+  - `GET/POST/PUT/DELETE /api/admin/gyms/{id}/documents` - Document type management
+  - `GET/POST/PUT/DELETE /api/admin/gyms/{id}/packages` - Package management
+  - `POST /api/admin/gyms/{id}/users/{id}/credits` - Add credits to user
+  - `GET /api/gyms/{id}/users/me/credits` - Get user's credit balance
+  - `GET /api/gyms/{id}/users/me/documents` - Get user's document status
+  - `POST/DELETE /api/sessions/{id}/waitlist` - Join/leave waitlist
+  - `GET /api/users/me/waitlist` - Get user's waitlist entries
+
+- **Database Migration (0.27.0)**
+  - `documents` - Document types per organization
+  - `user_documents` - User document completion tracking
+  - `class_packages` - Credit package definitions
+  - `user_class_credits` - User credit balances
+  - `waitlist_entries` - Session waitlist queue
+  - `class_notifications` - Class-related notifications
+
+### Fixed
+
+- **PurchaseCredits Bug** - Now correctly uses package credits when `package_id` is provided without explicit `credits` value
+
 ### Added - Workout Template Instructions Field
 
 - **Instructions Field for Template Movements**
