@@ -950,7 +950,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: https://actalog.com/terms/
   title: ActaLog API
-  version: 0.22.0
+  version: 1.1.0
 paths:
   /admin/audit-logs/cleanup:
     post:

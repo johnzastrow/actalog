@@ -9,7 +9,7 @@ ActaLog is a mobile-first CrossFit workout tracker built with:
 - **Frontend:** Vue.js 3, Vuetify 3, Pinia
 - **Architecture:** Clean Architecture with strict layer separation
 
-**Version:** 0.23.0-beta
+**Version:** 1.1.0-beta
 
 ## Quick Reference
 
@@ -35,7 +35,7 @@ docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
 docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:<version>
 ./docker/scripts/push.sh dev      # Push dev tag
 ./docker/scripts/push.sh latest   # Push latest tag
-./docker/scripts/push.sh <version> # Push version tag (e.g., 0.24.0-beta)
+./docker/scripts/push.sh <version> # Push version tag (e.g., 1.1.0-beta)
 
 # Migrations
 make migrate-create name=add_feature
@@ -135,10 +135,10 @@ When testing new features, cycle through all supported databases to ensure compa
 
 # Tag and push to registry (always push to dev, latest, and version tags)
 docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
-docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:0.24.0-beta  # Use current version
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:1.1.0-beta  # Use current version
 ./docker/scripts/push.sh dev
 ./docker/scripts/push.sh latest
-./docker/scripts/push.sh 0.24.0-beta  # Use current version
+./docker/scripts/push.sh 1.1.0-beta  # Use current version
 
 # Test with SQLite (mount local data directory)
 docker run -p 8080:8080 -v $(pwd)/data:/app/data \

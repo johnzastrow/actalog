@@ -5,9 +5,9 @@ import "fmt"
 
 const (
 	// Major version number
-	Major = 0
+	Major = 1
 	// Minor version number
-	Minor = 24
+	Minor = 1
 	// Patch version number
 	Patch = 0
 	// PreRelease identifier (e.g., "alpha", "beta", "rc1")
