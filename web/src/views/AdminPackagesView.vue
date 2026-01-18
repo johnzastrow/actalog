@@ -41,6 +41,7 @@
       <v-tabs v-model="activeTab" class="mb-4">
         <v-tab value="packages">Packages</v-tab>
         <v-tab value="documents">Documents</v-tab>
+        <v-tab value="credits">User Credits</v-tab>
       </v-tabs>
 
       <!-- Packages Tab -->
@@ -113,6 +114,81 @@
               <v-alert v-else type="info" variant="tonal" density="compact">
                 No documents configured yet.
               </v-alert>
+            </v-card-text>
+          </v-card>
+        </v-window-item>
+
+        <!-- Credits Tab -->
+        <v-window-item value="credits">
+          <v-card elevation="0" rounded="lg" v-if="selectedOrgId">
+            <v-card-title class="d-flex align-center justify-space-between">
+              <span>Add Credits to User</span>
+            </v-card-title>
+            <v-card-text>
+              <!-- User Selection -->
+              <v-autocomplete
+                v-model="selectedUserId"
+                :items="users"
+                item-title="display_name"
+                item-value="id"
+                label="Select User"
+                variant="outlined"
+                density="comfortable"
+                class="mb-4"
+                :loading="loadingUsers"
+                @update:search="searchUsers"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <v-list-item-subtitle>{{ item.raw.email }}</v-list-item-subtitle>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+
+              <!-- Package Selection -->
+              <v-select
+                v-model="selectedPackageId"
+                :items="packages.filter(p => p.is_active)"
+                item-title="name"
+                item-value="id"
+                label="Select Package (optional)"
+                variant="outlined"
+                density="comfortable"
+                class="mb-4"
+                clearable
+                @update:model-value="onPackageSelected"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <v-list-item-subtitle>{{ item.raw.credits }} credits - ${{ (item.raw.price_cents / 100).toFixed(2) }}</v-list-item-subtitle>
+                  </v-list-item>
+                </template>
+              </v-select>
+
+              <!-- Manual Credits -->
+              <v-text-field
+                v-model.number="creditsToAdd"
+                label="Credits to Add"
+                type="number"
+                variant="outlined"
+                density="comfortable"
+                class="mb-4"
+              />
+
+              <!-- Notes -->
+              <v-textarea
+                v-model="creditNotes"
+                label="Notes (optional)"
+                variant="outlined"
+                density="comfortable"
+                rows="2"
+                class="mb-4"
+              />
+
+              <v-btn color="primary" :disabled="!selectedUserId || creditsToAdd <= 0" @click="purchaseCredits">
+                <v-icon start>mdi-plus</v-icon>
+                Add Credits
+              </v-btn>
             </v-card-text>
           </v-card>
         </v-window-item>
@@ -293,6 +369,15 @@ const documentTypes = [
   { title: 'Emergency Contact', value: 'emergency_contact' },
   { title: 'Other', value: 'other' }
 ]
+
+// Credits
+const users = ref([])
+const loadingUsers = ref(false)
+const selectedUserId = ref(null)
+const selectedPackageId = ref(null)
+const creditsToAdd = ref(0)
+const creditNotes = ref('')
+let searchTimeout = null
 
 onMounted(() => {
   fetchOrganizations()
@@ -478,6 +563,68 @@ async function deleteDocument(doc) {
   } catch (err) {
     console.error('Failed to delete document:', err)
     error.value = err.response?.data?.error || 'Failed to delete document'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Credits functions
+async function searchUsers(query) {
+  if (!query || query.length < 2) {
+    users.value = []
+    return
+  }
+
+  // Debounce the search
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(async () => {
+    loadingUsers.value = true
+    try {
+      const response = await axios.get(`/api/admin/users?search=${encodeURIComponent(query)}&limit=20`)
+      users.value = (response.data.users || []).map(u => ({
+        ...u,
+        display_name: `${u.name || u.email} (${u.email})`
+      }))
+    } catch (err) {
+      console.error('Failed to search users:', err)
+    } finally {
+      loadingUsers.value = false
+    }
+  }, 300)
+}
+
+function onPackageSelected(packageId) {
+  if (packageId) {
+    const pkg = packages.value.find(p => p.id === packageId)
+    if (pkg) {
+      creditsToAdd.value = pkg.credits
+    }
+  }
+}
+
+async function purchaseCredits() {
+  if (!selectedUserId.value || creditsToAdd.value <= 0) return
+
+  loading.value = true
+  error.value = null
+
+  try {
+    await axios.post(`/api/admin/gyms/${selectedOrgId.value}/users/${selectedUserId.value}/credits`, {
+      package_id: selectedPackageId.value || null,
+      credits: creditsToAdd.value,
+      notes: creditNotes.value || ''
+    })
+    successMessage.value = `Successfully added ${creditsToAdd.value} credits`
+
+    // Reset form
+    selectedUserId.value = null
+    selectedPackageId.value = null
+    creditsToAdd.value = 0
+    creditNotes.value = ''
+    users.value = []
+  } catch (err) {
+    console.error('Failed to purchase credits:', err)
+    error.value = err.response?.data?.error || 'Failed to add credits'
   } finally {
     loading.value = false
   }

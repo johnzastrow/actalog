@@ -97,6 +97,9 @@
                   <v-chip v-else-if="session.current_user_status === 'checked_in'" color="success" size="small" class="mr-2">
                     Checked In
                   </v-chip>
+                  <v-chip v-else-if="getWaitlistPosition(session.id)" color="warning" size="small" class="mr-2">
+                    Waitlist #{{ getWaitlistPosition(session.id) }}
+                  </v-chip>
 
                   <!-- Action buttons -->
                   <v-btn v-if="!session.current_user_status && session.status === 'scheduled' && session.available_spots > 0"
@@ -106,6 +109,16 @@
                   <v-btn v-else-if="session.current_user_status === 'reserved'"
                          color="error" variant="outlined" size="small" @click="cancelReservation(session)">
                     Cancel
+                  </v-btn>
+                  <!-- Waitlist button when class is full -->
+                  <v-btn v-else-if="!session.current_user_status && !getWaitlistPosition(session.id) && session.status === 'scheduled' && session.available_spots === 0"
+                         color="warning" size="small" @click="joinWaitlist(session)">
+                    Join Waitlist
+                  </v-btn>
+                  <!-- Leave waitlist button -->
+                  <v-btn v-else-if="getWaitlistPosition(session.id)"
+                         color="grey" variant="outlined" size="small" @click="leaveWaitlist(session)">
+                    Leave Waitlist
                   </v-btn>
                 </div>
               </div>
@@ -138,6 +151,7 @@ const selectedOrgId = ref(null)
 const sessions = ref([])
 const startDate = ref(new Date())
 const endDate = ref(new Date())
+const waitlistPositions = ref({}) // Map of sessionId -> position
 
 // Initialize dates
 onMounted(() => {
@@ -150,6 +164,7 @@ onMounted(() => {
   endDate.value = end
 
   fetchOrganizations()
+  fetchUserWaitlist()
 })
 
 async function fetchOrganizations() {
@@ -215,6 +230,60 @@ async function cancelReservation(session) {
     error.value = err.response?.data?.error || 'Failed to cancel reservation'
   } finally {
     loading.value = false
+  }
+}
+
+async function joinWaitlist(session) {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await axios.post(`/api/sessions/${session.id}/waitlist`)
+    waitlistPositions.value[session.id] = response.data.position
+    successMessage.value = `You've been added to the waitlist for ${session.name} (Position #${response.data.position})`
+    await fetchSessions()
+  } catch (err) {
+    console.error('Failed to join waitlist:', err)
+    error.value = err.response?.data?.error || 'Failed to join waitlist'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function leaveWaitlist(session) {
+  loading.value = true
+  error.value = null
+
+  try {
+    await axios.delete(`/api/sessions/${session.id}/waitlist`)
+    delete waitlistPositions.value[session.id]
+    successMessage.value = `You've been removed from the waitlist for ${session.name}`
+    await fetchSessions()
+  } catch (err) {
+    console.error('Failed to leave waitlist:', err)
+    error.value = err.response?.data?.error || 'Failed to leave waitlist'
+  } finally {
+    loading.value = false
+  }
+}
+
+function getWaitlistPosition(sessionId) {
+  return waitlistPositions.value[sessionId] || null
+}
+
+async function fetchUserWaitlist() {
+  try {
+    const response = await axios.get('/api/users/me/waitlist')
+    const entries = response.data.waitlist_entries || []
+    // Build a map of sessionId -> position for active waitlist entries
+    waitlistPositions.value = {}
+    entries.forEach(entry => {
+      if (entry.status === 'waiting') {
+        waitlistPositions.value[entry.session_id] = entry.position
+      }
+    })
+  } catch (err) {
+    console.error('Failed to fetch user waitlist:', err)
   }
 }
 
