@@ -2484,6 +2484,496 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.27.0",
+		Description: "Add documents, class packages, credits, and waitlist tables for Phase 4",
+		Up: func(db *sql.DB, driver string) error {
+			// Step 1: Create documents table (document types that require user completion)
+			var createDocumentsSQL string
+			switch driver {
+			case "sqlite3":
+				createDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS documents (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					name TEXT NOT NULL,
+					description TEXT,
+					document_type TEXT NOT NULL DEFAULT 'waiver',
+					url TEXT,
+					is_required INTEGER NOT NULL DEFAULT 1,
+					expires_after_days INTEGER,
+					is_active INTEGER NOT NULL DEFAULT 1,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_documents_org_id ON documents(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_documents_active ON documents(is_active);
+				CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(document_type);
+				`
+			case "postgres":
+				createDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS documents (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					document_type VARCHAR(50) NOT NULL DEFAULT 'waiver',
+					url TEXT,
+					is_required BOOLEAN NOT NULL DEFAULT TRUE,
+					expires_after_days INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_documents_org_id ON documents(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_documents_active ON documents(is_active);
+				CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(document_type);
+				`
+			case "mysql":
+				createDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS documents (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					document_type VARCHAR(50) NOT NULL DEFAULT 'waiver',
+					url TEXT,
+					is_required BOOLEAN NOT NULL DEFAULT TRUE,
+					expires_after_days INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_documents_org_id (organization_id),
+					INDEX idx_documents_active (is_active),
+					INDEX idx_documents_type (document_type),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createDocumentsSQL); err != nil {
+				return fmt.Errorf("failed to create documents table: %w", err)
+			}
+			fmt.Println("✓ Created documents table")
+
+			// Step 2: Create user_documents table (tracking user document completion)
+			var createUserDocumentsSQL string
+			switch driver {
+			case "sqlite3":
+				createUserDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS user_documents (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					document_id INTEGER NOT NULL,
+					status TEXT NOT NULL DEFAULT 'pending',
+					completed_at DATETIME,
+					expires_at DATETIME,
+					verified_by_user_id INTEGER,
+					notes TEXT,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+					FOREIGN KEY (verified_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+					UNIQUE(user_id, document_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_user_id ON user_documents(user_id);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_document_id ON user_documents(document_id);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_status ON user_documents(status);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_expires ON user_documents(expires_at);
+				`
+			case "postgres":
+				createUserDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS user_documents (
+					id BIGSERIAL PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					document_id BIGINT NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'pending',
+					completed_at TIMESTAMP,
+					expires_at TIMESTAMP,
+					verified_by_user_id BIGINT,
+					notes TEXT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+					FOREIGN KEY (verified_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+					UNIQUE(user_id, document_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_user_id ON user_documents(user_id);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_document_id ON user_documents(document_id);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_status ON user_documents(status);
+				CREATE INDEX IF NOT EXISTS idx_user_documents_expires ON user_documents(expires_at);
+				`
+			case "mysql":
+				createUserDocumentsSQL = `
+				CREATE TABLE IF NOT EXISTS user_documents (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					document_id BIGINT NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'pending',
+					completed_at DATETIME,
+					expires_at DATETIME,
+					verified_by_user_id BIGINT,
+					notes TEXT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_user_documents_user_id (user_id),
+					INDEX idx_user_documents_document_id (document_id),
+					INDEX idx_user_documents_status (status),
+					INDEX idx_user_documents_expires (expires_at),
+					UNIQUE KEY unique_user_document (user_id, document_id),
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+					FOREIGN KEY (verified_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createUserDocumentsSQL); err != nil {
+				return fmt.Errorf("failed to create user_documents table: %w", err)
+			}
+			fmt.Println("✓ Created user_documents table")
+
+			// Step 3: Create class_packages table (credit packages for purchase)
+			var createClassPackagesSQL string
+			switch driver {
+			case "sqlite3":
+				createClassPackagesSQL = `
+				CREATE TABLE IF NOT EXISTS class_packages (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					name TEXT NOT NULL,
+					description TEXT,
+					credits INTEGER NOT NULL,
+					price_cents INTEGER NOT NULL DEFAULT 0,
+					validity_days INTEGER,
+					is_active INTEGER NOT NULL DEFAULT 1,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_packages_org_id ON class_packages(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_packages_active ON class_packages(is_active);
+				`
+			case "postgres":
+				createClassPackagesSQL = `
+				CREATE TABLE IF NOT EXISTS class_packages (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					credits INTEGER NOT NULL,
+					price_cents INTEGER NOT NULL DEFAULT 0,
+					validity_days INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_packages_org_id ON class_packages(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_packages_active ON class_packages(is_active);
+				`
+			case "mysql":
+				createClassPackagesSQL = `
+				CREATE TABLE IF NOT EXISTS class_packages (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					credits INTEGER NOT NULL,
+					price_cents INTEGER NOT NULL DEFAULT 0,
+					validity_days INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_class_packages_org_id (organization_id),
+					INDEX idx_class_packages_active (is_active),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createClassPackagesSQL); err != nil {
+				return fmt.Errorf("failed to create class_packages table: %w", err)
+			}
+			fmt.Println("✓ Created class_packages table")
+
+			// Step 4: Create user_class_credits table (user's purchased credits)
+			var createUserClassCreditsSQL string
+			switch driver {
+			case "sqlite3":
+				createUserClassCreditsSQL = `
+				CREATE TABLE IF NOT EXISTS user_class_credits (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					organization_id INTEGER NOT NULL,
+					package_id INTEGER,
+					credits_total INTEGER NOT NULL,
+					credits_used INTEGER NOT NULL DEFAULT 0,
+					purchased_at DATETIME NOT NULL,
+					expires_at DATETIME,
+					notes TEXT,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (package_id) REFERENCES class_packages(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_user_id ON user_class_credits(user_id);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_org_id ON user_class_credits(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_expires ON user_class_credits(expires_at);
+				`
+			case "postgres":
+				createUserClassCreditsSQL = `
+				CREATE TABLE IF NOT EXISTS user_class_credits (
+					id BIGSERIAL PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					organization_id BIGINT NOT NULL,
+					package_id BIGINT,
+					credits_total INTEGER NOT NULL,
+					credits_used INTEGER NOT NULL DEFAULT 0,
+					purchased_at TIMESTAMP NOT NULL,
+					expires_at TIMESTAMP,
+					notes TEXT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (package_id) REFERENCES class_packages(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_user_id ON user_class_credits(user_id);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_org_id ON user_class_credits(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_user_class_credits_expires ON user_class_credits(expires_at);
+				`
+			case "mysql":
+				createUserClassCreditsSQL = `
+				CREATE TABLE IF NOT EXISTS user_class_credits (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					organization_id BIGINT NOT NULL,
+					package_id BIGINT,
+					credits_total INTEGER NOT NULL,
+					credits_used INTEGER NOT NULL DEFAULT 0,
+					purchased_at DATETIME NOT NULL,
+					expires_at DATETIME,
+					notes TEXT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_user_class_credits_user_id (user_id),
+					INDEX idx_user_class_credits_org_id (organization_id),
+					INDEX idx_user_class_credits_expires (expires_at),
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (package_id) REFERENCES class_packages(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createUserClassCreditsSQL); err != nil {
+				return fmt.Errorf("failed to create user_class_credits table: %w", err)
+			}
+			fmt.Println("✓ Created user_class_credits table")
+
+			// Step 5: Create waitlist_entries table
+			var createWaitlistEntriesSQL string
+			switch driver {
+			case "sqlite3":
+				createWaitlistEntriesSQL = `
+				CREATE TABLE IF NOT EXISTS waitlist_entries (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					session_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					position INTEGER NOT NULL,
+					status TEXT NOT NULL DEFAULT 'waiting',
+					joined_at DATETIME NOT NULL,
+					promoted_at DATETIME,
+					expired_at DATETIME,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(session_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_session_id ON waitlist_entries(session_id);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_user_id ON waitlist_entries(user_id);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_status ON waitlist_entries(status);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_position ON waitlist_entries(session_id, position);
+				`
+			case "postgres":
+				createWaitlistEntriesSQL = `
+				CREATE TABLE IF NOT EXISTS waitlist_entries (
+					id BIGSERIAL PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					position INTEGER NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'waiting',
+					joined_at TIMESTAMP NOT NULL,
+					promoted_at TIMESTAMP,
+					expired_at TIMESTAMP,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(session_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_session_id ON waitlist_entries(session_id);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_user_id ON waitlist_entries(user_id);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_status ON waitlist_entries(status);
+				CREATE INDEX IF NOT EXISTS idx_waitlist_entries_position ON waitlist_entries(session_id, position);
+				`
+			case "mysql":
+				createWaitlistEntriesSQL = `
+				CREATE TABLE IF NOT EXISTS waitlist_entries (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					position INTEGER NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'waiting',
+					joined_at DATETIME NOT NULL,
+					promoted_at DATETIME,
+					expired_at DATETIME,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_waitlist_entries_session_id (session_id),
+					INDEX idx_waitlist_entries_user_id (user_id),
+					INDEX idx_waitlist_entries_status (status),
+					INDEX idx_waitlist_entries_position (session_id, position),
+					UNIQUE KEY unique_session_user (session_id, user_id),
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createWaitlistEntriesSQL); err != nil {
+				return fmt.Errorf("failed to create waitlist_entries table: %w", err)
+			}
+			fmt.Println("✓ Created waitlist_entries table")
+
+			// Step 6: Create class_notifications table for reminders
+			var createClassNotificationsSQL string
+			switch driver {
+			case "sqlite3":
+				createClassNotificationsSQL = `
+				CREATE TABLE IF NOT EXISTS class_notifications (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					session_id INTEGER,
+					reservation_id INTEGER,
+					waitlist_entry_id INTEGER,
+					notification_type TEXT NOT NULL,
+					status TEXT NOT NULL DEFAULT 'pending',
+					scheduled_for DATETIME NOT NULL,
+					sent_at DATETIME,
+					error_message TEXT,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+					FOREIGN KEY (waitlist_entry_id) REFERENCES waitlist_entries(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_user_id ON class_notifications(user_id);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_session_id ON class_notifications(session_id);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_status ON class_notifications(status);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_scheduled ON class_notifications(scheduled_for);
+				`
+			case "postgres":
+				createClassNotificationsSQL = `
+				CREATE TABLE IF NOT EXISTS class_notifications (
+					id BIGSERIAL PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					session_id BIGINT,
+					reservation_id BIGINT,
+					waitlist_entry_id BIGINT,
+					notification_type VARCHAR(50) NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'pending',
+					scheduled_for TIMESTAMP NOT NULL,
+					sent_at TIMESTAMP,
+					error_message TEXT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+					FOREIGN KEY (waitlist_entry_id) REFERENCES waitlist_entries(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_user_id ON class_notifications(user_id);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_session_id ON class_notifications(session_id);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_status ON class_notifications(status);
+				CREATE INDEX IF NOT EXISTS idx_class_notifications_scheduled ON class_notifications(scheduled_for);
+				`
+			case "mysql":
+				createClassNotificationsSQL = `
+				CREATE TABLE IF NOT EXISTS class_notifications (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					user_id BIGINT NOT NULL,
+					session_id BIGINT,
+					reservation_id BIGINT,
+					waitlist_entry_id BIGINT,
+					notification_type VARCHAR(50) NOT NULL,
+					status VARCHAR(50) NOT NULL DEFAULT 'pending',
+					scheduled_for DATETIME NOT NULL,
+					sent_at DATETIME,
+					error_message TEXT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_class_notifications_user_id (user_id),
+					INDEX idx_class_notifications_session_id (session_id),
+					INDEX idx_class_notifications_status (status),
+					INDEX idx_class_notifications_scheduled (scheduled_for),
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+					FOREIGN KEY (waitlist_entry_id) REFERENCES waitlist_entries(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createClassNotificationsSQL); err != nil {
+				return fmt.Errorf("failed to create class_notifications table: %w", err)
+			}
+			fmt.Println("✓ Created class_notifications table")
+
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop tables in reverse order of creation
+			tables := []string{
+				"class_notifications",
+				"waitlist_entries",
+				"user_class_credits",
+				"class_packages",
+				"user_documents",
+				"documents",
+			}
+
+			for _, table := range tables {
+				if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s", table)); err != nil {
+					return fmt.Errorf("failed to drop %s table: %w", table, err)
+				}
+				fmt.Printf("✓ Dropped %s table\n", table)
+			}
+
+			fmt.Println("⚠️  WARNING: Phase 4 data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 
