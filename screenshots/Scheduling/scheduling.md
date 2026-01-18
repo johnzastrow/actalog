@@ -2,7 +2,7 @@
 
 **Summary:**
 
-Add a first-class scheduling capability for gyms that lets administrators create recurring class templates and individual class sessions, let coaches manage attendance, and let athletes reserve and attend classes. The feature must be toggleable by admins, respect gym boundaries, and integrate with existing workout templates and user workout records.
+Add a first-class scheduling capability for gyms that lets administrators create recurring class templates and individual class sessions, let coaches manage attendance, and let athletes reserve and attend classes. The feature must be toggleable (disable/enable scheduling) by admins, respect gym boundaries, and integrate with existing workout templates and user workout records.
 
 **Goals:**
 
@@ -34,7 +34,7 @@ Add a first-class scheduling capability for gyms that lets administrators create
 
 Ignore the navigation bars in the example screenshots — focus on attributes and flows.
 
-### Screenshots
+### Screenshots for attributes and ideas
 
 ![Documents](/home/jcz/Github/actionlog/screenshots/Scheduling/image_001.png)
 
@@ -149,9 +149,9 @@ Return patterns: include reservation state and whether user has required documen
 
 **Open Questions / Decisions Needed:**
 
-- When should credits be charged: on reservation confirmed or on check-in? (Configurable per gym)
-- Waitlist promotion TTL: how long does a promoted user have to confirm? (e.g., 10 minutes)
-- Recurrence complexity: support full RRULE or only simple weekly schedules?
+- When should credits be charged: on reservation confirmed or on check-in? (Configurable per gym). Answer: on check-in.
+- Waitlist promotion TTL: how long does a promoted user have to confirm? (e.g., 10 minutes). Answer: configurable, default 15 minutes.
+- Recurrence complexity: support full RRULE or only simple weekly schedules? Answer: I need to see examples.
 
 **Next Steps (implementation sketch):**
 
