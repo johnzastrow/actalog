@@ -588,6 +588,15 @@ func (h *Phase4Handler) PurchaseCredits(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Get package credits for response if using a package
+	creditsAdded := req.Credits
+	if req.PackageID != nil && req.Credits == 0 {
+		pkg, err := h.phase4Service.GetPackageByID(*req.PackageID)
+		if err == nil && pkg != nil {
+			creditsAdded = pkg.Credits
+		}
+	}
+
 	if err := h.phase4Service.PurchaseCredits(adminUserID, targetUserID, gymID, req.PackageID, req.Credits, req.Notes); err != nil {
 		if err == service.ErrClassPackageNotFound {
 			respondError(w, http.StatusNotFound, "Class package not found")
@@ -600,7 +609,7 @@ func (h *Phase4Handler) PurchaseCredits(w http.ResponseWriter, r *http.Request) 
 
 	respondJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "Credits added successfully",
-		"credits": req.Credits,
+		"credits": creditsAdded,
 	})
 }
 

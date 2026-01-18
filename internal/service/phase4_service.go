@@ -331,14 +331,22 @@ func (s *Phase4Service) DeletePackage(adminUserID int64, id int64) error {
 
 // PurchaseCredits adds credits to a user's account
 func (s *Phase4Service) PurchaseCredits(adminUserID int64, userID, orgID int64, packageID *int64, credits int, notes string) error {
-	// Calculate expiration if package has validity period
+	// Calculate expiration and get credits from package if provided
 	var expiresAt *time.Time
+	creditsToAdd := credits
 	if packageID != nil {
 		pkg, err := s.packageRepo.GetByID(*packageID)
 		if err != nil {
 			return fmt.Errorf("failed to get package: %w", err)
 		}
-		if pkg != nil && pkg.ValidityDays != nil {
+		if pkg == nil {
+			return ErrClassPackageNotFound
+		}
+		// Use package credits if credits not explicitly provided
+		if credits == 0 {
+			creditsToAdd = pkg.Credits
+		}
+		if pkg.ValidityDays != nil {
 			exp := time.Now().AddDate(0, 0, *pkg.ValidityDays)
 			expiresAt = &exp
 		}
@@ -348,7 +356,7 @@ func (s *Phase4Service) PurchaseCredits(adminUserID int64, userID, orgID int64, 
 		UserID:         userID,
 		OrganizationID: orgID,
 		PackageID:      packageID,
-		CreditsTotal:   credits,
+		CreditsTotal:   creditsToAdd,
 		CreditsUsed:    0,
 		PurchasedAt:    time.Now(),
 		ExpiresAt:      expiresAt,
@@ -361,7 +369,7 @@ func (s *Phase4Service) PurchaseCredits(adminUserID int64, userID, orgID int64, 
 
 	s.logAudit(adminUserID, &userID, domain.EventCreditsAdded, map[string]interface{}{
 		"credits_id":      creditRecord.ID,
-		"credits":         credits,
+		"credits":         creditsToAdd,
 		"organization_id": orgID,
 		"package_id":      packageID,
 	})
