@@ -312,7 +312,7 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
   - **B) Credit is restored
   - **C) Configurable per gym
 
-  Question 6c: Should there be consequences for repeat no-shows?
+  Question 6c: Should there be consequences for repeat no-shows? Answer: A just track in reports.
   - A) No - Just track in reports
   - **B) Warning after N no-shows
   - **C) Auto-restrict booking after N no-shows in X days
@@ -323,11 +323,11 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: Gym has 3 coaches. "Morning CrossFit" needs coverage Mon-Fri but coaches rotate.
 
-  Question 7a: Can a session have multiple coaches?
+  Question 7a: Can a session have multiple coaches?  Answer: B Yes - Multiple coaches, no need to mark primary.
   - A) No - One coach per session
   - B) Yes - Multiple coaches, one marked primary
 
-  Question 7b: When sessions are materialized from template, how are coaches assigned?
+  Question 7b: When sessions are materialized from template, how are coaches assigned? Answer C Coach schedule - Separate coach availability system (more complex). Admins then assign coaches to sessions based on their availability.
   - A) No coach - Admin assigns after materialization
   - B) Default coach from template - Can be overridden per session
   - C) Coach schedule - Separate coach availability system (more complex)
@@ -337,7 +337,7 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: Small gym, coach is busy warming up, athletes arrive.
 
-  Question 8: Can athletes check themselves in?
+  Question 8: Can athletes check themselves in? Answer: C Configurable - Gym setting to allow/disallow self-check-in, including QR code option.
   - A) No - Only coach/admin can check in
   - B) Yes, always - Athletes can self-check-in
   - C) Configurable - Gym setting to allow/disallow self-check-in
@@ -348,12 +348,12 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: User hasn't signed the updated waiver (new version uploaded last week).
 
-  Question 9a: When are document requirements checked?
+  Question 9a: When are document requirements checked? answer: A On reservation - Can't reserve without signed docs
   - A) On reservation - Can't reserve without signed docs
   - B) On confirmation - Can reserve, must sign before confirming
   - C) On check-in - Can reserve/confirm, must sign at door
 
-  Question 9b: When a document is updated (new version):
+  Question 9b: When a document is updated (new version): answer: C Admin chooses per document update
   - **A) Existing signatures remain valid
   - **B) Users must re-sign new version
   - **C) Admin chooses per document update
@@ -363,12 +363,12 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: Coach is sick, 6am class needs to be cancelled. 15 people are confirmed.
 
-  Question 10a: What happens to reservations when a session is cancelled?
+  Question 10a: What happens to reservations when a session is cancelled? answer: A All automatically cancelled, credits restored
   - **A) All automatically cancelled, credits restored
   - **B) All automatically cancelled, no credit restore
   - **C) Admin chooses credit restore at cancellation time
 
-  Question 10b: Should the system support rescheduling (move to different time)?
+  Question 10b: Should the system support rescheduling (move to different time)? answer A No - Cancel and manually create new session if needed.
   - A) No - Cancel and create new session
   - B) Yes - Reschedule option that keeps reservations, notifies users
 
@@ -377,7 +377,7 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: Gym offers "Morning Only" subscription (classes before noon) and "Unlimited" subscription.
 
-  Question 11: Should class templates restrict which subscriptions can book?
+  Question 11: Should class templates restrict which subscriptions can book? answer A: A No - Any active subscription can book any class
   - A) No - Any active subscription can book any class
   - B) Yes - Templates can specify allowed subscription types
   - C) Yes, with time rules - Subscription defines allowed time windows
@@ -387,10 +387,54 @@ Architect: the dual concept of ClassTemplate and ClassSession allows for flexibl
 
   Situation: User bought 10-credit punch card 6 months ago, used 3 credits, subscription is "indefinite."
 
-  Question 12: Can credits expire independently of subscription?
+  Question 12: Can credits expire independently of subscription? answer B: yes - Credits expire after X days from purchase. Each purchase has its own terms
   - A) No - Credits valid as long as subscription is active
   - B) Yes - Credits expire after X days from purchase
   - **C) Configurable per subscription type
 
   ---
-  Please answer these questions so I can finalize the specification. You can answer with the letter choices, or provide alternative approaches I haven't considered.
+    ### Scenario 13: Reporting Needs
+    Situation: Gym admin wants to analyze class attendance trends.
+    Question 13: What reporting features are essential at launch? answer: A None - Reporting can be added later. But add these feature requests to the backlog to be fleshed out later.
+    - A) None - Reporting can be added later
+      - B) Basic reports - Attendance per class/session, user attendance history
+      - C) Advanced analytics - Peak times, no-show patterns, subscription usage trends
+      - D) Custom report builder - Admins create their own reports with filters and aggregations
+      - E) Export capabilities - CSV/Excel exports of attendance and reservation data
+      - F) Dashboard views - Visual summaries of key metrics for quick insights
+      - G) Scheduled reports - Automated email reports sent to admins on a regular basis
+      - H) Integration with BI tools - Connect to external business intelligence platforms for deeper analysis
+      - I) User engagement metrics - Track user activity, class participation rates, and retention statistics
+      - J) Feedback collection - Allow users to provide feedback on classes and coaches for quality improvement
+      - K) Historical data access - Ability to view and analyze past attendance and reservation data over time
+      - L) Role-based access - Control who can view and generate reports based on user roles (admin, coach, etc.)
+      - M) Real-time reporting - Live updates on class attendance and reservations for immediate insights
+      - N) Customizable dashboards - Allow admins to personalize their dashboard views with preferred metrics and visualizations
+      - O) Data visualization tools - Built-in charts and graphs to help interpret attendance and reservation data easily
+      - P) API access - Provide APIs for external systems to pull reporting data for integration purposes
+      - Q) User segmentation - Analyze attendance and reservation patterns based on user demographics and behavior
+      - R) Class performance metrics - Evaluate the success of classes based on attendance, feedback, and user retention
+      - S) Coach performance reports - Track coach effectiveness based on class attendance and user feedback
+      - T) Automated insights - System-generated recommendations based on attendance trends and user behavior
+      - U) Multi-gym reporting - Consolidated reports for admins managing multiple gym locations
+      - V) Data export scheduling - Set up automated exports of reporting data at specified intervals for offline analysis
+      - W) User activity tracking - Monitor user interactions with the scheduling system for usage analysis and improvements
+      - X) Attendance forecasting - Predict future class attendance based on historical data and trends
+      - Y) Custom alerting - Notify admins of significant changes in attendance patterns or reservation trends
+      - Z) Data retention policies - Define how long attendance and reservation data is stored for reporting purposes
+      - AA) Integration with CRM systems - Sync attendance and reservation data with customer relationship management platforms for enhanced user management
+      - AB) Mobile reporting - Access reporting features and dashboards on mobile devices for on-the-go insights
+      - AC) User feedback analysis - Aggregate and analyze user feedback to identify areas for improvement in classes and coaching
+      - AD) Class popularity metrics - Identify the most and least popular classes based on attendance data
+      - AE) Seasonal trend analysis - Examine attendance patterns across different seasons or time periods for strategic planning
+      - AF) User retention reports - Track how often users return to classes and their long-term engagement with the gym
+      - AG) Data visualization customization - Allow admins to customize the appearance and layout of data visualizations for better clarity
+      - AH) Integration with scheduling tools - Sync reporting data with external scheduling platforms for comprehensive analysis
+      - AI) User journey mapping - Visualize the user journey from reservation to attendance for better understanding of user behavior
+      - AJ) Class cancellation impact analysis - Assess the effects of class cancellations on attendance and user satisfaction
+      - AK) Real-time alerts - Notify admins of significant changes in attendance patterns or reservation trends
+      - AL) Data retention policies - Define how long attendance and reservation data is stored for reporting purposes
+      - AM) Integration with CRM systems - Sync attendance and reservation data with customer relationship management platforms for enhanced user management
+      - AN) Mobile reporting - Access reporting features and dashboards on mobile devices for on-the-go insights
+      - AO) User feedback analysis - Aggregate and analyze user feedback to identify areas for improvement in classes and coaching
+      - 
