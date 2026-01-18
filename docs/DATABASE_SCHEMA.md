@@ -13,7 +13,30 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 0.16.0-beta
+**Current Version:** 0.27.0-beta (Class Scheduling Phase 4)
+
+## Recent Changes (v0.27.0-beta)
+
+- **Class Scheduling Phase 4**: Documents, packages, credits, waitlist, notifications
+  - New `documents` table - Document types required by organizations (waivers, liability forms)
+  - New `user_documents` table - Track user document completion status
+  - New `class_packages` table - Credit packages (e.g., "10-Class Pack")
+  - New `user_class_credits` table - User credit balances with expiration
+  - New `waitlist_entries` table - Waitlist queue for full classes
+  - New `class_notifications` table - Class reminders and waitlist promotions
+  - All tables have proper indexes and foreign key constraints
+  - Multi-database support verified (SQLite, PostgreSQL, MariaDB)
+
+## Recent Changes (v0.26.0-beta)
+
+- **Class Scheduling System (Phases 1-3)**: Core scheduling infrastructure
+  - New `gym_locations` table - Physical locations within gyms
+  - New `class_templates` table - Reusable class definitions
+  - New `schedule_slots` table - Recurring time patterns per template
+  - New `class_sessions` table - Scheduled class instances
+  - New `coach_assignments` table - Per-gym coach role assignments
+  - New `session_coaches` table - Coaches assigned to specific sessions
+  - New `reservations` table - User bookings with state tracking
 
 ## Recent Changes (v0.16.0-beta)
 
@@ -780,6 +803,142 @@ User has write access if:
 - Admin: `GET /api/admin/subscriptions/user/{user_id}` - View subscription history
 - Organization endpoints follow same pattern
 
+### documents
+
+Stores document types that organizations require users to complete (waivers, liability forms, health forms). Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique document identifier |
+| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
+| name | VARCHAR(255) | NOT NULL | Document name (e.g., "Liability Waiver") |
+| description | TEXT | NULL | Description of the document |
+| document_type | VARCHAR(50) | NOT NULL, DEFAULT 'waiver' | Type: waiver, liability, health, other |
+| url | TEXT | NULL | URL to external document (if applicable) |
+| is_required | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether document is required |
+| expires_after_days | INT | NULL | Days until document expires (NULL = never) |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether document is currently active |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_documents_org_id, idx_documents_active, idx_documents_type
+
+**Foreign Keys:** organization_id → organizations(id) ON DELETE CASCADE
+
+### user_documents
+
+Tracks which documents each user has completed. Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique record identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| document_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to documents.id |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | Status: pending, completed, expired |
+| completed_at | TIMESTAMP | NULL | When document was completed |
+| expires_at | TIMESTAMP | NULL | When completion expires |
+| verified_by_user_id | BIGINT | NULL, FOREIGN KEY | Admin who verified completion |
+| notes | TEXT | NULL | Admin notes |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_user_documents_user_id, idx_user_documents_document_id, idx_user_documents_status, idx_user_documents_expires
+
+**Foreign Keys:** user_id → users(id) CASCADE, document_id → documents(id) CASCADE, verified_by_user_id → users(id) SET NULL
+
+**Unique Constraint:** (user_id, document_id)
+
+### class_packages
+
+Stores credit package definitions that can be purchased. Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique package identifier |
+| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
+| name | VARCHAR(255) | NOT NULL | Package name (e.g., "10-Class Pack") |
+| description | TEXT | NULL | Package description |
+| credits | INT | NOT NULL | Number of credits in package |
+| price_cents | INT | NOT NULL, DEFAULT 0 | Price in cents |
+| validity_days | INT | NULL | Days until credits expire (NULL = never) |
+| is_active | BOOLEAN | NOT NULL, DEFAULT TRUE | Whether package is available |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_class_packages_org_id, idx_class_packages_active
+
+**Foreign Keys:** organization_id → organizations(id) ON DELETE CASCADE
+
+### user_class_credits
+
+Tracks user credit balances from purchased packages. Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique credit record identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| organization_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to organizations.id |
+| package_id | BIGINT | NULL, FOREIGN KEY | Reference to class_packages.id (if from package) |
+| credits_total | INT | NOT NULL | Total credits purchased |
+| credits_used | INT | NOT NULL, DEFAULT 0 | Credits consumed |
+| purchased_at | TIMESTAMP | NOT NULL | When credits were purchased |
+| expires_at | TIMESTAMP | NULL | When credits expire |
+| notes | TEXT | NULL | Admin notes |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_user_class_credits_user_id, idx_user_class_credits_org_id, idx_user_class_credits_expires
+
+**Foreign Keys:** user_id → users(id) CASCADE, organization_id → organizations(id) CASCADE, package_id → class_packages(id) SET NULL
+
+**Calculated Field:** `credits_remaining = credits_total - credits_used`
+
+### waitlist_entries
+
+Queue for users waiting for spots in full classes. Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique waitlist entry identifier |
+| session_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to class_sessions.id |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| position | INT | NOT NULL | Position in waitlist queue |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'waiting' | Status: waiting, promoted, expired, cancelled |
+| joined_at | TIMESTAMP | NOT NULL | When user joined waitlist |
+| promoted_at | TIMESTAMP | NULL | When promoted to reservation |
+| expired_at | TIMESTAMP | NULL | When entry expired |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_waitlist_entries_session_id, idx_waitlist_entries_user_id, idx_waitlist_entries_status, idx_waitlist_entries_position
+
+**Foreign Keys:** session_id → class_sessions(id) CASCADE, user_id → users(id) CASCADE
+
+**Unique Constraint:** (session_id, user_id)
+
+### class_notifications
+
+Notifications for class reminders, waitlist promotions, and cancellations. Added in v0.27.0.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique notification identifier |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY | Reference to users.id |
+| session_id | BIGINT | NULL, FOREIGN KEY | Reference to class_sessions.id |
+| reservation_id | BIGINT | NULL, FOREIGN KEY | Reference to reservations.id |
+| waitlist_entry_id | BIGINT | NULL, FOREIGN KEY | Reference to waitlist_entries.id |
+| notification_type | VARCHAR(50) | NOT NULL | Type: reminder, waitlist_promoted, class_cancelled, class_updated |
+| status | VARCHAR(50) | NOT NULL, DEFAULT 'pending' | Status: pending, sent, failed |
+| scheduled_for | TIMESTAMP | NOT NULL | When notification should be sent |
+| sent_at | TIMESTAMP | NULL | When notification was sent |
+| error_message | TEXT | NULL | Error message if failed |
+| created_at | TIMESTAMP | NOT NULL | Record creation time |
+| updated_at | TIMESTAMP | NOT NULL | Last update time |
+
+**Indexes:** idx_class_notifications_user_id, idx_class_notifications_session_id, idx_class_notifications_status, idx_class_notifications_scheduled
+
+**Foreign Keys:** user_id → users(id) CASCADE, session_id → class_sessions(id) CASCADE, reservation_id → reservations(id) CASCADE, waitlist_entry_id → waitlist_entries(id) CASCADE
+
 ## Standard Movements
 
 The application pre-seeds 31 standard CrossFit movements on initialization:
@@ -994,8 +1153,11 @@ Potential future schema additions (not yet implemented):
 
 ## Version History
 
-- **Application v0.12.0-beta** (Current): No schema changes (Mobile PWA fixes, Docker OCI labels, Admin UI improvements)
-- **v0.11.0-beta** (Current Schema): Data change audit logging with before/after value tracking
+- **v0.27.0-beta** (Current Schema): Class scheduling Phase 4 - documents, packages, credits, waitlist, notifications
+- **v0.26.0-beta**: Class scheduling Phases 1-3 - locations, templates, sessions, coaches, reservations
+- **v0.16.0-beta**: Notification likes feature
+- **v0.14.0-beta**: Subscription billing system (user + organization subscriptions)
+- **v0.11.0-beta**: Data change audit logging with before/after value tracking
 - **Application v0.10.0-beta**: Docker deployment system and Wodify performance import
 - **Application v0.8.x-beta**: Cross-database backup/restore, PostgreSQL pgx driver migration
 - **v0.3.3-beta**: User profile editing with birthday field
