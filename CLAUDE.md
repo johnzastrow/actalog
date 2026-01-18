@@ -118,7 +118,7 @@ When testing new features, cycle through all supported databases to ensure compa
 |----------|------------|
 | SQLite | Local file: `./data/actalog.db` |
 | MariaDB | `192.168.1.234:3306` (user: jcz) |
-| PostgreSQL | `192.168.1.28:5432` |
+| PostgreSQL | `192.168.1.143:5432` (database: jcz, schema: actalog) |
 
 **Email Testing (SMTP2GO):**
 | Setting | Value |
@@ -162,8 +162,8 @@ docker run --network host \
 
 # Test with PostgreSQL (use --network host for external DB access)
 docker run --network host \
-  -e DB_DRIVER=postgres -e DB_HOST=192.168.1.28 -e DB_PORT=5432 \
-  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=actalog \
+  -e DB_DRIVER=postgres -e DB_HOST=192.168.1.143 -e DB_PORT=5432 \
+  -e DB_USER=jcz -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=jcz -e DB_SCHEMA=actalog \
   ghcr.io/johnzastrow/actalog:dev
 ```
 
