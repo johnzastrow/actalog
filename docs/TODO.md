@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-15
+> **Last Updated:** 2026-01-18
 > **Current Version:** 0.24.0-beta
 
 ---
@@ -35,6 +35,47 @@
 ## Active Tasks
 
 *Items currently being worked on. Move items here from Backlog when starting.*
+
+### Class Scheduling System *(Completed)*
+
+**Status:** Phase 1-4 Complete
+
+**Phase 1-3 (v0.26.0 migration):**
+- [x] Gym locations, class templates, schedule slots
+- [x] Class sessions with capacity management
+- [x] Coach assignments (per-gym role)
+- [x] Reservations with check-in flow
+
+**Phase 4 (v0.27.0 migration):**
+- [x] Documents - Required documents (waivers, liability forms) per gym
+- [x] User Documents - Track document completion status per user
+- [x] Class Packages - Credit packages (e.g., "10-Class Pack")
+- [x] User Credits - Credit balances with expiration tracking
+- [x] Waitlist - Queue management when classes are full
+- [x] Class Notifications - Reminders and waitlist promotions
+
+**Frontend Views:**
+- [x] `ScheduleView.vue` - Browse sessions, reserve, join/leave waitlist
+- [x] `MyCreditsView.vue` - User's credits, documents, waitlist entries
+- [x] `MyReservationsView.vue` - User's upcoming reservations
+- [x] `AdminPackagesView.vue` - Admin management for packages, documents, user credits
+- [x] `AdminSchedulingView.vue` - Admin session/template management
+
+**API Endpoints (Phase 4):**
+- Documents: `GET/POST/PUT/DELETE /api/admin/gyms/{id}/documents`
+- Packages: `GET/POST/PUT/DELETE /api/admin/gyms/{id}/packages`
+- Credits: `POST /api/admin/gyms/{id}/users/{id}/credits`, `GET /api/gyms/{id}/users/me/credits`
+- Waitlist: `POST/DELETE /api/sessions/{id}/waitlist`, `GET /api/users/me/waitlist`
+- User documents: `GET /api/gyms/{id}/users/me/documents`
+
+**Database Tables (6 new in v0.27.0):**
+- `documents`, `user_documents`, `class_packages`, `user_class_credits`, `waitlist_entries`, `class_notifications`
+
+**Bug Fix:** PurchaseCredits now correctly uses package credits when `package_id` is provided without explicit `credits` value.
+
+**Tested on:** SQLite, MariaDB (192.168.1.234), PostgreSQL (192.168.1.143)
+
+---
 
 ### Test Suite Cleanup *(Completed)*
 
