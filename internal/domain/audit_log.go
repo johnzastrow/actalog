@@ -132,6 +132,25 @@ const (
 	EventReservationCheckedIn = "reservation_checked_in"
 	EventReservationNoShow    = "reservation_no_show"
 	EventReservationAttended  = "reservation_attended"
+
+	// Phase 4 Events - Documents
+	EventDocumentCreated       = "document_created"
+	EventDocumentUpdated       = "document_updated"
+	EventDocumentDeleted       = "document_deleted"
+	EventUserDocumentCompleted = "user_document_completed"
+
+	// Phase 4 Events - Class Packages
+	EventClassPackageCreated = "class_package_created"
+	EventClassPackageUpdated = "class_package_updated"
+	EventClassPackageDeleted = "class_package_deleted"
+
+	// Phase 4 Events - Credits
+	EventCreditsAdded = "credits_added"
+
+	// Phase 4 Events - Waitlist
+	EventWaitlistJoined   = "waitlist_joined"
+	EventWaitlistCancelled = "waitlist_cancelled"
+	EventWaitlistPromoted = "waitlist_promoted"
 )
 
 // AuditLogRepository defines the interface for audit log data access

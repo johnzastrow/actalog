@@ -238,6 +238,14 @@ func main() {
 	reservationRepo := repository.NewReservationRepository(db)
 	coachAssignmentRepo := repository.NewCoachAssignmentRepository(db)
 
+	// Phase 4 repositories (documents, credits, waitlist, notifications)
+	documentRepo := repository.NewDocumentRepository(db)
+	userDocumentRepo := repository.NewUserDocumentRepository(db)
+	classPackageRepo := repository.NewClassPackageRepository(db)
+	userCreditsRepo := repository.NewUserClassCreditsRepository(db)
+	waitlistRepo := repository.NewWaitlistRepository(db)
+	classNotificationRepo := repository.NewClassNotificationRepository(db)
+
 	// Initialize email service
 	var emailService *email.Service
 	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
@@ -425,6 +433,20 @@ func main() {
 		auditLogRepo,
 	)
 
+	// Phase 4 service (documents, credits, waitlist, notifications)
+	phase4Service := service.NewPhase4Service(
+		documentRepo,
+		userDocumentRepo,
+		classPackageRepo,
+		userCreditsRepo,
+		waitlistRepo,
+		classNotificationRepo,
+		reservationRepo,
+		classSessionRepo,
+		orgRepo,
+		auditLogRepo,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -456,6 +478,7 @@ func main() {
 	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
 	dataQualityHandler := handler.NewDataQualityHandler(dataQualityService, appLogger)
 	schedulingHandler := handler.NewSchedulingHandler(schedulingService, appLogger)
+	phase4Handler := handler.NewPhase4Handler(phase4Service, appLogger)
 
 	// Initialize session materializer and scheduler
 	var appScheduler *scheduler.Scheduler
@@ -619,6 +642,11 @@ func main() {
 			// User's upcoming reservations (always allowed)
 			r.Get("/users/me/reservations/upcoming", schedulingHandler.GetUserUpcomingReservations)
 
+			// User's documents, waitlist, and notifications (always allowed - own data)
+			r.Get("/users/me/documents", phase4Handler.GetUserDocuments)
+			r.Get("/users/me/waitlist", phase4Handler.GetUserWaitlistEntries)
+			r.Get("/users/me/notifications", phase4Handler.GetUserNotifications)
+
 			// Coach portal routes (for users assigned as coaches)
 			r.Get("/coaches/me/sessions", schedulingHandler.GetCoachSessions)
 
@@ -713,7 +741,15 @@ func main() {
 				// Class session reservation routes (subscription required for making reservations)
 				r.Post("/sessions/{session_id}/reserve", schedulingHandler.CreateReservation)
 				r.Delete("/sessions/{session_id}/reserve", schedulingHandler.CancelReservation)
+
+				// Waitlist routes (subscription required)
+				r.Post("/sessions/{session_id}/waitlist", phase4Handler.JoinWaitlist)
+				r.Delete("/sessions/{session_id}/waitlist", phase4Handler.LeaveWaitlist)
 			}) // End of subscription-required routes
+
+			// Session waitlist info (read-only for authenticated users)
+			r.Get("/sessions/{session_id}/waitlist", phase4Handler.GetSessionWaitlist)
+			r.Get("/sessions/{session_id}/waitlist/position", phase4Handler.GetUserWaitlistPosition)
 
 			// Class scheduling routes (read-only public, write requires subscription)
 			// Session listing - available to all authenticated users
@@ -723,6 +759,16 @@ func main() {
 				r.Get("/locations", schedulingHandler.ListLocations)
 				r.Get("/locations/{id}", schedulingHandler.GetLocation)
 				r.Get("/templates", schedulingHandler.ListTemplates)
+
+				// Phase 4 read routes for gym
+				r.Get("/documents", phase4Handler.ListDocuments)
+				r.Get("/documents/{id}", phase4Handler.GetDocument)
+				r.Get("/packages", phase4Handler.ListClassPackages)
+				r.Get("/packages/{id}", phase4Handler.GetClassPackage)
+				r.Get("/users/me/documents", phase4Handler.GetUserDocumentsByOrganization)
+				r.Get("/users/me/documents/pending", phase4Handler.GetPendingDocuments)
+				r.Get("/users/me/credits", phase4Handler.GetUserCredits)
+				r.Get("/users/me/credits/available", phase4Handler.GetAvailableCredits)
 			})
 
 			// Admin routes (authenticated + admin role check)
@@ -842,6 +888,23 @@ func main() {
 					r.Post("/coaches", schedulingHandler.AssignCoach)
 					r.Get("/coaches", schedulingHandler.ListCoaches)
 					r.Delete("/coaches/{id}", schedulingHandler.UnassignCoach)
+
+					// Phase 4: Document management (admin only)
+					r.Post("/documents", phase4Handler.CreateDocument)
+					r.Put("/documents/{id}", phase4Handler.UpdateDocument)
+					r.Delete("/documents/{id}", phase4Handler.DeleteDocument)
+
+					// Phase 4: Class package management (admin only)
+					r.Post("/packages", phase4Handler.CreateClassPackage)
+					r.Put("/packages/{id}", phase4Handler.UpdateClassPackage)
+					r.Delete("/packages/{id}", phase4Handler.DeleteClassPackage)
+
+					// Phase 4: User document management (admin only)
+					r.Post("/user-documents/{id}/complete", phase4Handler.MarkDocumentCompleted)
+					r.Post("/users/{user_id}/documents/init", phase4Handler.InitializeUserDocuments)
+
+					// Phase 4: Credits management (admin only)
+					r.Post("/users/{user_id}/credits", phase4Handler.PurchaseCredits)
 				})
 
 				// Class template management (by ID)
