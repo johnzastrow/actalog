@@ -171,6 +171,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/my-credits',
+      name: 'my-credits',
+      component: () => import('@/views/MyCreditsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/coach',
       name: 'coach-dashboard',
       component: () => import('@/views/CoachDashboardView.vue'),
@@ -276,6 +282,12 @@ const router = createRouter({
       path: '/admin/scheduling',
       name: 'admin-scheduling',
       component: () => import('@/views/AdminSchedulingView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/packages',
+      name: 'admin-packages',
+      component: () => import('@/views/AdminPackagesView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
