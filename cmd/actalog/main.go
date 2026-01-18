@@ -228,6 +228,15 @@ func main() {
 	// Benchmark repository
 	benchmarkRepo := repository.NewBenchmarkRepository(db, cfg.Database.Driver)
 
+	// Scheduling repositories
+	gymLocationRepo := repository.NewGymLocationRepository(db)
+	classTemplateRepo := repository.NewClassTemplateRepository(db)
+	scheduleSlotRepo := repository.NewScheduleSlotRepository(db)
+	classSessionRepo := repository.NewClassSessionRepository(db)
+	sessionCoachRepo := repository.NewSessionCoachRepository(db)
+	reservationRepo := repository.NewReservationRepository(db)
+	coachAssignmentRepo := repository.NewCoachAssignmentRepository(db)
+
 	// Initialize email service
 	var emailService *email.Service
 	if cfg.Email.Enabled && cfg.Email.SMTPHost != "" {
@@ -402,6 +411,19 @@ func main() {
 	// Data quality service (for duplicate detection and data quality scanning)
 	dataQualityService := service.NewDataQualityService(db, cfg.Database.Driver, auditLogService)
 
+	// Scheduling service
+	schedulingService := service.NewSchedulingService(
+		gymLocationRepo,
+		classTemplateRepo,
+		scheduleSlotRepo,
+		classSessionRepo,
+		sessionCoachRepo,
+		reservationRepo,
+		coachAssignmentRepo,
+		orgRepo,
+		auditLogRepo,
+	)
+
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
 	userHandler := handler.NewUserHandler(userService, appLogger)
@@ -432,6 +454,7 @@ func main() {
 	adminMetricsHandler := handler.NewAdminMetricsHandler(adminMetricsService, appLogger)
 	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
 	dataQualityHandler := handler.NewDataQualityHandler(dataQualityService, appLogger)
+	schedulingHandler := handler.NewSchedulingHandler(schedulingService, appLogger)
 
 	// Set up router
 	r := chi.NewRouter()
@@ -552,6 +575,9 @@ func main() {
 			// Subscription status (always allowed - users need to check their status)
 			r.Get("/subscriptions/status", subscriptionHandler.GetMySubscriptionStatus)
 
+			// User's upcoming reservations (always allowed)
+			r.Get("/users/me/reservations/upcoming", schedulingHandler.GetUserUpcomingReservations)
+
 			// Notification read operations (always allowed)
 			r.Get("/notifications", notificationHandler.ListNotifications)
 			r.Get("/notifications/unread", notificationHandler.ListUnreadNotifications)
@@ -639,7 +665,21 @@ func main() {
 				// Benchmark routes
 				r.Post("/benchmark", benchmarkHandler.RunBenchmark)
 				r.Get("/benchmark/status", benchmarkHandler.GetBenchmarkStatus)
+
+				// Class session reservation routes (subscription required for making reservations)
+				r.Post("/sessions/{session_id}/reserve", schedulingHandler.CreateReservation)
+				r.Delete("/sessions/{session_id}/reserve", schedulingHandler.CancelReservation)
 			}) // End of subscription-required routes
+
+			// Class scheduling routes (read-only public, write requires subscription)
+			// Session listing - available to all authenticated users
+			r.Route("/gyms/{gym_id}", func(r chi.Router) {
+				r.Get("/sessions", schedulingHandler.ListSessions)
+				r.Get("/sessions/{id}", schedulingHandler.GetSession)
+				r.Get("/locations", schedulingHandler.ListLocations)
+				r.Get("/locations/{id}", schedulingHandler.GetLocation)
+				r.Get("/templates", schedulingHandler.ListTemplates)
+			})
 
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
@@ -738,6 +778,42 @@ func main() {
 				r.Get("/organizations/{id}", orgHandler.GetOrganization)
 				r.Put("/organizations/{id}", orgHandler.UpdateOrganization)
 				r.Delete("/organizations/{id}", orgHandler.DeleteOrganization)
+
+				// Class scheduling management routes (admin only)
+				r.Route("/gyms/{gym_id}", func(r chi.Router) {
+					// Location management
+					r.Post("/locations", schedulingHandler.CreateLocation)
+					r.Put("/locations/{id}", schedulingHandler.UpdateLocation)
+					r.Delete("/locations/{id}", schedulingHandler.DeleteLocation)
+
+					// Class template management
+					r.Post("/templates", schedulingHandler.CreateTemplate)
+
+					// Session management
+					r.Post("/sessions", schedulingHandler.CreateSession)
+					r.Put("/sessions/{id}", schedulingHandler.UpdateSession)
+					r.Post("/sessions/{id}/cancel", schedulingHandler.CancelSession)
+
+					// Coach management
+					r.Post("/coaches", schedulingHandler.AssignCoach)
+					r.Get("/coaches", schedulingHandler.ListCoaches)
+					r.Delete("/coaches/{id}", schedulingHandler.UnassignCoach)
+				})
+
+				// Class template management (by ID)
+				r.Get("/scheduling/templates/{id}", schedulingHandler.GetTemplate)
+				r.Put("/scheduling/templates/{id}", schedulingHandler.UpdateTemplate)
+				r.Delete("/scheduling/templates/{id}", schedulingHandler.DeleteTemplate)
+				r.Route("/scheduling/templates/{id}/slots", func(r chi.Router) {
+					r.Post("/", schedulingHandler.CreateScheduleSlot)
+					r.Get("/", schedulingHandler.ListScheduleSlots)
+					r.Put("/{slot_id}", schedulingHandler.UpdateScheduleSlot)
+					r.Delete("/{slot_id}", schedulingHandler.DeleteScheduleSlot)
+				})
+
+				// Session roster and check-in (admin/coach routes)
+				r.Get("/sessions/{session_id}/roster", schedulingHandler.GetSessionRoster)
+				r.Post("/sessions/{session_id}/check-in/{reservation_id}", schedulingHandler.CheckInReservation)
 
 				// User-organization assignment (admin only)
 				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)

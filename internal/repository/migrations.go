@@ -1929,6 +1929,561 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.26.0",
+		Description: "Add class scheduling system with locations, templates, sessions, coaches, and reservations",
+		Up: func(db *sql.DB, driver string) error {
+			// Step 1: Create gym_locations table
+			var createGymLocationsSQL string
+			switch driver {
+			case "sqlite3":
+				createGymLocationsSQL = `
+				CREATE TABLE IF NOT EXISTS gym_locations (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					name TEXT NOT NULL,
+					description TEXT,
+					address TEXT,
+					capacity INTEGER DEFAULT 0,
+					is_active INTEGER NOT NULL DEFAULT 1,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_gym_locations_org_id ON gym_locations(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_gym_locations_active ON gym_locations(is_active);
+				`
+			case "postgres":
+				createGymLocationsSQL = `
+				CREATE TABLE IF NOT EXISTS gym_locations (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					address TEXT,
+					capacity INTEGER DEFAULT 0,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				);
+				CREATE INDEX IF NOT EXISTS idx_gym_locations_org_id ON gym_locations(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_gym_locations_active ON gym_locations(is_active);
+				`
+			case "mysql":
+				createGymLocationsSQL = `
+				CREATE TABLE IF NOT EXISTS gym_locations (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					address TEXT,
+					capacity INTEGER DEFAULT 0,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_gym_locations_org_id (organization_id),
+					INDEX idx_gym_locations_active (is_active),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createGymLocationsSQL); err != nil {
+				return fmt.Errorf("failed to create gym_locations table: %w", err)
+			}
+			fmt.Println("✓ Created gym_locations table")
+
+			// Step 2: Create class_templates table
+			var createClassTemplatesSQL string
+			switch driver {
+			case "sqlite3":
+				createClassTemplatesSQL = `
+				CREATE TABLE IF NOT EXISTS class_templates (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					name TEXT NOT NULL,
+					description TEXT,
+					workout_id INTEGER,
+					duration_minutes INTEGER NOT NULL DEFAULT 60,
+					default_capacity INTEGER NOT NULL DEFAULT 20,
+					color TEXT DEFAULT '#00bcd4',
+					is_active INTEGER NOT NULL DEFAULT 1,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_templates_org_id ON class_templates(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_templates_active ON class_templates(is_active);
+				`
+			case "postgres":
+				createClassTemplatesSQL = `
+				CREATE TABLE IF NOT EXISTS class_templates (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					workout_id BIGINT,
+					duration_minutes INTEGER NOT NULL DEFAULT 60,
+					default_capacity INTEGER NOT NULL DEFAULT 20,
+					color VARCHAR(20) DEFAULT '#00bcd4',
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_templates_org_id ON class_templates(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_templates_active ON class_templates(is_active);
+				`
+			case "mysql":
+				createClassTemplatesSQL = `
+				CREATE TABLE IF NOT EXISTS class_templates (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					workout_id BIGINT,
+					duration_minutes INTEGER NOT NULL DEFAULT 60,
+					default_capacity INTEGER NOT NULL DEFAULT 20,
+					color VARCHAR(20) DEFAULT '#00bcd4',
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_class_templates_org_id (organization_id),
+					INDEX idx_class_templates_active (is_active),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createClassTemplatesSQL); err != nil {
+				return fmt.Errorf("failed to create class_templates table: %w", err)
+			}
+			fmt.Println("✓ Created class_templates table")
+
+			// Step 3: Create schedule_slots table (recurring time patterns)
+			var createScheduleSlotsSQL string
+			switch driver {
+			case "sqlite3":
+				createScheduleSlotsSQL = `
+				CREATE TABLE IF NOT EXISTS schedule_slots (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					template_id INTEGER NOT NULL,
+					location_id INTEGER,
+					day_of_week INTEGER NOT NULL,
+					start_time TEXT NOT NULL,
+					override_capacity INTEGER,
+					is_active INTEGER NOT NULL DEFAULT 1,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE CASCADE,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL,
+					CHECK (day_of_week >= 0 AND day_of_week <= 6)
+				);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_template_id ON schedule_slots(template_id);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_day ON schedule_slots(day_of_week);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_active ON schedule_slots(is_active);
+				`
+			case "postgres":
+				createScheduleSlotsSQL = `
+				CREATE TABLE IF NOT EXISTS schedule_slots (
+					id BIGSERIAL PRIMARY KEY,
+					template_id BIGINT NOT NULL,
+					location_id BIGINT,
+					day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+					start_time TIME NOT NULL,
+					override_capacity INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE CASCADE,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_template_id ON schedule_slots(template_id);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_day ON schedule_slots(day_of_week);
+				CREATE INDEX IF NOT EXISTS idx_schedule_slots_active ON schedule_slots(is_active);
+				`
+			case "mysql":
+				createScheduleSlotsSQL = `
+				CREATE TABLE IF NOT EXISTS schedule_slots (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					template_id BIGINT NOT NULL,
+					location_id BIGINT,
+					day_of_week INTEGER NOT NULL,
+					start_time TIME NOT NULL,
+					override_capacity INTEGER,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_schedule_slots_template_id (template_id),
+					INDEX idx_schedule_slots_day (day_of_week),
+					INDEX idx_schedule_slots_active (is_active),
+					CONSTRAINT chk_day_of_week CHECK (day_of_week >= 0 AND day_of_week <= 6),
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE CASCADE,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createScheduleSlotsSQL); err != nil {
+				return fmt.Errorf("failed to create schedule_slots table: %w", err)
+			}
+			fmt.Println("✓ Created schedule_slots table")
+
+			// Step 4: Create coach_assignments table (per-gym coach role)
+			var createCoachAssignmentsSQL string
+			switch driver {
+			case "sqlite3":
+				createCoachAssignmentsSQL = `
+				CREATE TABLE IF NOT EXISTS coach_assignments (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					is_active INTEGER NOT NULL DEFAULT 1,
+					assigned_at DATETIME NOT NULL,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(organization_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_org_id ON coach_assignments(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_user_id ON coach_assignments(user_id);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_active ON coach_assignments(is_active);
+				`
+			case "postgres":
+				createCoachAssignmentsSQL = `
+				CREATE TABLE IF NOT EXISTS coach_assignments (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					assigned_at TIMESTAMP NOT NULL,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(organization_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_org_id ON coach_assignments(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_user_id ON coach_assignments(user_id);
+				CREATE INDEX IF NOT EXISTS idx_coach_assignments_active ON coach_assignments(is_active);
+				`
+			case "mysql":
+				createCoachAssignmentsSQL = `
+				CREATE TABLE IF NOT EXISTS coach_assignments (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					assigned_at DATETIME NOT NULL,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_coach_assignments_org_id (organization_id),
+					INDEX idx_coach_assignments_user_id (user_id),
+					INDEX idx_coach_assignments_active (is_active),
+					UNIQUE KEY unique_org_user (organization_id, user_id),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createCoachAssignmentsSQL); err != nil {
+				return fmt.Errorf("failed to create coach_assignments table: %w", err)
+			}
+			fmt.Println("✓ Created coach_assignments table")
+
+			// Step 5: Create class_sessions table (actual scheduled instances)
+			var createClassSessionsSQL string
+			switch driver {
+			case "sqlite3":
+				createClassSessionsSQL = `
+				CREATE TABLE IF NOT EXISTS class_sessions (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					organization_id INTEGER NOT NULL,
+					template_id INTEGER,
+					location_id INTEGER,
+					name TEXT NOT NULL,
+					description TEXT,
+					workout_id INTEGER,
+					start_time DATETIME NOT NULL,
+					end_time DATETIME NOT NULL,
+					capacity INTEGER NOT NULL DEFAULT 20,
+					status TEXT NOT NULL DEFAULT 'scheduled',
+					cancelled_at DATETIME,
+					cancelled_reason TEXT,
+					completed_at DATETIME,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE SET NULL,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL,
+					CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled'))
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_org_id ON class_sessions(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_template_id ON class_sessions(template_id);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_start_time ON class_sessions(start_time);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_status ON class_sessions(status);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_date_range ON class_sessions(organization_id, start_time, end_time);
+				`
+			case "postgres":
+				createClassSessionsSQL = `
+				CREATE TABLE IF NOT EXISTS class_sessions (
+					id BIGSERIAL PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					template_id BIGINT,
+					location_id BIGINT,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					workout_id BIGINT,
+					start_time TIMESTAMP NOT NULL,
+					end_time TIMESTAMP NOT NULL,
+					capacity INTEGER NOT NULL DEFAULT 20,
+					status VARCHAR(20) NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled')),
+					cancelled_at TIMESTAMP,
+					cancelled_reason TEXT,
+					completed_at TIMESTAMP,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE SET NULL,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+				);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_org_id ON class_sessions(organization_id);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_template_id ON class_sessions(template_id);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_start_time ON class_sessions(start_time);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_status ON class_sessions(status);
+				CREATE INDEX IF NOT EXISTS idx_class_sessions_date_range ON class_sessions(organization_id, start_time, end_time);
+				`
+			case "mysql":
+				createClassSessionsSQL = `
+				CREATE TABLE IF NOT EXISTS class_sessions (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					organization_id BIGINT NOT NULL,
+					template_id BIGINT,
+					location_id BIGINT,
+					name VARCHAR(255) NOT NULL,
+					description TEXT,
+					workout_id BIGINT,
+					start_time DATETIME NOT NULL,
+					end_time DATETIME NOT NULL,
+					capacity INTEGER NOT NULL DEFAULT 20,
+					status VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+					cancelled_at DATETIME,
+					cancelled_reason TEXT,
+					completed_at DATETIME,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_class_sessions_org_id (organization_id),
+					INDEX idx_class_sessions_template_id (template_id),
+					INDEX idx_class_sessions_start_time (start_time),
+					INDEX idx_class_sessions_status (status),
+					INDEX idx_class_sessions_date_range (organization_id, start_time, end_time),
+					CONSTRAINT chk_session_status CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled')),
+					FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+					FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE SET NULL,
+					FOREIGN KEY (location_id) REFERENCES gym_locations(id) ON DELETE SET NULL,
+					FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createClassSessionsSQL); err != nil {
+				return fmt.Errorf("failed to create class_sessions table: %w", err)
+			}
+			fmt.Println("✓ Created class_sessions table")
+
+			// Step 6: Create session_coaches table (coaches assigned to specific sessions)
+			var createSessionCoachesSQL string
+			switch driver {
+			case "sqlite3":
+				createSessionCoachesSQL = `
+				CREATE TABLE IF NOT EXISTS session_coaches (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					session_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					is_lead INTEGER NOT NULL DEFAULT 0,
+					created_at DATETIME NOT NULL,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(session_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_session_coaches_session_id ON session_coaches(session_id);
+				CREATE INDEX IF NOT EXISTS idx_session_coaches_user_id ON session_coaches(user_id);
+				`
+			case "postgres":
+				createSessionCoachesSQL = `
+				CREATE TABLE IF NOT EXISTS session_coaches (
+					id BIGSERIAL PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					UNIQUE(session_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_session_coaches_session_id ON session_coaches(session_id);
+				CREATE INDEX IF NOT EXISTS idx_session_coaches_user_id ON session_coaches(user_id);
+				`
+			case "mysql":
+				createSessionCoachesSQL = `
+				CREATE TABLE IF NOT EXISTS session_coaches (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					INDEX idx_session_coaches_session_id (session_id),
+					INDEX idx_session_coaches_user_id (user_id),
+					UNIQUE KEY unique_session_coach (session_id, user_id),
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createSessionCoachesSQL); err != nil {
+				return fmt.Errorf("failed to create session_coaches table: %w", err)
+			}
+			fmt.Println("✓ Created session_coaches table")
+
+			// Step 7: Create reservations table
+			var createReservationsSQL string
+			switch driver {
+			case "sqlite3":
+				createReservationsSQL = `
+				CREATE TABLE IF NOT EXISTS reservations (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					session_id INTEGER NOT NULL,
+					user_id INTEGER NOT NULL,
+					status TEXT NOT NULL DEFAULT 'reserved',
+					reserved_at DATETIME NOT NULL,
+					checked_in_at DATETIME,
+					checked_in_by_user_id INTEGER,
+					cancelled_at DATETIME,
+					cancelled_reason TEXT,
+					no_show_marked_at DATETIME,
+					user_workout_id INTEGER,
+					created_at DATETIME NOT NULL,
+					updated_at DATETIME NOT NULL,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (checked_in_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+					FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE SET NULL,
+					UNIQUE(session_id, user_id),
+					CHECK (status IN ('reserved', 'checked_in', 'cancelled', 'no_show', 'attended'))
+				);
+				CREATE INDEX IF NOT EXISTS idx_reservations_session_id ON reservations(session_id);
+				CREATE INDEX IF NOT EXISTS idx_reservations_user_id ON reservations(user_id);
+				CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+				`
+			case "postgres":
+				createReservationsSQL = `
+				CREATE TABLE IF NOT EXISTS reservations (
+					id BIGSERIAL PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					status VARCHAR(20) NOT NULL DEFAULT 'reserved' CHECK (status IN ('reserved', 'checked_in', 'cancelled', 'no_show', 'attended')),
+					reserved_at TIMESTAMP NOT NULL,
+					checked_in_at TIMESTAMP,
+					checked_in_by_user_id BIGINT,
+					cancelled_at TIMESTAMP,
+					cancelled_reason TEXT,
+					no_show_marked_at TIMESTAMP,
+					user_workout_id BIGINT,
+					created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (checked_in_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+					FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE SET NULL,
+					UNIQUE(session_id, user_id)
+				);
+				CREATE INDEX IF NOT EXISTS idx_reservations_session_id ON reservations(session_id);
+				CREATE INDEX IF NOT EXISTS idx_reservations_user_id ON reservations(user_id);
+				CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+				`
+			case "mysql":
+				createReservationsSQL = `
+				CREATE TABLE IF NOT EXISTS reservations (
+					id BIGINT AUTO_INCREMENT PRIMARY KEY,
+					session_id BIGINT NOT NULL,
+					user_id BIGINT NOT NULL,
+					status VARCHAR(20) NOT NULL DEFAULT 'reserved',
+					reserved_at DATETIME NOT NULL,
+					checked_in_at DATETIME,
+					checked_in_by_user_id BIGINT,
+					cancelled_at DATETIME,
+					cancelled_reason TEXT,
+					no_show_marked_at DATETIME,
+					user_workout_id BIGINT,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_reservations_session_id (session_id),
+					INDEX idx_reservations_user_id (user_id),
+					INDEX idx_reservations_status (status),
+					UNIQUE KEY unique_session_user (session_id, user_id),
+					CONSTRAINT chk_reservation_status CHECK (status IN ('reserved', 'checked_in', 'cancelled', 'no_show', 'attended')),
+					FOREIGN KEY (session_id) REFERENCES class_sessions(id) ON DELETE CASCADE,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (checked_in_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+					FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE SET NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+				`
+			default:
+				return fmt.Errorf("unsupported database driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createReservationsSQL); err != nil {
+				return fmt.Errorf("failed to create reservations table: %w", err)
+			}
+			fmt.Println("✓ Created reservations table")
+
+			fmt.Println("✓ Class scheduling system migration complete")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// Drop tables in reverse order of creation (due to foreign key constraints)
+			tables := []string{
+				"reservations",
+				"session_coaches",
+				"class_sessions",
+				"coach_assignments",
+				"schedule_slots",
+				"class_templates",
+				"gym_locations",
+			}
+
+			for _, table := range tables {
+				if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s", table)); err != nil {
+					return fmt.Errorf("failed to drop %s table: %w", table, err)
+				}
+				fmt.Printf("✓ Dropped %s table\n", table)
+			}
+
+			fmt.Println("⚠️  WARNING: Class scheduling data has been deleted")
+			return nil
+		},
+	},
 	// Future incremental migrations will be added here
 }
 

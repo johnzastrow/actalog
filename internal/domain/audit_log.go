@@ -100,6 +100,38 @@ const (
 	EventUserExport                = "user_export"
 	EventBatchPasswordResetRequest = "batch_password_reset_request"
 	EventBatchPasswordResetSent    = "batch_password_reset_sent"
+
+	// Class Scheduling Events - Locations
+	EventGymLocationCreated = "gym_location_created"
+	EventGymLocationUpdated = "gym_location_updated"
+	EventGymLocationDeleted = "gym_location_deleted"
+
+	// Class Scheduling Events - Templates
+	EventClassTemplateCreated = "class_template_created"
+	EventClassTemplateUpdated = "class_template_updated"
+	EventClassTemplateDeleted = "class_template_deleted"
+
+	// Class Scheduling Events - Schedule Slots
+	EventScheduleSlotCreated = "schedule_slot_created"
+	EventScheduleSlotUpdated = "schedule_slot_updated"
+	EventScheduleSlotDeleted = "schedule_slot_deleted"
+
+	// Class Scheduling Events - Sessions
+	EventClassSessionCreated   = "class_session_created"
+	EventClassSessionUpdated   = "class_session_updated"
+	EventClassSessionCancelled = "class_session_cancelled"
+	EventClassSessionCompleted = "class_session_completed"
+
+	// Class Scheduling Events - Coach Assignments
+	EventCoachAssigned   = "coach_assigned"
+	EventCoachUnassigned = "coach_unassigned"
+
+	// Class Scheduling Events - Reservations
+	EventReservationCreated   = "reservation_created"
+	EventReservationCancelled = "reservation_cancelled"
+	EventReservationCheckedIn = "reservation_checked_in"
+	EventReservationNoShow    = "reservation_no_show"
+	EventReservationAttended  = "reservation_attended"
 )
 
 // AuditLogRepository defines the interface for audit log data access

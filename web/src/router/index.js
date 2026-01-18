@@ -159,6 +159,18 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/schedule/:gym_id?',
+      name: 'schedule',
+      component: () => import('@/views/ScheduleView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/reservations',
+      name: 'my-reservations',
+      component: () => import('@/views/MyReservationsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/settings/export',
       name: 'export-data',
       component: () => import('@/views/ExportView.vue'),
@@ -252,6 +264,12 @@ const router = createRouter({
       path: '/admin/users/import-export',
       name: 'admin-user-import-export',
       component: () => import('@/views/AdminUserImportExportView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/scheduling',
+      name: 'admin-scheduling',
+      component: () => import('@/views/AdminSchedulingView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
