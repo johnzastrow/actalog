@@ -95,6 +95,7 @@ import (
 	"github.com/johnzastrow/actalog/pkg/email"
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
+	"github.com/johnzastrow/actalog/pkg/scheduler"
 	"github.com/johnzastrow/actalog/pkg/version"
 	"github.com/joho/godotenv"
 
@@ -455,6 +456,46 @@ func main() {
 	userImportHandler := handler.NewUserImportHandler(userImportService, appLogger)
 	dataQualityHandler := handler.NewDataQualityHandler(dataQualityService, appLogger)
 	schedulingHandler := handler.NewSchedulingHandler(schedulingService, appLogger)
+
+	// Initialize session materializer and scheduler
+	var appScheduler *scheduler.Scheduler
+	if cfg.Scheduler.Enabled {
+		appLogger.Info("Initializing session materializer (enabled=%t, interval=%v, days_ahead=%d)",
+			cfg.Scheduler.Enabled, cfg.Scheduler.Interval, cfg.Scheduler.DaysAhead)
+
+		materializerConfig := scheduler.MaterializerConfig{
+			DaysAhead: cfg.Scheduler.DaysAhead,
+		}
+		materializer := scheduler.NewMaterializer(
+			classTemplateRepo,
+			scheduleSlotRepo,
+			classSessionRepo,
+			appLogger,
+			materializerConfig,
+		)
+
+		appScheduler = scheduler.NewScheduler(appLogger)
+		appScheduler.AddJob(materializer.CreateMaterializerJob(cfg.Scheduler.Interval))
+
+		// Run immediately on startup if configured
+		if cfg.Scheduler.RunOnStartup {
+			appLogger.Info("Running initial session materialization...")
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+				defer cancel()
+				result, err := materializer.MaterializeAll(ctx)
+				if err != nil {
+					appLogger.Error("Initial materialization failed: %v", err)
+				} else {
+					appLogger.Info("Initial materialization complete: %d sessions created, %d skipped",
+						result.SessionsCreated, result.SessionsSkipped)
+				}
+			}()
+		}
+
+		// Start the scheduler
+		appScheduler.Start()
+	}
 
 	// Set up router
 	r := chi.NewRouter()
@@ -905,6 +946,12 @@ func main() {
 	<-quit
 
 	appLogger.Info("Shutting down server...")
+
+	// Stop scheduler if running
+	if appScheduler != nil {
+		appLogger.Info("Stopping scheduler...")
+		appScheduler.Stop()
+	}
 
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

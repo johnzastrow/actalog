@@ -10,13 +10,22 @@ import (
 
 // Config holds all configuration for the application
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	App      AppConfig
-	Logging  LoggingConfig
-	Email    EmailConfig
-	Security SecurityConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	JWT       JWTConfig
+	App       AppConfig
+	Logging   LoggingConfig
+	Email     EmailConfig
+	Security  SecurityConfig
+	Scheduler SchedulerConfig
+}
+
+// SchedulerConfig holds scheduler configuration
+type SchedulerConfig struct {
+	Enabled       bool          // Enable in-app scheduler
+	Interval      time.Duration // How often to run the materializer
+	DaysAhead     int           // Number of days ahead to materialize sessions
+	RunOnStartup  bool          // Run materialization immediately on startup
 }
 
 // ServerConfig holds server-related configuration
@@ -161,6 +170,12 @@ func Load() (*Config, error) {
 			RequirePasswordLowercase: getEnvBool("REQUIRE_PASSWORD_LOWERCASE", false),
 			RequirePasswordNumber:    getEnvBool("REQUIRE_PASSWORD_NUMBER", false),
 			RequirePasswordSpecial:   getEnvBool("REQUIRE_PASSWORD_SPECIAL", false),
+		},
+		Scheduler: SchedulerConfig{
+			Enabled:      getEnvBool("SCHEDULER_ENABLED", false),                   // Disabled by default
+			Interval:     getEnvDuration("SCHEDULER_INTERVAL", 6*time.Hour),        // Run every 6 hours
+			DaysAhead:    getEnvInt("SCHEDULER_DAYS_AHEAD", 14),                    // Materialize 14 days ahead
+			RunOnStartup: getEnvBool("SCHEDULER_RUN_ON_STARTUP", true),             // Run on startup when enabled
 		},
 	}
 

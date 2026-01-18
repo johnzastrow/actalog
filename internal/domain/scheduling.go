@@ -176,6 +176,7 @@ type ClassTemplateRepository interface {
 	Create(template *ClassTemplate) error
 	GetByID(id int64) (*ClassTemplate, error)
 	GetByOrganizationID(orgID int64, includeInactive bool) ([]*ClassTemplate, error)
+	GetAllActive() ([]*ClassTemplate, error)
 	Update(template *ClassTemplate) error
 	Delete(id int64) error
 }
@@ -212,6 +213,7 @@ type ClassSessionRepository interface {
 	Cancel(id int64, reason string) error
 	Complete(id int64) error
 	GetReservationCount(sessionID int64) (int, error)
+	ExistsByTemplateAndStartTime(templateID int64, startTime time.Time) (bool, error)
 }
 
 // SessionCoachRepository defines the interface for session coach data access

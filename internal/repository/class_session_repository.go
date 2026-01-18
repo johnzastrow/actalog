@@ -493,3 +493,18 @@ func (r *ClassSessionRepository) GetReservationCount(sessionID int64) (int, erro
 	err := r.db.QueryRow(query, sessionID).Scan(&count)
 	return count, err
 }
+
+// ExistsByTemplateAndStartTime checks if a session already exists for a given template and start time
+func (r *ClassSessionRepository) ExistsByTemplateAndStartTime(templateID int64, startTime time.Time) (bool, error) {
+	query := rebindQuery(`
+		SELECT COUNT(*) FROM class_sessions
+		WHERE template_id = ? AND start_time = ? AND status != 'cancelled'
+	`)
+
+	var count int
+	err := r.db.QueryRow(query, templateID, startTime).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

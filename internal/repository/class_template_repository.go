@@ -237,3 +237,47 @@ func (r *ClassTemplateRepository) Delete(id int64) error {
 
 	return nil
 }
+
+// GetAllActive retrieves all active class templates across all organizations
+func (r *ClassTemplateRepository) GetAllActive() ([]*domain.ClassTemplate, error) {
+	query := rebindQuery(`
+		SELECT ct.id, ct.organization_id, ct.name, ct.description, ct.workout_id,
+		       ct.duration_minutes, ct.default_capacity, ct.color, ct.is_active,
+		       ct.created_at, ct.updated_at, w.name as workout_name
+		FROM class_templates ct
+		LEFT JOIN wods w ON ct.workout_id = w.id
+		WHERE ct.is_active = true
+		ORDER BY ct.organization_id, ct.name
+	`)
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query all active class templates: %w", err)
+	}
+	defer rows.Close()
+
+	var templates []*domain.ClassTemplate
+	for rows.Next() {
+		var template domain.ClassTemplate
+		err := rows.Scan(
+			&template.ID,
+			&template.OrganizationID,
+			&template.Name,
+			&template.Description,
+			&template.WorkoutID,
+			&template.DurationMinutes,
+			&template.DefaultCapacity,
+			&template.Color,
+			&template.IsActive,
+			&template.CreatedAt,
+			&template.UpdatedAt,
+			&template.WorkoutName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan class template: %w", err)
+		}
+		templates = append(templates, &template)
+	}
+
+	return templates, nil
+}
