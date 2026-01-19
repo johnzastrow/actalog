@@ -30,6 +30,7 @@
               item-title="name"
               item-value="id"
               :loading="loadingTemplates"
+              :menu-props="{ location: 'top' }"
               placeholder="Search workout templates..."
               variant="plain"
               density="compact"

@@ -456,7 +456,7 @@
                 item-title="displayName"
                 return-object
                 :loading="loadingMovements || loadingWods"
-                
+                :menu-props="{ location: 'top' }"
                 density="compact"
                 hide-details
                 clearable

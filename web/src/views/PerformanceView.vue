@@ -14,8 +14,9 @@
           item-title="name"
           item-value="id"
           :loading="loadingSearch"
+          :menu-props="{ location: 'top' }"
           placeholder="Search for a WOD or Movement..."
-          
+
           density="comfortable"
           clearable
           auto-select-first
@@ -456,7 +457,7 @@
                 item-value="id"
                 return-object
                 :loading="loadingMovements || loadingWods"
-                
+                :menu-props="{ location: 'top' }"
                 density="compact"
                 hide-details
                 clearable
