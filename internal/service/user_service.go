@@ -34,6 +34,7 @@ type UserService struct {
 	userSubRepo          domain.UserSubscriptionRepository
 	auditLogService      *AuditLogService
 	adminNotificationSvc *AdminNotificationService
+	notificationSvc      *NotificationService
 	jwtSecret            string
 	jwtExpiration        time.Duration
 	refreshTokenDuration time.Duration
@@ -85,6 +86,12 @@ func NewUserService(
 // This is a setter to avoid breaking the existing constructor signature
 func (s *UserService) SetAdminNotificationService(svc *AdminNotificationService) {
 	s.adminNotificationSvc = svc
+}
+
+// SetNotificationService sets the notification service for welcome messages
+// This is a setter to avoid breaking the existing constructor signature
+func (s *UserService) SetNotificationService(svc *NotificationService) {
+	s.notificationSvc = svc
 }
 
 // Register creates a new user account
@@ -233,6 +240,16 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 			ActorUserID:  nil, // Self-registration
 			Timestamp:    time.Now(),
 		})
+	}
+
+	// Send welcome notification and email to new user
+	if s.notificationSvc != nil {
+		// Run asynchronously so it doesn't block registration
+		go func() {
+			if err := s.notificationSvc.NotifyUserWelcome(user.ID, user.Name, user.Email, s.appURL); err != nil {
+				fmt.Printf("warning: failed to send welcome notification: %v\n", err)
+			}
+		}()
 	}
 
 	// Note: return user with PasswordHash set for tests that validate hashing

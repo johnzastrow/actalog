@@ -1104,6 +1104,14 @@ func (m *MockEmailService) SendHTMLEmail(to, subject, htmlBody string) error {
 	return nil
 }
 
+func (m *MockEmailService) SendWelcomeEmail(to, userName, appURL string) error {
+	if m.shouldError {
+		return m.errorToReturn
+	}
+	m.sentEmails = append(m.sentEmails, to)
+	return nil
+}
+
 // MockAuditLogRepository is a mock implementation of AuditLogRepository
 type MockAuditLogRepository struct {
 	logs          []*domain.AuditLog

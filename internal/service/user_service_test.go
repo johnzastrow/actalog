@@ -46,6 +46,15 @@ func (m *mockEmailService) SendHTMLEmail(to, subject, htmlBody string) error {
 	return nil
 }
 
+func (m *mockEmailService) SendWelcomeEmail(to, userName, appURL string) error {
+	m.sentEmails = append(m.sentEmails, mockEmail{
+		to:      to,
+		subject: "Welcome",
+		body:    "Welcome " + userName,
+	})
+	return nil
+}
+
 // Mock refresh token repository
 type mockRefreshTokenRepo struct {
 	tokens map[string]*domain.RefreshToken

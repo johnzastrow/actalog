@@ -37,7 +37,7 @@ func (m *userImportEmailMock) SendPasswordResetEmail(to, resetURL string) error 
 	return nil
 }
 
-func (m *userImportEmailMock) SendWelcomeEmail(to, name string) error {
+func (m *userImportEmailMock) SendWelcomeEmail(to, userName, appURL string) error {
 	return nil
 }
 

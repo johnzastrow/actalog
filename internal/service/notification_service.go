@@ -327,6 +327,41 @@ func (s *NotificationService) NotifyWODMilestone(
 	return s.CreateNotification(userID, organizationID, domain.NotificationTypeWODMilestone, title, message, data)
 }
 
+// NotifyUserWelcome sends a welcome notification and email to a new user
+func (s *NotificationService) NotifyUserWelcome(userID int64, userName, userEmail, appURL string) error {
+	title := "Welcome to ActaLog! 👋"
+	message := "Thanks for joining! Log your first workout by tapping Quick Log on the dashboard. Track your progress in the Performance tab and explore benchmark WODs. Need help? Contact your administrator."
+
+	now := time.Now()
+
+	// Create in-app notification directly for the user (not organization-based)
+	notification := &domain.Notification{
+		UserID:         userID,
+		OrganizationID: nil, // Welcome notifications are user-specific, not org-specific
+		Type:           domain.NotificationTypeWelcome,
+		Title:          title,
+		Message:        message,
+		Data:           "{}",
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+
+	if err := s.notificationRepo.Create(notification); err != nil {
+		fmt.Printf("Failed to create welcome notification for user %d: %v\n", userID, err)
+		// Continue to send email even if notification creation fails
+	}
+
+	// Send welcome email if email service is available
+	if s.emailService != nil {
+		if err := s.emailService.SendWelcomeEmail(userEmail, userName, appURL); err != nil {
+			fmt.Printf("Failed to send welcome email to %s: %v\n", userEmail, err)
+			// Don't return error - email failure shouldn't break registration
+		}
+	}
+
+	return nil
+}
+
 // GetNotifications retrieves notifications for a user with pagination
 func (s *NotificationService) GetNotifications(userID int64, limit, offset int) ([]*domain.Notification, error) {
 	return s.notificationRepo.GetByUserID(userID, limit, offset)

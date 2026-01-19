@@ -35,6 +35,7 @@ type EmailService interface {
 	SendPasswordResetEmail(to, resetURL string) error
 	SendVerificationEmail(to, verifyURL string) error
 	SendHTMLEmail(to, subject, htmlBody string) error
+	SendWelcomeEmail(to, userName, appURL string) error
 }
 
 // NewService creates a new email service
@@ -374,6 +375,82 @@ func (s *Service) SendHTMLEmail(to, subject, htmlBody string) error {
 		To:      []string{to},
 		Subject: subject,
 		Body:    htmlBody,
+		IsHTML:  true,
+	})
+}
+
+// SendWelcomeEmail sends a welcome email to a new user
+func (s *Service) SendWelcomeEmail(to, userName, appURL string) error {
+	s.logger.Printf("[INFO] Preparing welcome email for %s", to)
+	subject := "Welcome to ActaLog - Let's Get Started!"
+
+	body := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #00bcd4; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f5f7fa; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #ffc107; color: #1a1a1a; text-decoration: none; border-radius: 4px; font-weight: bold; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+        .step { background-color: white; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #00bcd4; }
+        .step-number { display: inline-block; background-color: #00bcd4; color: white; width: 24px; height: 24px; border-radius: 50%%; text-align: center; line-height: 24px; margin-right: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to ActaLog!</h1>
+        </div>
+        <div class="content">
+            <h2>Hi %s! 👋</h2>
+            <p>Welcome to ActaLog - your personal CrossFit workout tracker. We're excited to have you on board!</p>
+
+            <h3>Getting Started</h3>
+            <p>Here's how to make the most of ActaLog:</p>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Log Your First Workout</strong>
+                <p>Tap the <strong>Quick Log</strong> button on the dashboard to record your workout. Enter your movements, weights, reps, and times.</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Track Your Progress</strong>
+                <p>Visit the <strong>Performance</strong> tab to see your personal records and progress over time. ActaLog automatically detects PRs!</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Browse WODs</strong>
+                <p>Check out the <strong>WODs</strong> section to find benchmark workouts like Fran, Murph, and more. Use these as templates for your training.</p>
+            </div>
+
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="%s" class="button">Open ActaLog</a>
+            </p>
+
+            <h3>Need Help?</h3>
+            <p>If you have any questions or need assistance, contact your administrator or reply to this email. We're here to help!</p>
+
+            <p><strong>Happy training! 💪</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 ActaLog. All rights reserved.</p>
+            <p>This is an automated welcome email from ActaLog.</p>
+        </div>
+    </div>
+</body>
+</html>
+`, userName, appURL)
+
+	return s.Send(Message{
+		To:      []string{to},
+		Subject: subject,
+		Body:    body,
 		IsHTML:  true,
 	})
 }

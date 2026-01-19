@@ -11,6 +11,7 @@ const (
 	NotificationTypeWeeklyStreak   = "weekly_streak"
 	NotificationTypeWODMilestone   = "wod_milestone"
 	NotificationTypeAdminUserEvent = "admin_user_event"
+	NotificationTypeWelcome        = "welcome"
 )
 
 // Notification represents a notification to a user

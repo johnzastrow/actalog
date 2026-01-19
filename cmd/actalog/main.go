@@ -323,6 +323,8 @@ func main() {
 		userSettingsRepo,
 		emailService,
 	)
+	userService.SetNotificationService(notificationService)
+	appLogger.Info("Welcome notification service: enabled")
 
 	notificationLikeService := service.NewNotificationLikeService(
 		notificationLikeRepo,
