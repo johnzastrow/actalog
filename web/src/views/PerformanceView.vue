@@ -941,32 +941,30 @@ const filteredChartData = computed(() => {
   return performanceData.value.filter(p => p.weight && p.reps === targetReps)
 })
 
-// Watch performance data and auto-select rep scheme
+// Watch performance data and build rep scheme options
 watch(performanceData, async (newData) => {
   if (!selectedItem.value || selectedItem.value.type !== 'movement') {
     return
   }
 
-  const schemes = new Set(['All'])
+  // Collect unique rep counts
+  const repCounts = new Set()
   newData.forEach(p => {
     if (p.reps) {
-      schemes.add(`${p.reps} reps`)
+      repCounts.add(p.reps)
     }
   })
-  repSchemes.value = Array.from(schemes)
 
-  // Auto-select the rep scheme with the heaviest weight
-  if (newData.length > 0) {
-    const heaviest = newData
-      .filter(p => p.weight && p.reps)
-      .sort((a, b) => b.weight - a.weight)[0]
+  // Sort rep counts numerically (ascending) and format as "X reps"
+  const sortedReps = Array.from(repCounts)
+    .sort((a, b) => a - b)
+    .map(r => `${r} reps`)
 
-    if (heaviest) {
-      selectedRepScheme.value = `${heaviest.reps} reps`
-    } else {
-      selectedRepScheme.value = 'All'
-    }
-  }
+  // Build final list with "All" first, then sorted rep schemes
+  repSchemes.value = ['All', ...sortedReps]
+
+  // Always default to "All" to show complete performance history
+  selectedRepScheme.value = 'All'
 }, { immediate: true })
 
 // Watch filtered chart data and render movement chart when it changes
