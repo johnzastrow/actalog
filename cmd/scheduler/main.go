@@ -39,7 +39,7 @@ func main() {
 		materializeCmd.Parse(os.Args[2:])
 		runMaterialize(*daysAhead, *orgID)
 	case "version":
-		fmt.Printf("ActaLog Scheduler v%s\n", version.Version)
+		fmt.Printf("ActaLog Scheduler v%s\n", version.Version())
 		os.Exit(0)
 	case "help", "-h", "--help":
 		printUsage()

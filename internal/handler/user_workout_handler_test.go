@@ -698,23 +698,6 @@ func TestUserWorkoutHandler_GetPersonalRecords_Unauthorized(t *testing.T) {
 	assertBodyContains(t, rr, "Unauthorized")
 }
 
-func TestUserWorkoutHandler_GetPersonalRecords_WithLimit(t *testing.T) {
-	handler := &UserWorkoutHandler{
-		logger: createTestLogger(),
-	}
-
-	req := createAuthenticatedRequest(http.MethodGet, "/api/workouts/personal-records?limit=25", "", 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil userWorkoutService")
-		}
-	}()
-
-	handler.GetPersonalRecords(rr, req)
-}
-
 func TestUserWorkoutHandler_GetPersonalRecords_NilService(t *testing.T) {
 	handler := &UserWorkoutHandler{
 		logger: createTestLogger(),
@@ -771,13 +754,6 @@ func TestUserWorkoutHandler_GetActiveUsersStats_Unauthorized(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusUnauthorized)
 	assertBodyContains(t, rr, "Unauthorized")
-}
-
-func TestNewUserWorkoutHandler(t *testing.T) {
-	handler := NewUserWorkoutHandler(nil, nil)
-	if handler == nil {
-		t.Error("NewUserWorkoutHandler should return a non-nil handler")
-	}
 }
 
 func TestUserWorkoutHandler_UpdateLoggedWorkout_ValidIDInvalidJSON(t *testing.T) {

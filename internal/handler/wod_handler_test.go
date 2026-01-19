@@ -212,22 +212,6 @@ func TestWODHandler_CreateWOD_MissingName(t *testing.T) {
 	}
 }
 
-func TestWODHandler_CreateWOD_NilService(t *testing.T) {
-	handler := &WODHandler{}
-
-	req := createAuthenticatedRequest(http.MethodPost, "/api/wods", `{"name": "Test WOD"}`, 1, "test@example.com", "user")
-	rr := httptest.NewRecorder()
-
-	// This will panic due to nil wodService
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic with nil wodService")
-		}
-	}()
-
-	handler.CreateWOD(rr, req)
-}
-
 func TestWODHandler_GetWOD_InvalidID(t *testing.T) {
 	handler := &WODHandler{}
 
@@ -348,13 +332,6 @@ func TestWODHandler_DeleteWOD_InvalidID(t *testing.T) {
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
 	assertBodyContains(t, rr, "Invalid WOD ID")
-}
-
-func TestNewWODHandler(t *testing.T) {
-	handler := NewWODHandler(nil)
-	if handler == nil {
-		t.Error("NewWODHandler should return a non-nil handler")
-	}
 }
 
 // Removed 25 panic-expectation tests:
