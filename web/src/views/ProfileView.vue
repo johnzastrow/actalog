@@ -156,10 +156,10 @@
             </div>
           </div>
 
-          <!-- Organization Subscriptions -->
+          <!-- Gym Subscriptions -->
           <div v-if="subscriptionStore.orgSubscriptions.length > 0" class="mt-2 pt-2" style="border-top: 1px solid #eee">
             <div class="text-caption mb-1 text-disabled">
-              Organization Access
+              Gym Access
             </div>
             <div
               v-for="orgSub in subscriptionStore.orgSubscriptions"
@@ -552,10 +552,10 @@
             @click="$router.push('/admin/organizations')"
           >
             <v-list-item-title class="font-weight-medium" >
-              Organization Management
+              Gym Management
             </v-list-item-title>
             <v-list-item-subtitle class="text-caption text-disabled">
-              Manage organizations and members
+              Manage gyms and members
             </v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
@@ -895,8 +895,8 @@ function getSubscriptionColor(type) {
 function formatSource(source) {
   const sourceMap = {
     user: 'Personal Subscription',
-    organization: 'Organization Subscription',
-    both: 'Personal & Organization',
+    organization: 'Gym Subscription',
+    both: 'Personal & Gym',
     none: 'No Access'
   }
   return sourceMap[source] || source

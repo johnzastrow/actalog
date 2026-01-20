@@ -13,7 +13,7 @@
           <v-card-text>
             <v-list density="compact">
               <v-list-item>
-                <v-list-item-title>{{ type === 'user' ? 'User' : 'Organization' }}</v-list-item-title>
+                <v-list-item-title>{{ type === 'user' ? 'User' : 'Gym' }}</v-list-item-title>
                 <v-list-item-subtitle>
                   {{ getSubscriptionName() }}
                 </v-list-item-subtitle>
@@ -175,7 +175,7 @@ function getSubscriptionName() {
   if (props.type === 'user') {
     return props.subscription.user_email || `User ${props.subscription.user_id}`
   } else {
-    return props.subscription.organization_name || `Organization ${props.subscription.organization_id}`
+    return props.subscription.organization_name || `Gym ${props.subscription.organization_id}`
   }
 }
 

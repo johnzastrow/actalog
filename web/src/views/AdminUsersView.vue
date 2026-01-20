@@ -131,7 +131,7 @@
             icon
             size="small"
             variant="text"
-            title="Manage Organizations"
+            title="Manage Gyms"
             @click="manageOrganizations(item)"
           >
             <v-icon color="info">mdi-domain</v-icon>
@@ -425,7 +425,7 @@
           <div class="px-4">
             <div class="d-flex align-center mb-3">
               <v-icon class="mr-2">mdi-domain</v-icon>
-              <span class="text-subtitle-1 font-weight-bold">Organizations</span>
+              <span class="text-subtitle-1 font-weight-bold">Gyms</span>
             </div>
 
             <div v-if="userDetails.organizations && userDetails.organizations.length > 0">
@@ -499,7 +499,7 @@ const headers = [
   { title: 'Status', value: 'status', sortable: false },
   { title: 'Last Login', value: 'last_login_at', sortable: false },
   { title: 'Details', value: 'details', sortable: false, align: 'center', width: '80px' },
-  { title: 'Orgs', value: 'organizations', sortable: false, align: 'center', width: '80px' },
+  { title: 'Gyms', value: 'organizations', sortable: false, align: 'center', width: '80px' },
   { title: 'Lock', value: 'lock', sortable: false, align: 'center', width: '80px' },
   { title: 'Enable', value: 'enable', sortable: false, align: 'center', width: '80px' },
   { title: 'Email', value: 'email_verify', sortable: false, align: 'center', width: '80px' },

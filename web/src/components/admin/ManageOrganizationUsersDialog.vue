@@ -112,7 +112,7 @@
           </v-list>
 
           <v-alert v-else type="info" variant="tonal" class="mt-2">
-            No users assigned to this organization
+            No users assigned to this gym
           </v-alert>
         </div>
       </v-card-text>

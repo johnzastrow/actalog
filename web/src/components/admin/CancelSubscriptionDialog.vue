@@ -90,7 +90,7 @@ function getSubscriptionName() {
   if (props.type === 'user') {
     return props.subscription.user_email || `User ${props.subscription.user_id}`
   } else {
-    return props.subscription.organization_name || `Organization ${props.subscription.organization_id}`
+    return props.subscription.organization_name || `Gym ${props.subscription.organization_id}`
   }
 }
 

@@ -101,21 +101,21 @@
               class="mb-4"
             />
 
-            <!-- Organization Selector (for organization target type) -->
+            <!-- Gym Selector (for organization target type) -->
             <v-autocomplete
               v-if="announcement.targetType === 'organization'"
               v-model="announcement.targetIDs"
-              label="Select Organizations"
+              label="Select Gyms"
               :items="organizations"
               item-title="name"
               item-value="id"
-              
+
               density="comfortable"
               multiple
               chips
               closable-chips
               :loading="loadingOrganizations"
-              :rules="[v => (v && v.length > 0) || 'At least one organization is required']"
+              :rules="[v => (v && v.length > 0) || 'At least one gym is required']"
               class="mb-4"
             />
 
@@ -137,19 +137,19 @@
               class="mb-4"
             />
 
-            <!-- Organization Context (Optional) -->
+            <!-- Gym Context (Optional) -->
             <v-autocomplete
               v-model="announcement.organizationID"
-              label="Organization Context (Optional)"
+              label="Gym Context (Optional)"
               :items="organizations"
               item-title="name"
               item-value="id"
-              
+
               density="comfortable"
               clearable
               :loading="loadingOrganizations"
               class="mb-4"
-              hint="Associate this announcement with a specific organization"
+              hint="Associate this announcement with a specific gym"
               persistent-hint
             />
 
@@ -189,7 +189,7 @@ const announcement = ref({
 
 const targetOptions = [
   { title: 'All Users', value: 'all' },
-  { title: 'Specific Organizations', value: 'organization' },
+  { title: 'Specific Gyms', value: 'organization' },
   { title: 'Specific Users', value: 'users' }
 ]
 
@@ -210,7 +210,7 @@ const loadOrganizations = async () => {
     organizations.value = response.data.organizations || []
   } catch (error) {
     console.error('Failed to load organizations:', error)
-    errorMessage.value = 'Failed to load organizations'
+    errorMessage.value = 'Failed to load gyms'
   } finally {
     loadingOrganizations.value = false
   }

@@ -72,19 +72,19 @@
             </v-card>
           </v-col>
 
-          <!-- Organization Management -->
+          <!-- Gym Management -->
           <v-col cols="12" md="6">
             <v-card elevation="0" rounded="lg" class="pa-4" hover style="cursor: pointer" @click="$router.push('/admin/organizations')">
               <div class="d-flex align-center mb-3">
                 <v-icon color="accent" size="32" class="mr-3">mdi-domain</v-icon>
                 <div>
-                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Organizations</h3>
-                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Manage gyms and organizations</p>
+                  <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Gyms</h3>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Manage gyms, boxes, and affiliates</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
               <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
-                Create and manage organizations, assign users to gyms and groups.
+                Create and manage gyms, assign users, and configure locations.
               </p>
               <v-chip size="small" color="accent" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
@@ -189,7 +189,7 @@
               </div>
               <v-divider class="mb-3"></v-divider>
               <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
-                Send announcements to all users, specific organizations, or selected users with markdown support.
+                Send announcements to all users, specific gyms, or selected users with markdown support.
               </p>
               <v-chip size="small" color="warning" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>
@@ -205,12 +205,12 @@
                 <v-icon color="primary" size="32" class="mr-3">mdi-currency-usd</v-icon>
                 <div>
                   <h3 style="color: rgb(var(--v-theme-on-surface)); font-size: 18px; font-weight: 600">Subscriptions</h3>
-                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Manage user and organization subscriptions</p>
+                  <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Manage user and gym subscriptions</p>
                 </div>
               </div>
               <v-divider class="mb-3"></v-divider>
               <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 13px">
-                View and manage all user and organization subscriptions, payments, and billing.
+                View and manage all user and gym subscriptions, payments, and billing.
               </p>
               <v-chip size="small" color="primary" class="mt-2">
                 <v-icon start size="small">mdi-chevron-right</v-icon>

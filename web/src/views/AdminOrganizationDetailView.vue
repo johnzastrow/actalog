@@ -6,7 +6,7 @@
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
-          <h1 class="text-h5">{{ organization?.name || 'Organization Details' }}</h1>
+          <h1 class="text-h5">{{ organization?.name || 'Gym Details' }}</h1>
           <div class="text-body-2 text-medium-emphasis">Manage gym details and locations</div>
         </div>
       </div>
@@ -298,7 +298,7 @@ async function fetchOrganization(orgId) {
 
 async function saveOrganization() {
   if (!orgFormData.value.name) {
-    error.value = 'Organization name is required'
+    error.value = 'Gym name is required'
     return
   }
   saving.value = true
@@ -310,10 +310,10 @@ async function saveOrganization() {
     })
     organization.value.name = orgFormData.value.name
     organization.value.description = orgFormData.value.description
-    successMessage.value = 'Organization updated successfully'
+    successMessage.value = 'Gym updated successfully'
   } catch (err) {
     console.error('Failed to save organization:', err)
-    error.value = err.response?.data?.error || 'Failed to save organization'
+    error.value = err.response?.data?.error || 'Failed to save gym'
   } finally {
     saving.value = false
   }

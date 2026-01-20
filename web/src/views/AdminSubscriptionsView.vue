@@ -6,7 +6,7 @@
       <!-- Tabs for User vs Organization subscriptions -->
       <v-tabs v-model="activeTab" color="primary" class="mb-4">
         <v-tab value="users">User Subscriptions</v-tab>
-        <v-tab value="organizations">Organization Subscriptions</v-tab>
+        <v-tab value="organizations">Gym Subscriptions</v-tab>
         <v-tab value="expiring">Expiring Soon</v-tab>
         <v-tab value="overdue">Overdue</v-tab>
       </v-tabs>
@@ -170,7 +170,7 @@
           <v-card elevation="0" rounded="lg">
             <v-card-title class="d-flex align-center">
               <v-icon class="mr-2">mdi-office-building</v-icon>
-              Organization Subscriptions
+              Gym Subscriptions
               <v-spacer></v-spacer>
               <v-btn
                 color="primary"
@@ -187,7 +187,7 @@
                 <v-col cols="12" md="4">
                   <v-text-field
                     v-model="orgFilters.search"
-                    label="Search by organization name"
+                    label="Search by gym name"
                     prepend-inner-icon="mdi-magnify"
                     
                     density="compact"
@@ -225,7 +225,7 @@
                 class="elevation-1"
               >
                 <template #item.organization="{ item }">
-                  {{ item.organization_name || `Organization ${item.organization_id}` }}
+                  {{ item.organization_name || `Gym ${item.organization_id}` }}
                 </template>
 
                 <template #item.subscription_type="{ item }">
@@ -373,9 +373,9 @@
                 </v-list>
               </div>
 
-              <!-- Organization subscriptions expiring -->
+              <!-- Gym subscriptions expiring -->
               <div v-if="expiringOrgSubscriptions.length > 0">
-                <h3 class="text-subtitle-1 mb-2">Organization Subscriptions ({{ expiringOrgSubscriptions.length }})</h3>
+                <h3 class="text-subtitle-1 mb-2">Gym Subscriptions ({{ expiringOrgSubscriptions.length }})</h3>
                 <v-list density="compact">
                   <v-list-item
                     v-for="sub in expiringOrgSubscriptions"
@@ -388,7 +388,7 @@
                       </v-icon>
                     </template>
                     <v-list-item-title>
-                      {{ sub.organization_name || `Organization ${sub.organization_id}` }}
+                      {{ sub.organization_name || `Gym ${sub.organization_id}` }}
                     </v-list-item-title>
                     <v-list-item-subtitle>
                       {{ sub.subscription_type }} - Expires {{ formatDate(sub.end_date) }}
@@ -462,9 +462,9 @@
                 </v-list>
               </div>
 
-              <!-- Organization subscriptions expired -->
+              <!-- Gym subscriptions expired -->
               <div v-if="expiredOrgSubscriptions.length > 0">
-                <h3 class="text-subtitle-1 mb-2">Organization Subscriptions ({{ expiredOrgSubscriptions.length }})</h3>
+                <h3 class="text-subtitle-1 mb-2">Gym Subscriptions ({{ expiredOrgSubscriptions.length }})</h3>
                 <v-list density="compact">
                   <v-list-item
                     v-for="sub in expiredOrgSubscriptions"
@@ -475,7 +475,7 @@
                       <v-icon color="error" size="small">mdi-office-building</v-icon>
                     </template>
                     <v-list-item-title>
-                      {{ sub.organization_name || `Organization ${sub.organization_id}` }}
+                      {{ sub.organization_name || `Gym ${sub.organization_id}` }}
                     </v-list-item-title>
                     <v-list-item-subtitle>
                       {{ sub.subscription_type }} - Expired {{ formatDate(sub.end_date) }}
@@ -613,7 +613,7 @@ const userSubscriptionHeaders = [
 ]
 
 const orgSubscriptionHeaders = [
-  { title: 'Organization', key: 'organization', sortable: true },
+  { title: 'Gym', key: 'organization', sortable: true },
   { title: 'Type', key: 'subscription_type', sortable: true },
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Start Date', key: 'start_date', sortable: true },

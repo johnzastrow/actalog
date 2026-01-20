@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon class="mr-2">mdi-domain</v-icon>
-        Manage Organizations for {{ user?.email }}
+        Manage Gyms for {{ user?.email }}
         <v-spacer />
         <v-btn icon variant="text" @click="close">
           <v-icon>mdi-close</v-icon>
@@ -26,9 +26,9 @@
           {{ successMessage }}
         </v-alert>
 
-        <!-- Add Organization Section -->
+        <!-- Add Gym Section -->
         <div class="mb-4">
-          <h3 class="text-subtitle-1 mb-2">Add to Organization</h3>
+          <h3 class="text-subtitle-1 mb-2">Add to Gym</h3>
           <v-row>
             <v-col cols="8">
               <v-autocomplete
@@ -36,7 +36,7 @@
                 :items="availableOrganizations"
                 item-title="name"
                 item-value="id"
-                label="Select organization"
+                label="Select gym"
                 
                 density="compact"
                 :disabled="loading"
@@ -70,9 +70,9 @@
 
         <v-divider class="my-4" />
 
-        <!-- Current Organizations List -->
+        <!-- Current Gyms List -->
         <div>
-          <h3 class="text-subtitle-1 mb-2">Current Organizations ({{ userOrganizations.length }})</h3>
+          <h3 class="text-subtitle-1 mb-2">Current Gyms ({{ userOrganizations.length }})</h3>
 
           <v-list v-if="userOrganizations.length > 0" class="pa-0">
             <v-list-item
@@ -105,7 +105,7 @@
           </v-list>
 
           <v-alert v-else type="info" variant="tonal" class="mt-2">
-            User is not assigned to any organizations
+            User is not assigned to any gyms
           </v-alert>
         </div>
       </v-card-text>
@@ -176,8 +176,8 @@ async function loadData() {
     const allOrgsResponse = await axios.get('/api/admin/organizations?limit=1000')
     allOrganizations.value = allOrgsResponse.data.organizations || []
   } catch (err) {
-    console.error('Failed to load organizations:', err)
-    error.value = err.response?.data?.error || 'Failed to load organizations'
+    console.error('Failed to load gyms:', err)
+    error.value = err.response?.data?.error || 'Failed to load gyms'
   } finally {
     loading.value = false
   }
@@ -195,15 +195,15 @@ async function addOrganization() {
       organization_id: selectedOrganization.value
     })
 
-    successMessage.value = 'Organization added successfully'
+    successMessage.value = 'Added to gym successfully'
     selectedOrganization.value = null
 
-    // Reload user's organizations
+    // Reload user's gyms
     await loadData()
     emit('updated')
   } catch (err) {
-    console.error('Failed to add organization:', err)
-    error.value = err.response?.data?.error || 'Failed to add organization'
+    console.error('Failed to add to gym:', err)
+    error.value = err.response?.data?.error || 'Failed to add to gym'
   } finally {
     loading.value = false
   }
@@ -221,12 +221,12 @@ async function removeOrganization(org) {
 
     successMessage.value = `Removed from ${org.name}`
 
-    // Reload user's organizations
+    // Reload user's gyms
     await loadData()
     emit('updated')
   } catch (err) {
-    console.error('Failed to remove organization:', err)
-    error.value = err.response?.data?.error || 'Failed to remove organization'
+    console.error('Failed to remove from gym:', err)
+    error.value = err.response?.data?.error || 'Failed to remove from gym'
   } finally {
     loading.value = false
   }

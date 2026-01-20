@@ -62,12 +62,12 @@
         </div>
       </div>
 
-      <!-- Organization Subscriptions -->
+      <!-- Gym Subscriptions -->
       <div v-if="subscriptionStore.orgSubscriptions.length > 0" class="mt-4">
         <v-divider class="mb-3"></v-divider>
         <div class="text-subtitle-2 mb-2">
           <v-icon small class="mr-1">mdi-office-building</v-icon>
-          Organization Subscriptions
+          Gym Subscriptions
         </div>
         <div
           v-for="orgSub in subscriptionStore.orgSubscriptions"
@@ -75,7 +75,7 @@
           class="mb-2 pa-2 bg-grey-lighten-4 rounded"
         >
           <div class="text-body-2">
-            <strong>{{ orgSub.organization_name || `Organization ${orgSub.organization_id}` }}</strong>
+            <strong>{{ orgSub.organization_name || `Gym ${orgSub.organization_id}` }}</strong>
           </div>
           <div class="text-caption">
             <v-chip size="x-small" :color="orgSub.status === 'active' ? 'success' : 'error'" class="mr-1">

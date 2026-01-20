@@ -17,7 +17,7 @@
         :items="organizations"
         item-title="name"
         item-value="id"
-        label="Select Organization"
+        label="Select Gym"
         variant="outlined"
         density="comfortable"
         class="mb-4"

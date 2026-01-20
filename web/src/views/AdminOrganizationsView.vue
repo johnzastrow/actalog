@@ -6,21 +6,20 @@
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
-          <h1 class="text-h5">Organization Management</h1>
-          <div class="text-body-2 text-medium-emphasis">Manage gyms and organizations</div>
+          <h1 class="text-h5">Gym Management</h1>
+          <div class="text-body-2 text-medium-emphasis">Manage your gyms, boxes, and affiliates</div>
         </div>
         <v-spacer />
         <v-btn color="primary" @click="openCreateDialog">
           <v-icon start>mdi-plus</v-icon>
-          Create Organization
+          Add Gym
         </v-btn>
       </div>
 
-      <!-- Info Box: Organization = Gym -->
+      <!-- Info Box -->
       <v-alert type="info" variant="tonal" density="compact" class="mb-4">
         <div class="text-body-2">
-          <strong>Organization = Gym.</strong>
-          Each organization represents a gym, box, or affiliate. Use "Locations" within an organization to define physical spaces (e.g., Main Floor, Studio A) where classes are held.
+          Each gym can have multiple <strong>Locations</strong> (physical spaces like Main Floor, Studio A) where classes are held.
         </div>
       </v-alert>
 
@@ -37,11 +36,11 @@
         {{ successMessage }}
       </v-alert>
 
-      <!-- Organizations Table -->
+      <!-- Gyms Table -->
       <v-card elevation="0" rounded="lg">
         <v-card-title class="d-flex align-center">
           <v-icon class="mr-2">mdi-domain</v-icon>
-          Organizations ({{ total }})
+          Gyms ({{ total }})
         </v-card-title>
 
         <v-divider />
@@ -94,7 +93,7 @@
     <!-- Create Dialog -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
-        <v-card-title>Create Organization (Gym)</v-card-title>
+        <v-card-title>Add New Gym</v-card-title>
         <v-card-text>
           <v-form ref="form">
             <v-text-field
@@ -124,9 +123,9 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400px">
       <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+        <v-card-title>Delete Gym</v-card-title>
         <v-card-text>
-          Are you sure you want to delete "{{ organizationToDelete?.name }}"?
+          Are you sure you want to delete the gym "{{ organizationToDelete?.name }}"?
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -185,8 +184,8 @@ async function fetchOrganizations() {
     organizations.value = response.data.organizations || []
     total.value = response.data.total || 0
   } catch (err) {
-    console.error('Failed to fetch organizations:', err)
-    error.value = err.response?.data?.error || 'Failed to fetch organizations'
+    console.error('Failed to fetch gyms:', err)
+    error.value = err.response?.data?.error || 'Failed to fetch gyms'
   } finally {
     loading.value = false
   }
@@ -210,7 +209,7 @@ function closeDialog() {
 
 async function saveOrganization() {
   if (!formData.value.name) {
-    error.value = 'Organization name is required'
+    error.value = 'Gym name is required'
     return
   }
 
@@ -222,12 +221,12 @@ async function saveOrganization() {
       name: formData.value.name,
       description: formData.value.description || null
     })
-    successMessage.value = 'Organization created successfully'
+    successMessage.value = 'Gym created successfully'
     closeDialog()
     await fetchOrganizations()
   } catch (err) {
-    console.error('Failed to save organization:', err)
-    error.value = err.response?.data?.error || 'Failed to save organization'
+    console.error('Failed to save gym:', err)
+    error.value = err.response?.data?.error || 'Failed to save gym'
   } finally {
     loading.value = false
   }
@@ -251,13 +250,13 @@ async function confirmDelete() {
 
   try {
     await axios.delete(`/api/admin/organizations/${organizationToDelete.value.id}`)
-    successMessage.value = 'Organization deleted successfully'
+    successMessage.value = 'Gym deleted successfully'
     deleteDialog.value = false
     organizationToDelete.value = null
     await fetchOrganizations()
   } catch (err) {
-    console.error('Failed to delete organization:', err)
-    error.value = err.response?.data?.error || 'Failed to delete organization'
+    console.error('Failed to delete gym:', err)
+    error.value = err.response?.data?.error || 'Failed to delete gym'
   } finally {
     loading.value = false
   }

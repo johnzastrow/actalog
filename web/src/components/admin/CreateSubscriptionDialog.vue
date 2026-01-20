@@ -3,12 +3,12 @@
     <v-card>
       <v-card-title>
         <v-icon class="mr-2">mdi-plus-circle</v-icon>
-        Create {{ type === 'user' ? 'User' : 'Organization' }} Subscription
+        Create {{ type === 'user' ? 'User' : 'Gym' }} Subscription
       </v-card-title>
 
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="createSubscription">
-          <!-- User/Organization Selection -->
+          <!-- User/Gym Selection -->
           <v-autocomplete
             v-if="type === 'user'"
             v-model="form.user_id"
@@ -34,14 +34,14 @@
           <v-autocomplete
             v-else
             v-model="form.organization_id"
-            label="Select Organization"
+            label="Select Gym"
             :items="organizations"
             item-title="name"
             item-value="id"
-            
+
             density="compact"
             :loading="loadingOrgs"
-            :rules="[v => !!v || 'Organization is required']"
+            :rules="[v => !!v || 'Gym is required']"
             prepend-inner-icon="mdi-office-building"
             class="mb-3"
           ></v-autocomplete>
