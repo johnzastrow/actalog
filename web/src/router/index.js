@@ -243,6 +243,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
+      path: '/admin/organizations/:id',
+      name: 'admin-organization-detail',
+      component: () => import('@/views/AdminOrganizationDetailView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/admin/subscriptions',
       name: 'admin-subscriptions',
       component: () => import('@/views/AdminSubscriptionsView.vue'),
