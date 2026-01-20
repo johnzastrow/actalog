@@ -16,6 +16,14 @@
         </v-btn>
       </div>
 
+      <!-- Info Box: Organization = Gym -->
+      <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+        <div class="text-body-2">
+          <strong>Organization = Gym.</strong>
+          Each organization represents a gym, box, or affiliate. Use "Locations" within an organization to define physical spaces (e.g., Main Floor, Studio A) where classes are held.
+        </div>
+      </v-alert>
+
       <!-- Loading State -->
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 

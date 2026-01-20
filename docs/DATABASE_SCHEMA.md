@@ -198,14 +198,21 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Key Concepts: Organization, Gym, and Location
 
-Understanding the relationship between organizations, gyms, and locations is essential for the scheduling system:
+Understanding the relationship between organizations, gyms, and locations is essential for the scheduling system.
+
+> **Important:** In ActaLog, **"Organization" and "Gym" are the same thing.** The database uses the term `organizations` but this represents your gym, box, or affiliate. The term "Gym Location" refers to physical spaces *within* a gym (like rooms or training areas).
 
 ### Terminology Mapping
 
-| Database Table | Business Term | Examples |
-|----------------|---------------|----------|
-| `organizations` | **Gym / Affiliate / Box** | "CrossFit Downtown", "Iron Tribe Fitness", "F45 Training" |
-| `gym_locations` | **Room / Area / Space** | "Main Floor", "Studio A", "Outdoor Rig", "Yoga Room" |
+| Database Table | Business Term | Also Known As | Examples |
+|----------------|---------------|---------------|----------|
+| `organizations` | **Gym** | Organization, Affiliate, Box, Studio | "CrossFit Downtown", "Iron Tribe Fitness", "F45 Training" |
+| `gym_locations` | **Location** | Room, Area, Space, Training Zone | "Main Floor", "Studio A", "Outdoor Rig", "Yoga Room" |
+
+### Quick Reference
+
+- **Organization = Gym** — The business entity (your CrossFit box, fitness studio, etc.)
+- **Gym Location = Room/Area** — A physical space within your gym where classes happen
 
 ### Conceptual Hierarchy
 
