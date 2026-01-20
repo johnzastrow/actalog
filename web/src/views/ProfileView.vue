@@ -365,6 +365,16 @@
           <v-icon color="error" size="small" class="mr-1">mdi-shield-crown</v-icon>
           Administration
         </h2>
+        <div class="text-caption px-2 mb-2">
+          <span v-if="authStore.schedulingEnabled" class="text-success">
+            <v-icon size="x-small" color="success" class="mr-1">mdi-calendar-check</v-icon>
+            Scheduling enabled. Disable in the server.
+          </span>
+          <span v-else class="text-medium-emphasis">
+            <v-icon size="x-small" class="mr-1">mdi-calendar-remove</v-icon>
+            Scheduling disabled. Enable in the server.
+          </span>
+        </div>
         <v-list bg-color="transparent" density="compact">
           <v-list-item
             prepend-icon="mdi-chart-bar"
