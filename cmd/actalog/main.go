@@ -451,7 +451,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, appLogger)
-	userHandler := handler.NewUserHandler(userService, appLogger)
+	userHandler := handler.NewUserHandler(userService, schedulingService, appLogger)
 	movementHandler := handler.NewMovementHandler(movementRepo, movementService, appLogger)
 	workoutTemplateHandler := handler.NewWorkoutTemplateHandler(workoutTemplateService)
 	userWorkoutHandler := handler.NewUserWorkoutHandler(userWorkoutService, appLogger)
@@ -576,8 +576,8 @@ func main() {
 		r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s"}`,
-				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name)
+			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s","scheduling_enabled":%t}`,
+				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name, cfg.Scheduler.Enabled)
 		})
 
 		// Swagger documentation UI (public)

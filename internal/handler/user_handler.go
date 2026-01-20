@@ -17,15 +17,17 @@ import (
 
 // UserHandler handles user profile endpoints
 type UserHandler struct {
-	userService *service.UserService
-	logger      *logger.Logger
+	userService       *service.UserService
+	schedulingService *service.SchedulingService
+	logger            *logger.Logger
 }
 
 // NewUserHandler creates a new user handler
-func NewUserHandler(userService *service.UserService, l *logger.Logger) *UserHandler {
+func NewUserHandler(userService *service.UserService, schedulingService *service.SchedulingService, l *logger.Logger) *UserHandler {
 	return &UserHandler{
-		userService: userService,
-		logger:      l,
+		userService:       userService,
+		schedulingService: schedulingService,
+		logger:            l,
 	}
 }
 
@@ -167,8 +169,15 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, ProfileResponse{
-		User: user,
+	// Check if user is a coach (for any organization)
+	isCoach := false
+	if h.schedulingService != nil {
+		isCoach, _ = h.schedulingService.IsUserCoach(userID)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"user":     user,
+		"is_coach": isCoach,
 	})
 }
 

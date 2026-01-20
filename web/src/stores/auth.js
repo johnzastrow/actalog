@@ -9,11 +9,13 @@ export const useAuthStore = defineStore('auth', () => {
   const refreshToken = ref(localStorage.getItem('refreshToken') || null)
   const loading = ref(false)
   const error = ref(null)
+  const isCoach = ref(false)
+  const schedulingEnabled = ref(false)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
   // Initialize auth state from localStorage
-  function init() {
+  async function init() {
     const savedUser = localStorage.getItem('user')
     if (savedUser && token.value) {
       try {
@@ -25,6 +27,8 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = parsedUser
         // Set default authorization header
         axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+        // Fetch full profile to get is_coach status
+        await fetchProfile()
       } catch {
         logout()
       }
@@ -55,6 +59,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Set default authorization header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+
+      // Fetch full profile including is_coach status
+      await fetchProfile()
 
       return true
     } catch (e) {
@@ -123,6 +130,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     token.value = null
     refreshToken.value = null
+    isCoach.value = false
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     localStorage.removeItem('refreshToken')
@@ -173,8 +181,36 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Fetch user profile and is_coach status
+  async function fetchProfile() {
+    if (!token.value) return false
+    try {
+      const response = await axios.get('/api/users/profile')
+      user.value = response.data.user
+      isCoach.value = response.data.is_coach || false
+      localStorage.setItem('user', JSON.stringify(user.value))
+      return true
+    } catch (e) {
+      console.error('Failed to fetch profile:', e)
+      return false
+    }
+  }
+
+  // Fetch scheduling_enabled from version endpoint
+  async function fetchSchedulingEnabled() {
+    try {
+      const response = await axios.get('/api/version')
+      schedulingEnabled.value = response.data.scheduling_enabled || false
+    } catch (e) {
+      console.error('Failed to fetch version info:', e)
+      schedulingEnabled.value = false
+    }
+  }
+
   // Initialize on store creation
   init()
+  // Fetch scheduling status (public endpoint, no auth required)
+  fetchSchedulingEnabled()
 
   return {
     user,
@@ -182,11 +218,15 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     loading,
     error,
+    isCoach,
+    schedulingEnabled,
     isAuthenticated,
     login,
     register,
     logout,
     refreshAccessToken,
-    updateProfile
+    updateProfile,
+    fetchProfile,
+    fetchSchedulingEnabled
   }
 })

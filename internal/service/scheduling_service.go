@@ -625,6 +625,15 @@ func (s *SchedulingService) IsUserCoachForOrganization(userID, orgID int64) (boo
 	return s.coachAssignmentRepo.IsCoachForOrganization(userID, orgID)
 }
 
+// IsUserCoach checks if a user is a coach for any organization
+func (s *SchedulingService) IsUserCoach(userID int64) (bool, error) {
+	assignments, err := s.coachAssignmentRepo.GetByUserID(userID)
+	if err != nil {
+		return false, err
+	}
+	return len(assignments) > 0, nil
+}
+
 // AddCoachToSession adds a coach to a specific session
 func (s *SchedulingService) AddCoachToSession(adminUserID int64, sessionID, coachUserID int64, isLead bool) error {
 	// Verify session exists

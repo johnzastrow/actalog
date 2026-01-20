@@ -35,6 +35,19 @@ func NewNotificationService(
 	}
 }
 
+// isNilEmailService checks if the email service interface contains a nil pointer
+// This is necessary because in Go, an interface can be non-nil but contain a nil concrete value
+func (s *NotificationService) isNilEmailService() bool {
+	if s.emailService == nil {
+		return true
+	}
+	// Type assert to check if the concrete value is nil
+	if svc, ok := s.emailService.(*email.Service); ok {
+		return svc == nil
+	}
+	return false
+}
+
 // CreateNotification creates a notification for all users in an organization
 // based on their preferences
 func (s *NotificationService) CreateNotification(
@@ -351,8 +364,8 @@ func (s *NotificationService) NotifyUserWelcome(userID int64, userName, userEmai
 		// Continue to send email even if notification creation fails
 	}
 
-	// Send welcome email if email service is available
-	if s.emailService != nil {
+	// Send welcome email if email service is available and properly initialized
+	if s.emailService != nil && !s.isNilEmailService() {
 		if err := s.emailService.SendWelcomeEmail(userEmail, userName, appURL); err != nil {
 			fmt.Printf("Failed to send welcome email to %s: %v\n", userEmail, err)
 			// Don't return error - email failure shouldn't break registration

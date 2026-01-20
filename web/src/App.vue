@@ -179,8 +179,21 @@
         <span class="nav-label">Stats</span>
       </v-btn>
 
-      <!-- Center FAB Button -->
+      <!-- Schedule Button (when scheduling enabled) -->
       <v-btn
+        v-if="authStore.schedulingEnabled"
+        value="schedule"
+        to="/schedule"
+        size="x-small"
+        class="fab-button"
+      >
+        <v-avatar color="primary" size="40">
+          <v-icon color="white" size="24">mdi-calendar-clock</v-icon>
+        </v-avatar>
+      </v-btn>
+      <!-- Quick-log fallback (when scheduling disabled) -->
+      <v-btn
+        v-else
         value="log"
         to="/dashboard?open=quick-log"
         size="x-small"

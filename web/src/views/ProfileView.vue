@@ -337,6 +337,28 @@
         </v-list>
       </v-card>
 
+      <!-- Coaching (show if user is coach or admin) -->
+      <v-card v-if="authStore.isCoach || user?.role === 'admin'" elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-1">
+          <v-icon color="info" size="small" class="mr-1">mdi-whistle</v-icon>
+          Coaching
+        </h2>
+        <v-list bg-color="transparent" density="compact">
+          <v-list-item
+            prepend-icon="mdi-view-dashboard"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/coach')"
+          >
+            <v-list-item-title class="font-weight-medium">Coach Dashboard</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">View and manage your sessions</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-card>
+
       <!-- Administration (Admin Only) -->
       <v-card v-if="user?.role === 'admin'" elevation="0" rounded class="pa-2 mb-1" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-1" >
@@ -424,6 +446,32 @@
             <v-list-item-subtitle class="text-caption text-disabled">
               Manage user-created WODs, movements, workouts
             </v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-calendar-edit"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/scheduling')"
+          >
+            <v-list-item-title class="font-weight-medium">Class Scheduling</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage schedules, sessions, coaches</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-package-variant"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/packages')"
+          >
+            <v-list-item-title class="font-weight-medium">Class Packages</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage credit packages</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>

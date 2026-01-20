@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewUserHandler(t *testing.T) {
-	handler := NewUserHandler(nil, createTestLogger())
+	handler := NewUserHandler(nil, nil, createTestLogger())
 	if handler == nil {
 		t.Fatal("NewUserHandler() should not return nil")
 	}
@@ -298,7 +298,7 @@ func TestUserHandler_UploadAvatar_WrongFieldName(t *testing.T) {
 
 func TestUserHandler_GetProfile_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 1, "admin@example.com", "admin")
 	rr := httptest.NewRecorder()
@@ -311,7 +311,7 @@ func TestUserHandler_GetProfile_Success(t *testing.T) {
 
 func TestUserHandler_GetProfile_NotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	// User ID 999 doesn't exist in mock
 	req := createAuthenticatedRequest(http.MethodGet, "/api/profile", "", 999, "unknown@example.com", "user")
@@ -325,7 +325,7 @@ func TestUserHandler_GetProfile_NotFound(t *testing.T) {
 
 func TestUserHandler_UpdateProfile_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "Updated Name"}`, 1, "admin@example.com", "admin")
 	rr := httptest.NewRecorder()
@@ -337,7 +337,7 @@ func TestUserHandler_UpdateProfile_Success(t *testing.T) {
 
 func TestUserHandler_UpdateProfile_NotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	// User ID 999 doesn't exist in mock
 	req := createAuthenticatedRequest(http.MethodPut, "/api/profile", `{"name": "Updated Name"}`, 999, "unknown@example.com", "user")
@@ -351,7 +351,7 @@ func TestUserHandler_UpdateProfile_NotFound(t *testing.T) {
 
 func TestUserHandler_DeleteAvatar_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 1, "admin@example.com", "admin")
 	rr := httptest.NewRecorder()
@@ -363,7 +363,7 @@ func TestUserHandler_DeleteAvatar_Success(t *testing.T) {
 
 func TestUserHandler_DeleteAvatar_NotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	// User ID 999 doesn't exist in mock
 	req := createAuthenticatedRequest(http.MethodDelete, "/api/profile/avatar", "", 999, "unknown@example.com", "user")
@@ -376,7 +376,7 @@ func TestUserHandler_DeleteAvatar_NotFound(t *testing.T) {
 
 func TestUserHandler_ChangePassword_WrongOldPassword(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password",
 		`{"old_password": "wrongpassword", "new_password": "newpassword123"}`,
@@ -392,7 +392,7 @@ func TestUserHandler_ChangePassword_WrongOldPassword(t *testing.T) {
 
 func TestUserHandler_ChangePassword_NotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewUserHandler(userService, createTestLogger())
+	handler := NewUserHandler(userService, nil, createTestLogger())
 
 	// User ID 999 doesn't exist in mock
 	req := createAuthenticatedRequest(http.MethodPost, "/api/profile/password",

@@ -76,7 +76,7 @@ func setupFullRouter(t *testing.T) (*chi.Mux, func()) {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, testLogger)
-	userHandler := handler.NewUserHandler(userService, testLogger)
+	userHandler := handler.NewUserHandler(userService, nil, testLogger)
 	movementHandler := handler.NewMovementHandler(movementRepo, movementService, testLogger)
 	wodHandler := handler.NewWODHandler(wodService)
 	workoutTemplateHandler := handler.NewWorkoutTemplateHandler(workoutTemplateService)

@@ -136,6 +136,16 @@
         </v-col>
       </v-row>
 
+      <!-- Log Workout Button (shown when scheduling is enabled, since center nav is schedule icon) -->
+      <v-row v-if="authStore.schedulingEnabled" dense class="mb-2">
+        <v-col cols="12">
+          <v-btn color="primary" variant="elevated" block class="py-3" @click="openQuickLog">
+            <v-icon start>mdi-plus</v-icon>
+            Log Workout
+          </v-btn>
+        </v-col>
+      </v-row>
+
       <!-- Active Users This Month Card -->
       <v-row v-if="activeUsersStats.length > 0" dense class="mb-1">
         <v-col cols="12">
