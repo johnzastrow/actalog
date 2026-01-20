@@ -196,6 +196,80 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 - Fixed user repository List() method to include all admin fields
 - All user security fields now properly exposed to admin interface
 
+## Key Concepts: Organization, Gym, and Location
+
+Understanding the relationship between organizations, gyms, and locations is essential for the scheduling system:
+
+### Terminology Mapping
+
+| Database Table | Business Term | Examples |
+|----------------|---------------|----------|
+| `organizations` | **Gym / Affiliate / Box** | "CrossFit Downtown", "Iron Tribe Fitness", "F45 Training" |
+| `gym_locations` | **Room / Area / Space** | "Main Floor", "Studio A", "Outdoor Rig", "Yoga Room" |
+
+### Conceptual Hierarchy
+
+```
+Organization (the gym itself)
+└── Gym Locations (physical spaces within the gym)
+    ├── Main Floor (capacity: 20)
+    ├── Studio A (capacity: 15)
+    └── Outdoor Area (capacity: 30)
+```
+
+### Why This Design?
+
+1. **Organization = The Gym Business**
+   - An organization represents the entire gym/affiliate/box entity
+   - It owns all resources: coaches, class templates, packages, documents
+   - Athletes join organizations (memberships)
+   - Subscriptions are at the organization level
+
+2. **Gym Location = Physical Space Within a Gym**
+   - A single gym may have multiple training areas
+   - Different classes may occur in different locations simultaneously
+   - Each location can have its own capacity limit
+   - Examples: "6AM CrossFit" in Main Floor, "6AM Yoga" in Studio A
+
+3. **Multi-Gym Support**
+   - Athletes can belong to multiple organizations (gyms)
+   - A coach can be assigned to multiple organizations
+   - Each organization manages its own schedules independently
+
+### Data Flow Example
+
+```
+Organization: "CrossFit Downtown"
+    │
+    ├── Gym Locations:
+    │   ├── "Main Floor" (capacity: 20)
+    │   └── "Yoga Studio" (capacity: 12)
+    │
+    ├── Class Templates:
+    │   ├── "CrossFit WOD" (default location: Main Floor)
+    │   └── "Mobility Class" (default location: Yoga Studio)
+    │
+    ├── Schedule Slots:
+    │   ├── CrossFit WOD → Mon/Wed/Fri 6:00 AM
+    │   └── Mobility Class → Tue/Thu 5:30 PM
+    │
+    └── Class Sessions (generated from templates + slots):
+        ├── CrossFit WOD - Mon Jan 20, 6:00 AM @ Main Floor
+        ├── CrossFit WOD - Wed Jan 22, 6:00 AM @ Main Floor
+        └── Mobility Class - Tue Jan 21, 5:30 PM @ Yoga Studio
+```
+
+### Foreign Key Relationships
+
+| Child Table | → | Parent Table | Meaning |
+|-------------|---|--------------|---------|
+| `gym_locations` | → | `organizations` | Locations belong to a gym |
+| `class_templates` | → | `organizations` | Class types are gym-specific |
+| `class_sessions` | → | `organizations` | Sessions are hosted by a gym |
+| `class_sessions` | → | `gym_locations` | Sessions occur at a location |
+| `coach_assignments` | → | `organizations` | Coaches are assigned per-gym |
+| `user_organizations` | → | `organizations` | Athletes belong to gyms |
+
 ## Entity Relationship Diagram
 
 ```mermaid
