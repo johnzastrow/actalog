@@ -1114,14 +1114,14 @@ func (s *BackupServiceImpl) getTableSchema(tableName string) (domain.TableSchema
 func (s *BackupServiceImpl) normalizeColumnType(dbType string) string {
 	dbType = strings.ToLower(dbType)
 
+	// Boolean types - MUST check before integer types since tinyint(1) contains "int"
+	if strings.Contains(dbType, "bool") || strings.HasPrefix(dbType, "tinyint(1)") {
+		return "boolean"
+	}
+
 	// Integer types
 	if strings.Contains(dbType, "int") || strings.Contains(dbType, "serial") {
 		return "integer"
-	}
-
-	// Boolean types
-	if strings.Contains(dbType, "bool") || dbType == "tinyint(1)" {
-		return "boolean"
 	}
 
 	// Float/decimal types
@@ -2051,22 +2051,21 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, col
 		return nil
 	}
 
-	// Determine if this is a boolean column (prefer schema type, fallback to column name)
-	isBoolean := colType == "boolean"
-	if !isBoolean && colType == "" {
-		// Fallback for older backups without schema metadata
-		booleanColumns := map[string]bool{
-			"is_pr":                 true,
-			"is_rx":                 true,
-			"is_template":           true,
-			"is_standard":           true,
-			"is_permanent_free":     true,
-			"email_verified":        true,
-			"account_disabled":      true,
-			"notifications_enabled": true,
-		}
-		isBoolean = booleanColumns[columnName]
+	// Determine if this is a boolean column
+	// Known boolean columns - these take precedence over schema metadata
+	// (fixes backups created with buggy normalizeColumnType that marked tinyint(1) as integer)
+	booleanColumns := map[string]bool{
+		"is_pr":                            true,
+		"is_rx":                            true,
+		"is_template":                      true,
+		"is_standard":                      true,
+		"is_permanent_free":                true,
+		"email_verified":                   true,
+		"account_disabled":                 true,
+		"notifications_enabled":            true,
+		"admin_user_event_notifications":   true,
 	}
+	isBoolean := booleanColumns[columnName] || colType == "boolean"
 
 	// Determine if this is a datetime/date column (prefer schema type, fallback to column name)
 	isDatetime := colType == "datetime" || colType == "date"
@@ -2110,7 +2109,22 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, col
 		// Convert between different boolean representations
 		switch v := val.(type) {
 		case int:
-			// Plain int (handle for completeness)
+			// Plain int
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case int8:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case int16:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case int32:
 			if s.dbDriver == "postgres" {
 				return v != 0
 			}
@@ -2121,6 +2135,31 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, col
 				return v != 0
 			}
 			return v
+		case uint:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case uint8:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case uint16:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case uint32:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
+		case uint64:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
 		case bool:
 			// Convert boolean to integer for SQLite/MySQL
 			if s.dbDriver == "sqlite3" || s.dbDriver == "mysql" {
@@ -2130,12 +2169,39 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, col
 				return int64(0)
 			}
 			return v
+		case float32:
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			if v != 0 {
+				return int64(1)
+			}
+			return int64(0)
 		case float64:
 			// JSON unmarshaling might give us float64 for numbers
 			if s.dbDriver == "postgres" {
 				return v != 0
 			}
 			if v != 0 {
+				return int64(1)
+			}
+			return int64(0)
+		case string:
+			// Handle string representations of booleans
+			if s.dbDriver == "postgres" {
+				return v == "1" || v == "true" || v == "t" || v == "yes"
+			}
+			if v == "1" || v == "true" || v == "t" || v == "yes" {
+				return int64(1)
+			}
+			return int64(0)
+		default:
+			// Last resort: try to convert via fmt to catch any other numeric types
+			str := fmt.Sprintf("%v", v)
+			if s.dbDriver == "postgres" {
+				return str == "1" || str == "true" || str == "t" || str == "yes"
+			}
+			if str == "1" || str == "true" || str == "t" || str == "yes" {
 				return int64(1)
 			}
 			return int64(0)
