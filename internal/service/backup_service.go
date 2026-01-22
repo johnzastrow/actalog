@@ -1583,8 +1583,11 @@ func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) 
 		notification_preferences TEXT,
 		data_export_format TEXT DEFAULT 'json',
 		theme TEXT DEFAULT 'light',
+		font_family TEXT DEFAULT 'system',
 		weight_unit TEXT DEFAULT 'lbs',
 		distance_unit TEXT DEFAULT 'meters',
+		timezone TEXT DEFAULT 'America/New_York',
+		admin_user_event_notifications INTEGER DEFAULT 0,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -1685,6 +1688,7 @@ func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) 
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		is_pr INTEGER NOT NULL DEFAULT 0,
+		rpe INTEGER,
 		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
 		FOREIGN KEY (movement_id) REFERENCES movements(id) ON DELETE RESTRICT
 	);
@@ -1704,6 +1708,7 @@ func (s *BackupServiceImpl) createSchemaFromData(backupData *domain.BackupData) 
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		is_pr INTEGER NOT NULL DEFAULT 0,
+		rpe INTEGER,
 		FOREIGN KEY (user_workout_id) REFERENCES user_workouts(id) ON DELETE CASCADE,
 		FOREIGN KEY (wod_id) REFERENCES wods(id) ON DELETE RESTRICT
 	);

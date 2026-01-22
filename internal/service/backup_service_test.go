@@ -4269,3 +4269,98 @@ func TestBackupService_RestoreBackup_SkipMode(t *testing.T) {
 		t.Errorf("expected 'Existing User', got '%s'", name)
 	}
 }
+
+// TestSQLiteSchemaMatchesDomainEntities validates that the embedded SQLite schema
+// in the backup service includes all columns from domain entities.
+// This test helps catch schema drift when new columns are added to domain structs
+// but not to the backup SQLite schema.
+func TestSQLiteSchemaMatchesDomainEntities(t *testing.T) {
+	// Create a temporary backup service to extract the SQLite schema
+	tempDir, err := os.MkdirTemp("", "backup_schema_test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	sqlitePath := filepath.Join(tempDir, "test_schema.db")
+
+	// Create SQLite database with the backup schema
+	db, err := sql.Open("sqlite3", sqlitePath)
+	if err != nil {
+		t.Fatalf("failed to open sqlite db: %v", err)
+	}
+	defer db.Close()
+
+	// Create a backup service instance just to access the createSQLiteDump method
+	svc := &BackupServiceImpl{}
+
+	// Create empty backup data to generate schema
+	backupData := &domain.BackupData{
+		Schema: domain.SchemaMetadata{Tables: make(map[string]domain.TableSchema)},
+	}
+
+	// Run the SQLite dump creation (this creates the schema)
+	err = svc.createSQLiteDump(backupData, sqlitePath)
+	if err != nil {
+		t.Fatalf("failed to create SQLite dump: %v", err)
+	}
+
+	// Define expected columns for each table based on domain entities
+	// These are the db tags from domain structs that should be in the SQLite schema
+	expectedColumns := map[string][]string{
+		"user_workout_movements": {
+			"id", "user_workout_id", "movement_id", "sets", "reps", "weight",
+			"time", "distance", "notes", "order_index", "created_at", "updated_at",
+			"is_pr", "rpe",
+		},
+		"user_workout_wods": {
+			"id", "user_workout_id", "wod_id", "score_type", "score_value",
+			"time_seconds", "rounds", "reps", "weight", "notes", "order_index",
+			"created_at", "updated_at", "is_pr", "rpe",
+		},
+		"user_settings": {
+			"id", "user_id", "notification_preferences", "data_export_format",
+			"theme", "font_family", "weight_unit", "distance_unit", "timezone",
+			"admin_user_event_notifications", "created_at", "updated_at",
+		},
+	}
+
+	// Open the created database to check columns
+	checkDB, err := sql.Open("sqlite3", sqlitePath)
+	if err != nil {
+		t.Fatalf("failed to open sqlite db for checking: %v", err)
+	}
+	defer checkDB.Close()
+
+	for tableName, requiredCols := range expectedColumns {
+		t.Run(tableName, func(t *testing.T) {
+			// Get actual columns from the SQLite table
+			rows, err := checkDB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+			if err != nil {
+				t.Fatalf("failed to get table info for %s: %v", tableName, err)
+			}
+			defer rows.Close()
+
+			actualCols := make(map[string]bool)
+			for rows.Next() {
+				var cid int
+				var name, colType string
+				var notNull, pk int
+				var dfltValue interface{}
+				if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
+					t.Fatalf("failed to scan column info: %v", err)
+				}
+				actualCols[name] = true
+			}
+
+			// Check each required column exists
+			for _, col := range requiredCols {
+				if !actualCols[col] {
+					t.Errorf("SQLite schema for table %s is missing column %q (from domain entity). "+
+						"Update the SQLite schema in backup_service.go to include this column.",
+						tableName, col)
+				}
+			}
+		})
+	}
+}
