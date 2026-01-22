@@ -134,7 +134,7 @@ describe('AdminSchedulingView', () => {
     it('renders organization selector', () => {
       createWrapper()
 
-      expect(wrapper.text()).toContain('Select Organization')
+      expect(wrapper.text()).toContain('Select Gym')
     })
 
     it('renders tabs for different sections', () => {

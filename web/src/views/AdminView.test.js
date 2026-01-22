@@ -71,7 +71,7 @@ describe('AdminView', () => {
       expect(wrapper.text()).toContain('Data Cleanup')
       expect(wrapper.text()).toContain('Data Quality Checks')
       expect(wrapper.text()).toContain('User Management')
-      expect(wrapper.text()).toContain('Organizations')
+      expect(wrapper.text()).toContain('Gyms')
       expect(wrapper.text()).toContain('User Content')
       expect(wrapper.text()).toContain('Database Backups')
       expect(wrapper.text()).toContain('Audit Logs')

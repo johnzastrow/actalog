@@ -205,7 +205,9 @@ describe('LogWorkoutView', () => {
       await flushPromises()
 
       const vm = wrapper.vm
-      const today = new Date().toISOString().split('T')[0]
+      // Use local date format to match component's getTodayDate()
+      const now = new Date()
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
       expect(vm.workoutDate).toBe(today)
     })

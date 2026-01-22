@@ -256,7 +256,7 @@ describe('AdminAnnouncementsView', () => {
 
       const vm = wrapper.vm
 
-      expect(vm.errorMessage).toContain('organizations')
+      expect(vm.errorMessage).toContain('gyms')
 
       consoleSpy.mockRestore()
     })
