@@ -223,7 +223,14 @@ pkill -9 -f actalog 2>/dev/null; docker stop $(docker ps -q --filter "publish=80
 **NEVER change any data for the following user accounts:**
 - `br8kwall@gmail.com` - Do not modify password, email, role, or any other user data
 
-When testing or debugging, create separate test accounts instead of modifying protected users.
+### Claude Testing Account
+
+**For all testing, use this dedicated account instead of modifying protected users:**
+- Email: `claude@there.com`
+- Password: `FuzzyBanana38`
+- Role: `admin`
+
+Create this account in all testing databases (PostgreSQL, MariaDB, SQLite) as needed.
 
 ### Credential Scanning (CRITICAL)
 
