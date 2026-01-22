@@ -218,6 +218,13 @@ pkill -9 -f actalog 2>/dev/null; docker stop $(docker ps -q --filter "publish=80
 - Validate input at handler layer
 - Configure `CORS_ORIGINS` in `.env`
 
+### Protected Users (DO NOT MODIFY)
+
+**NEVER change any data for the following user accounts:**
+- `br8kwall@gmail.com` - Do not modify password, email, role, or any other user data
+
+When testing or debugging, create separate test accounts instead of modifying protected users.
+
 ### Credential Scanning (CRITICAL)
 
 **Before EVERY commit and push, scan for credentials:**
