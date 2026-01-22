@@ -2109,6 +2109,12 @@ func (s *BackupServiceImpl) convertValue(val interface{}, columnName string, col
 	if isBoolean {
 		// Convert between different boolean representations
 		switch v := val.(type) {
+		case int:
+			// Plain int (handle for completeness)
+			if s.dbDriver == "postgres" {
+				return v != 0
+			}
+			return int64(v)
 		case int64:
 			// Convert integer to boolean for PostgreSQL
 			if s.dbDriver == "postgres" {
