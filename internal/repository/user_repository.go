@@ -528,7 +528,7 @@ func (r *SQLiteUserRepository) IsAccountLocked(userID int64) (bool, *time.Time, 
 func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64, reason string) error {
 	now := time.Now()
 	query := rebindQuery(`UPDATE users
-		SET account_disabled = 1, disabled_at = ?, disabled_by_user_id = ?, disable_reason = ?, updated_at = ?
+		SET account_disabled = true, disabled_at = ?, disabled_by_user_id = ?, disable_reason = ?, updated_at = ?
 		WHERE id = ?`)
 
 	reasonPtr := &reason
@@ -546,7 +546,7 @@ func (r *SQLiteUserRepository) DisableAccount(userID int64, disabledBy int64, re
 // EnableAccount re-enables a disabled user account (admin action)
 func (r *SQLiteUserRepository) EnableAccount(userID int64) error {
 	query := rebindQuery(`UPDATE users
-		SET account_disabled = 0, disabled_at = NULL, disabled_by_user_id = NULL, disable_reason = NULL, updated_at = ?
+		SET account_disabled = false, disabled_at = NULL, disabled_by_user_id = NULL, disable_reason = NULL, updated_at = ?
 		WHERE id = ?`)
 
 	_, err := r.db.Exec(query, time.Now(), userID)
@@ -566,7 +566,7 @@ func (r *SQLiteUserRepository) CountNewThisMonth() (int64, error) {
 
 // CountDisabled returns the count of disabled user accounts
 func (r *SQLiteUserRepository) CountDisabled() (int64, error) {
-	query := `SELECT COUNT(*) FROM users WHERE account_disabled = 1`
+	query := `SELECT COUNT(*) FROM users WHERE account_disabled = true`
 	var count int64
 	err := r.db.QueryRow(query).Scan(&count)
 	return count, err

@@ -96,7 +96,7 @@ func (r *MovementRepository) GetByName(name string) (*domain.Movement, error) {
 
 // ListStandard retrieves all standard movements
 func (r *MovementRepository) ListStandard() ([]*domain.Movement, error) {
-	query := rebindQuery(`SELECT id, name, description, type, is_standard, created_by, created_at, updated_at FROM movements WHERE is_standard = 1 ORDER BY name`)
+	query := rebindQuery(`SELECT id, name, description, type, is_standard, created_by, created_at, updated_at FROM movements WHERE is_standard = true ORDER BY name`)
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -139,7 +139,7 @@ func (r *MovementRepository) Update(movement *domain.Movement) error {
 
 	query := rebindQuery(`UPDATE movements
 	          SET name = ?, description = ?, type = ?, updated_at = ?
-	          WHERE id = ? AND is_standard = 0`)
+	          WHERE id = ? AND is_standard = false`)
 
 	result, err := r.db.Exec(query, movement.Name, movement.Description, movement.Type, movement.UpdatedAt, movement.ID)
 	if err != nil {
@@ -160,7 +160,7 @@ func (r *MovementRepository) Update(movement *domain.Movement) error {
 
 // Delete deletes a movement (only for user-created movements)
 func (r *MovementRepository) Delete(id int64) error {
-	query := rebindQuery(`DELETE FROM movements WHERE id = ? AND is_standard = 0`)
+	query := rebindQuery(`DELETE FROM movements WHERE id = ? AND is_standard = false`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -182,7 +182,7 @@ func (r *MovementRepository) Delete(id int64) error {
 // ListAllUserCreated retrieves all user-created movements across all users (for admin view)
 func (r *MovementRepository) ListAllUserCreated() ([]*domain.Movement, error) {
 	query := rebindQuery(`SELECT id, name, description, type, is_standard, created_by, created_at, updated_at
-	          FROM movements WHERE is_standard = 0 ORDER BY name`)
+	          FROM movements WHERE is_standard = false ORDER BY name`)
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -199,7 +199,7 @@ func (r *MovementRepository) ListAllUserCreatedWithUserInfo() ([]*domain.Movemen
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM movements m
 	          LEFT JOIN users u ON m.created_by = u.id
-	          WHERE m.is_standard = 0
+	          WHERE m.is_standard = false
 	          ORDER BY m.name`)
 
 	rows, err := r.db.Query(query)
@@ -241,7 +241,7 @@ func (r *MovementRepository) ListAllUserCreatedWithUserInfo() ([]*domain.Movemen
 
 // CountAllUserCreated counts all user-created movements
 func (r *MovementRepository) CountAllUserCreated() (int64, error) {
-	query := rebindQuery(`SELECT COUNT(*) FROM movements WHERE is_standard = 0`)
+	query := rebindQuery(`SELECT COUNT(*) FROM movements WHERE is_standard = false`)
 	var count int64
 	err := r.db.QueryRow(query).Scan(&count)
 	if err != nil {
@@ -256,9 +256,9 @@ func (r *MovementRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offse
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM movements m
 	          LEFT JOIN users u ON m.created_by = u.id
-	          WHERE m.is_standard = 0`
+	          WHERE m.is_standard = false`
 
-	countQuery := `SELECT COUNT(*) FROM movements m LEFT JOIN users u ON m.created_by = u.id WHERE m.is_standard = 0`
+	countQuery := `SELECT COUNT(*) FROM movements m LEFT JOIN users u ON m.created_by = u.id WHERE m.is_standard = false`
 
 	var args []interface{}
 	var countArgs []interface{}

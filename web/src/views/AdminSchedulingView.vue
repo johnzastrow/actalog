@@ -24,6 +24,11 @@
         @update:model-value="onOrgChange"
       />
 
+      <!-- No Organizations Alert -->
+      <v-alert v-if="!loading && organizations.length === 0" type="warning" variant="tonal" class="mb-4">
+        No gyms configured. Create a gym in the Organizations section first.
+      </v-alert>
+
       <!-- Loading State -->
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
@@ -53,7 +58,7 @@
               <v-icon class="mr-2">mdi-map-marker</v-icon>
               Locations ({{ locations.length }})
               <v-spacer />
-              <v-btn color="primary" size="small" @click="openLocationDialog()">
+              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openLocationDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Add Location
               </v-btn>
@@ -92,7 +97,7 @@
               <v-icon class="mr-2">mdi-clipboard-list</v-icon>
               Class Templates ({{ templates.length }})
               <v-spacer />
-              <v-btn color="primary" size="small" @click="openTemplateDialog()">
+              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openTemplateDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Add Template
               </v-btn>
@@ -136,7 +141,7 @@
               <v-icon class="mr-2">mdi-calendar</v-icon>
               Sessions
               <v-spacer />
-              <v-btn color="primary" size="small" @click="openSessionDialog()">
+              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openSessionDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Create Session
               </v-btn>
@@ -193,7 +198,7 @@
               <v-icon class="mr-2">mdi-account-tie</v-icon>
               Coaches ({{ coaches.length }})
               <v-spacer />
-              <v-btn color="primary" size="small" @click="openCoachDialog()">
+              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openCoachDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Assign Coach
               </v-btn>
@@ -495,6 +500,14 @@ function editLocation(loc) {
 }
 
 async function saveLocation() {
+  if (!selectedOrgId.value) {
+    error.value = 'Please select a gym first'
+    return
+  }
+  if (!locationForm.value.name?.trim()) {
+    error.value = 'Location name is required'
+    return
+  }
   loading.value = true
   try {
     if (editingLocation.value) {
@@ -506,7 +519,7 @@ async function saveLocation() {
     locationDialog.value = false
     fetchLocations()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to save location'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to save location'
   } finally {
     loading.value = false
   }
@@ -519,7 +532,7 @@ async function deleteLocation(loc) {
     successMessage.value = 'Location deleted'
     fetchLocations()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to delete location'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to delete location'
   }
 }
 
@@ -535,6 +548,14 @@ function editTemplate(tmpl) {
 }
 
 async function saveTemplate() {
+  if (!selectedOrgId.value) {
+    error.value = 'Please select a gym first'
+    return
+  }
+  if (!templateForm.value.name?.trim()) {
+    error.value = 'Template name is required'
+    return
+  }
   loading.value = true
   try {
     if (editingTemplate.value) {
@@ -546,7 +567,7 @@ async function saveTemplate() {
     templateDialog.value = false
     fetchTemplates()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to save template'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to save template'
   } finally {
     loading.value = false
   }
@@ -559,7 +580,7 @@ async function deleteTemplate(tmpl) {
     successMessage.value = 'Template deleted'
     fetchTemplates()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to delete template'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to delete template'
   }
 }
 
@@ -586,6 +607,18 @@ function editSession(sess) {
 }
 
 async function saveSession() {
+  if (!selectedOrgId.value) {
+    error.value = 'Please select a gym first'
+    return
+  }
+  if (!sessionForm.value.name) {
+    error.value = 'Session name is required'
+    return
+  }
+  if (!sessionForm.value.start_time) {
+    error.value = 'Start time is required'
+    return
+  }
   loading.value = true
   try {
     const data = {
@@ -602,7 +635,7 @@ async function saveSession() {
     sessionDialog.value = false
     fetchSessions()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to save session'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to save session'
   } finally {
     loading.value = false
   }
@@ -616,7 +649,7 @@ async function cancelSession(sess) {
     successMessage.value = 'Session cancelled'
     fetchSessions()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to cancel session'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to cancel session'
   }
 }
 
@@ -672,6 +705,10 @@ function openCoachDialog() {
 }
 
 async function assignCoach() {
+  if (!selectedOrgId.value) {
+    error.value = 'Please select a gym first'
+    return
+  }
   if (!coachForm.value.user_id) {
     error.value = 'User ID is required'
     return
@@ -682,7 +719,7 @@ async function assignCoach() {
     coachDialog.value = false
     fetchCoaches()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to assign coach'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to assign coach'
   }
 }
 
@@ -693,7 +730,7 @@ async function removeCoach(coach) {
     successMessage.value = 'Coach removed'
     fetchCoaches()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to remove coach'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to remove coach'
   }
 }
 

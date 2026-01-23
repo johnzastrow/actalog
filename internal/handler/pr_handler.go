@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 	"github.com/johnzastrow/actalog/pkg/prmath"
@@ -117,7 +118,7 @@ func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 		JOIN workouts w ON wm.workout_id = w.id
 		JOIN user_workouts uw ON uw.workout_id = w.id
 		JOIN movements m ON wm.movement_id = m.id
-		WHERE uw.user_id = ? AND wm.is_pr = 1
+		WHERE uw.user_id = ? AND wm.is_pr = true
 		ORDER BY uw.workout_date DESC
 		LIMIT ?
 	`
@@ -144,7 +145,7 @@ func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 		JOIN workouts w ON ww.workout_id = w.id
 		JOIN user_workouts uw ON uw.workout_id = w.id
 		JOIN wods wod ON ww.wod_id = wod.id
-		WHERE uw.user_id = ? AND ww.is_pr = 1
+		WHERE uw.user_id = ? AND ww.is_pr = true
 		ORDER BY uw.workout_date DESC
 		LIMIT ?
 	`
@@ -153,7 +154,7 @@ func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 	var prs []PersonalRecord
 
 	// Get movement PRs
-	movementRows, err := h.db.Query(movementQuery, userID, limit)
+	movementRows, err := h.db.Query(repository.RebindQuery(movementQuery), userID, limit)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=get_prs outcome=failure user_id=%d error=query_movements: %v", userID, err)
@@ -201,7 +202,7 @@ func (h *PRHandler) GetPersonalRecords(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get WOD PRs
-	wodRows, err := h.db.Query(wodQuery, userID, limit)
+	wodRows, err := h.db.Query(repository.RebindQuery(wodQuery), userID, limit)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=get_prs outcome=failure user_id=%d error=query_wods: %v", userID, err)
@@ -297,13 +298,13 @@ func (h *PRHandler) GetPRMovements(w http.ResponseWriter, r *http.Request) {
 		JOIN workouts w ON wm.workout_id = w.id
 		JOIN user_workouts uw ON uw.workout_id = w.id
 		JOIN movements m ON wm.movement_id = m.id
-		WHERE uw.user_id = ? AND wm.is_pr = 1
+		WHERE uw.user_id = ? AND wm.is_pr = true
 		GROUP BY m.id, m.name, m.type
 		ORDER BY pr_count DESC, last_pr_date DESC
 		LIMIT ?
 	`
 
-	rows, err := h.db.Query(query, userID, limit)
+	rows, err := h.db.Query(repository.RebindQuery(query), userID, limit)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=get_pr_movements outcome=failure user_id=%d error=%v", userID, err)
@@ -401,7 +402,7 @@ func (h *PRHandler) ToggleMovementPR(w http.ResponseWriter, r *http.Request) {
 	`
 
 	var exists int
-	err = h.db.QueryRow(verifyQuery, movementID, userID).Scan(&exists)
+	err = h.db.QueryRow(repository.RebindQuery(verifyQuery), movementID, userID).Scan(&exists)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			if h.logger != nil {
@@ -420,12 +421,12 @@ func (h *PRHandler) ToggleMovementPR(w http.ResponseWriter, r *http.Request) {
 	// Toggle the PR flag
 	toggleQuery := `
 		UPDATE workout_movements
-		SET is_pr = CASE WHEN is_pr = 1 THEN 0 ELSE 1 END,
+		SET is_pr = NOT is_pr,
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
 
-	result, err := h.db.Exec(toggleQuery, movementID)
+	result, err := h.db.Exec(repository.RebindQuery(toggleQuery), movementID)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=toggle_movement_pr outcome=failure user_id=%d movement_id=%d error=%v", userID, movementID, err)
@@ -442,7 +443,7 @@ func (h *PRHandler) ToggleMovementPR(w http.ResponseWriter, r *http.Request) {
 
 	// Get the new state
 	var newState bool
-	err = h.db.QueryRow("SELECT is_pr FROM workout_movements WHERE id = ?", movementID).Scan(&newState)
+	err = h.db.QueryRow(repository.RebindQuery("SELECT is_pr FROM workout_movements WHERE id = ?"), movementID).Scan(&newState)
 	if err != nil {
 		if h.logger != nil {
 			h.logger.Error("action=toggle_movement_pr outcome=failure user_id=%d movement_id=%d error=get_state: %v", userID, movementID, err)

@@ -1182,6 +1182,12 @@ func getDateExpr(column string) string {
 	}
 }
 
+// RebindQuery converts ? placeholders to $N for PostgreSQL (exported for use by other packages)
+// This allows queries written with ? placeholders to work across all databases
+func RebindQuery(query string) string {
+	return rebindQuery(query)
+}
+
 // rebindQuery converts ? placeholders to $N for PostgreSQL
 // This allows queries written with ? placeholders to work across all databases
 func rebindQuery(query string) string {

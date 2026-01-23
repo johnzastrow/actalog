@@ -407,7 +407,7 @@ func (r *WorkoutMovementRepository) GetPRMovements(userID int64, limit int) ([]*
 		FROM workout_movements ws
 		INNER JOIN user_workouts uw ON ws.workout_id = uw.workout_id
 		INNER JOIN movements m ON ws.movement_id = m.id
-		WHERE uw.user_id = ? AND ws.is_pr = 1
+		WHERE uw.user_id = ? AND ws.is_pr = true
 		ORDER BY uw.workout_date DESC, ws.created_at DESC
 		LIMIT ?`)
 

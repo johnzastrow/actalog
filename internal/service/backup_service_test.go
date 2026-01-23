@@ -510,8 +510,8 @@ func TestNormalizeColumnType(t *testing.T) {
 		// Boolean types
 		{"boolean", "boolean", "boolean"},
 		{"BOOL", "BOOL", "boolean"},
-		// Note: tinyint(1) is often used as boolean in MySQL but contains "int" so matches integer first
-		{"tinyint(1)", "tinyint(1)", "integer"},
+		// tinyint(1) is MySQL's boolean type - must be detected before generic integer check
+		{"tinyint(1)", "tinyint(1)", "boolean"},
 
 		// Float types
 		{"float", "float", "float"},

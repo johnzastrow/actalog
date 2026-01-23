@@ -375,7 +375,7 @@ func (r *UserWorkoutWODRepository) GetPRWODs(userID int64, limit int) ([]*domain
 		FROM user_workout_wods uww
 		JOIN wods w ON uww.wod_id = w.id
 		JOIN user_workouts uw ON uww.user_workout_id = uw.id
-		WHERE uw.user_id = ? AND uww.is_pr = 1
+		WHERE uw.user_id = ? AND uww.is_pr = true
 		ORDER BY uw.workout_date DESC, uww.created_at DESC
 		LIMIT ?`)
 

@@ -223,7 +223,7 @@ func (r *WODRepository) List(filters map[string]interface{}, limit, offset int) 
 // ListStandard retrieves all standard (pre-seeded) WODs
 func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE is_standard = 1 ORDER BY name`)
+	          FROM wods WHERE is_standard = true ORDER BY name`)
 
 	var args []interface{}
 
@@ -277,7 +277,7 @@ func (r *WODRepository) Update(wod *domain.WOD) error {
 
 	query := rebindQuery(`UPDATE wods
 	          SET name = ?, source = ?, type = ?, regime = ?, score_type = ?, description = ?, url = ?, notes = ?, updated_at = ?
-	          WHERE id = ? AND is_standard = 0`)
+	          WHERE id = ? AND is_standard = false`)
 
 	result, err := r.db.Exec(query,
 		wod.Name,
@@ -313,7 +313,7 @@ func (r *WODRepository) UpdateStandard(wod *domain.WOD) error {
 
 	query := rebindQuery(`UPDATE wods
 	          SET name = ?, source = ?, type = ?, regime = ?, score_type = ?, description = ?, url = ?, notes = ?, updated_at = ?
-	          WHERE id = ? AND is_standard = 1`)
+	          WHERE id = ? AND is_standard = true`)
 
 	result, err := r.db.Exec(query,
 		wod.Name,
@@ -345,7 +345,7 @@ func (r *WODRepository) UpdateStandard(wod *domain.WOD) error {
 
 // Delete deletes a WOD (only for user-created WODs)
 func (r *WODRepository) Delete(id int64) error {
-	query := rebindQuery(`DELETE FROM wods WHERE id = ? AND is_standard = 0`)
+	query := rebindQuery(`DELETE FROM wods WHERE id = ? AND is_standard = false`)
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -392,7 +392,7 @@ func (r *WODRepository) Search(query string, limit int) ([]*domain.WOD, error) {
 func (r *WODRepository) ListAllUserCreated(limit, offset int) ([]*domain.WOD, error) {
 	query := rebindQuery(`SELECT w.id, w.name, w.source, w.type, w.regime, w.score_type, w.description, w.url, w.notes, w.is_standard, w.created_by, w.created_at, w.updated_at
 	          FROM wods w
-	          WHERE w.is_standard = 0
+	          WHERE w.is_standard = false
 	          ORDER BY w.name`)
 
 	var args []interface{}
@@ -421,7 +421,7 @@ func (r *WODRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*do
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM wods w
 	          LEFT JOIN users u ON w.created_by = u.id
-	          WHERE w.is_standard = 0
+	          WHERE w.is_standard = false
 	          ORDER BY w.name`)
 
 	var args []interface{}
@@ -486,7 +486,7 @@ func (r *WODRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*do
 
 // CountAllUserCreated counts all user-created WODs
 func (r *WODRepository) CountAllUserCreated() (int64, error) {
-	query := rebindQuery(`SELECT COUNT(*) FROM wods WHERE is_standard = 0`)
+	query := rebindQuery(`SELECT COUNT(*) FROM wods WHERE is_standard = false`)
 	var count int64
 	err := r.db.QueryRow(query).Scan(&count)
 	if err != nil {
@@ -501,9 +501,9 @@ func (r *WODRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset int
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM wods w
 	          LEFT JOIN users u ON w.created_by = u.id
-	          WHERE w.is_standard = 0`
+	          WHERE w.is_standard = false`
 
-	countQuery := `SELECT COUNT(*) FROM wods w LEFT JOIN users u ON w.created_by = u.id WHERE w.is_standard = 0`
+	countQuery := `SELECT COUNT(*) FROM wods w LEFT JOIN users u ON w.created_by = u.id WHERE w.is_standard = false`
 
 	var args []interface{}
 	var countArgs []interface{}
@@ -635,7 +635,7 @@ func (r *WODRepository) CopyToStandard(id int64, newName string) (*domain.WOD, e
 
 	// If copying with the same name, convert the source WOD to standard
 	if newName == source.Name {
-		query := rebindQuery(`UPDATE wods SET is_standard = 1, created_by = NULL, updated_at = ? WHERE id = ?`)
+		query := rebindQuery(`UPDATE wods SET is_standard = true, created_by = NULL, updated_at = ? WHERE id = ?`)
 		_, err := r.db.Exec(query, now, id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert wod to standard: %w", err)
@@ -653,7 +653,7 @@ func (r *WODRepository) CopyToStandard(id int64, newName string) (*domain.WOD, e
 	}
 	if existing != nil && !existing.IsStandard {
 		// Delete the user-created WOD with this name
-		_, err := r.db.Exec(`DELETE FROM wods WHERE id = ? AND is_standard = 0`, existing.ID)
+		_, err := r.db.Exec(`DELETE FROM wods WHERE id = ? AND is_standard = false`, existing.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to remove existing user wod: %w", err)
 		}
