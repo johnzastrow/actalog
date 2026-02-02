@@ -384,7 +384,7 @@ function quickLog() {
       router.push({ path: '/workouts/log', query: { movementId: props.id } })
       break
     case 'template':
-      router.push({ path: '/workouts/log', query: { templateId: props.id } })
+      router.push({ path: '/workouts/log', query: { template: props.id } })
       break
   }
   close()
