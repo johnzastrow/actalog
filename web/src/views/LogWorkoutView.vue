@@ -96,8 +96,11 @@
               {{ workoutName || selectedTemplate?.name }}
             </span>
           </div>
+          <div v-if="selectedTemplate?.intro_warmup" class="text-caption text-medium-emphasis mb-1">
+            <strong>Intro & Warmup:</strong> {{ truncateText(selectedTemplate.intro_warmup, 100) }}
+          </div>
           <div v-if="selectedTemplate?.notes" class="text-caption text-medium-emphasis">
-            {{ selectedTemplate.notes }}
+            <strong>Notes:</strong> {{ truncateText(selectedTemplate.notes, 100) }}
           </div>
           <div v-if="(selectedTemplate?.movements && selectedTemplate.movements.length > 0) || movementPerformance.length > 0" class="mt-2">
             <v-chip size="x-small" color="primary" class="mr-1">

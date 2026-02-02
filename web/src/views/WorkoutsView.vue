@@ -134,7 +134,10 @@
                 <div class="font-weight-bold text-body-1" >
                   {{ template.name }}
                 </div>
-                <div v-if="template.notes" class="text-caption text-medium-emphasis">
+                <div v-if="template.intro_warmup" class="text-caption text-medium-emphasis">
+                  {{ truncateText(template.intro_warmup, 60) }}
+                </div>
+                <div v-else-if="template.notes" class="text-caption text-medium-emphasis">
                   {{ truncateText(template.notes, 60) }}
                 </div>
               </div>

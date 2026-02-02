@@ -52,11 +52,19 @@
           <v-chip v-if="!isStandard" size="x-small" color="primary">Custom</v-chip>
         </div>
 
-        <!-- Description -->
+        <!-- Description (for WODs and Movements) -->
         <div v-if="entityData.description" class="mb-3">
           <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
           <div class="text-body-2">
             <markdown-renderer :content="entityData.description" />
+          </div>
+        </div>
+
+        <!-- Intro & Warmup (for Templates) -->
+        <div v-if="type === 'template' && entityData.intro_warmup" class="mb-3">
+          <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Intro & Warmup</p>
+          <div class="text-body-2">
+            <markdown-renderer :content="entityData.intro_warmup" />
           </div>
         </div>
 
