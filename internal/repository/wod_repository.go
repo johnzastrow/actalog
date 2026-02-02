@@ -222,8 +222,8 @@ func (r *WODRepository) List(filters map[string]interface{}, limit, offset int) 
 
 // ListStandard retrieves all standard (pre-seeded) WODs
 func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
-	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE is_standard = true ORDER BY name`)
+	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE is_standard = true ORDER BY name`
 
 	var args []interface{}
 
@@ -235,6 +235,9 @@ func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 		query += " OFFSET ?"
 		args = append(args, offset)
 	}
+
+	// Rebind after building full query so LIMIT/OFFSET placeholders are converted
+	query = rebindQuery(query)
 
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
@@ -247,8 +250,8 @@ func (r *WODRepository) ListStandard(limit, offset int) ([]*domain.WOD, error) {
 
 // ListByUser retrieves all custom WODs created by a specific user
 func (r *WODRepository) ListByUser(userID int64, limit, offset int) ([]*domain.WOD, error) {
-	query := rebindQuery(`SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
-	          FROM wods WHERE created_by = ? ORDER BY name`)
+	query := `SELECT id, name, source, type, regime, score_type, description, url, notes, is_standard, created_by, created_at, updated_at
+	          FROM wods WHERE created_by = ? ORDER BY name`
 
 	var args []interface{}
 	args = append(args, userID)
@@ -261,6 +264,9 @@ func (r *WODRepository) ListByUser(userID int64, limit, offset int) ([]*domain.W
 		query += " OFFSET ?"
 		args = append(args, offset)
 	}
+
+	// Rebind after building full query so LIMIT/OFFSET placeholders are converted
+	query = rebindQuery(query)
 
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
