@@ -11,12 +11,12 @@ import (
 )
 
 type WorkoutTemplateService interface {
-	Create(userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Create(userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	GetByID(id int64) (*domain.Workout, error)
 	GetByIDWithDetails(id int64) (*domain.Workout, error)
 	ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error)
 	ListStandard(limit, offset int) ([]*domain.Workout, error)
-	Update(id, userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Update(id, userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	Delete(id, userID int64, userEmail string) error
 }
 
@@ -52,7 +52,8 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 	var req struct {
 		Name        string  `json:"name"`
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
-		Description *string `json:"description"`
+		IntroWarmup *string `json:"intro_warmup"`
+		Notes       *string `json:"notes"`
 		Movements   []struct {
 			MovementID   int64    `json:"movement_id"`
 			Sets         *int     `json:"sets"`
@@ -61,17 +62,17 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
 			WorkTime     *int     `json:"work_time"` // Work duration in seconds
 			Distance     *float64 `json:"distance"`
-			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
-			IsPR         bool     `json:"is_pr"`  // Personal record flag
+			IsRx         bool     `json:"is_rx"`        // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`        // Personal record flag
 			Instructions string   `json:"instructions"` // Markdown instructions
 			Notes        string   `json:"notes"`
 			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
 			WODID        int64   `json:"wod_id"`
-			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
-			Division     *string `json:"division"`    // rx, scaled, beginner
-			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			ScoreValue   *string `json:"score_value"`  // Time, rounds+reps, etc.
+			Division     *string `json:"division"`     // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`        // Personal record flag
 			Instructions string  `json:"instructions"` // Markdown instructions
 			Notes        string  `json:"notes"`
 			OrderIndex   int     `json:"order_index"`
@@ -125,7 +126,7 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Create(userID, userEmail, req.Name, req.Description, movements, wods)
+	template, err := h.service.Create(userID, userEmail, req.Name, req.IntroWarmup, req.Notes, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -303,7 +304,8 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 	var req struct {
 		Name        string  `json:"name"`
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
-		Description *string `json:"description"`
+		IntroWarmup *string `json:"intro_warmup"`
+		Notes       *string `json:"notes"`
 		Movements   []struct {
 			MovementID   int64    `json:"movement_id"`
 			Sets         *int     `json:"sets"`
@@ -312,17 +314,17 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 			Time         *int     `json:"time"`      // Duration in seconds (alternate name)
 			WorkTime     *int     `json:"work_time"` // Work duration in seconds
 			Distance     *float64 `json:"distance"`
-			IsRx         bool     `json:"is_rx"`  // Prescribed standard flag
-			IsPR         bool     `json:"is_pr"`  // Personal record flag
+			IsRx         bool     `json:"is_rx"`        // Prescribed standard flag
+			IsPR         bool     `json:"is_pr"`        // Personal record flag
 			Instructions string   `json:"instructions"` // Markdown instructions
 			Notes        string   `json:"notes"`
 			OrderIndex   int      `json:"order_index"`
 		} `json:"movements"`
 		WODs []struct {
 			WODID        int64   `json:"wod_id"`
-			ScoreValue   *string `json:"score_value"` // Time, rounds+reps, etc.
-			Division     *string `json:"division"`    // rx, scaled, beginner
-			IsPR         bool    `json:"is_pr"`       // Personal record flag
+			ScoreValue   *string `json:"score_value"`  // Time, rounds+reps, etc.
+			Division     *string `json:"division"`     // rx, scaled, beginner
+			IsPR         bool    `json:"is_pr"`        // Personal record flag
 			Instructions string  `json:"instructions"` // Markdown instructions
 			Notes        string  `json:"notes"`
 			OrderIndex   int     `json:"order_index"`
@@ -376,7 +378,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Update(id, userID, userEmail, req.Name, req.Description, movements, wods)
+	template, err := h.service.Update(id, userID, userEmail, req.Name, req.IntroWarmup, req.Notes, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

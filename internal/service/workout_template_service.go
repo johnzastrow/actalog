@@ -26,14 +26,15 @@ func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMove
 }
 
 // Create creates a new workout template
-func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Create the workout template
 	workout := &domain.Workout{
-		Name:      name,
-		Notes:     notes,
-		CreatedBy: &userID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Name:        name,
+		IntroWarmup: introWarmup,
+		Notes:       notes,
+		CreatedBy:   &userID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	if err := s.workoutRepo.Create(workout); err != nil {
@@ -151,7 +152,7 @@ func (s *WorkoutTemplateService) ListStandard(limit, offset int) ([]*domain.Work
 }
 
 // Update updates an existing workout template
-func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -168,10 +169,12 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 
 	// Store old values for audit logging
 	oldName := existing.Name
+	oldIntroWarmup := existing.IntroWarmup
 	oldNotes := existing.Notes
 
 	// Update the workout
 	existing.Name = name
+	existing.IntroWarmup = introWarmup
 	existing.Notes = notes
 	existing.UpdatedAt = time.Now()
 
@@ -242,10 +245,12 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 			"wod_count":      len(wods),
 			"updated_by":     userEmail,
 			"changes": map[string]interface{}{
-				"name_old":  oldName,
-				"name_new":  name,
-				"notes_old": oldNotes,
-				"notes_new": notes,
+				"name_old":         oldName,
+				"name_new":         name,
+				"intro_warmup_old": oldIntroWarmup,
+				"intro_warmup_new": introWarmup,
+				"notes_old":        oldNotes,
+				"notes_new":        notes,
 			},
 		})
 		detailsStr := string(details)

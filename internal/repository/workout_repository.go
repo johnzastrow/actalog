@@ -23,19 +23,19 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 	workout.CreatedAt = time.Now()
 	workout.UpdatedAt = time.Now()
 
-	ph := getPlaceholders(currentDriver, 5)
-	query := fmt.Sprintf(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
-	          VALUES (%s, %s, %s, %s, %s)`, ph[0], ph[1], ph[2], ph[3], ph[4])
+	ph := getPlaceholders(currentDriver, 6)
+	query := fmt.Sprintf(`INSERT INTO workouts (name, intro_warmup, notes, created_by, created_at, updated_at)
+	          VALUES (%s, %s, %s, %s, %s, %s)`, ph[0], ph[1], ph[2], ph[3], ph[4], ph[5])
 
 	if currentDriver == "postgres" {
 		// PostgreSQL: use RETURNING to get the ID
 		query += " RETURNING id"
-		err := r.db.QueryRow(query, workout.Name, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt).Scan(&workout.ID)
+		err := r.db.QueryRow(query, workout.Name, workout.IntroWarmup, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt).Scan(&workout.ID)
 		if err != nil {
 			return fmt.Errorf("failed to create workout: %w", err)
 		}
 	} else {
-		result, err := r.db.Exec(query, workout.Name, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt)
+		result, err := r.db.Exec(query, workout.Name, workout.IntroWarmup, workout.Notes, workout.CreatedBy, workout.CreatedAt, workout.UpdatedAt)
 		if err != nil {
 			return fmt.Errorf("failed to create workout: %w", err)
 		}
@@ -52,13 +52,14 @@ func (r *WorkoutRepository) Create(workout *domain.Workout) error {
 
 // GetByID retrieves a workout template by ID
 func (r *WorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
-	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at FROM workouts WHERE id = ?`)
+	query := rebindQuery(`SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at FROM workouts WHERE id = ?`)
 
 	workout := &domain.Workout{}
 	var createdBy sql.NullInt64
+	var introWarmup sql.NullString
 	var notes sql.NullString
 
-	err := r.db.QueryRow(query, id).Scan(&workout.ID, &workout.Name, &notes, &createdBy, &workout.CreatedAt, &workout.UpdatedAt)
+	err := r.db.QueryRow(query, id).Scan(&workout.ID, &workout.Name, &introWarmup, &notes, &createdBy, &workout.CreatedAt, &workout.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -66,6 +67,9 @@ func (r *WorkoutRepository) GetByID(id int64) (*domain.Workout, error) {
 		return nil, fmt.Errorf("failed to get workout: %w", err)
 	}
 
+	if introWarmup.Valid {
+		workout.IntroWarmup = &introWarmup.String
+	}
 	if notes.Valid {
 		workout.Notes = &notes.String
 	}
@@ -221,7 +225,7 @@ func (r *WorkoutRepository) GetByIDWithDetails(id int64) (*domain.Workout, error
 
 // List retrieves all workout templates with optional filtering
 func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset int) ([]*domain.Workout, error) {
-	query := `SELECT id, name, notes, created_by, created_at, updated_at FROM workouts WHERE 1=1`
+	query := `SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at FROM workouts WHERE 1=1`
 	args := []interface{}{}
 
 	// Apply filters if provided
@@ -250,7 +254,7 @@ func (r *WorkoutRepository) List(filters map[string]interface{}, limit, offset i
 
 // ListByUser retrieves all workout templates created by a specific user
 func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
-	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by = ?
 	          ORDER BY name
@@ -267,7 +271,7 @@ func (r *WorkoutRepository) ListByUser(userID int64, limit, offset int) ([]*doma
 
 // ListStandard retrieves all standard (system) workout templates
 func (r *WorkoutRepository) ListStandard(limit, offset int) ([]*domain.Workout, error) {
-	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by IS NULL
 	          ORDER BY name
@@ -287,10 +291,10 @@ func (r *WorkoutRepository) Update(workout *domain.Workout) error {
 	workout.UpdatedAt = time.Now()
 
 	query := rebindQuery(`UPDATE workouts
-	          SET name = ?, notes = ?, updated_at = ?
+	          SET name = ?, intro_warmup = ?, notes = ?, updated_at = ?
 	          WHERE id = ?`)
 
-	result, err := r.db.Exec(query, workout.Name, workout.Notes, workout.UpdatedAt, workout.ID)
+	result, err := r.db.Exec(query, workout.Name, workout.IntroWarmup, workout.Notes, workout.UpdatedAt, workout.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update workout: %w", err)
 	}
@@ -330,7 +334,7 @@ func (r *WorkoutRepository) Delete(id int64) error {
 
 // ListAllUserCreated retrieves all user-created workout templates (for admin view)
 func (r *WorkoutRepository) ListAllUserCreated(limit, offset int) ([]*domain.Workout, error) {
-	query := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
+	query := rebindQuery(`SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at
 	          FROM workouts
 	          WHERE created_by IS NOT NULL
 	          ORDER BY name
@@ -347,7 +351,7 @@ func (r *WorkoutRepository) ListAllUserCreated(limit, offset int) ([]*domain.Wor
 
 // ListAllUserCreatedWithUserInfo retrieves all user-created workout templates with creator info (for admin view)
 func (r *WorkoutRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([]*domain.WorkoutWithCreator, error) {
-	query := rebindQuery(`SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+	query := rebindQuery(`SELECT w.id, w.name, w.intro_warmup, w.notes, w.created_by, w.created_at, w.updated_at,
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM workouts w
 	          LEFT JOIN users u ON w.created_by = u.id
@@ -365,11 +369,13 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([
 	for rows.Next() {
 		w := &domain.WorkoutWithCreator{}
 		var createdBy sql.NullInt64
+		var introWarmup sql.NullString
 		var notes sql.NullString
 
 		err := rows.Scan(
 			&w.ID,
 			&w.Name,
+			&introWarmup,
 			&notes,
 			&createdBy,
 			&w.CreatedAt,
@@ -381,6 +387,9 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfo(limit, offset int) ([
 			return nil, err
 		}
 
+		if introWarmup.Valid {
+			w.IntroWarmup = &introWarmup.String
+		}
 		if notes.Valid {
 			w.Notes = &notes.String
 		}
@@ -407,7 +416,7 @@ func (r *WorkoutRepository) CountAllUserCreated() (int64, error) {
 
 // ListAllUserCreatedWithUserInfoFiltered retrieves all user-created workout templates with creator info and filters (for admin view)
 func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset int, search, creator string) ([]*domain.WorkoutWithCreator, int64, error) {
-	baseQuery := `SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+	baseQuery := `SELECT w.id, w.name, w.intro_warmup, w.notes, w.created_by, w.created_at, w.updated_at,
 	                 COALESCE(u.email, '') as creator_email, COALESCE(u.name, '') as creator_name
 	          FROM workouts w
 	          LEFT JOIN users u ON w.created_by = u.id
@@ -463,12 +472,14 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 	var workouts []*domain.WorkoutWithCreator
 	for rows.Next() {
 		w := &domain.WorkoutWithCreator{}
+		var introWarmup sql.NullString
 		var notes sql.NullString
 		var createdBy sql.NullInt64
 
 		err := rows.Scan(
 			&w.ID,
 			&w.Name,
+			&introWarmup,
 			&notes,
 			&createdBy,
 			&w.CreatedAt,
@@ -480,6 +491,9 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 			return nil, 0, err
 		}
 
+		if introWarmup.Valid {
+			w.IntroWarmup = &introWarmup.String
+		}
 		if notes.Valid {
 			w.Notes = &notes.String
 		}
@@ -495,7 +509,7 @@ func (r *WorkoutRepository) ListAllUserCreatedWithUserInfoFiltered(limit, offset
 
 // Search searches workout templates by name
 func (r *WorkoutRepository) Search(query string, limit int) ([]*domain.Workout, error) {
-	searchQuery := rebindQuery(`SELECT id, name, notes, created_by, created_at, updated_at
+	searchQuery := rebindQuery(`SELECT id, name, intro_warmup, notes, created_by, created_at, updated_at
 	                FROM workouts
 	                WHERE name LIKE ?
 	                ORDER BY name
@@ -536,22 +550,23 @@ func (r *WorkoutRepository) Count(userID *int64) (int64, error) {
 // Optimized: combines 3 queries into 1 using LEFT JOIN with aggregates
 func (r *WorkoutRepository) GetUsageStats(workoutID int64) (*domain.WorkoutWithUsageStats, error) {
 	query := rebindQuery(`
-		SELECT w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at,
+		SELECT w.id, w.name, w.intro_warmup, w.notes, w.created_by, w.created_at, w.updated_at,
 		       COUNT(uw.id) as times_used,
 		       MAX(uw.workout_date) as last_used_at
 		FROM workouts w
 		LEFT JOIN user_workouts uw ON w.id = uw.workout_id
 		WHERE w.id = ?
-		GROUP BY w.id, w.name, w.notes, w.created_by, w.created_at, w.updated_at`)
+		GROUP BY w.id, w.name, w.intro_warmup, w.notes, w.created_by, w.created_at, w.updated_at`)
 
 	workout := &domain.Workout{}
 	var createdBy sql.NullInt64
+	var introWarmup sql.NullString
 	var notes sql.NullString
 	var timesUsed int64
 	var lastUsedAt sql.NullTime
 
 	err := r.db.QueryRow(query, workoutID).Scan(
-		&workout.ID, &workout.Name, &notes, &createdBy,
+		&workout.ID, &workout.Name, &introWarmup, &notes, &createdBy,
 		&workout.CreatedAt, &workout.UpdatedAt,
 		&timesUsed, &lastUsedAt,
 	)
@@ -562,6 +577,9 @@ func (r *WorkoutRepository) GetUsageStats(workoutID int64) (*domain.WorkoutWithU
 		return nil, fmt.Errorf("failed to get workout usage stats: %w", err)
 	}
 
+	if introWarmup.Valid {
+		workout.IntroWarmup = &introWarmup.String
+	}
 	if notes.Valid {
 		workout.Notes = &notes.String
 	}
@@ -594,21 +612,23 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 	// Create a new standard workout
 	now := time.Now()
 	standardWorkout := &domain.Workout{
-		Name:      newName,
-		Notes:     source.Notes,
-		CreatedBy: nil, // Standard workouts have no creator
-		CreatedAt: now,
-		UpdatedAt: now,
+		Name:        newName,
+		IntroWarmup: source.IntroWarmup,
+		Notes:       source.Notes,
+		CreatedBy:   nil, // Standard workouts have no creator
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
-	query := rebindQuery(`INSERT INTO workouts (name, notes, created_by, created_at, updated_at)
-	          VALUES (?, ?, NULL, ?, ?)`)
+	query := rebindQuery(`INSERT INTO workouts (name, intro_warmup, notes, created_by, created_at, updated_at)
+	          VALUES (?, ?, ?, NULL, ?, ?)`)
 
 	var newID int64
 	if currentDriver == "postgres" {
 		query += " RETURNING id"
 		err := r.db.QueryRow(query,
 			standardWorkout.Name,
+			standardWorkout.IntroWarmup,
 			standardWorkout.Notes,
 			standardWorkout.CreatedAt,
 			standardWorkout.UpdatedAt,
@@ -619,6 +639,7 @@ func (r *WorkoutRepository) CopyToStandard(id int64, newName string) (*domain.Wo
 	} else {
 		result, err := r.db.Exec(query,
 			standardWorkout.Name,
+			standardWorkout.IntroWarmup,
 			standardWorkout.Notes,
 			standardWorkout.CreatedAt,
 			standardWorkout.UpdatedAt,
@@ -687,13 +708,17 @@ func (r *WorkoutRepository) scanWorkouts(rows *sql.Rows) ([]*domain.Workout, err
 	for rows.Next() {
 		workout := &domain.Workout{}
 		var createdBy sql.NullInt64
+		var introWarmup sql.NullString
 		var notes sql.NullString
 
-		err := rows.Scan(&workout.ID, &workout.Name, &notes, &createdBy, &workout.CreatedAt, &workout.UpdatedAt)
+		err := rows.Scan(&workout.ID, &workout.Name, &introWarmup, &notes, &createdBy, &workout.CreatedAt, &workout.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 
+		if introWarmup.Valid {
+			workout.IntroWarmup = &introWarmup.String
+		}
 		if notes.Valid {
 			workout.Notes = &notes.String
 		}

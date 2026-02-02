@@ -2975,6 +2975,74 @@ var migrations = []Migration{
 		},
 	},
 	// Future incremental migrations will be added here
+
+	// Migration 0.28.0: Add intro_warmup field to workouts table and notes to workout_wods
+	{
+		Version:     "0.28.0",
+		Description: "Add intro_warmup field to workouts table and notes to workout_wods",
+		Up: func(db *sql.DB, driver string) error {
+			var alterStatements []string
+			switch driver {
+			case "sqlite3":
+				alterStatements = []string{
+					`ALTER TABLE workouts ADD COLUMN intro_warmup TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN notes TEXT DEFAULT ''`,
+				}
+			case "postgres":
+				alterStatements = []string{
+					`ALTER TABLE workouts ADD COLUMN IF NOT EXISTS intro_warmup TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`,
+				}
+			case "mysql":
+				alterStatements = []string{
+					`ALTER TABLE workouts ADD COLUMN intro_warmup TEXT`,
+					`ALTER TABLE workout_wods ADD COLUMN notes TEXT`,
+				}
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+
+			for _, stmt := range alterStatements {
+				if _, err := db.Exec(stmt); err != nil {
+					// Ignore "duplicate column" errors for idempotency
+					errStr := strings.ToLower(err.Error())
+					if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+						return fmt.Errorf("failed to add column: %w", err)
+					}
+				}
+			}
+			fmt.Println("✓ Added intro_warmup to workouts and notes to workout_wods")
+			return nil
+		},
+	},
+	// Migration 0.28.1: Add notes column to workout_wods (fix for 0.28.0 partial application)
+	{
+		Version:     "0.28.1",
+		Description: "Add notes column to workout_wods table",
+		Up: func(db *sql.DB, driver string) error {
+			var query string
+			switch driver {
+			case "sqlite3":
+				query = `ALTER TABLE workout_wods ADD COLUMN notes TEXT DEFAULT ''`
+			case "postgres":
+				query = `ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`
+			case "mysql":
+				query = `ALTER TABLE workout_wods ADD COLUMN notes TEXT`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+
+			if _, err := db.Exec(query); err != nil {
+				// Ignore "duplicate column" errors for idempotency
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add notes column to workout_wods: %w", err)
+				}
+			}
+			fmt.Println("✓ Added notes column to workout_wods table")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

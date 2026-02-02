@@ -8,12 +8,13 @@ import (
 // Templates can be used by multiple users multiple times
 // User-specific workout instances are tracked in UserWorkout
 type Workout struct {
-	ID        int64     `json:"id" db:"id"`
-	Name      string    `json:"name" db:"name"`                       // Template name (e.g., "Monday Strength", "Hero WOD")
-	Notes     *string   `json:"notes,omitempty" db:"notes"`           // General template notes/description
-	CreatedBy *int64    `json:"created_by,omitempty" db:"created_by"` // User who created (NULL for standard templates)
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID          int64     `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`                             // Template name (e.g., "Monday Strength", "Hero WOD")
+	IntroWarmup *string   `json:"intro_warmup,omitempty" db:"intro_warmup"`   // Intro/warmup text shown before movements/WODs
+	Notes       *string   `json:"notes,omitempty" db:"notes"`                 // Notes shown after movements/WODs
+	CreatedBy   *int64    `json:"created_by,omitempty" db:"created_by"`       // User who created (NULL for standard templates)
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related data (not stored directly in workout table, loaded via joins)
 	Movements []*WorkoutMovement       `json:"movements,omitempty" db:"-"` // Strength movements in this template

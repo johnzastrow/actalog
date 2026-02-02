@@ -22,6 +22,21 @@
         {{ error }}
       </v-alert>
 
+      <!-- Top Save Button -->
+      <v-btn
+        block
+        color="primary"
+        size="large"
+        rounded="lg"
+        :loading="saving"
+        style="text-transform: none; font-weight: 600"
+        class="mb-3"
+        @click="saveTemplate"
+      >
+        <v-icon start>mdi-content-save</v-icon>
+        {{ isEditMode ? 'Update Template' : 'Create Template' }}
+      </v-btn>
+
       <!-- Basic Information Card -->
       <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-3" >Template Details</h2>
@@ -30,7 +45,7 @@
           v-model="template.name"
           label="Template Name"
           placeholder="e.g., Upper Body Strength"
-          
+
           density="compact"
           rounded="lg"
           :error-messages="validationErrors.name"
@@ -43,9 +58,9 @@
         </v-text-field>
 
         <v-textarea
-          v-model="template.description"
-          label="Description (Optional)"
-          placeholder="Add any notes or instructions for this template"
+          v-model="template.intro_warmup"
+          label="Intro and Warmup (Optional)"
+          placeholder="Add warmup instructions, setup notes, or introduction"
           hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
           persistent-hint
 
@@ -55,7 +70,7 @@
           auto-grow
         >
           <template #prepend-inner>
-            <v-icon color="primary" size="small">mdi-text</v-icon>
+            <v-icon color="primary" size="small">mdi-run</v-icon>
           </template>
         </v-textarea>
       </v-card>
@@ -326,6 +341,28 @@
         </div>
       </v-card>
 
+      <!-- Notes Card -->
+      <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3">Notes</h2>
+
+        <v-textarea
+          v-model="template.notes"
+          label="Notes (Optional)"
+          placeholder="Add any closing notes, cooldown instructions, or additional information"
+          hint="Markdown: **bold**, *italic*, [link](url), lists (* or 1.), > quotes"
+          persistent-hint
+
+          density="compact"
+          rounded="lg"
+          rows="3"
+          auto-grow
+        >
+          <template #prepend-inner>
+            <v-icon color="primary" size="small">mdi-text</v-icon>
+          </template>
+        </v-textarea>
+      </v-card>
+
       <!-- Actions Card -->
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
         <v-btn
@@ -393,10 +430,42 @@ import axios from '@/utils/axios'
 const router = useRouter()
 const route = useRoute()
 
+// Helper to format today's date in long form
+function getTodayLongDate() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date().toLocaleDateString('en-US', options)
+}
+
+// Boilerplate markdown example for intro/warmup
+const introBoilerplate = `## Warmup (10 minutes)
+
+**General warmup:**
+- 400m jog or 2 min row
+- Dynamic stretches
+
+### Movement Prep
+1. First movement prep
+2. Second movement prep
+3. Third movement prep
+
+*Focus on quality over speed*
+
+---
+
+> **Coach's Note:** Scale as needed based on athlete's ability level.
+
+### Equipment Needed
+- Barbell
+- Plates
+- Pull-up bar
+
+[Link to demo video](https://example.com)`
+
 // State
 const template = ref({
-  name: '',
-  description: '',
+  name: getTodayLongDate(),
+  intro_warmup: introBoilerplate,
+  notes: '',
   wods: [],
   movements: []
 })
@@ -459,7 +528,8 @@ async function loadTemplate() {
     template.value = {
       name: data.name || '',
       workout_type: data.workout_type || 'strength',
-      description: data.notes || data.description || '',
+      intro_warmup: data.intro_warmup || '',
+      notes: data.notes || '',
       wods: (data.wods || []).map(w => ({
         wod_id: w.wod_id,
         instructions: w.instructions || '',
@@ -551,12 +621,9 @@ function validateTemplate() {
     isValid = false
   }
 
-  if (template.value.movements.length === 0 && template.value.wods.length === 0) {
-    error.value = 'Please add at least one movement or WOD'
-    isValid = false
-  }
+  // Movements and WODs are optional - no validation required
 
-  // Validate movements
+  // Validate movements (only if any are added)
   for (let i = 0; i < template.value.movements.length; i++) {
     const movement = template.value.movements[i]
     if (!movement.movement_id) {
@@ -591,7 +658,8 @@ async function saveTemplate() {
     const payload = {
       name: template.value.name.trim(),
       workout_type: template.value.workout_type,
-      description: template.value.description?.trim() || null,
+      intro_warmup: template.value.intro_warmup?.trim() || null,
+      notes: template.value.notes?.trim() || null,
       wods: template.value.wods.map((w, idx) => ({
         wod_id: w.wod_id,
         instructions: w.instructions?.trim() || '',

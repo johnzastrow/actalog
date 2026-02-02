@@ -337,7 +337,7 @@ func TestWorkoutTemplateHandler_CreateTemplate_Success(t *testing.T) {
 	svc := createWorkoutTemplateTestService()
 	handler := NewWorkoutTemplateHandler(svc)
 
-	body := `{"name": "New Template", "description": "Test description"}`
+	body := `{"name": "New Template", "intro_warmup": "Warmup instructions", "notes": "Test notes"}`
 	req := createAuthenticatedRequest(http.MethodPost, "/api/templates", body, 1, "test@example.com", "user")
 	rr := httptest.NewRecorder()
 
@@ -354,7 +354,7 @@ func TestWorkoutTemplateHandler_CreateTemplate_ServiceError(t *testing.T) {
 	svc := service.NewWorkoutTemplateService(mockWorkoutRepo, nil, nil, mockAuditLogRepo)
 	handler := NewWorkoutTemplateHandler(svc)
 
-	body := `{"name": "New Template", "description": "Test description"}`
+	body := `{"name": "New Template", "intro_warmup": "Warmup instructions", "notes": "Test notes"}`
 	req := createAuthenticatedRequest(http.MethodPost, "/api/templates", body, 1, "test@example.com", "user")
 	rr := httptest.NewRecorder()
 
