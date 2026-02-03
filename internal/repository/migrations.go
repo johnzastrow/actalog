@@ -3043,6 +3043,109 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.29.0",
+		Description: "Add recurrence fields to schedule_slots table",
+		Up: func(db *sql.DB, driver string) error {
+			// Add recurrence_interval (default 1 = weekly)
+			var addIntervalQuery string
+			switch driver {
+			case "sqlite3":
+				addIntervalQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_interval INTEGER DEFAULT 1`
+			case "postgres":
+				addIntervalQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS recurrence_interval INTEGER DEFAULT 1`
+			case "mysql":
+				addIntervalQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_interval INTEGER DEFAULT 1`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addIntervalQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add recurrence_interval column: %w", err)
+				}
+			}
+
+			// Add recurrence_end_type (none, count, date)
+			var addEndTypeQuery string
+			switch driver {
+			case "sqlite3":
+				addEndTypeQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_type TEXT DEFAULT 'none'`
+			case "postgres":
+				addEndTypeQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS recurrence_end_type VARCHAR(20) DEFAULT 'none'`
+			case "mysql":
+				addEndTypeQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_type VARCHAR(20) DEFAULT 'none'`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addEndTypeQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add recurrence_end_type column: %w", err)
+				}
+			}
+
+			// Add recurrence_end_count (nullable)
+			var addEndCountQuery string
+			switch driver {
+			case "sqlite3":
+				addEndCountQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_count INTEGER`
+			case "postgres":
+				addEndCountQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS recurrence_end_count INTEGER`
+			case "mysql":
+				addEndCountQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_count INTEGER`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addEndCountQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add recurrence_end_count column: %w", err)
+				}
+			}
+
+			// Add recurrence_end_date (nullable)
+			var addEndDateQuery string
+			switch driver {
+			case "sqlite3":
+				addEndDateQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_date TEXT`
+			case "postgres":
+				addEndDateQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS recurrence_end_date DATE`
+			case "mysql":
+				addEndDateQuery = `ALTER TABLE schedule_slots ADD COLUMN recurrence_end_date DATE`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addEndDateQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add recurrence_end_date column: %w", err)
+				}
+			}
+
+			// Add effective_start_date (nullable)
+			var addStartDateQuery string
+			switch driver {
+			case "sqlite3":
+				addStartDateQuery = `ALTER TABLE schedule_slots ADD COLUMN effective_start_date TEXT`
+			case "postgres":
+				addStartDateQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS effective_start_date DATE`
+			case "mysql":
+				addStartDateQuery = `ALTER TABLE schedule_slots ADD COLUMN effective_start_date DATE`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addStartDateQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add effective_start_date column: %w", err)
+				}
+			}
+
+			fmt.Println("✓ Added recurrence fields to schedule_slots table")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

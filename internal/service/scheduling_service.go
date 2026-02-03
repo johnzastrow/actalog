@@ -35,6 +35,7 @@ type SchedulingService struct {
 	coachAssignmentRepo domain.CoachAssignmentRepository
 	orgRepo             domain.OrganizationRepository
 	auditLogRepo        domain.AuditLogRepository
+	workoutRepo         domain.WorkoutRepository
 }
 
 func NewSchedulingService(
@@ -47,6 +48,7 @@ func NewSchedulingService(
 	coachAssignmentRepo domain.CoachAssignmentRepository,
 	orgRepo domain.OrganizationRepository,
 	auditLogRepo domain.AuditLogRepository,
+	workoutRepo domain.WorkoutRepository,
 ) *SchedulingService {
 	return &SchedulingService{
 		locationRepo:        locationRepo,
@@ -58,6 +60,7 @@ func NewSchedulingService(
 		coachAssignmentRepo: coachAssignmentRepo,
 		orgRepo:             orgRepo,
 		auditLogRepo:        auditLogRepo,
+		workoutRepo:         workoutRepo,
 	}
 }
 
@@ -472,6 +475,26 @@ func (s *SchedulingService) GetSessionByID(id int64) (*domain.ClassSession, erro
 	return session, nil
 }
 
+// GetSessionByIDWithWorkout retrieves a class session by ID with full workout details
+func (s *SchedulingService) GetSessionByIDWithWorkout(id int64) (*domain.ClassSession, error) {
+	session, err := s.sessionRepo.GetByIDWithWorkoutDetails(id, s.workoutRepo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get class session with workout: %w", err)
+	}
+	if session == nil {
+		return nil, ErrClassSessionNotFound
+	}
+
+	// Load coaches
+	coaches, err := s.sessionCoachRepo.GetBySessionID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session coaches: %w", err)
+	}
+	session.Coaches = coaches
+
+	return session, nil
+}
+
 // GetSessionsByOrganization retrieves all sessions for an organization within a date range
 func (s *SchedulingService) GetSessionsByOrganization(orgID int64, startDate, endDate time.Time) ([]*domain.ClassSession, error) {
 	return s.sessionRepo.GetByOrganizationID(orgID, startDate, endDate)
@@ -851,6 +874,97 @@ func (s *SchedulingService) GetCoachUpcomingSessions(coachUserID int64, limit in
 		limit = 20
 	}
 	return s.sessionRepo.GetUpcomingByCoachID(coachUserID, limit)
+}
+
+// ============================================
+// SCHEDULE PREVIEW METHODS
+// ============================================
+
+// PreviewScheduleDates generates a list of dates when sessions would occur for a template
+func (s *SchedulingService) PreviewScheduleDates(templateID int64, months int) ([]time.Time, error) {
+	// Get template
+	template, err := s.templateRepo.GetByID(templateID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get template: %w", err)
+	}
+	if template == nil {
+		return nil, ErrClassTemplateNotFound
+	}
+
+	// Get slots for this template
+	slots, err := s.slotRepo.GetByTemplateID(templateID, false) // Only active slots
+	if err != nil {
+		return nil, fmt.Errorf("failed to get slots: %w", err)
+	}
+
+	// Calculate date range
+	startDate := time.Now()
+	endDate := startDate.AddDate(0, months, 0)
+
+	var dates []time.Time
+
+	for _, slot := range slots {
+		// Parse slot time
+		slotTime, err := time.Parse("15:04", slot.StartTime)
+		if err != nil {
+			continue
+		}
+
+		// Determine effective start date
+		effectiveStart := startDate
+		if slot.EffectiveStartDate != nil && slot.EffectiveStartDate.After(startDate) {
+			effectiveStart = *slot.EffectiveStartDate
+		}
+
+		// Determine effective end date
+		effectiveEnd := endDate
+		if slot.RecurrenceEndType == domain.RecurrenceEndDate && slot.RecurrenceEndDate != nil {
+			if slot.RecurrenceEndDate.Before(endDate) {
+				effectiveEnd = *slot.RecurrenceEndDate
+			}
+		}
+
+		// Determine recurrence interval
+		recurrenceInterval := slot.RecurrenceInterval
+		if recurrenceInterval <= 0 {
+			recurrenceInterval = 1
+		}
+
+		// Track occurrence count
+		occurrenceCount := 0
+
+		// Iterate through dates
+		date := effectiveStart
+		for !date.After(effectiveEnd) {
+			// Check if this day matches the slot's day of week
+			if int(date.Weekday()) != slot.DayOfWeek {
+				date = date.AddDate(0, 0, 1)
+				continue
+			}
+
+			// Build the session start time
+			sessionStart := time.Date(
+				date.Year(), date.Month(), date.Day(),
+				slotTime.Hour(), slotTime.Minute(), 0, 0,
+				time.Local,
+			)
+
+			// Check occurrence count limit
+			if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
+				if occurrenceCount >= *slot.RecurrenceEndCount {
+					break
+				}
+			}
+
+			dates = append(dates, sessionStart)
+			occurrenceCount++
+
+			// Move to next occurrence
+			date = date.AddDate(0, 0, 7*recurrenceInterval)
+		}
+	}
+
+	return dates, nil
 }
 
 // ============================================

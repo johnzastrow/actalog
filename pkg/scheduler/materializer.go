@@ -205,8 +205,32 @@ func (m *Materializer) materializeSlot(
 		return 0, 0, fmt.Errorf("invalid start time format: %w", err)
 	}
 
-	// Iterate through each day in the range
-	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
+	// Determine effective start date (slot's effective_start_date or startDate)
+	effectiveStart := startDate
+	if slot.EffectiveStartDate != nil && slot.EffectiveStartDate.After(startDate) {
+		effectiveStart = *slot.EffectiveStartDate
+	}
+
+	// Determine effective end date based on recurrence_end_type
+	effectiveEnd := endDate
+	if slot.RecurrenceEndType == domain.RecurrenceEndDate && slot.RecurrenceEndDate != nil {
+		if slot.RecurrenceEndDate.Before(endDate) {
+			effectiveEnd = *slot.RecurrenceEndDate
+		}
+	}
+
+	// Determine recurrence interval (default to 1 = weekly)
+	recurrenceInterval := slot.RecurrenceInterval
+	if recurrenceInterval <= 0 {
+		recurrenceInterval = 1
+	}
+
+	// Track occurrence count for RecurrenceEndCount
+	occurrenceCount := 0
+
+	// Find the first matching day of week from effectiveStart
+	date := effectiveStart
+	for !date.After(effectiveEnd) {
 		select {
 		case <-ctx.Done():
 			return created, skipped, ctx.Err()
@@ -215,6 +239,7 @@ func (m *Materializer) materializeSlot(
 
 		// Check if this day matches the slot's day of week
 		if int(date.Weekday()) != slot.DayOfWeek {
+			date = date.AddDate(0, 0, 1)
 			continue
 		}
 
@@ -227,7 +252,16 @@ func (m *Materializer) materializeSlot(
 
 		// Skip if session start is in the past
 		if sessionStart.Before(time.Now()) {
+			// Move to next occurrence based on recurrence interval
+			date = date.AddDate(0, 0, 7*recurrenceInterval)
 			continue
+		}
+
+		// Check if we've exceeded the occurrence count limit
+		if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
+			if occurrenceCount >= *slot.RecurrenceEndCount {
+				break
+			}
 		}
 
 		// Calculate end time based on template duration
@@ -237,11 +271,14 @@ func (m *Materializer) materializeSlot(
 		exists, err := m.sessionExists(template.ID, sessionStart)
 		if err != nil {
 			m.logger.Warn("Error checking session existence: %v", err)
+			date = date.AddDate(0, 0, 7*recurrenceInterval)
 			continue
 		}
 
 		if exists {
 			skipped++
+			occurrenceCount++ // Count existing sessions toward limit
+			date = date.AddDate(0, 0, 7*recurrenceInterval)
 			continue
 		}
 
@@ -268,12 +305,17 @@ func (m *Materializer) materializeSlot(
 		if err := m.sessionRepo.Create(session); err != nil {
 			m.logger.Error("Failed to create session for template %d at %s: %v",
 				template.ID, sessionStart.Format("2006-01-02 15:04"), err)
+			date = date.AddDate(0, 0, 7*recurrenceInterval)
 			continue
 		}
 
 		created++
-		m.logger.Debug("Created session: %s at %s (template %d, slot %d)",
-			template.Name, sessionStart.Format("2006-01-02 15:04"), template.ID, slot.ID)
+		occurrenceCount++
+		m.logger.Debug("Created session: %s at %s (template %d, slot %d, interval %dw)",
+			template.Name, sessionStart.Format("2006-01-02 15:04"), template.ID, slot.ID, recurrenceInterval)
+
+		// Move to next occurrence based on recurrence interval
+		date = date.AddDate(0, 0, 7*recurrenceInterval)
 	}
 
 	return created, skipped, nil

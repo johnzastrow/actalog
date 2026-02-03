@@ -104,7 +104,7 @@
             </v-card-title>
             <v-divider />
             <v-list v-if="templates.length > 0">
-              <v-list-item v-for="tmpl in templates" :key="tmpl.id">
+              <v-list-item v-for="tmpl in templates" :key="tmpl.id" @click="editTemplate(tmpl)">
                 <template #prepend>
                   <v-avatar :color="tmpl.color || '#00bcd4'" size="40">
                     <v-icon color="white">mdi-dumbbell</v-icon>
@@ -114,15 +114,16 @@
                 <v-list-item-subtitle>
                   {{ tmpl.duration_minutes }} min | Capacity: {{ tmpl.default_capacity }}
                   <span v-if="tmpl.workout_name"> | Workout: {{ tmpl.workout_name }}</span>
+                  <span v-if="tmpl.schedule_slots && tmpl.schedule_slots.length"> | {{ tmpl.schedule_slots.length }} slot(s)</span>
                 </v-list-item-subtitle>
                 <template #append>
                   <v-chip :color="tmpl.is_active ? 'success' : 'grey'" size="x-small" class="mr-2">
                     {{ tmpl.is_active ? 'Active' : 'Inactive' }}
                   </v-chip>
-                  <v-btn icon size="small" variant="text" @click="editTemplate(tmpl)">
+                  <v-btn icon size="small" variant="text" @click.stop="editTemplate(tmpl)">
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
-                  <v-btn icon size="small" variant="text" @click="deleteTemplate(tmpl)">
+                  <v-btn icon size="small" variant="text" @click.stop="deleteTemplate(tmpl)">
                     <v-icon color="error">mdi-delete</v-icon>
                   </v-btn>
                 </template>
@@ -250,25 +251,15 @@
       </v-card>
     </v-dialog>
 
-    <!-- Template Dialog -->
-    <v-dialog v-model="templateDialog" max-width="500">
-      <v-card>
-        <v-card-title>{{ editingTemplate ? 'Edit Template' : 'Add Template' }}</v-card-title>
-        <v-card-text>
-          <v-text-field v-model="templateForm.name" label="Name" required />
-          <v-textarea v-model="templateForm.description" label="Description" rows="2" />
-          <v-text-field v-model.number="templateForm.duration_minutes" label="Duration (minutes)" type="number" />
-          <v-text-field v-model.number="templateForm.default_capacity" label="Default Capacity" type="number" />
-          <v-text-field v-model="templateForm.color" label="Color (hex)" placeholder="#00bcd4" />
-          <v-switch v-if="editingTemplate" v-model="templateForm.is_active" label="Active" />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="templateDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="saveTemplate">Save</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Template Dialog (Enhanced) -->
+    <TemplateEditDialog
+      v-model="templateDialog"
+      :template="editingTemplate"
+      :gym-id="selectedOrgId"
+      :locations="locations"
+      :workouts="workouts"
+      @saved="onTemplateSaved"
+    />
 
     <!-- Session Dialog -->
     <v-dialog v-model="sessionDialog" max-width="500">
@@ -376,6 +367,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import TemplateEditDialog from '@/components/scheduling/TemplateEditDialog.vue'
 
 const loading = ref(false)
 const error = ref(null)
@@ -390,6 +382,7 @@ const templates = ref([])
 const sessions = ref([])
 const coaches = ref([])
 const roster = ref([])
+const workouts = ref([])
 
 const startDate = ref(new Date())
 const endDate = ref(new Date())
@@ -444,6 +437,7 @@ function onOrgChange() {
   fetchTemplates()
   fetchSessions()
   fetchCoaches()
+  fetchWorkouts()
 }
 
 async function fetchLocations() {
@@ -485,6 +479,15 @@ async function fetchCoaches() {
     coaches.value = response.data.coaches || []
   } catch (err) {
     console.error('Failed to fetch coaches:', err)
+  }
+}
+
+async function fetchWorkouts() {
+  try {
+    const response = await axios.get('/api/templates')
+    workouts.value = response.data.templates || []
+  } catch (err) {
+    console.error('Failed to fetch workouts:', err)
   }
 }
 
@@ -539,7 +542,6 @@ async function deleteLocation(loc) {
 // Template functions
 function openTemplateDialog(tmpl = null) {
   editingTemplate.value = tmpl
-  templateForm.value = tmpl ? { ...tmpl } : { name: '', description: '', duration_minutes: 60, default_capacity: 20, color: '#00bcd4', is_active: true }
   templateDialog.value = true
 }
 
@@ -547,30 +549,9 @@ function editTemplate(tmpl) {
   openTemplateDialog(tmpl)
 }
 
-async function saveTemplate() {
-  if (!selectedOrgId.value) {
-    error.value = 'Please select a gym first'
-    return
-  }
-  if (!templateForm.value.name?.trim()) {
-    error.value = 'Template name is required'
-    return
-  }
-  loading.value = true
-  try {
-    if (editingTemplate.value) {
-      await axios.put(`/api/admin/scheduling/templates/${editingTemplate.value.id}`, templateForm.value)
-    } else {
-      await axios.post(`/api/admin/gyms/${selectedOrgId.value}/templates`, templateForm.value)
-    }
-    successMessage.value = 'Template saved successfully'
-    templateDialog.value = false
-    fetchTemplates()
-  } catch (err) {
-    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to save template'
-  } finally {
-    loading.value = false
-  }
+function onTemplateSaved() {
+  successMessage.value = 'Template saved successfully'
+  fetchTemplates()
 }
 
 async function deleteTemplate(tmpl) {

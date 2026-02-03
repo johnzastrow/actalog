@@ -62,7 +62,8 @@
           </div>
 
           <v-card v-for="session in day.sessions" :key="session.id"
-                  elevation="0" rounded="lg" class="mb-2" :class="getSessionCardClass(session)">
+                  elevation="0" rounded="lg" class="mb-2 session-card" :class="getSessionCardClass(session)"
+                  @click="openSessionDetail(session)">
             <v-card-text class="py-3">
               <div class="d-flex align-center">
                 <div class="flex-grow-1">
@@ -71,6 +72,10 @@
                     <v-chip v-if="session.status === 'cancelled'" color="error" size="x-small" class="ml-2">
                       Cancelled
                     </v-chip>
+                    <!-- Workout indicator -->
+                    <v-icon v-if="session.workout_name || session.workout_id" size="small" color="warning" class="ml-2">
+                      mdi-dumbbell
+                    </v-icon>
                   </div>
                   <div class="text-body-2 text-medium-emphasis">
                     {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
@@ -78,6 +83,10 @@
                   <div v-if="session.location_name" class="text-caption text-medium-emphasis">
                     <v-icon size="small" class="mr-1">mdi-map-marker</v-icon>
                     {{ session.location_name }}
+                  </div>
+                  <div v-if="session.workout_name" class="text-caption text-warning mt-1">
+                    <v-icon size="small" class="mr-1">mdi-dumbbell</v-icon>
+                    {{ session.workout_name }}
                   </div>
                   <div class="text-caption mt-1">
                     <v-icon size="small" class="mr-1">mdi-account-multiple</v-icon>
@@ -89,7 +98,7 @@
                   </div>
                 </div>
 
-                <div>
+                <div @click.stop>
                   <!-- User's reservation status -->
                   <v-chip v-if="session.current_user_status === 'reserved'" color="primary" size="small" class="mr-2">
                     Reserved
@@ -136,12 +145,22 @@
         Please select a gym to view the class schedule.
       </v-alert>
     </v-container>
+
+    <!-- Session Detail Dialog -->
+    <SessionDetailDialog
+      v-model="showSessionDetail"
+      :session-id="selectedSessionId"
+      :gym-id="selectedOrgId"
+      @reserved="onReservationChange"
+      @cancelled="onReservationChange"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import SessionDetailDialog from '@/components/SessionDetailDialog.vue'
 
 const loading = ref(false)
 const error = ref(null)
@@ -152,6 +171,10 @@ const sessions = ref([])
 const startDate = ref(new Date())
 const endDate = ref(new Date())
 const waitlistPositions = ref({}) // Map of sessionId -> position
+
+// Session detail dialog state
+const showSessionDetail = ref(false)
+const selectedSessionId = ref(null)
 
 // Initialize dates
 onMounted(() => {
@@ -380,6 +403,20 @@ function getSessionCardClass(session) {
   }
   return ''
 }
+
+// Open session detail dialog
+function openSessionDetail(session) {
+  selectedSessionId.value = session.id
+  showSessionDetail.value = true
+}
+
+// Handle reservation changes from dialog
+function onReservationChange(session) {
+  successMessage.value = session.current_user_status === 'reserved'
+    ? `Reservation cancelled for ${session.name}`
+    : `Successfully reserved a spot in ${session.name}`
+  fetchSessions()
+}
 </script>
 
 <style scoped>
@@ -390,5 +427,14 @@ function getSessionCardClass(session) {
 
 .border-primary {
   border-left: 4px solid rgb(var(--v-theme-primary));
+}
+
+.session-card {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.session-card:hover {
+  background-color: rgba(var(--v-theme-primary), 0.05);
 }
 </style>

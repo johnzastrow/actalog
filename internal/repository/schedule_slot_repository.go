@@ -22,9 +22,19 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 	slot.CreatedAt = time.Now()
 	slot.UpdatedAt = time.Now()
 
+	// Set defaults for new recurrence fields
+	if slot.RecurrenceInterval == 0 {
+		slot.RecurrenceInterval = 1
+	}
+	if slot.RecurrenceEndType == "" {
+		slot.RecurrenceEndType = domain.RecurrenceEndNone
+	}
+
 	query := rebindQuery(`
-		INSERT INTO schedule_slots (template_id, location_id, day_of_week, start_time, override_capacity, is_active, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO schedule_slots (template_id, location_id, day_of_week, start_time, override_capacity, is_active,
+			recurrence_interval, recurrence_end_type, recurrence_end_count, recurrence_end_date, effective_start_date,
+			created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 
 	if currentDriver == "postgres" {
@@ -36,6 +46,11 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 			slot.StartTime,
 			slot.OverrideCapacity,
 			slot.IsActive,
+			slot.RecurrenceInterval,
+			slot.RecurrenceEndType,
+			slot.RecurrenceEndCount,
+			slot.RecurrenceEndDate,
+			slot.EffectiveStartDate,
 			slot.CreatedAt,
 			slot.UpdatedAt,
 		).Scan(&slot.ID)
@@ -48,6 +63,11 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 		slot.StartTime,
 		slot.OverrideCapacity,
 		slot.IsActive,
+		slot.RecurrenceInterval,
+		slot.RecurrenceEndType,
+		slot.RecurrenceEndCount,
+		slot.RecurrenceEndDate,
+		slot.EffectiveStartDate,
 		slot.CreatedAt,
 		slot.UpdatedAt,
 	)
@@ -69,6 +89,8 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 	query := rebindQuery(`
 		SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
 		       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
+		       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
+		       ss.recurrence_end_date, ss.effective_start_date,
 		       gl.name as location_name
 		FROM schedule_slots ss
 		LEFT JOIN gym_locations gl ON ss.location_id = gl.id
@@ -79,6 +101,11 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 	var locationID sql.NullInt64
 	var overrideCapacity sql.NullInt64
 	var locationName sql.NullString
+	var recurrenceInterval sql.NullInt64
+	var recurrenceEndType sql.NullString
+	var recurrenceEndCount sql.NullInt64
+	var recurrenceEndDateStr sql.NullString
+	var effectiveStartDateStr sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
 		&slot.ID,
@@ -90,6 +117,11 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 		&slot.IsActive,
 		&slot.CreatedAt,
 		&slot.UpdatedAt,
+		&recurrenceInterval,
+		&recurrenceEndType,
+		&recurrenceEndCount,
+		&recurrenceEndDateStr,
+		&effectiveStartDateStr,
 		&locationName,
 	)
 
@@ -110,8 +142,51 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 	if locationName.Valid {
 		slot.LocationName = &locationName.String
 	}
+	if recurrenceInterval.Valid {
+		slot.RecurrenceInterval = int(recurrenceInterval.Int64)
+	} else {
+		slot.RecurrenceInterval = 1 // Default
+	}
+	if recurrenceEndType.Valid {
+		slot.RecurrenceEndType = recurrenceEndType.String
+	} else {
+		slot.RecurrenceEndType = domain.RecurrenceEndNone
+	}
+	if recurrenceEndCount.Valid {
+		count := int(recurrenceEndCount.Int64)
+		slot.RecurrenceEndCount = &count
+	}
+	if recurrenceEndDateStr.Valid && recurrenceEndDateStr.String != "" {
+		if t, err := parseDateString(recurrenceEndDateStr.String); err == nil {
+			slot.RecurrenceEndDate = &t
+		}
+	}
+	if effectiveStartDateStr.Valid && effectiveStartDateStr.String != "" {
+		if t, err := parseDateString(effectiveStartDateStr.String); err == nil {
+			slot.EffectiveStartDate = &t
+		}
+	}
 
 	return slot, nil
+}
+
+// parseDateString parses various date string formats from different database drivers
+func parseDateString(s string) (time.Time, error) {
+	// Try common formats
+	formats := []string{
+		time.RFC3339,
+		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02 15:04:05+00:00",
+		"2006-01-02 15:04:05-07:00",
+		"2006-01-02 15:04:05",
+		"2006-01-02",
+	}
+	for _, format := range formats {
+		if t, err := time.Parse(format, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", s)
 }
 
 // GetByTemplateID retrieves all schedule slots for a template
@@ -121,6 +196,8 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 		query = rebindQuery(`
 			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
 			       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
+			       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
+			       ss.recurrence_end_date, ss.effective_start_date,
 			       gl.name as location_name
 			FROM schedule_slots ss
 			LEFT JOIN gym_locations gl ON ss.location_id = gl.id
@@ -131,6 +208,8 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 		query = rebindQuery(`
 			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
 			       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
+			       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
+			       ss.recurrence_end_date, ss.effective_start_date,
 			       gl.name as location_name
 			FROM schedule_slots ss
 			LEFT JOIN gym_locations gl ON ss.location_id = gl.id
@@ -157,6 +236,11 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 		var locationID sql.NullInt64
 		var overrideCapacity sql.NullInt64
 		var locationName sql.NullString
+		var recurrenceInterval sql.NullInt64
+		var recurrenceEndType sql.NullString
+		var recurrenceEndCount sql.NullInt64
+		var recurrenceEndDateStr sql.NullString
+		var effectiveStartDateStr sql.NullString
 
 		err := rows.Scan(
 			&slot.ID,
@@ -168,6 +252,11 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 			&slot.IsActive,
 			&slot.CreatedAt,
 			&slot.UpdatedAt,
+			&recurrenceInterval,
+			&recurrenceEndType,
+			&recurrenceEndCount,
+			&recurrenceEndDateStr,
+			&effectiveStartDateStr,
 			&locationName,
 		)
 		if err != nil {
@@ -184,6 +273,30 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 		if locationName.Valid {
 			slot.LocationName = &locationName.String
 		}
+		if recurrenceInterval.Valid {
+			slot.RecurrenceInterval = int(recurrenceInterval.Int64)
+		} else {
+			slot.RecurrenceInterval = 1 // Default
+		}
+		if recurrenceEndType.Valid {
+			slot.RecurrenceEndType = recurrenceEndType.String
+		} else {
+			slot.RecurrenceEndType = domain.RecurrenceEndNone
+		}
+		if recurrenceEndCount.Valid {
+			count := int(recurrenceEndCount.Int64)
+			slot.RecurrenceEndCount = &count
+		}
+		if recurrenceEndDateStr.Valid && recurrenceEndDateStr.String != "" {
+			if t, err := parseDateString(recurrenceEndDateStr.String); err == nil {
+				slot.RecurrenceEndDate = &t
+			}
+		}
+		if effectiveStartDateStr.Valid && effectiveStartDateStr.String != "" {
+			if t, err := parseDateString(effectiveStartDateStr.String); err == nil {
+				slot.EffectiveStartDate = &t
+			}
+		}
 
 		slots = append(slots, slot)
 	}
@@ -195,10 +308,21 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 func (r *ScheduleSlotRepository) Update(slot *domain.ScheduleSlot) error {
 	slot.UpdatedAt = time.Now()
 
+	// Set defaults for recurrence fields
+	if slot.RecurrenceInterval == 0 {
+		slot.RecurrenceInterval = 1
+	}
+	if slot.RecurrenceEndType == "" {
+		slot.RecurrenceEndType = domain.RecurrenceEndNone
+	}
+
 	query := rebindQuery(`
 		UPDATE schedule_slots
 		SET location_id = ?, day_of_week = ?, start_time = ?,
-		    override_capacity = ?, is_active = ?, updated_at = ?
+		    override_capacity = ?, is_active = ?,
+		    recurrence_interval = ?, recurrence_end_type = ?,
+		    recurrence_end_count = ?, recurrence_end_date = ?,
+		    effective_start_date = ?, updated_at = ?
 		WHERE id = ?
 	`)
 
@@ -208,6 +332,11 @@ func (r *ScheduleSlotRepository) Update(slot *domain.ScheduleSlot) error {
 		slot.StartTime,
 		slot.OverrideCapacity,
 		slot.IsActive,
+		slot.RecurrenceInterval,
+		slot.RecurrenceEndType,
+		slot.RecurrenceEndCount,
+		slot.RecurrenceEndDate,
+		slot.EffectiveStartDate,
 		slot.UpdatedAt,
 		slot.ID,
 	)

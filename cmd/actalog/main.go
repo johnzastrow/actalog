@@ -433,6 +433,7 @@ func main() {
 		coachAssignmentRepo,
 		orgRepo,
 		auditLogRepo,
+		workoutRepo,
 	)
 
 	// Phase 4 service (documents, credits, waitlist, notifications)
@@ -913,6 +914,7 @@ func main() {
 				r.Get("/scheduling/templates/{id}", schedulingHandler.GetTemplate)
 				r.Put("/scheduling/templates/{id}", schedulingHandler.UpdateTemplate)
 				r.Delete("/scheduling/templates/{id}", schedulingHandler.DeleteTemplate)
+				r.Get("/scheduling/templates/{id}/preview-schedule", schedulingHandler.PreviewSchedule)
 				r.Route("/scheduling/templates/{id}/slots", func(r chi.Router) {
 					r.Post("/", schedulingHandler.CreateScheduleSlot)
 					r.Get("/", schedulingHandler.ListScheduleSlots)

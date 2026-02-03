@@ -401,6 +401,29 @@ func (r *ClassSessionRepository) scanSessionsWithUserStatus(rows *sql.Rows) ([]*
 	return sessions, rows.Err()
 }
 
+// GetByIDWithWorkoutDetails retrieves a class session by ID with full workout details
+func (r *ClassSessionRepository) GetByIDWithWorkoutDetails(id int64, workoutRepo domain.WorkoutRepository) (*domain.ClassSession, error) {
+	// First, get the session using the standard GetByID
+	session, err := r.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if session == nil {
+		return nil, nil
+	}
+
+	// If session has a workout, load full workout details
+	if session.WorkoutID != nil && workoutRepo != nil {
+		workout, err := workoutRepo.GetByIDWithDetails(*session.WorkoutID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get workout details: %w", err)
+		}
+		session.Workout = workout
+	}
+
+	return session, nil
+}
+
 // Update updates a class session
 func (r *ClassSessionRepository) Update(session *domain.ClassSession) error {
 	session.UpdatedAt = time.Now()

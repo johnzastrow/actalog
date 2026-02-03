@@ -54,6 +54,13 @@ type ClassTemplate struct {
 	WorkoutName   *string         `json:"workout_name,omitempty"`
 }
 
+// Recurrence end type constants
+const (
+	RecurrenceEndNone  = "none"  // No end - continues indefinitely
+	RecurrenceEndCount = "count" // Ends after N occurrences
+	RecurrenceEndDate  = "date"  // Ends on a specific date
+)
+
 // ScheduleSlot represents a recurring time pattern for a class template
 type ScheduleSlot struct {
 	ID               int64     `json:"id" db:"id"`
@@ -65,6 +72,13 @@ type ScheduleSlot struct {
 	IsActive         bool      `json:"is_active" db:"is_active"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
+
+	// Recurrence fields
+	RecurrenceInterval int        `json:"recurrence_interval" db:"recurrence_interval"`         // Every N weeks (1=weekly, 2=bi-weekly)
+	RecurrenceEndType  string     `json:"recurrence_end_type" db:"recurrence_end_type"`         // none, count, date
+	RecurrenceEndCount *int       `json:"recurrence_end_count,omitempty" db:"recurrence_end_count"` // Number of occurrences
+	RecurrenceEndDate  *time.Time `json:"recurrence_end_date,omitempty" db:"recurrence_end_date"`   // End date
+	EffectiveStartDate *time.Time `json:"effective_start_date,omitempty" db:"effective_start_date"` // When slot becomes active
 
 	// Populated via JOINs
 	LocationName *string `json:"location_name,omitempty"`
@@ -105,13 +119,16 @@ type ClassSession struct {
 	UpdatedAt       time.Time  `json:"updated_at" db:"updated_at"`
 
 	// Populated via JOINs or computed
-	TemplateName       *string        `json:"template_name,omitempty"`
-	LocationName       *string        `json:"location_name,omitempty"`
-	WorkoutName        *string        `json:"workout_name,omitempty"`
-	ReservationCount   int            `json:"reservation_count"`
-	AvailableSpots     int            `json:"available_spots"`
-	Coaches            []*SessionCoach `json:"coaches,omitempty"`
-	CurrentUserStatus  *string        `json:"current_user_status,omitempty"` // For athlete view: reserved/checked_in/etc
+	TemplateName      *string         `json:"template_name,omitempty"`
+	LocationName      *string         `json:"location_name,omitempty"`
+	WorkoutName       *string         `json:"workout_name,omitempty"`
+	ReservationCount  int             `json:"reservation_count"`
+	AvailableSpots    int             `json:"available_spots"`
+	Coaches           []*SessionCoach `json:"coaches,omitempty"`
+	CurrentUserStatus *string         `json:"current_user_status,omitempty"` // For athlete view: reserved/checked_in/etc
+
+	// Full workout details (loaded on demand for single session fetch)
+	Workout *Workout `json:"workout,omitempty"`
 }
 
 // SessionCoach represents a coach assigned to a specific session
@@ -205,6 +222,7 @@ type CoachAssignmentRepository interface {
 type ClassSessionRepository interface {
 	Create(session *ClassSession) error
 	GetByID(id int64) (*ClassSession, error)
+	GetByIDWithWorkoutDetails(id int64, workoutRepo WorkoutRepository) (*ClassSession, error)
 	GetByOrganizationID(orgID int64, startDate, endDate time.Time) ([]*ClassSession, error)
 	GetByOrganizationIDWithUserStatus(orgID, userID int64, startDate, endDate time.Time) ([]*ClassSession, error)
 	GetUpcomingByCoachID(coachUserID int64, limit int) ([]*ClassSession, error)

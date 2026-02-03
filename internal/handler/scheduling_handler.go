@@ -398,6 +398,51 @@ func (h *SchedulingHandler) DeleteTemplate(w http.ResponseWriter, r *http.Reques
 }
 
 // ============================================
+// SCHEDULE PREVIEW HANDLERS
+// ============================================
+
+// PreviewSchedule handles GET /api/templates/{id}/preview-schedule
+func (h *SchedulingHandler) PreviewSchedule(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid template ID")
+		return
+	}
+
+	// Parse months parameter (default 3)
+	monthsStr := r.URL.Query().Get("months")
+	months := 3
+	if monthsStr != "" {
+		if m, err := strconv.Atoi(monthsStr); err == nil && m > 0 && m <= 12 {
+			months = m
+		}
+	}
+
+	dates, err := h.schedulingService.PreviewScheduleDates(id, months)
+	if err != nil {
+		if err == service.ErrClassTemplateNotFound {
+			respondError(w, http.StatusNotFound, "Template not found")
+			return
+		}
+		h.logger.Error("Failed to preview schedule: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to preview schedule")
+		return
+	}
+
+	// Convert dates to strings for JSON response
+	dateStrings := make([]string, len(dates))
+	for i, d := range dates {
+		dateStrings[i] = d.Format(time.RFC3339)
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"dates": dateStrings,
+		"count": len(dates),
+	})
+}
+
+// ============================================
 // SCHEDULE SLOT HANDLERS
 // ============================================
 
@@ -417,10 +462,15 @@ func (h *SchedulingHandler) CreateScheduleSlot(w http.ResponseWriter, r *http.Re
 	}
 
 	var req struct {
-		LocationID       *int64 `json:"location_id"`
-		DayOfWeek        int    `json:"day_of_week"`
-		StartTime        string `json:"start_time"`
-		OverrideCapacity *int   `json:"override_capacity"`
+		LocationID         *int64  `json:"location_id"`
+		DayOfWeek          int     `json:"day_of_week"`
+		StartTime          string  `json:"start_time"`
+		OverrideCapacity   *int    `json:"override_capacity"`
+		RecurrenceInterval int     `json:"recurrence_interval"`
+		RecurrenceEndType  string  `json:"recurrence_end_type"`
+		RecurrenceEndCount *int    `json:"recurrence_end_count"`
+		RecurrenceEndDate  *string `json:"recurrence_end_date"`
+		EffectiveStartDate *string `json:"effective_start_date"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -434,11 +484,30 @@ func (h *SchedulingHandler) CreateScheduleSlot(w http.ResponseWriter, r *http.Re
 	}
 
 	slot := &domain.ScheduleSlot{
-		TemplateID:       templateID,
-		LocationID:       req.LocationID,
-		DayOfWeek:        req.DayOfWeek,
-		StartTime:        req.StartTime,
-		OverrideCapacity: req.OverrideCapacity,
+		TemplateID:         templateID,
+		LocationID:         req.LocationID,
+		DayOfWeek:          req.DayOfWeek,
+		StartTime:          req.StartTime,
+		OverrideCapacity:   req.OverrideCapacity,
+		RecurrenceInterval: req.RecurrenceInterval,
+		RecurrenceEndType:  req.RecurrenceEndType,
+		RecurrenceEndCount: req.RecurrenceEndCount,
+	}
+
+	// Parse recurrence end date
+	if req.RecurrenceEndDate != nil && *req.RecurrenceEndDate != "" {
+		t, err := time.Parse("2006-01-02", *req.RecurrenceEndDate)
+		if err == nil {
+			slot.RecurrenceEndDate = &t
+		}
+	}
+
+	// Parse effective start date
+	if req.EffectiveStartDate != nil && *req.EffectiveStartDate != "" {
+		t, err := time.Parse("2006-01-02", *req.EffectiveStartDate)
+		if err == nil {
+			slot.EffectiveStartDate = &t
+		}
 	}
 
 	if err := h.schedulingService.CreateScheduleSlot(userID, slot); err != nil {
@@ -502,11 +571,16 @@ func (h *SchedulingHandler) UpdateScheduleSlot(w http.ResponseWriter, r *http.Re
 	}
 
 	var req struct {
-		LocationID       *int64 `json:"location_id"`
-		DayOfWeek        int    `json:"day_of_week"`
-		StartTime        string `json:"start_time"`
-		OverrideCapacity *int   `json:"override_capacity"`
-		IsActive         bool   `json:"is_active"`
+		LocationID         *int64  `json:"location_id"`
+		DayOfWeek          int     `json:"day_of_week"`
+		StartTime          string  `json:"start_time"`
+		OverrideCapacity   *int    `json:"override_capacity"`
+		IsActive           bool    `json:"is_active"`
+		RecurrenceInterval int     `json:"recurrence_interval"`
+		RecurrenceEndType  string  `json:"recurrence_end_type"`
+		RecurrenceEndCount *int    `json:"recurrence_end_count"`
+		RecurrenceEndDate  *string `json:"recurrence_end_date"`
+		EffectiveStartDate *string `json:"effective_start_date"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -515,12 +589,31 @@ func (h *SchedulingHandler) UpdateScheduleSlot(w http.ResponseWriter, r *http.Re
 	}
 
 	slot := &domain.ScheduleSlot{
-		ID:               id,
-		LocationID:       req.LocationID,
-		DayOfWeek:        req.DayOfWeek,
-		StartTime:        req.StartTime,
-		OverrideCapacity: req.OverrideCapacity,
-		IsActive:         req.IsActive,
+		ID:                 id,
+		LocationID:         req.LocationID,
+		DayOfWeek:          req.DayOfWeek,
+		StartTime:          req.StartTime,
+		OverrideCapacity:   req.OverrideCapacity,
+		IsActive:           req.IsActive,
+		RecurrenceInterval: req.RecurrenceInterval,
+		RecurrenceEndType:  req.RecurrenceEndType,
+		RecurrenceEndCount: req.RecurrenceEndCount,
+	}
+
+	// Parse recurrence end date
+	if req.RecurrenceEndDate != nil && *req.RecurrenceEndDate != "" {
+		t, err := time.Parse("2006-01-02", *req.RecurrenceEndDate)
+		if err == nil {
+			slot.RecurrenceEndDate = &t
+		}
+	}
+
+	// Parse effective start date
+	if req.EffectiveStartDate != nil && *req.EffectiveStartDate != "" {
+		t, err := time.Parse("2006-01-02", *req.EffectiveStartDate)
+		if err == nil {
+			slot.EffectiveStartDate = &t
+		}
 	}
 
 	if err := h.schedulingService.UpdateScheduleSlot(userID, slot); err != nil {
@@ -724,7 +817,8 @@ func (h *SchedulingHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.schedulingService.GetSessionByID(id)
+	// Load session with full workout details
+	session, err := h.schedulingService.GetSessionByIDWithWorkout(id)
 	if err != nil {
 		if err == service.ErrClassSessionNotFound {
 			respondError(w, http.StatusNotFound, "Session not found")
