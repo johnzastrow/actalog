@@ -199,10 +199,14 @@ func (m *Materializer) materializeSlot(
 	slot *domain.ScheduleSlot,
 	startDate, endDate time.Time,
 ) (created int, skipped int, err error) {
-	// Parse the slot's start time
+	// Parse the slot's start time - handle both "15:04" and "15:04:05" formats
 	slotTime, err := time.Parse("15:04", slot.StartTime)
 	if err != nil {
-		return 0, 0, fmt.Errorf("invalid start time format: %w", err)
+		// Try with seconds (MariaDB/MySQL format)
+		slotTime, err = time.Parse("15:04:05", slot.StartTime)
+		if err != nil {
+			return 0, 0, fmt.Errorf("invalid start time format: %w", err)
+		}
 	}
 
 	// Determine effective start date (slot's effective_start_date or startDate)

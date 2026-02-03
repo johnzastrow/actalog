@@ -904,10 +904,16 @@ func (s *SchedulingService) PreviewScheduleDates(templateID int64, months int) (
 	var dates []time.Time
 
 	for _, slot := range slots {
-		// Parse slot time
-		slotTime, err := time.Parse("15:04", slot.StartTime)
+		// Parse slot time - handle both "15:04" and "15:04:05" formats
+		var slotTime time.Time
+		var err error
+		slotTime, err = time.Parse("15:04", slot.StartTime)
 		if err != nil {
-			continue
+			// Try with seconds (MariaDB/MySQL format)
+			slotTime, err = time.Parse("15:04:05", slot.StartTime)
+			if err != nil {
+				continue
+			}
 		}
 
 		// Determine effective start date
