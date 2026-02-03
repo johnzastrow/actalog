@@ -138,7 +138,7 @@
                   <v-divider />
                   <v-card-text>
                     <RecurrencePatternEditor
-                      v-model="slots[index]"
+                      :model-value="slots[index]"
                       @update:model-value="onSlotUpdate(index, $event)"
                     />
 
@@ -332,6 +332,8 @@ async function loadSlots(templateId) {
     const response = await axios.get(`/api/admin/scheduling/templates/${templateId}/slots?include_inactive=true`)
     slots.value = (response.data.slots || []).map(slot => ({
       ...slot,
+      // Convert single day_of_week to days_of_week array for multi-day UI
+      days_of_week: [slot.day_of_week ?? 1],
       // Convert dates to string format for the editor
       recurrence_end_date: slot.recurrence_end_date ? slot.recurrence_end_date.split('T')[0] : '',
       effective_start_date: slot.effective_start_date ? slot.effective_start_date.split('T')[0] : ''
@@ -344,7 +346,8 @@ async function loadSlots(templateId) {
 
 function addSlot() {
   slots.value.push({
-    day_of_week: 1, // Monday
+    days_of_week: [1], // Monday (array for multi-day support)
+    day_of_week: 1, // Legacy single day support
     start_time: '09:00',
     recurrence_interval: 1,
     recurrence_end_type: 'none',
@@ -406,39 +409,45 @@ function generateLocalPreview() {
     if (slot._deleted) continue
 
     const interval = slot.recurrence_interval || 1
-    const dayOfWeek = slot.day_of_week ?? 0
+    // Support both multi-day array and legacy single day
+    const daysOfWeek = slot.days_of_week?.length > 0
+      ? slot.days_of_week
+      : [slot.day_of_week ?? 0]
     const [hours, minutes] = (slot.start_time || '09:00').split(':').map(Number)
 
-    // Find first matching day
-    let date = new Date(today)
-    while (date.getDay() !== dayOfWeek) {
-      date.setDate(date.getDate() + 1)
-    }
+    // Generate dates for each selected day
+    for (const dayOfWeek of daysOfWeek) {
+      // Find first matching day
+      let date = new Date(today)
+      while (date.getDay() !== dayOfWeek) {
+        date.setDate(date.getDate() + 1)
+      }
 
-    // Effective start date
-    if (slot.effective_start_date) {
-      const effectiveStart = new Date(slot.effective_start_date)
-      if (effectiveStart > date) {
-        date = new Date(effectiveStart)
-        while (date.getDay() !== dayOfWeek) {
-          date.setDate(date.getDate() + 1)
+      // Effective start date
+      if (slot.effective_start_date) {
+        const effectiveStart = new Date(slot.effective_start_date)
+        if (effectiveStart > date) {
+          date = new Date(effectiveStart)
+          while (date.getDay() !== dayOfWeek) {
+            date.setDate(date.getDate() + 1)
+          }
         }
       }
-    }
 
-    // Generate dates
-    let count = 0
-    const maxCount = slot.recurrence_end_type === 'count' ? (slot.recurrence_end_count || 100) : 100
-    const endDateLimit = slot.recurrence_end_type === 'date' && slot.recurrence_end_date
-      ? new Date(slot.recurrence_end_date)
-      : endDate
+      // Generate dates
+      let count = 0
+      const maxCount = slot.recurrence_end_type === 'count' ? (slot.recurrence_end_count || 100) : 100
+      const endDateLimit = slot.recurrence_end_type === 'date' && slot.recurrence_end_date
+        ? new Date(slot.recurrence_end_date)
+        : endDate
 
-    while (date <= endDateLimit && date <= endDate && count < maxCount) {
-      const sessionDate = new Date(date)
-      sessionDate.setHours(hours, minutes, 0, 0)
-      dates.push(sessionDate.toISOString())
-      count++
-      date.setDate(date.getDate() + 7 * interval)
+      while (date <= endDateLimit && date <= endDate && count < maxCount) {
+        const sessionDate = new Date(date)
+        sessionDate.setHours(hours, minutes, 0, 0)
+        dates.push(sessionDate.toISOString())
+        count++
+        date.setDate(date.getDate() + 7 * interval)
+      }
     }
   }
 
@@ -447,7 +456,7 @@ function generateLocalPreview() {
 
 function onPreviewDayClick(date) {
   // Could open session details or create session for that date
-  console.log('Day clicked:', date)
+  // TODO: Open session edit dialog for this date
 }
 
 function close() {
@@ -478,24 +487,37 @@ async function save() {
         // Delete existing slot
         await axios.delete(`/api/admin/scheduling/templates/${templateId}/slots/${slot.id}`)
       } else if (slot._isNew) {
-        // Create new slot
-        const slotData = {
-          ...slot,
-          recurrence_end_date: slot.recurrence_end_date || null,
-          effective_start_date: slot.effective_start_date || null
+        // Create new slot(s) - one per selected day
+        const daysToCreate = slot.days_of_week?.length > 0
+          ? slot.days_of_week
+          : [slot.day_of_week ?? 1]
+
+        for (const dayOfWeek of daysToCreate) {
+          const slotData = {
+            day_of_week: dayOfWeek,
+            start_time: slot.start_time,
+            recurrence_interval: slot.recurrence_interval,
+            recurrence_end_type: slot.recurrence_end_type,
+            recurrence_end_count: slot.recurrence_end_count,
+            recurrence_end_date: slot.recurrence_end_date || null,
+            effective_start_date: slot.effective_start_date || null,
+            location_id: slot.location_id,
+            override_capacity: slot.override_capacity,
+            is_active: slot.is_active !== false
+          }
+          await axios.post(`/api/admin/scheduling/templates/${templateId}/slots`, slotData)
         }
-        delete slotData._isNew
-        delete slotData._deleted
-        await axios.post(`/api/admin/scheduling/templates/${templateId}/slots`, slotData)
       } else if (slot.id) {
-        // Update existing slot
+        // Update existing slot (single day only - multi-day editing not supported for existing slots)
         const slotData = {
           ...slot,
+          day_of_week: slot.days_of_week?.[0] ?? slot.day_of_week ?? 1,
           recurrence_end_date: slot.recurrence_end_date || null,
           effective_start_date: slot.effective_start_date || null
         }
         delete slotData._isNew
         delete slotData._deleted
+        delete slotData.days_of_week // Backend doesn't support array
         await axios.put(`/api/admin/scheduling/templates/${templateId}/slots/${slot.id}`, slotData)
       }
     }
@@ -510,13 +532,11 @@ async function save() {
 }
 
 function onSessionSave(sessionData) {
-  // Handle session save
-  console.log('Session save:', sessionData)
+  // Handle session save - TODO: implement
 }
 
 function onSessionCancel(session) {
-  // Handle session cancel
-  console.log('Session cancel:', session)
+  // Handle session cancel - TODO: implement
 }
 </script>
 

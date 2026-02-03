@@ -25,12 +25,12 @@
       </v-chip>
     </div>
 
-    <!-- Day of Week -->
+    <!-- Days of Week (multiple selection) -->
     <div class="mb-4">
       <DayOfWeekSelector
-        v-model="dayOfWeek"
+        v-model="daysOfWeek"
         label="On"
-        :multiple="false"
+        :multiple="true"
       />
     </div>
 
@@ -113,7 +113,8 @@ const props = defineProps({
   modelValue: {
     type: Object,
     default: () => ({
-      day_of_week: 0,
+      days_of_week: [1], // Array of days (Monday default)
+      day_of_week: 1, // Legacy single day support
       start_time: '09:00',
       recurrence_interval: 1,
       recurrence_end_type: 'none',
@@ -128,8 +129,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-// Local state
-const dayOfWeek = ref(props.modelValue.day_of_week ?? 0)
+// Local state - support both legacy single day and new multi-day
+const daysOfWeek = ref(
+  props.modelValue.days_of_week?.length > 0
+    ? [...props.modelValue.days_of_week]
+    : (props.modelValue.day_of_week !== undefined ? [props.modelValue.day_of_week] : [1])
+)
 const startTime = ref(props.modelValue.start_time ?? '09:00')
 const interval = ref(props.modelValue.recurrence_interval ?? 1)
 const endType = ref(props.modelValue.recurrence_end_type ?? 'none')
@@ -137,9 +142,26 @@ const endCount = ref(props.modelValue.recurrence_end_count ?? 10)
 const endDate = ref(props.modelValue.recurrence_end_date ?? '')
 const effectiveStartDate = ref(props.modelValue.effective_start_date ?? '')
 
+// Format selected days for summary
+const selectedDaysText = computed(() => {
+  if (!daysOfWeek.value || daysOfWeek.value.length === 0) {
+    return 'no days selected'
+  }
+  // Sort days and get names
+  const sortedDays = [...daysOfWeek.value].sort((a, b) => a - b)
+  const names = sortedDays.map(d => dayNames[d])
+  if (names.length === 1) {
+    return names[0]
+  } else if (names.length === 2) {
+    return `${names[0]} and ${names[1]}`
+  } else {
+    return names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1]
+  }
+})
+
 // Summary text
 const summaryText = computed(() => {
-  let text = `Every ${interval.value === 1 ? '' : interval.value + ' '}week${interval.value > 1 ? 's' : ''} on ${dayNames[dayOfWeek.value]} at ${formatTime(startTime.value)}`
+  let text = `Every ${interval.value === 1 ? '' : interval.value + ' '}week${interval.value > 1 ? 's' : ''} on ${selectedDaysText.value} at ${formatTime(startTime.value)}`
 
   if (effectiveStartDate.value) {
     text += `, starting ${formatDateDisplay(effectiveStartDate.value)}`
@@ -172,7 +194,8 @@ function formatDateDisplay(dateStr) {
 // Watch for changes and emit
 function emitUpdate() {
   emit('update:modelValue', {
-    day_of_week: dayOfWeek.value,
+    days_of_week: [...daysOfWeek.value], // Array of selected days
+    day_of_week: daysOfWeek.value[0] ?? 1, // Legacy support: first day
     start_time: startTime.value,
     recurrence_interval: interval.value,
     recurrence_end_type: endType.value,
@@ -182,17 +205,46 @@ function emitUpdate() {
   })
 }
 
-watch([dayOfWeek, startTime, interval, endType, endCount, endDate, effectiveStartDate], emitUpdate)
+watch([daysOfWeek, startTime, interval, endType, endCount, endDate, effectiveStartDate], emitUpdate, { deep: true })
+
+// Helper to check if arrays are equal
+function arraysEqual(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((val, i) => val === sortedB[i])
+}
 
 // Watch for prop changes
 watch(() => props.modelValue, (newVal) => {
-  dayOfWeek.value = newVal.day_of_week ?? 0
-  startTime.value = newVal.start_time ?? '09:00'
-  interval.value = newVal.recurrence_interval ?? 1
-  endType.value = newVal.recurrence_end_type ?? 'none'
-  endCount.value = newVal.recurrence_end_count ?? 10
-  endDate.value = newVal.recurrence_end_date ?? ''
-  effectiveStartDate.value = newVal.effective_start_date ?? ''
+  // Support both new multi-day and legacy single day
+  const newDays = newVal.days_of_week?.length > 0
+    ? newVal.days_of_week
+    : (newVal.day_of_week !== undefined ? [newVal.day_of_week] : [1])
+
+  // Only update if values actually changed to prevent circular updates
+  if (!arraysEqual(daysOfWeek.value, newDays)) {
+    daysOfWeek.value = [...newDays]
+  }
+  if (startTime.value !== (newVal.start_time ?? '09:00')) {
+    startTime.value = newVal.start_time ?? '09:00'
+  }
+  if (interval.value !== (newVal.recurrence_interval ?? 1)) {
+    interval.value = newVal.recurrence_interval ?? 1
+  }
+  if (endType.value !== (newVal.recurrence_end_type ?? 'none')) {
+    endType.value = newVal.recurrence_end_type ?? 'none'
+  }
+  if (endCount.value !== (newVal.recurrence_end_count ?? 10)) {
+    endCount.value = newVal.recurrence_end_count ?? 10
+  }
+  if (endDate.value !== (newVal.recurrence_end_date ?? '')) {
+    endDate.value = newVal.recurrence_end_date ?? ''
+  }
+  if (effectiveStartDate.value !== (newVal.effective_start_date ?? '')) {
+    effectiveStartDate.value = newVal.effective_start_date ?? ''
+  }
 }, { deep: true })
 </script>
 

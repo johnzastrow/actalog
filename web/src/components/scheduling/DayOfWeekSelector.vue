@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -45,15 +45,40 @@ const emit = defineEmits(['update:modelValue'])
 // Day labels starting from Sunday (0)
 const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
-const selectedDays = ref(props.modelValue)
+// Initialize based on multiple mode
+function normalizeValue(val, isMultiple) {
+  if (isMultiple) {
+    // Multiple mode: ensure it's an array
+    if (Array.isArray(val)) return [...val]
+    if (typeof val === 'number') return [val]
+    return [1] // Default to Monday
+  } else {
+    // Single mode: ensure it's a number
+    if (typeof val === 'number') return val
+    if (Array.isArray(val) && val.length > 0) return val[0]
+    return 1 // Default to Monday
+  }
+}
 
+// Use a ref with watchers to handle the v-btn-toggle properly
+const selectedDays = ref(normalizeValue(props.modelValue, props.multiple))
+
+// Flag to prevent circular updates
+let isUpdatingFromProp = false
+
+// Watch for external changes to modelValue
 watch(() => props.modelValue, (newVal) => {
-  selectedDays.value = newVal
-})
+  isUpdatingFromProp = true
+  selectedDays.value = normalizeValue(newVal, props.multiple)
+  isUpdatingFromProp = false
+}, { deep: true })
 
+// Watch for internal changes and emit to parent
 watch(selectedDays, (newVal) => {
-  emit('update:modelValue', newVal)
-})
+  if (!isUpdatingFromProp) {
+    emit('update:modelValue', newVal)
+  }
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -64,5 +89,15 @@ watch(selectedDays, (newVal) => {
 .v-btn-toggle .v-btn {
   text-transform: none;
   font-weight: 500;
+}
+
+/* Selected day buttons - dark blue with light text */
+.v-btn-toggle .v-btn.v-btn--active {
+  background-color: #1a365d !important;
+  color: #ffffff !important;
+}
+
+.v-btn-toggle .v-btn.v-btn--active:hover {
+  background-color: #2c5282 !important;
 }
 </style>
