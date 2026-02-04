@@ -93,30 +93,36 @@
                 </v-row>
               </div>
 
-              <!-- Appearance Section -->
-              <div class="form-section mb-4">
-                <div class="section-title">
-                  <v-icon size="small" class="mr-2">mdi-palette</v-icon>
-                  Appearance
-                </div>
-                <div class="d-flex align-center gap-3 mb-2">
-                  <div class="text-body-2 text-medium-emphasis">Class Color</div>
-                  <v-avatar :color="form.color || '#00bcd4'" size="32">
-                    <v-icon color="white" size="small">mdi-dumbbell</v-icon>
-                  </v-avatar>
-                </div>
-                <v-color-picker
-                  v-model="form.color"
-                  :swatches="colorSwatches"
-                  show-swatches
-                  hide-inputs
-                  hide-canvas
-                  swatches-max-height="120"
-                  elevation="0"
-                  rounded="lg"
-                  class="color-picker-compact"
-                />
-              </div>
+              <!-- Appearance Section (Collapsible) -->
+              <v-expansion-panels class="mb-4 appearance-panel">
+                <v-expansion-panel elevation="0" rounded="lg" bg-color="white">
+                  <v-expansion-panel-title class="section-title-panel">
+                    <div class="d-flex align-center">
+                      <v-icon size="small" class="mr-2">mdi-palette</v-icon>
+                      Appearance
+                      <v-avatar :color="form.color || '#00bcd4'" size="24" class="ml-3">
+                        <v-icon color="white" size="x-small">mdi-dumbbell</v-icon>
+                      </v-avatar>
+                    </div>
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <div class="d-flex align-center gap-3 mb-2">
+                      <div class="text-body-2 text-medium-emphasis">Class Color</div>
+                    </div>
+                    <v-color-picker
+                      v-model="form.color"
+                      :swatches="colorSwatches"
+                      show-swatches
+                      hide-inputs
+                      hide-canvas
+                      swatches-max-height="120"
+                      elevation="0"
+                      rounded="lg"
+                      class="color-picker-compact"
+                    />
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
 
               <!-- Defaults Section -->
               <div class="form-section mb-4">
@@ -951,5 +957,28 @@ function onSessionCancel(session) {
 
 .color-picker-compact :deep(.v-color-picker-swatches) {
   max-height: none !important;
+}
+
+/* Appearance Panel Styling */
+.appearance-panel {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.appearance-panel :deep(.v-expansion-panel) {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.section-title-panel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  min-height: 48px !important;
+  padding: 12px 16px !important;
+}
+
+.appearance-panel :deep(.v-expansion-panel-text__wrapper) {
+  padding: 0 16px 16px 16px;
 }
 </style>

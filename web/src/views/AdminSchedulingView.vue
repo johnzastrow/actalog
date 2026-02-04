@@ -700,7 +700,7 @@ function editTemplate(tmpl) {
 
 function onTemplateSaved() {
   console.log('[AdminSchedulingView] onTemplateSaved called')
-  showSnackbar('Class saved successfully', 'success')
+  // Note: TemplateEditDialog shows its own snackbar, so we don't show one here
   fetchTemplates()
 }
 
