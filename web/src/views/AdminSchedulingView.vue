@@ -701,7 +701,7 @@ function editTemplate(tmpl) {
 
 function onTemplateSaved() {
   console.log('[AdminSchedulingView] onTemplateSaved called')
-  // Note: TemplateEditDialog shows its own snackbar, so we don't show one here
+  successMessage.value = 'Class saved successfully'
   fetchTemplates()
 }
 
