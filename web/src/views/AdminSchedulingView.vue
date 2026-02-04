@@ -157,7 +157,7 @@
           <v-card elevation="0" rounded="lg">
             <v-card-title class="d-flex align-center">
               <v-icon class="mr-2">mdi-account-tie</v-icon>
-              Coaches ({{ coaches.length }})
+              Coaches per Gym ({{ coaches.length }})
               <v-spacer />
               <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openCoachDialog()">
                 <v-icon start>mdi-plus</v-icon>
@@ -310,14 +310,37 @@
     <!-- Coach Assignment Dialog -->
     <v-dialog v-model="coachDialog" max-width="400">
       <v-card>
-        <v-card-title>Assign Coach</v-card-title>
+        <v-card-title>Assign Coach to Gym</v-card-title>
         <v-card-text>
-          <v-text-field v-model.number="coachForm.user_id" label="User ID" type="number" required />
+          <v-autocomplete
+            v-model="coachForm.user_id"
+            v-model:search="userSearch"
+            :items="availableUsers"
+            :loading="searchingUsers"
+            item-title="display_name"
+            item-value="id"
+            label="Search user by name or email"
+            placeholder="Start typing to search..."
+            no-data-text="No users found"
+            clearable
+            @update:search="onUserSearch"
+          >
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props">
+                <template #prepend>
+                  <v-avatar color="primary" size="32">
+                    <span class="text-caption">{{ getInitials(item.raw.name || item.raw.email) }}</span>
+                  </v-avatar>
+                </template>
+                <v-list-item-subtitle>{{ item.raw.email }}</v-list-item-subtitle>
+              </v-list-item>
+            </template>
+          </v-autocomplete>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn @click="coachDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="assignCoach">Assign</v-btn>
+          <v-btn color="primary" :disabled="!coachForm.user_id" @click="assignCoach">Assign</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -366,6 +389,9 @@ const editingSession = ref(null)
 const sessionForm = ref({ name: '', template_id: null, start_time: '', end_time: '', capacity: 20, location_id: null })
 
 const coachForm = ref({ user_id: null })
+const availableUsers = ref([])
+const searchingUsers = ref(false)
+const userSearch = ref('')
 const currentRosterSessionId = ref(null)
 const currentRosterSession = ref(null)
 const sessionsGrid = ref(null)
@@ -646,7 +672,34 @@ async function markNoShow(res) {
 // Coach functions
 function openCoachDialog() {
   coachForm.value = { user_id: null }
+  availableUsers.value = []
+  userSearch.value = ''
   coachDialog.value = true
+}
+
+async function onUserSearch(search) {
+  if (!search || search.length < 2) {
+    availableUsers.value = []
+    return
+  }
+  searchingUsers.value = true
+  try {
+    const response = await axios.get(`/api/admin/user-management/filter?search=${encodeURIComponent(search)}&limit=20`)
+    const users = response.data.users || []
+    // Filter out users already assigned as coaches
+    const existingCoachIds = coaches.value.map(c => c.user_id)
+    availableUsers.value = users
+      .filter(u => !existingCoachIds.includes(u.id))
+      .map(u => ({
+        ...u,
+        display_name: u.name ? `${u.name} (${u.email})` : u.email
+      }))
+  } catch (err) {
+    console.error('Failed to search users:', err)
+    availableUsers.value = []
+  } finally {
+    searchingUsers.value = false
+  }
 }
 
 async function assignCoach() {
