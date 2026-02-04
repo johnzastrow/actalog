@@ -401,6 +401,17 @@ watch(coachSearch, (search) => {
   }, 300)
 })
 
+// Auto-generate preview when switching to Preview tab
+watch(activeTab, (newTab) => {
+  if (newTab === 'preview' && slots.value.length > 0) {
+    if (props.template?.id) {
+      loadPreview()
+    } else {
+      generateLocalPreview()
+    }
+  }
+})
+
 function resetForm() {
   form.value = {
     name: '',
@@ -551,6 +562,10 @@ function onSlotUpdate(index, updatedSlot) {
   slots.value[index] = {
     ...slots.value[index],
     ...updatedSlot
+  }
+  // Auto-regenerate preview when slots change
+  if (activeTab.value === 'preview') {
+    generateLocalPreview()
   }
 }
 
