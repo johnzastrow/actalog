@@ -344,6 +344,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Snackbar for notifications -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      :timeout="3000"
+      location="bottom"
+    >
+      {{ snackbarText }}
+      <template #actions>
+        <v-btn variant="text" @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -356,6 +369,17 @@ import SessionsGrid from '@/components/scheduling/SessionsGrid.vue'
 const loading = ref(false)
 const error = ref(null)
 const successMessage = ref(null)
+
+// Snackbar state
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
+
+function showSnackbar(message, color = 'success') {
+  snackbarText.value = message
+  snackbarColor.value = color
+  snackbar.value = true
+}
 
 const organizations = ref([])
 const selectedOrgId = ref(null)
@@ -538,7 +562,7 @@ function editTemplate(tmpl) {
 }
 
 function onTemplateSaved() {
-  successMessage.value = 'Class saved successfully'
+  showSnackbar('Class saved successfully', 'success')
   fetchTemplates()
 }
 
