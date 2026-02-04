@@ -1,31 +1,37 @@
 <template>
-  <div class="mobile-view-wrapper">
-    <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">Class Scheduling</h1>
-          <div class="text-body-2 text-medium-emphasis">Manage templates, sessions, and coaches</div>
-        </div>
+  <div class="scheduling-view">
+    <!-- Page Header -->
+    <div class="page-header pa-4 d-flex align-center">
+      <v-btn icon variant="text" color="white" class="mr-2" @click="$router.back()">
+        <v-icon>mdi-arrow-left</v-icon>
+      </v-btn>
+      <div class="flex-grow-1">
+        <div class="text-h6 font-weight-bold text-white">Class Scheduling</div>
+        <div class="text-caption text-white" style="opacity: 0.8;">Manage templates, sessions, and coaches</div>
+      </div>
+      <v-icon color="white" size="large">mdi-calendar-clock</v-icon>
+    </div>
+
+    <v-container fluid class="pa-4 bg-grey-lighten-4">
+      <!-- Organization Selector -->
+      <div class="form-section mb-4">
+        <v-select
+          v-model="selectedOrgId"
+          :items="organizations"
+          item-title="name"
+          item-value="id"
+          label="Select Gym"
+          variant="solo-filled"
+          density="comfortable"
+          rounded="lg"
+          flat
+          hide-details
+          @update:model-value="onOrgChange"
+        />
       </div>
 
-      <!-- Organization Selector -->
-      <v-select
-        v-model="selectedOrgId"
-        :items="organizations"
-        item-title="name"
-        item-value="id"
-        label="Select Gym"
-        variant="outlined"
-        density="comfortable"
-        class="mb-4"
-        @update:model-value="onOrgChange"
-      />
-
       <!-- No Organizations Alert -->
-      <v-alert v-if="!loading && organizations.length === 0" type="warning" variant="tonal" class="mb-4">
+      <v-alert v-if="!loading && organizations.length === 0" type="warning" variant="tonal" class="mb-4" rounded="lg">
         No gyms configured. Create a gym in the Organizations section first.
       </v-alert>
 
@@ -33,46 +39,61 @@
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
       <!-- Error Alert -->
-      <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" @click:close="error = null">
+      <v-alert v-if="error" type="error" variant="tonal" closable class="mb-4" rounded="lg" @click:close="error = null">
         {{ error }}
       </v-alert>
 
       <!-- Success Alert -->
-      <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
+      <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" rounded="lg" @click:close="successMessage = null">
         {{ successMessage }}
       </v-alert>
 
       <!-- Tabs -->
-      <v-tabs v-model="activeTab" class="mb-4">
-        <v-tab value="locations">Locations</v-tab>
-        <v-tab value="templates">Classes</v-tab>
-        <v-tab value="sessions">Sessions</v-tab>
-        <v-tab value="coaches">Coaches</v-tab>
-      </v-tabs>
+      <div class="form-section mb-4 pa-1">
+        <v-tabs v-model="activeTab" bg-color="transparent" slider-color="primary">
+          <v-tab value="locations" class="text-none" rounded="lg">
+            <v-icon start size="small">mdi-map-marker</v-icon>
+            Locations
+          </v-tab>
+          <v-tab value="templates" class="text-none" rounded="lg">
+            <v-icon start size="small">mdi-clipboard-list</v-icon>
+            Classes
+          </v-tab>
+          <v-tab value="sessions" class="text-none" rounded="lg">
+            <v-icon start size="small">mdi-calendar</v-icon>
+            Sessions
+          </v-tab>
+          <v-tab value="coaches" class="text-none" rounded="lg">
+            <v-icon start size="small">mdi-account-tie</v-icon>
+            Coaches
+          </v-tab>
+        </v-tabs>
+      </div>
 
       <!-- Locations Tab -->
       <v-window v-model="activeTab">
         <v-window-item value="locations">
-          <v-card elevation="0" rounded="lg">
-            <v-card-title class="d-flex align-center">
-              <v-icon class="mr-2">mdi-map-marker</v-icon>
-              Locations ({{ locations.length }})
+          <div class="form-section">
+            <div class="section-header d-flex align-center mb-3">
+              <div class="section-title">
+                <v-icon size="small" class="mr-2">mdi-map-marker</v-icon>
+                Locations ({{ locations.length }})
+              </div>
               <v-spacer />
-              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openLocationDialog()">
+              <v-btn color="primary" size="small" rounded="lg" :disabled="!selectedOrgId" @click="openLocationDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Add Location
               </v-btn>
-            </v-card-title>
-            <v-divider />
-            <v-list v-if="locations.length > 0">
-              <v-list-item v-for="loc in locations" :key="loc.id">
-                <v-list-item-title>{{ loc.name }}</v-list-item-title>
+            </div>
+            <v-list v-if="locations.length > 0" bg-color="transparent" class="pa-0">
+              <v-list-item v-for="loc in locations" :key="loc.id" class="list-item-card mb-2" rounded="lg">
+                <v-list-item-title class="font-weight-medium">{{ loc.name }}</v-list-item-title>
                 <v-list-item-subtitle>
                   <span v-if="loc.address">{{ loc.address }}</span>
                   <span v-if="loc.capacity"> | Capacity: {{ loc.capacity }}</span>
                 </v-list-item-subtitle>
                 <template #append>
-                  <v-chip :color="loc.is_active ? 'success' : 'grey'" size="x-small" class="mr-2">
+                  <v-chip :color="loc.is_active ? 'success' : 'grey'" size="x-small" class="mr-2" variant="flat" rounded="lg">
                     {{ loc.is_active ? 'Active' : 'Inactive' }}
                   </v-chip>
                   <v-btn icon size="small" variant="text" @click="editLocation(loc)">
@@ -84,35 +105,37 @@
                 </template>
               </v-list-item>
             </v-list>
-            <v-card-text v-else>
-              <v-alert type="info" variant="tonal">No locations configured.</v-alert>
-            </v-card-text>
-          </v-card>
+            <v-alert v-else type="info" variant="tonal" rounded="lg">No locations configured.</v-alert>
+          </div>
         </v-window-item>
 
         <!-- Classes Tab -->
         <v-window-item value="templates">
-          <v-card elevation="0" rounded="lg">
-            <v-card-title class="d-flex align-center">
-              <v-icon class="mr-2">mdi-clipboard-list</v-icon>
-              Classes ({{ filteredTemplates.length }}<span v-if="filteredTemplates.length !== templates.length"> of {{ templates.length }}</span>)
+          <div class="form-section">
+            <div class="section-header d-flex align-center mb-3">
+              <div class="section-title">
+                <v-icon size="small" class="mr-2">mdi-clipboard-list</v-icon>
+                Classes ({{ filteredTemplates.length }}<span v-if="filteredTemplates.length !== templates.length"> of {{ templates.length }}</span>)
+              </div>
               <v-spacer />
-              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openTemplateDialog()">
+              <v-btn color="primary" size="small" rounded="lg" :disabled="!selectedOrgId" @click="openTemplateDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Add Class
               </v-btn>
-            </v-card-title>
+            </div>
 
             <!-- Filter Section -->
-            <v-card-text class="pb-0">
+            <div class="filter-section mb-3">
               <v-row dense>
                 <v-col cols="12" sm="4">
                   <v-text-field
                     v-model="classFilter.search"
                     label="Search classes"
                     prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
+                    variant="solo-filled"
                     density="compact"
+                    rounded="lg"
+                    flat
                     clearable
                     hide-details
                   />
@@ -124,8 +147,10 @@
                     item-title="name"
                     item-value="id"
                     label="Location"
-                    variant="outlined"
+                    variant="solo-filled"
                     density="compact"
+                    rounded="lg"
+                    flat
                     hide-details
                   />
                 </v-col>
@@ -136,17 +161,18 @@
                     item-title="user_name"
                     item-value="user_id"
                     label="Coach"
-                    variant="outlined"
+                    variant="solo-filled"
                     density="compact"
+                    rounded="lg"
+                    flat
                     hide-details
                   />
                 </v-col>
               </v-row>
-            </v-card-text>
+            </div>
 
-            <v-divider class="mt-3" />
-            <v-list v-if="filteredTemplates.length > 0" lines="three">
-              <v-list-item v-for="tmpl in filteredTemplates" :key="tmpl.id" @click="editTemplate(tmpl)">
+            <v-list v-if="filteredTemplates.length > 0" lines="three" bg-color="transparent" class="pa-0">
+              <v-list-item v-for="tmpl in filteredTemplates" :key="tmpl.id" class="list-item-card mb-2" rounded="lg" @click="editTemplate(tmpl)">
                 <template #prepend>
                   <v-avatar :color="tmpl.color || '#00bcd4'" size="40">
                     <v-icon color="white">mdi-dumbbell</v-icon>
@@ -169,7 +195,7 @@
                 </v-list-item-subtitle>
                 <template #append>
                   <div class="d-flex flex-column align-end">
-                    <v-chip :color="tmpl.is_active ? 'success' : 'grey'" size="x-small" class="mb-1">
+                    <v-chip :color="tmpl.is_active ? 'success' : 'grey'" size="x-small" class="mb-1" variant="flat" rounded="lg">
                       {{ tmpl.is_active ? 'Active' : 'Inactive' }}
                     </v-chip>
                     <div>
@@ -184,18 +210,14 @@
                 </template>
               </v-list-item>
             </v-list>
-            <v-card-text v-else-if="templates.length > 0">
-              <v-alert type="info" variant="tonal">No classes match the current filters.</v-alert>
-            </v-card-text>
-            <v-card-text v-else>
-              <v-alert type="info" variant="tonal">No class templates configured.</v-alert>
-            </v-card-text>
-          </v-card>
+            <v-alert v-else-if="templates.length > 0" type="info" variant="tonal" rounded="lg">No classes match the current filters.</v-alert>
+            <v-alert v-else type="info" variant="tonal" rounded="lg">No class templates configured.</v-alert>
+          </div>
         </v-window-item>
 
         <!-- Sessions Tab -->
         <v-window-item value="sessions">
-          <v-card elevation="0" rounded="lg" class="pa-4">
+          <div class="form-section">
             <SessionsGrid
               ref="sessionsGrid"
               :gym-id="selectedOrgId"
@@ -207,33 +229,34 @@
               @complete="completeSession"
               @updated="onSessionUpdated"
             />
-          </v-card>
+          </div>
         </v-window-item>
 
         <!-- Coaches Tab -->
         <v-window-item value="coaches">
-          <v-card elevation="0" rounded="lg">
-            <v-card-title class="d-flex align-center">
-              <v-icon class="mr-2">mdi-account-tie</v-icon>
-              Coaches per Gym ({{ coaches.length }})
+          <div class="form-section">
+            <div class="section-header d-flex align-center mb-3">
+              <div class="section-title">
+                <v-icon size="small" class="mr-2">mdi-account-tie</v-icon>
+                Coaches per Gym ({{ coaches.length }})
+              </div>
               <v-spacer />
-              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openCoachDialog()">
+              <v-btn color="primary" size="small" rounded="lg" :disabled="!selectedOrgId" @click="openCoachDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Assign Coach
               </v-btn>
-            </v-card-title>
-            <v-divider />
-            <v-list v-if="coaches.length > 0">
-              <v-list-item v-for="coach in coaches" :key="coach.id">
+            </div>
+            <v-list v-if="coaches.length > 0" bg-color="transparent" class="pa-0">
+              <v-list-item v-for="coach in coaches" :key="coach.id" class="list-item-card mb-2" rounded="lg">
                 <template #prepend>
                   <v-avatar color="primary">
                     <span class="text-caption">{{ getInitials(coach.user_name || coach.user_email) }}</span>
                   </v-avatar>
                 </template>
-                <v-list-item-title>{{ coach.user_name || 'Unknown' }}</v-list-item-title>
+                <v-list-item-title class="font-weight-medium">{{ coach.user_name || 'Unknown' }}</v-list-item-title>
                 <v-list-item-subtitle>{{ coach.user_email }}</v-list-item-subtitle>
                 <template #append>
-                  <v-chip :color="coach.is_active ? 'success' : 'grey'" size="x-small" class="mr-2">
+                  <v-chip :color="coach.is_active ? 'success' : 'grey'" size="x-small" class="mr-2" variant="flat" rounded="lg">
                     {{ coach.is_active ? 'Active' : 'Inactive' }}
                   </v-chip>
                   <v-btn icon size="small" variant="text" @click="removeCoach(coach)">
@@ -242,10 +265,8 @@
                 </template>
               </v-list-item>
             </v-list>
-            <v-card-text v-else>
-              <v-alert type="info" variant="tonal">No coaches assigned to this organization.</v-alert>
-            </v-card-text>
-          </v-card>
+            <v-alert v-else type="info" variant="tonal" rounded="lg">No coaches assigned to this organization.</v-alert>
+          </div>
         </v-window-item>
       </v-window>
     </v-container>
@@ -929,8 +950,49 @@ function getInitials(name) {
 </script>
 
 <style scoped>
-.mobile-view-wrapper {
+.scheduling-view {
   min-height: 100vh;
   padding-bottom: 70px;
+  background-color: #f5f5f5;
+}
+
+/* Page Header - matches dialog header */
+.page-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+}
+
+/* Form Sections - white cards with subtle shadow */
+.form-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Section Title */
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  display: flex;
+  align-items: center;
+}
+
+/* List item cards */
+.list-item-card {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s;
+}
+
+.list-item-card:hover {
+  background-color: #e9ecef;
+}
+
+/* Filter section background */
+.filter-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
 }
 </style>
