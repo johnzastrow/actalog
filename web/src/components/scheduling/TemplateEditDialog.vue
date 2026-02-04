@@ -12,9 +12,9 @@
             {{ template?.name || 'New Class' }}
           </div>
         </div>
-        <v-avatar :color="form.color || '#00bcd4'" size="36" class="elevation-2">
-          <v-icon color="white" size="small">mdi-dumbbell</v-icon>
-        </v-avatar>
+        <v-btn icon variant="text" color="white" @click="close">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
       </div>
 
       <!-- Tabs - Fixed -->
@@ -99,20 +99,23 @@
                   <v-icon size="small" class="mr-2">mdi-palette</v-icon>
                   Appearance
                 </div>
-                <v-text-field
+                <div class="d-flex align-center gap-3 mb-2">
+                  <div class="text-body-2 text-medium-emphasis">Class Color</div>
+                  <v-avatar :color="form.color || '#00bcd4'" size="32">
+                    <v-icon color="white" size="small">mdi-dumbbell</v-icon>
+                  </v-avatar>
+                </div>
+                <v-color-picker
                   v-model="form.color"
-                  label="Color"
-                  variant="solo-filled"
-                  density="comfortable"
+                  :swatches="colorSwatches"
+                  show-swatches
+                  hide-inputs
+                  hide-canvas
+                  swatches-max-height="120"
+                  elevation="0"
                   rounded="lg"
-                  flat
-                >
-                  <template #prepend-inner>
-                    <div
-                      :style="{ backgroundColor: form.color, width: '24px', height: '24px', borderRadius: '8px' }"
-                    ></div>
-                  </template>
-                </v-text-field>
+                  class="color-picker-compact"
+                />
               </div>
 
               <!-- Defaults Section -->
@@ -379,6 +382,14 @@ const { mobile: isMobile } = useDisplay()
 const activeTab = ref('details')
 const saving = ref(false)
 const loadingPreview = ref(false)
+
+// Color swatches for picker
+const colorSwatches = [
+  ['#00bcd4', '#03a9f4', '#2196f3', '#3f51b5', '#673ab7'],
+  ['#9c27b0', '#e91e63', '#f44336', '#ff5722', '#ff9800'],
+  ['#ffc107', '#cddc39', '#8bc34a', '#4caf50', '#009688'],
+  ['#795548', '#607d8b', '#9e9e9e', '#455a64', '#263238']
+]
 
 // Form state
 const form = ref({
@@ -826,11 +837,41 @@ async function save() {
 
     console.log('[TemplateEditDialog] Emitting saved event')
     emit('saved')
-    close()
+
+    // Reload data from database to refresh the form
+    await reloadTemplateData(templateId)
   } catch (err) {
     console.error('Failed to save template:', err)
   } finally {
     saving.value = false
+  }
+}
+
+async function reloadTemplateData(templateId) {
+  try {
+    // Fetch the updated template from the database
+    const response = await axios.get(`/api/admin/scheduling/templates/${templateId}`)
+    const template = response.data
+
+    // Update form with fresh data
+    form.value = {
+      name: template.name || '',
+      description: template.description || '',
+      duration_minutes: template.duration_minutes || 60,
+      default_capacity: template.default_capacity || 20,
+      color: template.color || '#00bcd4',
+      workout_id: template.workout_id || null,
+      default_location_id: template.default_location_id || null,
+      is_active: template.is_active !== false
+    }
+
+    // Reload slots and coaches
+    await Promise.all([
+      loadSlots(templateId),
+      loadCoaches(templateId)
+    ])
+  } catch (err) {
+    console.error('Failed to reload template data:', err)
   }
 }
 
@@ -900,5 +941,15 @@ function onSessionCancel(session) {
 
 .slot-content {
   padding: 16px;
+}
+
+/* Compact Color Picker */
+.color-picker-compact {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.color-picker-compact :deep(.v-color-picker-swatches) {
+  max-height: none !important;
 }
 </style>
