@@ -1,132 +1,175 @@
 <template>
   <v-dialog v-model="dialogOpen" max-width="900">
-    <v-card class="d-flex flex-column" style="max-height: 90vh;">
+    <v-card class="d-flex flex-column template-edit-dialog" style="max-height: 90vh;">
       <!-- Header - Fixed -->
-      <v-card-title class="d-flex align-center pa-4 flex-shrink-0">
+      <div class="dialog-header pa-4 d-flex align-center">
         <v-btn icon variant="text" class="mr-2" @click="close">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
-        <div>
-          <div class="text-h6">{{ isEditing ? 'Edit Class' : 'Create Class' }}</div>
+        <div class="flex-grow-1">
+          <div class="text-h6 font-weight-bold">{{ isEditing ? 'Edit Class' : 'Create Class' }}</div>
           <div class="text-caption text-medium-emphasis">
             {{ template?.name || 'New Class' }}
           </div>
         </div>
-        <v-spacer />
-        <v-avatar :color="form.color || '#00bcd4'" size="32">
+        <v-avatar :color="form.color || '#00bcd4'" size="36" class="elevation-2">
           <v-icon color="white" size="small">mdi-dumbbell</v-icon>
         </v-avatar>
-      </v-card-title>
-
-      <v-divider class="flex-shrink-0" />
+      </div>
 
       <!-- Tabs - Fixed -->
-      <v-tabs v-model="activeTab" bg-color="surface" class="flex-shrink-0">
-        <v-tab value="details">Details</v-tab>
-        <v-tab value="schedule">Schedule</v-tab>
-        <v-tab value="preview">Preview</v-tab>
+      <v-tabs v-model="activeTab" bg-color="grey-lighten-4" class="flex-shrink-0 px-2" slider-color="primary">
+        <v-tab value="details" class="text-none">
+          <v-icon start size="small">mdi-text-box</v-icon>
+          Details
+        </v-tab>
+        <v-tab value="schedule" class="text-none">
+          <v-icon start size="small">mdi-calendar-clock</v-icon>
+          Schedule
+        </v-tab>
+        <v-tab value="preview" class="text-none">
+          <v-icon start size="small">mdi-calendar-month</v-icon>
+          Preview
+        </v-tab>
       </v-tabs>
 
-      <v-divider class="flex-shrink-0" />
-
       <!-- Scrollable Content -->
-      <v-card-text class="pa-0 flex-grow-1 overflow-y-auto">
+      <v-card-text class="pa-0 flex-grow-1 overflow-y-auto bg-grey-lighten-4">
         <v-window v-model="activeTab">
           <!-- Details Tab -->
           <v-window-item value="details">
             <div class="pa-4">
-              <v-text-field
-                v-model="form.name"
-                label="Class Name"
-                variant="outlined"
-                density="comfortable"
-                required
-                class="mb-3"
-              />
-
-              <v-textarea
-                v-model="form.description"
-                label="Description"
-                variant="outlined"
-                density="comfortable"
-                rows="2"
-                class="mb-3"
-              />
-
-              <div class="d-flex gap-3 mb-3">
+              <!-- Basic Info Section -->
+              <div class="form-section mb-4">
+                <div class="section-title">
+                  <v-icon size="small" class="mr-2">mdi-information</v-icon>
+                  Basic Information
+                </div>
                 <v-text-field
-                  v-model.number="form.duration_minutes"
-                  label="Duration (minutes)"
-                  type="number"
-                  variant="outlined"
+                  v-model="form.name"
+                  label="Class Name"
+                  variant="solo-filled"
                   density="comfortable"
-                  style="flex: 1"
+                  rounded="lg"
+                  flat
+                  required
+                  class="mb-3"
                 />
-                <v-text-field
-                  v-model.number="form.default_capacity"
-                  label="Default Capacity"
-                  type="number"
-                  variant="outlined"
+
+                <v-textarea
+                  v-model="form.description"
+                  label="Description"
+                  variant="solo-filled"
                   density="comfortable"
-                  style="flex: 1"
+                  rounded="lg"
+                  flat
+                  rows="2"
+                  class="mb-3"
+                />
+
+                <v-row dense>
+                  <v-col cols="6">
+                    <v-text-field
+                      v-model.number="form.duration_minutes"
+                      label="Duration (minutes)"
+                      type="number"
+                      variant="solo-filled"
+                      density="comfortable"
+                      rounded="lg"
+                      flat
+                    />
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      v-model.number="form.default_capacity"
+                      label="Default Capacity"
+                      type="number"
+                      variant="solo-filled"
+                      density="comfortable"
+                      rounded="lg"
+                      flat
+                    />
+                  </v-col>
+                </v-row>
+              </div>
+
+              <!-- Appearance Section -->
+              <div class="form-section mb-4">
+                <div class="section-title">
+                  <v-icon size="small" class="mr-2">mdi-palette</v-icon>
+                  Appearance
+                </div>
+                <v-text-field
+                  v-model="form.color"
+                  label="Color"
+                  variant="solo-filled"
+                  density="comfortable"
+                  rounded="lg"
+                  flat
+                >
+                  <template #prepend-inner>
+                    <div
+                      :style="{ backgroundColor: form.color, width: '24px', height: '24px', borderRadius: '8px' }"
+                    ></div>
+                  </template>
+                </v-text-field>
+              </div>
+
+              <!-- Defaults Section -->
+              <div class="form-section mb-4">
+                <div class="section-title">
+                  <v-icon size="small" class="mr-2">mdi-cog</v-icon>
+                  Default Settings
+                </div>
+                <v-select
+                  v-model="form.workout_id"
+                  :items="workouts"
+                  item-title="name"
+                  item-value="id"
+                  label="Default Workout (optional)"
+                  variant="solo-filled"
+                  density="comfortable"
+                  rounded="lg"
+                  flat
+                  clearable
+                  class="mb-3"
+                />
+
+                <v-select
+                  v-model="form.default_location_id"
+                  :items="locations"
+                  item-title="name"
+                  item-value="id"
+                  label="Default Location (optional)"
+                  variant="solo-filled"
+                  density="comfortable"
+                  rounded="lg"
+                  flat
+                  clearable
                 />
               </div>
 
-              <v-text-field
-                v-model="form.color"
-                label="Color"
-                variant="outlined"
-                density="comfortable"
-                class="mb-3"
-              >
-                <template #prepend-inner>
-                  <div
-                    :style="{ backgroundColor: form.color, width: '24px', height: '24px', borderRadius: '4px' }"
-                  ></div>
-                </template>
-              </v-text-field>
-
-              <v-select
-                v-model="form.workout_id"
-                :items="workouts"
-                item-title="name"
-                item-value="id"
-                label="Default Workout (optional)"
-                variant="outlined"
-                density="comfortable"
-                clearable
-                class="mb-3"
-              />
-
-              <v-select
-                v-model="form.default_location_id"
-                :items="locations"
-                item-title="name"
-                item-value="id"
-                label="Default Location (optional)"
-                variant="outlined"
-                density="comfortable"
-                clearable
-                class="mb-3"
-              />
-
-              <!-- Default Coaches Section -->
-              <div class="mb-4">
-                <div class="text-subtitle-2 mb-2">Default Coaches</div>
+              <!-- Coaches Section -->
+              <div class="form-section mb-4">
+                <div class="section-title">
+                  <v-icon size="small" class="mr-2">mdi-account-tie</v-icon>
+                  Default Coaches
+                </div>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                   <v-chip
                     v-for="coach in defaultCoaches"
                     :key="coach.user_id"
                     closable
-                    :color="coach.is_lead ? 'primary' : 'default'"
-                    variant="outlined"
+                    :color="coach.is_lead ? 'primary' : 'grey-lighten-1'"
+                    :variant="coach.is_lead ? 'flat' : 'flat'"
+                    rounded="lg"
                     @click:close="removeCoach(coach.user_id)"
                     @click="toggleLeadCoach(coach.user_id)"
                   >
                     <v-icon v-if="coach.is_lead" start size="small">mdi-star</v-icon>
                     {{ coach.user_name || coach.user_email }}
                   </v-chip>
-                  <v-chip v-if="defaultCoaches.length === 0" variant="text" size="small" class="text-medium-emphasis">
+                  <v-chip v-if="defaultCoaches.length === 0" variant="tonal" color="grey" size="small" rounded="lg">
                     No coaches assigned
                   </v-chip>
                 </div>
@@ -138,8 +181,10 @@
                   item-title="displayName"
                   item-value="id"
                   label="Add Coach"
-                  variant="outlined"
-                  density="compact"
+                  variant="solo-filled"
+                  density="comfortable"
+                  rounded="lg"
+                  flat
                   clearable
                   no-filter
                   placeholder="Search by name or email..."
@@ -157,12 +202,20 @@
                 </div>
               </div>
 
-              <v-switch
-                v-if="isEditing"
-                v-model="form.is_active"
-                label="Active"
-                color="primary"
-              />
+              <!-- Status Section -->
+              <div v-if="isEditing" class="form-section">
+                <div class="section-title">
+                  <v-icon size="small" class="mr-2">mdi-toggle-switch</v-icon>
+                  Status
+                </div>
+                <v-switch
+                  v-model="form.is_active"
+                  label="Active"
+                  color="primary"
+                  hide-details
+                  inset
+                />
+              </div>
             </div>
           </v-window-item>
 
@@ -170,21 +223,22 @@
           <v-window-item value="schedule">
             <div class="pa-4">
               <div class="d-flex align-center justify-space-between mb-4">
-                <div class="text-subtitle-1">Schedule Slots</div>
-                <v-btn color="primary" size="small" @click="addSlot">
+                <div class="text-subtitle-1 font-weight-medium">Schedule Slots</div>
+                <v-btn color="primary" size="small" rounded="lg" @click="addSlot">
                   <v-icon start>mdi-plus</v-icon>
                   Add Slot
                 </v-btn>
               </div>
 
-              <v-alert v-if="slots.length === 0" type="info" variant="tonal">
+              <v-alert v-if="slots.length === 0" type="info" variant="tonal" rounded="lg">
                 No schedule slots configured. Add a slot to define when classes occur.
               </v-alert>
 
               <div v-for="(slot, index) in slots" :key="slot.id || index" class="mb-4">
-                <v-card variant="outlined">
-                  <v-card-title class="d-flex align-center py-2 px-4">
-                    <span class="text-body-2">Slot {{ index + 1 }}</span>
+                <div class="slot-card">
+                  <div class="slot-header d-flex align-center">
+                    <v-icon size="small" class="mr-2">mdi-clock-outline</v-icon>
+                    <span class="text-body-2 font-weight-medium">Slot {{ index + 1 }}</span>
                     <v-spacer />
                     <v-btn
                       icon
@@ -195,9 +249,8 @@
                     >
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
-                  </v-card-title>
-                  <v-divider />
-                  <v-card-text>
+                  </div>
+                  <div class="slot-content">
                     <RecurrencePatternEditor
                       :model-value="slots[index]"
                       @update:model-value="onSlotUpdate(index, $event)"
@@ -207,12 +260,14 @@
                       v-model.number="slots[index].override_capacity"
                       label="Capacity Override (optional)"
                       type="number"
-                      variant="outlined"
-                      density="compact"
+                      variant="solo-filled"
+                      density="comfortable"
+                      rounded="lg"
+                      flat
                       class="mt-4"
                     />
-                  </v-card-text>
-                </v-card>
+                  </div>
+                </div>
               </div>
             </div>
           </v-window-item>
@@ -224,6 +279,7 @@
                 color="primary"
                 variant="tonal"
                 class="mb-4"
+                rounded="lg"
                 :loading="loadingPreview"
                 @click="loadPreview"
               >
@@ -243,19 +299,20 @@
         </v-window>
       </v-card-text>
 
-      <v-divider class="flex-shrink-0" />
-
-      <v-card-actions class="pa-4 flex-shrink-0">
-        <v-btn variant="text" @click="close">Cancel</v-btn>
+      <!-- Footer -->
+      <div class="dialog-footer pa-4 d-flex align-center">
+        <v-btn variant="text" rounded="lg" @click="close">Cancel</v-btn>
         <v-spacer />
         <v-btn
           color="primary"
+          rounded="lg"
           :loading="saving"
           @click="save"
         >
+          <v-icon start>mdi-content-save</v-icon>
           {{ isEditing ? 'Save Changes' : 'Create Class' }}
         </v-btn>
-      </v-card-actions>
+      </div>
     </v-card>
 
     <!-- Session Edit Dialog -->
@@ -771,5 +828,56 @@ function onSessionCancel(session) {
 }
 .gap-3 {
   gap: 12px;
+}
+
+/* Modern Dialog Styling */
+.template-edit-dialog {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.dialog-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+}
+
+.dialog-footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Form Sections */
+.form-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+/* Schedule Slot Cards */
+.slot-card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.slot-header {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.slot-content {
+  padding: 16px;
 }
 </style>

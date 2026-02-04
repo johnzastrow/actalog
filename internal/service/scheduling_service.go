@@ -223,8 +223,29 @@ func (s *SchedulingService) GetTemplateByID(id int64) (*domain.ClassTemplate, er
 }
 
 // GetTemplatesByOrganization retrieves all class templates for an organization
+// Includes schedule slots and default coaches for each template
 func (s *SchedulingService) GetTemplatesByOrganization(orgID int64, includeInactive bool) ([]*domain.ClassTemplate, error) {
-	return s.templateRepo.GetByOrganizationID(orgID, includeInactive)
+	templates, err := s.templateRepo.GetByOrganizationID(orgID, includeInactive)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch schedule slots and coaches for each template
+	for _, template := range templates {
+		// Get schedule slots
+		slots, err := s.slotRepo.GetByTemplateID(template.ID, false) // Only active slots
+		if err == nil {
+			template.ScheduleSlots = slots
+		}
+
+		// Get default coaches
+		coaches, err := s.templateCoachRepo.GetByTemplateID(template.ID)
+		if err == nil {
+			template.DefaultCoaches = coaches
+		}
+	}
+
+	return templates, nil
 }
 
 // UpdateTemplate updates a class template

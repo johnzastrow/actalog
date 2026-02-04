@@ -95,40 +95,98 @@
           <v-card elevation="0" rounded="lg">
             <v-card-title class="d-flex align-center">
               <v-icon class="mr-2">mdi-clipboard-list</v-icon>
-              Classes ({{ templates.length }})
+              Classes ({{ filteredTemplates.length }}<span v-if="filteredTemplates.length !== templates.length"> of {{ templates.length }}</span>)
               <v-spacer />
               <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openTemplateDialog()">
                 <v-icon start>mdi-plus</v-icon>
                 Add Class
               </v-btn>
             </v-card-title>
-            <v-divider />
-            <v-list v-if="templates.length > 0">
-              <v-list-item v-for="tmpl in templates" :key="tmpl.id" @click="editTemplate(tmpl)">
+
+            <!-- Filter Section -->
+            <v-card-text class="pb-0">
+              <v-row dense>
+                <v-col cols="12" sm="4">
+                  <v-text-field
+                    v-model="classFilter.search"
+                    label="Search classes"
+                    prepend-inner-icon="mdi-magnify"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="6" sm="4">
+                  <v-select
+                    v-model="classFilter.locationId"
+                    :items="[{ id: null, name: 'All Locations' }, ...locations]"
+                    item-title="name"
+                    item-value="id"
+                    label="Location"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="6" sm="4">
+                  <v-select
+                    v-model="classFilter.coachId"
+                    :items="[{ user_id: null, user_name: 'All Coaches' }, ...coaches.map(c => ({ user_id: c.user_id, user_name: c.user_name || c.user_email }))]"
+                    item-title="user_name"
+                    item-value="user_id"
+                    label="Coach"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+
+            <v-divider class="mt-3" />
+            <v-list v-if="filteredTemplates.length > 0" lines="three">
+              <v-list-item v-for="tmpl in filteredTemplates" :key="tmpl.id" @click="editTemplate(tmpl)">
                 <template #prepend>
                   <v-avatar :color="tmpl.color || '#00bcd4'" size="40">
                     <v-icon color="white">mdi-dumbbell</v-icon>
                   </v-avatar>
                 </template>
-                <v-list-item-title>{{ tmpl.name }}</v-list-item-title>
+                <v-list-item-title class="font-weight-medium">{{ tmpl.name }}</v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ tmpl.duration_minutes }} min | Capacity: {{ tmpl.default_capacity }}
-                  <span v-if="tmpl.workout_name"> | Workout: {{ tmpl.workout_name }}</span>
-                  <span v-if="tmpl.schedule_slots && tmpl.schedule_slots.length"> | {{ tmpl.schedule_slots.length }} slot(s)</span>
+                  <div>
+                    {{ tmpl.duration_minutes }} min | Capacity: {{ tmpl.default_capacity }}
+                    <span v-if="tmpl.default_location_name"> | <v-icon size="x-small">mdi-map-marker</v-icon> {{ tmpl.default_location_name }}</span>
+                  </div>
+                  <div v-if="tmpl.default_coaches && tmpl.default_coaches.length" class="mt-1">
+                    <v-icon size="x-small">mdi-account-tie</v-icon>
+                    {{ tmpl.default_coaches.map(c => c.user_name || c.user_email).join(', ') }}
+                  </div>
+                  <div v-if="tmpl.schedule_slots && tmpl.schedule_slots.length" class="mt-1">
+                    <v-icon size="x-small">mdi-calendar-clock</v-icon>
+                    {{ getScheduleSummary(tmpl.schedule_slots) }}
+                  </div>
                 </v-list-item-subtitle>
                 <template #append>
-                  <v-chip :color="tmpl.is_active ? 'success' : 'grey'" size="x-small" class="mr-2">
-                    {{ tmpl.is_active ? 'Active' : 'Inactive' }}
-                  </v-chip>
-                  <v-btn icon size="small" variant="text" @click.stop="editTemplate(tmpl)">
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
-                  <v-btn icon size="small" variant="text" @click.stop="deleteTemplate(tmpl)">
-                    <v-icon color="error">mdi-delete</v-icon>
-                  </v-btn>
+                  <div class="d-flex flex-column align-end">
+                    <v-chip :color="tmpl.is_active ? 'success' : 'grey'" size="x-small" class="mb-1">
+                      {{ tmpl.is_active ? 'Active' : 'Inactive' }}
+                    </v-chip>
+                    <div>
+                      <v-btn icon size="small" variant="text" @click.stop="editTemplate(tmpl)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" variant="text" @click.stop="deleteTemplate(tmpl)">
+                        <v-icon color="error">mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </div>
                 </template>
               </v-list-item>
             </v-list>
+            <v-card-text v-else-if="templates.length > 0">
+              <v-alert type="info" variant="tonal">No classes match the current filters.</v-alert>
+            </v-card-text>
             <v-card-text v-else>
               <v-alert type="info" variant="tonal">No class templates configured.</v-alert>
             </v-card-text>
@@ -362,7 +420,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import TemplateEditDialog from '@/components/scheduling/TemplateEditDialog.vue'
 import SessionsGrid from '@/components/scheduling/SessionsGrid.vue'
@@ -392,6 +450,63 @@ const sessions = ref([])
 const coaches = ref([])
 const roster = ref([])
 const workouts = ref([])
+
+// Class filter state
+const classFilter = ref({
+  search: '',
+  locationId: null,
+  coachId: null
+})
+
+// Filtered templates computed
+const filteredTemplates = computed(() => {
+  let result = templates.value
+
+  // Text search
+  if (classFilter.value.search) {
+    const search = classFilter.value.search.toLowerCase()
+    result = result.filter(t =>
+      t.name.toLowerCase().includes(search) ||
+      (t.description && t.description.toLowerCase().includes(search)) ||
+      (t.default_location_name && t.default_location_name.toLowerCase().includes(search))
+    )
+  }
+
+  // Location filter
+  if (classFilter.value.locationId) {
+    result = result.filter(t => t.default_location_id === classFilter.value.locationId)
+  }
+
+  // Coach filter
+  if (classFilter.value.coachId) {
+    result = result.filter(t =>
+      t.default_coaches && t.default_coaches.some(c => c.user_id === classFilter.value.coachId)
+    )
+  }
+
+  return result
+})
+
+// Generate schedule summary text
+function getScheduleSummary(slots) {
+  if (!slots || slots.length === 0) return 'No schedule'
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const summaries = []
+
+  for (const slot of slots) {
+    // Get days from either days_of_week array or single day_of_week
+    const days = slot.days_of_week && slot.days_of_week.length > 0
+      ? slot.days_of_week
+      : [slot.day_of_week]
+
+    const dayStr = days.map(d => dayNames[d]).join('/')
+    const time = slot.start_time ? slot.start_time.substring(0, 5) : '??:??'
+    summaries.push(`${dayStr} @ ${time}`)
+  }
+
+  return summaries.join(', ')
+}
 
 const startDate = ref(new Date())
 const endDate = ref(new Date())
