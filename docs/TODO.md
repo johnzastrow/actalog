@@ -412,6 +412,10 @@ These features can be added after the core frontend is complete:
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
 - [ ] `[LOW]` **Data Visualization** - Charts for PR progression
 - [ ] `[LOW]` **Social Features** - Share workouts (opt-in)
+- [ ] `[LOW]` **UI Styling Consistency** - Assess styling throughout the app and ensure all screens/dialogs use consistent patterns (colors, spacing, typography, component styling)
+
+#### Technical Debt
+- [ ] `[LOW]` **Multiple Save Issue** - TemplateEditDialog save() is being called 3x instead of 1x; investigate root cause (possibly related to Vue reactivity with Schedule tab slots)
 
 ---
 
