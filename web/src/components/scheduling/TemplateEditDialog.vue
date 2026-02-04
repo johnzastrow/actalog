@@ -3,12 +3,12 @@
     <v-card class="d-flex flex-column template-edit-dialog" style="max-height: 90vh;">
       <!-- Header - Fixed -->
       <div class="dialog-header pa-4 d-flex align-center">
-        <v-btn icon variant="text" class="mr-2" @click="close">
+        <v-btn icon variant="text" color="white" class="mr-2" @click="close">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div class="flex-grow-1">
-          <div class="text-h6 font-weight-bold">{{ isEditing ? 'Edit Class' : 'Create Class' }}</div>
-          <div class="text-caption text-medium-emphasis">
+          <div class="text-h6 font-weight-bold text-white">{{ isEditing ? 'Edit Class' : 'Create Class' }}</div>
+          <div class="text-caption text-white" style="opacity: 0.8;">
             {{ template?.name || 'New Class' }}
           </div>
         </div>
@@ -804,6 +804,7 @@ async function save() {
       }
     }
 
+    console.log('[TemplateEditDialog] Emitting saved event')
     emit('saved')
     close()
   } catch (err) {

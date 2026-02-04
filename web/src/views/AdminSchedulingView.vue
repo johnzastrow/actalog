@@ -678,6 +678,7 @@ function editTemplate(tmpl) {
 }
 
 function onTemplateSaved() {
+  console.log('[AdminSchedulingView] onTemplateSaved called')
   showSnackbar('Class saved successfully', 'success')
   fetchTemplates()
 }

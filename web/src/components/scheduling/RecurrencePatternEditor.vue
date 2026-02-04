@@ -1,6 +1,9 @@
 <template>
-  <v-card variant="outlined" class="pa-4">
-    <div class="text-subtitle-2 mb-3">Recurrence Pattern</div>
+  <div class="recurrence-editor">
+    <div class="section-label mb-3">
+      <v-icon size="small" class="mr-2">mdi-repeat</v-icon>
+      Recurrence Pattern
+    </div>
 
     <!-- Frequency -->
     <div class="d-flex align-center gap-3 mb-4">
@@ -11,7 +14,9 @@
         min="1"
         max="12"
         density="compact"
-        variant="outlined"
+        variant="solo-filled"
+        rounded="lg"
+        flat
         hide-details
         style="max-width: 80px"
       />
@@ -19,7 +24,8 @@
       <v-chip
         :color="interval === 1 ? 'primary' : 'secondary'"
         size="small"
-        variant="tonal"
+        variant="flat"
+        rounded="lg"
       >
         {{ interval === 1 ? 'Weekly' : interval === 2 ? 'Bi-weekly' : `Every ${interval} weeks` }}
       </v-chip>
@@ -40,7 +46,9 @@
       label="Start Time"
       type="time"
       density="compact"
-      variant="outlined"
+      variant="solo-filled"
+      rounded="lg"
+      flat
       class="mb-4"
       hide-details
     />
@@ -51,7 +59,9 @@
       label="Start Date (optional)"
       type="date"
       density="compact"
-      variant="outlined"
+      variant="solo-filled"
+      rounded="lg"
+      flat
       class="mb-4"
       hide-details
       hint="When this schedule takes effect"
@@ -71,7 +81,9 @@
               min="1"
               max="100"
               density="compact"
-              variant="outlined"
+              variant="solo-filled"
+              rounded="lg"
+              flat
               hide-details
               :disabled="endType !== 'count'"
               style="max-width: 80px"
@@ -88,7 +100,9 @@
               v-model="endDate"
               type="date"
               density="compact"
-              variant="outlined"
+              variant="solo-filled"
+              rounded="lg"
+              flat
               hide-details
               :disabled="endType !== 'date'"
               style="max-width: 160px"
@@ -99,10 +113,10 @@
     </v-radio-group>
 
     <!-- Summary Text -->
-    <v-alert type="info" variant="tonal" density="compact" class="mt-4">
+    <v-alert type="info" variant="tonal" density="compact" class="mt-4" rounded="lg">
       <div class="text-body-2">{{ summaryText }}</div>
     </v-alert>
-  </v-card>
+  </div>
 </template>
 
 <script setup>
@@ -254,5 +268,17 @@ watch(() => props.modelValue, (newVal) => {
 }
 .gap-3 {
   gap: 12px;
+}
+.recurrence-editor {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+}
+.section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  display: flex;
+  align-items: center;
 }
 </style>
