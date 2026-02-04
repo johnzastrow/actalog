@@ -45,7 +45,7 @@
       <!-- Tabs -->
       <v-tabs v-model="activeTab" class="mb-4">
         <v-tab value="locations">Locations</v-tab>
-        <v-tab value="templates">Templates</v-tab>
+        <v-tab value="templates">Classes</v-tab>
         <v-tab value="sessions">Sessions</v-tab>
         <v-tab value="coaches">Coaches</v-tab>
       </v-tabs>
@@ -90,16 +90,16 @@
           </v-card>
         </v-window-item>
 
-        <!-- Templates Tab -->
+        <!-- Classes Tab -->
         <v-window-item value="templates">
           <v-card elevation="0" rounded="lg">
             <v-card-title class="d-flex align-center">
               <v-icon class="mr-2">mdi-clipboard-list</v-icon>
-              Class Templates ({{ templates.length }})
+              Classes ({{ templates.length }})
               <v-spacer />
               <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openTemplateDialog()">
                 <v-icon start>mdi-plus</v-icon>
-                Add Template
+                Add Class
               </v-btn>
             </v-card-title>
             <v-divider />
@@ -550,18 +550,18 @@ function editTemplate(tmpl) {
 }
 
 function onTemplateSaved() {
-  successMessage.value = 'Template saved successfully'
+  successMessage.value = 'Class saved successfully'
   fetchTemplates()
 }
 
 async function deleteTemplate(tmpl) {
-  if (!confirm(`Delete template "${tmpl.name}"?`)) return
+  if (!confirm(`Delete class "${tmpl.name}"?`)) return
   try {
     await axios.delete(`/api/admin/scheduling/templates/${tmpl.id}`)
-    successMessage.value = 'Template deleted'
+    successMessage.value = 'Class deleted'
     fetchTemplates()
   } catch (err) {
-    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to delete template'
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to delete class'
   }
 }
 

@@ -7,9 +7,9 @@
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
-          <div class="text-h6">{{ isEditing ? 'Edit Template' : 'Create Template' }}</div>
+          <div class="text-h6">{{ isEditing ? 'Edit Class' : 'Create Class' }}</div>
           <div class="text-caption text-medium-emphasis">
-            {{ template?.name || 'New Template' }}
+            {{ template?.name || 'New Class' }}
           </div>
         </div>
         <v-spacer />
@@ -37,7 +37,7 @@
             <div class="pa-4">
               <v-text-field
                 v-model="form.name"
-                label="Template Name"
+                label="Class Name"
                 variant="outlined"
                 density="comfortable"
                 required
@@ -205,7 +205,7 @@
           :loading="saving"
           @click="save"
         >
-          {{ isEditing ? 'Save Changes' : 'Create Template' }}
+          {{ isEditing ? 'Save Changes' : 'Create Class' }}
         </v-btn>
       </v-card-actions>
     </v-card>
