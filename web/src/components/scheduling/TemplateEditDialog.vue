@@ -203,25 +203,13 @@
                       @update:model-value="onSlotUpdate(index, $event)"
                     />
 
-                    <v-select
-                      v-model="slots[index].location_id"
-                      :items="locations"
-                      item-title="name"
-                      item-value="id"
-                      label="Location (optional)"
-                      variant="outlined"
-                      density="compact"
-                      clearable
-                      class="mt-4"
-                    />
-
                     <v-text-field
                       v-model.number="slots[index].override_capacity"
                       label="Capacity Override (optional)"
                       type="number"
                       variant="outlined"
                       density="compact"
-                      class="mt-3"
+                      class="mt-4"
                     />
                   </v-card-text>
                 </v-card>

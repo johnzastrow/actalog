@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -950,39 +951,68 @@ func (s *SchedulingService) PreviewScheduleDates(templateID int64, months int) (
 			recurrenceInterval = 1
 		}
 
-		// Track occurrence count
+		// Get list of days to generate sessions for
+		// Use DaysOfWeek array if available, otherwise fall back to single DayOfWeek
+		daysOfWeek := slot.DaysOfWeek
+		if len(daysOfWeek) == 0 {
+			daysOfWeek = []int{slot.DayOfWeek}
+		}
+
+		// Track occurrence count (total across all days)
 		occurrenceCount := 0
 
-		// Iterate through dates
-		date := effectiveStart
-		for !date.After(effectiveEnd) {
-			// Check if this day matches the slot's day of week
-			if int(date.Weekday()) != slot.DayOfWeek {
-				date = date.AddDate(0, 0, 1)
-				continue
+		// Find the start of the week containing effectiveStart (Sunday)
+		weekStart := effectiveStart
+		for weekStart.Weekday() != time.Sunday {
+			weekStart = weekStart.AddDate(0, 0, -1)
+		}
+
+		// Iterate through weeks
+		for !weekStart.After(effectiveEnd) {
+			// For each day of week in the slot
+			for _, dayOfWeek := range daysOfWeek {
+				// Calculate the date for this day of week in the current week
+				date := weekStart.AddDate(0, 0, dayOfWeek)
+
+				// Skip if before effective start or after effective end
+				if date.Before(effectiveStart) || date.After(effectiveEnd) {
+					continue
+				}
+
+				// Build the session start time
+				sessionStart := time.Date(
+					date.Year(), date.Month(), date.Day(),
+					slotTime.Hour(), slotTime.Minute(), 0, 0,
+					time.Local,
+				)
+
+				// Check occurrence count limit
+				if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
+					if occurrenceCount >= *slot.RecurrenceEndCount {
+						break
+					}
+				}
+
+				dates = append(dates, sessionStart)
+				occurrenceCount++
 			}
 
-			// Build the session start time
-			sessionStart := time.Date(
-				date.Year(), date.Month(), date.Day(),
-				slotTime.Hour(), slotTime.Minute(), 0, 0,
-				time.Local,
-			)
-
-			// Check occurrence count limit
+			// Check if we've hit the occurrence limit
 			if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
 				if occurrenceCount >= *slot.RecurrenceEndCount {
 					break
 				}
 			}
 
-			dates = append(dates, sessionStart)
-			occurrenceCount++
-
-			// Move to next occurrence
-			date = date.AddDate(0, 0, 7*recurrenceInterval)
+			// Move to next week (respecting recurrence interval)
+			weekStart = weekStart.AddDate(0, 0, 7*recurrenceInterval)
 		}
 	}
+
+	// Sort dates chronologically
+	sort.Slice(dates, func(i, j int) bool {
+		return dates[i].Before(dates[j])
+	})
 
 	return dates, nil
 }
