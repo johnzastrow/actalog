@@ -325,6 +325,20 @@
       @cancel="onSessionCancel"
     />
   </v-dialog>
+
+  <!-- Success Snackbar (outside dialog so it persists after close) -->
+  <v-snackbar
+    v-model="showSuccessSnackbar"
+    color="success"
+    :timeout="3000"
+    location="bottom"
+  >
+    <v-icon class="mr-2">mdi-check-circle</v-icon>
+    Class saved successfully
+    <template #actions>
+      <v-btn variant="text" @click="showSuccessSnackbar = false">Close</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <script setup>
@@ -396,6 +410,9 @@ const previewDates = ref([])
 // Session edit
 const sessionEditOpen = ref(false)
 const selectedSession = ref(null)
+
+// Success snackbar
+const showSuccessSnackbar = ref(false)
 
 const dialogOpen = computed({
   get: () => props.modelValue,
@@ -803,6 +820,9 @@ async function save() {
         }
       }
     }
+
+    // Show success snackbar
+    showSuccessSnackbar.value = true
 
     console.log('[TemplateEditDialog] Emitting saved event')
     emit('saved')

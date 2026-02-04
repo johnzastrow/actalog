@@ -126,6 +126,10 @@ const (
 	EventCoachAssigned   = "coach_assigned"
 	EventCoachUnassigned = "coach_unassigned"
 
+	// Class Scheduling Events - Template Coaches
+	EventTemplateCoachAdded   = "template_coach_added"
+	EventTemplateCoachRemoved = "template_coach_removed"
+
 	// Class Scheduling Events - Reservations
 	EventReservationCreated   = "reservation_created"
 	EventReservationCancelled = "reservation_cancelled"
