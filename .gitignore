@@ -79,6 +79,7 @@ node_modules/
 .yarn
 .pnpm-debug.log
 web/dist/
+web/dev-dist/
 web/.nuxt/
 web/.output/
 web/.cache/
