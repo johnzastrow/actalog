@@ -378,6 +378,10 @@ const props = defineProps({
   workouts: {
     type: Array,
     default: () => []
+  },
+  coaches: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -534,25 +538,27 @@ async function loadCoaches(templateId) {
   }
 }
 
-async function searchCoaches(search) {
+function searchCoaches(search) {
   searchingCoaches.value = true
   try {
-    const response = await axios.get('/api/admin/user-management/filter', {
-      params: { q: search }
-    })
-    // Filter out already assigned coaches
+    const searchLower = search.toLowerCase()
+    // Filter from coaches prop (coaches assigned to this gym)
     const assignedIds = new Set(defaultCoaches.value.map(c => c.user_id))
-    coachSearchResults.value = (response.data.users || [])
-      .filter(u => !assignedIds.has(u.id))
-      .map(u => ({
-        id: u.id,
-        email: u.email,
-        name: u.name || '',
-        displayName: u.name ? `${u.name} (${u.email})` : u.email
+    coachSearchResults.value = (props.coaches || [])
+      .filter(c => {
+        // Exclude already assigned coaches
+        if (assignedIds.has(c.user_id)) return false
+        // Match on name or email
+        const name = (c.user_name || '').toLowerCase()
+        const email = (c.user_email || '').toLowerCase()
+        return name.includes(searchLower) || email.includes(searchLower)
+      })
+      .map(c => ({
+        id: c.user_id,
+        email: c.user_email,
+        name: c.user_name || '',
+        displayName: c.user_name ? `${c.user_name} (${c.user_email})` : c.user_email
       }))
-  } catch (err) {
-    console.error('Failed to search coaches:', err)
-    coachSearchResults.value = []
   } finally {
     searchingCoaches.value = false
   }

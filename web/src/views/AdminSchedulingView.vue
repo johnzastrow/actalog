@@ -297,6 +297,7 @@
       :gym-id="selectedOrgId"
       :locations="locations"
       :workouts="workouts"
+      :coaches="coaches"
       @saved="onTemplateSaved"
     />
 
