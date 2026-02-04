@@ -114,13 +114,13 @@
 
     <!-- Summary Text -->
     <v-alert type="info" variant="tonal" density="compact" class="mt-4" rounded="lg">
-      <div class="text-body-2">{{ summaryText }}</div>
+      <div class="text-body-2">{{ summaryTextValue }}</div>
     </v-alert>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, watchEffect } from 'vue'
 import DayOfWeekSelector from './DayOfWeekSelector.vue'
 
 const props = defineProps({
@@ -157,12 +157,12 @@ const endDate = ref(props.modelValue.recurrence_end_date ?? '')
 const effectiveStartDate = ref(props.modelValue.effective_start_date ?? '')
 
 // Format selected days for summary
-const selectedDaysText = computed(() => {
-  if (!daysOfWeek.value || daysOfWeek.value.length === 0) {
+function formatSelectedDays(days) {
+  if (!days || days.length === 0) {
     return 'no days selected'
   }
   // Sort days and get names
-  const sortedDays = [...daysOfWeek.value].sort((a, b) => a - b)
+  const sortedDays = [...days].sort((a, b) => a - b)
   const names = sortedDays.map(d => dayNames[d])
   if (names.length === 1) {
     return names[0]
@@ -171,24 +171,37 @@ const selectedDaysText = computed(() => {
   } else {
     return names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1]
   }
-})
+}
 
-// Summary text
-const summaryText = computed(() => {
-  let text = `Every ${interval.value === 1 ? '' : interval.value + ' '}week${interval.value > 1 ? 's' : ''} on ${selectedDaysText.value} at ${formatTime(startTime.value)}`
+// Use a ref for the summary text and update it via watchEffect to ensure reactivity
+const summaryTextValue = ref('')
 
-  if (effectiveStartDate.value) {
-    text += `, starting ${formatDateDisplay(effectiveStartDate.value)}`
+watchEffect(() => {
+  const days = daysOfWeek.value
+  const intervalVal = interval.value
+  const startTimeVal = startTime.value
+  const endTypeVal = endType.value
+  const endCountVal = endCount.value
+  const endDateVal = endDate.value
+  const effectiveStartDateVal = effectiveStartDate.value
+
+  let text = `Every ${intervalVal === 1 ? '' : intervalVal + ' '}week${intervalVal > 1 ? 's' : ''} on ${formatSelectedDays(days)} at ${formatTime(startTimeVal)}`
+
+  if (effectiveStartDateVal) {
+    text += `, starting ${formatDateDisplay(effectiveStartDateVal)}`
   }
 
-  if (endType.value === 'count') {
-    text += `, for ${endCount.value} occurrence${endCount.value > 1 ? 's' : ''}`
-  } else if (endType.value === 'date' && endDate.value) {
-    text += `, until ${formatDateDisplay(endDate.value)}`
+  if (endTypeVal === 'count') {
+    text += `, for ${endCountVal} occurrence${endCountVal > 1 ? 's' : ''}`
+  } else if (endTypeVal === 'date' && endDateVal) {
+    text += `, until ${formatDateDisplay(endDateVal)}`
   }
 
-  return text
+  summaryTextValue.value = text
 })
+
+// Keep computed for backwards compatibility
+const selectedDaysText = computed(() => formatSelectedDays(daysOfWeek.value))
 
 function formatTime(time) {
   if (!time) return ''
