@@ -515,6 +515,12 @@ func (s *SchedulingService) UpdateSession(adminUserID int64, session *domain.Cla
 		return ErrClassSessionNotFound
 	}
 
+	// Preserve fields that shouldn't be changed via update
+	session.Status = existing.Status
+	session.OrganizationID = existing.OrganizationID
+	session.TemplateID = existing.TemplateID
+	session.CreatedAt = existing.CreatedAt
+
 	if err := s.sessionRepo.Update(session); err != nil {
 		return fmt.Errorf("failed to update class session: %w", err)
 	}
