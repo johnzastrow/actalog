@@ -28,6 +28,7 @@ var (
 type SchedulingService struct {
 	locationRepo        domain.GymLocationRepository
 	templateRepo        domain.ClassTemplateRepository
+	templateCoachRepo   domain.TemplateCoachRepository
 	slotRepo            domain.ScheduleSlotRepository
 	sessionRepo         domain.ClassSessionRepository
 	sessionCoachRepo    domain.SessionCoachRepository
@@ -41,6 +42,7 @@ type SchedulingService struct {
 func NewSchedulingService(
 	locationRepo domain.GymLocationRepository,
 	templateRepo domain.ClassTemplateRepository,
+	templateCoachRepo domain.TemplateCoachRepository,
 	slotRepo domain.ScheduleSlotRepository,
 	sessionRepo domain.ClassSessionRepository,
 	sessionCoachRepo domain.SessionCoachRepository,
@@ -53,6 +55,7 @@ func NewSchedulingService(
 	return &SchedulingService{
 		locationRepo:        locationRepo,
 		templateRepo:        templateRepo,
+		templateCoachRepo:   templateCoachRepo,
 		slotRepo:            slotRepo,
 		sessionRepo:         sessionRepo,
 		sessionCoachRepo:    sessionCoachRepo,
@@ -999,4 +1002,42 @@ func (s *SchedulingService) logAudit(userID int64, targetUserID *int64, eventTyp
 		Details:      &detailsStr,
 		CreatedAt:    time.Now(),
 	})
+}
+
+// ============================================
+// TEMPLATE COACH METHODS
+// ============================================
+
+// GetTemplateCoaches retrieves all coaches for a template
+func (s *SchedulingService) GetTemplateCoaches(templateID int64) ([]*domain.TemplateCoach, error) {
+	return s.templateCoachRepo.GetByTemplateID(templateID)
+}
+
+// AddTemplateCoach adds a coach to a template
+func (s *SchedulingService) AddTemplateCoach(adminUserID, templateID, coachUserID int64, isLead bool) error {
+	if err := s.templateCoachRepo.Add(templateID, coachUserID, isLead); err != nil {
+		return fmt.Errorf("failed to add template coach: %w", err)
+	}
+
+	s.logAudit(adminUserID, nil, domain.EventTemplateCoachAdded, map[string]interface{}{
+		"template_id":   templateID,
+		"coach_user_id": coachUserID,
+		"is_lead":       isLead,
+	})
+
+	return nil
+}
+
+// RemoveTemplateCoach removes a coach from a template
+func (s *SchedulingService) RemoveTemplateCoach(adminUserID, templateID, coachUserID int64) error {
+	if err := s.templateCoachRepo.Remove(templateID, coachUserID); err != nil {
+		return fmt.Errorf("failed to remove template coach: %w", err)
+	}
+
+	s.logAudit(adminUserID, nil, domain.EventTemplateCoachRemoved, map[string]interface{}{
+		"template_id":   templateID,
+		"coach_user_id": coachUserID,
+	})
+
+	return nil
 }

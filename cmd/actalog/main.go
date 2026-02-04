@@ -235,6 +235,7 @@ func main() {
 	scheduleSlotRepo := repository.NewScheduleSlotRepository(db)
 	classSessionRepo := repository.NewClassSessionRepository(db)
 	sessionCoachRepo := repository.NewSessionCoachRepository(db)
+	templateCoachRepo := repository.NewTemplateCoachRepository(db)
 	reservationRepo := repository.NewReservationRepository(db)
 	coachAssignmentRepo := repository.NewCoachAssignmentRepository(db)
 
@@ -426,6 +427,7 @@ func main() {
 	schedulingService := service.NewSchedulingService(
 		gymLocationRepo,
 		classTemplateRepo,
+		templateCoachRepo,
 		scheduleSlotRepo,
 		classSessionRepo,
 		sessionCoachRepo,
@@ -921,6 +923,11 @@ func main() {
 					r.Put("/{slot_id}", schedulingHandler.UpdateScheduleSlot)
 					r.Delete("/{slot_id}", schedulingHandler.DeleteScheduleSlot)
 				})
+
+				// Template coach management (admin only)
+				r.Get("/scheduling/templates/{id}/coaches", schedulingHandler.GetTemplateCoaches)
+				r.Post("/scheduling/templates/{id}/coaches", schedulingHandler.AddTemplateCoach)
+				r.Delete("/scheduling/templates/{id}/coaches/{user_id}", schedulingHandler.RemoveTemplateCoach)
 
 				// Session roster and check-in (admin/coach routes)
 				r.Get("/sessions/{session_id}/roster", schedulingHandler.GetSessionRoster)

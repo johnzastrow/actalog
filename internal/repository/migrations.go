@@ -3190,6 +3190,75 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.31.0",
+		Description: "Add default location and coaches to class templates",
+		Up: func(db *sql.DB, driver string) error {
+			// Add default_location_id column to class_templates
+			var addLocationQuery string
+			switch driver {
+			case "sqlite3":
+				addLocationQuery = `ALTER TABLE class_templates ADD COLUMN default_location_id INTEGER REFERENCES gym_locations(id)`
+			case "postgres":
+				addLocationQuery = `ALTER TABLE class_templates ADD COLUMN IF NOT EXISTS default_location_id BIGINT REFERENCES gym_locations(id)`
+			case "mysql":
+				addLocationQuery = `ALTER TABLE class_templates ADD COLUMN default_location_id BIGINT`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addLocationQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add default_location_id column: %w", err)
+				}
+			}
+
+			// Create template_coaches table for default coach assignments
+			var createTableQuery string
+			switch driver {
+			case "sqlite3":
+				createTableQuery = `
+					CREATE TABLE IF NOT EXISTS template_coaches (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						template_id INTEGER NOT NULL REFERENCES class_templates(id) ON DELETE CASCADE,
+						user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE(template_id, user_id)
+					)`
+			case "postgres":
+				createTableQuery = `
+					CREATE TABLE IF NOT EXISTS template_coaches (
+						id BIGSERIAL PRIMARY KEY,
+						template_id BIGINT NOT NULL REFERENCES class_templates(id) ON DELETE CASCADE,
+						user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+						created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE(template_id, user_id)
+					)`
+			case "mysql":
+				createTableQuery = `
+					CREATE TABLE IF NOT EXISTS template_coaches (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						template_id BIGINT NOT NULL,
+						user_id BIGINT NOT NULL,
+						is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE KEY unique_template_coach (template_id, user_id),
+						FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE CASCADE,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+					)`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(createTableQuery); err != nil {
+				return fmt.Errorf("failed to create template_coaches table: %w", err)
+			}
+
+			fmt.Println("✓ Added default_location_id to class_templates and created template_coaches table")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

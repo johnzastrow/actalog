@@ -95,7 +95,67 @@
                 variant="outlined"
                 density="comfortable"
                 clearable
+                class="mb-3"
               />
+
+              <v-select
+                v-model="form.default_location_id"
+                :items="locations"
+                item-title="name"
+                item-value="id"
+                label="Default Location (optional)"
+                variant="outlined"
+                density="comfortable"
+                clearable
+                class="mb-3"
+              />
+
+              <!-- Default Coaches Section -->
+              <div class="mb-4">
+                <div class="text-subtitle-2 mb-2">Default Coaches</div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <v-chip
+                    v-for="coach in defaultCoaches"
+                    :key="coach.user_id"
+                    closable
+                    :color="coach.is_lead ? 'primary' : 'default'"
+                    variant="outlined"
+                    @click:close="removeCoach(coach.user_id)"
+                    @click="toggleLeadCoach(coach.user_id)"
+                  >
+                    <v-icon v-if="coach.is_lead" start size="small">mdi-star</v-icon>
+                    {{ coach.user_name || coach.user_email }}
+                  </v-chip>
+                  <v-chip v-if="defaultCoaches.length === 0" variant="text" size="small" class="text-medium-emphasis">
+                    No coaches assigned
+                  </v-chip>
+                </div>
+                <v-autocomplete
+                  v-model="selectedCoach"
+                  v-model:search="coachSearch"
+                  :items="coachSearchResults"
+                  :loading="searchingCoaches"
+                  item-title="displayName"
+                  item-value="id"
+                  label="Add Coach"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                  no-filter
+                  placeholder="Search by name or email..."
+                  hide-no-data
+                  @update:model-value="onCoachSelected"
+                >
+                  <template #item="{ item, props: itemProps }">
+                    <v-list-item v-bind="itemProps">
+                      <template #subtitle>{{ item.raw.email }}</template>
+                    </v-list-item>
+                  </template>
+                </v-autocomplete>
+                <div class="text-caption text-medium-emphasis mt-1">
+                  Click a coach chip to toggle lead status
+                </div>
+              </div>
 
               <v-switch
                 v-if="isEditing"
@@ -269,8 +329,17 @@ const form = ref({
   default_capacity: 20,
   color: '#00bcd4',
   workout_id: null,
+  default_location_id: null,
   is_active: true
 })
+
+// Default coaches
+const defaultCoaches = ref([])
+const selectedCoach = ref(null)
+const coachSearch = ref('')
+const coachSearchResults = ref([])
+const searchingCoaches = ref(false)
+let coachSearchTimeout = null
 
 // Schedule slots
 const slots = ref([])
@@ -299,19 +368,38 @@ watch(() => props.template, async (newTemplate) => {
       default_capacity: newTemplate.default_capacity || 20,
       color: newTemplate.color || '#00bcd4',
       workout_id: newTemplate.workout_id || null,
+      default_location_id: newTemplate.default_location_id || null,
       is_active: newTemplate.is_active !== false
     }
 
-    // Load slots if editing
+    // Load slots and coaches if editing
     if (newTemplate.id) {
-      await loadSlots(newTemplate.id)
+      await Promise.all([
+        loadSlots(newTemplate.id),
+        loadCoaches(newTemplate.id)
+      ])
     } else {
       slots.value = []
+      defaultCoaches.value = []
     }
   } else {
     resetForm()
   }
 }, { immediate: true })
+
+// Watch coach search for autocomplete
+watch(coachSearch, (search) => {
+  if (coachSearchTimeout) {
+    clearTimeout(coachSearchTimeout)
+  }
+  if (!search || search.length < 2) {
+    coachSearchResults.value = []
+    return
+  }
+  coachSearchTimeout = setTimeout(() => {
+    searchCoaches(search)
+  }, 300)
+})
 
 function resetForm() {
   form.value = {
@@ -321,11 +409,97 @@ function resetForm() {
     default_capacity: 20,
     color: '#00bcd4',
     workout_id: null,
+    default_location_id: null,
     is_active: true
   }
   slots.value = []
+  defaultCoaches.value = []
   previewDates.value = []
   activeTab.value = 'details'
+  coachSearch.value = ''
+  coachSearchResults.value = []
+}
+
+async function loadCoaches(templateId) {
+  try {
+    const response = await axios.get(`/api/admin/scheduling/templates/${templateId}/coaches`)
+    defaultCoaches.value = response.data.coaches || []
+  } catch (err) {
+    console.error('Failed to load coaches:', err)
+    defaultCoaches.value = []
+  }
+}
+
+async function searchCoaches(search) {
+  searchingCoaches.value = true
+  try {
+    const response = await axios.get('/api/admin/user-management/filter', {
+      params: { q: search }
+    })
+    // Filter out already assigned coaches
+    const assignedIds = new Set(defaultCoaches.value.map(c => c.user_id))
+    coachSearchResults.value = (response.data.users || [])
+      .filter(u => !assignedIds.has(u.id))
+      .map(u => ({
+        id: u.id,
+        email: u.email,
+        name: u.name || '',
+        displayName: u.name ? `${u.name} (${u.email})` : u.email
+      }))
+  } catch (err) {
+    console.error('Failed to search coaches:', err)
+    coachSearchResults.value = []
+  } finally {
+    searchingCoaches.value = false
+  }
+}
+
+function onCoachSelected(userId) {
+  if (!userId) return
+
+  const coach = coachSearchResults.value.find(c => c.id === userId)
+  if (coach) {
+    // Add to local list (will be saved when template is saved)
+    defaultCoaches.value.push({
+      user_id: coach.id,
+      user_name: coach.name,
+      user_email: coach.email,
+      is_lead: defaultCoaches.value.length === 0, // First coach becomes lead
+      _isNew: true
+    })
+  }
+
+  // Clear selection
+  selectedCoach.value = null
+  coachSearch.value = ''
+  coachSearchResults.value = []
+}
+
+function removeCoach(userId) {
+  const index = defaultCoaches.value.findIndex(c => c.user_id === userId)
+  if (index !== -1) {
+    const coach = defaultCoaches.value[index]
+    if (coach._isNew) {
+      // Just remove from local list
+      defaultCoaches.value.splice(index, 1)
+    } else {
+      // Mark for deletion
+      coach._deleted = true
+      defaultCoaches.value.splice(index, 1)
+    }
+
+    // If we removed the lead, make first remaining coach the lead
+    if (coach.is_lead && defaultCoaches.value.length > 0) {
+      defaultCoaches.value[0].is_lead = true
+    }
+  }
+}
+
+function toggleLeadCoach(userId) {
+  // Set this coach as lead, remove lead from others
+  for (const coach of defaultCoaches.value) {
+    coach.is_lead = coach.user_id === userId
+  }
 }
 
 async function loadSlots(templateId) {
@@ -522,6 +696,40 @@ async function save() {
       }
     }
 
+    // Save coaches
+    // First, get the original coaches to find deletions
+    const originalCoaches = props.template?.default_coaches || []
+    const originalCoachIds = new Set(originalCoaches.map(c => c.user_id))
+    const currentCoachIds = new Set(defaultCoaches.value.map(c => c.user_id))
+
+    // Delete coaches that were removed
+    for (const original of originalCoaches) {
+      if (!currentCoachIds.has(original.user_id)) {
+        await axios.delete(`/api/admin/scheduling/templates/${templateId}/coaches/${original.user_id}`)
+      }
+    }
+
+    // Add new coaches and update lead status
+    for (const coach of defaultCoaches.value) {
+      if (coach._isNew || !originalCoachIds.has(coach.user_id)) {
+        // Add new coach
+        await axios.post(`/api/admin/scheduling/templates/${templateId}/coaches`, {
+          user_id: coach.user_id,
+          is_lead: coach.is_lead
+        })
+      } else {
+        // Update lead status if changed
+        const original = originalCoaches.find(c => c.user_id === coach.user_id)
+        if (original && original.is_lead !== coach.is_lead) {
+          // Re-add with new lead status (API handles upsert)
+          await axios.post(`/api/admin/scheduling/templates/${templateId}/coaches`, {
+            user_id: coach.user_id,
+            is_lead: coach.is_lead
+          })
+        }
+      }
+    }
+
     emit('saved')
     close()
   } catch (err) {
@@ -541,6 +749,9 @@ function onSessionCancel(session) {
 </script>
 
 <style scoped>
+.gap-2 {
+  gap: 8px;
+}
 .gap-3 {
   gap: 12px;
 }

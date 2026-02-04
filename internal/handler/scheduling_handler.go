@@ -227,12 +227,13 @@ func (h *SchedulingHandler) CreateTemplate(w http.ResponseWriter, r *http.Reques
 	}
 
 	var req struct {
-		Name            string  `json:"name"`
-		Description     *string `json:"description"`
-		WorkoutID       *int64  `json:"workout_id"`
-		DurationMinutes int     `json:"duration_minutes"`
-		DefaultCapacity int     `json:"default_capacity"`
-		Color           string  `json:"color"`
+		Name              string  `json:"name"`
+		Description       *string `json:"description"`
+		WorkoutID         *int64  `json:"workout_id"`
+		DurationMinutes   int     `json:"duration_minutes"`
+		DefaultCapacity   int     `json:"default_capacity"`
+		DefaultLocationID *int64  `json:"default_location_id"`
+		Color             string  `json:"color"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -246,13 +247,14 @@ func (h *SchedulingHandler) CreateTemplate(w http.ResponseWriter, r *http.Reques
 	}
 
 	template := &domain.ClassTemplate{
-		OrganizationID:  gymID,
-		Name:            req.Name,
-		Description:     req.Description,
-		WorkoutID:       req.WorkoutID,
-		DurationMinutes: req.DurationMinutes,
-		DefaultCapacity: req.DefaultCapacity,
-		Color:           req.Color,
+		OrganizationID:    gymID,
+		Name:              req.Name,
+		Description:       req.Description,
+		WorkoutID:         req.WorkoutID,
+		DurationMinutes:   req.DurationMinutes,
+		DefaultCapacity:   req.DefaultCapacity,
+		DefaultLocationID: req.DefaultLocationID,
+		Color:             req.Color,
 	}
 
 	if err := h.schedulingService.CreateTemplate(userID, template); err != nil {
@@ -331,13 +333,14 @@ func (h *SchedulingHandler) UpdateTemplate(w http.ResponseWriter, r *http.Reques
 	}
 
 	var req struct {
-		Name            string  `json:"name"`
-		Description     *string `json:"description"`
-		WorkoutID       *int64  `json:"workout_id"`
-		DurationMinutes int     `json:"duration_minutes"`
-		DefaultCapacity int     `json:"default_capacity"`
-		Color           string  `json:"color"`
-		IsActive        bool    `json:"is_active"`
+		Name              string  `json:"name"`
+		Description       *string `json:"description"`
+		WorkoutID         *int64  `json:"workout_id"`
+		DurationMinutes   int     `json:"duration_minutes"`
+		DefaultCapacity   int     `json:"default_capacity"`
+		DefaultLocationID *int64  `json:"default_location_id"`
+		Color             string  `json:"color"`
+		IsActive          bool    `json:"is_active"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -346,14 +349,15 @@ func (h *SchedulingHandler) UpdateTemplate(w http.ResponseWriter, r *http.Reques
 	}
 
 	template := &domain.ClassTemplate{
-		ID:              id,
-		Name:            req.Name,
-		Description:     req.Description,
-		WorkoutID:       req.WorkoutID,
-		DurationMinutes: req.DurationMinutes,
-		DefaultCapacity: req.DefaultCapacity,
-		Color:           req.Color,
-		IsActive:        req.IsActive,
+		ID:                id,
+		Name:              req.Name,
+		Description:       req.Description,
+		WorkoutID:         req.WorkoutID,
+		DurationMinutes:   req.DurationMinutes,
+		DefaultCapacity:   req.DefaultCapacity,
+		DefaultLocationID: req.DefaultLocationID,
+		Color:             req.Color,
+		IsActive:          req.IsActive,
 	}
 
 	if err := h.schedulingService.UpdateTemplate(userID, template); err != nil {
@@ -1397,4 +1401,95 @@ func (h *SchedulingHandler) MarkNoShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Marked as no-show successfully"})
+}
+
+// GetTemplateCoaches handles GET /api/templates/{id}/coaches
+func (h *SchedulingHandler) GetTemplateCoaches(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid template ID")
+		return
+	}
+
+	coaches, err := h.schedulingService.GetTemplateCoaches(id)
+	if err != nil {
+		h.logger.Error("Failed to get template coaches: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get template coaches")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"coaches": coaches,
+	})
+}
+
+// AddTemplateCoach handles POST /api/templates/{id}/coaches
+func (h *SchedulingHandler) AddTemplateCoach(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	templateID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid template ID")
+		return
+	}
+
+	var req struct {
+		UserID int64 `json:"user_id"`
+		IsLead bool  `json:"is_lead"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.UserID == 0 {
+		respondError(w, http.StatusBadRequest, "User ID is required")
+		return
+	}
+
+	if err := h.schedulingService.AddTemplateCoach(userID, templateID, req.UserID, req.IsLead); err != nil {
+		h.logger.Error("Failed to add template coach: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to add template coach")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]string{"message": "Coach added successfully"})
+}
+
+// RemoveTemplateCoach handles DELETE /api/templates/{id}/coaches/{user_id}
+func (h *SchedulingHandler) RemoveTemplateCoach(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	templateIDStr := chi.URLParam(r, "id")
+	templateID, err := strconv.ParseInt(templateIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid template ID")
+		return
+	}
+
+	userIDStr := chi.URLParam(r, "user_id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	if err := h.schedulingService.RemoveTemplateCoach(adminUserID, templateID, userID); err != nil {
+		h.logger.Error("Failed to remove template coach: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to remove template coach")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Coach removed successfully"})
 }

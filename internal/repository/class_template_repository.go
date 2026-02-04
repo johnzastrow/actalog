@@ -23,8 +23,8 @@ func (r *ClassTemplateRepository) Create(template *domain.ClassTemplate) error {
 	template.UpdatedAt = time.Now()
 
 	query := rebindQuery(`
-		INSERT INTO class_templates (organization_id, name, description, workout_id, duration_minutes, default_capacity, color, is_active, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO class_templates (organization_id, name, description, workout_id, duration_minutes, default_capacity, default_location_id, color, is_active, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 
 	if currentDriver == "postgres" {
@@ -36,6 +36,7 @@ func (r *ClassTemplateRepository) Create(template *domain.ClassTemplate) error {
 			template.WorkoutID,
 			template.DurationMinutes,
 			template.DefaultCapacity,
+			template.DefaultLocationID,
 			template.Color,
 			template.IsActive,
 			template.CreatedAt,
@@ -50,6 +51,7 @@ func (r *ClassTemplateRepository) Create(template *domain.ClassTemplate) error {
 		template.WorkoutID,
 		template.DurationMinutes,
 		template.DefaultCapacity,
+		template.DefaultLocationID,
 		template.Color,
 		template.IsActive,
 		template.CreatedAt,
@@ -68,21 +70,24 @@ func (r *ClassTemplateRepository) Create(template *domain.ClassTemplate) error {
 	return nil
 }
 
-// GetByID retrieves a class template by ID with optional workout name
+// GetByID retrieves a class template by ID with optional workout name and location
 func (r *ClassTemplateRepository) GetByID(id int64) (*domain.ClassTemplate, error) {
 	query := rebindQuery(`
 		SELECT ct.id, ct.organization_id, ct.name, ct.description, ct.workout_id,
-		       ct.duration_minutes, ct.default_capacity, ct.color, ct.is_active,
-		       ct.created_at, ct.updated_at, w.name as workout_name
+		       ct.duration_minutes, ct.default_capacity, ct.default_location_id, ct.color, ct.is_active,
+		       ct.created_at, ct.updated_at, w.name as workout_name, gl.name as location_name
 		FROM class_templates ct
 		LEFT JOIN workouts w ON ct.workout_id = w.id
+		LEFT JOIN gym_locations gl ON ct.default_location_id = gl.id
 		WHERE ct.id = ?
 	`)
 
 	template := &domain.ClassTemplate{}
 	var description sql.NullString
 	var workoutID sql.NullInt64
+	var defaultLocationID sql.NullInt64
 	var workoutName sql.NullString
+	var locationName sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
 		&template.ID,
@@ -92,11 +97,13 @@ func (r *ClassTemplateRepository) GetByID(id int64) (*domain.ClassTemplate, erro
 		&workoutID,
 		&template.DurationMinutes,
 		&template.DefaultCapacity,
+		&defaultLocationID,
 		&template.Color,
 		&template.IsActive,
 		&template.CreatedAt,
 		&template.UpdatedAt,
 		&workoutName,
+		&locationName,
 	)
 
 	if err != nil {
@@ -112,8 +119,14 @@ func (r *ClassTemplateRepository) GetByID(id int64) (*domain.ClassTemplate, erro
 	if workoutID.Valid {
 		template.WorkoutID = &workoutID.Int64
 	}
+	if defaultLocationID.Valid {
+		template.DefaultLocationID = &defaultLocationID.Int64
+	}
 	if workoutName.Valid {
 		template.WorkoutName = &workoutName.String
+	}
+	if locationName.Valid {
+		template.DefaultLocationName = &locationName.String
 	}
 
 	return template, nil
@@ -125,20 +138,22 @@ func (r *ClassTemplateRepository) GetByOrganizationID(orgID int64, includeInacti
 	if includeInactive {
 		query = rebindQuery(`
 			SELECT ct.id, ct.organization_id, ct.name, ct.description, ct.workout_id,
-			       ct.duration_minutes, ct.default_capacity, ct.color, ct.is_active,
-			       ct.created_at, ct.updated_at, w.name as workout_name
+			       ct.duration_minutes, ct.default_capacity, ct.default_location_id, ct.color, ct.is_active,
+			       ct.created_at, ct.updated_at, w.name as workout_name, gl.name as location_name
 			FROM class_templates ct
 			LEFT JOIN workouts w ON ct.workout_id = w.id
+			LEFT JOIN gym_locations gl ON ct.default_location_id = gl.id
 			WHERE ct.organization_id = ?
 			ORDER BY ct.name ASC
 		`)
 	} else {
 		query = rebindQuery(`
 			SELECT ct.id, ct.organization_id, ct.name, ct.description, ct.workout_id,
-			       ct.duration_minutes, ct.default_capacity, ct.color, ct.is_active,
-			       ct.created_at, ct.updated_at, w.name as workout_name
+			       ct.duration_minutes, ct.default_capacity, ct.default_location_id, ct.color, ct.is_active,
+			       ct.created_at, ct.updated_at, w.name as workout_name, gl.name as location_name
 			FROM class_templates ct
 			LEFT JOIN workouts w ON ct.workout_id = w.id
+			LEFT JOIN gym_locations gl ON ct.default_location_id = gl.id
 			WHERE ct.organization_id = ? AND ct.is_active = ?
 			ORDER BY ct.name ASC
 		`)
@@ -161,7 +176,9 @@ func (r *ClassTemplateRepository) GetByOrganizationID(orgID int64, includeInacti
 		template := &domain.ClassTemplate{}
 		var description sql.NullString
 		var workoutID sql.NullInt64
+		var defaultLocationID sql.NullInt64
 		var workoutName sql.NullString
+		var locationName sql.NullString
 
 		err := rows.Scan(
 			&template.ID,
@@ -171,11 +188,13 @@ func (r *ClassTemplateRepository) GetByOrganizationID(orgID int64, includeInacti
 			&workoutID,
 			&template.DurationMinutes,
 			&template.DefaultCapacity,
+			&defaultLocationID,
 			&template.Color,
 			&template.IsActive,
 			&template.CreatedAt,
 			&template.UpdatedAt,
 			&workoutName,
+			&locationName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan class template: %w", err)
@@ -187,8 +206,14 @@ func (r *ClassTemplateRepository) GetByOrganizationID(orgID int64, includeInacti
 		if workoutID.Valid {
 			template.WorkoutID = &workoutID.Int64
 		}
+		if defaultLocationID.Valid {
+			template.DefaultLocationID = &defaultLocationID.Int64
+		}
 		if workoutName.Valid {
 			template.WorkoutName = &workoutName.String
+		}
+		if locationName.Valid {
+			template.DefaultLocationName = &locationName.String
 		}
 
 		templates = append(templates, template)
@@ -204,7 +229,7 @@ func (r *ClassTemplateRepository) Update(template *domain.ClassTemplate) error {
 	query := rebindQuery(`
 		UPDATE class_templates
 		SET name = ?, description = ?, workout_id = ?, duration_minutes = ?,
-		    default_capacity = ?, color = ?, is_active = ?, updated_at = ?
+		    default_capacity = ?, default_location_id = ?, color = ?, is_active = ?, updated_at = ?
 		WHERE id = ?
 	`)
 
@@ -214,6 +239,7 @@ func (r *ClassTemplateRepository) Update(template *domain.ClassTemplate) error {
 		template.WorkoutID,
 		template.DurationMinutes,
 		template.DefaultCapacity,
+		template.DefaultLocationID,
 		template.Color,
 		template.IsActive,
 		template.UpdatedAt,

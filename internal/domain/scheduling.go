@@ -37,21 +37,37 @@ type GymLocation struct {
 
 // ClassTemplate represents a reusable class definition
 type ClassTemplate struct {
-	ID              int64     `json:"id" db:"id"`
-	OrganizationID  int64     `json:"organization_id" db:"organization_id"`
-	Name            string    `json:"name" db:"name"`
-	Description     *string   `json:"description,omitempty" db:"description"`
-	WorkoutID       *int64    `json:"workout_id,omitempty" db:"workout_id"`
-	DurationMinutes int       `json:"duration_minutes" db:"duration_minutes"`
-	DefaultCapacity int       `json:"default_capacity" db:"default_capacity"`
-	Color           string    `json:"color" db:"color"`
-	IsActive        bool      `json:"is_active" db:"is_active"`
-	CreatedAt       time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+	ID                int64     `json:"id" db:"id"`
+	OrganizationID    int64     `json:"organization_id" db:"organization_id"`
+	Name              string    `json:"name" db:"name"`
+	Description       *string   `json:"description,omitempty" db:"description"`
+	WorkoutID         *int64    `json:"workout_id,omitempty" db:"workout_id"`
+	DurationMinutes   int       `json:"duration_minutes" db:"duration_minutes"`
+	DefaultCapacity   int       `json:"default_capacity" db:"default_capacity"`
+	DefaultLocationID *int64    `json:"default_location_id,omitempty" db:"default_location_id"`
+	Color             string    `json:"color" db:"color"`
+	IsActive          bool      `json:"is_active" db:"is_active"`
+	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 
 	// Populated via JOINs, not stored in class_templates table
-	ScheduleSlots []*ScheduleSlot `json:"schedule_slots,omitempty"`
-	WorkoutName   *string         `json:"workout_name,omitempty"`
+	ScheduleSlots       []*ScheduleSlot  `json:"schedule_slots,omitempty"`
+	WorkoutName         *string          `json:"workout_name,omitempty"`
+	DefaultLocationName *string          `json:"default_location_name,omitempty"`
+	DefaultCoaches      []*TemplateCoach `json:"default_coaches,omitempty"`
+}
+
+// TemplateCoach represents a default coach assignment for a class template
+type TemplateCoach struct {
+	ID         int64     `json:"id" db:"id"`
+	TemplateID int64     `json:"template_id" db:"template_id"`
+	UserID     int64     `json:"user_id" db:"user_id"`
+	IsLead     bool      `json:"is_lead" db:"is_lead"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+
+	// Populated via JOINs
+	UserName  *string `json:"user_name,omitempty"`
+	UserEmail *string `json:"user_email,omitempty"`
 }
 
 // Recurrence end type constants
@@ -242,6 +258,15 @@ type SessionCoachRepository interface {
 	GetBySessionID(sessionID int64) ([]*SessionCoach, error)
 	Delete(id int64) error
 	DeleteBySessionAndUser(sessionID, userID int64) error
+}
+
+// TemplateCoachRepository defines the interface for template coach data access
+type TemplateCoachRepository interface {
+	Add(templateID, userID int64, isLead bool) error
+	Remove(templateID, userID int64) error
+	GetByTemplateID(templateID int64) ([]*TemplateCoach, error)
+	RemoveAllByTemplateID(templateID int64) error
+	SetLeadCoach(templateID, userID int64) error
 }
 
 // ReservationRepository defines the interface for reservation data access
