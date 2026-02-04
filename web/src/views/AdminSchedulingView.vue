@@ -349,8 +349,9 @@
     <v-snackbar
       v-model="snackbar"
       :color="snackbarColor"
-      :timeout="3000"
+      :timeout="4000"
       location="bottom"
+      :style="{ marginBottom: '80px' }"
     >
       {{ snackbarText }}
       <template #actions>

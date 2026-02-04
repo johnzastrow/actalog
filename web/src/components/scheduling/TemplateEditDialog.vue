@@ -335,6 +335,7 @@ const form = ref({
 
 // Default coaches
 const defaultCoaches = ref([])
+const originalCoachesSnapshot = ref([]) // Track original coaches for save comparison
 const selectedCoach = ref(null)
 const coachSearch = ref('')
 const coachSearchResults = ref([])
@@ -381,11 +382,19 @@ watch(() => props.template, async (newTemplate) => {
     } else {
       slots.value = []
       defaultCoaches.value = []
+      originalCoachesSnapshot.value = []
     }
   } else {
     resetForm()
   }
 }, { immediate: true })
+
+// Reset form when dialog opens for a new class
+watch(dialogOpen, (isOpen) => {
+  if (isOpen && !props.template) {
+    resetForm()
+  }
+})
 
 // Watch coach search for autocomplete
 watch(coachSearch, (search) => {
@@ -425,6 +434,7 @@ function resetForm() {
   }
   slots.value = []
   defaultCoaches.value = []
+  originalCoachesSnapshot.value = []
   previewDates.value = []
   activeTab.value = 'details'
   coachSearch.value = ''
@@ -434,10 +444,14 @@ function resetForm() {
 async function loadCoaches(templateId) {
   try {
     const response = await axios.get(`/api/admin/scheduling/templates/${templateId}/coaches`)
-    defaultCoaches.value = response.data.coaches || []
+    const coaches = response.data.coaches || []
+    defaultCoaches.value = coaches
+    // Save a snapshot to compare on save (deep copy)
+    originalCoachesSnapshot.value = coaches.map(c => ({ ...c }))
   } catch (err) {
     console.error('Failed to load coaches:', err)
     defaultCoaches.value = []
+    originalCoachesSnapshot.value = []
   }
 }
 
@@ -712,8 +726,8 @@ async function save() {
     }
 
     // Save coaches
-    // First, get the original coaches to find deletions
-    const originalCoaches = props.template?.default_coaches || []
+    // Use the snapshot of coaches loaded when dialog opened
+    const originalCoaches = originalCoachesSnapshot.value
     const originalCoachIds = new Set(originalCoaches.map(c => c.user_id))
     const currentCoachIds = new Set(defaultCoaches.value.map(c => c.user_id))
 
