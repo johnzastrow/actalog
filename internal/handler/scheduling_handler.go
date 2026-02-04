@@ -464,6 +464,7 @@ func (h *SchedulingHandler) CreateScheduleSlot(w http.ResponseWriter, r *http.Re
 	var req struct {
 		LocationID         *int64  `json:"location_id"`
 		DayOfWeek          int     `json:"day_of_week"`
+		DaysOfWeek         []int   `json:"days_of_week"`
 		StartTime          string  `json:"start_time"`
 		OverrideCapacity   *int    `json:"override_capacity"`
 		RecurrenceInterval int     `json:"recurrence_interval"`
@@ -483,10 +484,20 @@ func (h *SchedulingHandler) CreateScheduleSlot(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Use DaysOfWeek if provided, otherwise fall back to DayOfWeek
+	daysOfWeek := req.DaysOfWeek
+	dayOfWeek := req.DayOfWeek
+	if len(daysOfWeek) > 0 {
+		dayOfWeek = daysOfWeek[0] // Set legacy field to first day
+	} else if dayOfWeek >= 0 {
+		daysOfWeek = []int{dayOfWeek}
+	}
+
 	slot := &domain.ScheduleSlot{
 		TemplateID:         templateID,
 		LocationID:         req.LocationID,
-		DayOfWeek:          req.DayOfWeek,
+		DayOfWeek:          dayOfWeek,
+		DaysOfWeek:         daysOfWeek,
 		StartTime:          req.StartTime,
 		OverrideCapacity:   req.OverrideCapacity,
 		RecurrenceInterval: req.RecurrenceInterval,
@@ -573,6 +584,7 @@ func (h *SchedulingHandler) UpdateScheduleSlot(w http.ResponseWriter, r *http.Re
 	var req struct {
 		LocationID         *int64  `json:"location_id"`
 		DayOfWeek          int     `json:"day_of_week"`
+		DaysOfWeek         []int   `json:"days_of_week"`
 		StartTime          string  `json:"start_time"`
 		OverrideCapacity   *int    `json:"override_capacity"`
 		IsActive           bool    `json:"is_active"`
@@ -588,10 +600,20 @@ func (h *SchedulingHandler) UpdateScheduleSlot(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Use DaysOfWeek if provided, otherwise fall back to DayOfWeek
+	daysOfWeek := req.DaysOfWeek
+	dayOfWeek := req.DayOfWeek
+	if len(daysOfWeek) > 0 {
+		dayOfWeek = daysOfWeek[0] // Set legacy field to first day
+	} else if dayOfWeek >= 0 {
+		daysOfWeek = []int{dayOfWeek}
+	}
+
 	slot := &domain.ScheduleSlot{
 		ID:                 id,
 		LocationID:         req.LocationID,
-		DayOfWeek:          req.DayOfWeek,
+		DayOfWeek:          dayOfWeek,
+		DaysOfWeek:         daysOfWeek,
 		StartTime:          req.StartTime,
 		OverrideCapacity:   req.OverrideCapacity,
 		IsActive:           req.IsActive,

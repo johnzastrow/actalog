@@ -3146,6 +3146,50 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.30.0",
+		Description: "Add days_of_week_json column to schedule_slots for multi-day support",
+		Up: func(db *sql.DB, driver string) error {
+			// Add days_of_week_json column (nullable TEXT/JSON for storing array of days)
+			var addDaysQuery string
+			switch driver {
+			case "sqlite3":
+				addDaysQuery = `ALTER TABLE schedule_slots ADD COLUMN days_of_week_json TEXT`
+			case "postgres":
+				addDaysQuery = `ALTER TABLE schedule_slots ADD COLUMN IF NOT EXISTS days_of_week_json TEXT`
+			case "mysql":
+				addDaysQuery = `ALTER TABLE schedule_slots ADD COLUMN days_of_week_json TEXT`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(addDaysQuery); err != nil {
+				errStr := strings.ToLower(err.Error())
+				if !strings.Contains(errStr, "duplicate column") && !strings.Contains(errStr, "already exists") {
+					return fmt.Errorf("failed to add days_of_week_json column: %w", err)
+				}
+			}
+
+			// Migrate existing single day_of_week values to days_of_week_json
+			// Convert day_of_week integer to JSON array like "[1]"
+			var updateQuery string
+			switch driver {
+			case "sqlite3":
+				updateQuery = `UPDATE schedule_slots SET days_of_week_json = '[' || day_of_week || ']' WHERE days_of_week_json IS NULL`
+			case "postgres":
+				updateQuery = `UPDATE schedule_slots SET days_of_week_json = '[' || day_of_week::text || ']' WHERE days_of_week_json IS NULL`
+			case "mysql":
+				updateQuery = `UPDATE schedule_slots SET days_of_week_json = CONCAT('[', day_of_week, ']') WHERE days_of_week_json IS NULL`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+			if _, err := db.Exec(updateQuery); err != nil {
+				return fmt.Errorf("failed to migrate existing day_of_week values: %w", err)
+			}
+
+			fmt.Println("✓ Added days_of_week_json column to schedule_slots table")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

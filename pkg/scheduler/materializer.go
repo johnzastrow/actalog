@@ -229,97 +229,106 @@ func (m *Materializer) materializeSlot(
 		recurrenceInterval = 1
 	}
 
-	// Track occurrence count for RecurrenceEndCount
+	// Get the days to materialize - use DaysOfWeek if available, fallback to DayOfWeek
+	daysOfWeek := slot.DaysOfWeek
+	if len(daysOfWeek) == 0 {
+		daysOfWeek = []int{slot.DayOfWeek}
+	}
+
+	// Track occurrence count for RecurrenceEndCount (shared across all days)
 	occurrenceCount := 0
 
-	// Find the first matching day of week from effectiveStart
-	date := effectiveStart
-	for !date.After(effectiveEnd) {
-		select {
-		case <-ctx.Done():
-			return created, skipped, ctx.Err()
-		default:
-		}
+	// Materialize for each day of week in the slot
+	for _, dayOfWeek := range daysOfWeek {
+		// Find the first matching day of week from effectiveStart
+		date := effectiveStart
+		for !date.After(effectiveEnd) {
+			select {
+			case <-ctx.Done():
+				return created, skipped, ctx.Err()
+			default:
+			}
 
-		// Check if this day matches the slot's day of week
-		if int(date.Weekday()) != slot.DayOfWeek {
-			date = date.AddDate(0, 0, 1)
-			continue
-		}
+			// Check if this day matches the current day of week
+			if int(date.Weekday()) != dayOfWeek {
+				date = date.AddDate(0, 0, 1)
+				continue
+			}
 
-		// Build the session start time
-		sessionStart := time.Date(
-			date.Year(), date.Month(), date.Day(),
-			slotTime.Hour(), slotTime.Minute(), 0, 0,
-			time.Local,
-		)
+			// Build the session start time
+			sessionStart := time.Date(
+				date.Year(), date.Month(), date.Day(),
+				slotTime.Hour(), slotTime.Minute(), 0, 0,
+				time.Local,
+			)
 
-		// Skip if session start is in the past
-		if sessionStart.Before(time.Now()) {
+			// Skip if session start is in the past
+			if sessionStart.Before(time.Now()) {
+				// Move to next occurrence based on recurrence interval
+				date = date.AddDate(0, 0, 7*recurrenceInterval)
+				continue
+			}
+
+			// Check if we've exceeded the occurrence count limit
+			if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
+				if occurrenceCount >= *slot.RecurrenceEndCount {
+					break
+				}
+			}
+
+			// Calculate end time based on template duration
+			sessionEnd := sessionStart.Add(time.Duration(template.DurationMinutes) * time.Minute)
+
+			// Check if session already exists for this template/slot/time
+			exists, err := m.sessionExists(template.ID, sessionStart)
+			if err != nil {
+				m.logger.Warn("Error checking session existence: %v", err)
+				date = date.AddDate(0, 0, 7*recurrenceInterval)
+				continue
+			}
+
+			if exists {
+				skipped++
+				occurrenceCount++ // Count existing sessions toward limit
+				date = date.AddDate(0, 0, 7*recurrenceInterval)
+				continue
+			}
+
+			// Determine capacity (slot override or template default)
+			capacity := template.DefaultCapacity
+			if slot.OverrideCapacity != nil {
+				capacity = *slot.OverrideCapacity
+			}
+
+			// Create the session
+			session := &domain.ClassSession{
+				OrganizationID: template.OrganizationID,
+				TemplateID:     &template.ID,
+				LocationID:     slot.LocationID,
+				Name:           template.Name,
+				Description:    template.Description,
+				WorkoutID:      template.WorkoutID,
+				StartTime:      sessionStart,
+				EndTime:        sessionEnd,
+				Capacity:       capacity,
+				Status:         domain.SessionStatusScheduled,
+			}
+
+			if err := m.sessionRepo.Create(session); err != nil {
+				m.logger.Error("Failed to create session for template %d at %s: %v",
+					template.ID, sessionStart.Format("2006-01-02 15:04"), err)
+				date = date.AddDate(0, 0, 7*recurrenceInterval)
+				continue
+			}
+
+			created++
+			occurrenceCount++
+			m.logger.Debug("Created session: %s at %s (template %d, slot %d, day %d, interval %dw)",
+				template.Name, sessionStart.Format("2006-01-02 15:04"), template.ID, slot.ID, dayOfWeek, recurrenceInterval)
+
 			// Move to next occurrence based on recurrence interval
 			date = date.AddDate(0, 0, 7*recurrenceInterval)
-			continue
 		}
-
-		// Check if we've exceeded the occurrence count limit
-		if slot.RecurrenceEndType == domain.RecurrenceEndCount && slot.RecurrenceEndCount != nil {
-			if occurrenceCount >= *slot.RecurrenceEndCount {
-				break
-			}
-		}
-
-		// Calculate end time based on template duration
-		sessionEnd := sessionStart.Add(time.Duration(template.DurationMinutes) * time.Minute)
-
-		// Check if session already exists for this template/slot/time
-		exists, err := m.sessionExists(template.ID, sessionStart)
-		if err != nil {
-			m.logger.Warn("Error checking session existence: %v", err)
-			date = date.AddDate(0, 0, 7*recurrenceInterval)
-			continue
-		}
-
-		if exists {
-			skipped++
-			occurrenceCount++ // Count existing sessions toward limit
-			date = date.AddDate(0, 0, 7*recurrenceInterval)
-			continue
-		}
-
-		// Determine capacity (slot override or template default)
-		capacity := template.DefaultCapacity
-		if slot.OverrideCapacity != nil {
-			capacity = *slot.OverrideCapacity
-		}
-
-		// Create the session
-		session := &domain.ClassSession{
-			OrganizationID: template.OrganizationID,
-			TemplateID:     &template.ID,
-			LocationID:     slot.LocationID,
-			Name:           template.Name,
-			Description:    template.Description,
-			WorkoutID:      template.WorkoutID,
-			StartTime:      sessionStart,
-			EndTime:        sessionEnd,
-			Capacity:       capacity,
-			Status:         domain.SessionStatusScheduled,
-		}
-
-		if err := m.sessionRepo.Create(session); err != nil {
-			m.logger.Error("Failed to create session for template %d at %s: %v",
-				template.ID, sessionStart.Format("2006-01-02 15:04"), err)
-			date = date.AddDate(0, 0, 7*recurrenceInterval)
-			continue
-		}
-
-		created++
-		occurrenceCount++
-		m.logger.Debug("Created session: %s at %s (template %d, slot %d, interval %dw)",
-			template.Name, sessionStart.Format("2006-01-02 15:04"), template.ID, slot.ID, recurrenceInterval)
-
-		// Move to next occurrence based on recurrence interval
-		date = date.AddDate(0, 0, 7*recurrenceInterval)
 	}
 
 	return created, skipped, nil

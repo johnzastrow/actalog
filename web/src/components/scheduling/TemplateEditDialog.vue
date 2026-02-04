@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="dialogOpen" max-width="900" scrollable>
-    <v-card>
-      <!-- Header -->
-      <v-card-title class="d-flex align-center pa-4">
+  <v-dialog v-model="dialogOpen" max-width="900">
+    <v-card class="d-flex flex-column" style="max-height: 90vh;">
+      <!-- Header - Fixed -->
+      <v-card-title class="d-flex align-center pa-4 flex-shrink-0">
         <v-btn icon variant="text" class="mr-2" @click="close">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
@@ -18,18 +18,19 @@
         </v-avatar>
       </v-card-title>
 
-      <v-divider />
+      <v-divider class="flex-shrink-0" />
 
-      <!-- Tabs -->
-      <v-tabs v-model="activeTab" bg-color="surface">
+      <!-- Tabs - Fixed -->
+      <v-tabs v-model="activeTab" bg-color="surface" class="flex-shrink-0">
         <v-tab value="details">Details</v-tab>
         <v-tab value="schedule">Schedule</v-tab>
         <v-tab value="preview">Preview</v-tab>
       </v-tabs>
 
-      <v-divider />
+      <v-divider class="flex-shrink-0" />
 
-      <v-card-text class="pa-0">
+      <!-- Scrollable Content -->
+      <v-card-text class="pa-0 flex-grow-1 overflow-y-auto">
         <v-window v-model="activeTab">
           <!-- Details Tab -->
           <v-window-item value="details">
@@ -194,9 +195,9 @@
         </v-window>
       </v-card-text>
 
-      <v-divider />
+      <v-divider class="flex-shrink-0" />
 
-      <v-card-actions class="pa-4">
+      <v-card-actions class="pa-4 flex-shrink-0">
         <v-btn variant="text" @click="close">Cancel</v-btn>
         <v-spacer />
         <v-btn
@@ -332,8 +333,8 @@ async function loadSlots(templateId) {
     const response = await axios.get(`/api/admin/scheduling/templates/${templateId}/slots?include_inactive=true`)
     slots.value = (response.data.slots || []).map(slot => ({
       ...slot,
-      // Convert single day_of_week to days_of_week array for multi-day UI
-      days_of_week: [slot.day_of_week ?? 1],
+      // Use days_of_week array from backend, fallback to single day_of_week
+      days_of_week: slot.days_of_week?.length > 0 ? [...slot.days_of_week] : [slot.day_of_week ?? 1],
       // Convert dates to string format for the editor
       recurrence_end_date: slot.recurrence_end_date ? slot.recurrence_end_date.split('T')[0] : '',
       effective_start_date: slot.effective_start_date ? slot.effective_start_date.split('T')[0] : ''
@@ -487,37 +488,36 @@ async function save() {
         // Delete existing slot
         await axios.delete(`/api/admin/scheduling/templates/${templateId}/slots/${slot.id}`)
       } else if (slot._isNew) {
-        // Create new slot(s) - one per selected day
-        const daysToCreate = slot.days_of_week?.length > 0
-          ? slot.days_of_week
-          : [slot.day_of_week ?? 1]
-
-        for (const dayOfWeek of daysToCreate) {
-          const slotData = {
-            day_of_week: dayOfWeek,
-            start_time: slot.start_time,
-            recurrence_interval: slot.recurrence_interval,
-            recurrence_end_type: slot.recurrence_end_type,
-            recurrence_end_count: slot.recurrence_end_count,
-            recurrence_end_date: slot.recurrence_end_date || null,
-            effective_start_date: slot.effective_start_date || null,
-            location_id: slot.location_id,
-            override_capacity: slot.override_capacity,
-            is_active: slot.is_active !== false
-          }
-          await axios.post(`/api/admin/scheduling/templates/${templateId}/slots`, slotData)
-        }
-      } else if (slot.id) {
-        // Update existing slot (single day only - multi-day editing not supported for existing slots)
+        // Create new slot with days_of_week array
         const slotData = {
-          ...slot,
+          days_of_week: slot.days_of_week?.length > 0 ? slot.days_of_week : [slot.day_of_week ?? 1],
           day_of_week: slot.days_of_week?.[0] ?? slot.day_of_week ?? 1,
+          start_time: slot.start_time,
+          recurrence_interval: slot.recurrence_interval,
+          recurrence_end_type: slot.recurrence_end_type,
+          recurrence_end_count: slot.recurrence_end_count,
           recurrence_end_date: slot.recurrence_end_date || null,
-          effective_start_date: slot.effective_start_date || null
+          effective_start_date: slot.effective_start_date || null,
+          location_id: slot.location_id,
+          override_capacity: slot.override_capacity,
+          is_active: slot.is_active !== false
         }
-        delete slotData._isNew
-        delete slotData._deleted
-        delete slotData.days_of_week // Backend doesn't support array
+        await axios.post(`/api/admin/scheduling/templates/${templateId}/slots`, slotData)
+      } else if (slot.id) {
+        // Update existing slot with days_of_week array
+        const slotData = {
+          days_of_week: slot.days_of_week?.length > 0 ? slot.days_of_week : [slot.day_of_week ?? 1],
+          day_of_week: slot.days_of_week?.[0] ?? slot.day_of_week ?? 1,
+          start_time: slot.start_time,
+          recurrence_interval: slot.recurrence_interval,
+          recurrence_end_type: slot.recurrence_end_type,
+          recurrence_end_count: slot.recurrence_end_count,
+          recurrence_end_date: slot.recurrence_end_date || null,
+          effective_start_date: slot.effective_start_date || null,
+          location_id: slot.location_id,
+          override_capacity: slot.override_capacity,
+          is_active: slot.is_active !== false
+        }
         await axios.put(`/api/admin/scheduling/templates/${templateId}/slots/${slot.id}`, slotData)
       }
     }

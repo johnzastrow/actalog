@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -30,11 +31,28 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 		slot.RecurrenceEndType = domain.RecurrenceEndNone
 	}
 
+	// Serialize DaysOfWeek to JSON
+	var daysOfWeekJSON *string
+	if len(slot.DaysOfWeek) > 0 {
+		jsonBytes, err := json.Marshal(slot.DaysOfWeek)
+		if err != nil {
+			return fmt.Errorf("failed to serialize days_of_week: %w", err)
+		}
+		jsonStr := string(jsonBytes)
+		daysOfWeekJSON = &jsonStr
+		// Also set DayOfWeek to first day for backwards compatibility
+		slot.DayOfWeek = slot.DaysOfWeek[0]
+	} else if slot.DayOfWeek >= 0 {
+		// If only DayOfWeek is set, create single-element array
+		jsonStr := fmt.Sprintf("[%d]", slot.DayOfWeek)
+		daysOfWeekJSON = &jsonStr
+	}
+
 	query := rebindQuery(`
-		INSERT INTO schedule_slots (template_id, location_id, day_of_week, start_time, override_capacity, is_active,
+		INSERT INTO schedule_slots (template_id, location_id, day_of_week, days_of_week_json, start_time, override_capacity, is_active,
 			recurrence_interval, recurrence_end_type, recurrence_end_count, recurrence_end_date, effective_start_date,
 			created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 
 	if currentDriver == "postgres" {
@@ -43,6 +61,7 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 			slot.TemplateID,
 			slot.LocationID,
 			slot.DayOfWeek,
+			daysOfWeekJSON,
 			slot.StartTime,
 			slot.OverrideCapacity,
 			slot.IsActive,
@@ -60,6 +79,7 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 		slot.TemplateID,
 		slot.LocationID,
 		slot.DayOfWeek,
+		daysOfWeekJSON,
 		slot.StartTime,
 		slot.OverrideCapacity,
 		slot.IsActive,
@@ -87,7 +107,7 @@ func (r *ScheduleSlotRepository) Create(slot *domain.ScheduleSlot) error {
 // GetByID retrieves a schedule slot by ID
 func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error) {
 	query := rebindQuery(`
-		SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
+		SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.days_of_week_json, ss.start_time,
 		       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
 		       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
 		       ss.recurrence_end_date, ss.effective_start_date,
@@ -99,6 +119,7 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 
 	slot := &domain.ScheduleSlot{}
 	var locationID sql.NullInt64
+	var daysOfWeekJSON sql.NullString
 	var overrideCapacity sql.NullInt64
 	var locationName sql.NullString
 	var recurrenceInterval sql.NullInt64
@@ -112,6 +133,7 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 		&slot.TemplateID,
 		&locationID,
 		&slot.DayOfWeek,
+		&daysOfWeekJSON,
 		&slot.StartTime,
 		&overrideCapacity,
 		&slot.IsActive,
@@ -134,6 +156,17 @@ func (r *ScheduleSlotRepository) GetByID(id int64) (*domain.ScheduleSlot, error)
 
 	if locationID.Valid {
 		slot.LocationID = &locationID.Int64
+	}
+	// Parse days_of_week_json
+	if daysOfWeekJSON.Valid && daysOfWeekJSON.String != "" {
+		var days []int
+		if err := json.Unmarshal([]byte(daysOfWeekJSON.String), &days); err == nil {
+			slot.DaysOfWeek = days
+		}
+	}
+	// Fallback to single day if no multi-day data
+	if len(slot.DaysOfWeek) == 0 {
+		slot.DaysOfWeek = []int{slot.DayOfWeek}
 	}
 	if overrideCapacity.Valid {
 		cap := int(overrideCapacity.Int64)
@@ -194,7 +227,7 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 	var query string
 	if includeInactive {
 		query = rebindQuery(`
-			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
+			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.days_of_week_json, ss.start_time,
 			       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
 			       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
 			       ss.recurrence_end_date, ss.effective_start_date,
@@ -206,7 +239,7 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 		`)
 	} else {
 		query = rebindQuery(`
-			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.start_time,
+			SELECT ss.id, ss.template_id, ss.location_id, ss.day_of_week, ss.days_of_week_json, ss.start_time,
 			       ss.override_capacity, ss.is_active, ss.created_at, ss.updated_at,
 			       ss.recurrence_interval, ss.recurrence_end_type, ss.recurrence_end_count,
 			       ss.recurrence_end_date, ss.effective_start_date,
@@ -234,6 +267,7 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 	for rows.Next() {
 		slot := &domain.ScheduleSlot{}
 		var locationID sql.NullInt64
+		var daysOfWeekJSON sql.NullString
 		var overrideCapacity sql.NullInt64
 		var locationName sql.NullString
 		var recurrenceInterval sql.NullInt64
@@ -247,6 +281,7 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 			&slot.TemplateID,
 			&locationID,
 			&slot.DayOfWeek,
+			&daysOfWeekJSON,
 			&slot.StartTime,
 			&overrideCapacity,
 			&slot.IsActive,
@@ -265,6 +300,17 @@ func (r *ScheduleSlotRepository) GetByTemplateID(templateID int64, includeInacti
 
 		if locationID.Valid {
 			slot.LocationID = &locationID.Int64
+		}
+		// Parse days_of_week_json
+		if daysOfWeekJSON.Valid && daysOfWeekJSON.String != "" {
+			var days []int
+			if err := json.Unmarshal([]byte(daysOfWeekJSON.String), &days); err == nil {
+				slot.DaysOfWeek = days
+			}
+		}
+		// Fallback to single day if no multi-day data
+		if len(slot.DaysOfWeek) == 0 {
+			slot.DaysOfWeek = []int{slot.DayOfWeek}
 		}
 		if overrideCapacity.Valid {
 			cap := int(overrideCapacity.Int64)
@@ -316,9 +362,26 @@ func (r *ScheduleSlotRepository) Update(slot *domain.ScheduleSlot) error {
 		slot.RecurrenceEndType = domain.RecurrenceEndNone
 	}
 
+	// Serialize DaysOfWeek to JSON
+	var daysOfWeekJSON *string
+	if len(slot.DaysOfWeek) > 0 {
+		jsonBytes, err := json.Marshal(slot.DaysOfWeek)
+		if err != nil {
+			return fmt.Errorf("failed to serialize days_of_week: %w", err)
+		}
+		jsonStr := string(jsonBytes)
+		daysOfWeekJSON = &jsonStr
+		// Also set DayOfWeek to first day for backwards compatibility
+		slot.DayOfWeek = slot.DaysOfWeek[0]
+	} else if slot.DayOfWeek >= 0 {
+		// If only DayOfWeek is set, create single-element array
+		jsonStr := fmt.Sprintf("[%d]", slot.DayOfWeek)
+		daysOfWeekJSON = &jsonStr
+	}
+
 	query := rebindQuery(`
 		UPDATE schedule_slots
-		SET location_id = ?, day_of_week = ?, start_time = ?,
+		SET location_id = ?, day_of_week = ?, days_of_week_json = ?, start_time = ?,
 		    override_capacity = ?, is_active = ?,
 		    recurrence_interval = ?, recurrence_end_type = ?,
 		    recurrence_end_count = ?, recurrence_end_date = ?,
@@ -329,6 +392,7 @@ func (r *ScheduleSlotRepository) Update(slot *domain.ScheduleSlot) error {
 	_, err := r.db.Exec(query,
 		slot.LocationID,
 		slot.DayOfWeek,
+		daysOfWeekJSON,
 		slot.StartTime,
 		slot.OverrideCapacity,
 		slot.IsActive,

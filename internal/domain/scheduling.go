@@ -66,8 +66,10 @@ type ScheduleSlot struct {
 	ID               int64     `json:"id" db:"id"`
 	TemplateID       int64     `json:"template_id" db:"template_id"`
 	LocationID       *int64    `json:"location_id,omitempty" db:"location_id"`
-	DayOfWeek        int       `json:"day_of_week" db:"day_of_week"` // 0=Sunday, 6=Saturday
-	StartTime        string    `json:"start_time" db:"start_time"`   // HH:MM format
+	DayOfWeek        int       `json:"day_of_week" db:"day_of_week"`     // 0=Sunday, 6=Saturday (legacy, use first day from DaysOfWeek)
+	DaysOfWeek       []int     `json:"days_of_week" db:"-"`             // Multiple days [0,1,2...6] - stored as JSON in days_of_week_json
+	DaysOfWeekJSON   *string   `json:"-" db:"days_of_week_json"`        // JSON storage for DaysOfWeek
+	StartTime        string    `json:"start_time" db:"start_time"`       // HH:MM format
 	OverrideCapacity *int      `json:"override_capacity,omitempty" db:"override_capacity"`
 	IsActive         bool      `json:"is_active" db:"is_active"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
