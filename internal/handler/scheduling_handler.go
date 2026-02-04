@@ -1275,6 +1275,102 @@ func (h *SchedulingHandler) CompleteSession(w http.ResponseWriter, r *http.Reque
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Session completed successfully"})
 }
 
+// AddSessionCoach handles POST /api/sessions/{session_id}/coaches
+func (h *SchedulingHandler) AddSessionCoach(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	var req struct {
+		UserID int64 `json:"user_id"`
+		IsLead bool  `json:"is_lead"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.UserID == 0 {
+		respondError(w, http.StatusBadRequest, "user_id is required")
+		return
+	}
+
+	if err := h.schedulingService.AddCoachToSession(userID, sessionID, req.UserID, req.IsLead); err != nil {
+		if err == service.ErrClassSessionNotFound {
+			respondError(w, http.StatusNotFound, "Session not found")
+			return
+		}
+		h.logger.Error("Failed to add coach to session: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to add coach to session")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]string{"message": "Coach added to session"})
+}
+
+// RemoveSessionCoach handles DELETE /api/sessions/{session_id}/coaches/{user_id}
+func (h *SchedulingHandler) RemoveSessionCoach(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	coachUserIDStr := chi.URLParam(r, "user_id")
+	coachUserID, err := strconv.ParseInt(coachUserIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	if err := h.schedulingService.RemoveCoachFromSession(userID, sessionID, coachUserID); err != nil {
+		h.logger.Error("Failed to remove coach from session: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to remove coach from session")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Coach removed from session"})
+}
+
+// GetSessionCoaches handles GET /api/sessions/{session_id}/coaches
+func (h *SchedulingHandler) GetSessionCoaches(w http.ResponseWriter, r *http.Request) {
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	coaches, err := h.schedulingService.GetSessionCoaches(sessionID)
+	if err != nil {
+		h.logger.Error("Failed to get session coaches: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get session coaches")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"coaches": coaches,
+		"count":   len(coaches),
+	})
+}
+
 // MarkNoShow handles POST /api/sessions/{session_id}/no-show/{reservation_id}
 func (h *SchedulingHandler) MarkNoShow(w http.ResponseWriter, r *http.Request) {
 	coachUserID, ok := middleware.GetUserID(r.Context())

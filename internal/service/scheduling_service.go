@@ -698,6 +698,11 @@ func (s *SchedulingService) RemoveCoachFromSession(adminUserID int64, sessionID,
 	return nil
 }
 
+// GetSessionCoaches retrieves all coaches assigned to a session
+func (s *SchedulingService) GetSessionCoaches(sessionID int64) ([]*domain.SessionCoach, error) {
+	return s.sessionCoachRepo.GetBySessionID(sessionID)
+}
+
 // ============================================
 // RESERVATION METHODS
 // ============================================

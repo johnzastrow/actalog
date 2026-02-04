@@ -137,58 +137,18 @@
 
         <!-- Sessions Tab -->
         <v-window-item value="sessions">
-          <v-card elevation="0" rounded="lg">
-            <v-card-title class="d-flex align-center">
-              <v-icon class="mr-2">mdi-calendar</v-icon>
-              Sessions
-              <v-spacer />
-              <v-btn color="primary" size="small" :disabled="!selectedOrgId" @click="openSessionDialog()">
-                <v-icon start>mdi-plus</v-icon>
-                Create Session
-              </v-btn>
-            </v-card-title>
-            <v-divider />
-
-            <!-- Date Navigation -->
-            <div class="pa-3 d-flex align-center justify-space-between">
-              <v-btn icon variant="text" size="small" @click="previousWeek">
-                <v-icon>mdi-chevron-left</v-icon>
-              </v-btn>
-              <span class="text-body-2">{{ formatDateRange(startDate, endDate) }}</span>
-              <v-btn icon variant="text" size="small" @click="nextWeek">
-                <v-icon>mdi-chevron-right</v-icon>
-              </v-btn>
-            </div>
-
-            <v-list v-if="sessions.length > 0">
-              <v-list-item v-for="sess in sessions" :key="sess.id">
-                <v-list-item-title>
-                  {{ sess.name }}
-                  <v-chip :color="getSessionStatusColor(sess.status)" size="x-small" class="ml-2">
-                    {{ sess.status }}
-                  </v-chip>
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ formatDateTime(sess.start_time) }}
-                  | {{ sess.reservation_count }}/{{ sess.capacity }} reserved
-                  <span v-if="sess.location_name"> | {{ sess.location_name }}</span>
-                </v-list-item-subtitle>
-                <template #append>
-                  <v-btn icon size="small" variant="text" title="View Roster" @click="viewRoster(sess)">
-                    <v-icon>mdi-account-multiple</v-icon>
-                  </v-btn>
-                  <v-btn v-if="sess.status === 'scheduled'" icon size="small" variant="text" @click="editSession(sess)">
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
-                  <v-btn v-if="sess.status === 'scheduled'" icon size="small" variant="text" @click="cancelSession(sess)">
-                    <v-icon color="error">mdi-cancel</v-icon>
-                  </v-btn>
-                </template>
-              </v-list-item>
-            </v-list>
-            <v-card-text v-else>
-              <v-alert type="info" variant="tonal">No sessions scheduled for this period.</v-alert>
-            </v-card-text>
+          <v-card elevation="0" rounded="lg" class="pa-4">
+            <SessionsGrid
+              ref="sessionsGrid"
+              :gym-id="selectedOrgId"
+              :locations="locations"
+              :coaches="coaches"
+              @create="openSessionDialog()"
+              @view-roster="viewRoster"
+              @cancel="cancelSession"
+              @complete="completeSession"
+              @updated="onSessionUpdated"
+            />
           </v-card>
         </v-window-item>
 
@@ -368,6 +328,7 @@
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import TemplateEditDialog from '@/components/scheduling/TemplateEditDialog.vue'
+import SessionsGrid from '@/components/scheduling/SessionsGrid.vue'
 
 const loading = ref(false)
 const error = ref(null)
@@ -407,6 +368,7 @@ const sessionForm = ref({ name: '', template_id: null, start_time: '', end_time:
 const coachForm = ref({ user_id: null })
 const currentRosterSessionId = ref(null)
 const currentRosterSession = ref(null)
+const sessionsGrid = ref(null)
 
 // Initialize
 onMounted(() => {
@@ -628,10 +590,25 @@ async function cancelSession(sess) {
   try {
     await axios.post(`/api/admin/gyms/${selectedOrgId.value}/sessions/${sess.id}/cancel`, { reason })
     successMessage.value = 'Session cancelled'
-    fetchSessions()
+    if (sessionsGrid.value) sessionsGrid.value.refresh()
   } catch (err) {
     error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to cancel session'
   }
+}
+
+async function completeSession(sess) {
+  if (!confirm(`Mark "${sess.name}" as completed?`)) return
+  try {
+    await axios.post(`/api/admin/sessions/${sess.id}/complete`)
+    successMessage.value = 'Session completed'
+    if (sessionsGrid.value) sessionsGrid.value.refresh()
+  } catch (err) {
+    error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to complete session'
+  }
+}
+
+function onSessionUpdated() {
+  successMessage.value = 'Session updated'
 }
 
 async function viewRoster(sess) {
@@ -663,19 +640,6 @@ async function markNoShow(res) {
     viewRoster(currentRosterSession.value)
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to mark no-show'
-  }
-}
-
-async function completeSession() {
-  if (!confirm('Are you sure you want to complete this session?')) return
-  try {
-    await axios.post(`/api/admin/sessions/${currentRosterSessionId.value}/complete`)
-    successMessage.value = 'Session completed successfully'
-    currentRosterSession.value.status = 'completed'
-    rosterDialog.value = false
-    fetchSessions()
-  } catch (err) {
-    error.value = err.response?.data?.error || 'Failed to complete session'
   }
 }
 

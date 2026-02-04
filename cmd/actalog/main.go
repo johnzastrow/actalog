@@ -928,6 +928,11 @@ func main() {
 				r.Post("/sessions/{session_id}/no-show/{reservation_id}", schedulingHandler.MarkNoShow)
 				r.Post("/sessions/{session_id}/complete", schedulingHandler.CompleteSession)
 
+				// Session coach management (admin only)
+				r.Get("/sessions/{session_id}/coaches", schedulingHandler.GetSessionCoaches)
+				r.Post("/sessions/{session_id}/coaches", schedulingHandler.AddSessionCoach)
+				r.Delete("/sessions/{session_id}/coaches/{user_id}", schedulingHandler.RemoveSessionCoach)
+
 				// User-organization assignment (admin only)
 				r.Post("/users/{id}/organization", orgHandler.AssignUserToOrganization)
 				r.Delete("/users/{id}/organization/{org_id}", orgHandler.RemoveUserFromOrganization)
