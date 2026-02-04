@@ -316,6 +316,7 @@
           color="primary"
           rounded="lg"
           :loading="saving"
+          :disabled="saving"
           @click="save"
         >
           <v-icon start>mdi-content-save</v-icon>
@@ -410,6 +411,9 @@ let coachSearchTimeout = null
 
 // Schedule slots
 const slots = ref([])
+
+// Module-level save lock (not reactive, prevents race conditions)
+let saveLock = false
 
 // Preview
 const previewDates = ref([])
@@ -736,8 +740,16 @@ function close() {
 }
 
 async function save() {
+  // Prevent multiple concurrent saves using module-level lock
+  if (saveLock) {
+    console.log('[TemplateEditDialog] Save already in progress (lock), skipping')
+    return
+  }
+  saveLock = true
+
   if (!form.value.name?.trim()) {
     // Show error
+    saveLock = false
     return
   }
 
@@ -836,6 +848,7 @@ async function save() {
     console.error('Failed to save template:', err)
   } finally {
     saving.value = false
+    saveLock = false
   }
 }
 
