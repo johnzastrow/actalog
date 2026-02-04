@@ -74,9 +74,10 @@ watch(() => props.modelValue, (newVal) => {
 }, { deep: true })
 
 // Watch for internal changes and emit to parent
+// IMPORTANT: Spread to create new array so parent's watchEffect detects the change
 watch(selectedDays, (newVal) => {
   if (!isUpdatingFromProp) {
-    emit('update:modelValue', newVal)
+    emit('update:modelValue', Array.isArray(newVal) ? [...newVal] : newVal)
   }
 }, { deep: true })
 </script>

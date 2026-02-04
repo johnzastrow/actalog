@@ -34,7 +34,8 @@
     <!-- Days of Week (multiple selection) -->
     <div class="mb-4">
       <DayOfWeekSelector
-        v-model="daysOfWeek"
+        :modelValue="daysOfWeek"
+        @update:modelValue="onDaysChange"
         label="On"
         :multiple="true"
       />
@@ -120,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, watchEffect } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import DayOfWeekSelector from './DayOfWeekSelector.vue'
 
 const props = defineProps({
@@ -156,6 +157,19 @@ const endCount = ref(props.modelValue.recurrence_end_count ?? 10)
 const endDate = ref(props.modelValue.recurrence_end_date ?? '')
 const effectiveStartDate = ref(props.modelValue.effective_start_date ?? '')
 
+// Flag to track when we're syncing from props (should not emit back)
+let isSyncingFromProps = false
+
+// Handler for days change from child component
+function onDaysChange(newDays) {
+  const newArray = Array.isArray(newDays) ? [...newDays] : [newDays]
+
+  // Check if actually changed to prevent unnecessary updates
+  if (arraysEqual(daysOfWeek.value, newArray)) return
+
+  daysOfWeek.value = newArray
+}
+
 // Format selected days for summary
 function formatSelectedDays(days) {
   if (!days || days.length === 0) {
@@ -173,11 +187,12 @@ function formatSelectedDays(days) {
   }
 }
 
-// Use a ref for the summary text and update it via watchEffect to ensure reactivity
-const summaryTextValue = ref('')
-
-watchEffect(() => {
-  const days = daysOfWeek.value
+// Computed summary text - using a computed ensures reactivity
+// We create primitive dependencies to guarantee Vue tracks the changes
+const summaryTextValue = computed(() => {
+  // Access array as primitive string to ensure reactivity on content changes
+  const daysKey = JSON.stringify(daysOfWeek.value)
+  const days = JSON.parse(daysKey)
   const intervalVal = interval.value
   const startTimeVal = startTime.value
   const endTypeVal = endType.value
@@ -197,7 +212,7 @@ watchEffect(() => {
     text += `, until ${formatDateDisplay(endDateVal)}`
   }
 
-  summaryTextValue.value = text
+  return text
 })
 
 // Keep computed for backwards compatibility
@@ -220,6 +235,9 @@ function formatDateDisplay(dateStr) {
 
 // Watch for changes and emit
 function emitUpdate() {
+  // Skip emit when syncing from props to prevent circular loops
+  if (isSyncingFromProps) return
+
   emit('update:modelValue', {
     days_of_week: [...daysOfWeek.value], // Array of selected days
     day_of_week: daysOfWeek.value[0] ?? 1, // Legacy support: first day
@@ -245,6 +263,9 @@ function arraysEqual(a, b) {
 
 // Watch for prop changes
 watch(() => props.modelValue, (newVal) => {
+  // Set flag to prevent emitting back to parent while syncing
+  isSyncingFromProps = true
+
   // Support both new multi-day and legacy single day
   const newDays = newVal.days_of_week?.length > 0
     ? newVal.days_of_week
@@ -272,6 +293,11 @@ watch(() => props.modelValue, (newVal) => {
   if (effectiveStartDate.value !== (newVal.effective_start_date ?? '')) {
     effectiveStartDate.value = newVal.effective_start_date ?? ''
   }
+
+  // Reset flag after all sync effects complete
+  nextTick(() => {
+    isSyncingFromProps = false
+  })
 }, { deep: true })
 </script>
 
