@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -66,11 +66,27 @@ const selectedDays = ref(normalizeValue(props.modelValue, props.multiple))
 // Flag to prevent circular updates
 let isUpdatingFromProp = false
 
+// Helper to check if arrays are equal
+function arraysEqual(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return a === b
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((val, i) => val === sortedB[i])
+}
+
 // Watch for external changes to modelValue
 watch(() => props.modelValue, (newVal) => {
   isUpdatingFromProp = true
-  selectedDays.value = normalizeValue(newVal, props.multiple)
-  isUpdatingFromProp = false
+  const normalized = normalizeValue(newVal, props.multiple)
+  // Only update if values actually changed to prevent unnecessary watch triggers
+  if (!arraysEqual(selectedDays.value, normalized)) {
+    selectedDays.value = normalized
+  }
+  // Use nextTick to ensure the flag stays true until after any queued watches execute
+  nextTick(() => {
+    isUpdatingFromProp = false
+  })
 }, { deep: true })
 
 // Watch for internal changes and emit to parent
