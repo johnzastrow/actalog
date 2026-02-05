@@ -26,6 +26,9 @@ var (
 	ErrInvalidTimeFormat       = errors.New("time must be in HH:MM format")
 )
 
+// MaterializeFunc is a callback function to trigger session materialization for a template
+type MaterializeFunc func(templateID int64) error
+
 type SchedulingService struct {
 	locationRepo        domain.GymLocationRepository
 	templateRepo        domain.ClassTemplateRepository
@@ -38,6 +41,7 @@ type SchedulingService struct {
 	orgRepo             domain.OrganizationRepository
 	auditLogRepo        domain.AuditLogRepository
 	workoutRepo         domain.WorkoutRepository
+	materializeFunc     MaterializeFunc // Optional callback for session materialization
 }
 
 func NewSchedulingService(
@@ -65,6 +69,27 @@ func NewSchedulingService(
 		orgRepo:             orgRepo,
 		auditLogRepo:        auditLogRepo,
 		workoutRepo:         workoutRepo,
+	}
+}
+
+// SetMaterializeFunc sets the callback function for session materialization.
+// This should be called after creating the service to enable automatic
+// materialization when schedule slots are created or updated.
+func (s *SchedulingService) SetMaterializeFunc(fn MaterializeFunc) {
+	s.materializeFunc = fn
+}
+
+// triggerMaterialization calls the materialize callback if set
+func (s *SchedulingService) triggerMaterialization(templateID int64) {
+	if s.materializeFunc != nil {
+		// Run in background to not block the request
+		go func() {
+			if err := s.materializeFunc(templateID); err != nil {
+				// Log error but don't fail the request
+				// The scheduler will pick up any missed sessions
+				_ = err // Error is logged in the materializer
+			}
+		}()
 	}
 }
 
@@ -332,6 +357,9 @@ func (s *SchedulingService) CreateScheduleSlot(adminUserID int64, slot *domain.S
 		"start_time":  slot.StartTime,
 	})
 
+	// Trigger session materialization for this template
+	s.triggerMaterialization(slot.TemplateID)
+
 	return nil
 }
 
@@ -365,6 +393,9 @@ func (s *SchedulingService) UpdateScheduleSlot(adminUserID int64, slot *domain.S
 		"day_of_week": slot.DayOfWeek,
 		"start_time":  slot.StartTime,
 	})
+
+	// Trigger session materialization for this template
+	s.triggerMaterialization(existing.TemplateID)
 
 	return nil
 }

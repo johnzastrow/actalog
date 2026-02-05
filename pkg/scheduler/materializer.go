@@ -192,6 +192,63 @@ func (m *Materializer) MaterializeForOrganization(ctx context.Context, orgID int
 	return result, nil
 }
 
+// MaterializeForTemplate materializes sessions for a single template
+func (m *Materializer) MaterializeForTemplate(ctx context.Context, templateID int64) (*MaterializeResult, error) {
+	result := &MaterializeResult{}
+
+	// Calculate date range
+	startDate := time.Now()
+	endDate := startDate.AddDate(0, 0, m.config.DaysAhead)
+
+	m.logger.Info("Materializing sessions for template %d: %s to %s",
+		templateID,
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"),
+	)
+
+	template, err := m.templateRepo.GetByID(templateID)
+	if err != nil {
+		return result, fmt.Errorf("failed to get template: %w", err)
+	}
+	if template == nil {
+		return result, fmt.Errorf("template %d not found", templateID)
+	}
+
+	if !template.IsActive {
+		m.logger.Info("Template %d is inactive, skipping materialization", templateID)
+		return result, nil
+	}
+
+	result.TemplatesProcessed++
+
+	slots, err := m.slotRepo.GetByTemplateID(templateID, false)
+	if err != nil {
+		return result, fmt.Errorf("failed to get slots: %w", err)
+	}
+
+	for _, slot := range slots {
+		result.SlotsProcessed++
+
+		created, skipped, err := m.materializeSlot(ctx, template, slot, startDate, endDate)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Errorf("slot %d: %w", slot.ID, err))
+			continue
+		}
+
+		result.SessionsCreated += created
+		result.SessionsSkipped += skipped
+	}
+
+	m.logger.Info("Template %d materialization complete: %d slots, %d sessions created, %d skipped",
+		templateID,
+		result.SlotsProcessed,
+		result.SessionsCreated,
+		result.SessionsSkipped,
+	)
+
+	return result, nil
+}
+
 // materializeSlot creates sessions for a single slot within the date range
 func (m *Materializer) materializeSlot(
 	ctx context.Context,

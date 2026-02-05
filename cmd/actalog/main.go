@@ -485,23 +485,33 @@ func main() {
 	schedulingHandler := handler.NewSchedulingHandler(schedulingService, appLogger)
 	phase4Handler := handler.NewPhase4Handler(phase4Service, appLogger)
 
-	// Initialize session materializer and scheduler
+	// Initialize session materializer (always created for on-demand materialization)
+	appLogger.Info("Initializing session materializer (enabled=%t, interval=%v, days_ahead=%d)",
+		cfg.Scheduler.Enabled, cfg.Scheduler.Interval, cfg.Scheduler.DaysAhead)
+
+	materializerConfig := scheduler.MaterializerConfig{
+		DaysAhead: cfg.Scheduler.DaysAhead,
+	}
+	materializer := scheduler.NewMaterializer(
+		classTemplateRepo,
+		scheduleSlotRepo,
+		classSessionRepo,
+		appLogger,
+		materializerConfig,
+	)
+
+	// Set up on-demand materialization callback for the scheduling service
+	// This triggers session creation when schedule slots are saved
+	schedulingService.SetMaterializeFunc(func(templateID int64) error {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		_, err := materializer.MaterializeForTemplate(ctx, templateID)
+		return err
+	})
+
+	// Initialize background scheduler if enabled
 	var appScheduler *scheduler.Scheduler
 	if cfg.Scheduler.Enabled {
-		appLogger.Info("Initializing session materializer (enabled=%t, interval=%v, days_ahead=%d)",
-			cfg.Scheduler.Enabled, cfg.Scheduler.Interval, cfg.Scheduler.DaysAhead)
-
-		materializerConfig := scheduler.MaterializerConfig{
-			DaysAhead: cfg.Scheduler.DaysAhead,
-		}
-		materializer := scheduler.NewMaterializer(
-			classTemplateRepo,
-			scheduleSlotRepo,
-			classSessionRepo,
-			appLogger,
-			materializerConfig,
-		)
-
 		appScheduler = scheduler.NewScheduler(appLogger)
 		appScheduler.AddJob(materializer.CreateMaterializerJob(cfg.Scheduler.Interval))
 
