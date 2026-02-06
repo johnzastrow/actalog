@@ -1,17 +1,7 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
-      <!-- Error/Success Alert -->
-      <v-alert
-        v-if="successMessage"
-        type="success"
-        closable
-        class="mb-3"
-        @click:close="successMessage = ''"
-      >
-        {{ successMessage }}
-      </v-alert>
-
+      <!-- Error Alert -->
       <v-alert
         v-if="error"
         type="error"
@@ -454,6 +444,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Save Confirmation Snackbar -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      :timeout="4000"
+      location="bottom"
+    >
+      {{ snackbarText }}
+      <template #actions>
+        <v-btn variant="text" @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -515,13 +518,17 @@ const loadingMovements = ref(false)
 const loadingWODs = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
-const successMessage = ref('')
 const error = ref('')
 const validationErrors = ref({})
 const deleteDialog = ref(false)
 const previewDialog = ref(false)
 const previewId = ref(null)
 const savedState = ref(null) // Track saved state for change detection
+
+// Snackbar state
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
 
 // Computed
 const isEditMode = computed(() => !!route.params.id)
@@ -602,6 +609,13 @@ async function loadTemplate() {
     console.error('Failed to load workout:', err)
     error.value = 'Failed to load workout'
   }
+}
+
+// Show snackbar notification
+function showSnackbar(message, color = 'success') {
+  snackbarText.value = message
+  snackbarColor.value = color
+  snackbar.value = true
 }
 
 // Open preview dialog
@@ -694,7 +708,6 @@ async function saveTemplate() {
 
   saving.value = true
   error.value = ''
-  successMessage.value = ''
 
   try {
     const payload = {
@@ -722,12 +735,12 @@ async function saveTemplate() {
 
     if (isEditMode.value) {
       await axios.put(`/api/templates/${route.params.id}`, payload)
-      successMessage.value = 'Workout saved successfully!'
+      showSnackbar('Workout saved successfully!')
       // Update saved state after successful save
       savedState.value = JSON.stringify(template.value)
     } else {
       const response = await axios.post('/api/templates', payload)
-      successMessage.value = 'Workout created successfully!'
+      showSnackbar('Workout created successfully!')
       // Redirect to edit mode with new ID
       setTimeout(() => {
         router.push(`/workouts/templates/${response.data.template.id}/edit`)
@@ -736,9 +749,9 @@ async function saveTemplate() {
   } catch (err) {
     console.error('Failed to save workout:', err)
     if (err.response?.data?.message) {
-      error.value = err.response.data.message
+      showSnackbar(err.response.data.message, 'error')
     } else {
-      error.value = 'Failed to save workout. Please try again.'
+      showSnackbar('Failed to save workout. Please try again.', 'error')
     }
   } finally {
     saving.value = false
@@ -753,17 +766,16 @@ function confirmDelete() {
 // Delete workout
 async function deleteTemplate() {
   deleting.value = true
-  error.value = ''
 
   try {
     await axios.delete(`/api/templates/${route.params.id}`)
-    successMessage.value = 'Workout deleted successfully!'
+    showSnackbar('Workout deleted successfully!')
     setTimeout(() => {
       router.push('/workouts')
     }, 1000)
   } catch (err) {
     console.error('Failed to delete workout:', err)
-    error.value = 'Failed to delete workout. Please try again.'
+    showSnackbar('Failed to delete workout. Please try again.', 'error')
     deleteDialog.value = false
   } finally {
     deleting.value = false

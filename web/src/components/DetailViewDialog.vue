@@ -54,7 +54,7 @@
 
         <!-- Description (for WODs and Movements) -->
         <div v-if="entityData.description" class="mb-3">
-          <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Description</p>
+          <p class="section-label">Description</p>
           <div class="text-body-2">
             <markdown-renderer :content="entityData.description" />
           </div>
@@ -62,7 +62,7 @@
 
         <!-- Intro & Warmup (for Templates) -->
         <div v-if="type === 'template' && entityData.intro_warmup" class="mb-3">
-          <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Intro & Warmup</p>
+          <p class="section-label">Intro & Warmup</p>
           <div class="text-body-2">
             <markdown-renderer :content="entityData.intro_warmup" />
           </div>
@@ -70,7 +70,7 @@
 
         <!-- Notes (for WODs and Movements only - template notes shown last) -->
         <div v-if="type !== 'template' && entityData.notes" class="mb-3">
-          <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
+          <p class="section-label">Notes</p>
           <div class="text-body-2">
             <markdown-renderer :content="entityData.notes" />
           </div>
@@ -79,11 +79,11 @@
         <!-- WOD-specific: Source and URL -->
         <template v-if="type === 'wod'">
           <div v-if="entityData.source" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Source</p>
+            <p class="section-label">Source</p>
             <v-chip size="small" color="info" variant="flat">{{ entityData.source }}</v-chip>
           </div>
           <div v-if="entityData.url" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Video</p>
+            <p class="section-label">Video</p>
             <v-btn
               :href="entityData.url"
               target="_blank"
@@ -102,7 +102,7 @@
         <!-- Template-specific: Combined Workout section (Movements and WODs together) -->
         <template v-if="type === 'template'">
           <div v-if="entityData.movements?.length || entityData.wods?.length" class="mb-3">
-            <p class="text-caption font-weight-bold mb-2 text-medium-emphasis">Workout</p>
+            <p class="section-label mb-2">Workout</p>
             <v-list density="compact" bg-color="transparent" class="py-0">
               <!-- Movements -->
               <v-list-item v-for="m in entityData.movements" :key="'m-' + m.id" class="px-0 mb-2">
@@ -192,7 +192,7 @@
 
           <!-- Notes section (always last for templates) -->
           <div v-if="entityData.notes" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
+            <p class="section-label">Notes</p>
             <div class="text-body-2">
               <markdown-renderer :content="entityData.notes" />
             </div>
@@ -426,3 +426,14 @@ watch(() => props.id, (newVal) => {
   }
 })
 </script>
+
+<style scoped>
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #00838f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+</style>
