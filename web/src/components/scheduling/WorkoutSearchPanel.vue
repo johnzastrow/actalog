@@ -1,10 +1,20 @@
 <template>
   <div class="workout-search-panel">
-    <div class="panel-header mb-3">
+    <div class="panel-header mb-3 d-flex align-center justify-space-between">
       <div class="section-title">
         <v-icon size="small" class="mr-2">mdi-dumbbell</v-icon>
         Select Workout
       </div>
+      <v-btn
+        color="primary"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-plus"
+        rounded="lg"
+        @click="$emit('create')"
+      >
+        New Workout
+      </v-btn>
     </div>
 
     <!-- Search and Sort Controls -->
@@ -101,7 +111,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['select', 'preview'])
+const emit = defineEmits(['select', 'preview', 'create'])
 
 const search = ref('')
 const sortBy = ref('name_asc')

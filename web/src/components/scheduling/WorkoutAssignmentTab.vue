@@ -1,20 +1,10 @@
 <template>
   <div class="workout-assignment-tab">
-    <div class="section-header d-flex align-center justify-space-between mb-4">
+    <div class="section-header mb-4">
       <div class="section-title">
         <v-icon size="small" class="mr-2">mdi-dumbbell</v-icon>
         Assign Workout to Sessions
       </div>
-      <v-btn
-        color="primary"
-        variant="tonal"
-        size="small"
-        prepend-icon="mdi-plus"
-        rounded="lg"
-        @click="createNewWorkout"
-      >
-        New Workout
-      </v-btn>
     </div>
 
     <!-- Two Column Layout -->
@@ -27,6 +17,7 @@
             :selected-id="selectedWorkoutId"
             @select="onWorkoutSelect"
             @preview="openWorkoutPreview"
+            @create="createNewWorkout"
           />
         </div>
       </v-col>
