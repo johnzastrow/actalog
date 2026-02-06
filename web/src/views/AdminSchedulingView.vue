@@ -637,7 +637,7 @@ async function fetchCoaches() {
 async function fetchWorkouts() {
   try {
     const response = await axios.get('/api/templates')
-    workouts.value = response.data.templates || []
+    workouts.value = response.data.workouts || []
   } catch (err) {
     console.error('Failed to fetch workouts:', err)
   }
