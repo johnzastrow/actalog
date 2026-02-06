@@ -223,6 +223,7 @@
               :gym-id="selectedOrgId"
               :locations="locations"
               :coaches="coaches"
+              :templates="templates"
               @create="openSessionDialog()"
               @view-roster="viewRoster"
               @cancel="cancelSession"

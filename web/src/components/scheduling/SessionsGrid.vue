@@ -20,10 +20,84 @@
       </div>
     </div>
 
+    <!-- Filters -->
+    <div class="filter-section mb-4">
+      <v-row dense>
+        <v-col cols="6" sm="3">
+          <v-select
+            v-model="filters.templateId"
+            :items="templateOptions"
+            item-title="name"
+            item-value="id"
+            label="Class"
+            variant="solo-filled"
+            density="compact"
+            rounded="lg"
+            flat
+            hide-details
+            clearable
+          />
+        </v-col>
+        <v-col cols="6" sm="3">
+          <v-select
+            v-model="filters.locationId"
+            :items="locationOptions"
+            item-title="name"
+            item-value="id"
+            label="Location"
+            variant="solo-filled"
+            density="compact"
+            rounded="lg"
+            flat
+            hide-details
+            clearable
+          />
+        </v-col>
+        <v-col cols="6" sm="3">
+          <v-select
+            v-model="filters.status"
+            :items="statusOptions"
+            item-title="label"
+            item-value="value"
+            label="Status"
+            variant="solo-filled"
+            density="compact"
+            rounded="lg"
+            flat
+            hide-details
+            clearable
+          />
+        </v-col>
+        <v-col cols="6" sm="3">
+          <v-select
+            v-model="filters.coachId"
+            :items="coachOptions"
+            item-title="name"
+            item-value="id"
+            label="Coach"
+            variant="solo-filled"
+            density="compact"
+            rounded="lg"
+            flat
+            hide-details
+            clearable
+          />
+        </v-col>
+      </v-row>
+      <div v-if="hasActiveFilters" class="mt-2 d-flex align-center gap-2">
+        <span class="text-caption text-medium-emphasis">
+          Showing {{ filteredSessions.length }} of {{ sessions.length }} sessions
+        </span>
+        <v-btn variant="text" size="x-small" color="primary" @click="clearFilters">
+          Clear filters
+        </v-btn>
+      </div>
+    </div>
+
     <!-- Data Table -->
     <v-data-table
       :headers="headers"
-      :items="sessions"
+      :items="filteredSessions"
       :loading="loading"
       class="elevation-1 sessions-table"
       density="comfortable"
@@ -204,6 +278,10 @@ const props = defineProps({
   coaches: {
     type: Array,
     default: () => []
+  },
+  templates: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -215,6 +293,77 @@ const startDate = ref(new Date())
 const editingId = ref(null)
 const editingField = ref(null)
 const editValue = ref(null)
+
+// Filter state
+const filters = ref({
+  templateId: null,
+  locationId: null,
+  status: null,
+  coachId: null
+})
+
+// Filter options
+const templateOptions = computed(() => {
+  return [{ id: null, name: 'All Classes' }, ...props.templates]
+})
+
+const locationOptions = computed(() => {
+  return [{ id: null, name: 'All Locations' }, ...props.locations]
+})
+
+const statusOptions = [
+  { value: null, label: 'All Statuses' },
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' }
+]
+
+const coachOptions = computed(() => {
+  return [
+    { id: null, name: 'All Coaches' },
+    ...props.coaches.map(c => ({ id: c.user_id, name: c.user_name || c.user_email }))
+  ]
+})
+
+// Filtered sessions
+const filteredSessions = computed(() => {
+  let result = sessions.value
+
+  if (filters.value.templateId) {
+    result = result.filter(s => s.template_id === filters.value.templateId)
+  }
+
+  if (filters.value.locationId) {
+    result = result.filter(s => s.location_id === filters.value.locationId)
+  }
+
+  if (filters.value.status) {
+    result = result.filter(s => s.status === filters.value.status)
+  }
+
+  if (filters.value.coachId) {
+    result = result.filter(s =>
+      (s.coaches || []).some(c => c.user_id === filters.value.coachId)
+    )
+  }
+
+  return result
+})
+
+const hasActiveFilters = computed(() => {
+  return filters.value.templateId || filters.value.locationId ||
+         filters.value.status || filters.value.coachId
+})
+
+function clearFilters() {
+  filters.value = {
+    templateId: null,
+    locationId: null,
+    status: null,
+    coachId: null
+  }
+}
 
 // Set start date to beginning of current week (Monday)
 function initStartDate() {
@@ -441,5 +590,11 @@ defineExpose({ refresh: fetchSessions })
 
 .sessions-table :deep(.v-data-table__td) {
   vertical-align: middle;
+}
+
+.filter-section {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 12px 16px;
 }
 </style>
