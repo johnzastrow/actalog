@@ -224,6 +224,7 @@
               :locations="locations"
               :coaches="coaches"
               :templates="templates"
+              :workouts="workouts"
               @create="openSessionDialog()"
               @view-roster="viewRoster"
               @cancel="cancelSession"

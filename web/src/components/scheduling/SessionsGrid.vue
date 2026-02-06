@@ -131,14 +131,53 @@
         </span>
       </template>
 
-      <!-- Workout Column -->
+      <!-- Workout Column (Editable with autocomplete) -->
       <template #item.workout_name="{ item }">
-        <span v-if="item.workout_name" class="text-body-2">
-          {{ item.workout_name }}
-        </span>
-        <span v-else class="text-caption text-medium-emphasis">
-          No workout
-        </span>
+        <v-autocomplete
+          v-if="editingId === item.id && editingField === 'workout_id'"
+          v-model="editValue"
+          :items="props.workouts"
+          item-title="name"
+          item-value="id"
+          density="compact"
+          variant="outlined"
+          hide-details
+          clearable
+          autofocus
+          placeholder="Search workouts..."
+          style="min-width: 180px"
+          @update:model-value="saveEdit(item)"
+          @blur="cancelEdit"
+        />
+        <div v-else class="d-flex align-center gap-1 workout-cell">
+          <span
+            v-if="item.workout_name"
+            class="editable-cell flex-grow-1"
+            @click="startEdit(item, 'workout_id', item.workout_id)"
+          >
+            {{ item.workout_name }}
+            <v-icon size="x-small" class="edit-icon ml-1">mdi-pencil</v-icon>
+          </span>
+          <span
+            v-else
+            class="editable-cell text-caption text-medium-emphasis flex-grow-1"
+            @click="startEdit(item, 'workout_id', item.workout_id)"
+          >
+            No workout
+            <v-icon size="x-small" class="edit-icon ml-1">mdi-pencil</v-icon>
+          </span>
+          <v-btn
+            v-if="item.workout_id"
+            icon
+            size="x-small"
+            variant="text"
+            color="primary"
+            @click.stop="openWorkoutPreview(item.workout_id)"
+          >
+            <v-icon size="small">mdi-eye</v-icon>
+            <v-tooltip activator="parent" location="top">View Workout Details</v-tooltip>
+          </v-btn>
+        </div>
       </template>
 
       <!-- Location Column (Editable) -->
@@ -274,12 +313,19 @@
         </div>
       </template>
     </v-data-table>
+
+    <!-- Workout Preview Dialog -->
+    <WorkoutPreviewDialog
+      v-model="workoutPreviewDialog"
+      :workout-id="selectedWorkoutId"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import axios from '@/utils/axios'
+import WorkoutPreviewDialog from './WorkoutPreviewDialog.vue'
 
 const props = defineProps({
   gymId: {
@@ -297,6 +343,10 @@ const props = defineProps({
   templates: {
     type: Array,
     default: () => []
+  },
+  workouts: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -308,6 +358,10 @@ const startDate = ref(new Date())
 const editingId = ref(null)
 const editingField = ref(null)
 const editValue = ref(null)
+
+// Workout preview dialog state
+const workoutPreviewDialog = ref(false)
+const selectedWorkoutId = ref(null)
 
 // Filter state
 const filters = ref({
@@ -406,7 +460,7 @@ const formatDateRange = computed(() => {
 const headers = [
   { title: 'Date/Time', key: 'start_time', sortable: true, width: '160px' },
   { title: 'Name', key: 'name', sortable: true },
-  { title: 'Workout', key: 'workout_name', sortable: true, width: '150px' },
+  { title: 'Workout', key: 'workout_name', sortable: true, width: '200px' },
   { title: 'Location', key: 'location_id', sortable: false, width: '150px' },
   { title: 'Capacity', key: 'capacity', sortable: false, width: '100px' },
   { title: 'Coaches', key: 'coaches', sortable: false, width: '200px' },
@@ -498,6 +552,11 @@ function cancelEdit() {
   editValue.value = null
 }
 
+function openWorkoutPreview(workoutId) {
+  selectedWorkoutId.value = workoutId
+  workoutPreviewDialog.value = true
+}
+
 async function saveEdit(item) {
   if (editValue.value === item[editingField.value]) {
     cancelEdit()
@@ -524,6 +583,10 @@ async function saveEdit(item) {
     if (editingField.value === 'location_id') {
       const loc = props.locations.find(l => l.id === editValue.value)
       item.location_name = loc?.name || null
+    }
+    if (editingField.value === 'workout_id') {
+      const workout = props.workouts.find(w => w.id === editValue.value)
+      item.workout_name = workout?.name || null
     }
 
     emit('updated')
@@ -643,5 +706,13 @@ defineExpose({ refresh: fetchSessions })
 
 .coach-chip:hover {
   transform: scale(1.02);
+}
+
+.workout-cell {
+  min-width: 120px;
+}
+
+.workout-cell .editable-cell {
+  flex-grow: 1;
 }
 </style>
