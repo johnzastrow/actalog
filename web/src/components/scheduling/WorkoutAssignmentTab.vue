@@ -1,10 +1,20 @@
 <template>
   <div class="workout-assignment-tab">
-    <div class="section-header d-flex align-center mb-4">
+    <div class="section-header d-flex align-center justify-space-between mb-4">
       <div class="section-title">
         <v-icon size="small" class="mr-2">mdi-dumbbell</v-icon>
         Assign Workout to Sessions
       </div>
+      <v-btn
+        color="primary"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-plus"
+        rounded="lg"
+        @click="createNewWorkout"
+      >
+        New Workout
+      </v-btn>
     </div>
 
     <!-- Two Column Layout -->
@@ -127,10 +137,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import WorkoutSearchPanel from './WorkoutSearchPanel.vue'
 import SessionSelectionPanel from './SessionSelectionPanel.vue'
 import DetailViewDialog from '@/components/DetailViewDialog.vue'
+
+const router = useRouter()
 
 const props = defineProps({
   gymId: {
@@ -197,6 +210,10 @@ function onSessionSelectionChange(ids) {
 function openWorkoutPreview(id) {
   previewWorkoutId.value = id
   workoutPreviewDialog.value = true
+}
+
+function createNewWorkout() {
+  router.push('/workouts/templates/create')
 }
 
 function showSnackbar(message, color = 'success') {
