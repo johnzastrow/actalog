@@ -258,6 +258,7 @@ type SessionCoachRepository interface {
 	GetBySessionID(sessionID int64) ([]*SessionCoach, error)
 	Delete(id int64) error
 	DeleteBySessionAndUser(sessionID, userID int64) error
+	SetLeadCoach(sessionID, userID int64) error
 }
 
 // TemplateCoachRepository defines the interface for template coach data access

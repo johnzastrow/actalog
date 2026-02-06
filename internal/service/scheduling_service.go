@@ -719,7 +719,7 @@ func (s *SchedulingService) IsUserCoach(userID int64) (bool, error) {
 	return len(assignments) > 0, nil
 }
 
-// AddCoachToSession adds a coach to a specific session
+// AddCoachToSession adds a coach to a specific session or updates their lead status if already assigned
 func (s *SchedulingService) AddCoachToSession(adminUserID int64, sessionID, coachUserID int64, isLead bool) error {
 	// Verify session exists
 	session, err := s.sessionRepo.GetByID(sessionID)
@@ -739,6 +739,25 @@ func (s *SchedulingService) AddCoachToSession(adminUserID int64, sessionID, coac
 		return fmt.Errorf("user is not a coach for this organization")
 	}
 
+	// Check if coach is already assigned to this session
+	existingCoaches, err := s.sessionCoachRepo.GetBySessionID(sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing coaches: %w", err)
+	}
+
+	for _, coach := range existingCoaches {
+		if coach.UserID == coachUserID {
+			// Coach already assigned - just update lead status if requested
+			if isLead {
+				if err := s.sessionCoachRepo.SetLeadCoach(sessionID, coachUserID); err != nil {
+					return fmt.Errorf("failed to set lead coach: %w", err)
+				}
+			}
+			return nil
+		}
+	}
+
+	// Coach not yet assigned - create new assignment
 	sessionCoach := &domain.SessionCoach{
 		SessionID: sessionID,
 		UserID:    coachUserID,

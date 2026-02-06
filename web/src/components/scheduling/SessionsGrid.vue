@@ -184,11 +184,16 @@
             :key="coach.user_id"
             size="small"
             closable
-            :color="coach.is_lead ? 'primary' : 'default'"
+            :color="coach.is_lead ? 'primary' : 'grey-lighten-1'"
+            class="coach-chip"
             @click:close="removeCoach(item, coach.user_id)"
+            @click="toggleLeadCoach(item, coach.user_id)"
           >
+            <v-icon v-if="coach.is_lead" start size="small">mdi-star</v-icon>
             {{ coach.user_name || coach.user_email }}
-            <v-tooltip v-if="coach.is_lead" activator="parent">Lead Coach</v-tooltip>
+            <v-tooltip activator="parent">
+              {{ coach.is_lead ? 'Lead Coach - Click to change' : 'Click to make Lead Coach' }}
+            </v-tooltip>
           </v-chip>
           <v-menu>
             <template #activator="{ props }">
@@ -544,6 +549,28 @@ async function removeCoach(session, coachUserId) {
   }
 }
 
+async function toggleLeadCoach(session, coachUserId) {
+  // Only allow toggling for scheduled sessions
+  if (session.status !== 'scheduled') return
+
+  try {
+    // Set this coach as lead by re-adding with is_lead=true
+    // The API will update the existing assignment
+    await axios.post(`/api/admin/sessions/${session.id}/coaches`, {
+      user_id: coachUserId,
+      is_lead: true
+    })
+
+    // Update local state - set clicked coach as lead, remove lead from others
+    for (const coach of session.coaches || []) {
+      coach.is_lead = coach.user_id === coachUserId
+    }
+    emit('updated')
+  } catch (err) {
+    console.error('Failed to toggle lead coach:', err)
+  }
+}
+
 // Watch for gym changes and date changes
 watch([() => props.gymId, startDate], () => {
   fetchSessions()
@@ -596,5 +623,14 @@ defineExpose({ refresh: fetchSessions })
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
   padding: 12px 16px;
+}
+
+.coach-chip {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.coach-chip:hover {
+  transform: scale(1.02);
 }
 </style>

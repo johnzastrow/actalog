@@ -125,3 +125,20 @@ func (r *SessionCoachRepository) DeleteBySessionAndUser(sessionID, userID int64)
 
 	return nil
 }
+
+// SetLeadCoach sets the specified coach as lead and removes lead from others
+func (r *SessionCoachRepository) SetLeadCoach(sessionID, userID int64) error {
+	// First, remove lead from all coaches for this session
+	query1 := rebindQuery(`UPDATE session_coaches SET is_lead = ? WHERE session_id = ?`)
+	if _, err := r.db.Exec(query1, false, sessionID); err != nil {
+		return fmt.Errorf("failed to reset lead coaches: %w", err)
+	}
+
+	// Then set the specified coach as lead
+	query2 := rebindQuery(`UPDATE session_coaches SET is_lead = ? WHERE session_id = ? AND user_id = ?`)
+	if _, err := r.db.Exec(query2, true, sessionID, userID); err != nil {
+		return fmt.Errorf("failed to set lead coach: %w", err)
+	}
+
+	return nil
+}
