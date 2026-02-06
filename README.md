@@ -10,7 +10,7 @@
 
 ![ActaLog Logo](docs/images/logo_sm.png)
 
-ActaLog is an open-source web application designed for CrossFit/Functional Fitness athletes to log their workouts, monitor progress, and analyze performance over time. Built with Go on the backend and Vue.js on the frontend, ActaLog offers a responsive and user-friendly interface optimized for mobile devices.
+ActaLog is an open-source web application designed for CrossFit and Functional Fitness athletes to log workouts, track progress, and analyze performance over time. Built with Go on the backend and Vue.js on the frontend, ActaLog offers a responsive and user-friendly interface optimized for mobile devices.
 
 ## Screenshots
 
@@ -181,7 +181,7 @@ For production deployment using Docker:
    - Full application (frontend + API): `http://localhost:8080`
    - Health check: `http://localhost:8080/health`
 
-**Note:** In production, the Docker container serves both the frontend and backend from a single port (8080). The frontend is pre-built into static files, and the Go backend serves both the API and the static files. This is different from local development where the frontend runs on port 3000.
+**Note:** In production, the Docker container serves both the frontend and backend from a single port (8080). The frontend is pre-built into static files, and the Go backend serves both the API and the static files. This is different from local development, where the frontend runs on port 3000.
 
 **Database Options:**
 
