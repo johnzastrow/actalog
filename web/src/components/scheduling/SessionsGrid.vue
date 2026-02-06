@@ -131,6 +131,16 @@
         </span>
       </template>
 
+      <!-- Workout Column -->
+      <template #item.workout_name="{ item }">
+        <span v-if="item.workout_name" class="text-body-2">
+          {{ item.workout_name }}
+        </span>
+        <span v-else class="text-caption text-medium-emphasis">
+          No workout
+        </span>
+      </template>
+
       <!-- Location Column (Editable) -->
       <template #item.location_id="{ item }">
         <v-select
@@ -396,6 +406,7 @@ const formatDateRange = computed(() => {
 const headers = [
   { title: 'Date/Time', key: 'start_time', sortable: true, width: '160px' },
   { title: 'Name', key: 'name', sortable: true },
+  { title: 'Workout', key: 'workout_name', sortable: true, width: '150px' },
   { title: 'Location', key: 'location_id', sortable: false, width: '150px' },
   { title: 'Capacity', key: 'capacity', sortable: false, width: '100px' },
   { title: 'Coaches', key: 'coaches', sortable: false, width: '200px' },
