@@ -314,10 +314,12 @@
       </template>
     </v-data-table>
 
-    <!-- Workout Preview Dialog -->
-    <WorkoutPreviewDialog
+    <!-- Workout Detail Dialog -->
+    <DetailViewDialog
       v-model="workoutPreviewDialog"
-      :workout-id="selectedWorkoutId"
+      type="template"
+      :id="selectedWorkoutId"
+      :handle-quick-log-externally="true"
     />
   </div>
 </template>
@@ -325,7 +327,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import axios from '@/utils/axios'
-import WorkoutPreviewDialog from './WorkoutPreviewDialog.vue'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const props = defineProps({
   gymId: {
