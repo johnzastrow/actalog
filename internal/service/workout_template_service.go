@@ -26,13 +26,23 @@ func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMove
 }
 
 // Create creates a new workout template
-func (s *WorkoutTemplateService) Create(userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Create(userID int64, userEmail, userRole, name string, introWarmup, notes *string, isStandard bool, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+	// Determine CreatedBy based on isStandard and role
+	var createdBy *int64
+	if isStandard && userRole == "admin" {
+		// Standard workout: CreatedBy is NULL, making it available to all users
+		createdBy = nil
+	} else {
+		// Personal workout: CreatedBy is the user's ID
+		createdBy = &userID
+	}
+
 	// Create the workout template
 	workout := &domain.Workout{
 		Name:        name,
 		IntroWarmup: introWarmup,
 		Notes:       notes,
-		CreatedBy:   &userID,
+		CreatedBy:   createdBy,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -152,7 +162,7 @@ func (s *WorkoutTemplateService) ListStandard(limit, offset int) ([]*domain.Work
 }
 
 // Update updates an existing workout template
-func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
+func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, userRole, name string, introWarmup, notes *string, isStandard bool, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -162,15 +172,30 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, name string
 		return nil, fmt.Errorf("failed to get workout template: %w", err)
 	}
 
-	// Verify user owns this template
-	if existing.CreatedBy == nil || *existing.CreatedBy != userID {
-		return nil, fmt.Errorf("you don't have permission to edit this template")
+	// Check permissions:
+	// - Admins can edit any workout (including standard ones)
+	// - Non-admins can only edit their own workouts
+	isOwner := existing.CreatedBy != nil && *existing.CreatedBy == userID
+	isAdmin := userRole == "admin"
+
+	if !isOwner && !isAdmin {
+		return nil, fmt.Errorf("you don't have permission to edit this workout")
 	}
 
 	// Store old values for audit logging
 	oldName := existing.Name
 	oldIntroWarmup := existing.IntroWarmup
 	oldNotes := existing.Notes
+
+	// Determine CreatedBy based on isStandard and role
+	if isAdmin {
+		if isStandard {
+			existing.CreatedBy = nil // Make it standard
+		} else if existing.CreatedBy == nil {
+			// Converting from standard to personal - assign to this admin
+			existing.CreatedBy = &userID
+		}
+	}
 
 	// Update the workout
 	existing.Name = name
@@ -330,7 +355,7 @@ func (s *WorkoutTemplateService) CopyToStandard(id int64, newName string) (*doma
 }
 
 // Delete deletes a workout template
-func (s *WorkoutTemplateService) Delete(id, userID int64, userEmail string) error {
+func (s *WorkoutTemplateService) Delete(id, userID int64, userEmail, userRole string) error {
 	// Get existing workout to verify ownership
 	existing, err := s.workoutRepo.GetByID(id)
 	if err != nil {
@@ -340,9 +365,14 @@ func (s *WorkoutTemplateService) Delete(id, userID int64, userEmail string) erro
 		return fmt.Errorf("failed to get workout template: %w", err)
 	}
 
-	// Verify user owns this template
-	if existing.CreatedBy == nil || *existing.CreatedBy != userID {
-		return fmt.Errorf("you don't have permission to delete this template")
+	// Check permissions:
+	// - Admins can delete any workout (including standard ones)
+	// - Non-admins can only delete their own workouts
+	isOwner := existing.CreatedBy != nil && *existing.CreatedBy == userID
+	isAdmin := userRole == "admin"
+
+	if !isOwner && !isAdmin {
+		return fmt.Errorf("you don't have permission to delete this workout")
 	}
 
 	// Store details for audit log

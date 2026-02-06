@@ -22,28 +22,67 @@
         {{ error }}
       </v-alert>
 
-      <!-- Top Save Button -->
-      <v-btn
-        block
-        color="primary"
-        size="large"
-        rounded="lg"
-        :loading="saving"
-        style="text-transform: none; font-weight: 600"
-        class="mb-3"
-        @click="saveTemplate"
-      >
-        <v-icon start>mdi-content-save</v-icon>
-        {{ isEditMode ? 'Update Template' : 'Create Template' }}
-      </v-btn>
+      <!-- Top Action Buttons -->
+      <div class="d-flex gap-2 mb-3">
+        <v-btn
+          v-if="isEditMode && !hasUnsavedChanges"
+          color="secondary"
+          size="large"
+          rounded="lg"
+          style="text-transform: none; font-weight: 600"
+          @click="openPreview"
+        >
+          <v-icon start>mdi-eye</v-icon>
+          View
+        </v-btn>
+        <v-btn
+          :block="!(isEditMode && !hasUnsavedChanges)"
+          color="primary"
+          size="large"
+          rounded="lg"
+          :loading="saving"
+          style="text-transform: none; font-weight: 600"
+          class="flex-grow-1"
+          @click="saveTemplate"
+        >
+          <v-icon start>mdi-content-save</v-icon>
+          Save Workout
+        </v-btn>
+      </div>
+
+      <!-- Workout Type Selection (Admin Only) -->
+      <v-card v-if="isAdmin" elevation="0" rounded="lg" class="pa-3 mb-2" bg-color="surface">
+        <div class="d-flex align-center">
+          <v-icon color="primary" size="small" class="mr-2">mdi-shield-account</v-icon>
+          <span class="text-body-2 font-weight-medium mr-4">Workout Visibility:</span>
+          <v-btn-toggle
+            v-model="template.is_standard"
+            density="compact"
+            color="primary"
+            mandatory
+          >
+            <v-btn :value="false" size="small">
+              <v-icon start size="small">mdi-account</v-icon>
+              Personal
+            </v-btn>
+            <v-btn :value="true" size="small">
+              <v-icon start size="small">mdi-earth</v-icon>
+              Standard
+            </v-btn>
+          </v-btn-toggle>
+        </div>
+        <p v-if="template.is_standard" class="text-caption text-medium-emphasis mt-2 mb-0">
+          Standard workouts are available for all users and can be assigned to class sessions.
+        </p>
+      </v-card>
 
       <!-- Basic Information Card -->
       <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
-        <h2 class="text-body-1 font-weight-bold mb-3" >Template Details</h2>
+        <h2 class="text-body-1 font-weight-bold mb-3">Workout Details</h2>
 
         <v-text-field
           v-model="template.name"
-          label="Template Name"
+          label="Workout Name"
           placeholder="e.g., Upper Body Strength"
 
           density="compact"
@@ -78,28 +117,16 @@
       <!-- Movements Card -->
       <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
         <div class="d-flex align-center justify-space-between mb-3">
-          <h2 class="text-body-1 font-weight-bold" >Movements</h2>
-          <div class="d-flex gap-2">
-            <v-btn
-              size="small"
-              color="secondary"
-              
-              prepend-icon="mdi-library"
-              style="text-transform: none"
-              @click="browseMovements"
-            >
-              Browse
-            </v-btn>
-            <v-btn
-              size="small"
-              color="primary"
-              prepend-icon="mdi-plus"
-              style="text-transform: none"
-              @click="addMovement"
-            >
-              Add
-            </v-btn>
-          </div>
+          <h2 class="text-body-1 font-weight-bold">Movements</h2>
+          <v-btn
+            size="small"
+            color="primary"
+            prepend-icon="mdi-plus"
+            style="text-transform: none"
+            @click="addMovement"
+          >
+            Add
+          </v-btn>
         </div>
 
         <!-- Empty State -->
@@ -228,28 +255,16 @@
       <!-- WODs Card -->
       <v-card elevation="0" rounded="lg" class="pa-2 mb-2" bg-color="surface">
         <div class="d-flex align-center justify-space-between mb-3">
-          <h2 class="text-body-1 font-weight-bold" >WODs</h2>
-          <div class="d-flex gap-2">
-            <v-btn
-              size="small"
-              color="secondary"
-              
-              prepend-icon="mdi-library"
-              style="text-transform: none"
-              @click="browseWODs"
-            >
-              Browse
-            </v-btn>
-            <v-btn
-              size="small"
-              color="primary"
-              prepend-icon="mdi-plus"
-              style="text-transform: none"
-              @click="addWOD"
-            >
-              Add
-            </v-btn>
-          </div>
+          <h2 class="text-body-1 font-weight-bold">WODs</h2>
+          <v-btn
+            size="small"
+            color="primary"
+            prepend-icon="mdi-plus"
+            style="text-transform: none"
+            @click="addWOD"
+          >
+            Add
+          </v-btn>
         </div>
 
         <!-- Empty State -->
@@ -365,41 +380,61 @@
 
       <!-- Actions Card -->
       <v-card elevation="0" rounded="lg" class="pa-3" bg-color="surface">
-        <v-btn
-          block
-          color="primary"
-          size="large"
-          rounded="lg"
-          :loading="saving"
-          style="text-transform: none; font-weight: 600"
-          @click="saveTemplate"
-        >
-          <v-icon start>mdi-content-save</v-icon>
-          {{ isEditMode ? 'Update Template' : 'Create Template' }}
-        </v-btn>
+        <div class="d-flex gap-2 mb-2">
+          <v-btn
+            v-if="isEditMode && !hasUnsavedChanges"
+            color="secondary"
+            size="large"
+            rounded="lg"
+            style="text-transform: none; font-weight: 600"
+            @click="openPreview"
+          >
+            <v-icon start>mdi-eye</v-icon>
+            View
+          </v-btn>
+          <v-btn
+            :block="!(isEditMode && !hasUnsavedChanges)"
+            color="primary"
+            size="large"
+            rounded="lg"
+            :loading="saving"
+            style="text-transform: none; font-weight: 600"
+            class="flex-grow-1"
+            @click="saveTemplate"
+          >
+            <v-icon start>mdi-content-save</v-icon>
+            Save Workout
+          </v-btn>
+        </div>
 
         <v-btn
           v-if="isEditMode"
           block
           color="error"
-          
+          variant="outlined"
           size="large"
           rounded="lg"
-          class="mt-2"
           :loading="deleting"
           style="text-transform: none; font-weight: 600"
           @click="confirmDelete"
         >
           <v-icon start>mdi-delete</v-icon>
-          Delete Template
+          Delete Workout
         </v-btn>
       </v-card>
     </v-container>
 
+    <!-- Workout Preview Dialog -->
+    <DetailViewDialog
+      v-model="previewDialog"
+      type="template"
+      :id="previewId"
+    />
+
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h6" style="color: rgb(var(--v-theme-error))">Delete Template?</v-card-title>
+        <v-card-title class="text-h6" style="color: rgb(var(--v-theme-error))">Delete Workout?</v-card-title>
         <v-card-text>
           <p class="text-medium-emphasis">
             Are you sure you want to delete "{{ template.name }}"? This action cannot be undone.
@@ -423,12 +458,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
+import { useAuthStore } from '@/stores/auth'
+import DetailViewDialog from '@/components/DetailViewDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
 
 // Helper to format today's date in long form
 function getTodayLongDate() {
@@ -467,7 +505,8 @@ const template = ref({
   intro_warmup: introBoilerplate,
   notes: '',
   wods: [],
-  movements: []
+  movements: [],
+  is_standard: false
 })
 
 const availableMovements = ref([])
@@ -480,9 +519,19 @@ const successMessage = ref('')
 const error = ref('')
 const validationErrors = ref({})
 const deleteDialog = ref(false)
+const previewDialog = ref(false)
+const previewId = ref(null)
+const savedState = ref(null) // Track saved state for change detection
 
 // Computed
 const isEditMode = computed(() => !!route.params.id)
+const isAdmin = computed(() => authStore.user?.role === 'admin')
+
+// Track unsaved changes
+const hasUnsavedChanges = computed(() => {
+  if (!savedState.value) return true // New workout always has "unsaved" changes
+  return JSON.stringify(template.value) !== savedState.value
+})
 
 // Load movements
 async function fetchMovements() {
@@ -530,6 +579,7 @@ async function loadTemplate() {
       workout_type: data.workout_type || 'strength',
       intro_warmup: data.intro_warmup || '',
       notes: data.notes || '',
+      is_standard: data.created_by === null, // Standard if no creator
       wods: (data.wods || []).map(w => ({
         wod_id: w.wod_id,
         instructions: w.instructions || '',
@@ -546,9 +596,19 @@ async function loadTemplate() {
         order_index: m.order_index
       }))
     }
+    // Save initial state for change detection
+    savedState.value = JSON.stringify(template.value)
   } catch (err) {
-    console.error('Failed to load template:', err)
-    error.value = 'Failed to load template'
+    console.error('Failed to load workout:', err)
+    error.value = 'Failed to load workout'
+  }
+}
+
+// Open preview dialog
+function openPreview() {
+  if (route.params.id) {
+    previewId.value = parseInt(route.params.id)
+    previewDialog.value = true
   }
 }
 
@@ -574,15 +634,6 @@ function removeMovement(index) {
   })
 }
 
-// Browse movements library
-function browseMovements() {
-  const currentPath = route.path
-  router.push({
-    path: '/movements',
-    query: { select: 'true', returnPath: currentPath }
-  })
-}
-
 // Add new WOD
 function addWOD() {
   template.value.wods.push({
@@ -602,22 +653,13 @@ function removeWOD(index) {
   })
 }
 
-// Browse WODs library
-function browseWODs() {
-  const currentPath = route.path
-  router.push({
-    path: '/wods',
-    query: { select: 'true', returnPath: currentPath }
-  })
-}
-
-// Validate template
+// Validate workout
 function validateTemplate() {
   validationErrors.value = {}
   let isValid = true
 
   if (!template.value.name || template.value.name.trim() === '') {
-    validationErrors.value.name = 'Template name is required'
+    validationErrors.value.name = 'Workout name is required'
     isValid = false
   }
 
@@ -646,7 +688,7 @@ function validateTemplate() {
   return isValid
 }
 
-// Save template
+// Save workout
 async function saveTemplate() {
   if (!validateTemplate()) return
 
@@ -660,6 +702,7 @@ async function saveTemplate() {
       workout_type: template.value.workout_type,
       intro_warmup: template.value.intro_warmup?.trim() || null,
       notes: template.value.notes?.trim() || null,
+      is_standard: isAdmin.value ? template.value.is_standard : false,
       wods: template.value.wods.map((w, idx) => ({
         wod_id: w.wod_id,
         instructions: w.instructions?.trim() || '',
@@ -679,21 +722,23 @@ async function saveTemplate() {
 
     if (isEditMode.value) {
       await axios.put(`/api/templates/${route.params.id}`, payload)
-      successMessage.value = 'Template updated successfully!'
+      successMessage.value = 'Workout saved successfully!'
+      // Update saved state after successful save
+      savedState.value = JSON.stringify(template.value)
     } else {
       const response = await axios.post('/api/templates', payload)
-      successMessage.value = 'Template created successfully!'
+      successMessage.value = 'Workout created successfully!'
       // Redirect to edit mode with new ID
       setTimeout(() => {
         router.push(`/workouts/templates/${response.data.template.id}/edit`)
       }, 1500)
     }
   } catch (err) {
-    console.error('Failed to save template:', err)
+    console.error('Failed to save workout:', err)
     if (err.response?.data?.message) {
       error.value = err.response.data.message
     } else {
-      error.value = 'Failed to save template. Please try again.'
+      error.value = 'Failed to save workout. Please try again.'
     }
   } finally {
     saving.value = false
@@ -705,20 +750,20 @@ function confirmDelete() {
   deleteDialog.value = true
 }
 
-// Delete template
+// Delete workout
 async function deleteTemplate() {
   deleting.value = true
   error.value = ''
 
   try {
     await axios.delete(`/api/templates/${route.params.id}`)
-    successMessage.value = 'Template deleted successfully!'
+    successMessage.value = 'Workout deleted successfully!'
     setTimeout(() => {
       router.push('/workouts')
     }, 1000)
   } catch (err) {
-    console.error('Failed to delete template:', err)
-    error.value = 'Failed to delete template. Please try again.'
+    console.error('Failed to delete workout:', err)
+    error.value = 'Failed to delete workout. Please try again.'
     deleteDialog.value = false
   } finally {
     deleting.value = false

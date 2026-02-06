@@ -14,7 +14,7 @@
         </v-tab>
         <v-tab value="custom">
           <v-icon start>mdi-account</v-icon>
-          My Templates
+          My Workouts
         </v-tab>
       </v-tabs>
 
@@ -68,7 +68,7 @@
           style="text-transform: none; font-weight: 600"
           @click="$router.push('/workouts/templates/create')"
         >
-          Create New Template
+          Create Workout
         </v-btn>
       </v-card>
 
@@ -76,7 +76,7 @@
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="mt-4 text-medium-emphasis">Loading templates...</p>
+          <p class="mt-4 text-medium-emphasis">Loading workouts...</p>
         </div>
 
         <!-- Empty State -->
@@ -89,13 +89,13 @@
         >
           <v-icon size="64" color="surface-variant">mdi-clipboard-text-outline</v-icon>
           <p class="text-h6 mt-4 text-high-emphasis">
-            {{ activeTemplateTab === 'standard' ? 'No standard templates found' : 'No custom templates yet' }}
+            {{ activeTemplateTab === 'standard' ? 'No standard workouts found' : 'No custom workouts yet' }}
           </p>
           <p class="text-body-2 text-medium-emphasis">
             {{
               activeTemplateTab === 'standard'
-                ? 'Standard templates will be seeded on first use'
-                : 'Create your first custom workout template'
+                ? 'Standard workouts will be seeded on first use'
+                : 'Create your first custom workout'
             }}
           </p>
           <v-btn
@@ -107,7 +107,7 @@
             style="text-transform: none; font-weight: 600"
             @click="$router.push('/workouts/templates/create')"
           >
-            Create Template
+            Create Workout
           </v-btn>
         </v-card>
 
@@ -209,14 +209,14 @@
       <v-card>
         <v-card-title class="bg-primary text-white">
           <v-icon start>mdi-plus</v-icon>
-          Create Workout Template
+          Create Workout
         </v-card-title>
         <v-card-text class="pt-4">
           <v-text-field
             v-model="newTemplate.name"
-            label="Template Name"
+            label="Workout Name"
             placeholder="e.g., Monday Strength, Hero WOD"
-            
+
             density="comfortable"
             prepend-inner-icon="mdi-clipboard-text"
             required
@@ -224,14 +224,14 @@
           <v-textarea
             v-model="newTemplate.notes"
             label="Description / Notes"
-            placeholder="Describe the workout template..."
-            
+            placeholder="Describe the workout..."
+
             density="comfortable"
             rows="3"
             prepend-inner-icon="mdi-note-text"
           />
           <v-alert type="info" density="compact" class="mt-2">
-            After creating the template, you can add movements and WODs in the details view.
+            After creating the workout, you can add movements and WODs in the details view.
           </v-alert>
         </v-card-text>
         <v-card-actions>
@@ -273,7 +273,7 @@
       </v-btn>
       <v-btn value="workouts" to="/workouts">
         <v-icon>mdi-dumbbell</v-icon>
-        <span style="font-size: 10px">Templates</span>
+        <span style="font-size: 10px">Workouts</span>
       </v-btn>
       <v-btn value="profile" to="/profile">
         <v-icon>mdi-account</v-icon>
@@ -341,17 +341,17 @@ async function fetchTemplates() {
     } else if (err.request) {
       error.value = 'No response from server. Is the backend running?'
     } else {
-      error.value = 'Failed to fetch templates'
+      error.value = 'Failed to fetch workouts'
     }
   } finally {
     loading.value = false
   }
 }
 
-// Create new workout template
+// Create new workout
 async function createTemplate() {
   if (!newTemplate.value.name.trim()) {
-    error.value = 'Template name is required'
+    error.value = 'Workout name is required'
     return
   }
 
@@ -364,18 +364,18 @@ async function createTemplate() {
       notes: newTemplate.value.notes.trim() || null
     })
 
-    // Add to custom templates list
+    // Add to custom workouts list
     customTemplates.value.unshift(response.data.workout)
 
     // Reset form and close dialog
     newTemplate.value = { name: '', notes: '' }
     createTemplateDialog.value = false
 
-    // Switch to custom tab to show new template
+    // Switch to custom tab to show new workout
     activeTemplateTab.value = 'custom'
   } catch (err) {
-    console.error('Failed to create template:', err)
-    error.value = err.response?.data?.message || 'Failed to create template'
+    console.error('Failed to create workout:', err)
+    error.value = err.response?.data?.message || 'Failed to create workout'
   } finally {
     creating.value = false
   }
@@ -398,9 +398,9 @@ function editTemplate(template) {
   router.push(`/workouts/templates/${template.id}/edit`)
 }
 
-// Delete template
+// Delete workout
 async function deleteTemplate(templateId) {
-  if (!confirm('Are you sure you want to delete this template?')) {
+  if (!confirm('Are you sure you want to delete this workout?')) {
     return
   }
 
@@ -410,8 +410,8 @@ async function deleteTemplate(templateId) {
     // Remove from list
     customTemplates.value = customTemplates.value.filter(t => t.id !== templateId)
   } catch (err) {
-    console.error('Failed to delete template:', err)
-    error.value = err.response?.data?.message || 'Failed to delete template'
+    console.error('Failed to delete workout:', err)
+    error.value = err.response?.data?.message || 'Failed to delete workout'
   }
 }
 

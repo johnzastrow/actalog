@@ -11,13 +11,13 @@ import (
 )
 
 type WorkoutTemplateService interface {
-	Create(userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Create(userID int64, userEmail, userRole, name string, introWarmup, notes *string, isStandard bool, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
 	GetByID(id int64) (*domain.Workout, error)
 	GetByIDWithDetails(id int64) (*domain.Workout, error)
 	ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error)
 	ListStandard(limit, offset int) ([]*domain.Workout, error)
-	Update(id, userID int64, userEmail, name string, introWarmup, notes *string, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
-	Delete(id, userID int64, userEmail string) error
+	Update(id, userID int64, userEmail, userRole, name string, introWarmup, notes *string, isStandard bool, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error)
+	Delete(id, userID int64, userEmail, userRole string) error
 }
 
 type WorkoutTemplateHandler struct {
@@ -48,12 +48,14 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 	userEmail, _ := middleware.GetUserEmail(r.Context())
+	userRole, _ := middleware.GetUserRole(r.Context())
 
 	var req struct {
 		Name        string  `json:"name"`
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		IntroWarmup *string `json:"intro_warmup"`
 		Notes       *string `json:"notes"`
+		IsStandard  bool    `json:"is_standard"` // Only admins can create standard workouts
 		Movements   []struct {
 			MovementID   int64    `json:"movement_id"`
 			Sets         *int     `json:"sets"`
@@ -126,7 +128,7 @@ func (h *WorkoutTemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Create(userID, userEmail, req.Name, req.IntroWarmup, req.Notes, movements, wods)
+	template, err := h.service.Create(userID, userEmail, userRole, req.Name, req.IntroWarmup, req.Notes, req.IsStandard, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -293,6 +295,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 	userEmail, _ := middleware.GetUserEmail(r.Context())
+	userRole, _ := middleware.GetUserRole(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -306,6 +309,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		WorkoutType string  `json:"workout_type"` // Accept but ignore for now
 		IntroWarmup *string `json:"intro_warmup"`
 		Notes       *string `json:"notes"`
+		IsStandard  bool    `json:"is_standard"` // Only admins can change this
 		Movements   []struct {
 			MovementID   int64    `json:"movement_id"`
 			Sets         *int     `json:"sets"`
@@ -378,7 +382,7 @@ func (h *WorkoutTemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	template, err := h.service.Update(id, userID, userEmail, req.Name, req.IntroWarmup, req.Notes, movements, wods)
+	template, err := h.service.Update(id, userID, userEmail, userRole, req.Name, req.IntroWarmup, req.Notes, req.IsStandard, movements, wods)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -410,6 +414,7 @@ func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 	userEmail, _ := middleware.GetUserEmail(r.Context())
+	userRole, _ := middleware.GetUserRole(r.Context())
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -418,7 +423,7 @@ func (h *WorkoutTemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.service.Delete(id, userID, userEmail); err != nil {
+	if err := h.service.Delete(id, userID, userEmail, userRole); err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}

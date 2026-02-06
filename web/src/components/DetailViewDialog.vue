@@ -26,7 +26,7 @@
       </v-card-text>
 
       <!-- Content -->
-      <v-card-text v-else-if="entityData" class="pa-4">
+      <v-card-text v-else-if="entityData" class="pa-4" style="max-height: 70vh; overflow-y: auto;">
         <!-- Type Chips -->
         <div class="d-flex flex-wrap gap-2 mb-3">
           <template v-if="type === 'wod'">
@@ -68,8 +68,8 @@
           </div>
         </div>
 
-        <!-- Notes -->
-        <div v-if="entityData.notes" class="mb-3">
+        <!-- Notes (for WODs and Movements only - template notes shown last) -->
+        <div v-if="type !== 'template' && entityData.notes" class="mb-3">
           <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
           <div class="text-body-2">
             <markdown-renderer :content="entityData.notes" />
@@ -99,12 +99,13 @@
           </div>
         </template>
 
-        <!-- Template-specific: Movements and WODs list -->
+        <!-- Template-specific: Combined Workout section (Movements and WODs together) -->
         <template v-if="type === 'template'">
-          <div v-if="entityData.movements?.length" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Movements</p>
+          <div v-if="entityData.movements?.length || entityData.wods?.length" class="mb-3">
+            <p class="text-caption font-weight-bold mb-2 text-medium-emphasis">Workout</p>
             <v-list density="compact" bg-color="transparent" class="py-0">
-              <v-list-item v-for="m in entityData.movements" :key="m.id" class="px-0 mb-2">
+              <!-- Movements -->
+              <v-list-item v-for="m in entityData.movements" :key="'m-' + m.id" class="px-0 mb-2">
                 <template #prepend>
                   <v-icon size="small" color="primary" class="mt-1">mdi-weight-lifter</v-icon>
                 </template>
@@ -112,7 +113,7 @@
                   <v-list-item-title class="text-body-2 font-weight-medium">
                     {{ m.movement?.name || 'Movement' }}
                   </v-list-item-title>
-                  <!-- Instructions first -->
+                  <!-- Instructions -->
                   <div v-if="m.instructions" class="mt-2">
                     <p class="text-caption font-weight-medium mb-1 text-info">
                       <v-icon size="x-small" class="mr-1">mdi-clipboard-text-outline</v-icon>
@@ -140,18 +141,14 @@
                       {{ m.distance }} {{ m.distance_unit || 'm' }}
                     </v-chip>
                   </div>
-                  <!-- Notes last -->
-                  <p v-if="m.notes" class="text-caption text-medium-emphasis mt-1 mb-0">
-                    <strong>Notes:</strong> {{ m.notes }}
-                  </p>
+                  <!-- Notes -->
+                  <div v-if="m.notes" class="text-caption text-medium-emphasis mt-1">
+                    <markdown-renderer :content="m.notes" />
+                  </div>
                 </div>
               </v-list-item>
-            </v-list>
-          </div>
-          <div v-if="entityData.wods?.length" class="mb-3">
-            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">WODs</p>
-            <v-list density="compact" bg-color="transparent" class="py-0">
-              <v-list-item v-for="w in entityData.wods" :key="w.id" class="px-0 mb-2">
+              <!-- WODs -->
+              <v-list-item v-for="w in entityData.wods" :key="'w-' + w.id" class="px-0 mb-2">
                 <template #prepend>
                   <v-icon size="small" color="#ff5722" class="mt-1">mdi-fire</v-icon>
                 </template>
@@ -159,7 +156,7 @@
                   <v-list-item-title class="text-body-2 font-weight-medium">
                     {{ w.wod?.name || 'WOD' }}
                   </v-list-item-title>
-                  <!-- Instructions first -->
+                  <!-- Instructions -->
                   <div v-if="w.instructions" class="mt-2">
                     <p class="text-caption font-weight-medium mb-1 text-info">
                       <v-icon size="x-small" class="mr-1">mdi-clipboard-text-outline</v-icon>
@@ -181,16 +178,24 @@
                       {{ w.wod.score_type }}
                     </v-chip>
                   </div>
-                  <p v-if="w.wod?.description" class="text-caption text-medium-emphasis mt-1 mb-0" style="white-space: pre-wrap;">
-                    {{ w.wod.description }}
-                  </p>
-                  <!-- Notes last -->
-                  <p v-if="w.notes" class="text-caption text-medium-emphasis mt-1 mb-0">
-                    <strong>Notes:</strong> {{ w.notes }}
-                  </p>
+                  <div v-if="w.wod?.description" class="text-caption text-medium-emphasis mt-1">
+                    <markdown-renderer :content="w.wod.description" />
+                  </div>
+                  <!-- Notes -->
+                  <div v-if="w.notes" class="text-caption text-medium-emphasis mt-1">
+                    <markdown-renderer :content="w.notes" />
+                  </div>
                 </div>
               </v-list-item>
             </v-list>
+          </div>
+
+          <!-- Notes section (always last for templates) -->
+          <div v-if="entityData.notes" class="mb-3">
+            <p class="text-caption font-weight-bold mb-1 text-medium-emphasis">Notes</p>
+            <div class="text-body-2">
+              <markdown-renderer :content="entityData.notes" />
+            </div>
           </div>
         </template>
       </v-card-text>
