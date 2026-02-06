@@ -1142,3 +1142,61 @@ func (s *SchedulingService) RemoveTemplateCoach(adminUserID, templateID, coachUs
 
 	return nil
 }
+
+// ============================================
+// BATCH WORKOUT ASSIGNMENT METHODS
+// ============================================
+
+// BatchUpdateSessionWorkout updates the workout for multiple sessions at once
+func (s *SchedulingService) BatchUpdateSessionWorkout(adminUserID, gymID int64, sessionIDs []int64, workoutID *int64) (int, error) {
+	if len(sessionIDs) == 0 {
+		return 0, nil
+	}
+
+	// Validate all sessions exist and belong to the gym
+	sessions, err := s.sessionRepo.GetByIDs(sessionIDs)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get sessions: %w", err)
+	}
+
+	if len(sessions) != len(sessionIDs) {
+		return 0, fmt.Errorf("one or more sessions not found")
+	}
+
+	// Validate all sessions belong to the gym and are in scheduled status
+	for _, session := range sessions {
+		if session.OrganizationID != gymID {
+			return 0, fmt.Errorf("session %d does not belong to this gym", session.ID)
+		}
+		if session.Status != domain.SessionStatusScheduled {
+			return 0, fmt.Errorf("session %d is not in scheduled status", session.ID)
+		}
+	}
+
+	// Validate workout exists if provided
+	if workoutID != nil {
+		workout, err := s.workoutRepo.GetByID(*workoutID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to verify workout: %w", err)
+		}
+		if workout == nil {
+			return 0, fmt.Errorf("workout not found")
+		}
+	}
+
+	// Perform the batch update
+	count, err := s.sessionRepo.BatchUpdateWorkout(sessionIDs, workoutID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to batch update sessions: %w", err)
+	}
+
+	// Audit log
+	s.logAudit(adminUserID, nil, domain.EventSessionWorkoutBatchUpdated, map[string]interface{}{
+		"session_ids":   sessionIDs,
+		"workout_id":    workoutID,
+		"updated_count": count,
+		"gym_id":        gymID,
+	})
+
+	return int(count), nil
+}

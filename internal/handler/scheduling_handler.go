@@ -1493,3 +1493,45 @@ func (h *SchedulingHandler) RemoveTemplateCoach(w http.ResponseWriter, r *http.R
 
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Coach removed successfully"})
 }
+
+// BatchUpdateSessionWorkout handles PUT /api/admin/gyms/{gym_id}/sessions/batch-workout
+func (h *SchedulingHandler) BatchUpdateSessionWorkout(w http.ResponseWriter, r *http.Request) {
+	adminUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	gymIDStr := chi.URLParam(r, "gym_id")
+	gymID, err := strconv.ParseInt(gymIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid gym ID")
+		return
+	}
+
+	var req struct {
+		SessionIDs []int64 `json:"session_ids"`
+		WorkoutID  *int64  `json:"workout_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(req.SessionIDs) == 0 {
+		respondError(w, http.StatusBadRequest, "session_ids is required")
+		return
+	}
+
+	count, err := h.schedulingService.BatchUpdateSessionWorkout(adminUserID, gymID, req.SessionIDs, req.WorkoutID)
+	if err != nil {
+		h.logger.Error("Failed to batch update session workouts: %v", err)
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"updated_count": count,
+	})
+}

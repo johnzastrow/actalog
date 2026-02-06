@@ -130,6 +130,9 @@ const (
 	EventTemplateCoachAdded   = "template_coach_added"
 	EventTemplateCoachRemoved = "template_coach_removed"
 
+	// Class Scheduling Events - Batch Operations
+	EventSessionWorkoutBatchUpdated = "session_workout_batch_updated"
+
 	// Class Scheduling Events - Reservations
 	EventReservationCreated   = "reservation_created"
 	EventReservationCancelled = "reservation_cancelled"

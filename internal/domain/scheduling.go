@@ -240,6 +240,7 @@ type CoachAssignmentRepository interface {
 type ClassSessionRepository interface {
 	Create(session *ClassSession) error
 	GetByID(id int64) (*ClassSession, error)
+	GetByIDs(ids []int64) ([]*ClassSession, error)
 	GetByIDWithWorkoutDetails(id int64, workoutRepo WorkoutRepository) (*ClassSession, error)
 	GetByOrganizationID(orgID int64, startDate, endDate time.Time) ([]*ClassSession, error)
 	GetByOrganizationIDWithUserStatus(orgID, userID int64, startDate, endDate time.Time) ([]*ClassSession, error)
@@ -250,6 +251,7 @@ type ClassSessionRepository interface {
 	Complete(id int64) error
 	GetReservationCount(sessionID int64) (int, error)
 	ExistsByTemplateAndStartTime(templateID int64, startTime time.Time) (bool, error)
+	BatchUpdateWorkout(sessionIDs []int64, workoutID *int64) (int64, error)
 }
 
 // SessionCoachRepository defines the interface for session coach data access

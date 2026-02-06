@@ -898,6 +898,7 @@ func main() {
 					r.Post("/sessions", schedulingHandler.CreateSession)
 					r.Put("/sessions/{id}", schedulingHandler.UpdateSession)
 					r.Post("/sessions/{id}/cancel", schedulingHandler.CancelSession)
+					r.Put("/sessions/batch-workout", schedulingHandler.BatchUpdateSessionWorkout)
 
 					// Coach management
 					r.Post("/coaches", schedulingHandler.AssignCoach)

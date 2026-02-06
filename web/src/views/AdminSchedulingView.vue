@@ -63,6 +63,10 @@
             <v-icon start size="small">mdi-calendar</v-icon>
             Sessions
           </v-tab>
+          <v-tab value="batch-assign" class="text-none" rounded="lg">
+            <v-icon start size="small">mdi-dumbbell</v-icon>
+            Batch Assign
+          </v-tab>
           <v-tab value="coaches" class="text-none" rounded="lg">
             <v-icon start size="small">mdi-account-tie</v-icon>
             Coaches
@@ -232,6 +236,19 @@
               @updated="onSessionUpdated"
             />
           </div>
+        </v-window-item>
+
+        <!-- Batch Assign Tab -->
+        <v-window-item value="batch-assign">
+          <WorkoutAssignmentTab
+            :gym-id="selectedOrgId"
+            :workouts="workouts"
+            :sessions="batchAssignSessions"
+            :templates="templates"
+            :coaches="coaches"
+            :locations="locations"
+            @applied="onBatchAssignApplied"
+          />
         </v-window-item>
 
         <!-- Coaches Tab -->
@@ -444,10 +461,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from '@/utils/axios'
 import TemplateEditDialog from '@/components/scheduling/TemplateEditDialog.vue'
 import SessionsGrid from '@/components/scheduling/SessionsGrid.vue'
+import WorkoutAssignmentTab from '@/components/scheduling/WorkoutAssignmentTab.vue'
 
 const loading = ref(false)
 const error = ref(null)
@@ -474,6 +492,7 @@ const sessions = ref([])
 const coaches = ref([])
 const roster = ref([])
 const workouts = ref([])
+const batchAssignSessions = ref([])
 
 // Class filter state
 const classFilter = ref({
@@ -642,6 +661,46 @@ async function fetchWorkouts() {
     console.error('Failed to fetch workouts:', err)
   }
 }
+
+async function fetchBatchAssignSessions() {
+  if (!selectedOrgId.value) return
+  try {
+    // Fetch sessions for the next 30 days
+    const today = new Date()
+    const start = today.toISOString().split('T')[0]
+    const end = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    const response = await axios.get(`/api/gyms/${selectedOrgId.value}/sessions?start_date=${start}&end_date=${end}`)
+    const sessionList = response.data.sessions || []
+
+    // Load coaches for each session
+    for (const session of sessionList) {
+      try {
+        const coachRes = await axios.get(`/api/admin/sessions/${session.id}/coaches`)
+        session.coaches = coachRes.data.coaches || []
+      } catch {
+        session.coaches = []
+      }
+    }
+
+    batchAssignSessions.value = sessionList
+  } catch (err) {
+    console.error('Failed to fetch batch assign sessions:', err)
+  }
+}
+
+function onBatchAssignApplied() {
+  successMessage.value = 'Workouts assigned successfully'
+  fetchBatchAssignSessions()
+  // Also refresh the sessions grid if visible
+  if (sessionsGrid.value) sessionsGrid.value.refresh()
+}
+
+// Watch for tab changes to load batch assign sessions
+watch(activeTab, (newTab) => {
+  if (newTab === 'batch-assign' && batchAssignSessions.value.length === 0) {
+    fetchBatchAssignSessions()
+  }
+})
 
 // Location functions
 function openLocationDialog(loc = null) {

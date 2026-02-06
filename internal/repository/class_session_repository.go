@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -530,4 +531,79 @@ func (r *ClassSessionRepository) ExistsByTemplateAndStartTime(templateID int64, 
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// BatchUpdateWorkout updates the workout_id for multiple sessions at once
+func (r *ClassSessionRepository) BatchUpdateWorkout(sessionIDs []int64, workoutID *int64) (int64, error) {
+	if len(sessionIDs) == 0 {
+		return 0, nil
+	}
+
+	// Build IN clause with correct number of placeholders
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, 0, len(sessionIDs)+2)
+	args = append(args, workoutID, time.Now())
+
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE class_sessions
+		SET workout_id = ?, updated_at = ?
+		WHERE id IN (%s)
+	`, strings.Join(placeholders, ","))
+
+	query = rebindQuery(query)
+
+	result, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to batch update session workouts: %w", err)
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetByIDs retrieves multiple sessions by their IDs
+func (r *ClassSessionRepository) GetByIDs(ids []int64) ([]*domain.ClassSession, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT cs.id, cs.organization_id, cs.template_id, cs.location_id, cs.name, cs.description,
+		       cs.workout_id, cs.start_time, cs.end_time, cs.capacity, cs.status,
+		       cs.cancelled_at, cs.cancelled_reason, cs.completed_at, cs.created_at, cs.updated_at,
+		       ct.name as template_name, gl.name as location_name, w.name as workout_name,
+		       (SELECT COUNT(*) FROM reservations r WHERE r.session_id = cs.id AND r.status IN ('reserved', 'checked_in', 'attended')) as reservation_count
+		FROM class_sessions cs
+		LEFT JOIN class_templates ct ON cs.template_id = ct.id
+		LEFT JOIN gym_locations gl ON cs.location_id = gl.id
+		LEFT JOIN workouts w ON cs.workout_id = w.id
+		WHERE cs.id IN (%s)
+		ORDER BY cs.start_time ASC
+	`, strings.Join(placeholders, ","))
+
+	query = rebindQuery(query)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sessions by IDs: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSessions(rows)
 }
