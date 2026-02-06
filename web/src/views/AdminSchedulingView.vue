@@ -65,7 +65,7 @@
           </v-tab>
           <v-tab value="batch-assign" class="text-none" rounded="lg">
             <v-icon start size="small">mdi-dumbbell</v-icon>
-            Batch Assign
+            Assign Workouts
           </v-tab>
           <v-tab value="coaches" class="text-none" rounded="lg">
             <v-icon start size="small">mdi-account-tie</v-icon>

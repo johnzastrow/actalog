@@ -3,7 +3,7 @@
     <div class="section-header d-flex align-center mb-4">
       <div class="section-title">
         <v-icon size="small" class="mr-2">mdi-dumbbell</v-icon>
-        Batch Assign Workout to Sessions
+        Assign Workout to Sessions
       </div>
     </div>
 
