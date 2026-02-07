@@ -114,7 +114,7 @@ const props = defineProps({
 const emit = defineEmits(['select', 'preview', 'create'])
 
 const search = ref('')
-const sortBy = ref('name_asc')
+const sortBy = ref('newest')
 const selectedWorkout = ref(props.selectedId)
 
 const sortOptions = [
