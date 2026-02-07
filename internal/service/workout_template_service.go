@@ -143,22 +143,48 @@ func (s *WorkoutTemplateService) GetByIDWithDetails(id int64) (*domain.Workout, 
 	return workout, nil
 }
 
-// ListByUser retrieves all workout templates created by a specific user
+// ListByUser retrieves all workout templates created by a specific user with full details
 func (s *WorkoutTemplateService) ListByUser(userID int64, limit, offset int) ([]*domain.Workout, error) {
 	templates, err := s.workoutRepo.ListByUser(userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list user templates: %w", err)
 	}
-	return templates, nil
+
+	// Load full details for each workout
+	var result []*domain.Workout
+	for _, t := range templates {
+		workout, err := s.workoutRepo.GetByIDWithDetails(t.ID)
+		if err != nil {
+			// If we can't get details, use the basic info
+			result = append(result, t)
+			continue
+		}
+		result = append(result, workout)
+	}
+
+	return result, nil
 }
 
-// ListStandard retrieves all standard (system) workout templates
+// ListStandard retrieves all standard (system) workout templates with full details
 func (s *WorkoutTemplateService) ListStandard(limit, offset int) ([]*domain.Workout, error) {
 	templates, err := s.workoutRepo.ListStandard(limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list standard templates: %w", err)
 	}
-	return templates, nil
+
+	// Load full details for each workout
+	var result []*domain.Workout
+	for _, t := range templates {
+		workout, err := s.workoutRepo.GetByIDWithDetails(t.ID)
+		if err != nil {
+			// If we can't get details, use the basic info
+			result = append(result, t)
+			continue
+		}
+		result = append(result, workout)
+	}
+
+	return result, nil
 }
 
 // Update updates an existing workout template
