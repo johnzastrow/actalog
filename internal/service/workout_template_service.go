@@ -27,9 +27,14 @@ func NewWorkoutTemplateService(workoutRepo domain.WorkoutRepository, workoutMove
 
 // Create creates a new workout template
 func (s *WorkoutTemplateService) Create(userID int64, userEmail, userRole, name string, introWarmup, notes *string, isStandard bool, movements []domain.WorkoutMovement, wods []domain.WorkoutWOD) (*domain.Workout, error) {
-	// Determine CreatedBy based on isStandard and role
+	// Validate permission for standard workouts
+	if isStandard && userRole != "admin" {
+		return nil, fmt.Errorf("only administrators can create standard workouts")
+	}
+
+	// Determine CreatedBy based on isStandard
 	var createdBy *int64
-	if isStandard && userRole == "admin" {
+	if isStandard {
 		// Standard workout: CreatedBy is NULL, making it available to all users
 		createdBy = nil
 	} else {
@@ -208,12 +213,17 @@ func (s *WorkoutTemplateService) Update(id, userID int64, userEmail, userRole, n
 		return nil, fmt.Errorf("you don't have permission to edit this workout")
 	}
 
+	// Validate permission for standard workouts
+	if isStandard && !isAdmin {
+		return nil, fmt.Errorf("only administrators can create standard workouts")
+	}
+
 	// Store old values for audit logging
 	oldName := existing.Name
 	oldIntroWarmup := existing.IntroWarmup
 	oldNotes := existing.Notes
 
-	// Determine CreatedBy based on isStandard and role
+	// Determine CreatedBy based on isStandard (only admins reach here if isStandard is true)
 	if isAdmin {
 		if isStandard {
 			existing.CreatedBy = nil // Make it standard
