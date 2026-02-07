@@ -154,7 +154,7 @@
                 </template>
                 <div>
                   <v-list-item-title class="text-body-2 font-weight-medium">
-                    {{ w.wod?.name || 'WOD' }}
+                    {{ w.wod_name || 'WOD' }}
                   </v-list-item-title>
                   <!-- Instructions -->
                   <div v-if="w.instructions" class="mt-2">
@@ -168,18 +168,18 @@
                   </div>
                   <!-- WOD specifics -->
                   <div class="d-flex flex-wrap gap-1 mt-1">
-                    <v-chip v-if="w.wod?.type" size="x-small" color="secondary" variant="tonal">
-                      {{ w.wod.type }}
+                    <v-chip v-if="w.wod_type" size="x-small" color="secondary" variant="tonal">
+                      {{ w.wod_type }}
                     </v-chip>
-                    <v-chip v-if="w.wod?.regime" size="x-small" color="primary" variant="tonal">
-                      {{ w.wod.regime }}
+                    <v-chip v-if="w.wod_regime" size="x-small" color="primary" variant="tonal">
+                      {{ w.wod_regime }}
                     </v-chip>
-                    <v-chip v-if="w.wod?.score_type" size="x-small" color="success" variant="tonal">
-                      {{ w.wod.score_type }}
+                    <v-chip v-if="w.wod_score_type" size="x-small" color="success" variant="tonal">
+                      {{ w.wod_score_type }}
                     </v-chip>
                   </div>
-                  <div v-if="w.wod?.description" class="text-caption text-medium-emphasis mt-1">
-                    <markdown-renderer :content="w.wod.description" />
+                  <div v-if="w.wod_description" class="text-caption text-medium-emphasis mt-1">
+                    <markdown-renderer :content="w.wod_description" />
                   </div>
                   <!-- Notes -->
                   <div v-if="w.notes" class="text-caption text-medium-emphasis mt-1">
@@ -429,11 +429,11 @@ watch(() => props.id, (newVal) => {
 
 <style scoped>
 .section-label {
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #00838f;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 </style>
