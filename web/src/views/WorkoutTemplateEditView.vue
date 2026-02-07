@@ -1,6 +1,20 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
+      <!-- User Info Badge -->
+      <div class="d-flex align-center justify-end mb-2">
+        <v-chip
+          :color="isAdmin ? 'error' : 'info'"
+          variant="tonal"
+          size="small"
+          class="mr-2"
+        >
+          <v-icon start size="small">mdi-shield-account</v-icon>
+          {{ isAdmin ? 'Admin' : 'User' }}
+        </v-chip>
+        <span class="text-caption text-medium-emphasis">{{ authStore.user?.email }}</span>
+      </div>
+
       <!-- Error Alert -->
       <v-alert
         v-if="error"
