@@ -105,14 +105,14 @@
             <p class="section-label mb-2">Workout</p>
             <v-list density="compact" bg-color="transparent" class="py-0">
               <!-- Movements -->
-              <v-list-item v-for="m in entityData.movements" :key="'m-' + m.id" class="px-0 mb-2">
-                <template #prepend>
-                  <v-icon size="small" color="primary" class="mt-1">mdi-weight-lifter</v-icon>
-                </template>
-                <div>
-                  <v-list-item-title class="text-body-2 font-weight-medium">
-                    {{ m.movement?.name || 'Movement' }}
-                  </v-list-item-title>
+              <div v-for="m in entityData.movements" :key="'m-' + m.id" class="workout-item mb-3">
+                <div class="d-flex align-center mb-1">
+                  <v-icon size="24" color="primary" class="mr-2">mdi-weight-lifter</v-icon>
+                  <div>
+                    <span class="item-type-label text-primary">MOVEMENT</span>
+                    <div class="item-name">{{ m.movement?.name || 'Movement' }}</div>
+                  </div>
+                </div>
                   <!-- Instructions -->
                   <div v-if="m.instructions" class="mt-2">
                     <p class="text-caption font-weight-medium mb-1 text-info">
@@ -141,21 +141,20 @@
                       {{ m.distance }} {{ m.distance_unit || 'm' }}
                     </v-chip>
                   </div>
-                  <!-- Notes -->
-                  <div v-if="m.notes" class="text-caption text-medium-emphasis mt-1">
-                    <markdown-renderer :content="m.notes" />
+                <!-- Notes -->
+                <div v-if="m.notes" class="text-caption text-medium-emphasis mt-1">
+                  <markdown-renderer :content="m.notes" />
+                </div>
+              </div>
+              <!-- WODs -->
+              <div v-for="w in entityData.wods" :key="'w-' + w.id" class="workout-item mb-3">
+                <div class="d-flex align-center mb-1">
+                  <v-icon size="24" color="#ff5722" class="mr-2">mdi-fire</v-icon>
+                  <div>
+                    <span class="item-type-label" style="color: #ff5722;">WOD</span>
+                    <div class="item-name">{{ w.wod_name || 'WOD' }}</div>
                   </div>
                 </div>
-              </v-list-item>
-              <!-- WODs -->
-              <v-list-item v-for="w in entityData.wods" :key="'w-' + w.id" class="px-0 mb-2">
-                <template #prepend>
-                  <v-icon size="small" color="#ff5722" class="mt-1">mdi-fire</v-icon>
-                </template>
-                <div>
-                  <v-list-item-title class="text-body-2 font-weight-medium">
-                    {{ w.wod_name || 'WOD' }}
-                  </v-list-item-title>
                   <!-- Instructions -->
                   <div v-if="w.instructions" class="mt-2">
                     <p class="text-caption font-weight-medium mb-1 text-info">
@@ -181,12 +180,11 @@
                   <div v-if="w.wod_description" class="text-caption text-medium-emphasis mt-1">
                     <markdown-renderer :content="w.wod_description" />
                   </div>
-                  <!-- Notes -->
-                  <div v-if="w.notes" class="text-caption text-medium-emphasis mt-1">
-                    <markdown-renderer :content="w.notes" />
-                  </div>
+                <!-- Notes -->
+                <div v-if="w.notes" class="text-caption text-medium-emphasis mt-1">
+                  <markdown-renderer :content="w.notes" />
                 </div>
-              </v-list-item>
+              </div>
             </v-list>
           </div>
 
@@ -435,5 +433,28 @@ watch(() => props.id, (newVal) => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
+}
+
+.workout-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 3px solid currentColor;
+}
+
+.item-type-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  line-height: 1;
+}
+
+.item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.3;
 }
 </style>
