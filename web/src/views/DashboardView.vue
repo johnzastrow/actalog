@@ -376,9 +376,12 @@
     <!-- Quick Log Dialog -->
     <v-dialog v-model="quickLogDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold" bg-color="primary">
+        <v-card-title
+          class="d-flex align-center py-3 px-4"
+          style="background-color: rgb(var(--v-theme-primary)); color: white"
+        >
           <v-icon color="white" class="mr-2">mdi-lightning-bolt</v-icon>
-          Quick Log Workout
+          <span class="text-h6 font-weight-bold">Quick Log Workout</span>
         </v-card-title>
 
         <v-card-text class="pa-2">
