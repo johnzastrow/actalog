@@ -78,6 +78,60 @@
           </div>
         </div>
 
+        <!-- Reserved Athletes Section (Collapsible) -->
+        <div v-if="roster.length > 0" class="mb-4">
+          <v-expansion-panels v-model="rosterExpanded" variant="accordion">
+            <v-expansion-panel>
+              <v-expansion-panel-title class="pa-2">
+                <div class="d-flex align-center">
+                  <v-icon color="primary" size="small" class="mr-2">mdi-account-group</v-icon>
+                  <span class="text-body-2 font-weight-bold">Reserved Athletes ({{ roster.length }})</span>
+                </div>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="pa-0">
+                <v-list density="compact" class="py-0">
+                  <v-list-item
+                    v-for="reservation in roster"
+                    :key="reservation.id"
+                    class="px-2 py-1"
+                  >
+                    <template #prepend>
+                      <v-avatar
+                        size="24"
+                        :color="getAvatarColor(reservation.user_name)"
+                        class="mr-2"
+                      >
+                        <span class="text-white text-caption font-weight-bold">
+                          {{ getInitials(reservation.user_name) }}
+                        </span>
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title class="text-body-2">
+                      {{ reservation.user_name || reservation.user_email }}
+                    </v-list-item-title>
+                    <template #append>
+                      <v-chip
+                        v-if="reservation.status === 'checked_in'"
+                        color="success"
+                        size="x-small"
+                      >
+                        Checked In
+                      </v-chip>
+                      <v-chip
+                        v-else-if="reservation.status === 'attended'"
+                        color="info"
+                        size="x-small"
+                      >
+                        Attended
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </div>
+
         <v-divider class="my-4" />
 
         <!-- Workout Details Section -->
@@ -289,6 +343,8 @@ const router = useRouter()
 const session = ref(null)
 const loading = ref(false)
 const error = ref('')
+const roster = ref([])
+const rosterExpanded = ref(false)
 
 // Computed
 const dialogVisible = computed({
@@ -341,16 +397,51 @@ async function fetchSession() {
   loading.value = true
   error.value = ''
   session.value = null
+  roster.value = []
 
   try {
     const response = await axios.get(`/api/gyms/${props.gymId}/sessions/${props.sessionId}`)
     session.value = response.data
+
+    // Try to fetch roster (may fail if user is not admin/coach)
+    await fetchRoster()
   } catch (err) {
     console.error('Failed to fetch session:', err)
     error.value = err.response?.data?.error || 'Failed to load session details'
   } finally {
     loading.value = false
   }
+}
+
+async function fetchRoster() {
+  if (!props.sessionId) return
+
+  try {
+    const response = await axios.get(`/api/admin/sessions/${props.sessionId}/roster`)
+    roster.value = response.data.roster || []
+  } catch (err) {
+    // Silently fail - user may not have permission to view roster
+    console.debug('Could not fetch roster:', err.response?.status)
+    roster.value = []
+  }
+}
+
+function getInitials(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(' ')
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+function getAvatarColor(name) {
+  if (!name) return '#9e9e9e'
+  // Generate consistent color from name
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#ff9800', '#ff5722']
+  return colors[Math.abs(hash) % colors.length]
 }
 
 function close() {
