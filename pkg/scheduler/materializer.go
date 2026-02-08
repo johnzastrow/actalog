@@ -35,11 +35,13 @@ type ExtendedSessionRepository interface {
 
 // Materializer handles generating class sessions from templates and schedule slots
 type Materializer struct {
-	templateRepo domain.ClassTemplateRepository
-	slotRepo     domain.ScheduleSlotRepository
-	sessionRepo  ExtendedSessionRepository
-	logger       *logger.Logger
-	config       MaterializerConfig
+	templateRepo      domain.ClassTemplateRepository
+	templateCoachRepo domain.TemplateCoachRepository
+	slotRepo          domain.ScheduleSlotRepository
+	sessionRepo       ExtendedSessionRepository
+	sessionCoachRepo  domain.SessionCoachRepository
+	logger            *logger.Logger
+	config            MaterializerConfig
 }
 
 // NewMaterializer creates a new session materializer
@@ -57,6 +59,12 @@ func NewMaterializer(
 		logger:       logger,
 		config:       config,
 	}
+}
+
+// SetCoachRepositories sets the optional coach repositories for copying default coaches
+func (m *Materializer) SetCoachRepositories(templateCoachRepo domain.TemplateCoachRepository, sessionCoachRepo domain.SessionCoachRepository) {
+	m.templateCoachRepo = templateCoachRepo
+	m.sessionCoachRepo = sessionCoachRepo
 }
 
 // MaterializeResult holds the results of a materialization run
@@ -357,11 +365,19 @@ func (m *Materializer) materializeSlot(
 				capacity = *slot.OverrideCapacity
 			}
 
+			// Determine location (slot override or template default)
+			var locationID *int64
+			if slot.LocationID != nil {
+				locationID = slot.LocationID
+			} else if template.DefaultLocationID != nil {
+				locationID = template.DefaultLocationID
+			}
+
 			// Create the session
 			session := &domain.ClassSession{
 				OrganizationID: template.OrganizationID,
 				TemplateID:     &template.ID,
-				LocationID:     slot.LocationID,
+				LocationID:     locationID,
 				Name:           template.Name,
 				Description:    template.Description,
 				WorkoutID:      template.WorkoutID,
@@ -376,6 +392,13 @@ func (m *Materializer) materializeSlot(
 					template.ID, sessionStart.Format("2006-01-02 15:04"), err)
 				date = date.AddDate(0, 0, 7*recurrenceInterval)
 				continue
+			}
+
+			// Copy default coaches from template to session
+			if m.templateCoachRepo != nil && m.sessionCoachRepo != nil {
+				if err := m.copyDefaultCoaches(template.ID, session.ID); err != nil {
+					m.logger.Warn("Failed to copy default coaches for session %d: %v", session.ID, err)
+				}
 			}
 
 			created++
@@ -399,6 +422,29 @@ func (m *Materializer) sessionExists(templateID int64, startTime time.Time) (boo
 // getAllActiveTemplates gets all active templates across all organizations
 func (m *Materializer) getAllActiveTemplates() ([]*domain.ClassTemplate, error) {
 	return m.templateRepo.GetAllActive()
+}
+
+// copyDefaultCoaches copies the default coaches from a template to a session
+func (m *Materializer) copyDefaultCoaches(templateID, sessionID int64) error {
+	// Get default coaches from template
+	templateCoaches, err := m.templateCoachRepo.GetByTemplateID(templateID)
+	if err != nil {
+		return fmt.Errorf("failed to get template coaches: %w", err)
+	}
+
+	// Copy each coach to the session
+	for _, tc := range templateCoaches {
+		sessionCoach := &domain.SessionCoach{
+			SessionID: sessionID,
+			UserID:    tc.UserID,
+			IsLead:    tc.IsLead,
+		}
+		if err := m.sessionCoachRepo.Create(sessionCoach); err != nil {
+			return fmt.Errorf("failed to create session coach: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // CreateMaterializerJob creates a scheduler job for the materializer

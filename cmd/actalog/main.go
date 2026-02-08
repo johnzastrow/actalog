@@ -500,6 +500,9 @@ func main() {
 		materializerConfig,
 	)
 
+	// Set coach repositories to enable copying default coaches during materialization
+	materializer.SetCoachRepositories(templateCoachRepo, sessionCoachRepo)
+
 	// Set up on-demand materialization callback for the scheduling service
 	// This triggers session creation when schedule slots are saved
 	schedulingService.SetMaterializeFunc(func(templateID int64) error {
