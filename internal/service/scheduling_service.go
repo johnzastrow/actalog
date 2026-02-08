@@ -822,14 +822,25 @@ func (s *SchedulingService) CreateReservation(userID int64, sessionID int64) (*d
 		return nil, ErrSessionFull
 	}
 
-	reservation := &domain.Reservation{
-		SessionID: sessionID,
-		UserID:    userID,
-		Status:    domain.ReservationStatusReserved,
-	}
+	var reservation *domain.Reservation
 
-	if err := s.reservationRepo.Create(reservation); err != nil {
-		return nil, fmt.Errorf("failed to create reservation: %w", err)
+	// If there's a cancelled reservation, reactivate it instead of creating a new one
+	if existing != nil && existing.Status == domain.ReservationStatusCancelled {
+		if err := s.reservationRepo.UpdateStatus(existing.ID, domain.ReservationStatusReserved); err != nil {
+			return nil, fmt.Errorf("failed to reactivate reservation: %w", err)
+		}
+		existing.Status = domain.ReservationStatusReserved
+		reservation = existing
+	} else {
+		reservation = &domain.Reservation{
+			SessionID: sessionID,
+			UserID:    userID,
+			Status:    domain.ReservationStatusReserved,
+		}
+
+		if err := s.reservationRepo.Create(reservation); err != nil {
+			return nil, fmt.Errorf("failed to create reservation: %w", err)
+		}
 	}
 
 	// Audit log

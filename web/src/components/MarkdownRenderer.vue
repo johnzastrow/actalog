@@ -80,16 +80,16 @@ const renderedHtml = computed(() => {
 
 /* Code */
 .markdown-content :deep(code) {
-  background-color: rgb(var(--v-theme-background));
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
   font-size: 0.9em;
-  color: #e91e63;
+  color: rgb(var(--v-theme-primary));
 }
 
 .markdown-content :deep(pre) {
-  background-color: rgb(var(--v-theme-background));
+  background-color: rgba(var(--v-theme-on-surface), 0.05);
   padding: 1em;
   border-radius: 5px;
   overflow-x: auto;

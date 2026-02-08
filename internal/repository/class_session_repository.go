@@ -198,7 +198,7 @@ func (r *ClassSessionRepository) GetByOrganizationIDWithUserStatus(orgID, userID
 		       cs.cancelled_at, cs.cancelled_reason, cs.completed_at, cs.created_at, cs.updated_at,
 		       ct.name as template_name, gl.name as location_name, w.name as workout_name,
 		       (SELECT COUNT(*) FROM reservations r WHERE r.session_id = cs.id AND r.status IN ('reserved', 'checked_in', 'attended')) as reservation_count,
-		       (SELECT r2.status FROM reservations r2 WHERE r2.session_id = cs.id AND r2.user_id = ? LIMIT 1) as user_status
+		       (SELECT r2.status FROM reservations r2 WHERE r2.session_id = cs.id AND r2.user_id = ? AND r2.status IN ('reserved', 'checked_in') LIMIT 1) as user_status
 		FROM class_sessions cs
 		LEFT JOIN class_templates ct ON cs.template_id = ct.id
 		LEFT JOIN gym_locations gl ON cs.location_id = gl.id
