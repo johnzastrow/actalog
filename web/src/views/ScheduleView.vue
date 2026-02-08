@@ -408,11 +408,11 @@ function getSessionCardClass(session) {
 
 // Computed: check if there are multiple locations across all sessions
 const hasMultipleLocations = computed(() => {
-  const locationIds = new Set()
+  const locationNames = new Set()
   sessions.value.forEach(s => {
-    if (s.location_id) locationIds.add(s.location_id)
+    if (s.location_name) locationNames.add(s.location_name)
   })
-  return locationIds.size > 1
+  return locationNames.size > 1
 })
 
 // Computed: check if there are multiple gyms
