@@ -1,15 +1,14 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.push('/admin/organizations')">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">{{ organization?.name || 'Gym Details' }}</h1>
-          <div class="text-body-2 text-medium-emphasis">Manage gym details and locations</div>
-        </div>
-      </div>
+      <AdminHeader
+        :title="organization?.name || 'Gym Details'"
+        subtitle="Manage gym details and locations"
+        :breadcrumbs="[
+          { title: 'Organizations', to: '/admin/organizations' },
+          { title: organization?.name || 'Details', to: `/admin/organizations/${$route.params.id}` }
+        ]"
+      />
 
       <!-- Loading State -->
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
@@ -234,6 +233,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import ManageOrganizationUsersDialog from '@/components/admin/ManageOrganizationUsersDialog.vue'
 
 const route = useRoute()

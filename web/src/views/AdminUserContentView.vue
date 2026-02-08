@@ -1,15 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">User-Created Content</h1>
-          <div class="text-body-2 text-medium-emphasis">View and promote user-created WODs, Movements, and Workouts to standard</div>
-        </div>
-      </div>
+      <AdminHeader
+        title="User-Created Content"
+        subtitle="View and promote user-created WODs, Movements, and Workouts to standard"
+        :breadcrumbs="[{ title: 'User Content', to: '/admin/user-content' }]"
+      />
 
       <!-- Loading State -->
       <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
@@ -530,6 +526,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 // State
 const loading = ref(false)

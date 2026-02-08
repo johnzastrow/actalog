@@ -1,16 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-        <!-- Page Title -->
-        <div class="mb-4">
-          <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600">
-            <v-icon color="error" size="28" class="mr-2">mdi-database-refresh</v-icon>
-            WOD Score Type Cleanup
-          </h1>
-          <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px">
-            Detect and fix WOD performance records that don't match their defined score_type
-          </p>
-        </div>
+      <AdminHeader
+        title="WOD Score Type Cleanup"
+        subtitle="Detect and fix WOD performance records that don't match their defined score_type"
+        :breadcrumbs="[{ title: 'Data Cleanup', to: '/admin/data-cleanup' }]"
+      />
 
         <!-- Scan Section -->
         <v-card elevation="0" rounded="lg" class="pa-4 mb-4">
@@ -268,6 +263,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 const scanning = ref(false)
 const fixing = ref(false)

@@ -1,16 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <!-- Header -->
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">Send Announcement</h1>
-          <div class="text-body-2 text-medium-emphasis">Send notifications to users with markdown support</div>
-        </div>
-      </div>
+      <AdminHeader
+        title="Send Announcement"
+        subtitle="Send notifications to users with markdown support"
+        :breadcrumbs="[{ title: 'Announcements', to: '/admin/announcements' }]"
+      />
 
       <!-- Success Alert -->
       <v-alert v-if="successMessage" type="success" variant="tonal" closable class="mb-4" @click:close="successMessage = null">
@@ -175,6 +170,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
 // State

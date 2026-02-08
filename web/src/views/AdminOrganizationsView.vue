@@ -1,15 +1,13 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">Gym Management</h1>
-          <div class="text-body-2 text-medium-emphasis">Manage your gyms, boxes, and affiliates</div>
-        </div>
-        <v-spacer />
+      <AdminHeader
+        title="Gym Management"
+        subtitle="Manage your gyms, boxes, and affiliates"
+        :breadcrumbs="[{ title: 'Organizations', to: '/admin/organizations' }]"
+      />
+
+      <div class="d-flex justify-end mb-4">
         <v-btn color="primary" @click="openCreateDialog">
           <v-icon start>mdi-plus</v-icon>
           Add Gym
@@ -147,6 +145,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import ManageOrganizationUsersDialog from '@/components/admin/ManageOrganizationUsersDialog.vue'
 
 const loading = ref(false)

@@ -1,35 +1,32 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
+      <AdminHeader
+        title="Database Backups"
+        subtitle="Create, download, and restore database backups"
+        :breadcrumbs="[{ title: 'Backups', to: '/admin/backups' }]"
+      />
+
+      <div class="d-flex justify-end gap-2 mb-4">
+        <v-btn
+          color="secondary"
+          prepend-icon="mdi-upload"
+          :loading="uploading"
+          :disabled="uploading || loading"
+          @click="$refs.fileInput.click()"
+        >
+          Upload Backup
         </v-btn>
-        <div>
-          <h1 class="text-h5">Database Backups</h1>
-          <div class="text-body-2 text-medium-emphasis">Create, download, and restore database backups</div>
-        </div>
-      <v-spacer />
-      <v-btn
-        color="secondary"
-        prepend-icon="mdi-upload"
-        :loading="uploading"
-        :disabled="uploading || loading"
-        class="mr-2"
-        @click="$refs.fileInput.click()"
-      >
-        Upload Backup
-      </v-btn>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-database-export"
-        :loading="creating"
-        :disabled="creating || loading"
-        @click="createBackup"
-      >
-        Create Backup
-      </v-btn>
-    </div>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-database-export"
+          :loading="creating"
+          :disabled="creating || loading"
+          @click="createBackup"
+        >
+          Create Backup
+        </v-btn>
+      </div>
 
     <!-- Hidden file input for upload -->
     <input
@@ -259,6 +256,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 // State
 const loading = ref(false)

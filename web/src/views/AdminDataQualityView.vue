@@ -1,16 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <!-- Page Title -->
-      <div class="mb-4">
-        <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600">
-          <v-icon color="primary" size="28" class="mr-2">mdi-database-check</v-icon>
-          Data Quality Checks
-        </h1>
-        <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px">
-          Scan for duplicate records and data quality issues across the database
-        </p>
-      </div>
+      <AdminHeader
+        title="Data Quality Checks"
+        subtitle="Scan for duplicate records and data quality issues across the database"
+        :breadcrumbs="[{ title: 'Data Quality', to: '/admin/data-quality' }]"
+      />
 
       <!-- Tabs -->
       <v-tabs v-model="activeTab" bg-color="transparent" color="primary" class="mb-4">
@@ -439,6 +434,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 // State
 const activeTab = ref('overview')

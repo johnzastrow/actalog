@@ -1,7 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container class="pa-3">
-      <h1 class="text-h5 font-weight-bold mb-4">Subscription Management</h1>
+      <AdminHeader
+        title="Subscription Management"
+        subtitle="Manage user and gym subscriptions"
+        :breadcrumbs="[{ title: 'Subscriptions', to: '/admin/subscriptions' }]"
+      />
 
       <!-- Tabs for User vs Organization subscriptions -->
       <v-tabs v-model="activeTab" color="primary" class="mb-4">
@@ -541,6 +545,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import CreateSubscriptionDialog from '@/components/admin/CreateSubscriptionDialog.vue'
 import SubscriptionDetailDialog from '@/components/admin/SubscriptionDetailDialog.vue'
 import MarkAsPaidDialog from '@/components/admin/MarkAsPaidDialog.vue'

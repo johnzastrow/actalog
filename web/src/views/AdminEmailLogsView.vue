@@ -1,20 +1,17 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">Email Logs</h1>
-          <div class="text-body-2 text-medium-emphasis">View history of sent emails</div>
-        </div>
-        <v-spacer />
+      <AdminHeader
+        title="Email Logs"
+        subtitle="View history of sent emails"
+        :breadcrumbs="[{ title: 'Email Logs', to: '/admin/email-logs' }]"
+      />
+
+      <div class="d-flex justify-end gap-2 mb-4">
         <v-btn
           color="secondary"
           prepend-icon="mdi-email-cog"
           :to="{ name: 'admin-email-settings' }"
-          class="mr-2"
         >
           Email Settings
         </v-btn>
@@ -356,6 +353,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 // State
 const loading = ref(false)

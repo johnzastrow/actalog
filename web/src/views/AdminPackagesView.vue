@@ -1,15 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <div class="d-flex align-center mb-4">
-        <v-btn icon class="mr-2" @click="$router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-        <div>
-          <h1 class="text-h5">Manage Packages & Documents</h1>
-          <div class="text-body-2 text-medium-emphasis">Credit packages and required documents</div>
-        </div>
-      </div>
+      <AdminHeader
+        title="Manage Packages & Documents"
+        subtitle="Credit packages and required documents"
+        :breadcrumbs="[{ title: 'Packages', to: '/admin/packages' }]"
+      />
 
       <!-- Organization Selector -->
       <v-select
@@ -327,6 +323,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 const loading = ref(false)
 const error = ref(null)

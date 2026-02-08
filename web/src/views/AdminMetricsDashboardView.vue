@@ -1,12 +1,12 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <!-- Page Title -->
-      <div class="d-flex align-center justify-space-between mb-4">
-        <div>
-          <h1 style="color: rgb(var(--v-theme-on-surface)); font-size: 24px; font-weight: 600">System Metrics</h1>
-          <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px">Real-time system statistics and health</p>
-        </div>
+      <div class="d-flex align-center justify-space-between">
+        <AdminHeader
+          title="System Metrics"
+          subtitle="Real-time system statistics and health"
+          :breadcrumbs="[{ title: 'Metrics', to: '/admin/metrics' }]"
+        />
         <v-btn
           icon
           variant="text"
@@ -261,6 +261,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import StatCard from '@/components/admin/StatCard.vue'
 import WorkoutTrendsChart from '@/components/admin/WorkoutTrendsChart.vue'
 

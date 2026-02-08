@@ -1,18 +1,11 @@
 <template>
   <div class="mobile-view-wrapper">
     <v-container fluid class="pa-4">
-      <!-- Page Title -->
-      <div class="mb-4">
-        <div class="d-flex align-center mb-2">
-          <v-btn icon variant="text" size="small" @click="$router.push('/admin')">
-            <v-icon>mdi-arrow-left</v-icon>
-          </v-btn>
-          <h1 style="color: #2c3e50; font-size: 24px; font-weight: 600" class="ml-2">User Import/Export</h1>
-        </div>
-        <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px">
-          Import users from CSV, export user list, or send batch password reset emails
-        </p>
-      </div>
+      <AdminHeader
+        title="User Import/Export"
+        subtitle="Import users from CSV, export user list, or send batch password reset emails"
+        :breadcrumbs="[{ title: 'User Import/Export', to: '/admin/users/import-export' }]"
+      />
 
       <!-- Success Alert -->
       <v-alert v-if="successMessage" type="success" closable class="mb-4" @click:close="successMessage = null">
@@ -403,6 +396,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 
 // Tab state
 const activeTab = ref('import')
