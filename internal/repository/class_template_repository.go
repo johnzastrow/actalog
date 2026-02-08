@@ -268,7 +268,7 @@ func (r *ClassTemplateRepository) Delete(id int64) error {
 func (r *ClassTemplateRepository) GetAllActive() ([]*domain.ClassTemplate, error) {
 	query := rebindQuery(`
 		SELECT ct.id, ct.organization_id, ct.name, ct.description, ct.workout_id,
-		       ct.duration_minutes, ct.default_capacity, ct.color, ct.is_active,
+		       ct.duration_minutes, ct.default_capacity, ct.default_location_id, ct.color, ct.is_active,
 		       ct.created_at, ct.updated_at, w.name as workout_name
 		FROM class_templates ct
 		LEFT JOIN wods w ON ct.workout_id = w.id
@@ -285,23 +285,43 @@ func (r *ClassTemplateRepository) GetAllActive() ([]*domain.ClassTemplate, error
 	var templates []*domain.ClassTemplate
 	for rows.Next() {
 		var template domain.ClassTemplate
+		var description sql.NullString
+		var workoutID sql.NullInt64
+		var defaultLocationID sql.NullInt64
+		var workoutName sql.NullString
+
 		err := rows.Scan(
 			&template.ID,
 			&template.OrganizationID,
 			&template.Name,
-			&template.Description,
-			&template.WorkoutID,
+			&description,
+			&workoutID,
 			&template.DurationMinutes,
 			&template.DefaultCapacity,
+			&defaultLocationID,
 			&template.Color,
 			&template.IsActive,
 			&template.CreatedAt,
 			&template.UpdatedAt,
-			&template.WorkoutName,
+			&workoutName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan class template: %w", err)
 		}
+
+		if description.Valid {
+			template.Description = &description.String
+		}
+		if workoutID.Valid {
+			template.WorkoutID = &workoutID.Int64
+		}
+		if defaultLocationID.Valid {
+			template.DefaultLocationID = &defaultLocationID.Int64
+		}
+		if workoutName.Valid {
+			template.WorkoutName = &workoutName.String
+		}
+
 		templates = append(templates, &template)
 	}
 
