@@ -88,7 +88,7 @@
           v-if="selectedTemplate || (isEditMode && selectedTemplateId)"
           elevation="0"
           class="mb-1 pa-2"
-          style="background-color: rgb(var(--v-theme-surface)); border: 2px solid rgb(var(--v-theme-primary))"
+          style="background-color: rgb(var(--v-theme-surface))"
         >
           <div class="d-flex align-center mb-2">
             <v-icon color="primary" class="mr-2">mdi-information-outline</v-icon>
