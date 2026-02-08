@@ -697,7 +697,24 @@ function buildMovementsPayload() {
 // Build WODs payload
 function buildWODsPayload() {
   return wodPerformance.value
-    .filter(w => w.score_type)
+    .filter(w => {
+      // Must have a score_type
+      if (!w.score_type) return false
+
+      // Only include WODs where user actually entered score data
+      if (w.score_type === 'Time (HH:MM:SS)') {
+        return w.time_hours || w.time_minutes || w.time_seconds
+      }
+      if (w.score_type === 'Rounds+Reps') {
+        return w.rounds != null
+      }
+      if (w.score_type === 'Max Weight') {
+        return w.weight != null
+      }
+
+      // For other score types, include if notes or rpe is set
+      return w.notes || w.rpe
+    })
     .map(w => {
       const payload = {
         wod_id: w.wod_id,
