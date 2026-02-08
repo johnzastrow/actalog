@@ -79,57 +79,57 @@
         </div>
 
         <!-- Reserved Athletes Section (Collapsible) -->
-        <div v-if="roster.length > 0" class="mb-4">
-          <v-expansion-panels v-model="rosterExpanded" variant="accordion">
-            <v-expansion-panel>
-              <v-expansion-panel-title class="pa-2">
-                <div class="d-flex align-center">
-                  <v-icon color="primary" size="small" class="mr-2">mdi-account-group</v-icon>
-                  <span class="text-body-2 font-weight-bold">Reserved Athletes ({{ roster.length }})</span>
-                </div>
-              </v-expansion-panel-title>
-              <v-expansion-panel-text class="pa-0">
-                <v-list density="compact" class="py-0">
-                  <v-list-item
-                    v-for="reservation in roster"
-                    :key="reservation.id"
-                    class="px-2 py-1"
-                  >
-                    <template #prepend>
-                      <v-avatar
-                        size="24"
-                        :color="getAvatarColor(reservation.user_name)"
-                        class="mr-2"
-                      >
-                        <span class="text-white text-caption font-weight-bold">
-                          {{ getInitials(reservation.user_name) }}
-                        </span>
-                      </v-avatar>
-                    </template>
-                    <v-list-item-title class="text-body-2">
-                      {{ reservation.user_name || reservation.user_email }}
-                    </v-list-item-title>
-                    <template #append>
-                      <v-chip
-                        v-if="reservation.status === 'checked_in'"
-                        color="success"
-                        size="x-small"
-                      >
-                        Checked In
-                      </v-chip>
-                      <v-chip
-                        v-else-if="reservation.status === 'attended'"
-                        color="info"
-                        size="x-small"
-                      >
-                        Attended
-                      </v-chip>
-                    </template>
-                  </v-list-item>
-                </v-list>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
+        <div v-if="roster.length > 0" class="mb-2">
+          <div
+            class="d-flex align-center mb-2 cursor-pointer"
+            @click="rosterExpanded = !rosterExpanded"
+          >
+            <v-icon color="primary" size="small" class="mr-2">mdi-account-group</v-icon>
+            <span class="text-body-2">
+              Reserved Athletes ({{ roster.length }})
+            </span>
+            <v-icon size="small" class="ml-1">
+              {{ rosterExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+            </v-icon>
+          </div>
+          <v-expand-transition>
+            <div v-show="rosterExpanded" class="ml-6">
+              <div
+                v-for="reservation in roster"
+                :key="reservation.id"
+                class="d-flex align-center mb-1"
+              >
+                <v-avatar
+                  size="20"
+                  :color="getAvatarColor(reservation.user_name)"
+                  class="mr-2"
+                >
+                  <span class="text-white text-caption font-weight-bold" style="font-size: 10px;">
+                    {{ getInitials(reservation.user_name) }}
+                  </span>
+                </v-avatar>
+                <span class="text-body-2">
+                  {{ reservation.user_name || reservation.user_email }}
+                </span>
+                <v-chip
+                  v-if="reservation.status === 'checked_in'"
+                  color="success"
+                  size="x-small"
+                  class="ml-2"
+                >
+                  Checked In
+                </v-chip>
+                <v-chip
+                  v-else-if="reservation.status === 'attended'"
+                  color="info"
+                  size="x-small"
+                  class="ml-2"
+                >
+                  Attended
+                </v-chip>
+              </div>
+            </div>
+          </v-expand-transition>
         </div>
 
         <v-divider class="my-4" />
@@ -512,5 +512,8 @@ watch(() => props.sessionId, (newVal) => {
 }
 .gap-2 {
   gap: 8px;
+}
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>
