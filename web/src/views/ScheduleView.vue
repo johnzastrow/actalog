@@ -11,8 +11,9 @@
         </div>
       </div>
 
-      <!-- Organization Selector -->
+      <!-- Organization Selector (only show if multiple gyms) -->
       <v-select
+        v-if="organizations.length > 1"
         v-model="selectedOrgId"
         :items="organizations"
         item-title="name"
@@ -68,7 +69,7 @@
               <div class="d-flex align-center">
                 <div class="flex-grow-1">
                   <div class="d-flex align-center">
-                    <span class="text-subtitle-1 font-weight-bold">{{ session.name }}</span>
+                    <span class="text-subtitle-1 font-weight-bold">{{ getSessionDisplayName(session) }}</span>
                     <v-chip v-if="session.status === 'cancelled'" color="error" size="x-small" class="ml-2">
                       Cancelled
                     </v-chip>
@@ -79,10 +80,6 @@
                   </div>
                   <div class="text-body-2 text-medium-emphasis">
                     {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
-                  </div>
-                  <div v-if="session.location_name" class="text-caption text-medium-emphasis">
-                    <v-icon size="small" class="mr-1">mdi-map-marker</v-icon>
-                    {{ session.location_name }}
                   </div>
                   <div v-if="session.workout_name" class="text-caption text-warning mt-1">
                     <v-icon size="small" class="mr-1">mdi-dumbbell</v-icon>
@@ -140,9 +137,14 @@
         </div>
       </div>
 
-      <!-- No Organization Selected -->
-      <v-alert v-if="!selectedOrgId && !loading" type="info" variant="tonal">
+      <!-- No Organization Selected (only relevant when multiple gyms exist) -->
+      <v-alert v-if="!selectedOrgId && !loading && organizations.length > 1" type="info" variant="tonal">
         Please select a gym to view the class schedule.
+      </v-alert>
+
+      <!-- No gyms available -->
+      <v-alert v-if="!loading && organizations.length === 0" type="info" variant="tonal">
+        No gyms available. Please contact your administrator.
       </v-alert>
     </v-container>
 
@@ -402,6 +404,44 @@ function getSessionCardClass(session) {
     return 'border-primary'
   }
   return ''
+}
+
+// Computed: check if there are multiple locations across all sessions
+const hasMultipleLocations = computed(() => {
+  const locationIds = new Set()
+  sessions.value.forEach(s => {
+    if (s.location_id) locationIds.add(s.location_id)
+  })
+  return locationIds.size > 1
+})
+
+// Computed: check if there are multiple gyms
+const hasMultipleGyms = computed(() => organizations.value.length > 1)
+
+// Get the current gym name
+const currentGymName = computed(() => {
+  const org = organizations.value.find(o => o.id === selectedOrgId.value)
+  return org?.name || ''
+})
+
+// Build session display name based on gym/location counts
+function getSessionDisplayName(session) {
+  const parts = []
+
+  // Add gym name if multiple gyms
+  if (hasMultipleGyms.value) {
+    parts.push(currentGymName.value)
+  }
+
+  // Add location name if multiple locations
+  if (hasMultipleLocations.value && session.location_name) {
+    parts.push(session.location_name)
+  }
+
+  // Always add the class name
+  parts.push(session.name)
+
+  return parts.join(' - ')
 }
 
 // Open session detail dialog
