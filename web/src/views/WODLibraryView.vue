@@ -163,35 +163,6 @@
       @click="createNewWOD"
     />
 
-    <!-- Bottom Navigation (only when not in selection mode) -->
-    <v-bottom-navigation
-      v-if="!selectionMode"
-      v-model="activeNav"
-      grow
-      style="position: fixed; bottom: 0; width: 100%; z-index: 5; background-color: rgb(var(--v-theme-surface))"
-      elevation="8"
-    >
-      <v-btn value="dashboard" @click="$router.push('/dashboard')">
-        <v-icon>mdi-view-dashboard</v-icon>
-        <span>Dashboard</span>
-      </v-btn>
-
-      <v-btn value="workouts" @click="$router.push('/workouts')">
-        <v-icon>mdi-clipboard-text</v-icon>
-        <span>Workouts</span>
-      </v-btn>
-
-      <v-btn value="performance" @click="$router.push('/performance')">
-        <v-icon>mdi-chart-line</v-icon>
-        <span>Performance</span>
-      </v-btn>
-
-      <v-btn value="profile" @click="$router.push('/profile')">
-        <v-icon>mdi-account</v-icon>
-        <span>Profile</span>
-      </v-btn>
-    </v-bottom-navigation>
-
     <!-- Detail View Dialog -->
     <DetailViewDialog
       v-model="showDetailDialog"
@@ -385,7 +356,6 @@ const wodsStore = useWodsStore()
 // State
 const searchQuery = ref('')
 const selectedType = ref('all')
-const activeNav = ref('wods')
 
 // Detail Dialog state
 const showDetailDialog = ref(false)

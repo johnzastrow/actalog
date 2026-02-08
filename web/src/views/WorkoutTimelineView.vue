@@ -143,25 +143,6 @@
       </div>
     </div>
 
-    <!-- Bottom Navigation -->
-    <v-bottom-navigation style="position: fixed; bottom: 0; left: 0; right: 0" elevation="8">
-      <v-btn to="/dashboard">
-        <v-icon>mdi-view-dashboard</v-icon>
-        <span>Dashboard</span>
-      </v-btn>
-      <v-btn to="/log-workout">
-        <v-icon>mdi-plus-circle</v-icon>
-        <span>Log</span>
-      </v-btn>
-      <v-btn to="/workouts">
-        <v-icon>mdi-history</v-icon>
-        <span>History</span>
-      </v-btn>
-      <v-btn to="/profile">
-        <v-icon>mdi-account</v-icon>
-        <span>Profile</span>
-      </v-btn>
-    </v-bottom-navigation>
   </div>
 </template>
 

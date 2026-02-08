@@ -284,26 +284,6 @@
           </v-col>
         </v-row>
       </v-container>
-
-    <!-- Bottom Navigation -->
-    <v-bottom-navigation fixed style="z-index: 5; height: 56px; box-shadow: 0px -2px 4px rgba(0,0,0,0.1)">
-      <v-btn to="/dashboard" style="flex: 1">
-        <v-icon size="20">mdi-view-dashboard</v-icon>
-        <span style="font-size: 9px">Home</span>
-      </v-btn>
-      <v-btn to="/log-workout" style="flex: 1">
-        <v-icon size="20">mdi-plus-circle</v-icon>
-        <span style="font-size: 9px">Log</span>
-      </v-btn>
-      <v-btn to="/performance" style="flex: 1">
-        <v-icon size="20">mdi-chart-line</v-icon>
-        <span style="font-size: 9px">Stats</span>
-      </v-btn>
-      <v-btn to="/admin" style="flex: 1" color="primary">
-        <v-icon size="20">mdi-shield-account</v-icon>
-        <span style="font-size: 9px">Admin</span>
-      </v-btn>
-    </v-bottom-navigation>
   </div>
 </template>
 

@@ -308,35 +308,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Bottom Navigation -->
-    <v-bottom-navigation
-      v-model="activeTab"
-      grow
-      style="position: fixed; bottom: 0; background-color: rgb(var(--v-theme-surface))"
-      elevation="8"
-    >
-      <v-btn value="dashboard" to="/dashboard">
-        <v-icon>mdi-view-dashboard</v-icon>
-        <span style="font-size: 10px">Dashboard</span>
-      </v-btn>
-      <v-btn value="performance" to="/performance">
-        <v-icon>mdi-chart-line</v-icon>
-        <span style="font-size: 10px">Performance</span>
-      </v-btn>
-      <v-btn value="log" to="/dashboard?open=quick-log" style="position: relative; bottom: 20px">
-        <v-avatar color="primary" size="56" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
-          <v-icon color="white" size="32">mdi-plus</v-icon>
-        </v-avatar>
-      </v-btn>
-      <v-btn value="workouts" to="/workouts">
-        <v-icon>mdi-dumbbell</v-icon>
-        <span style="font-size: 10px">Templates</span>
-      </v-btn>
-      <v-btn value="profile" to="/profile">
-        <v-icon>mdi-account</v-icon>
-        <span style="font-size: 10px">Profile</span>
-      </v-btn>
-    </v-bottom-navigation>
   </div>
 </template>
 

@@ -227,29 +227,6 @@
         </p>
       </v-card>
     </v-container>
-
-    <!-- Bottom Navigation -->
-    <v-bottom-navigation fixed elevation="8" height="56" style="z-index: 5">
-      <v-btn value="dashboard" to="/">
-        <v-icon>mdi-view-dashboard</v-icon>
-        <span>Dashboard</span>
-      </v-btn>
-
-      <v-btn value="log" to="/log">
-        <v-icon>mdi-plus-circle</v-icon>
-        <span>Log</span>
-      </v-btn>
-
-      <v-btn value="performance" to="/performance">
-        <v-icon>mdi-chart-line</v-icon>
-        <span>Performance</span>
-      </v-btn>
-
-      <v-btn value="profile" to="/profile">
-        <v-icon>mdi-account</v-icon>
-        <span>Profile</span>
-      </v-btn>
-    </v-bottom-navigation>
   </div>
 </template>
 
