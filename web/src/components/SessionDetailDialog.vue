@@ -93,7 +93,7 @@
               <v-icon size="x-small" class="mr-1">mdi-flag-checkered</v-icon>
               Intro & Warmup
             </p>
-            <div class="text-body-2 pa-2 rounded" style="background-color: rgb(var(--v-theme-surface-variant));">
+            <div class="text-body-2 pa-2 rounded" style="background-color: rgba(var(--v-theme-on-surface), 0.05);">
               <markdown-renderer :content="session.workout.intro_warmup" />
             </div>
           </div>
@@ -198,7 +198,7 @@
               <v-icon size="x-small" class="mr-1">mdi-note-text</v-icon>
               Notes
             </p>
-            <div class="text-body-2 pa-2 rounded" style="background-color: rgb(var(--v-theme-surface-variant));">
+            <div class="text-body-2 pa-2 rounded" style="background-color: rgba(var(--v-theme-on-surface), 0.05);">
               <markdown-renderer :content="session.workout.notes" />
             </div>
           </div>
