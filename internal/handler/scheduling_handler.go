@@ -374,6 +374,8 @@ func (h *SchedulingHandler) UpdateTemplate(w http.ResponseWriter, r *http.Reques
 }
 
 // DeleteTemplate handles DELETE /api/templates/{id}
+// Query params:
+//   - mode: template_only (default), with_all_sessions, with_future_sessions
 func (h *SchedulingHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -388,6 +390,41 @@ func (h *SchedulingHandler) DeleteTemplate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Check for mode parameter
+	mode := r.URL.Query().Get("mode")
+	if mode != "" {
+		// Use the new DeleteTemplateWithMode method
+		deleteMode := service.DeleteMode(mode)
+		switch deleteMode {
+		case service.DeleteModeTemplateOnly, service.DeleteModeWithAllSessions, service.DeleteModeWithFutureSessions:
+			// Valid mode
+		default:
+			respondError(w, http.StatusBadRequest, "Invalid mode. Must be: template_only, with_all_sessions, or with_future_sessions")
+			return
+		}
+
+		result, err := h.schedulingService.DeleteTemplateWithMode(userID, id, deleteMode)
+		if err != nil {
+			if err == service.ErrClassTemplateNotFound {
+				respondError(w, http.StatusNotFound, "Template not found")
+				return
+			}
+			h.logger.Error("Failed to delete template with mode: %v", err)
+			respondError(w, http.StatusInternalServerError, "Failed to delete template")
+			return
+		}
+
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"message":            "Template deleted successfully",
+			"sessions_deleted":   result.SessionsDeleted,
+			"notifications_sent": result.NotificationsSent,
+			"credits_refunded":   result.CreditsRefunded,
+			"mode":               string(result.Mode),
+		})
+		return
+	}
+
+	// Default behavior: just delete the template
 	if err := h.schedulingService.DeleteTemplate(userID, id); err != nil {
 		if err == service.ErrClassTemplateNotFound {
 			respondError(w, http.StatusNotFound, "Template not found")

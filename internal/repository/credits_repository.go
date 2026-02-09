@@ -393,6 +393,37 @@ func (r *UserClassCreditsRepository) UseCredit(userID, orgID int64) error {
 	return err
 }
 
+// RefundCredit restores 1 credit to the user's balance (opposite of UseCredit)
+// It finds the most recently used credits record with credits_used > 0 and decrements it
+func (r *UserClassCreditsRepository) RefundCredit(userID, orgID int64) error {
+	// Find the most recently updated credits record that has credits_used > 0
+	var creditID int64
+	query := rebindQuery(`SELECT id FROM user_class_credits
+		WHERE user_id = ? AND organization_id = ?
+		AND credits_used > 0
+		ORDER BY updated_at DESC
+		LIMIT 1`)
+
+	err := r.db.QueryRow(query, userID, orgID).Scan(&creditID)
+	if err == sql.ErrNoRows {
+		// No credits to refund - this is not an error, just nothing to do
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to find credits to refund: %w", err)
+	}
+
+	// Decrement credits_used
+	updateQuery := rebindQuery(`UPDATE user_class_credits SET credits_used = credits_used - 1, updated_at = ? WHERE id = ?`)
+
+	_, err = r.db.Exec(updateQuery, time.Now(), creditID)
+	if err != nil {
+		return fmt.Errorf("failed to refund credit: %w", err)
+	}
+
+	return nil
+}
+
 // GetExpiringSoon retrieves credits expiring within daysAhead days
 func (r *UserClassCreditsRepository) GetExpiringSoon(daysAhead int) ([]*domain.UserClassCredits, error) {
 	expirationDate := time.Now().AddDate(0, 0, daysAhead)

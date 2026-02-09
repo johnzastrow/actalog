@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -328,6 +329,30 @@ func (r *WaitlistRepository) Delete(id int64) error {
 	return err
 }
 
+// DeleteBySessionIDs deletes all waitlist entries for the given sessions
+func (r *WaitlistRepository) DeleteBySessionIDs(sessionIDs []int64) error {
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM waitlist_entries WHERE session_id IN (%s)`, strings.Join(placeholders, ","))
+	query = rebindQuery(query)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete waitlist entries: %w", err)
+	}
+
+	return nil
+}
+
 // ClassNotificationRepository implements domain.ClassNotificationRepository
 type ClassNotificationRepository struct {
 	db *sql.DB
@@ -539,4 +564,28 @@ func (r *ClassNotificationRepository) DeleteByReservationID(reservationID int64)
 	query := rebindQuery(`DELETE FROM class_notifications WHERE reservation_id = ?`)
 	_, err := r.db.Exec(query, reservationID)
 	return err
+}
+
+// DeleteBySessionIDs deletes all notifications for the given sessions
+func (r *ClassNotificationRepository) DeleteBySessionIDs(sessionIDs []int64) error {
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM class_notifications WHERE session_id IN (%s)`, strings.Join(placeholders, ","))
+	query = rebindQuery(query)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete class notifications: %w", err)
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
@@ -138,6 +139,30 @@ func (r *SessionCoachRepository) SetLeadCoach(sessionID, userID int64) error {
 	query2 := rebindQuery(`UPDATE session_coaches SET is_lead = ? WHERE session_id = ? AND user_id = ?`)
 	if _, err := r.db.Exec(query2, true, sessionID, userID); err != nil {
 		return fmt.Errorf("failed to set lead coach: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteBySessionIDs deletes all coach assignments for the given sessions
+func (r *SessionCoachRepository) DeleteBySessionIDs(sessionIDs []int64) error {
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM session_coaches WHERE session_id IN (%s)`, strings.Join(placeholders, ","))
+	query = rebindQuery(query)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete session coaches: %w", err)
 	}
 
 	return nil

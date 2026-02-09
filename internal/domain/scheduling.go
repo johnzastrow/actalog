@@ -252,6 +252,10 @@ type ClassSessionRepository interface {
 	GetReservationCount(sessionID int64) (int, error)
 	ExistsByTemplateAndStartTime(templateID int64, startTime time.Time) (bool, error)
 	BatchUpdateWorkout(sessionIDs []int64, workoutID *int64) (int64, error)
+	// Bulk delete methods for template deletion
+	GetSessionIDsByTemplateID(templateID int64) ([]int64, error)
+	GetFutureSessionIDsByTemplateID(templateID int64, after time.Time) ([]int64, error)
+	DeleteByIDs(sessionIDs []int64) (int64, error)
 }
 
 // SessionCoachRepository defines the interface for session coach data access
@@ -261,6 +265,8 @@ type SessionCoachRepository interface {
 	Delete(id int64) error
 	DeleteBySessionAndUser(sessionID, userID int64) error
 	SetLeadCoach(sessionID, userID int64) error
+	// Bulk delete for template deletion
+	DeleteBySessionIDs(sessionIDs []int64) error
 }
 
 // TemplateCoachRepository defines the interface for template coach data access
@@ -288,4 +294,7 @@ type ReservationRepository interface {
 	MarkNoShow(id int64) error
 	MarkAttended(id int64, userWorkoutID int64) error
 	CountActiveForSession(sessionID int64) (int, error)
+	// Bulk operations for template deletion
+	GetBySessionIDs(sessionIDs []int64) ([]*Reservation, error)
+	DeleteBySessionIDs(sessionIDs []int64) error
 }

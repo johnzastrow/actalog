@@ -437,6 +437,10 @@ func main() {
 		auditLogRepo,
 		workoutRepo,
 	)
+	// Set optional repositories for bulk delete operations
+	schedulingService.SetWaitlistRepo(waitlistRepo)
+	schedulingService.SetNotificationRepo(classNotificationRepo)
+	schedulingService.SetCreditsRepo(userCreditsRepo)
 
 	// Phase 4 service (documents, credits, waitlist, notifications)
 	phase4Service := service.NewPhase4Service(

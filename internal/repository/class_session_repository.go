@@ -607,3 +607,82 @@ func (r *ClassSessionRepository) GetByIDs(ids []int64) ([]*domain.ClassSession, 
 
 	return r.scanSessions(rows)
 }
+
+// GetSessionIDsByTemplateID returns all session IDs for a template
+func (r *ClassSessionRepository) GetSessionIDsByTemplateID(templateID int64) ([]int64, error) {
+	query := rebindQuery(`
+		SELECT id FROM class_sessions
+		WHERE template_id = ?
+	`)
+
+	rows, err := r.db.Query(query, templateID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session IDs by template: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan session ID: %w", err)
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, rows.Err()
+}
+
+// GetFutureSessionIDsByTemplateID returns session IDs for a template after the given time
+func (r *ClassSessionRepository) GetFutureSessionIDsByTemplateID(templateID int64, after time.Time) ([]int64, error) {
+	query := rebindQuery(`
+		SELECT id FROM class_sessions
+		WHERE template_id = ? AND start_time > ?
+	`)
+
+	rows, err := r.db.Query(query, templateID, after)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get future session IDs by template: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan session ID: %w", err)
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, rows.Err()
+}
+
+// DeleteByIDs deletes sessions by their IDs
+func (r *ClassSessionRepository) DeleteByIDs(sessionIDs []int64) (int64, error) {
+	if len(sessionIDs) == 0 {
+		return 0, nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM class_sessions WHERE id IN (%s)`, strings.Join(placeholders, ","))
+	query = rebindQuery(query)
+
+	result, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to delete sessions: %w", err)
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	return count, nil
+}

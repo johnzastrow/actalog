@@ -558,3 +558,64 @@ func (r *ReservationRepository) populateReservationNullableFields(
 		reservation.CheckedInByEmail = &checkedInByEmail.String
 	}
 }
+
+// GetBySessionIDs retrieves all reservations for the given sessions
+func (r *ReservationRepository) GetBySessionIDs(sessionIDs []int64) ([]*domain.Reservation, error) {
+	if len(sessionIDs) == 0 {
+		return nil, nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT r.id, r.session_id, r.user_id, r.status, r.reserved_at,
+		       r.checked_in_at, r.checked_in_by_user_id, r.cancelled_at, r.cancelled_reason,
+		       r.no_show_marked_at, r.user_workout_id, r.created_at, r.updated_at,
+		       u.name as user_name, u.email as user_email,
+		       cb.name as checked_in_by_name, cb.email as checked_in_by_email
+		FROM reservations r
+		JOIN users u ON r.user_id = u.id
+		LEFT JOIN users cb ON r.checked_in_by_user_id = cb.id
+		WHERE r.session_id IN (%s)
+		ORDER BY r.reserved_at ASC
+	`, strings.Join(placeholders, ","))
+
+	query = rebindQuery(query)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get reservations by session IDs: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanReservations(rows)
+}
+
+// DeleteBySessionIDs deletes all reservations for the given sessions
+func (r *ReservationRepository) DeleteBySessionIDs(sessionIDs []int64) error {
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, len(sessionIDs))
+	args := make([]interface{}, len(sessionIDs))
+	for i, id := range sessionIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM reservations WHERE session_id IN (%s)`, strings.Join(placeholders, ","))
+	query = rebindQuery(query)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to delete reservations: %w", err)
+	}
+
+	return nil
+}

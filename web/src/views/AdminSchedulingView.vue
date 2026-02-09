@@ -444,6 +444,59 @@
       </v-card>
     </v-dialog>
 
+    <!-- Delete Class Dialog -->
+    <v-dialog v-model="deleteClassDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-error d-flex align-center">
+          <v-icon class="mr-2" color="error">mdi-alert</v-icon>
+          Delete Class: {{ deletingTemplate?.name }}
+        </v-card-title>
+        <v-card-text>
+          <v-alert type="warning" variant="tonal" class="mb-4" rounded="lg">
+            <strong>Warning:</strong> This action cannot be undone!
+          </v-alert>
+
+          <v-radio-group v-model="deleteMode" class="mb-4">
+            <v-radio value="template_only">
+              <template #label>
+                Delete class template only (keep all sessions)
+              </template>
+            </v-radio>
+            <v-radio value="with_future_sessions">
+              <template #label>
+                <span>Delete class and <strong>future</strong> sessions ({{ futureSessionCount }} sessions)</span>
+              </template>
+            </v-radio>
+            <v-radio value="with_all_sessions">
+              <template #label>
+                <span>Delete class and <strong>all</strong> sessions ({{ allSessionCount }} sessions)</span>
+              </template>
+            </v-radio>
+          </v-radio-group>
+
+          <div v-if="deleteMode !== 'template_only'" class="text-body-2 text-medium-emphasis">
+            This will also delete:
+            <ul class="mt-2">
+              <li>All reservations for these sessions</li>
+              <li>Coach assignments for these sessions</li>
+              <li>Schedule slots for this class</li>
+            </ul>
+            <div class="mt-2">
+              <v-icon size="small" color="info" class="mr-1">mdi-information</v-icon>
+              Users with reservations will be notified. Credits will be refunded for unconfirmed reservations.
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="deleteClassDialog = false">Cancel</v-btn>
+          <v-btn color="error" :loading="deletingClass" @click="confirmDeleteClass">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Snackbar for notifications -->
     <v-snackbar
       v-model="snackbar"
@@ -578,6 +631,14 @@ const userSearch = ref('')
 const currentRosterSessionId = ref(null)
 const currentRosterSession = ref(null)
 const sessionsGrid = ref(null)
+
+// Delete class dialog state
+const deleteClassDialog = ref(false)
+const deletingTemplate = ref(null)
+const deleteMode = ref('with_future_sessions')
+const deletingClass = ref(false)
+const futureSessionCount = ref(0)
+const allSessionCount = ref(0)
 
 // Initialize
 onMounted(() => {
@@ -767,13 +828,69 @@ function onTemplateSaved() {
 }
 
 async function deleteTemplate(tmpl) {
-  if (!confirm(`Delete class "${tmpl.name}"?`)) return
+  deletingTemplate.value = tmpl
+  deleteMode.value = 'with_future_sessions'  // Default to safer option
+  deletingClass.value = false
+
+  // Calculate session counts
+  await fetchSessionCounts(tmpl.id)
+
+  deleteClassDialog.value = true
+}
+
+async function fetchSessionCounts(templateId) {
+  // Count sessions for this template from the sessions we have
+  // For more accurate counts, fetch sessions specifically for this template
   try {
-    await axios.delete(`/api/admin/scheduling/templates/${tmpl.id}`)
-    successMessage.value = 'Class deleted'
+    const today = new Date()
+    const start = new Date(today.getFullYear() - 1, 0, 1).toISOString().split('T')[0]  // 1 year ago
+    const end = new Date(today.getFullYear() + 1, 11, 31).toISOString().split('T')[0]  // 1 year ahead
+    const response = await axios.get(`/api/gyms/${selectedOrgId.value}/sessions?start_date=${start}&end_date=${end}`)
+    const allSessions = response.data.sessions || []
+    const templateSessions = allSessions.filter(s => s.template_id === templateId)
+    const now = new Date()
+
+    allSessionCount.value = templateSessions.length
+    futureSessionCount.value = templateSessions.filter(s => new Date(s.start_time) > now).length
+  } catch (err) {
+    console.error('Failed to fetch session counts:', err)
+    allSessionCount.value = 0
+    futureSessionCount.value = 0
+  }
+}
+
+async function confirmDeleteClass() {
+  if (!deletingTemplate.value) return
+
+  deletingClass.value = true
+  try {
+    const response = await axios.delete(
+      `/api/admin/scheduling/templates/${deletingTemplate.value.id}?mode=${deleteMode.value}`
+    )
+    const deleted = response.data.sessions_deleted || 0
+    const notifications = response.data.notifications_sent || 0
+    const refunds = response.data.credits_refunded || 0
+
+    let message = 'Class deleted'
+    if (deleted > 0) {
+      message += ` with ${deleted} session${deleted !== 1 ? 's' : ''}`
+    }
+    if (notifications > 0) {
+      message += `, ${notifications} notification${notifications !== 1 ? 's' : ''} sent`
+    }
+    if (refunds > 0) {
+      message += `, ${refunds} credit${refunds !== 1 ? 's' : ''} refunded`
+    }
+
+    successMessage.value = message
+    deleteClassDialog.value = false
     fetchTemplates()
+    // Also refresh sessions if visible
+    if (sessionsGrid.value) sessionsGrid.value.refresh()
   } catch (err) {
     error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to delete class'
+  } finally {
+    deletingClass.value = false
   }
 }
 

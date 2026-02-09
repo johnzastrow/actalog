@@ -199,7 +199,8 @@ type UserClassCreditsRepository interface {
 	GetByUserID(userID int64) ([]*UserClassCredits, error)
 	GetByUserAndOrganization(userID, orgID int64) ([]*UserClassCredits, error)
 	GetAvailableCredits(userID, orgID int64) (int, error)
-	UseCredit(userID, orgID int64) error // Deducts 1 credit from oldest non-expired balance
+	UseCredit(userID, orgID int64) error    // Deducts 1 credit from oldest non-expired balance
+	RefundCredit(userID, orgID int64) error // Restores 1 credit (opposite of UseCredit)
 	GetExpiringSoon(daysAhead int) ([]*UserClassCredits, error)
 	Update(credits *UserClassCredits) error
 }
@@ -215,9 +216,11 @@ type WaitlistRepository interface {
 	GetPosition(sessionID, userID int64) (int, error)
 	Promote(id int64) error
 	Cancel(id int64) error
-	ExpireOldEntries() (int, error) // Expires entries for past sessions
+	ExpireOldEntries() (int, error)         // Expires entries for past sessions
 	ReorderPositions(sessionID int64) error // Reorders positions after promotion/cancellation
 	Delete(id int64) error
+	// Bulk delete for template deletion
+	DeleteBySessionIDs(sessionIDs []int64) error
 }
 
 // ClassNotificationRepository defines the interface for notification data access
@@ -230,4 +233,6 @@ type ClassNotificationRepository interface {
 	MarkFailed(id int64, errorMessage string) error
 	DeleteBySessionID(sessionID int64) error
 	DeleteByReservationID(reservationID int64) error
+	// Bulk delete for template deletion
+	DeleteBySessionIDs(sessionIDs []int64) error
 }

@@ -42,6 +42,10 @@ type SchedulingService struct {
 	auditLogRepo        domain.AuditLogRepository
 	workoutRepo         domain.WorkoutRepository
 	materializeFunc     MaterializeFunc // Optional callback for session materialization
+	// Optional repositories for bulk operations (set via setters)
+	waitlistRepo     domain.WaitlistRepository
+	notificationRepo domain.ClassNotificationRepository
+	creditsRepo      domain.UserClassCreditsRepository
 }
 
 func NewSchedulingService(
@@ -317,6 +321,212 @@ func (s *SchedulingService) DeleteTemplate(adminUserID int64, id int64) error {
 	})
 
 	return nil
+}
+
+// DeleteMode specifies how to delete a template
+type DeleteMode string
+
+const (
+	DeleteModeTemplateOnly       DeleteMode = "template_only"
+	DeleteModeWithAllSessions    DeleteMode = "with_all_sessions"
+	DeleteModeWithFutureSessions DeleteMode = "with_future_sessions"
+)
+
+// DeleteTemplateResult contains the result of a template deletion
+type DeleteTemplateResult struct {
+	TemplateID         int64      `json:"template_id"`
+	TemplateName       string     `json:"template_name"`
+	SessionsDeleted    int64      `json:"sessions_deleted"`
+	NotificationsSent  int        `json:"notifications_sent"`
+	CreditsRefunded    int        `json:"credits_refunded"`
+	Mode               DeleteMode `json:"mode"`
+}
+
+// SetWaitlistRepo sets the waitlist repository (optional, for bulk operations)
+func (s *SchedulingService) SetWaitlistRepo(repo domain.WaitlistRepository) {
+	s.waitlistRepo = repo
+}
+
+// SetNotificationRepo sets the notification repository (optional, for bulk operations)
+func (s *SchedulingService) SetNotificationRepo(repo domain.ClassNotificationRepository) {
+	s.notificationRepo = repo
+}
+
+// SetCreditsRepo sets the credits repository (optional, for bulk operations)
+func (s *SchedulingService) SetCreditsRepo(repo domain.UserClassCreditsRepository) {
+	s.creditsRepo = repo
+}
+
+// DeleteTemplateWithMode deletes a template with the specified delete mode
+func (s *SchedulingService) DeleteTemplateWithMode(adminUserID, templateID int64, mode DeleteMode) (*DeleteTemplateResult, error) {
+	// Get template first
+	template, err := s.templateRepo.GetByID(templateID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get class template: %w", err)
+	}
+	if template == nil {
+		return nil, ErrClassTemplateNotFound
+	}
+
+	result := &DeleteTemplateResult{
+		TemplateID:   templateID,
+		TemplateName: template.Name,
+		Mode:         mode,
+	}
+
+	// If template_only mode, just delete the template
+	if mode == DeleteModeTemplateOnly {
+		if err := s.templateRepo.Delete(templateID); err != nil {
+			return nil, fmt.Errorf("failed to delete class template: %w", err)
+		}
+
+		s.logAudit(adminUserID, nil, domain.EventClassTemplateDeleted, map[string]interface{}{
+			"template_id":   templateID,
+			"template_name": template.Name,
+			"mode":          string(mode),
+		})
+
+		return result, nil
+	}
+
+	// Get session IDs to delete based on mode
+	var sessionIDs []int64
+	if mode == DeleteModeWithAllSessions {
+		sessionIDs, err = s.sessionRepo.GetSessionIDsByTemplateID(templateID)
+	} else if mode == DeleteModeWithFutureSessions {
+		sessionIDs, err = s.sessionRepo.GetFutureSessionIDsByTemplateID(templateID, time.Now())
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session IDs: %w", err)
+	}
+
+	if len(sessionIDs) > 0 {
+		// Get sessions with details for notifications
+		sessions, err := s.sessionRepo.GetByIDs(sessionIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get session details: %w", err)
+		}
+
+		// Get reservations for notifications and credit refunds
+		reservations, err := s.reservationRepo.GetBySessionIDs(sessionIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get reservations: %w", err)
+		}
+
+		// Create session lookup map for notifications
+		sessionMap := make(map[int64]*domain.ClassSession)
+		for _, sess := range sessions {
+			sessionMap[sess.ID] = sess
+		}
+
+		// Process each reservation: send notification and refund if needed
+		for _, res := range reservations {
+			// Skip cancelled reservations
+			if res.Status == domain.ReservationStatusCancelled {
+				continue
+			}
+
+			sess := sessionMap[res.SessionID]
+			if sess == nil {
+				continue
+			}
+
+			// Create cancellation notification if notification repo is set
+			if s.notificationRepo != nil {
+				locationName := ""
+				if sess.LocationName != nil {
+					locationName = *sess.LocationName
+				}
+				notification := &domain.ClassNotification{
+					UserID:           res.UserID,
+					SessionID:        &res.SessionID,
+					ReservationID:    &res.ID,
+					NotificationType: domain.NotificationTypeClassCancelled,
+					Status:           domain.NotificationStatusPending,
+					ScheduledFor:     time.Now(),
+				}
+				if err := s.notificationRepo.Create(notification); err == nil {
+					result.NotificationsSent++
+				}
+				// Log the details for later email processing
+				s.logAudit(adminUserID, &res.UserID, domain.EventClassSessionCancelled, map[string]interface{}{
+					"session_id":    res.SessionID,
+					"session_name":  sess.Name,
+					"session_time":  sess.StartTime.Format(time.RFC3339),
+					"location":      locationName,
+					"user_id":       res.UserID,
+					"reason":        "Class deleted",
+				})
+			}
+
+			// Refund credit for unconfirmed reservations (status = reserved, not checked_in or attended)
+			if res.Status == domain.ReservationStatusReserved && s.creditsRepo != nil {
+				if err := s.creditsRepo.RefundCredit(res.UserID, template.OrganizationID); err == nil {
+					result.CreditsRefunded++
+				}
+			}
+		}
+
+		// Delete related data in proper order
+		// 1. Delete session coaches
+		if err := s.sessionCoachRepo.DeleteBySessionIDs(sessionIDs); err != nil {
+			return nil, fmt.Errorf("failed to delete session coaches: %w", err)
+		}
+
+		// 2. Delete reservations
+		if err := s.reservationRepo.DeleteBySessionIDs(sessionIDs); err != nil {
+			return nil, fmt.Errorf("failed to delete reservations: %w", err)
+		}
+
+		// 3. Delete class notifications (waitlist-related)
+		if s.notificationRepo != nil {
+			if err := s.notificationRepo.DeleteBySessionIDs(sessionIDs); err != nil {
+				return nil, fmt.Errorf("failed to delete notifications: %w", err)
+			}
+		}
+
+		// 4. Delete waitlist entries
+		if s.waitlistRepo != nil {
+			if err := s.waitlistRepo.DeleteBySessionIDs(sessionIDs); err != nil {
+				return nil, fmt.Errorf("failed to delete waitlist entries: %w", err)
+			}
+		}
+
+		// 5. Delete sessions
+		deletedCount, err := s.sessionRepo.DeleteByIDs(sessionIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to delete sessions: %w", err)
+		}
+		result.SessionsDeleted = deletedCount
+	}
+
+	// Delete schedule slots for template
+	slots, err := s.slotRepo.GetByTemplateID(templateID, true) // include inactive
+	if err == nil {
+		for _, slot := range slots {
+			_ = s.slotRepo.Delete(slot.ID)
+		}
+	}
+
+	// Delete template coaches
+	_ = s.templateCoachRepo.RemoveAllByTemplateID(templateID)
+
+	// Delete the template
+	if err := s.templateRepo.Delete(templateID); err != nil {
+		return nil, fmt.Errorf("failed to delete class template: %w", err)
+	}
+
+	// Audit log
+	s.logAudit(adminUserID, nil, domain.EventClassTemplateDeleted, map[string]interface{}{
+		"template_id":        templateID,
+		"template_name":      template.Name,
+		"mode":               string(mode),
+		"sessions_deleted":   result.SessionsDeleted,
+		"notifications_sent": result.NotificationsSent,
+		"credits_refunded":   result.CreditsRefunded,
+	})
+
+	return result, nil
 }
 
 // ============================================
