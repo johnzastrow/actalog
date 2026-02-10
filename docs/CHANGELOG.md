@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Delete Class with Sessions
+
+- **Enhanced Class Template Deletion**
+  - Three delete modes via `?mode=` query parameter:
+    - `template_only` (default): Delete template only, sessions become orphaned
+    - `with_future_sessions`: Delete template and future sessions, preserve past sessions
+    - `with_all_sessions`: Delete template and all sessions (past and future)
+  - Cascade deletion of related data (coaches, reservations, waitlist, notifications)
+  - Credit refunds for unconfirmed reservations (status != checked_in/attended)
+  - User notifications for cancelled sessions with session details
+
+- **New UI Delete Dialog**
+  - Radio button selection for delete mode
+  - Session counts displayed for each option
+  - Warning about cascading deletes
+  - Information about notifications and credit refunds
+
+- **API Enhancement**
+  - `DELETE /api/admin/scheduling/templates/{id}?mode=<mode>`
+  - Response includes: `sessions_deleted`, `notifications_sent`, `credits_refunded`
+
+- **Repository Methods**
+  - `GetSessionIDsByTemplateID`, `GetFutureSessionIDsByTemplateID`, `DeleteByIDs` on ClassSessionRepository
+  - `DeleteBySessionIDs` on SessionCoachRepository, ReservationRepository, WaitlistRepository
+  - `GetBySessionIDs` on ReservationRepository
+  - `RefundCredit` on UserClassCreditsRepository
+
+- **Tested on:** SQLite, MariaDB (192.168.1.234), PostgreSQL (192.168.1.143)
+
 ### Added - Class Scheduling System (Phase 4 Complete)
 
 - **Documents Management**

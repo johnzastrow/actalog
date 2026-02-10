@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-01-18
-> **Current Version:** 1.1.0-beta
+> **Last Updated:** 2026-02-09
+> **Current Version:** 1.1.0-beta (Build 31)
 
 ---
 
@@ -74,6 +74,35 @@
 **Bug Fix:** PurchaseCredits now correctly uses package credits when `package_id` is provided without explicit `credits` value.
 
 **Tested on:** SQLite, MariaDB (192.168.1.234), PostgreSQL (192.168.1.143)
+
+---
+
+### Delete Class with Sessions *(Completed)*
+
+**Status:** Complete (Build 31)
+
+- [x] Three delete modes for class templates:
+  - `template_only` - Delete template only, sessions orphaned
+  - `with_future_sessions` - Delete template + future sessions, keep past
+  - `with_all_sessions` - Delete template + all sessions
+- [x] Cascade deletion (coaches, reservations, waitlist, notifications)
+- [x] Credit refunds for unconfirmed reservations
+- [x] User notifications for cancelled sessions
+- [x] New UI dialog with mode selection and session counts
+- [x] API: `DELETE /api/admin/scheduling/templates/{id}?mode=<mode>`
+
+**Files Modified:**
+- `internal/domain/scheduling.go`, `internal/domain/phase4.go` - Interface methods
+- `internal/repository/class_session_repository.go` - Bulk delete methods
+- `internal/repository/session_coach_repository.go` - DeleteBySessionIDs
+- `internal/repository/reservation_repository.go` - GetBySessionIDs, DeleteBySessionIDs
+- `internal/repository/waitlist_repository.go` - DeleteBySessionIDs
+- `internal/repository/credits_repository.go` - RefundCredit
+- `internal/service/scheduling_service.go` - DeleteTemplateWithMode
+- `internal/handler/scheduling_handler.go` - Mode parameter handling
+- `web/src/views/AdminSchedulingView.vue` - Delete dialog UI
+
+**Tested on:** SQLite, MariaDB, PostgreSQL
 
 ---
 
