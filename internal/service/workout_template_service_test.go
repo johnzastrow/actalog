@@ -38,7 +38,7 @@ func TestWorkoutTemplateService_Create(t *testing.T) {
 		{WODID: 1},
 	}
 
-	result, err := svc.Create(1, "user@example.com", "Test Template", nil, stringPtr("Test notes"), movements, wods)
+	result, err := svc.Create(1, "user@example.com", "user", "Test Template", nil, stringPtr("Test notes"), false, movements, wods)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -70,7 +70,7 @@ func TestWorkoutTemplateService_Create_WithoutMovementsOrWODs(t *testing.T) {
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, auditLogRepo)
 
 	// Create a template without movements or WODs
-	result, err := svc.Create(1, "user@example.com", "Simple Template", nil, nil, nil, nil)
+	result, err := svc.Create(1, "user@example.com", "user", "Simple Template", nil, nil, false, nil, nil)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -90,7 +90,7 @@ func TestWorkoutTemplateService_Create_WithoutAuditLogRepo(t *testing.T) {
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
 	// Should not panic when audit log repo is nil
-	result, err := svc.Create(1, "user@example.com", "No Audit Template", nil, nil, nil, nil)
+	result, err := svc.Create(1, "user@example.com", "user", "No Audit Template", nil, nil, false, nil, nil)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -225,7 +225,7 @@ func TestWorkoutTemplateService_Update(t *testing.T) {
 	movements := []domain.WorkoutMovement{
 		{MovementID: 1, Sets: intPtr(5), Reps: intPtr(5)},
 	}
-	result, err := svc.Update(workout.ID, 1, "user@example.com", "Updated Name", nil, stringPtr("Updated notes"), movements, nil)
+	result, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated Name", nil, stringPtr("Updated notes"), false, movements, nil)
 	if err != nil {
 		t.Errorf("Update() error = %v", err)
 	}
@@ -258,7 +258,7 @@ func TestWorkoutTemplateService_Update_NotOwner(t *testing.T) {
 	_ = workoutRepo.Create(workout)
 
 	// Try to update as user 2
-	_, err := svc.Update(workout.ID, 2, "other@example.com", "Hacked Name", nil, nil, nil, nil)
+	_, err := svc.Update(workout.ID, 2, "other@example.com", "user", "Hacked Name", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when user doesn't own the template")
 	}
@@ -272,7 +272,7 @@ func TestWorkoutTemplateService_Update_NotFound(t *testing.T) {
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
-	_, err := svc.Update(999, 1, "user@example.com", "Name", nil, nil, nil, nil)
+	_, err := svc.Update(999, 1, "user@example.com", "user", "Name", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when template not found")
 	}
@@ -292,7 +292,7 @@ func TestWorkoutTemplateService_Delete(t *testing.T) {
 	_ = workoutRepo.Create(workout)
 
 	// Delete it
-	err := svc.Delete(workout.ID, 1, "user@example.com")
+	err := svc.Delete(workout.ID, 1, "user@example.com", "user")
 	if err != nil {
 		t.Errorf("Delete() error = %v", err)
 	}
@@ -324,7 +324,7 @@ func TestWorkoutTemplateService_Delete_NotOwner(t *testing.T) {
 	_ = workoutRepo.Create(workout)
 
 	// Try to delete as user 2
-	err := svc.Delete(workout.ID, 2, "other@example.com")
+	err := svc.Delete(workout.ID, 2, "other@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when user doesn't own the template")
 	}
@@ -338,7 +338,7 @@ func TestWorkoutTemplateService_Delete_NotFound(t *testing.T) {
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
-	err := svc.Delete(999, 1, "user@example.com")
+	err := svc.Delete(999, 1, "user@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when template not found")
 	}
@@ -628,7 +628,7 @@ func TestWorkoutTemplateService_Create_RepoError(t *testing.T) {
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
-	_, err := svc.Create(1, "user@example.com", "Test", nil, nil, nil, nil)
+	_, err := svc.Create(1, "user@example.com", "user", "Test", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Create() should return error when repo fails")
 	}
@@ -645,7 +645,7 @@ func TestWorkoutTemplateService_Create_MovementError(t *testing.T) {
 	movements := []domain.WorkoutMovement{
 		{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
 	}
-	_, err := svc.Create(1, "user@example.com", "Test", nil, nil, movements, nil)
+	_, err := svc.Create(1, "user@example.com", "user", "Test", nil, nil, false, movements, nil)
 	if err == nil {
 		t.Error("Create() should return error when adding movement fails")
 	}
@@ -662,7 +662,7 @@ func TestWorkoutTemplateService_Create_WODError(t *testing.T) {
 	wods := []domain.WorkoutWOD{
 		{WODID: 1},
 	}
-	_, err := svc.Create(1, "user@example.com", "Test", nil, nil, nil, wods)
+	_, err := svc.Create(1, "user@example.com", "user", "Test", nil, nil, false, nil, wods)
 	if err == nil {
 		t.Error("Create() should return error when adding WOD fails")
 	}
@@ -683,7 +683,7 @@ func TestWorkoutTemplateService_Update_RepoUpdateError(t *testing.T) {
 	// Set update error
 	workoutRepo.updateError = errors.New("update error")
 
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil, nil)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when repo update fails")
 	}
@@ -704,7 +704,7 @@ func TestWorkoutTemplateService_Update_DeleteMovementsError(t *testing.T) {
 	// Set delete movements error
 	workoutMovementRepo.deleteByWorkoutIDError = errors.New("delete movements error")
 
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil, nil)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when deleting movements fails")
 	}
@@ -728,7 +728,7 @@ func TestWorkoutTemplateService_Update_CreateMovementError(t *testing.T) {
 	movements := []domain.WorkoutMovement{
 		{MovementID: 1, Sets: intPtr(3), Reps: intPtr(10)},
 	}
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, movements, nil)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, movements, nil)
 	if err == nil {
 		t.Error("Update() should return error when creating movement fails")
 	}
@@ -747,7 +747,7 @@ func TestWorkoutTemplateService_Update_DeleteWODsError(t *testing.T) {
 	workout := &domain.Workout{Name: "Original", CreatedBy: &userID}
 	_ = workoutRepo.Create(workout)
 
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil, nil)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when deleting WODs fails")
 	}
@@ -771,7 +771,7 @@ func TestWorkoutTemplateService_Update_CreateWODError(t *testing.T) {
 	wods := []domain.WorkoutWOD{
 		{WODID: 1},
 	}
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil, wods)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, wods)
 	if err == nil {
 		t.Error("Update() should return error when creating WOD fails")
 	}
@@ -785,7 +785,7 @@ func TestWorkoutTemplateService_Update_GetByIDRepoError(t *testing.T) {
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
-	_, err := svc.Update(1, 1, "user@example.com", "Updated", nil, nil, nil, nil)
+	_, err := svc.Update(1, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when GetByID fails")
 	}
@@ -803,7 +803,7 @@ func TestWorkoutTemplateService_Update_NilCreatedBy(t *testing.T) {
 	_ = workoutRepo.Create(workout)
 
 	// Try to update as any user - should fail since CreatedBy is nil
-	_, err := svc.Update(workout.ID, 1, "user@example.com", "Updated", nil, nil, nil, nil)
+	_, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated", nil, nil, false, nil, nil)
 	if err == nil {
 		t.Error("Update() should return error when workout has no owner")
 	}
@@ -824,7 +824,7 @@ func TestWorkoutTemplateService_Delete_RepoError(t *testing.T) {
 	// Set delete error
 	workoutRepo.deleteError = errors.New("delete error")
 
-	err := svc.Delete(workout.ID, 1, "user@example.com")
+	err := svc.Delete(workout.ID, 1, "user@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when repo delete fails")
 	}
@@ -843,7 +843,7 @@ func TestWorkoutTemplateService_Delete_DeleteMovementsError(t *testing.T) {
 	workout := &domain.Workout{Name: "To Delete", CreatedBy: &userID}
 	_ = workoutRepo.Create(workout)
 
-	err := svc.Delete(workout.ID, 1, "user@example.com")
+	err := svc.Delete(workout.ID, 1, "user@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when deleting movements fails")
 	}
@@ -857,7 +857,7 @@ func TestWorkoutTemplateService_Delete_GetByIDRepoError(t *testing.T) {
 
 	svc := NewWorkoutTemplateService(workoutRepo, workoutMovementRepo, workoutWODRepo, nil)
 
-	err := svc.Delete(1, 1, "user@example.com")
+	err := svc.Delete(1, 1, "user@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when GetByID fails")
 	}
@@ -875,7 +875,7 @@ func TestWorkoutTemplateService_Delete_NilCreatedBy(t *testing.T) {
 	_ = workoutRepo.Create(workout)
 
 	// Try to delete as any user - should fail since CreatedBy is nil
-	err := svc.Delete(workout.ID, 1, "user@example.com")
+	err := svc.Delete(workout.ID, 1, "user@example.com", "user")
 	if err == nil {
 		t.Error("Delete() should return error when workout has no owner")
 	}
@@ -899,7 +899,7 @@ func TestWorkoutTemplateService_Update_WithWODs(t *testing.T) {
 		{WODID: 1},
 		{WODID: 2},
 	}
-	result, err := svc.Update(workout.ID, 1, "user@example.com", "Updated Name", nil, nil, nil, wods)
+	result, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated Name", nil, nil, false, nil, wods)
 	if err != nil {
 		t.Errorf("Update() error = %v", err)
 	}
@@ -951,7 +951,7 @@ func TestWorkoutTemplateService_Create_WithInstructions(t *testing.T) {
 		},
 	}
 
-	result, err := svc.Create(1, "user@example.com", "Template With Instructions", nil, stringPtr("Test notes"), movements, wods)
+	result, err := svc.Create(1, "user@example.com", "user", "Template With Instructions", nil, stringPtr("Test notes"), false, movements, wods)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -1020,7 +1020,7 @@ func TestWorkoutTemplateService_Update_WithInstructions(t *testing.T) {
 		},
 	}
 
-	result, err := svc.Update(workout.ID, 1, "user@example.com", "Updated Name", nil, stringPtr("Updated notes"), movements, wods)
+	result, err := svc.Update(workout.ID, 1, "user@example.com", "user", "Updated Name", nil, stringPtr("Updated notes"), false, movements, wods)
 	if err != nil {
 		t.Errorf("Update() error = %v", err)
 	}
@@ -1065,7 +1065,7 @@ func TestWorkoutTemplateService_Create_AllMovementFields(t *testing.T) {
 		},
 	}
 
-	result, err := svc.Create(1, "user@example.com", "Full Movement Details", nil, nil, movements, nil)
+	result, err := svc.Create(1, "user@example.com", "user", "Full Movement Details", nil, nil, false, movements, nil)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -1126,7 +1126,7 @@ func TestWorkoutTemplateService_Create_AllWODFields(t *testing.T) {
 		},
 	}
 
-	result, err := svc.Create(1, "user@example.com", "Full WOD Details", nil, nil, nil, wods)
+	result, err := svc.Create(1, "user@example.com", "user", "Full WOD Details", nil, nil, false, nil, wods)
 	if err != nil {
 		t.Errorf("Create() error = %v", err)
 	}
@@ -1225,7 +1225,7 @@ func TestWorkoutTemplate_FullCRUD_AllFields(t *testing.T) {
 		}
 
 		templateNotes := "Weekly strength program - Day 1: Push focus"
-		created, err := svc.Create(userID, userEmail, "Full Test Template", nil, &templateNotes, movements, wods)
+		created, err := svc.Create(userID, userEmail, "user", "Full Test Template", nil, &templateNotes, false, movements, wods)
 		if err != nil {
 			t.Fatalf("Create failed: %v", err)
 		}
@@ -1315,7 +1315,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 		},
 	}
 
-	created, err := svc.Create(userID, userEmail, "Edit Test Template", nil, &initialNotes, movements, wods)
+	created, err := svc.Create(userID, userEmail, "user", "Edit Test Template", nil, &initialNotes, false, movements, wods)
 	if err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -1325,7 +1325,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 	// Test 1: Edit only template name
 	// =========================================================================
 	t.Run("Edit_TemplateName", func(t *testing.T) {
-		result, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &initialNotes, movements, wods)
+		result, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &initialNotes, false, movements, wods)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1343,7 +1343,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 	// =========================================================================
 	t.Run("Edit_TemplateNotes", func(t *testing.T) {
 		newNotes := "Updated notes content"
-		result, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &newNotes, movements, wods)
+		result, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &newNotes, false, movements, wods)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1368,7 +1368,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &initialNotes, updatedMovements, wods)
+		_, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &initialNotes, false, updatedMovements, wods)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1399,7 +1399,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &initialNotes, updatedMovements, wods)
+		_, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &initialNotes, false, updatedMovements, wods)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1426,7 +1426,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &initialNotes, updatedMovements, wods)
+		_, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &initialNotes, false, updatedMovements, wods)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1460,7 +1460,7 @@ func TestWorkoutTemplate_EditIndividualFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(templateID, userID, userEmail, "Updated Template Name", nil, &initialNotes, currentMovements, updatedWODs)
+		_, err := svc.Update(templateID, userID, userEmail, "user", "Updated Template Name", nil, &initialNotes, false, currentMovements, updatedWODs)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1508,7 +1508,7 @@ func TestWorkoutTemplate_NullableFields(t *testing.T) {
 			},
 		}
 
-		result, err := svc.Create(userID, userEmail, "Nil Fields Template", nil, nil, movements, nil)
+		result, err := svc.Create(userID, userEmail, "user", "Nil Fields Template", nil, nil, false, movements, nil)
 		if err != nil {
 			t.Fatalf("Create failed: %v", err)
 		}
@@ -1545,7 +1545,7 @@ func TestWorkoutTemplate_NullableFields(t *testing.T) {
 			},
 		}
 
-		created, _ := svc.Create(userID, userEmail, "Nil to Value Test", nil, nil, movements, nil)
+		created, _ := svc.Create(userID, userEmail, "user", "Nil to Value Test", nil, nil, false, movements, nil)
 
 		// Now update with values
 		updatedMovements := []domain.WorkoutMovement{
@@ -1560,7 +1560,7 @@ func TestWorkoutTemplate_NullableFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(created.ID, userID, userEmail, "Nil to Value Test", nil, nil, updatedMovements, nil)
+		_, err := svc.Update(created.ID, userID, userEmail, "user", "Nil to Value Test", nil, nil, false, updatedMovements, nil)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1588,7 +1588,7 @@ func TestWorkoutTemplate_NullableFields(t *testing.T) {
 			},
 		}
 
-		created, _ := svc.Create(userID, userEmail, "Value to Nil Test", nil, nil, movements, nil)
+		created, _ := svc.Create(userID, userEmail, "user", "Value to Nil Test", nil, nil, false, movements, nil)
 
 		// Now update with nil values
 		updatedMovements := []domain.WorkoutMovement{
@@ -1601,7 +1601,7 @@ func TestWorkoutTemplate_NullableFields(t *testing.T) {
 			},
 		}
 
-		_, err := svc.Update(created.ID, userID, userEmail, "Value to Nil Test", nil, nil, updatedMovements, nil)
+		_, err := svc.Update(created.ID, userID, userEmail, "user", "Value to Nil Test", nil, nil, false, updatedMovements, nil)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}
@@ -1661,7 +1661,7 @@ func TestWorkoutTemplate_SpecialCharacters(t *testing.T) {
 			},
 		}
 
-		result, err := svc.Create(userID, userEmail, "Template with Special Chars & Symbols", nil, nil, movements, nil)
+		result, err := svc.Create(userID, userEmail, "user", "Template with Special Chars & Symbols", nil, nil, false, movements, nil)
 		if err != nil {
 			t.Fatalf("Create failed: %v", err)
 		}
@@ -1701,7 +1701,7 @@ func TestWorkoutTemplate_MultipleMovementsAndWODs(t *testing.T) {
 			{WODID: 2, Instructions: "WOD 2 instructions", OrderIndex: 2},
 		}
 
-		result, err := svc.Create(userID, userEmail, "Multi-item Template", nil, nil, movements, wods)
+		result, err := svc.Create(userID, userEmail, "user", "Multi-item Template", nil, nil, false, movements, wods)
 		if err != nil {
 			t.Fatalf("Create failed: %v", err)
 		}
@@ -1735,7 +1735,7 @@ func TestWorkoutTemplate_MultipleMovementsAndWODs(t *testing.T) {
 			{MovementID: 2, Instructions: "Second", OrderIndex: 2},
 		}
 
-		created, _ := svc.Create(userID, userEmail, "Order Test", nil, nil, movements, nil)
+		created, _ := svc.Create(userID, userEmail, "user", "Order Test", nil, nil, false, movements, nil)
 
 		// Update with reversed order
 		updatedMovements := []domain.WorkoutMovement{
@@ -1743,7 +1743,7 @@ func TestWorkoutTemplate_MultipleMovementsAndWODs(t *testing.T) {
 			{MovementID: 1, Instructions: "Now Second", OrderIndex: 2},
 		}
 
-		_, err := svc.Update(created.ID, userID, userEmail, "Order Test", nil, nil, updatedMovements, nil)
+		_, err := svc.Update(created.ID, userID, userEmail, "user", "Order Test", nil, nil, false, updatedMovements, nil)
 		if err != nil {
 			t.Fatalf("Update failed: %v", err)
 		}

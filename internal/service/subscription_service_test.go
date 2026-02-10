@@ -178,7 +178,8 @@ func TestSubscriptionService_CreateUserSubscription(t *testing.T) {
 						expectedDuration = 365 * 24 * time.Hour
 					}
 					expectedEndDate := sub.StartDate.Add(expectedDuration)
-					if sub.EndDate.Before(expectedEndDate.Add(-1*time.Minute)) || sub.EndDate.After(expectedEndDate.Add(1*time.Minute)) {
+					// Allow 2 hour tolerance for DST transitions
+					if sub.EndDate.Before(expectedEndDate.Add(-2*time.Hour)) || sub.EndDate.After(expectedEndDate.Add(2*time.Hour)) {
 						t.Errorf("EndDate not set correctly, expected around %v, got %v", expectedEndDate, sub.EndDate)
 					}
 				}
