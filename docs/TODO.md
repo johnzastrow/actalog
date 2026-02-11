@@ -281,6 +281,7 @@ These features can be added after the core frontend is complete:
    - Enforce limits on free subscriptions
    - Display usage metrics
 
+
 5. **Bulk Operations** (v0.17.0+)
    - Admin can bulk-update subscriptions
    - Bulk extend expiration dates
@@ -431,6 +432,15 @@ These features can be added after the core frontend is complete:
   - Runtime caching (CacheFirst) caches fonts on first use
   - Precache: 3.4MB → 2.6MB (additional 24% reduction)
 - [x] `[LOW]` Fix accessibility issues (color contrast, touch targets) - Fixed label contrast (#666666 for 5.74:1 ratio), touch target sizes (24x24px min)
+
+#### Roles & Permissions
+- [ ] `[HIGH]` **Coach Role** - Add a dedicated `coach` role to the user system. Currently coaching is assignment-based (any user/admin assigned to sessions can view the Coach Dashboard), but there is no role-level distinction. A proper coach role would:
+  - Add `"coach"` as a valid role alongside `"user"` and `"admin"`
+  - Add `middleware.CoachOrAdmin` middleware for coach-specific routes (roster, check-in, session management)
+  - Allow coaches to manage their own sessions without full admin access (check in athletes, mark no-shows, complete sessions)
+  - Restrict admin-only operations (template creation, location management, user management) from coaches
+  - Update frontend navigation to show coach-specific menu items based on role
+  - **Current state:** Coach assignment exists via `coach_assignments` table and `GET /api/coaches/me/sessions` endpoint. See `docs/USER_PERMISSIONS.md` Coach Portal section and `screenshots/Scheduling/scheduling_v2.md` for planned spec
 
 ### Low Priority
 
