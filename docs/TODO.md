@@ -392,6 +392,7 @@ These features can be added after the core frontend is complete:
 - [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
 - [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
 - [x] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health (v0.22.0)
+- [ ] `[MEDIUM]` **1RM Percentage Display** - Performance page 1RM percentage tops out at 95%; needs to also show 100% of the maximum weight lifted
 - [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
 
 #### Testing
@@ -438,6 +439,7 @@ These features can be added after the core frontend is complete:
 - [x] `[LOW]` **Add wodify_import_service tests** - 100% coverage achieved
 
 #### Features
+- [ ] `[MEDIUM]` **Consistency Achievement Notifications** - Automatically notify users when they hit attendance milestones (e.g., 3x/week streak, 10 classes in a month). Track gym visit frequency from reservations/check-ins and trigger congratulatory notifications at configurable thresholds
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
 - [ ] `[LOW]` **Data Visualization** - Charts for PR progression
 - [ ] `[LOW]` **Social Features** - Share workouts (opt-in)
