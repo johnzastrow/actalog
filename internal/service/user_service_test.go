@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -129,8 +130,16 @@ func (m *mockRefreshTokenRepo) GetByUserID(userID int64) ([]*domain.RefreshToken
 
 // Helper to create test user service
 func newTestUserService(allowRegistration bool) *UserService {
-	return NewUserService(
+	return newTestUserServiceWithRepo(
 		&mockUserRepo{users: make(map[int64]*domain.User), nextID: 0},
+		allowRegistration,
+	)
+}
+
+// Helper to create test user service with a custom mock repo (for error injection)
+func newTestUserServiceWithRepo(repo *mockUserRepo, allowRegistration bool) *UserService {
+	return NewUserService(
+		repo,
 		&mockRefreshTokenRepo{tokens: make(map[string]*domain.RefreshToken)},
 		nil, // no user subscription repo for tests
 		nil, // no audit log service for tests
@@ -1466,5 +1475,516 @@ func TestPasswordResetNonExistentEmail(t *testing.T) {
 	err := service.RequestPasswordReset("nonexistent@example.com")
 	if err != nil {
 		t.Errorf("Should silently succeed for non-existent email, got: %v", err)
+	}
+}
+
+// ==================== Edge Case Tests ====================
+
+// Test Register - GetByEmail returns database error
+func TestRegisterGetByEmailError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByEmailError = errors.New("database connection lost")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when GetByEmail fails")
+	}
+	if !strings.Contains(err.Error(), "failed to check existing user") {
+		t.Errorf("Expected 'failed to check existing user' error, got: %v", err)
+	}
+}
+
+// Test Register - Count returns database error
+func TestRegisterCountError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.countError = errors.New("count query failed")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when Count fails")
+	}
+	if !strings.Contains(err.Error(), "failed to count users") {
+		t.Errorf("Expected 'failed to count users' error, got: %v", err)
+	}
+}
+
+// Test Register - Create returns database error
+func TestRegisterCreateError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.createError = errors.New("insert failed")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when Create fails")
+	}
+	if !strings.Contains(err.Error(), "failed to create user") {
+		t.Errorf("Expected 'failed to create user' error, got: %v", err)
+	}
+}
+
+// Test Register - Update returns error during auto-verification
+func TestRegisterAutoVerifyUpdateError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// First register succeeds (to set up the first user)
+	_, _, err := service.Register("Admin", "admin@example.com", "Password123")
+	if err != nil {
+		t.Fatalf("First register should succeed: %v", err)
+	}
+
+	// Now set update error - the second register will fail during auto-verify update
+	repo.updateError = errors.New("update failed")
+	_, _, err = service.Register("User", "user@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when Update fails during auto-verification")
+	}
+	if !strings.Contains(err.Error(), "failed to update user") {
+		t.Errorf("Expected 'failed to update user' error, got: %v", err)
+	}
+}
+
+// Test Login - GetByEmail returns database error
+func TestLoginGetByEmailError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user first
+	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	if err != nil {
+		t.Fatalf("Register failed: %v", err)
+	}
+
+	// Now set the error for subsequent GetByEmail calls
+	repo.getByEmailError = errors.New("database timeout")
+	_, _, err = service.Login("test@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when GetByEmail fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test Login - IsAccountLocked returns database error
+func TestLoginIsLockedError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user
+	_, _, _ = service.Register("Test User", "test@example.com", "Password123")
+
+	// Set IsAccountLocked to return error
+	repo.isLockedError = errors.New("lock check failed")
+	_, _, err := service.Login("test@example.com", "Password123")
+	if err == nil {
+		t.Fatal("Expected error when IsAccountLocked fails")
+	}
+	if !strings.Contains(err.Error(), "failed to check lock status") {
+		t.Errorf("Expected 'failed to check lock status' error, got: %v", err)
+	}
+}
+
+// Test Login - account lockout after max failed attempts
+func TestLoginAccountLockoutAfterMaxAttempts(t *testing.T) {
+	service := newTestUserService(true)
+
+	// Register a user
+	_, _, _ = service.Register("Test User", "test@example.com", "Password123")
+
+	// Attempt wrong password 5 times (maxLoginAttempts = 5)
+	for i := 0; i < 5; i++ {
+		_, _, err := service.Login("test@example.com", "WrongPassword")
+		if err != ErrInvalidCredentials {
+			t.Errorf("Attempt %d: Expected ErrInvalidCredentials, got: %v", i+1, err)
+		}
+	}
+
+	// Next attempt should show account locked
+	_, _, err := service.Login("test@example.com", "Password123")
+	if err != ErrAccountLocked {
+		t.Errorf("Expected ErrAccountLocked after max attempts, got: %v", err)
+	}
+}
+
+// Test UpdateProfile - GetByID returns error
+func TestUpdateProfileGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("database error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, err := service.UpdateProfile(99999, "New Name", "", nil)
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test UpdateProfile - GetByEmail returns error when checking new email
+func TestUpdateProfileEmailCheckError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user
+	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+
+	// Now set GetByEmail to return error
+	repo.getByEmailError = errors.New("email check failed")
+
+	_, err := service.UpdateProfile(user.ID, "", "newemail@example.com", nil)
+	if err == nil {
+		t.Fatal("Expected error when email check fails")
+	}
+	if !strings.Contains(err.Error(), "failed to check email") {
+		t.Errorf("Expected 'failed to check email' error, got: %v", err)
+	}
+}
+
+// Test UpdateProfile - Update returns error
+func TestUpdateProfileUpdateError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user
+	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+
+	// Now set update to fail
+	repo.updateError = errors.New("update failed")
+	_, err := service.UpdateProfile(user.ID, "New Name", "", nil)
+	if err == nil {
+		t.Fatal("Expected error when Update fails")
+	}
+	if !strings.Contains(err.Error(), "failed to update user") {
+		t.Errorf("Expected 'failed to update user' error, got: %v", err)
+	}
+}
+
+// Test ChangePassword - UpdatePassword returns error
+func TestChangePasswordUpdatePasswordError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user
+	user, _, _ := service.Register("Test User", "test@example.com", "OldPassword123")
+
+	// Set UpdatePassword to fail
+	repo.updatePwdError = errors.New("password update failed")
+	err := service.ChangePassword(user.ID, "OldPassword123", "NewPassword123")
+	if err == nil {
+		t.Fatal("Expected error when UpdatePassword fails")
+	}
+	if !strings.Contains(err.Error(), "password update failed") {
+		t.Errorf("Expected 'password update failed' error, got: %v", err)
+	}
+}
+
+// Test UnlockAccount - admin user not found (GetByID error)
+func TestUnlockAccountAdminGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db connection error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.UnlockAccount(99999, 88888)
+	if err == nil {
+		t.Fatal("Expected error when admin GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get admin user") {
+		t.Errorf("Expected 'failed to get admin user' error, got: %v", err)
+	}
+}
+
+// Test UnlockAccount - UnlockAccount repo method fails
+func TestUnlockAccountRepoError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register admin and user
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	// Lock user
+	service.userRepo.LockAccount(user.ID, 15*time.Minute)
+
+	// Set unlock to fail
+	repo.unlockError = errors.New("unlock query failed")
+	err := service.UnlockAccount(admin.ID, user.ID)
+	if err == nil {
+		t.Fatal("Expected error when UnlockAccount repo fails")
+	}
+	if !strings.Contains(err.Error(), "failed to unlock account") {
+		t.Errorf("Expected 'failed to unlock account' error, got: %v", err)
+	}
+}
+
+// Test DisableAccount - target user GetByID error
+func TestDisableAccountTargetGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register admin
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+
+	// Set getByIDError - will affect GetByID for non-existing target
+	repo.getByIDError = errors.New("db error")
+	err := service.DisableAccount(admin.ID, 99999, "test reason")
+	if err == nil {
+		t.Fatal("Expected error when target GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get target user") {
+		t.Errorf("Expected 'failed to get target user' error, got: %v", err)
+	}
+}
+
+// Test DisableAccount - DisableAccount repo method fails
+func TestDisableAccountRepoError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	repo.disableError = errors.New("disable query failed")
+	err := service.DisableAccount(admin.ID, user.ID, "test reason")
+	if err == nil {
+		t.Fatal("Expected error when DisableAccount repo fails")
+	}
+	if !strings.Contains(err.Error(), "failed to disable account") {
+		t.Errorf("Expected 'failed to disable account' error, got: %v", err)
+	}
+}
+
+// Test EnableAccount - admin user not found
+func TestEnableAccountAdminGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.EnableAccount(99999, 88888)
+	if err == nil {
+		t.Fatal("Expected error when admin GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get admin user") {
+		t.Errorf("Expected 'failed to get admin user' error, got: %v", err)
+	}
+}
+
+// Test EnableAccount - EnableAccount repo method fails
+func TestEnableAccountRepoError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	repo.enableError = errors.New("enable query failed")
+	err := service.EnableAccount(admin.ID, user.ID)
+	if err == nil {
+		t.Fatal("Expected error when EnableAccount repo fails")
+	}
+	if !strings.Contains(err.Error(), "failed to enable account") {
+		t.Errorf("Expected 'failed to enable account' error, got: %v", err)
+	}
+}
+
+// Test SetEmailVerification - admin not found
+func TestSetEmailVerificationAdminNotFound(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.SetEmailVerification(99999, 88888, true)
+	if err == nil {
+		t.Fatal("Expected error when admin not found")
+	}
+	if !strings.Contains(err.Error(), "failed to get admin user") {
+		t.Errorf("Expected 'failed to get admin user' error, got: %v", err)
+	}
+}
+
+// Test SetEmailVerification - target not found
+func TestSetEmailVerificationTargetNotFound(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+
+	// Target doesn't exist - getByIDError not set so it returns nil, nil
+	// But the service doesn't check for nil on these Get calls - it just continues
+	// So let's set getByIDError after admin is created
+	repo.getByIDError = errors.New("db error")
+	err := service.SetEmailVerification(admin.ID, 99999, true)
+	if err == nil {
+		t.Fatal("Expected error when target not found")
+	}
+	if !strings.Contains(err.Error(), "failed to get target user") {
+		t.Errorf("Expected 'failed to get target user' error, got: %v", err)
+	}
+}
+
+// Test SetEmailVerification - Update fails
+func TestSetEmailVerificationUpdateError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	repo.updateError = errors.New("update failed")
+	err := service.SetEmailVerification(admin.ID, user.ID, true)
+	if err == nil {
+		t.Fatal("Expected error when Update fails")
+	}
+	if !strings.Contains(err.Error(), "failed to update email verification") {
+		t.Errorf("Expected 'failed to update email verification' error, got: %v", err)
+	}
+}
+
+// Test DeleteUser - admin GetByID returns error
+func TestDeleteUserAdminGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.DeleteUser(99999, 88888)
+	if err == nil {
+		t.Fatal("Expected error when admin GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get admin user") {
+		t.Errorf("Expected 'failed to get admin user' error, got: %v", err)
+	}
+}
+
+// Test DeleteUser - repo Delete fails
+func TestDeleteUserRepoDeleteError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	repo.deleteError = errors.New("delete constraint violation")
+	err := service.DeleteUser(admin.ID, user.ID)
+	if err == nil {
+		t.Fatal("Expected error when Delete repo fails")
+	}
+	if !strings.Contains(err.Error(), "failed to delete user") {
+		t.Errorf("Expected 'failed to delete user' error, got: %v", err)
+	}
+}
+
+// Test ChangeUserRole - admin GetByID error
+func TestChangeUserRoleAdminGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.ChangeUserRole(99999, 88888, "admin")
+	if err == nil {
+		t.Fatal("Expected error when admin GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get admin user") {
+		t.Errorf("Expected 'failed to get admin user' error, got: %v", err)
+	}
+}
+
+// Test ChangeUserRole - Update fails
+func TestChangeUserRoleUpdateError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	user, _, _ := service.Register("User", "user@example.com", "Password123")
+
+	repo.updateError = errors.New("update role failed")
+	err := service.ChangeUserRole(admin.ID, user.ID, "admin")
+	if err == nil {
+		t.Fatal("Expected error when Update fails")
+	}
+	if !strings.Contains(err.Error(), "failed to update user role") {
+		t.Errorf("Expected 'failed to update user role' error, got: %v", err)
+	}
+}
+
+// Test GetActiveSessions - GetByID returns error
+func TestGetActiveSessionsGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, err := service.GetActiveSessions(99999)
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test RevokeSession - GetByID returns error
+func TestRevokeSessionGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.RevokeSession(99999, 1)
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test RevokeAllSessions - GetByID returns error
+func TestRevokeAllSessionsGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	err := service.RevokeAllSessions(99999, nil)
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test GetUserByIDWithAdminDetails - GetByID returns error
+func TestGetUserByIDWithAdminDetailsGetByIDError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	repo.getByIDError = errors.New("db error")
+	service := newTestUserServiceWithRepo(repo, true)
+
+	_, err := service.GetUserByIDWithAdminDetails(99999)
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get user") {
+		t.Errorf("Expected 'failed to get user' error, got: %v", err)
+	}
+}
+
+// Test ListUsers - List returns error
+func TestListUsersCountError(t *testing.T) {
+	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
+	service := newTestUserServiceWithRepo(repo, true)
+
+	// Register a user to populate the repo
+	service.Register("Test", "test@example.com", "Password123")
+
+	// Set count error
+	repo.countError = errors.New("count query failed")
+	_, _, err := service.ListUsers(10, 0)
+	if err == nil {
+		t.Fatal("Expected error when Count fails")
+	}
+	if !strings.Contains(err.Error(), "failed to count users") {
+		t.Errorf("Expected 'failed to count users' error, got: %v", err)
 	}
 }

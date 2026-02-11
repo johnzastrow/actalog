@@ -765,12 +765,13 @@ func int64Ptr(i int64) *int64 {
 
 // Mock WODRepository
 type mockWODRepo struct {
-	wods         map[int64]*domain.WOD
-	nextID       int64
-	getByIDError error
-	createError  error
-	updateError  error
-	deleteError  error
+	wods           map[int64]*domain.WOD
+	nextID         int64
+	getByIDError   error
+	getByNameError error
+	createError    error
+	updateError    error
+	deleteError    error
 }
 
 func newMockWODRepo() *mockWODRepo {
@@ -802,6 +803,9 @@ func (m *mockWODRepo) GetByID(id int64) (*domain.WOD, error) {
 }
 
 func (m *mockWODRepo) GetByName(name string) (*domain.WOD, error) {
+	if m.getByNameError != nil {
+		return nil, m.getByNameError
+	}
 	for _, wod := range m.wods {
 		if wod.Name == name {
 			return wod, nil
@@ -1576,9 +1580,19 @@ func (m *mockMovementRepo) CopyToStandard(id int64, newName string) (*domain.Mov
 
 // Mock UserRepository (complete implementation)
 type mockUserRepo struct {
-	users        map[int64]*domain.User
-	nextID       int64
-	getByIDError error // If set, GetByID returns this error for non-existent users
+	users            map[int64]*domain.User
+	nextID           int64
+	getByIDError     error // If set, GetByID returns this error for non-existent users
+	getByEmailError  error // If set, GetByEmail returns this error
+	countError       error // If set, Count returns this error
+	createError      error // If set, Create returns this error
+	updateError      error // If set, Update returns this error
+	deleteError      error // If set, Delete returns this error
+	updatePwdError   error // If set, UpdatePassword returns this error
+	unlockError      error // If set, UnlockAccount returns this error
+	disableError     error // If set, DisableAccount returns this error
+	enableError      error // If set, EnableAccount returns this error
+	isLockedError    error // If set, IsAccountLocked returns this error
 }
 
 func newMockUserRepo() *mockUserRepo {
@@ -1589,6 +1603,9 @@ func newMockUserRepo() *mockUserRepo {
 }
 
 func (m *mockUserRepo) Create(user *domain.User) error {
+	if m.createError != nil {
+		return m.createError
+	}
 	m.nextID++
 	user.ID = m.nextID
 	user.CreatedAt = time.Now()
@@ -1609,6 +1626,9 @@ func (m *mockUserRepo) GetByID(id int64) (*domain.User, error) {
 }
 
 func (m *mockUserRepo) GetByEmail(email string) (*domain.User, error) {
+	if m.getByEmailError != nil {
+		return nil, m.getByEmailError
+	}
 	for _, user := range m.users {
 		if user.Email == email {
 			return user, nil
@@ -1636,6 +1656,9 @@ func (m *mockUserRepo) GetByVerificationToken(token string) (*domain.User, error
 }
 
 func (m *mockUserRepo) Update(user *domain.User) error {
+	if m.updateError != nil {
+		return m.updateError
+	}
 	if _, ok := m.users[user.ID]; !ok {
 		return sql.ErrNoRows
 	}
@@ -1645,6 +1668,9 @@ func (m *mockUserRepo) Update(user *domain.User) error {
 }
 
 func (m *mockUserRepo) Delete(id int64) error {
+	if m.deleteError != nil {
+		return m.deleteError
+	}
 	if _, ok := m.users[id]; !ok {
 		return sql.ErrNoRows
 	}
@@ -1665,6 +1691,9 @@ func (m *mockUserRepo) CountTotal() (int, error) {
 }
 
 func (m *mockUserRepo) UpdatePassword(userID int64, hashedPassword string) error {
+	if m.updatePwdError != nil {
+		return m.updatePwdError
+	}
 	if user, ok := m.users[userID]; ok {
 		user.PasswordHash = hashedPassword
 		user.UpdatedAt = time.Now()
@@ -1749,6 +1778,9 @@ func (m *mockUserRepo) LockAccount(userID int64, duration time.Duration) error {
 }
 
 func (m *mockUserRepo) IsAccountLocked(userID int64) (bool, *time.Time, error) {
+	if m.isLockedError != nil {
+		return false, nil, m.isLockedError
+	}
 	user, ok := m.users[userID]
 	if !ok {
 		return false, nil, sql.ErrNoRows
@@ -1783,6 +1815,9 @@ func (m *mockUserRepo) DeleteProfileImage(id int64) error {
 
 // Add Count method to mockUserRepo
 func (m *mockUserRepo) Count() (int64, error) {
+	if m.countError != nil {
+		return 0, m.countError
+	}
 	return int64(len(m.users)), nil
 }
 
@@ -1909,6 +1944,9 @@ func (m *mockOrganizationRepo) Count() (int64, error) {
 
 // Add DisableAccount and EnableAccount methods to mockUserRepo
 func (m *mockUserRepo) DisableAccount(userID int64, disabledBy int64, reason string) error {
+	if m.disableError != nil {
+		return m.disableError
+	}
 	user, ok := m.users[userID]
 	if !ok {
 		return sql.ErrNoRows
@@ -1924,6 +1962,9 @@ func (m *mockUserRepo) DisableAccount(userID int64, disabledBy int64, reason str
 }
 
 func (m *mockUserRepo) EnableAccount(userID int64) error {
+	if m.enableError != nil {
+		return m.enableError
+	}
 	user, ok := m.users[userID]
 	if !ok {
 		return sql.ErrNoRows
@@ -1986,6 +2027,9 @@ func (m *mockUserRepo) ResetFailedAttempts(userID int64) error {
 
 // Add missing UnlockAccount to mockUserRepo
 func (m *mockUserRepo) UnlockAccount(userID int64) error {
+	if m.unlockError != nil {
+		return m.unlockError
+	}
 	user, ok := m.users[userID]
 	if !ok {
 		return sql.ErrNoRows

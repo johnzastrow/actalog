@@ -1590,6 +1590,291 @@ func TestWODService_Update_NilCreatedBy(t *testing.T) {
 	}
 }
 
+// ==================== Edge Case Tests ====================
+
+// Test Create - GetByName returns database error
+func TestWODService_Create_GetByNameError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.getByNameError = errors.New("database connection lost")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Create(&domain.WOD{
+		Name:   "Test WOD",
+		Source: "Self-recorded",
+		Type:   "Self-created",
+	}, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when GetByName fails")
+	}
+	if !strings.Contains(err.Error(), "failed to check for duplicate WOD name") {
+		t.Errorf("Expected 'failed to check for duplicate WOD name' error, got: %v", err)
+	}
+}
+
+// Test Create - repo Create returns error
+func TestWODService_Create_RepoCreateError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.createError = errors.New("insert failed")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Create(&domain.WOD{
+		Name:   "Test WOD",
+		Source: "Self-recorded",
+		Type:   "Self-created",
+	}, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when Create fails")
+	}
+	if !strings.Contains(err.Error(), "failed to create wod") {
+		t.Errorf("Expected 'failed to create wod' error, got: %v", err)
+	}
+}
+
+// Test Update - GetByID returns database error
+func TestWODService_Update_GetByIDError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.getByIDError = errors.New("db timeout")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Update(&domain.WOD{
+		ID:     1,
+		Name:   "Updated WOD",
+		Source: "Self-recorded",
+		Type:   "Self-created",
+	}, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get wod") {
+		t.Errorf("Expected 'failed to get wod' error, got: %v", err)
+	}
+}
+
+// Test Update - repo Update returns error
+func TestWODService_Update_RepoUpdateError(t *testing.T) {
+	userID := int64(1)
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Original WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  &userID,
+		CreatedAt:  time.Now(),
+	}
+	wodRepo.updateError = errors.New("update constraint violation")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Update(&domain.WOD{
+		ID:     1,
+		Name:   "Updated WOD",
+		Source: "Self-recorded",
+		Type:   "Self-created",
+	}, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when Update fails")
+	}
+	if !strings.Contains(err.Error(), "failed to update wod") {
+		t.Errorf("Expected 'failed to update wod' error, got: %v", err)
+	}
+}
+
+// Test Update - duplicate name check with different ID
+func TestWODService_Update_DuplicateNameDifferentID(t *testing.T) {
+	userID := int64(1)
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Original WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  &userID,
+	}
+	wodRepo.wods[2] = &domain.WOD{
+		ID:         2,
+		Name:       "Other WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  &userID,
+	}
+	service := NewWODService(wodRepo, nil, nil)
+
+	// Try to rename WOD 1 to the name of WOD 2
+	err := service.Update(&domain.WOD{
+		ID:     1,
+		Name:   "Other WOD",
+		Source: "Self-recorded",
+		Type:   "Self-created",
+	}, 1, "test@example.com")
+
+	if !errors.Is(err, ErrWODDuplicateName) {
+		t.Errorf("Expected ErrWODDuplicateName, got: %v", err)
+	}
+}
+
+// Test Delete - GetByID returns database error
+func TestWODService_Delete_GetByIDError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.getByIDError = errors.New("db error")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(1, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get wod") {
+		t.Errorf("Expected 'failed to get wod' error, got: %v", err)
+	}
+}
+
+// Test Delete - repo Delete returns error
+func TestWODService_Delete_RepoDeleteError(t *testing.T) {
+	userID := int64(1)
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Test WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  &userID,
+	}
+	wodRepo.deleteError = errors.New("delete foreign key constraint")
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(1, 1, "test@example.com")
+
+	if err == nil {
+		t.Fatal("Expected error when Delete fails")
+	}
+	if !strings.Contains(err.Error(), "failed to delete wod") {
+		t.Errorf("Expected 'failed to delete wod' error, got: %v", err)
+	}
+}
+
+// Test Delete - WOD not found
+func TestWODService_Delete_NotFound(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(999, 1, "test@example.com")
+
+	if !errors.Is(err, ErrWODNotFound) {
+		t.Errorf("Expected ErrWODNotFound, got: %v", err)
+	}
+}
+
+// Test Delete - standard WOD cannot be deleted
+func TestWODService_Delete_StandardWOD(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Fran",
+		Source:     "CrossFit",
+		Type:       "Benchmark",
+		IsStandard: true,
+	}
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(1, 1, "test@example.com")
+
+	if !errors.Is(err, ErrWODUnauthorized) {
+		t.Errorf("Expected ErrWODUnauthorized, got: %v", err)
+	}
+}
+
+// Test Delete - wrong owner
+func TestWODService_Delete_WrongOwner(t *testing.T) {
+	otherUser := int64(2)
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Other User WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  &otherUser,
+	}
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(1, 1, "test@example.com")
+
+	if !errors.Is(err, ErrWODOwnership) {
+		t.Errorf("Expected ErrWODOwnership, got: %v", err)
+	}
+}
+
+// Test Delete - nil CreatedBy
+func TestWODService_Delete_NilCreatedBy(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.wods[1] = &domain.WOD{
+		ID:         1,
+		Name:       "Orphan WOD",
+		Source:     "Self-recorded",
+		Type:       "Self-created",
+		IsStandard: false,
+		CreatedBy:  nil,
+	}
+	service := NewWODService(wodRepo, nil, nil)
+
+	err := service.Delete(1, 1, "test@example.com")
+
+	if !errors.Is(err, ErrWODOwnership) {
+		t.Errorf("Expected ErrWODOwnership, got: %v", err)
+	}
+}
+
+// Test GetByID - error from repo
+func TestWODService_GetByID_RepoError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.getByIDError = errors.New("db error")
+	service := NewWODService(wodRepo, nil, nil)
+
+	_, err := service.GetByID(1)
+
+	if err == nil {
+		t.Fatal("Expected error when GetByID fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get wod") {
+		t.Errorf("Expected 'failed to get wod' error, got: %v", err)
+	}
+}
+
+// Test GetByName - error from repo
+func TestWODService_GetByName_RepoError(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	wodRepo.getByNameError = errors.New("db error")
+	service := NewWODService(wodRepo, nil, nil)
+
+	_, err := service.GetByName("Fran")
+
+	if err == nil {
+		t.Fatal("Expected error when GetByName fails")
+	}
+	if !strings.Contains(err.Error(), "failed to get wod by name") {
+		t.Errorf("Expected 'failed to get wod by name' error, got: %v", err)
+	}
+}
+
+// Test GetByName - whitespace-only name
+func TestWODService_GetByName_WhitespaceOnly(t *testing.T) {
+	wodRepo := newMockWODRepo()
+	service := NewWODService(wodRepo, nil, nil)
+
+	_, err := service.GetByName("   ")
+	if !errors.Is(err, ErrWODNameRequired) {
+		t.Errorf("Expected ErrWODNameRequired for whitespace, got: %v", err)
+	}
+}
+
 // Helper function
 func boolPtr(b bool) *bool {
 	return &b
