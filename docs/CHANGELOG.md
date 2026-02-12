@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Coach Role & Role Rename
+
+- **Three-Tier Role System**
+  - Renamed `"user"` role to `"athlete"` across backend, frontend, and tests
+  - Added `"coach"` as a new middle-tier role: athlete < coach < admin
+  - Database migration (0.32.0) renames existing `user` records to `athlete`
+
+- **CoachOrAdmin Middleware**
+  - New `CoachOrAdmin` middleware in `pkg/middleware/auth.go` for coach-accessible routes
+  - Coaches bypass subscription checks (same as admins) in `RequireActiveSubscription`
+  - 14 comprehensive middleware tests covering all role permutations
+
+- **Dedicated Coach API Routes**
+  - `GET /api/coaches/me/sessions` - Coach's upcoming sessions (admins see all sessions across all gyms)
+  - `GET /api/coaches/sessions/{id}/roster` - Session roster
+  - `POST /api/coaches/sessions/{id}/check-in/{rid}` - Check in athlete
+  - `POST /api/coaches/sessions/{id}/no-show/{rid}` - Mark no-show
+  - `POST /api/coaches/sessions/{id}/complete` - Complete session
+  - Organization-level access verification for coach actions
+
+- **Frontend Updates**
+  - Coach nav button in bottom navigation (visible for coach/admin when scheduling enabled)
+  - Coach Dashboard updated to use `/api/coaches/` routes instead of admin routes
+  - Admin Users panel shows three role options: Athlete, Coach, Admin
+  - Router guard for `requiresCoach` meta on coach routes
+
+- **Admin All-Sessions Visibility**
+  - Admins see ALL upcoming sessions on Coach Dashboard (not limited by coach assignments)
+  - New `GetAllUpcoming` repository method and `GetAllUpcomingSessions` service method
+
 ### Added - Delete Class with Sessions
 
 - **Enhanced Class Template Deletion**
