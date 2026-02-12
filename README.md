@@ -2,7 +2,8 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
-[![Version](https://img.shields.io/badge/version-0.22.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
+[![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fjohnzastrow%2Factalog-2496ED?style=flat&logo=docker)](https://github.com/johnzastrow/actalog/pkgs/container/actalog)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -32,7 +33,52 @@ See the Roadmap file [ROADMAP.md](docs/ROADMAP.md) for the current project statu
 For the full backlog and lower-priority items see [TODO.md](docs/TODO.md). For release history and completed features see [CHANGELOG.md](docs/CHANGELOG.md).
 
 
-## Quick Start
+## Docker Images
+
+Docker images are published to [GitHub Container Registry](https://github.com/johnzastrow/actalog/pkgs/container/actalog).
+
+```bash
+docker pull ghcr.io/johnzastrow/actalog:latest
+```
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Latest stable build |
+| `1.1.0-beta` | Current versioned release |
+| `dev` | Development build |
+
+**Run with SQLite (simplest):**
+```bash
+docker run -d -p 8080:8080 \
+  -v actalog-data:/app/data \
+  -e DB_DRIVER=sqlite3 -e DB_NAME=/app/data/actalog.db \
+  --name actalog \
+  ghcr.io/johnzastrow/actalog:latest
+```
+
+**Run with MariaDB/MySQL:**
+```bash
+docker run -d -p 8080:8080 --network host \
+  -e DB_DRIVER=mysql -e DB_HOST=localhost -e DB_PORT=3306 \
+  -e DB_USER=actalog -e DB_PASSWORD=yourpassword -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:latest
+```
+
+**Run with PostgreSQL:**
+```bash
+docker run -d -p 8080:8080 --network host \
+  -e DB_DRIVER=postgres -e DB_HOST=localhost -e DB_PORT=5432 \
+  -e DB_USER=actalog -e DB_PASSWORD=yourpassword -e DB_NAME=actalog \
+  ghcr.io/johnzastrow/actalog:latest
+```
+
+Open [http://localhost:8080](http://localhost:8080) — the first registered user automatically becomes admin.
+
+See [docker/DOCKER.md](docker/DOCKER.md) for Docker Compose examples and full deployment docs.
+
+---
+
+## Quick Start (Local Development)
 
 ### Prerequisites
 
@@ -154,45 +200,6 @@ Most endpoints require JWT authentication. To use protected endpoints in Swagger
 | `import-export` | Data import/export (CSV, JSON) |
 | `backups` | System backup/restore |
 | `audit` | Audit logs |
-
-### Docker Deployment (Production)
-
-For production deployment using Docker:
-
-1. **Pull the latest image from GitHub Container Registry**
-
-   ```bash
-   docker pull ghcr.io/johnzastrow/actalog:latest
-   ```
-
-2. **Run the container**
-
-   ```bash
-   docker run -d \
-     -p 8080:8080 \
-     -v actalog-data:/app/data \
-     -v actalog-uploads:/app/uploads \
-     --name actalog \
-     ghcr.io/johnzastrow/actalog:latest
-   ```
-
-3. **Access the application**
-
-   - Full application (frontend + API): `http://localhost:8080`
-   - Health check: `http://localhost:8080/health`
-
-**Note:** In production, the Docker container serves both the frontend and backend from a single port (8080). The frontend is pre-built into static files, and the Go backend serves both the API and the static files. This is different from local development, where the frontend runs on port 3000.
-
-**Database Options:**
-
-The application supports multiple databases via environment variables:
-
-- **SQLite** (default): File-based, single-container deployment
-- **PostgreSQL**: For production, use with docker-compose
-- **MariaDB/MySQL**: Alternative production database
-
-See `docker/docker-compose.*.yml` for multi-container setups with PostgreSQL or MariaDB.
-
 
 ## License
 
