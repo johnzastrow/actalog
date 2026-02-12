@@ -32,9 +32,9 @@ func RequireActiveSubscription(subscriptionService SubscriptionService) func(htt
 				return
 			}
 
-			// Admin users bypass subscription checks entirely
+			// Admin and coach users bypass subscription checks entirely
 			role, _ := GetUserRole(r.Context())
-			if role == "admin" {
+			if role == "admin" || role == "coach" {
 				next.ServeHTTP(w, r)
 				return
 			}

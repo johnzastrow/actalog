@@ -13,7 +13,7 @@ func createTestUserForWorkout(t *testing.T, repo *SQLiteUserRepository, email st
 		Email:        email,
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := repo.Create(user); err != nil {
 		t.Fatalf("Failed to create test user: %v", err)

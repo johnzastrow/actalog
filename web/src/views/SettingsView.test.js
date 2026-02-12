@@ -44,7 +44,7 @@ const mockAuthStore = {
     name: 'Test User',
     email: 'test@example.com',
     birthday: '1990-05-15T00:00:00Z',
-    role: 'user'
+    role: 'athlete'
   },
   logout: vi.fn()
 }
@@ -182,7 +182,7 @@ describe('SettingsView', () => {
       name: 'Test User',
       email: 'test@example.com',
       birthday: '1990-05-15T00:00:00Z',
-      role: 'user'
+      role: 'athlete'
     }
   })
 

@@ -180,7 +180,7 @@ const router = createRouter({
       path: '/coach',
       name: 'coach-dashboard',
       component: () => import('@/views/CoachDashboardView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresCoach: true }
     },
     {
       path: '/settings/export',
@@ -309,11 +309,15 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
+  const requiresCoach = to.matched.some(record => record.meta.requiresCoach)
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (requiresAdmin && authStore.user?.role !== 'admin') {
     // Redirect non-admins trying to access admin routes
+    next('/dashboard')
+  } else if (requiresCoach && authStore.user?.role !== 'coach' && authStore.user?.role !== 'admin') {
+    // Redirect non-coaches trying to access coach routes
     next('/dashboard')
   } else if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'reset-password' || to.name === 'verify-email') && authStore.isAuthenticated) {
     // If already authenticated, redirect auth flows to dashboard (except verify-email can be accessed)

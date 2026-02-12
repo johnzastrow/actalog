@@ -30,7 +30,7 @@ vi.mock('vue-router', async () => {
 
 // Mock auth store
 const mockAuthStore = {
-  user: { id: 1, role: 'user' }
+  user: { id: 1, role: 'athlete' }
 }
 vi.mock('@/stores/auth', () => ({
   useAuthStore: () => mockAuthStore
@@ -121,7 +121,7 @@ describe('WODDetailView', () => {
     vi.clearAllMocks()
     mockPush.mockClear()
     mockBack.mockClear()
-    mockAuthStore.user = { id: 1, role: 'user' }
+    mockAuthStore.user = { id: 1, role: 'athlete' }
   })
 
   afterEach(() => {
@@ -213,7 +213,7 @@ describe('WODDetailView', () => {
     })
 
     it('allows owner to edit custom WOD', async () => {
-      mockAuthStore.user = { id: 1, role: 'user' }
+      mockAuthStore.user = { id: 1, role: 'athlete' }
       axios.get.mockResolvedValue({ data: { wod: mockCustomWOD } })
       createWrapper()
       await flushPromises()
@@ -224,7 +224,7 @@ describe('WODDetailView', () => {
     })
 
     it('does not allow non-owner to edit custom WOD', async () => {
-      mockAuthStore.user = { id: 99, role: 'user' }
+      mockAuthStore.user = { id: 99, role: 'athlete' }
       axios.get.mockResolvedValue({ data: { wod: mockCustomWOD } })
       createWrapper()
       await flushPromises()
@@ -235,7 +235,7 @@ describe('WODDetailView', () => {
     })
 
     it('does not allow non-admin to edit standard WOD', async () => {
-      mockAuthStore.user = { id: 1, role: 'user' }
+      mockAuthStore.user = { id: 1, role: 'athlete' }
       setupDefaultMocks()
       createWrapper()
       await flushPromises()

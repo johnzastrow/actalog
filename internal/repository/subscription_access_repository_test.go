@@ -25,7 +25,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_NoSubscription(t *testing.
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -65,7 +65,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_UserSubscription(t *testin
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -124,7 +124,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_PermanentFree(t *testing.T
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -179,7 +179,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_ExpiredSubscription(t *tes
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -233,7 +233,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_OrganizationSubscription(t
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -304,7 +304,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_BothSubscriptions(t *testi
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -361,7 +361,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_MultipleOrganizations(t *t
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -449,7 +449,7 @@ func TestSubscriptionAccessRepository_CheckUserAccess_InactiveUserSubWithActiveO
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)

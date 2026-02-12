@@ -31,7 +31,7 @@ func createTestPRHandler(t *testing.T) (*PRHandler, func()) {
 	testUser := &domain.User{
 		Email:        "prtest@example.com",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -382,7 +382,7 @@ func TestPRHandler_GetPersonalRecords_EmptyResult(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "empty@example.com",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

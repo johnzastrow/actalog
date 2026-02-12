@@ -48,7 +48,7 @@ const mockAuthStore = {
     name: 'Test User',
     email: 'test@example.com',
     email_verified: true,
-    role: 'user'
+    role: 'athlete'
   }
 }
 
@@ -190,7 +190,7 @@ describe('DashboardView', () => {
       name: 'Test User',
       email: 'test@example.com',
       email_verified: true,
-      role: 'user'
+      role: 'athlete'
     }
   })
 

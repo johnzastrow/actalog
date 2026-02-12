@@ -393,7 +393,7 @@ func TestAuditLogService_LogRoleChanged(t *testing.T) {
 	repo := newMockAuditLogRepo()
 	svc := NewAuditLogService(repo)
 
-	err := svc.LogRoleChanged(1, 2, "admin@example.com", "user@example.com", "user", "admin")
+	err := svc.LogRoleChanged(1, 2, "admin@example.com", "user@example.com", "athlete", "admin")
 	if err != nil {
 		t.Errorf("LogRoleChanged() error = %v", err)
 	}

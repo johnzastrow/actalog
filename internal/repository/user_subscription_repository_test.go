@@ -22,7 +22,7 @@ func TestUserSubscriptionRepository_Create(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -65,7 +65,7 @@ func TestUserSubscriptionRepository_GetByID(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -135,7 +135,7 @@ func TestUserSubscriptionRepository_GetActiveByUserID(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -194,7 +194,7 @@ func TestUserSubscriptionRepository_GetByUserID(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -259,7 +259,7 @@ func TestUserSubscriptionRepository_Update(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -317,7 +317,7 @@ func TestUserSubscriptionRepository_Delete(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -364,7 +364,7 @@ func TestUserSubscriptionRepository_MarkAsExpired(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -422,7 +422,7 @@ func TestUserSubscriptionRepository_Cancel(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -487,7 +487,7 @@ func TestUserSubscriptionRepository_MarkAsPaid(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -546,7 +546,7 @@ func TestUserSubscriptionRepository_MarkAsPaid_CustomDuration(t *testing.T) {
 
 	// Create admin and test user
 	admin := &domain.User{Email: "admin@example.com", PasswordHash: "hash", Name: "Admin", Role: "admin"}
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test User", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test User", Role: "athlete"}
 	userRepo.Create(admin)
 	userRepo.Create(user)
 
@@ -595,7 +595,7 @@ func TestUserSubscriptionRepository_PermanentFree(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -642,10 +642,10 @@ func TestUserSubscriptionRepository_ListExpiring(t *testing.T) {
 	subRepo := NewSQLiteUserSubscriptionRepository(db)
 
 	// Create test users
-	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
-	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
-	user4 := &domain.User{Email: "user4@example.com", PasswordHash: "hash", Name: "User 4", Role: "user"}
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "athlete"}
+	user4 := &domain.User{Email: "user4@example.com", PasswordHash: "hash", Name: "User 4", Role: "athlete"}
 	userRepo.Create(user1)
 	userRepo.Create(user2)
 	userRepo.Create(user3)
@@ -752,9 +752,9 @@ func TestUserSubscriptionRepository_ListAll(t *testing.T) {
 	}
 
 	// Create test users
-	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
-	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "athlete"}
 	userRepo.Create(user1)
 	userRepo.Create(user2)
 	userRepo.Create(user3)
@@ -825,9 +825,9 @@ func TestUserSubscriptionRepository_ListExpired(t *testing.T) {
 	subRepo := NewSQLiteUserSubscriptionRepository(db)
 
 	// Create test users
-	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
-	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"}
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
+	user3 := &domain.User{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "athlete"}
 	userRepo.Create(user1)
 	userRepo.Create(user2)
 	userRepo.Create(user3)

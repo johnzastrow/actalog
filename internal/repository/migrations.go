@@ -3259,6 +3259,50 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.32.0",
+		Description: "Rename user role to athlete, add coach role",
+		Up: func(db *sql.DB, driver string) error {
+			// Rename existing 'user' role to 'athlete'
+			var updateQuery string
+			switch driver {
+			case "postgres":
+				updateQuery = `UPDATE users SET role = 'athlete' WHERE role = 'user'`
+			default:
+				updateQuery = `UPDATE users SET role = 'athlete' WHERE role = 'user'`
+			}
+
+			result, err := db.Exec(updateQuery)
+			if err != nil {
+				return fmt.Errorf("failed to rename user role to athlete: %w", err)
+			}
+
+			rowsAffected, _ := result.RowsAffected()
+			fmt.Printf("✓ Renamed %d users from role 'user' to 'athlete'\n", rowsAffected)
+
+			// Update default for PostgreSQL and MySQL
+			switch driver {
+			case "postgres":
+				if _, err := db.Exec(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'athlete'`); err != nil {
+					errStr := strings.ToLower(err.Error())
+					if !strings.Contains(errStr, "already") {
+						return fmt.Errorf("failed to set default role: %w", err)
+					}
+				}
+			case "mysql":
+				if _, err := db.Exec("ALTER TABLE users ALTER role SET DEFAULT 'athlete'"); err != nil {
+					errStr := strings.ToLower(err.Error())
+					if !strings.Contains(errStr, "already") {
+						return fmt.Errorf("failed to set default role: %w", err)
+					}
+				}
+			}
+			// SQLite default is set in the service layer (no ALTER COLUMN DEFAULT support)
+
+			fmt.Println("✓ Coach role is now available (athlete, coach, admin)")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

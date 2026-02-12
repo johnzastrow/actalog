@@ -27,7 +27,7 @@ func TestUserRepository_Create(t *testing.T) {
 				Email:        "test@example.com",
 				PasswordHash: "hashed_password_123",
 				Name:         "Test User",
-				Role:         "user",
+				Role:         "athlete",
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
 			},
@@ -51,7 +51,7 @@ func TestUserRepository_Create(t *testing.T) {
 				Email:        "test@example.com", // Already exists
 				PasswordHash: "another_hash",
 				Name:         "Another User",
-				Role:         "user",
+				Role:         "athlete",
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
 			},
@@ -87,7 +87,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 		Email:        "getbyid@example.com",
 		PasswordHash: "hash123",
 		Name:         "Get By ID User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -150,7 +150,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		Email:        "byemail@example.com",
 		PasswordHash: "hash123",
 		Name:         "Get By Email User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -213,7 +213,7 @@ func TestUserRepository_Update(t *testing.T) {
 		Email:        "update@example.com",
 		PasswordHash: "hash123",
 		Name:         "Original Name",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -255,7 +255,7 @@ func TestUserRepository_UpdatePassword(t *testing.T) {
 		Email:        "password@example.com",
 		PasswordHash: "old_hash",
 		Name:         "Password User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -293,7 +293,7 @@ func TestUserRepository_Delete(t *testing.T) {
 		Email:        "delete@example.com",
 		PasswordHash: "hash123",
 		Name:         "Delete User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -337,7 +337,7 @@ func TestUserRepository_List(t *testing.T) {
 			Email:        "list" + string(rune('0'+i)) + "@example.com",
 			PasswordHash: "hash123",
 			Name:         "List User " + string(rune('0'+i)),
-			Role:         "user",
+			Role:         "athlete",
 			CreatedAt:    time.Now().Add(time.Duration(i) * time.Second),
 			UpdatedAt:    time.Now(),
 		}
@@ -416,7 +416,7 @@ func TestUserRepository_Count(t *testing.T) {
 			Email:        "count" + string(rune('0'+i)) + "@example.com",
 			PasswordHash: "hash123",
 			Name:         "Count User " + string(rune('0'+i)),
-			Role:         "user",
+			Role:         "athlete",
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 		}
@@ -449,7 +449,7 @@ func TestUserRepository_AccountLocking(t *testing.T) {
 		Email:        "locktest@example.com",
 		PasswordHash: "hash123",
 		Name:         "Lock Test User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -544,7 +544,7 @@ func TestUserRepository_AccountDisabling(t *testing.T) {
 		Email:        "disable@example.com",
 		PasswordHash: "hash123",
 		Name:         "Disable Test User",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}

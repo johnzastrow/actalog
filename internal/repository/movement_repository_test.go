@@ -714,7 +714,7 @@ func createTestUser(t *testing.T, repo *SQLiteUserRepository, email string) *dom
 		Email:        email,
 		PasswordHash: "hash123",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := repo.Create(user); err != nil {
 		t.Fatalf("failed to create test user: %v", err)

@@ -1572,3 +1572,208 @@ func (h *SchedulingHandler) BatchUpdateSessionWorkout(w http.ResponseWriter, r *
 		"updated_count": count,
 	})
 }
+
+// ============================================
+// COACH-SPECIFIC HANDLERS
+// These handlers verify org-level coach access before delegating
+// to existing service methods. Used by /api/coaches/ routes.
+// ============================================
+
+// CoachGetSessionRoster handles GET /api/coaches/sessions/{session_id}/roster
+func (h *SchedulingHandler) CoachGetSessionRoster(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	// Admins bypass org check; coaches must be assigned to the session's org
+	role, _ := middleware.GetUserRole(r.Context())
+	if role != "admin" {
+		if err := h.schedulingService.VerifyCoachAccessToSession(coachUserID, sessionID); err != nil {
+			if err == service.ErrNotAuthorized {
+				respondError(w, http.StatusForbidden, "Not a coach for this organization")
+				return
+			}
+			if err == service.ErrClassSessionNotFound {
+				respondError(w, http.StatusNotFound, "Session not found")
+				return
+			}
+			h.logger.Error("Failed to verify coach access: %v", err)
+			respondError(w, http.StatusInternalServerError, "Failed to verify access")
+			return
+		}
+	}
+
+	reservations, err := h.schedulingService.GetReservationRoster(sessionID)
+	if err != nil {
+		h.logger.Error("Failed to get session roster: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to get roster")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"roster": reservations,
+		"count":  len(reservations),
+	})
+}
+
+// CoachCheckInReservation handles POST /api/coaches/sessions/{session_id}/check-in/{reservation_id}
+func (h *SchedulingHandler) CoachCheckInReservation(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	reservationIDStr := chi.URLParam(r, "reservation_id")
+	reservationID, err := strconv.ParseInt(reservationIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid reservation ID")
+		return
+	}
+
+	role, _ := middleware.GetUserRole(r.Context())
+	if role != "admin" {
+		if err := h.schedulingService.VerifyCoachAccessToSession(coachUserID, sessionID); err != nil {
+			if err == service.ErrNotAuthorized {
+				respondError(w, http.StatusForbidden, "Not a coach for this organization")
+				return
+			}
+			if err == service.ErrClassSessionNotFound {
+				respondError(w, http.StatusNotFound, "Session not found")
+				return
+			}
+			h.logger.Error("Failed to verify coach access: %v", err)
+			respondError(w, http.StatusInternalServerError, "Failed to verify access")
+			return
+		}
+	}
+
+	if err := h.schedulingService.CheckInReservation(coachUserID, reservationID); err != nil {
+		if err == service.ErrReservationNotFound {
+			respondError(w, http.StatusNotFound, "Reservation not found")
+			return
+		}
+		h.logger.Error("Failed to check in reservation: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to check in")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Checked in successfully"})
+}
+
+// CoachMarkNoShow handles POST /api/coaches/sessions/{session_id}/no-show/{reservation_id}
+func (h *SchedulingHandler) CoachMarkNoShow(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	reservationIDStr := chi.URLParam(r, "reservation_id")
+	reservationID, err := strconv.ParseInt(reservationIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid reservation ID")
+		return
+	}
+
+	role, _ := middleware.GetUserRole(r.Context())
+	if role != "admin" {
+		if err := h.schedulingService.VerifyCoachAccessToSession(coachUserID, sessionID); err != nil {
+			if err == service.ErrNotAuthorized {
+				respondError(w, http.StatusForbidden, "Not a coach for this organization")
+				return
+			}
+			if err == service.ErrClassSessionNotFound {
+				respondError(w, http.StatusNotFound, "Session not found")
+				return
+			}
+			h.logger.Error("Failed to verify coach access: %v", err)
+			respondError(w, http.StatusInternalServerError, "Failed to verify access")
+			return
+		}
+	}
+
+	if err := h.schedulingService.MarkNoShow(coachUserID, reservationID); err != nil {
+		if err == service.ErrReservationNotFound {
+			respondError(w, http.StatusNotFound, "Reservation not found")
+			return
+		}
+		h.logger.Error("Failed to mark no-show: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to mark no-show")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Marked as no-show successfully"})
+}
+
+// CoachCompleteSession handles POST /api/coaches/sessions/{session_id}/complete
+func (h *SchedulingHandler) CoachCompleteSession(w http.ResponseWriter, r *http.Request) {
+	coachUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	sessionIDStr := chi.URLParam(r, "session_id")
+	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid session ID")
+		return
+	}
+
+	role, _ := middleware.GetUserRole(r.Context())
+	if role != "admin" {
+		if err := h.schedulingService.VerifyCoachAccessToSession(coachUserID, sessionID); err != nil {
+			if err == service.ErrNotAuthorized {
+				respondError(w, http.StatusForbidden, "Not a coach for this organization")
+				return
+			}
+			if err == service.ErrClassSessionNotFound {
+				respondError(w, http.StatusNotFound, "Session not found")
+				return
+			}
+			h.logger.Error("Failed to verify coach access: %v", err)
+			respondError(w, http.StatusInternalServerError, "Failed to verify access")
+			return
+		}
+	}
+
+	if err := h.schedulingService.CompleteSession(coachUserID, sessionID); err != nil {
+		if err == service.ErrClassSessionNotFound {
+			respondError(w, http.StatusNotFound, "Session not found")
+			return
+		}
+		if err == service.ErrSessionNotActive {
+			respondError(w, http.StatusBadRequest, "Session cannot be completed")
+			return
+		}
+		h.logger.Error("Failed to complete session: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to complete session")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Session completed successfully"})
+}

@@ -19,7 +19,7 @@ func TestWorkoutMovementRepository_Create(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Create user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestWorkoutMovementRepository_GetByID(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	movement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
@@ -144,7 +144,7 @@ func TestWorkoutMovementRepository_GetByWorkoutID(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	movements := []*domain.Movement{
@@ -204,7 +204,7 @@ func TestWorkoutMovementRepository_Update(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	movement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
@@ -255,7 +255,7 @@ func TestWorkoutMovementRepository_Delete(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	movement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
@@ -303,7 +303,7 @@ func TestWorkoutMovementRepository_DeleteByWorkoutID(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	movement := &domain.Movement{Name: "Back Squat", Type: domain.MovementTypeWeightlifting}
@@ -354,7 +354,7 @@ func TestWorkoutMovementRepository_DifferentMeasurements(t *testing.T) {
 	wmRepo := NewWorkoutMovementRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	// Different movement types

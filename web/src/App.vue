@@ -209,6 +209,17 @@
         <span class="nav-label">Log</span>
       </v-btn>
 
+      <!-- Coach Button (when user has coach/admin role AND scheduling enabled) -->
+      <v-btn
+        v-if="authStore.isCoachOrAdmin && authStore.schedulingEnabled"
+        value="coach"
+        to="/coach"
+        size="x-small"
+      >
+        <v-icon size="20">mdi-clipboard-check</v-icon>
+        <span class="nav-label">Coach</span>
+      </v-btn>
+
       <v-btn value="profile" to="/profile" size="x-small">
         <!-- Show avatar if user has one, otherwise show default icon -->
         <v-avatar v-if="userAvatar" size="20">

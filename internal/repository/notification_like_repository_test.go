@@ -23,7 +23,7 @@ func TestNotificationLikeRepository_Create(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -72,7 +72,7 @@ func TestNotificationLikeRepository_Delete(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -137,9 +137,9 @@ func TestNotificationLikeRepository_GetByNotificationID(t *testing.T) {
 
 	// Create test users
 	users := []*domain.User{
-		{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"},
-		{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"},
-		{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "user"},
+		{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"},
+		{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"},
+		{Email: "user3@example.com", PasswordHash: "hash", Name: "User 3", Role: "athlete"},
 	}
 	for _, u := range users {
 		if err := userRepo.Create(u); err != nil {
@@ -208,7 +208,7 @@ func TestNotificationLikeRepository_GetLikeCount(t *testing.T) {
 			Email:        "user" + string(rune('0'+i)) + "@example.com",
 			PasswordHash: "hash",
 			Name:         "User " + string(rune('0'+i)),
-			Role:         "user",
+			Role:         "athlete",
 		}
 		if err := userRepo.Create(users[i]); err != nil {
 			t.Fatalf("Failed to create user: %v", err)
@@ -269,8 +269,8 @@ func TestNotificationLikeRepository_HasUserLiked(t *testing.T) {
 	likeRepo := NewNotificationLikeRepository(db)
 
 	// Create test users
-	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
 	}

@@ -22,7 +22,7 @@ func TestAuditLogRepository_Create(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -107,7 +107,7 @@ func TestAuditLogRepository_GetByID(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -164,7 +164,7 @@ func TestAuditLogRepository_List(t *testing.T) {
 		Email:        "user1@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "User 1",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
@@ -350,7 +350,7 @@ func TestAuditLogRepository_Count(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -427,7 +427,7 @@ func TestAuditLogRepository_GetByUserID(t *testing.T) {
 		Email:        "user1@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "User 1",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
@@ -437,7 +437,7 @@ func TestAuditLogRepository_GetByUserID(t *testing.T) {
 		Email:        "user2@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "User 2",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user2); err != nil {
 		t.Fatalf("Failed to create user2: %v", err)
@@ -516,7 +516,7 @@ func TestAuditLogRepository_GetByTargetUserID(t *testing.T) {
 		Email:        "target@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Target User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(targetUser); err != nil {
 		t.Fatalf("Failed to create target user: %v", err)
@@ -700,7 +700,7 @@ func TestAuditLogRepository_Count_AllFilters(t *testing.T) {
 		Email:        "user1@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "User 1",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
@@ -803,7 +803,7 @@ func TestAuditLogRepository_List_AllFilters(t *testing.T) {
 		Email:        "user1@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "User 1",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)

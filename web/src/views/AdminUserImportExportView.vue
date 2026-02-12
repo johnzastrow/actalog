@@ -45,7 +45,7 @@
               <code class="text-caption">user@example.com,John Doe,SecurePass123</code>
             </v-alert>
             <p class="text-caption text-medium-emphasis mt-3">
-              All imported users will be created with role "user" and a permanent free subscription.
+              All imported users will be created with role "athlete" and a permanent free subscription.
               Passwords must be at least 8 characters.
             </p>
           </v-card>

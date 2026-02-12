@@ -340,7 +340,7 @@ func TestOrganizationService_Delete_WithUsers(t *testing.T) {
 		Email:        "user@test.com",
 		Name:         "Test User",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(user)
 	orgRepo.AddUserToOrganization(user.ID, org.ID, "member")
@@ -367,7 +367,7 @@ func TestOrganizationService_AssignUserToOrganization(t *testing.T) {
 		Email:        "user@test.com",
 		Name:         "Test User",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(user)
 
@@ -441,7 +441,7 @@ func TestOrganizationService_AssignUserToOrganization_AlreadyMember(t *testing.T
 		Email:        "user@test.com",
 		Name:         "Test User",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(user)
 
@@ -473,7 +473,7 @@ func TestOrganizationService_RemoveUserFromOrganization(t *testing.T) {
 		Email:        "user@test.com",
 		Name:         "Test User",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(user)
 	service.AssignUserToOrganization(1, user.ID, org.ID)
@@ -546,7 +546,7 @@ func TestOrganizationService_GetUserOrganizations(t *testing.T) {
 		Email:        "user@test.com",
 		Name:         "Test User",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(user)
 	org1, _ := service.Create(1, "Gym A", nil)

@@ -250,8 +250,8 @@ func (h *AdminUserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request
 	}
 
 	// Validate role
-	if request.Role != "user" && request.Role != "admin" {
-		http.Error(w, "Role must be 'user' or 'admin'", http.StatusBadRequest)
+	if request.Role != "athlete" && request.Role != "coach" && request.Role != "admin" {
+		http.Error(w, "Role must be 'athlete', 'coach', or 'admin'", http.StatusBadRequest)
 		return
 	}
 

@@ -262,7 +262,7 @@ const openRoster = async (session) => {
   roster.value = []
 
   try {
-    const response = await axios.get(`/api/admin/sessions/${session.id}/roster`)
+    const response = await axios.get(`/api/coaches/sessions/${session.id}/roster`)
     roster.value = response.data.roster || []
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to load roster'
@@ -276,7 +276,7 @@ const openRoster = async (session) => {
 const checkInReservation = async (res) => {
   checkInLoading.value = res.id
   try {
-    await axios.post(`/api/admin/sessions/${currentSession.value.id}/check-in/${res.id}`)
+    await axios.post(`/api/coaches/sessions/${currentSession.value.id}/check-in/${res.id}`)
     res.status = 'checked_in'
     successMessage.value = `Checked in ${res.user_name || res.user_email}`
   } catch (err) {
@@ -290,7 +290,7 @@ const checkInReservation = async (res) => {
 const markNoShow = async (res) => {
   noShowLoading.value = res.id
   try {
-    await axios.post(`/api/admin/sessions/${currentSession.value.id}/no-show/${res.id}`)
+    await axios.post(`/api/coaches/sessions/${currentSession.value.id}/no-show/${res.id}`)
     res.status = 'no_show'
     successMessage.value = `Marked ${res.user_name || res.user_email} as no-show`
   } catch (err) {
@@ -312,7 +312,7 @@ const completeSession = async () => {
 
   completeLoading.value = true
   try {
-    await axios.post(`/api/admin/sessions/${sessionToComplete.value.id}/complete`)
+    await axios.post(`/api/coaches/sessions/${sessionToComplete.value.id}/complete`)
     sessionToComplete.value.status = 'completed'
     successMessage.value = `Session "${sessionToComplete.value.name}" completed`
     completeDialog.value = false

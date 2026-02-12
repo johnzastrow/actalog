@@ -626,7 +626,7 @@ func NewMockUserRepository() *MockUserRepository {
 	return &MockUserRepository{
 		users: []*domain.User{
 			{ID: 1, Email: "admin@example.com", Name: "Admin User", Role: "admin"},
-			{ID: 2, Email: "test@example.com", Name: "Test User", Role: "user"},
+			{ID: 2, Email: "test@example.com", Name: "Test User", Role: "athlete"},
 		},
 	}
 }

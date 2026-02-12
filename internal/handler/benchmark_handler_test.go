@@ -25,7 +25,7 @@ func createTestBenchmarkService(t *testing.T) (*service.BenchmarkService, func()
 	testUser := &domain.User{
 		Email:        "benchtest@example.com",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

@@ -920,6 +920,25 @@ func (s *SchedulingService) IsUserCoachForOrganization(userID, orgID int64) (boo
 	return s.coachAssignmentRepo.IsCoachForOrganization(userID, orgID)
 }
 
+// VerifyCoachAccessToSession checks that a coach user is assigned to the session's organization
+func (s *SchedulingService) VerifyCoachAccessToSession(coachUserID, sessionID int64) error {
+	session, err := s.sessionRepo.GetByID(sessionID)
+	if err != nil {
+		return fmt.Errorf("session not found: %w", err)
+	}
+	if session == nil {
+		return ErrClassSessionNotFound
+	}
+	isCoach, err := s.coachAssignmentRepo.IsCoachForOrganization(coachUserID, session.OrganizationID)
+	if err != nil {
+		return fmt.Errorf("failed to check coach status: %w", err)
+	}
+	if !isCoach {
+		return ErrNotAuthorized
+	}
+	return nil
+}
+
 // IsUserCoach checks if a user is a coach for any organization
 func (s *SchedulingService) IsUserCoach(userID int64) (bool, error) {
 	assignments, err := s.coachAssignmentRepo.GetByUserID(userID)

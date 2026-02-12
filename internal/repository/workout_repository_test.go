@@ -13,7 +13,7 @@ func createTestUserForWorkoutRepo(t *testing.T, repo *SQLiteUserRepository, emai
 		Email:        email,
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := repo.Create(user); err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -636,7 +636,7 @@ func TestWorkoutRepository_ListAllUserCreatedWithUserInfo(t *testing.T) {
 		Email:        "john@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "John Doe",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -1034,7 +1034,7 @@ func TestWorkoutRepository_ListAllUserCreatedWithUserInfoFiltered(t *testing.T) 
 		Email:        "john@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "John Doe",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
@@ -1044,7 +1044,7 @@ func TestWorkoutRepository_ListAllUserCreatedWithUserInfoFiltered(t *testing.T) 
 		Email:        "jane@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Jane Smith",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user2); err != nil {
 		t.Fatalf("Failed to create user2: %v", err)

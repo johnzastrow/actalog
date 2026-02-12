@@ -13,6 +13,9 @@ export const useAuthStore = defineStore('auth', () => {
   const schedulingEnabled = ref(false)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isCoachRole = computed(() => user.value?.role === 'coach')
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isCoachOrAdmin = computed(() => user.value?.role === 'coach' || user.value?.role === 'admin')
 
   // Initialize auth state from localStorage
   async function init() {
@@ -221,6 +224,9 @@ export const useAuthStore = defineStore('auth', () => {
     isCoach,
     schedulingEnabled,
     isAuthenticated,
+    isCoachRole,
+    isAdmin,
+    isCoachOrAdmin,
     login,
     register,
     logout,

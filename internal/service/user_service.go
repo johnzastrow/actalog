@@ -143,7 +143,7 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 		Email:        email,
 		PasswordHash: hashedPassword,
 		Name:         name,
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -984,8 +984,8 @@ func (s *UserService) EnableAccount(adminUserID, targetUserID int64) error {
 // ChangeUserRole changes a user's role (admin operation)
 func (s *UserService) ChangeUserRole(adminUserID, targetUserID int64, newRole string) error {
 	// Validate role
-	if newRole != "user" && newRole != "admin" {
-		return fmt.Errorf("invalid role: must be 'user' or 'admin'")
+	if newRole != "athlete" && newRole != "coach" && newRole != "admin" {
+		return fmt.Errorf("invalid role: must be 'athlete', 'coach', or 'admin'")
 	}
 
 	// Get both users for audit logging

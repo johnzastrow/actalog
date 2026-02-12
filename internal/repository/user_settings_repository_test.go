@@ -21,7 +21,7 @@ func TestUserSettingsRepository_Create(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -66,7 +66,7 @@ func TestUserSettingsRepository_GetByUserID(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -131,7 +131,7 @@ func TestUserSettingsRepository_Update(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -191,7 +191,7 @@ func TestUserSettingsRepository_Delete(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -238,8 +238,8 @@ func TestUserSettingsRepository_MultipleUsers(t *testing.T) {
 
 	// Create multiple users with settings
 	users := []*domain.User{
-		{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"},
-		{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"},
+		{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"},
+		{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"},
 	}
 
 	for _, u := range users {

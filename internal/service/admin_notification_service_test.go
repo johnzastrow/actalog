@@ -73,10 +73,10 @@ func TestBuildSubject(t *testing.T) {
 				EventType:   UserEventRoleChange,
 				TargetEmail: "user@example.com",
 				Changes: map[string][2]string{
-					"role": {"user", "admin"},
+					"role": {"athlete", "admin"},
 				},
 			},
-			contains: "Role Changed: user@example.com (user → admin)",
+			contains: "Role Changed: user@example.com (athlete → admin)",
 		},
 		{
 			name: "disable event",
@@ -437,10 +437,10 @@ func TestBuildNotificationMessage(t *testing.T) {
 				ActorUserID: &actorID,
 				ActorEmail:  "admin@example.com",
 				Changes: map[string][2]string{
-					"role": {"user", "admin"},
+					"role": {"athlete", "admin"},
 				},
 			},
-			contains: []string{"user@example.com", "user", "admin"},
+			contains: []string{"user@example.com", "athlete", "admin"},
 		},
 		{
 			name: "role change without details",

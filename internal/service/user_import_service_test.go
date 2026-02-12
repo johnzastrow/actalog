@@ -283,8 +283,8 @@ jane@example.com,Jane Smith,securepass99`
 	user1, _ := userRepo.GetByEmail("john@example.com")
 	if user1 == nil {
 		t.Error("User john@example.com was not created")
-	} else if user1.Role != "user" {
-		t.Errorf("User role = %s, want 'user'", user1.Role)
+	} else if user1.Role != "athlete" {
+		t.Errorf("User role = %s, want 'athlete'", user1.Role)
 	}
 
 	user2, _ := userRepo.GetByEmail("jane@example.com")

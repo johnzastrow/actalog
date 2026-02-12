@@ -252,7 +252,7 @@ func TestOrganizationRepository_DeleteWithUsers(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -326,7 +326,7 @@ func TestOrganizationRepository_AddUserToOrganization(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hash",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -365,7 +365,7 @@ func TestOrganizationRepository_RemoveUserFromOrganization(t *testing.T) {
 	orgRepo := NewOrganizationRepository(db)
 
 	// Create user and org
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -407,7 +407,7 @@ func TestOrganizationRepository_GetUserOrganizations(t *testing.T) {
 	orgRepo := NewOrganizationRepository(db)
 
 	// Create user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -456,7 +456,7 @@ func TestOrganizationRepository_GetOrganizationUsers(t *testing.T) {
 			Email:        "user" + string(rune('0'+i)) + "@example.com",
 			PasswordHash: "hash",
 			Name:         "User " + string(rune('0'+i)),
-			Role:         "user",
+			Role:         "athlete",
 		}
 		if err := userRepo.Create(user); err != nil {
 			t.Fatalf("Failed to create user: %v", err)
@@ -487,7 +487,7 @@ func TestOrganizationRepository_IsUserInOrganization(t *testing.T) {
 	orgRepo := NewOrganizationRepository(db)
 
 	// Create user and org
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -532,7 +532,7 @@ func TestOrganizationRepository_GetUserOrganizationIDs(t *testing.T) {
 	orgRepo := NewOrganizationRepository(db)
 
 	// Create user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -560,7 +560,7 @@ func TestOrganizationRepository_GetUserOrganizationIDs(t *testing.T) {
 	}
 
 	// User not in any org
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
 	if err := userRepo.Create(user2); err != nil {
 		t.Fatalf("Failed to create user2: %v", err)
 	}

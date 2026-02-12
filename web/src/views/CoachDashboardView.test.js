@@ -251,7 +251,7 @@ describe('CoachDashboardView', () => {
       await flushPromises()
 
       expect(vm.rosterDialog).toBe(true)
-      expect(axios.get).toHaveBeenCalledWith('/api/admin/sessions/1/roster')
+      expect(axios.get).toHaveBeenCalledWith('/api/coaches/sessions/1/roster')
     })
 
     it('displays roster members', async () => {
@@ -293,7 +293,7 @@ describe('CoachDashboardView', () => {
       await vm.checkInReservation(mockRoster[0])
       await flushPromises()
 
-      expect(axios.post).toHaveBeenCalledWith('/api/admin/sessions/1/check-in/1')
+      expect(axios.post).toHaveBeenCalledWith('/api/coaches/sessions/1/check-in/1')
     })
 
     it('shows success message after check-in', async () => {
@@ -361,7 +361,7 @@ describe('CoachDashboardView', () => {
       await vm.markNoShow(mockRoster[0])
       await flushPromises()
 
-      expect(axios.post).toHaveBeenCalledWith('/api/admin/sessions/1/no-show/1')
+      expect(axios.post).toHaveBeenCalledWith('/api/coaches/sessions/1/no-show/1')
     })
 
     it('shows success message after marking no-show', async () => {
@@ -441,7 +441,7 @@ describe('CoachDashboardView', () => {
       await vm.completeSession()
       await flushPromises()
 
-      expect(axios.post).toHaveBeenCalledWith('/api/admin/sessions/2/complete')
+      expect(axios.post).toHaveBeenCalledWith('/api/coaches/sessions/2/complete')
     })
 
     it('shows success message after completing session', async () => {

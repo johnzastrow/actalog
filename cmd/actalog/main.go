@@ -669,8 +669,15 @@ func main() {
 			r.Get("/users/me/waitlist", phase4Handler.GetUserWaitlistEntries)
 			r.Get("/users/me/notifications", phase4Handler.GetUserNotifications)
 
-			// Coach portal routes (for users assigned as coaches)
-			r.Get("/coaches/me/sessions", schedulingHandler.GetCoachSessions)
+			// Coach routes (requires coach or admin role)
+			r.Route("/coaches", func(r chi.Router) {
+				r.Use(middleware.CoachOrAdmin)
+				r.Get("/me/sessions", schedulingHandler.GetCoachSessions)
+				r.Get("/sessions/{session_id}/roster", schedulingHandler.CoachGetSessionRoster)
+				r.Post("/sessions/{session_id}/check-in/{reservation_id}", schedulingHandler.CoachCheckInReservation)
+				r.Post("/sessions/{session_id}/no-show/{reservation_id}", schedulingHandler.CoachMarkNoShow)
+				r.Post("/sessions/{session_id}/complete", schedulingHandler.CoachCompleteSession)
+			})
 
 			// Notification read operations (always allowed)
 			r.Get("/notifications", notificationHandler.ListNotifications)

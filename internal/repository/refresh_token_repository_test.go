@@ -22,7 +22,7 @@ func TestRefreshTokenRepository_Create(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -60,7 +60,7 @@ func TestRefreshTokenRepository_GetByToken(t *testing.T) {
 		Email:        "test@example.com",
 		PasswordHash: "hashedpassword",
 		Name:         "Test User",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
@@ -135,8 +135,8 @@ func TestRefreshTokenRepository_GetByUserID(t *testing.T) {
 	tokenRepo := NewSQLiteRefreshTokenRepository(db)
 
 	// Create test users
-	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "user"}
-	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "user"}
+	user1 := &domain.User{Email: "user1@example.com", PasswordHash: "hash", Name: "User 1", Role: "athlete"}
+	user2 := &domain.User{Email: "user2@example.com", PasswordHash: "hash", Name: "User 2", Role: "athlete"}
 	if err := userRepo.Create(user1); err != nil {
 		t.Fatalf("Failed to create user1: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestRefreshTokenRepository_Revoke(t *testing.T) {
 	tokenRepo := NewSQLiteRefreshTokenRepository(db)
 
 	// Create test user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -262,7 +262,7 @@ func TestRefreshTokenRepository_RevokeAllForUser(t *testing.T) {
 	tokenRepo := NewSQLiteRefreshTokenRepository(db)
 
 	// Create test user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -317,7 +317,7 @@ func TestRefreshTokenRepository_Delete(t *testing.T) {
 	tokenRepo := NewSQLiteRefreshTokenRepository(db)
 
 	// Create test user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -361,7 +361,7 @@ func TestRefreshTokenRepository_DeleteExpired(t *testing.T) {
 	tokenRepo := NewSQLiteRefreshTokenRepository(db)
 
 	// Create test user
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	if err := userRepo.Create(user); err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}

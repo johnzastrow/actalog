@@ -37,7 +37,7 @@ func TestBenchmarkRepository_Create(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "benchmark@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	err = userRepo.Create(testUser)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestBenchmarkRepository_CreateBatch(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "batch@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	err = userRepo.Create(testUser)
 	if err != nil {
@@ -242,7 +242,7 @@ func TestBenchmarkRepository_GetByID(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "getbyid@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -346,7 +346,7 @@ func TestBenchmarkRepository_GetByKey(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "getbykey@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -421,7 +421,7 @@ func TestBenchmarkRepository_List(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "list@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -519,12 +519,12 @@ func TestBenchmarkRepository_ListFiltered(t *testing.T) {
 	testUser1 := &domain.User{
 		Email:        "filter1@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	testUser2 := &domain.User{
 		Email:        "filter2@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser1)
 	userRepo.Create(testUser2)
@@ -631,7 +631,7 @@ func TestBenchmarkRepository_Update(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "update@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -717,7 +717,7 @@ func TestBenchmarkRepository_Delete(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "delete@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -776,12 +776,12 @@ func TestBenchmarkRepository_DeleteByUserID(t *testing.T) {
 	testUser1 := &domain.User{
 		Email:        "deleteuser1@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	testUser2 := &domain.User{
 		Email:        "deleteuser2@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser1)
 	userRepo.Create(testUser2)
@@ -859,7 +859,7 @@ func TestBenchmarkRepository_DeleteAll(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "deleteall@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -904,7 +904,7 @@ func TestBenchmarkRepository_Count(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "count@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 

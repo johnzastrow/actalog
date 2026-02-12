@@ -24,7 +24,7 @@ func createTestPerformanceHandler(t *testing.T) (*PerformanceHandler, func()) {
 	testUser := &domain.User{
 		Email:        "perftest@example.com",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

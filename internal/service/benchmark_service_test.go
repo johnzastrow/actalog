@@ -35,7 +35,7 @@ func TestBenchmarkService_RunBenchmark(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "benchmark-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	err = userRepo.Create(testUser)
 	if err != nil {
@@ -192,7 +192,7 @@ func TestBenchmarkService_GetBenchmarkStatus(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "status-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -348,7 +348,7 @@ func TestBenchmarkService_RunBenchmark_DatabaseOperations(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "db-ops-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -416,7 +416,7 @@ func TestBenchmarkService_RunBenchmark_SerializationOperations(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "serialization-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -468,7 +468,7 @@ func TestBenchmarkService_RunBenchmark_BusinessLogicOperations(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "business-logic-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 
@@ -524,7 +524,7 @@ func TestBenchmarkService_RunBenchmark_ConcurrentOperations(t *testing.T) {
 	testUser := &domain.User{
 		Email:        "concurrent-test@example.com",
 		PasswordHash: "hash",
-		Role:         "user",
+		Role:         "athlete",
 	}
 	userRepo.Create(testUser)
 

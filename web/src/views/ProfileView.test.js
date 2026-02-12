@@ -37,7 +37,7 @@ const mockAuthStore = {
     id: 1,
     name: 'Test User',
     email: 'test@example.com',
-    role: 'user',
+    role: 'athlete',
     created_at: '2024-01-01T00:00:00Z',
     profile_image: null
   },
@@ -156,7 +156,7 @@ describe('ProfileView', () => {
       id: 1,
       name: 'Test User',
       email: 'test@example.com',
-      role: 'user',
+      role: 'athlete',
       created_at: '2024-01-01T00:00:00Z',
       profile_image: null
     }
@@ -242,10 +242,10 @@ describe('ProfileView', () => {
     })
 
     it('identifies regular users', () => {
-      mockAuthStore.user.role = 'user'
+      mockAuthStore.user.role = 'athlete'
       createWrapper()
 
-      expect(mockAuthStore.user.role).toBe('user')
+      expect(mockAuthStore.user.role).toBe('athlete')
     })
   })
 

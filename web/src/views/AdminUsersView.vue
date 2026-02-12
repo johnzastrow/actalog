@@ -64,7 +64,7 @@
 
         <!-- Role Column -->
         <template #item.role="{ item }">
-          <v-chip :color="item.role === 'admin' ? 'error' : 'default'" size="small">
+          <v-chip :color="item.role === 'admin' ? 'error' : item.role === 'coach' ? 'warning' : 'default'" size="small">
             {{ item.role }}
           </v-chip>
         </template>
@@ -185,8 +185,8 @@
             variant="text"
             @click="openRoleDialog(item)"
           >
-            <v-icon :color="item.role === 'admin' ? 'purple' : 'blue'">
-              {{ item.role === 'admin' ? 'mdi-shield-crown' : 'mdi-account' }}
+            <v-icon :color="item.role === 'admin' ? 'purple' : item.role === 'coach' ? 'orange' : 'blue'">
+              {{ item.role === 'admin' ? 'mdi-shield-crown' : item.role === 'coach' ? 'mdi-clipboard-check' : 'mdi-account' }}
             </v-icon>
           </v-btn>
         </template>
@@ -268,7 +268,8 @@
             Change role for <strong>{{ selectedUser?.email }}</strong>
           </div>
           <v-radio-group v-model="newRole">
-            <v-radio label="User" value="user" />
+            <v-radio label="Athlete" value="athlete" />
+            <v-radio label="Coach" value="coach" />
             <v-radio label="Admin" value="admin" />
           </v-radio-group>
         </v-card-text>
@@ -358,7 +359,7 @@
             <v-list-item>
               <v-list-item-title class="text-subtitle-2">Role</v-list-item-title>
               <v-list-item-subtitle>
-                <v-chip :color="userDetails.role === 'admin' ? 'error' : 'default'" size="small" class="mt-1">
+                <v-chip :color="userDetails.role === 'admin' ? 'error' : userDetails.role === 'coach' ? 'warning' : 'default'" size="small" class="mt-1">
                   {{ userDetails.role }}
                 </v-chip>
               </v-list-item-subtitle>
@@ -487,7 +488,7 @@ const deleteDialog = ref(false)
 const selectedUser = ref(null)
 const userDetails = ref(null)
 const disableReason = ref('')
-const newRole = ref('user')
+const newRole = ref('athlete')
 const manageOrganizationsDialog = ref(false)
 
 const headers = [

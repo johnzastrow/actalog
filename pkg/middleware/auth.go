@@ -96,3 +96,21 @@ func AdminOnly(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// CoachOrAdmin is a middleware that restricts access to coach or admin users
+func CoachOrAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, ok := GetUserRole(r.Context())
+		if !ok {
+			http.Error(w, `{"message":"Unauthorized: no user context found"}`, http.StatusUnauthorized)
+			return
+		}
+
+		if role != "coach" && role != "admin" {
+			http.Error(w, `{"message":"Forbidden: coach or admin access required"}`, http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

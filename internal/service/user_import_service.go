@@ -268,7 +268,7 @@ func (s *UserImportService) ConfirmUserImportWithAudit(csvData io.Reader, skipDu
 			Email:         row.Email,
 			PasswordHash:  hashedPassword,
 			Name:          row.Name,
-			Role:          "user", // Always create as regular user
+			Role:          "athlete", // Always create as regular user (athlete)
 			EmailVerified: false,
 			CreatedAt:     now,
 			UpdatedAt:     now,

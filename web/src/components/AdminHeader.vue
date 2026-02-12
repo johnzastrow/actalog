@@ -63,7 +63,7 @@ const authStore = useAuthStore()
 
 const userEmail = computed(() => authStore.user?.email || 'Unknown')
 const userRole = computed(() => {
-  const role = authStore.user?.role || 'user'
+  const role = authStore.user?.role || 'athlete'
   return role.charAt(0).toUpperCase() + role.slice(1)
 })
 

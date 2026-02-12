@@ -1,6 +1,6 @@
 # User Permissions Matrix
 
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 1.1.0-beta
 
 This document details all user actions and their permission requirements in ActaLog.
@@ -9,21 +9,31 @@ This document details all user actions and their permission requirements in Acta
 
 ## Role Summary
 
-ActaLog has two user roles: **User** and **Admin**. Every person who registers receives the User role by default, with one exception: the very first account created on a fresh installation is automatically promoted to Admin. After that, only an existing Admin can change another person's role.
+ActaLog has three user roles: **Athlete**, **Coach**, and **Admin**. Every person who registers receives the Athlete role by default, with one exception: the very first account created on a fresh installation is automatically promoted to Admin. After that, only an existing Admin can change another person's role.
 
-### Regular Users
+### Athletes
 
-A regular user can track personal workouts, browse the movement and WOD libraries, log results, view personal records, analyze performance trends, and manage their own profile and settings. They can also browse class schedules, make reservations, join waitlists, and view their credits and documents. Users assigned as coaches can additionally view their coaching sessions through the Coach Dashboard.
+An athlete can track personal workouts, browse the movement and WOD libraries, log results, view personal records, analyze performance trends, and manage their own profile and settings. They can also browse class schedules, make reservations, join waitlists, and view their credits and documents.
 
-All of these capabilities are gated behind an **active subscription**. When a user's subscription is active, they have full read and write access to every feature route. When their subscription expires, they enter a **read-only mode**: they can still view their data (GET requests succeed), but any attempt to create, update, or delete records on feature routes returns HTTP 402 (Payment Required). This ensures users never lose visibility into their history while encouraging renewal.
+All of these capabilities are gated behind an **active subscription**. When an athlete's subscription is active, they have full read and write access to every feature route. When their subscription expires, they enter a **read-only mode**: they can still view their data (GET requests succeed), but any attempt to create, update, or delete records on feature routes returns HTTP 402 (Payment Required). This ensures athletes never lose visibility into their history while encouraging renewal.
 
 A handful of routes are exempt from subscription enforcement entirely. Account essentials like viewing and editing your profile, managing settings, changing your password, viewing notifications, checking subscription status, and managing login sessions always work regardless of subscription state. These are considered security-critical or baseline account operations that should never be locked behind a paywall.
 
-Users are strictly scoped to their own data. They cannot view other users' workouts, personal records, or account details. All user-facing queries are filtered by the authenticated user's ID at the service layer.
+Athletes are strictly scoped to their own data. They cannot view other users' workouts, personal records, or account details. All user-facing queries are filtered by the authenticated user's ID at the service layer.
+
+### Coaches
+
+Coaches inherit every capability an athlete has, plus access to the Coach Dashboard where they can manage class sessions for their assigned gyms. Coach capabilities include: viewing session rosters, checking in athletes, marking no-shows, and completing sessions.
+
+Coaches access these features through dedicated `/api/coaches/` routes protected by `CoachOrAdmin` middleware. The service layer additionally verifies that a coach is assigned to the session's organization before allowing roster/check-in actions.
+
+Critically, **coaches bypass all subscription checks** (like admins). A coach's access is never degraded by subscription status.
+
+Coach actions do NOT include: template/location/schedule management, user management, or any other admin-only operations. Those remain restricted to the Admin role.
 
 ### Administrators
 
-Admins inherit every capability a regular user has, plus full access to all administrative functions: user management (list, disable, enable, unlock, delete, role changes), organization and subscription management, class scheduling configuration (locations, templates, schedule slots, sessions, coaches), document and package management, data quality tools, backup and restore, email configuration, audit logs, and system metrics.
+Admins inherit every capability a coach has, plus full access to all administrative functions: user management (list, disable, enable, unlock, delete, role changes), organization and subscription management, class scheduling configuration (locations, templates, schedule slots, sessions, coaches), document and package management, data quality tools, backup and restore, email configuration, audit logs, and system metrics.
 
 Critically, **admins bypass all subscription checks**. An admin's access is never degraded by subscription status. This ensures the system can always be managed even if the admin's own subscription has lapsed.
 
@@ -31,9 +41,9 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Constraints and Exceptions
 
-- **One role at a time.** A user is either User or Admin, never both. Role changes take effect immediately.
+- **One role at a time.** A user is Athlete, Coach, or Admin, never multiple. Role changes take effect immediately.
 - **Rate limiting applies to everyone.** Public authentication endpoints (login, register, password reset) are rate-limited by IP regardless of role. Login and registration allow 5 attempts per 15 minutes; password reset allows 3 attempts per hour.
-- **Coach is not a role.** Any user (User or Admin) can be assigned as a coach to specific gym sessions or class templates. Coach capabilities (viewing assigned sessions, appearing in the Coach Dashboard) are determined by assignment, not by role.
+- **Coach role + coach assignments.** The Coach role grants access to coach routes. Coach assignments (via `coach_assignments` table) determine which specific gyms a coach can manage. Both are required: a user must have the coach role AND be assigned to an organization to manage its sessions.
 - **Protected accounts.** Certain system accounts are protected and must never have their data modified, regardless of who is logged in. See CLAUDE.md for the protected accounts list.
 
 ---
@@ -42,14 +52,15 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 | Role | Description | Assignment |
 |------|-------------|------------|
-| **User** | Regular user with access to personal workout tracking features | Default role for all new registrations |
+| **Athlete** | Regular user with access to personal workout tracking features | Default role for all new registrations |
+| **Coach** | Elevated user with roster/check-in access for assigned gyms | Assigned by admin via Admin > Users |
 | **Admin** | Full system access including user management and system configuration | First registered user; manually assigned thereafter |
 
 **Notes:**
 - A user has exactly one role at any time
 - Role changes require admin action via Admin > Users
-- Subscription status affects feature access for regular users (admins bypass subscription checks)
-- Expired subscription users get read-only access: GET requests succeed, POST/PUT/DELETE return HTTP 402
+- Subscription status affects feature access for athletes only (coaches and admins bypass subscription checks)
+- Expired subscription athletes get read-only access: GET requests succeed, POST/PUT/DELETE return HTTP 402
 
 ---
 
@@ -66,8 +77,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Account & Authentication
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Register new account | Y | Y | `POST /api/auth/register` | Public, rate limited (5/15min per IP) |
 | Login | Y | Y | `POST /api/auth/login` | Public, rate limited (5/15min per IP) |
 | Logout | Y | Y | Client-side token removal | |
@@ -94,8 +105,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Movements Library
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View all movements | Y | Y | `GET /api/movements` | Public, includes standard and custom |
 | Search movements | Y | Y | `GET /api/movements/search` | Public |
 | View movement details | Y | Y | `GET /api/movements/{id}` | Public |
@@ -111,8 +122,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## WODs (Workouts of the Day)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View all WODs | Y | Y | `GET /api/wods` | Public, includes standard and custom |
 | View standard WODs | Y | Y | `GET /api/wods/standard` | Public |
 | Search WODs | Y | Y | `GET /api/wods/search` | Public |
@@ -129,8 +140,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Workout Templates
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View standard templates | Y | Y | `GET /api/templates` | Public |
 | View template details | Y | Y | `GET /api/templates/{id}` | Public |
 | View own templates | S | Y | `GET /api/workouts/my-templates` | |
@@ -149,8 +160,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Workout Logging
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Log a workout | S | Y | `POST /api/workouts` | Creates user workout record |
 | View own workout history | S | Y | `GET /api/workouts` | |
 | View standard workouts | S | Y | `GET /api/workouts/standard` | |
@@ -166,8 +177,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Personal Records (PRs)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View own personal records | S | Y | `GET /api/prs` | |
 | View movements with PRs | S | Y | `GET /api/pr-movements` | Own PR movements |
 | Toggle movement PR tracking | S | Y | `POST /api/movements/toggle-pr` | |
@@ -177,8 +188,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Performance Analytics
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Search own performance data | S | Y | `GET /api/performance/search` | Unified search |
 | View movement performance trends | S | Y | `GET /api/performance/movements/{id}` | Own data |
 | View WOD performance trends | S | Y | `GET /api/performance/wods/{id}` | Own data |
@@ -188,8 +199,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Notifications
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View own notifications | Y | Y | `GET /api/notifications` | No subscription required |
 | View unread notifications | Y | Y | `GET /api/notifications/unread` | |
 | Get unread notification count | Y | Y | `GET /api/notifications/count` | |
@@ -207,8 +218,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Browsing Classes
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View gym sessions list | Y | Y | `GET /api/gyms/{gym_id}/sessions` | Auth required, no subscription |
 | View session details | Y | Y | `GET /api/gyms/{gym_id}/sessions/{id}` | Auth required, no subscription |
 | View gym locations | Y | Y | `GET /api/gyms/{gym_id}/locations` | Auth required, no subscription |
@@ -217,16 +228,16 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Reservations
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Reserve a session spot | S | Y | `POST /api/sessions/{session_id}/reserve` | Subscription required |
 | Cancel reservation | S | Y | `DELETE /api/sessions/{session_id}/reserve` | Subscription required |
 | View own upcoming reservations | Y | Y | `GET /api/users/me/reservations/upcoming` | No subscription required |
 
 ### Waitlist
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View session waitlist | Y | Y | `GET /api/sessions/{session_id}/waitlist` | Auth required, no subscription |
 | View own waitlist position | Y | Y | `GET /api/sessions/{session_id}/waitlist/position` | Auth required, no subscription |
 | Join session waitlist | S | Y | `POST /api/sessions/{session_id}/waitlist` | Subscription required |
@@ -237,8 +248,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Documents & Packages (User-Facing)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View gym documents | Y | Y | `GET /api/gyms/{gym_id}/documents` | Auth required, no subscription |
 | View document details | Y | Y | `GET /api/gyms/{gym_id}/documents/{id}` | Auth required, no subscription |
 | View own documents (all gyms) | Y | Y | `GET /api/users/me/documents` | No subscription required |
@@ -251,8 +262,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Credits (User-Facing)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View own credits (by gym) | Y | Y | `GET /api/gyms/{gym_id}/users/me/credits` | Auth required, no subscription |
 | View available credits (by gym) | Y | Y | `GET /api/gyms/{gym_id}/users/me/credits/available` | Auth required, no subscription |
 | View own notifications (phase4) | Y | Y | `GET /api/users/me/notifications` | No subscription required |
@@ -261,18 +272,22 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Coach Portal
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
-| View assigned coaching sessions | Y | Y | `GET /api/coaches/me/sessions` | User must be assigned as coach |
+| Action | Athlete | Coach | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------|-------------|-------|
+| View assigned coaching sessions | N | Y | Y | `GET /api/coaches/me/sessions` | Requires coach or admin role |
+| View session roster | N | Y | Y | `GET /api/coaches/sessions/{id}/roster` | Coach must be assigned to session's org |
+| Check in athlete | N | Y | Y | `POST /api/coaches/sessions/{id}/check-in/{res_id}` | Coach must be assigned to session's org |
+| Mark no-show | N | Y | Y | `POST /api/coaches/sessions/{id}/no-show/{res_id}` | Coach must be assigned to session's org |
+| Complete session | N | Y | Y | `POST /api/coaches/sessions/{id}/complete` | Coach must be assigned to session's org |
 
-**Note:** Coach functionality is available to any user assigned as a coach to sessions or templates. There is no separate "coach" role; coach status is determined by assignment.
+**Note:** Coach routes require the `coach` or `admin` role (enforced by `CoachOrAdmin` middleware). Additionally, the service layer verifies that a coach is assigned to the session's organization via `coach_assignments` before allowing roster/check-in actions. Admins bypass the org-assignment check.
 
 ---
 
 ## Data Import/Export
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Export own WODs | S | Y | `GET /api/export/wods` | CSV/JSON format |
 | Export own movements | S | Y | `GET /api/export/movements` | CSV/JSON format |
 | Export own workouts | S | Y | `GET /api/export/user-workouts` | CSV/JSON format |
@@ -291,8 +306,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## User Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | List all users | N | Y | `GET /api/admin/users` | |
 | View any user's details | N | Y | `GET /api/admin/users/{id}` | |
 | Unlock locked user account | N | Y | `POST /api/admin/users/{id}/unlock` | After failed login attempts |
@@ -311,8 +326,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Organization Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create organization | N | Y | `POST /api/admin/organizations` | |
 | List organizations | N | Y | `GET /api/admin/organizations` | |
 | View organization details | N | Y | `GET /api/admin/organizations/{id}` | |
@@ -327,8 +342,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Subscription Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | List all user subscriptions | N | Y | `GET /api/admin/subscriptions/users` | |
 | List all organization subscriptions | N | Y | `GET /api/admin/subscriptions/organizations` | |
 | List expiring user subscriptions | N | Y | `GET /api/admin/subscriptions/users/expiring` | |
@@ -352,16 +367,16 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Location Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create gym location | N | Y | `POST /api/admin/gyms/{gym_id}/locations` | |
 | Update gym location | N | Y | `PUT /api/admin/gyms/{gym_id}/locations/{id}` | |
 | Delete gym location | N | Y | `DELETE /api/admin/gyms/{gym_id}/locations/{id}` | |
 
 ### Class Template Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create class template | N | Y | `POST /api/admin/gyms/{gym_id}/templates` | |
 | View class template | N | Y | `GET /api/admin/scheduling/templates/{id}` | |
 | Update class template | N | Y | `PUT /api/admin/scheduling/templates/{id}` | |
@@ -370,8 +385,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Schedule Slot Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create schedule slot | N | Y | `POST /api/admin/scheduling/templates/{id}/slots/` | Recurring time pattern |
 | List schedule slots | N | Y | `GET /api/admin/scheduling/templates/{id}/slots/` | |
 | Update schedule slot | N | Y | `PUT /api/admin/scheduling/templates/{id}/slots/{slot_id}` | |
@@ -379,16 +394,16 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Template Coach Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View template coaches | N | Y | `GET /api/admin/scheduling/templates/{id}/coaches` | Default coaches |
 | Add template coach | N | Y | `POST /api/admin/scheduling/templates/{id}/coaches` | |
 | Remove template coach | N | Y | `DELETE /api/admin/scheduling/templates/{id}/coaches/{user_id}` | |
 
 ### Session Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create session manually | N | Y | `POST /api/admin/gyms/{gym_id}/sessions` | |
 | Update session | N | Y | `PUT /api/admin/gyms/{gym_id}/sessions/{id}` | |
 | Cancel session | N | Y | `POST /api/admin/gyms/{gym_id}/sessions/{id}/cancel` | |
@@ -396,8 +411,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Session Roster & Check-In
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View session roster | N | Y | `GET /api/admin/sessions/{session_id}/roster` | |
 | Check in reservation | N | Y | `POST /api/admin/sessions/{session_id}/check-in/{reservation_id}` | |
 | Mark no-show | N | Y | `POST /api/admin/sessions/{session_id}/no-show/{reservation_id}` | |
@@ -405,16 +420,16 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ### Session Coach Management
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View session coaches | N | Y | `GET /api/admin/sessions/{session_id}/coaches` | |
 | Add session coach | N | Y | `POST /api/admin/sessions/{session_id}/coaches` | |
 | Remove session coach | N | Y | `DELETE /api/admin/sessions/{session_id}/coaches/{user_id}` | |
 
 ### Coach Assignment
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Assign coach to gym | N | Y | `POST /api/admin/gyms/{gym_id}/coaches` | |
 | List gym coaches | N | Y | `GET /api/admin/gyms/{gym_id}/coaches` | |
 | Unassign coach from gym | N | Y | `DELETE /api/admin/gyms/{gym_id}/coaches/{id}` | |
@@ -423,8 +438,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Document & Package Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create document | N | Y | `POST /api/admin/gyms/{gym_id}/documents` | |
 | Update document | N | Y | `PUT /api/admin/gyms/{gym_id}/documents/{id}` | |
 | Delete document | N | Y | `DELETE /api/admin/gyms/{gym_id}/documents/{id}` | |
@@ -439,8 +454,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## User-Generated Content Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | List all user-created WODs | N | Y | `GET /api/admin/user-created/wods` | Across all users |
 | Copy user WOD to standard library | N | Y | `POST /api/admin/user-created/wods/{id}/copy-to-standard` | Promotes to standard |
 | List all user-created movements | N | Y | `GET /api/admin/user-created/movements` | Across all users |
@@ -452,8 +467,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Backup Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Create database backup | N | Y | `POST /api/admin/backups` | Full DB backup |
 | List available backups | N | Y | `GET /api/admin/backups` | |
 | Upload backup file | N | Y | `POST /api/admin/backups/upload` | |
@@ -466,8 +481,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Email Management (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View email configuration | N | Y | `GET /api/admin/email/config` | SMTP settings |
 | Send test email | N | Y | `POST /api/admin/email/test` | Verify configuration |
 | List email logs | N | Y | `GET /api/admin/email-logs/` | Delivery history |
@@ -480,8 +495,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Data Quality & Cleanup (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | Detect WOD score type mismatches | N | Y | `GET /api/admin/data-cleanup/wod-mismatches` | Data integrity check |
 | Fix WOD score type mismatches | N | Y | `DELETE /api/admin/data-cleanup/wod-mismatches` | Bulk correction |
 | Update WOD record directly | N | Y | `PUT /api/admin/data-cleanup/wod-record/{id}` | Manual fix |
@@ -497,8 +512,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Audit & Logging (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | List all audit logs | N | Y | `GET /api/admin/audit-logs` | System-wide |
 | View audit log details | N | Y | `GET /api/admin/audit-logs/{id}` | |
 | Cleanup old audit logs | N | Y | `POST /api/admin/audit-logs/cleanup` | Retention policy |
@@ -511,8 +526,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## System Administration (Admin Only)
 
-| Action | User | Admin | API Endpoint | Notes |
-|--------|------|-------|-------------|-------|
+| Action | Athlete | Admin | API Endpoint | Notes |
+|--------|---------|-------|-------------|-------|
 | View admin dashboard metrics | N | Y | `GET /api/admin/metrics` | System overview |
 | Run benchmark test | S | Y | `POST /api/benchmark` | Performance test |
 | View benchmark status | S | Y | `GET /api/benchmark/status` | |

@@ -19,7 +19,7 @@ func TestWorkoutWODRepository_Create(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{
@@ -69,7 +69,7 @@ func TestWorkoutWODRepository_GetByID(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{Name: "Fran", Type: "Benchmark", ScoreType: "Time"}
@@ -129,7 +129,7 @@ func TestWorkoutWODRepository_ListByWorkout(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wods := []*domain.WOD{
@@ -184,7 +184,7 @@ func TestWorkoutWODRepository_ListByWorkoutWithDetails(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{
@@ -240,7 +240,7 @@ func TestWorkoutWODRepository_Update(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{Name: "Fran", Type: "Benchmark", ScoreType: "Time"}
@@ -296,7 +296,7 @@ func TestWorkoutWODRepository_Delete(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{Name: "Fran", Type: "Benchmark", ScoreType: "Time"}
@@ -344,7 +344,7 @@ func TestWorkoutWODRepository_GetByWODID(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{Name: "Fran", Type: "Benchmark", ScoreType: "Time"}
@@ -386,7 +386,7 @@ func TestWorkoutWODRepository_DeleteByWorkout(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wods := []*domain.WOD{
@@ -442,7 +442,7 @@ func TestWorkoutWODRepository_BatchCreate(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wods := []*domain.WOD{
@@ -492,7 +492,7 @@ func TestWorkoutWODRepository_Reorder(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wods := []*domain.WOD{
@@ -550,7 +550,7 @@ func TestWorkoutWODRepository_TogglePR(t *testing.T) {
 	wwRepo := NewWorkoutWODRepository(db)
 
 	// Setup
-	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "user"}
+	user := &domain.User{Email: "test@example.com", PasswordHash: "hash", Name: "Test", Role: "athlete"}
 	userRepo.Create(user)
 
 	wod := &domain.WOD{Name: "Fran", Type: "Benchmark", ScoreType: "Time"}

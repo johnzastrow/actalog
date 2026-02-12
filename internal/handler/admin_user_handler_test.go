@@ -220,7 +220,7 @@ func TestAdminUserHandler_ChangeUserRole_InvalidRoleValue(t *testing.T) {
 	handler.ChangeUserRole(rr, req)
 
 	assertStatusCode(t, rr, http.StatusBadRequest)
-	assertBodyContains(t, rr, "Role must be 'user' or 'admin'")
+	assertBodyContains(t, rr, "Role must be 'athlete', 'coach', or 'admin'")
 }
 
 func TestAdminUserHandler_ToggleEmailVerification_ValidIDInvalidJSON(t *testing.T) {
@@ -409,7 +409,7 @@ func TestAdminUserHandler_ChangeUserRole_CannotChangeOwnRole(t *testing.T) {
 	userService := createTestUserService()
 	handler := NewAdminUserHandler(userService, createTestLogger())
 
-	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/1/role", `{"role": "user"}`, 1, "admin@example.com", "admin")
+	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/1/role", `{"role": "athlete"}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
 	rr := httptest.NewRecorder()
 

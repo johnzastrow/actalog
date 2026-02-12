@@ -834,7 +834,7 @@ func createTestUserWorkoutHandler(t *testing.T) (*UserWorkoutHandler, int64, fun
 	testUser := &domain.User{
 		Email:        "workouttest@example.com",
 		PasswordHash: "hashedpassword",
-		Role:         "user",
+		Role:         "athlete",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

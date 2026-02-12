@@ -269,8 +269,8 @@ func TestFirstUserBecomesAdmin(t *testing.T) {
 		t.Fatalf("Failed to register second user: %v", err)
 	}
 
-	if user2.Role != "user" {
-		t.Errorf("Second user should be regular user, got role: %s", user2.Role)
+	if user2.Role != "athlete" {
+		t.Errorf("Second user should be regular athlete, got role: %s", user2.Role)
 	}
 }
 
@@ -1193,15 +1193,15 @@ func TestChangeUserRole(t *testing.T) {
 		t.Errorf("Expected role 'admin', got '%s'", userFromRepo.Role)
 	}
 
-	// Change back to user
-	err = service.ChangeUserRole(admin.ID, user.ID, "user")
+	// Change back to athlete
+	err = service.ChangeUserRole(admin.ID, user.ID, "athlete")
 	if err != nil {
 		t.Fatalf("Failed to change role back: %v", err)
 	}
 
 	userFromRepo, _ = service.userRepo.GetByID(user.ID)
-	if userFromRepo.Role != "user" {
-		t.Errorf("Expected role 'user', got '%s'", userFromRepo.Role)
+	if userFromRepo.Role != "athlete" {
+		t.Errorf("Expected role 'athlete', got '%s'", userFromRepo.Role)
 	}
 
 	// Invalid role
@@ -1211,7 +1211,7 @@ func TestChangeUserRole(t *testing.T) {
 	}
 
 	// Cannot change own role
-	err = service.ChangeUserRole(admin.ID, admin.ID, "user")
+	err = service.ChangeUserRole(admin.ID, admin.ID, "athlete")
 	if err == nil {
 		t.Error("Should not be able to change own role")
 	}
