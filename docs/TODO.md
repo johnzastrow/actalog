@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-02-09
-> **Current Version:** 1.1.0-beta (Build 31)
+> **Last Updated:** 2026-02-12
+> **Current Version:** 1.1.0-beta (Build 36)
 
 ---
 
@@ -434,7 +434,11 @@ These features can be added after the core frontend is complete:
 - [x] `[LOW]` Fix accessibility issues (color contrast, touch targets) - Fixed label contrast (#666666 for 5.74:1 ratio), touch target sizes (24x24px min)
 
 #### Roles & Permissions
-- [x] `[HIGH]` **Coach Role** - Added dedicated `coach` role (migration 0.32.0). Renamed `"user"` to `"athlete"`. Three-tier role system: athlete < coach < admin. `CoachOrAdmin` middleware protects `/api/coaches/` routes. Coaches bypass subscription checks. Coach Dashboard uses dedicated `/api/coaches/sessions/` endpoints with org-level access verification. Bottom nav shows Coach button for coach/admin roles when scheduling enabled.
+- [x] `[HIGH]` **Coach Role** *(Completed Build 36)* - Added dedicated `coach` role (migration 0.32.0). Renamed `"user"` to `"athlete"`. Three-tier role system: athlete < coach < admin. `CoachOrAdmin` middleware protects `/api/coaches/` routes. Coaches bypass subscription checks. Coach Dashboard uses dedicated `/api/coaches/sessions/` endpoints with org-level access verification. Bottom nav shows Coach button for coach/admin roles when scheduling enabled.
+  - **Admin all-sessions visibility:** Admins see ALL upcoming sessions across all gyms on Coach Dashboard (not limited to coach assignments). Added `GetAllUpcoming` repo method and `GetAllUpcomingSessions` service method; handler branches on role.
+  - **Comprehensive role/access middleware tests:** 14 new test functions in `pkg/middleware/auth_test.go` and `pkg/middleware/subscription_test.go` covering all role permutations for `AdminOnly`, `CoachOrAdmin`, and `RequireActiveSubscription` middleware. Includes full JWT→middleware integration tests.
+  - **Files modified:** `internal/domain/scheduling.go`, `internal/repository/class_session_repository.go`, `internal/service/scheduling_service.go`, `internal/handler/scheduling_handler.go`, `pkg/middleware/auth_test.go`, `pkg/middleware/subscription_test.go`
+  - **Docker images pushed:** `ghcr.io/johnzastrow/actalog:dev`, `:latest`, `:1.1.0-beta` (Build 36)
 
 ### Low Priority
 
