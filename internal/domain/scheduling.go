@@ -245,6 +245,7 @@ type ClassSessionRepository interface {
 	GetByOrganizationID(orgID int64, startDate, endDate time.Time) ([]*ClassSession, error)
 	GetByOrganizationIDWithUserStatus(orgID, userID int64, startDate, endDate time.Time) ([]*ClassSession, error)
 	GetUpcomingByCoachID(coachUserID int64, limit int) ([]*ClassSession, error)
+	GetAllUpcoming(limit int) ([]*ClassSession, error)
 	Update(session *ClassSession) error
 	UpdateStatus(id int64, status string) error
 	Cancel(id int64, reason string) error

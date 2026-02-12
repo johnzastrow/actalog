@@ -243,6 +243,32 @@ func (r *ClassSessionRepository) GetUpcomingByCoachID(coachUserID int64, limit i
 	return r.scanSessions(rows)
 }
 
+// GetAllUpcoming retrieves all upcoming sessions across all organizations (for admin view)
+func (r *ClassSessionRepository) GetAllUpcoming(limit int) ([]*domain.ClassSession, error) {
+	query := rebindQuery(`
+		SELECT cs.id, cs.organization_id, cs.template_id, cs.location_id, cs.name, cs.description,
+		       cs.workout_id, cs.start_time, cs.end_time, cs.capacity, cs.status,
+		       cs.cancelled_at, cs.cancelled_reason, cs.completed_at, cs.created_at, cs.updated_at,
+		       ct.name as template_name, gl.name as location_name, w.name as workout_name,
+		       (SELECT COUNT(*) FROM reservations r WHERE r.session_id = cs.id AND r.status IN ('reserved', 'checked_in', 'attended')) as reservation_count
+		FROM class_sessions cs
+		LEFT JOIN class_templates ct ON cs.template_id = ct.id
+		LEFT JOIN gym_locations gl ON cs.location_id = gl.id
+		LEFT JOIN workouts w ON cs.workout_id = w.id
+		WHERE cs.start_time >= ? AND cs.status IN ('scheduled', 'in_progress')
+		ORDER BY cs.start_time ASC
+		LIMIT ?
+	`)
+
+	rows, err := r.db.Query(query, time.Now(), limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all upcoming sessions: %w", err)
+	}
+	defer rows.Close()
+
+	return r.scanSessions(rows)
+}
+
 func (r *ClassSessionRepository) scanSessions(rows *sql.Rows) ([]*domain.ClassSession, error) {
 	var sessions []*domain.ClassSession
 

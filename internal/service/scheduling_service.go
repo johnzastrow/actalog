@@ -1202,6 +1202,14 @@ func (s *SchedulingService) GetCoachUpcomingSessions(coachUserID int64, limit in
 	return s.sessionRepo.GetUpcomingByCoachID(coachUserID, limit)
 }
 
+// GetAllUpcomingSessions retrieves all upcoming sessions across all organizations (admin view)
+func (s *SchedulingService) GetAllUpcomingSessions(limit int) ([]*domain.ClassSession, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	return s.sessionRepo.GetAllUpcoming(limit)
+}
+
 // ============================================
 // SCHEDULE PREVIEW METHODS
 // ============================================

@@ -292,6 +292,102 @@ func TestRequireActiveSubscription_AdminBypass(t *testing.T) {
 	}
 }
 
+func TestRequireActiveSubscription_CoachBypass(t *testing.T) {
+	// Coach users should bypass subscription checks entirely, just like admins
+	expiresAt := time.Now().Add(-24 * time.Hour)
+	svc := &mockSubscriptionService{
+		accessResult: &domain.SubscriptionAccessResult{
+			HasAccess: false,
+			Source:    "expired",
+			ExpiresAt: &expiresAt,
+		},
+	}
+
+	handlerCalled := false
+	handler := RequireActiveSubscription(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// All methods should be allowed for coach users, even write operations
+	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	for _, method := range methods {
+		t.Run("coach_"+method, func(t *testing.T) {
+			handlerCalled = false
+			req := httptest.NewRequest(method, "/test", nil)
+			ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+			ctx = context.WithValue(ctx, UserRoleKey, "coach")
+			req = req.WithContext(ctx)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusOK {
+				t.Errorf("Coach %s status = %d, want %d", method, rec.Code, http.StatusOK)
+			}
+			if !handlerCalled {
+				t.Errorf("Coach %s: handler should be called (coach bypasses subscription)", method)
+			}
+		})
+	}
+}
+
+func TestRequireActiveSubscription_AthleteStillRequiresSubscription(t *testing.T) {
+	// Athlete users should NOT bypass subscription checks
+	expiresAt := time.Now().Add(-24 * time.Hour)
+	svc := &mockSubscriptionService{
+		accessResult: &domain.SubscriptionAccessResult{
+			HasAccess: false,
+			Source:    "expired",
+			ExpiresAt: &expiresAt,
+		},
+	}
+
+	handlerCalled := false
+	handler := RequireActiveSubscription(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Write operations should be blocked for athletes with expired subscriptions
+	t.Run("athlete_POST", func(t *testing.T) {
+		handlerCalled = false
+		req := httptest.NewRequest("POST", "/test", nil)
+		ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+		ctx = context.WithValue(ctx, UserRoleKey, "athlete")
+		req = req.WithContext(ctx)
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusPaymentRequired {
+			t.Errorf("Athlete POST status = %d, want %d", rec.Code, http.StatusPaymentRequired)
+		}
+		if handlerCalled {
+			t.Error("Athlete: handler should NOT be called for write operation with expired subscription")
+		}
+	})
+
+	// Read operations should still be allowed
+	t.Run("athlete_GET", func(t *testing.T) {
+		handlerCalled = false
+		req := httptest.NewRequest("GET", "/test", nil)
+		ctx := context.WithValue(req.Context(), UserIDKey, int64(1))
+		ctx = context.WithValue(ctx, UserRoleKey, "athlete")
+		req = req.WithContext(ctx)
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("Athlete GET status = %d, want %d", rec.Code, http.StatusOK)
+		}
+		if !handlerCalled {
+			t.Error("Athlete: handler should be called for read operation")
+		}
+	})
+}
+
 func TestRequireActiveSubscription_NonAdminRoleStillRequiresSubscription(t *testing.T) {
 	// Non-admin users (role="user" or empty) should still require subscription
 	expiresAt := time.Now().Add(-24 * time.Hour)

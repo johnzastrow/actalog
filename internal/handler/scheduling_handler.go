@@ -1256,6 +1256,8 @@ func (h *SchedulingHandler) UnassignCoach(w http.ResponseWriter, r *http.Request
 // ============================================
 
 // GetCoachSessions handles GET /api/coaches/me/sessions
+// Admins see all upcoming sessions across all organizations.
+// Coaches see only sessions they are assigned to.
 func (h *SchedulingHandler) GetCoachSessions(w http.ResponseWriter, r *http.Request) {
 	coachUserID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -1271,7 +1273,17 @@ func (h *SchedulingHandler) GetCoachSessions(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	sessions, err := h.schedulingService.GetCoachUpcomingSessions(coachUserID, limit)
+	role, _ := middleware.GetUserRole(r.Context())
+
+	var sessions []*domain.ClassSession
+	var err error
+
+	if role == "admin" {
+		sessions, err = h.schedulingService.GetAllUpcomingSessions(limit)
+	} else {
+		sessions, err = h.schedulingService.GetCoachUpcomingSessions(coachUserID, limit)
+	}
+
 	if err != nil {
 		h.logger.Error("Failed to get coach sessions: %v", err)
 		respondError(w, http.StatusInternalServerError, "Failed to get sessions")

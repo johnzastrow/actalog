@@ -81,7 +81,7 @@ func TestAuth_InvalidToken(t *testing.T) {
 
 func TestAuth_ExpiredToken(t *testing.T) {
 	// Generate a token that expires immediately
-	token, err := auth.GenerateToken(1, "test@example.com", "user", testSecret, time.Millisecond)
+	token, err := auth.GenerateToken(1, "test@example.com", "athlete", testSecret, time.Millisecond)
 	if err != nil {
 		t.Fatalf("Failed to generate token: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestAuth_ValidToken(t *testing.T) {
 
 func TestAuth_WrongSecret(t *testing.T) {
 	// Generate token with one secret
-	token, err := auth.GenerateToken(1, "test@example.com", "user", "secret1", time.Hour)
+	token, err := auth.GenerateToken(1, "test@example.com", "athlete", "secret1", time.Hour)
 	if err != nil {
 		t.Fatalf("Failed to generate token: %v", err)
 	}
@@ -323,7 +323,7 @@ func TestAdminOnly_NonAdminUser(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/admin", nil)
 	// Add user role to context
-	ctx := context.WithValue(req.Context(), UserRoleKey, "user")
+	ctx := context.WithValue(req.Context(), UserRoleKey, "athlete")
 	req = req.WithContext(ctx)
 	rec := httptest.NewRecorder()
 
@@ -334,6 +334,23 @@ func TestAdminOnly_NonAdminUser(t *testing.T) {
 	}
 	if !contains(rec.Body.String(), "admin access required") {
 		t.Errorf("Expected error about admin access, got: %s", rec.Body.String())
+	}
+}
+
+func TestAdminOnly_CoachUser(t *testing.T) {
+	handler := AdminOnly(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/admin", nil)
+	ctx := context.WithValue(req.Context(), UserRoleKey, "coach")
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("Expected status %d, got %d", http.StatusForbidden, rec.Code)
 	}
 }
 
@@ -389,7 +406,7 @@ func TestAuth_Integration_WithAdminOnly(t *testing.T) {
 
 func TestAuth_Integration_NonAdminWithAdminOnly(t *testing.T) {
 	// Generate non-admin token
-	token, err := auth.GenerateToken(1, "user@example.com", "user", testSecret, time.Hour)
+	token, err := auth.GenerateToken(1, "athlete@example.com", "athlete", testSecret, time.Hour)
 	if err != nil {
 		t.Fatalf("Failed to generate token: %v", err)
 	}
@@ -399,6 +416,165 @@ func TestAuth_Integration_NonAdminWithAdminOnly(t *testing.T) {
 	})))
 
 	req := httptest.NewRequest("GET", "/admin", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("Expected status %d, got %d", http.StatusForbidden, rec.Code)
+	}
+}
+
+// ============================================
+// CoachOrAdmin middleware tests
+// ============================================
+
+func TestCoachOrAdmin_NoUserContext(t *testing.T) {
+	handler := CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+	if !contains(rec.Body.String(), "no user context found") {
+		t.Errorf("Expected error about no user context, got: %s", rec.Body.String())
+	}
+}
+
+func TestCoachOrAdmin_AthleteUser(t *testing.T) {
+	handler := CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	ctx := context.WithValue(req.Context(), UserRoleKey, "athlete")
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("Expected status %d, got %d", http.StatusForbidden, rec.Code)
+	}
+	if !contains(rec.Body.String(), "coach or admin access required") {
+		t.Errorf("Expected error about coach/admin access, got: %s", rec.Body.String())
+	}
+}
+
+func TestCoachOrAdmin_CoachUser(t *testing.T) {
+	handlerCalled := false
+	handler := CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	ctx := context.WithValue(req.Context(), UserRoleKey, "coach")
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !handlerCalled {
+		t.Error("Expected handler to be called for coach user")
+	}
+}
+
+func TestCoachOrAdmin_AdminUser(t *testing.T) {
+	handlerCalled := false
+	handler := CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	ctx := context.WithValue(req.Context(), UserRoleKey, "admin")
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !handlerCalled {
+		t.Error("Expected handler to be called for admin user")
+	}
+}
+
+func TestAuth_Integration_CoachWithCoachOrAdmin(t *testing.T) {
+	token, err := auth.GenerateToken(1, "coach@example.com", "coach", testSecret, time.Hour)
+	if err != nil {
+		t.Fatalf("Failed to generate token: %v", err)
+	}
+
+	handlerCalled := false
+	handler := Auth(testSecret)(CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	})))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !handlerCalled {
+		t.Error("Expected handler to be called for coach")
+	}
+}
+
+func TestAuth_Integration_AdminWithCoachOrAdmin(t *testing.T) {
+	token, err := auth.GenerateToken(1, "admin@example.com", "admin", testSecret, time.Hour)
+	if err != nil {
+		t.Fatalf("Failed to generate token: %v", err)
+	}
+
+	handlerCalled := false
+	handler := Auth(testSecret)(CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerCalled = true
+		w.WriteHeader(http.StatusOK)
+	})))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !handlerCalled {
+		t.Error("Expected handler to be called for admin")
+	}
+}
+
+func TestAuth_Integration_AthleteWithCoachOrAdmin(t *testing.T) {
+	token, err := auth.GenerateToken(1, "athlete@example.com", "athlete", testSecret, time.Hour)
+	if err != nil {
+		t.Fatalf("Failed to generate token: %v", err)
+	}
+
+	handler := Auth(testSecret)(CoachOrAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})))
+
+	req := httptest.NewRequest("GET", "/coaches/me/sessions", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
