@@ -1,6 +1,6 @@
 # User Permissions Matrix
 
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-02-12
 **Version:** 1.1.0-beta
 
 This document details all user actions and their permission requirements in ActaLog.
@@ -604,54 +604,56 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## API Endpoint Summary
 
-| Category | Total | Public | Auth (No Sub) | Subscription | Admin Only |
-|----------|-------|--------|---------------|--------------|------------|
-| System (health/version/docs) | 3 | 3 | 0 | 0 | 0 |
-| Authentication | 8 | 8 | 0 | 0 | 0 |
-| Browse (movements/WODs/templates) | 9 | 9 | 0 | 0 | 0 |
-| Account/Profile/Settings | 8 | 0 | 8 | 0 | 0 |
-| Sessions (auth) | 3 | 0 | 3 | 0 | 0 |
-| Subscription Status | 1 | 0 | 1 | 0 | 0 |
-| Notifications | 9 | 0 | 7 | 2 | 0 |
-| User Scheduling Data | 4 | 0 | 4 | 0 | 0 |
-| Coach Portal | 1 | 0 | 1 | 0 | 0 |
-| Gym Browsing | 13 | 0 | 13 | 0 | 0 |
-| Waitlist (read) | 2 | 0 | 2 | 0 | 0 |
-| Movement Management | 3 | 0 | 0 | 3 | 0 |
-| WOD Management | 4 | 0 | 0 | 4 | 0 |
-| Template Management | 4 | 0 | 0 | 4 | 0 |
-| Template WOD Linking | 5 | 0 | 0 | 5 | 0 |
-| Workout Logging | 9 | 0 | 0 | 9 | 0 |
-| PR Tracking | 3 | 0 | 0 | 3 | 0 |
-| Performance | 3 | 0 | 0 | 3 | 0 |
-| Statistics | 1 | 0 | 0 | 1 | 0 |
-| Data Export | 3 | 0 | 0 | 3 | 0 |
-| Data Import | 8 | 0 | 0 | 8 | 0 |
-| Benchmark | 2 | 0 | 0 | 2 | 0 |
-| Reservations | 2 | 0 | 0 | 2 | 0 |
-| Waitlist (actions) | 2 | 0 | 0 | 2 | 0 |
-| Admin User Management | 8 | 0 | 0 | 0 | 8 |
-| Admin User Import/Export | 5 | 0 | 0 | 0 | 5 |
-| Admin Organizations | 9 | 0 | 0 | 0 | 9 |
-| Admin Subscriptions | 16 | 0 | 0 | 0 | 16 |
-| Admin Scheduling (locations) | 3 | 0 | 0 | 0 | 3 |
-| Admin Scheduling (templates) | 5 | 0 | 0 | 0 | 5 |
-| Admin Scheduling (slots) | 4 | 0 | 0 | 0 | 4 |
-| Admin Scheduling (template coaches) | 3 | 0 | 0 | 0 | 3 |
-| Admin Scheduling (sessions) | 4 | 0 | 0 | 0 | 4 |
-| Admin Roster & Check-In | 4 | 0 | 0 | 0 | 4 |
-| Admin Session Coaches | 3 | 0 | 0 | 0 | 3 |
-| Admin Coach Assignment | 3 | 0 | 0 | 0 | 3 |
-| Admin Documents & Packages | 9 | 0 | 0 | 0 | 9 |
-| Admin User Content | 6 | 0 | 0 | 0 | 6 |
-| Admin Backups | 7 | 0 | 0 | 0 | 7 |
-| Admin Email | 7 | 0 | 0 | 0 | 7 |
-| Admin Data Quality | 10 | 0 | 0 | 0 | 10 |
-| Admin Audit/Logs | 7 | 0 | 0 | 0 | 7 |
-| Admin Metrics | 1 | 0 | 0 | 0 | 1 |
-| Admin Benchmark Cleanup | 1 | 0 | 0 | 0 | 1 |
-| Admin Announcements | 1 | 0 | 0 | 0 | 1 |
-| **TOTAL** | **226** | **20** | **39** | **51** | **116** |
+| Category | Total | Public | Auth (No Sub) | Subscription | Coach/Admin | Admin Only |
+|----------|-------|--------|---------------|--------------|-------------|------------|
+| System (health/version/docs) | 3 | 3 | 0 | 0 | 0 | 0 |
+| Authentication | 8 | 8 | 0 | 0 | 0 | 0 |
+| Browse (movements/WODs/templates) | 9 | 9 | 0 | 0 | 0 | 0 |
+| Account/Profile/Settings | 8 | 0 | 8 | 0 | 0 | 0 |
+| Sessions (auth) | 3 | 0 | 3 | 0 | 0 | 0 |
+| Subscription Status | 1 | 0 | 1 | 0 | 0 | 0 |
+| Notifications | 9 | 0 | 7 | 2 | 0 | 0 |
+| User Scheduling Data | 4 | 0 | 4 | 0 | 0 | 0 |
+| Coach Portal | 5 | 0 | 0 | 0 | 5 | 0 |
+| Gym Browsing | 13 | 0 | 13 | 0 | 0 | 0 |
+| Waitlist (read) | 2 | 0 | 2 | 0 | 0 | 0 |
+| Movement Management | 3 | 0 | 0 | 3 | 0 | 0 |
+| WOD Management | 4 | 0 | 0 | 4 | 0 | 0 |
+| Template Management | 4 | 0 | 0 | 4 | 0 | 0 |
+| Template WOD Linking | 5 | 0 | 0 | 5 | 0 | 0 |
+| Workout Logging | 9 | 0 | 0 | 9 | 0 | 0 |
+| PR Tracking | 3 | 0 | 0 | 3 | 0 | 0 |
+| Performance | 3 | 0 | 0 | 3 | 0 | 0 |
+| Statistics | 1 | 0 | 0 | 1 | 0 | 0 |
+| Data Export | 3 | 0 | 0 | 3 | 0 | 0 |
+| Data Import | 8 | 0 | 0 | 8 | 0 | 0 |
+| Benchmark | 2 | 0 | 0 | 2 | 0 | 0 |
+| Reservations | 2 | 0 | 0 | 2 | 0 | 0 |
+| Waitlist (actions) | 2 | 0 | 0 | 2 | 0 | 0 |
+| Admin User Management | 8 | 0 | 0 | 0 | 0 | 8 |
+| Admin User Import/Export | 5 | 0 | 0 | 0 | 0 | 5 |
+| Admin Organizations | 9 | 0 | 0 | 0 | 0 | 9 |
+| Admin Subscriptions | 16 | 0 | 0 | 0 | 0 | 16 |
+| Admin Scheduling (locations) | 3 | 0 | 0 | 0 | 0 | 3 |
+| Admin Scheduling (templates) | 5 | 0 | 0 | 0 | 0 | 5 |
+| Admin Scheduling (slots) | 4 | 0 | 0 | 0 | 0 | 4 |
+| Admin Scheduling (template coaches) | 3 | 0 | 0 | 0 | 0 | 3 |
+| Admin Scheduling (sessions) | 4 | 0 | 0 | 0 | 0 | 4 |
+| Admin Roster & Check-In | 4 | 0 | 0 | 0 | 0 | 4 |
+| Admin Session Coaches | 3 | 0 | 0 | 0 | 0 | 3 |
+| Admin Coach Assignment | 3 | 0 | 0 | 0 | 0 | 3 |
+| Admin Documents & Packages | 9 | 0 | 0 | 0 | 0 | 9 |
+| Admin User Content | 6 | 0 | 0 | 0 | 0 | 6 |
+| Admin Backups | 7 | 0 | 0 | 0 | 0 | 7 |
+| Admin Email | 7 | 0 | 0 | 0 | 0 | 7 |
+| Admin Data Quality | 10 | 0 | 0 | 0 | 0 | 10 |
+| Admin Audit/Logs | 7 | 0 | 0 | 0 | 0 | 7 |
+| Admin Metrics | 1 | 0 | 0 | 0 | 0 | 1 |
+| Admin Benchmark Cleanup | 1 | 0 | 0 | 0 | 0 | 1 |
+| Admin Announcements | 1 | 0 | 0 | 0 | 0 | 1 |
+| **TOTAL** | **230** | **20** | **38** | **51** | **5** | **116** |
+
+**Note:** "Coach/Admin" endpoints require `CoachOrAdmin` middleware — accessible to users with `coach` or `admin` role, with no subscription check. Coaches are additionally verified against org-level assignments at the service layer.
 
 ---
 
@@ -666,14 +668,14 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## Subscription Enforcement Behavior
 
-| HTTP Method | Active Subscription | Expired Subscription | Admin |
-|-------------|-------------------|---------------------|-------|
-| GET | Allowed | Allowed (read-only) | Always allowed |
-| POST | Allowed | HTTP 402 Payment Required | Always allowed |
-| PUT | Allowed | HTTP 402 Payment Required | Always allowed |
-| DELETE | Allowed | HTTP 402 Payment Required | Always allowed |
+| HTTP Method | Active Subscription | Expired Subscription | Coach | Admin |
+|-------------|-------------------|---------------------|-------|-------|
+| GET | Allowed | Allowed (read-only) | Always allowed | Always allowed |
+| POST | Allowed | HTTP 402 Payment Required | Always allowed | Always allowed |
+| PUT | Allowed | HTTP 402 Payment Required | Always allowed | Always allowed |
+| DELETE | Allowed | HTTP 402 Payment Required | Always allowed | Always allowed |
 
-**Note:** Account routes (profile, settings, sessions, notifications) are exempt from subscription checks. Only feature routes (workouts, movements, WODs, etc.) enforce subscription requirements.
+**Note:** Account routes (profile, settings, sessions, notifications) are exempt from subscription checks. Only feature routes (workouts, movements, WODs, etc.) enforce subscription requirements. Coaches and admins bypass all subscription enforcement.
 
 ---
 
@@ -693,6 +695,13 @@ middleware.Auth(jwtSecret) // Extracts user ID, email, role from JWT
 middleware.Auth(jwtSecret)
 middleware.RequireActiveSubscription(subscriptionService)
 // GET requests pass through; POST/PUT/DELETE blocked for expired users
+```
+
+**Coach/admin endpoints:**
+```
+middleware.Auth(jwtSecret)
+middleware.CoachOrAdmin // Checks role == "coach" or "admin"
+// Service layer additionally verifies coach org assignment
 ```
 
 **Admin-only endpoints:**
@@ -715,9 +724,4 @@ middleware.AdminOnly // Checks role == "admin"
 
 ## Future Considerations
 
-The following roles are planned but not yet implemented:
-
-- **Coach** - Can check athletes in/out of classes, view assigned sessions
-- **Gym Owner** - Multi-gym management capabilities
-
-See `screenshots/Scheduling/scheduling_v2.md` for the planned Coach role specification.
+- **Gym Owner** - Multi-gym management capabilities with delegated admin permissions
