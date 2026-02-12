@@ -3339,6 +3339,133 @@ func RunMigrations(db *sql.DB, driver string) error {
 		fmt.Printf("✓ Migration %s applied successfully\n", migration.Version)
 	}
 
+	// Verify schema integrity after migrations
+	if err := verifySchema(db, driver); err != nil {
+		return fmt.Errorf("schema verification failed: %w", err)
+	}
+
+	return nil
+}
+
+// expectedColumn defines a column that must exist in a table
+type expectedColumn struct {
+	Table      string
+	Column     string
+	SQLite     string // ALTER statement for SQLite
+	Postgres   string // ALTER statement for PostgreSQL
+	MySQL      string // ALTER statement for MySQL
+}
+
+// expectedColumns lists columns that must exist, regardless of migration history.
+// This catches schema drift from backup restores or partial migration application.
+var expectedColumns = []expectedColumn{
+	{
+		Table:    "workout_wods",
+		Column:   "notes",
+		SQLite:   "ALTER TABLE workout_wods ADD COLUMN notes TEXT DEFAULT ''",
+		Postgres: "ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''",
+		MySQL:    "ALTER TABLE workout_wods ADD COLUMN notes TEXT",
+	},
+	{
+		Table:    "workout_wods",
+		Column:   "instructions",
+		SQLite:   "ALTER TABLE workout_wods ADD COLUMN instructions TEXT DEFAULT ''",
+		Postgres: "ALTER TABLE workout_wods ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT ''",
+		MySQL:    "ALTER TABLE workout_wods ADD COLUMN instructions TEXT",
+	},
+	{
+		Table:    "workouts",
+		Column:   "intro_warmup",
+		SQLite:   "ALTER TABLE workouts ADD COLUMN intro_warmup TEXT",
+		Postgres: "ALTER TABLE workouts ADD COLUMN IF NOT EXISTS intro_warmup TEXT",
+		MySQL:    "ALTER TABLE workouts ADD COLUMN intro_warmup TEXT",
+	},
+	{
+		Table:    "workout_movements",
+		Column:   "instructions",
+		SQLite:   "ALTER TABLE workout_movements ADD COLUMN instructions TEXT DEFAULT ''",
+		Postgres: "ALTER TABLE workout_movements ADD COLUMN IF NOT EXISTS instructions TEXT DEFAULT ''",
+		MySQL:    "ALTER TABLE workout_movements ADD COLUMN instructions TEXT",
+	},
+}
+
+// columnExists checks if a column exists in a table
+func columnExists(db *sql.DB, driver, table, column string) (bool, error) {
+	var query string
+	switch driver {
+	case "sqlite3":
+		query = fmt.Sprintf("PRAGMA table_info(%s)", table)
+		rows, err := db.Query(query)
+		if err != nil {
+			return false, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var cid int
+			var name, ctype string
+			var notnull int
+			var dfltValue sql.NullString
+			var pk int
+			if err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk); err != nil {
+				return false, err
+			}
+			if name == column {
+				return true, nil
+			}
+		}
+		return false, rows.Err()
+	case "postgres":
+		query = `SELECT COUNT(*) FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`
+		var count int
+		err := db.QueryRow(query, table, column).Scan(&count)
+		return count > 0, err
+	case "mysql":
+		query = `SELECT COUNT(*) FROM information_schema.columns WHERE table_name = ? AND column_name = ? AND table_schema = DATABASE()`
+		var count int
+		err := db.QueryRow(query, table, column).Scan(&count)
+		return count > 0, err
+	default:
+		return false, fmt.Errorf("unsupported driver: %s", driver)
+	}
+}
+
+// verifySchema checks that all expected columns exist and adds any missing ones.
+// This protects against schema drift from backup restores or incomplete migrations.
+func verifySchema(db *sql.DB, driver string) error {
+	repaired := 0
+	for _, col := range expectedColumns {
+		exists, err := columnExists(db, driver, col.Table, col.Column)
+		if err != nil {
+			return fmt.Errorf("failed to check column %s.%s: %w", col.Table, col.Column, err)
+		}
+		if exists {
+			continue
+		}
+
+		// Column is missing — add it
+		var stmt string
+		switch driver {
+		case "sqlite3":
+			stmt = col.SQLite
+		case "postgres":
+			stmt = col.Postgres
+		case "mysql":
+			stmt = col.MySQL
+		default:
+			return fmt.Errorf("unsupported driver: %s", driver)
+		}
+
+		fmt.Printf("[SCHEMA REPAIR] Adding missing column %s.%s\n", col.Table, col.Column)
+		if _, err := db.Exec(stmt); err != nil {
+			return fmt.Errorf("failed to add missing column %s.%s: %w", col.Table, col.Column, err)
+		}
+		fmt.Printf("✓ Repaired: %s.%s added\n", col.Table, col.Column)
+		repaired++
+	}
+
+	if repaired > 0 {
+		fmt.Printf("[SCHEMA REPAIR] Repaired %d missing column(s)\n", repaired)
+	}
 	return nil
 }
 
