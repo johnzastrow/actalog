@@ -34,7 +34,8 @@ describe('AdminView', () => {
           'v-chip': { template: '<span><slot /></span>' },
           'v-divider': { template: '<hr />' },
           'v-bottom-navigation': { template: '<div><slot /></div>' },
-          'v-btn': { template: '<button><slot /></button>' }
+          'v-btn': { template: '<button><slot /></button>' },
+          AdminHeader: { template: '<div><h1>{{ title }}</h1><p>{{ subtitle }}</p></div>', props: ['title', 'subtitle', 'breadcrumbs'] }
         }
       }
     })

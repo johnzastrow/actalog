@@ -119,8 +119,10 @@ describe('ScheduleView', () => {
       expect(wrapper.text()).toContain('Book your classes')
     })
 
-    it('renders organization selector', () => {
+    it('renders organization selector', async () => {
+      axios.get.mockResolvedValue({ data: { organizations: [{ id: 1, name: 'Gym A' }, { id: 2, name: 'Gym B' }], sessions: [] } })
       createWrapper()
+      await flushPromises()
 
       expect(wrapper.text()).toContain('Select Gym')
     })
@@ -131,8 +133,13 @@ describe('ScheduleView', () => {
       expect(wrapper.find('.text-subtitle-1').exists()).toBe(true)
     })
 
-    it('shows info message when no organization selected', () => {
+    it('shows info message when no organization selected', async () => {
+      axios.get.mockResolvedValue({ data: { organizations: [{ id: 1, name: 'Gym A' }, { id: 2, name: 'Gym B' }], sessions: [] } })
       createWrapper()
+      await flushPromises()
+
+      wrapper.vm.selectedOrgId = null
+      await wrapper.vm.$nextTick()
 
       expect(wrapper.text()).toContain('Please select a gym to view the class schedule')
     })

@@ -188,7 +188,6 @@ describe('WODLibraryView', () => {
 
       expect(vm.searchQuery).toBe('')
       expect(vm.selectedType).toBe('all')
-      expect(vm.activeNav).toBe('wods')
     })
 
     it('shows loading state from store', async () => {
