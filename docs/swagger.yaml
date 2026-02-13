@@ -22,8 +22,7 @@ definitions:
       user_agent:
         type: string
       user_email:
-        description: These fields are populated via JOIN queries and are not in the
-          audit_logs table
+        description: These fields are populated via JOIN queries and are not in the audit_logs table
         type: string
       user_id:
         description: User who performed the action (NULL for system)
@@ -137,8 +136,7 @@ definitions:
         description: miles, km
         type: string
       font_family:
-        description: system, inter, roboto, lato, firasans, lexend, opendyslexic,
-          atkinson, sourceserif, jetbrainsmono
+        description: system, inter, roboto, lato, firasans, lexend, opendyslexic, atkinson, sourceserif, jetbrainsmono
         type: string
       id:
         type: integer
@@ -313,8 +311,7 @@ definitions:
       id:
         type: integer
       movements:
-        description: Related data (not stored directly in workout table, loaded via
-          joins)
+        description: Related data (not stored directly in workout table, loaded via joins)
         items:
           $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutMovement'
         type: array
@@ -576,7 +573,7 @@ definitions:
         type: array
       workout_date:
         description: YYYY-MM-DD format
-        example: "2024-01-15"
+        example: '2024-01-15'
         type: string
       workout_id:
         description: Template ID (optional for ad-hoc workouts)
@@ -612,7 +609,7 @@ definitions:
         type: integer
       payment_date:
         description: 'Optional: defaults to now'
-        example: "2024-01-15"
+        example: '2024-01-15'
         type: string
     type: object
   internal_handler.MessageResponse:
@@ -745,7 +742,7 @@ definitions:
     properties:
       birthday:
         description: 'Format: "YYYY-MM-DD" or empty'
-        example: "1990-05-15"
+        example: '1990-05-15'
         type: string
       email:
         example: john@example.com
@@ -797,7 +794,7 @@ definitions:
     description: Complete logged workout with performance data
     properties:
       created_at:
-        example: "2024-01-15T10:30:00Z"
+        example: '2024-01-15T10:30:00Z'
         type: string
       id:
         example: 1
@@ -824,7 +821,7 @@ definitions:
         example: 1200
         type: integer
       updated_at:
-        example: "2024-01-15T10:30:00Z"
+        example: '2024-01-15T10:30:00Z'
         type: string
       user_id:
         example: 1
@@ -835,7 +832,7 @@ definitions:
           $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WorkoutWODWithDetails'
         type: array
       workout_date:
-        example: "2024-01-15"
+        example: '2024-01-15'
         type: string
       workout_id:
         description: Nullable for ad-hoc workouts
@@ -882,7 +879,7 @@ definitions:
         type: string
       score_value:
         description: Formatted score
-        example: "12:30"
+        example: '12:30'
         type: string
       time_seconds:
         description: For time-based WODs
@@ -900,7 +897,7 @@ definitions:
     description: WOD details response
     properties:
       created_at:
-        example: "2024-01-15T10:30:00Z"
+        example: '2024-01-15T10:30:00Z'
         type: string
       created_by:
         type: integer
@@ -931,7 +928,7 @@ definitions:
         example: For Time
         type: string
       updated_at:
-        example: "2024-01-15T10:30:00Z"
+        example: '2024-01-15T10:30:00Z'
         type: string
       url:
         type: string
@@ -942,15 +939,14 @@ info:
     email: support@actalog.com
     name: ActaLog Support
     url: https://github.com/johnzastrow/actalog/issues
-  description: ActaLog is a mobile-first CrossFit workout tracker API. It provides
-    endpoints for user authentication, workout logging, movement tracking, personal
-    records, and administrative functions.
+  description: ActaLog is a mobile-first CrossFit workout tracker API. It provides endpoints for user authentication, workout
+    logging, movement tracking, personal records, and administrative functions.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: https://actalog.com/terms/
   title: ActaLog API
-  version: 1.1.0
+  version: 1.1.0-beta
 paths:
   /admin/audit-logs/cleanup:
     post:
@@ -967,20 +963,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Deleted count and success message
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -997,12 +993,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of backups with count
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1018,22 +1014,58 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Backup created with filename and metadata
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create backup (Admin)
+      tags:
+      - backups
+  /admin/backups/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a backup ZIP file from another system
+      parameters:
+      - description: Backup ZIP file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Upload success with filename and metadata
+          schema:
+            additionalProperties: true
+            type: object
+        '400':
+          description: Invalid file or format
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload backup (Admin)
       tags:
       - backups
   /admin/backups/{filename}:
@@ -1050,20 +1082,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message with filename
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid filename
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1085,23 +1117,23 @@ paths:
       produces:
       - application/zip
       responses:
-        "200":
+        '200':
           description: Backup ZIP file
           schema:
             type: file
-        "400":
+        '400':
           description: Invalid filename
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Backup not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1124,15 +1156,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Backup metadata
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.BackupMetadata'
-        "400":
+        '400':
           description: Invalid filename
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Backup not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1161,62 +1193,26 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Restore result
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request or filename
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Restore backup (Admin)
-      tags:
-      - backups
-  /admin/backups/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a backup ZIP file from another system
-      parameters:
-      - description: Backup ZIP file
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Upload success with filename and metadata
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid file or format
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Upload backup (Admin)
       tags:
       - backups
   /admin/benchmark/data:
@@ -1227,21 +1223,21 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Cleanup result
           schema:
             additionalProperties:
               type: string
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1265,20 +1261,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Deleted count and success message
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1287,12 +1283,950 @@ paths:
       summary: Cleanup old data change logs (Admin)
       tags:
       - admin
+  /admin/data-quality/duplicates:
+    get:
+      description: Scan all entity types for duplicate records
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Duplicate scan results for all entities
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Scan for duplicates
+      tags:
+      - admin-data-quality
+  /admin/data-quality/duplicates/merge/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Execute a duplicate merge operation. Updates FK references and deletes duplicate records.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Merge results
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Confirm duplicate merge
+      tags:
+      - admin-data-quality
+  /admin/data-quality/duplicates/merge/preview:
+    post:
+      consumes:
+      - application/json
+      description: Preview a duplicate merge operation showing FK reference impact
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Merge preview with FK impact
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Preview duplicate merge
+      tags:
+      - admin-data-quality
+  /admin/data-quality/duplicates/summary:
+    get:
+      description: Get a quick summary of duplicate counts by entity type
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Summary of duplicates per entity type
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get duplicate summary
+      tags:
+      - admin-data-quality
+  /admin/data-quality/duplicates/{entity}:
+    get:
+      description: Scan a specific entity type for duplicates (movements, wods, user_workouts, users, workouts)
+      parameters:
+      - description: 'Entity type: movements, wods, user_workouts, users, workouts'
+        in: path
+        name: entity
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Duplicate groups for entity
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Scan duplicates by entity
+      tags:
+      - admin-data-quality
+  /admin/data-quality/full-scan:
+    get:
+      description: Run a comprehensive data quality scan including duplicates and data issues
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Complete scan results
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Full data quality scan
+      tags:
+      - admin-data-quality
+  /admin/data-quality/issues:
+    get:
+      description: 'Scan for data quality issues: orphaned FKs, empty required fields, future dates, invalid emails'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of data quality issues
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Scan data quality issues
+      tags:
+      - admin-data-quality
+  /admin/email-logs/:
+    get:
+      description: List email delivery logs
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of email logs
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List email logs
+      tags:
+      - admin-email
+  /admin/email-logs/cleanup:
+    post:
+      description: Delete old email logs based on retention period
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Cleanup results
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Cleanup email logs
+      tags:
+      - admin-email
+  /admin/email-logs/failures:
+    get:
+      description: Get recent email delivery failures
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of failed emails
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get recent email failures
+      tags:
+      - admin-email
+  /admin/email-logs/stats:
+    get:
+      description: Get email delivery statistics (success/failure rates)
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Email statistics
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get email statistics
+      tags:
+      - admin-email
+  /admin/email-logs/{id}:
+    get:
+      description: Get details of a specific email log entry
+      parameters:
+      - description: Email log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Email log details
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get email log details
+      tags:
+      - admin-email
+  /admin/email/config:
+    get:
+      description: Get current email/SMTP configuration
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Email configuration details
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get email configuration
+      tags:
+      - admin-email
+  /admin/email/test:
+    post:
+      consumes:
+      - application/json
+      description: Send a test email to verify SMTP configuration
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Test email sent
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Send test email
+      tags:
+      - admin-email
+  /admin/gyms/{gym_id}/coaches:
+    get:
+      description: List coaches assigned to a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of coaches
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List gym coaches
+      tags:
+      - admin-scheduling
+    post:
+      consumes:
+      - application/json
+      description: Assign a coach to a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Coach assigned
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Assign coach to gym
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/coaches/{id}:
+    delete:
+      description: Unassign a coach from a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Coach assignment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Coach unassigned
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Unassign coach from gym
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/documents:
+    post:
+      consumes:
+      - application/json
+      description: Create a document type for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Document created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create document
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/documents/{id}:
+    delete:
+      description: Delete a document type
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Document deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Delete document
+      tags:
+      - admin-scheduling
+    put:
+      consumes:
+      - application/json
+      description: Update a document type
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Document updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update document
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/locations:
+    post:
+      consumes:
+      - application/json
+      description: Create a new gym location
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Location created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create gym location
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/locations/{id}:
+    delete:
+      description: Delete a gym location
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Location deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Delete gym location
+      tags:
+      - admin-scheduling
+    put:
+      consumes:
+      - application/json
+      description: Update a gym location
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Location updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update gym location
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/packages:
+    post:
+      consumes:
+      - application/json
+      description: Create a class package for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Package created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create class package
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/packages/{id}:
+    delete:
+      description: Delete a class package
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Package deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Delete class package
+      tags:
+      - admin-scheduling
+    put:
+      consumes:
+      - application/json
+      description: Update a class package
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Package updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update class package
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/sessions:
+    post:
+      consumes:
+      - application/json
+      description: Create a class session manually
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Session created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create session
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/sessions/batch-workout:
+    put:
+      consumes:
+      - application/json
+      description: Batch update workout assignment for multiple sessions
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Sessions updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Batch update session workout
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/sessions/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a class session
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update session
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/sessions/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a class session with optional reason
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session cancelled
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Cancel session
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/templates:
+    post:
+      consumes:
+      - application/json
+      description: Create a new class template
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Template created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create class template
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/user-documents/{id}/complete:
+    post:
+      description: Mark a user document as completed
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: User document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Document marked as completed
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Mark document completed
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/users/{user_id}/credits:
+    post:
+      consumes:
+      - application/json
+      description: Purchase or add credits for a user at a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Credits added
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Add credits for user
+      tags:
+      - admin-scheduling
+  /admin/gyms/{gym_id}/users/{user_id}/documents/init:
+    post:
+      description: Initialize document records for a user at a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Documents initialized
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Initialize user documents
+      tags:
+      - admin-scheduling
+  /admin/metrics:
+    get:
+      description: 'Get admin dashboard metrics: user counts, workout stats, system health'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Admin dashboard metrics
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get admin metrics
+      tags:
+      - admin
   /admin/notifications/announce:
     post:
       consumes:
       - application/json
-      description: Send an announcement to all users, organization members, or specific
-        users
+      description: Send an announcement to all users, organization members, or specific users
       parameters:
       - description: Announcement details
         in: body
@@ -1303,19 +2237,19 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Announcement created
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Admin access required
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1341,12 +2275,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Organizations list with total count
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1369,20 +2303,20 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created organization
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Organization name exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1405,23 +2339,23 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid organization ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Organization has assigned users
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1443,20 +2377,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Organization details
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid organization ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1484,24 +2418,24 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Updated organization
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Organization name exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1524,20 +2458,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of users
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid organization ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1546,6 +2480,525 @@ paths:
       summary: Get organization users (Admin)
       tags:
       - organizations
+  /admin/scheduling/templates/{id}:
+    delete:
+      description: 'Delete a class template. Supports mode parameter: template_only, with_future_sessions, with_all_sessions'
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Delete mode: template_only, with_future_sessions, with_all_sessions'
+        in: query
+        name: mode
+        required: false
+        type: string
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Template deleted with cascade results
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Delete class template
+      tags:
+      - admin-scheduling
+    get:
+      description: Get a class template by ID
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Template details
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get class template
+      tags:
+      - admin-scheduling
+    put:
+      consumes:
+      - application/json
+      description: Update a class template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Template updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update class template
+      tags:
+      - admin-scheduling
+  /admin/scheduling/templates/{id}/coaches:
+    get:
+      description: Get default coaches assigned to a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of template coaches
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get template coaches
+      tags:
+      - admin-scheduling
+    post:
+      consumes:
+      - application/json
+      description: Add a default coach to a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Coach added
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Add template coach
+      tags:
+      - admin-scheduling
+  /admin/scheduling/templates/{id}/coaches/{user_id}:
+    delete:
+      description: Remove a default coach from a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Coach user ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Coach removed
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Remove template coach
+      tags:
+      - admin-scheduling
+  /admin/scheduling/templates/{id}/preview-schedule:
+    get:
+      description: Preview the schedule that would be generated for a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Preview of scheduled sessions
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Preview template schedule
+      tags:
+      - admin-scheduling
+  /admin/scheduling/templates/{id}/slots/:
+    get:
+      description: List schedule slots for a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of schedule slots
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List schedule slots
+      tags:
+      - admin-scheduling
+    post:
+      consumes:
+      - application/json
+      description: Create a schedule slot for a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Slot created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Create schedule slot
+      tags:
+      - admin-scheduling
+  /admin/scheduling/templates/{id}/slots/{slot_id}:
+    delete:
+      description: Delete a schedule slot
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Slot ID
+        in: path
+        name: slot_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Slot deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Delete schedule slot
+      tags:
+      - admin-scheduling
+    put:
+      consumes:
+      - application/json
+      description: Update a schedule slot
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Slot ID
+        in: path
+        name: slot_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Slot updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Update schedule slot
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/check-in/{reservation_id}:
+    post:
+      description: Check in a reservation (admin)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      - description: Reservation ID
+        in: path
+        name: reservation_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Checked in
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Check in reservation (admin)
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/coaches:
+    get:
+      description: Get coaches assigned to a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of session coaches
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get session coaches
+      tags:
+      - admin-scheduling
+    post:
+      consumes:
+      - application/json
+      description: Add a coach to a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Coach added to session
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Add session coach
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/coaches/{user_id}:
+    delete:
+      description: Remove a coach from a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      - description: Coach user ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Coach removed from session
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Remove session coach
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/complete:
+    post:
+      description: Mark a session as completed (admin)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session completed
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Complete session (admin)
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/no-show/{reservation_id}:
+    post:
+      description: Mark a reservation as no-show (admin)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      - description: Reservation ID
+        in: path
+        name: reservation_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Marked as no-show
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Mark no-show (admin)
+      tags:
+      - admin-scheduling
+  /admin/sessions/{session_id}/roster:
+    get:
+      description: Get the roster of reservations for a session (admin)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session roster
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get session roster (admin)
+      tags:
+      - admin-scheduling
   /admin/subscriptions/organizations:
     get:
       consumes:
@@ -1554,12 +3007,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Subscriptions list
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1582,26 +3035,75 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created subscription
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Active subscription exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create organization subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/expired:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of expired or overdue organization subscriptions
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Expired subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expired organization subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/organizations/expiring:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of organization subscriptions expiring within the specified number of days
+      parameters:
+      - description: 'Number of days to look ahead (default: 30)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Expiring subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expiring organization subscriptions (Admin)
       tags:
       - admin
   /admin/subscriptions/organizations/{id}/cancel:
@@ -1624,19 +3126,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request or missing reason
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1649,8 +3151,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Mark an organization subscription as paid and extend the subscription
-        period
+      description: Mark an organization subscription as paid and extend the subscription period
       parameters:
       - description: Subscription ID
         in: path
@@ -1665,19 +3166,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Cannot mark free subscription as paid
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1706,19 +3207,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1741,72 +3242,22 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Subscriptions list
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid organization ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get organization subscriptions (Admin)
-      tags:
-      - admin
-  /admin/subscriptions/organizations/expired:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of expired or overdue organization subscriptions
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expired subscriptions list
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List expired organization subscriptions (Admin)
-      tags:
-      - admin
-  /admin/subscriptions/organizations/expiring:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of organization subscriptions expiring within the specified
-        number of days
-      parameters:
-      - description: 'Number of days to look ahead (default: 30)'
-        in: query
-        name: days
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expiring subscriptions list
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List expiring organization subscriptions (Admin)
       tags:
       - admin
   /admin/subscriptions/users:
@@ -1817,12 +3268,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Subscriptions list
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1845,30 +3296,79 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created subscription
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot modify own subscription
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Active subscription exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create user subscription (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/expired:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of expired or overdue user subscriptions
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Expired subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expired user subscriptions (Admin)
+      tags:
+      - admin
+  /admin/subscriptions/users/expiring:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of user subscriptions expiring within the specified number of days
+      parameters:
+      - description: 'Number of days to look ahead (default: 30)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Expiring subscriptions list
+          schema:
+            additionalProperties: true
+            type: object
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List expiring user subscriptions (Admin)
       tags:
       - admin
   /admin/subscriptions/users/{id}/cancel:
@@ -1891,23 +3391,23 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request or missing reason
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot modify own subscription
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1935,23 +3435,23 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Cannot mark free subscription as paid
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot modify own subscription
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -1980,23 +3480,23 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot modify own subscription
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Subscription not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2019,72 +3519,22 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Subscriptions list
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user subscriptions (Admin)
-      tags:
-      - admin
-  /admin/subscriptions/users/expired:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of expired or overdue user subscriptions
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expired subscriptions list
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List expired user subscriptions (Admin)
-      tags:
-      - admin
-  /admin/subscriptions/users/expiring:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of user subscriptions expiring within the specified
-        number of days
-      parameters:
-      - description: 'Number of days to look ahead (default: 30)'
-        in: query
-        name: days
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expiring subscriptions list
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List expiring user subscriptions (Admin)
       tags:
       - admin
   /admin/user-created/movements:
@@ -2116,12 +3566,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of user-created movements
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2150,23 +3600,23 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created standard movement
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Movement not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Name already exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2204,12 +3654,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of user-created WODs
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2238,23 +3688,23 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created standard WOD
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.WOD'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: WOD not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Name already exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2288,12 +3738,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of user-created workouts
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2322,23 +3772,23 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created standard workout
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Workout'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Workout not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Name already exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2347,6 +3797,127 @@ paths:
       summary: Copy workout to standard (Admin)
       tags:
       - admin
+  /admin/user-management/batch-password-reset:
+    post:
+      consumes:
+      - application/json
+      description: Send password reset emails to selected users
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Reset emails sent
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Batch password reset
+      tags:
+      - admin-user-management
+  /admin/user-management/export:
+    get:
+      description: Export all users to CSV format
+      produces:
+      - text/csv
+      responses:
+        '200':
+          description: CSV file download
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Export users to CSV
+      tags:
+      - admin-user-management
+  /admin/user-management/filter:
+    get:
+      description: List users with search and date filters
+      parameters:
+      - description: Search by name or email
+        in: query
+        name: search
+        required: false
+        type: string
+      - description: Filter by creation date (ISO 8601)
+        in: query
+        name: created_after
+        required: false
+        type: string
+      - description: Filter by creation date (ISO 8601)
+        in: query
+        name: created_before
+        required: false
+        type: string
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Filtered user list
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Filter users
+      tags:
+      - admin-user-management
+  /admin/user-management/import/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm and execute user import
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Import results
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Confirm user import
+      tags:
+      - admin-user-management
+  /admin/user-management/import/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Preview user import from CSV file
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Import preview with validation results
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Preview user import
+      tags:
+      - admin-user-management
   /admin/users:
     get:
       consumes:
@@ -2364,12 +3935,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Users list with total count
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2392,11 +3963,11 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID or cannot delete
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2418,16 +3989,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: User details
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2455,15 +4026,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID or cannot disable
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2486,15 +4057,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2523,19 +4094,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User or organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2563,19 +4134,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User or organization not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2598,20 +4169,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of organizations
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2640,15 +4211,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID or role
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2677,15 +4248,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2708,15 +4279,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid user ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2733,12 +4304,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of mismatched records
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2755,12 +4326,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Count of deleted records
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2789,20 +4360,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Success message
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request or score type mismatch
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Record not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2852,20 +4423,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Audit logs list with total count
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid parameters
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2888,19 +4459,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Audit log entry
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.AuditLog'
-        "400":
+        '400':
           description: Invalid ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Audit log not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2913,8 +4484,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Send a password reset email to the user. Always returns success
-        for security.
+      description: Send a password reset email to the user. Always returns success for security.
       parameters:
       - description: Email address
         in: body
@@ -2925,15 +4495,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Reset email sent if address exists
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to process request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2944,8 +4514,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticate user with email and password. Set remember_me to true
-        for refresh token.
+      description: Authenticate user with email and password. Set remember_me to true for refresh token.
       parameters:
       - description: Login credentials
         in: body
@@ -2956,19 +4525,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Successfully authenticated
           schema:
             $ref: '#/definitions/internal_handler.AuthResponse'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Invalid email or password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -2990,19 +4559,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: New access token
           schema:
             $ref: '#/definitions/internal_handler.AuthResponse'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Invalid or expired refresh token
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to refresh token
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3024,19 +4593,19 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Successfully registered
           schema:
             $ref: '#/definitions/internal_handler.AuthResponse'
-        "400":
+        '400':
           description: Invalid request or validation error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Registration is closed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Email already exists
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3058,15 +4627,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Verification email sent if applicable
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request or already verified
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to resend verification email
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3088,15 +4657,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Password reset successfully
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid token, expired token, or weak password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to reset password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3118,19 +4687,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Token revoked successfully
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Refresh token not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to revoke token
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3151,15 +4720,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Email verified successfully
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid or expired token, or already verified
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to verify email
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3170,8 +4739,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Execute the full benchmark suite to test database, serialization,
-        and business logic performance
+      description: Execute the full benchmark suite to test database, serialization, and business logic performance
       parameters:
       - description: 'Include concurrent operation tests (default: false)'
         in: query
@@ -3181,24 +4749,23 @@ paths:
         in: query
         name: cleanup
         type: boolean
-      - description: 'Number of records to generate for benchmark testing (default:
-          1000, max: 500000)'
+      - description: 'Number of records to generate for benchmark testing (default: 1000, max: 500000)'
         in: query
         name: records
         type: integer
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Benchmark results
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3215,16 +4782,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Benchmark status
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3233,6 +4800,148 @@ paths:
       summary: Get benchmark status
       tags:
       - benchmark
+  /coaches/me/sessions:
+    get:
+      description: Get upcoming sessions for the authenticated coach. Admins see all sessions across all gyms; coaches see
+        only their assigned sessions.
+      parameters:
+      - description: Max sessions to return (default 20)
+        in: query
+        name: limit
+        required: false
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of upcoming sessions with count
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get coach's upcoming sessions
+      tags:
+      - coaches
+  /coaches/sessions/{session_id}/check-in/{reservation_id}:
+    post:
+      description: Check in an athlete's reservation. Coach must be assigned to the session's organization.
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      - description: Reservation ID
+        in: path
+        name: reservation_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Reservation checked in
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Check in reservation
+      tags:
+      - coaches
+  /coaches/sessions/{session_id}/complete:
+    post:
+      description: Mark a session as completed. Coach must be assigned to the session's organization.
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session marked as completed
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Complete session
+      tags:
+      - coaches
+  /coaches/sessions/{session_id}/no-show/{reservation_id}:
+    post:
+      description: Mark a reservation as no-show. Coach must be assigned to the session's organization.
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      - description: Reservation ID
+        in: path
+        name: reservation_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Reservation marked as no-show
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Mark reservation as no-show
+      tags:
+      - coaches
+  /coaches/sessions/{session_id}/roster:
+    get:
+      description: Get the roster of reservations for a session. Coach must be assigned to the session's organization.
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session roster with reservations
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get session roster
+      tags:
+      - coaches
   /data-change-logs:
     get:
       consumes:
@@ -3278,61 +4987,26 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Data change logs with total count
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid parameters
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List data change logs (Admin)
-      tags:
-      - admin
-  /data-change-logs/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a specific data change log entry by ID
-      parameters:
-      - description: Data Change Log ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Data change log entry
-          schema:
-            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.DataChangeLog'
-        "400":
-          description: Invalid ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
-          description: Log not found
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get data change log (Admin)
       tags:
       - admin
   /data-change-logs/entity/{entity_type}/{entity_id}:
@@ -3362,26 +5036,61 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Entity change history
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid entity_id
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Forbidden
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get entity history (Admin)
+      tags:
+      - admin
+  /data-change-logs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific data change log entry by ID
+      parameters:
+      - description: Data Change Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Data change log entry
+          schema:
+            $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.DataChangeLog'
+        '400':
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '403':
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '404':
+          description: Log not found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get data change log (Admin)
       tags:
       - admin
   /export/movements:
@@ -3406,15 +5115,15 @@ paths:
       - text/csv
       - application/json
       responses:
-        "200":
+        '200':
           description: Exported file (CSV or JSON)
           schema:
             type: file
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3427,8 +5136,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Export user's logged workouts to CSV or JSON format with optional
-        date range
+      description: Export user's logged workouts to CSV or JSON format with optional date range
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
@@ -3446,19 +5154,19 @@ paths:
       - text/csv
       - application/json
       responses:
-        "200":
+        '200':
           description: Exported file (CSV or JSON)
           schema:
             type: file
-        "400":
+        '400':
           description: Invalid date format
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3489,15 +5197,15 @@ paths:
       - text/csv
       - application/json
       responses:
-        "200":
+        '200':
           description: Exported file (CSV or JSON)
           schema:
             type: file
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3506,6 +5214,333 @@ paths:
       summary: Export WODs
       tags:
       - import-export
+  /gyms/{gym_id}/documents:
+    get:
+      description: List required documents for a gym (waivers, liability forms, etc.)
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of documents
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List gym documents
+      tags:
+      - scheduling
+  /gyms/{gym_id}/documents/{id}:
+    get:
+      description: Get details of a specific document
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Document details
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get document details
+      tags:
+      - scheduling
+  /gyms/{gym_id}/locations:
+    get:
+      description: List locations for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of locations
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List gym locations
+      tags:
+      - scheduling
+  /gyms/{gym_id}/locations/{id}:
+    get:
+      description: Get details of a specific gym location
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Location details
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get location details
+      tags:
+      - scheduling
+  /gyms/{gym_id}/packages:
+    get:
+      description: List class packages available at a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of class packages
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List class packages
+      tags:
+      - scheduling
+  /gyms/{gym_id}/packages/{id}:
+    get:
+      description: Get details of a specific class package
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Package details
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get class package details
+      tags:
+      - scheduling
+  /gyms/{gym_id}/sessions:
+    get:
+      description: List upcoming class sessions for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of sessions
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List gym sessions
+      tags:
+      - scheduling
+  /gyms/{gym_id}/sessions/{id}:
+    get:
+      description: Get details of a specific class session
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session details
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get session details
+      tags:
+      - scheduling
+  /gyms/{gym_id}/templates:
+    get:
+      description: List class templates for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of class templates
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: List class templates
+      tags:
+      - scheduling
+  /gyms/{gym_id}/users/me/credits:
+    get:
+      description: Get the authenticated user's class credits for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: User credit records
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's credits
+      tags:
+      - scheduling
+  /gyms/{gym_id}/users/me/credits/available:
+    get:
+      description: Get available (non-expired) credit count for the authenticated user at a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Available credit count
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's available credits
+      tags:
+      - scheduling
+  /gyms/{gym_id}/users/me/documents:
+    get:
+      description: Get the authenticated user's document completion status for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of user document statuses
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's gym documents
+      tags:
+      - scheduling
+  /gyms/{gym_id}/users/me/documents/pending:
+    get:
+      description: Get the authenticated user's pending (incomplete) documents for a gym
+      parameters:
+      - description: Organization/Gym ID
+        in: path
+        name: gym_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of pending documents
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's pending documents
+      tags:
+      - scheduling
   /import/movements/confirm:
     post:
       consumes:
@@ -3528,20 +5563,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import results with counts
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Import failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3564,16 +5599,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import preview with validation results
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file or validation failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3604,20 +5639,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import results with counts
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Import failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3640,16 +5675,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import preview with validation results
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file or validation failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3680,20 +5715,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import results with counts
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Import failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3716,20 +5751,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import preview with validation results
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Preview failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3760,20 +5795,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import results with counts
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Import failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3796,16 +5831,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Import preview with validation results
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid file or validation failed
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3822,11 +5857,11 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of all movements
           schema:
             $ref: '#/definitions/internal_handler.MovementListResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3847,25 +5882,77 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created movement
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a custom movement
+      tags:
+      - movements
+  /movements/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for movements by name
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results (default 20)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Matching movements
+          schema:
+            $ref: '#/definitions/internal_handler.MovementListResponse'
+        '400':
+          description: Missing query parameter
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Search movements
+      tags:
+      - movements
+  /movements/standard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve only standard (built-in) movements
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of standard movements
+          schema:
+            $ref: '#/definitions/internal_handler.MovementListResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: List standard movements
       tags:
       - movements
   /movements/{id}:
@@ -3882,23 +5969,23 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Movement deleted successfully
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid movement ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot delete standard movement
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3920,19 +6007,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Movement details
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
-        "400":
+        '400':
           description: Invalid movement ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Movement not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -3958,81 +6045,29 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Updated movement
           schema:
             $ref: '#/definitions/github_com_johnzastrow_actalog_internal_domain.Movement'
-        "400":
+        '400':
           description: Invalid request body
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Cannot modify standard movement
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a movement
-      tags:
-      - movements
-  /movements/search:
-    get:
-      consumes:
-      - application/json
-      description: Search for movements by name
-      parameters:
-      - description: Search query
-        in: query
-        name: q
-        required: true
-        type: string
-      - description: Max results (default 20)
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Matching movements
-          schema:
-            $ref: '#/definitions/internal_handler.MovementListResponse'
-        "400":
-          description: Missing query parameter
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      summary: Search movements
-      tags:
-      - movements
-  /movements/standard:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve only standard (built-in) movements
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of standard movements
-          schema:
-            $ref: '#/definitions/internal_handler.MovementListResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      summary: List standard movements
       tags:
       - movements
   /notifications:
@@ -4052,195 +6087,22 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of notifications
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List notifications
-      tags:
-      - notifications
-  /notifications/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a specific notification
-      parameters:
-      - description: Notification ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Notification deleted
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid notification ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete notification
-      tags:
-      - notifications
-  /notifications/{id}/like:
-    delete:
-      consumes:
-      - application/json
-      description: Remove like from a notification
-      parameters:
-      - description: Notification ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Like removed
-        "400":
-          description: Invalid notification ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Unlike notification
-      tags:
-      - notifications
-    post:
-      consumes:
-      - application/json
-      description: Like a notification (e.g., PR announcement)
-      parameters:
-      - description: Notification ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Notification liked
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid notification ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
-          description: Already liked
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Like notification
-      tags:
-      - notifications
-  /notifications/{id}/likes:
-    get:
-      consumes:
-      - application/json
-      description: Get all likes for a notification
-      parameters:
-      - description: Notification ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Likes list with count
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid notification ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get notification likes
-      tags:
-      - notifications
-  /notifications/{id}/read:
-    put:
-      consumes:
-      - application/json
-      description: Mark a specific notification as read
-      parameters:
-      - description: Notification ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Marked as read
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid notification ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Mark notification as read
       tags:
       - notifications
   /notifications/count:
@@ -4251,16 +6113,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Unread count
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4277,15 +6139,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: All marked as read
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4311,16 +6173,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of unread notifications
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4329,12 +6191,184 @@ paths:
       summary: List unread notifications
       tags:
       - notifications
+  /notifications/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Notification deleted
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete notification
+      tags:
+      - notifications
+  /notifications/{id}/like:
+    delete:
+      consumes:
+      - application/json
+      description: Remove like from a notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '204':
+          description: Like removed
+        '400':
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unlike notification
+      tags:
+      - notifications
+    post:
+      consumes:
+      - application/json
+      description: Like a notification (e.g., PR announcement)
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Notification liked
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '409':
+          description: Already liked
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Like notification
+      tags:
+      - notifications
+  /notifications/{id}/likes:
+    get:
+      consumes:
+      - application/json
+      description: Get all likes for a notification
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Likes list with count
+          schema:
+            additionalProperties: true
+            type: object
+        '400':
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get notification likes
+      tags:
+      - notifications
+  /notifications/{id}/read:
+    put:
+      consumes:
+      - application/json
+      description: Mark a specific notification as read
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Marked as read
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid notification ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read
+      tags:
+      - notifications
   /performance/movements/{id}:
     get:
       consumes:
       - application/json
-      description: Retrieve all performance records for a movement with calculated
-        1RM values
+      description: Retrieve all performance records for a movement with calculated 1RM values
       parameters:
       - description: Movement ID
         in: path
@@ -4344,20 +6378,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Performance history with best 1RM
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid movement ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4384,20 +6418,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Combined search results
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Missing search query
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4420,20 +6454,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: WOD performance history
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid WOD ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4455,16 +6489,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of personal records
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4486,16 +6520,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Movement PR summaries
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4518,24 +6552,24 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: New PR state
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Missing or invalid movement ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Movement not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4552,53 +6586,22 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of active sessions
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: List active sessions
-      tags:
-      - sessions
-  /sessions/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Revoke a specific session (log out that device)
-      parameters:
-      - description: Session ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Session revoked
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid session ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Revoke session
       tags:
       - sessions
   /sessions/revoke-all:
@@ -4615,15 +6618,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: All sessions revoked
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4632,6 +6635,186 @@ paths:
       summary: Revoke all sessions
       tags:
       - sessions
+  /sessions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Revoke a specific session (log out that device)
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Session revoked
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid session ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke session
+      tags:
+      - sessions
+  /sessions/{session_id}/reserve:
+    delete:
+      description: Cancel a reservation for a class session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Reservation cancelled
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Cancel reservation
+      tags:
+      - scheduling
+    post:
+      description: Reserve a spot in a class session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Reservation created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '402':
+          description: Payment required
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Reserve session spot
+      tags:
+      - scheduling
+  /sessions/{session_id}/waitlist:
+    delete:
+      description: Leave the waitlist for a class session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Removed from waitlist
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Leave session waitlist
+      tags:
+      - scheduling
+    get:
+      description: Get the waitlist for a class session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of waitlist entries
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get session waitlist
+      tags:
+      - scheduling
+    post:
+      description: Join the waitlist for a full class session
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '201':
+          description: Added to waitlist
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '402':
+          description: Payment required
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Join session waitlist
+      tags:
+      - scheduling
+  /sessions/{session_id}/waitlist/position:
+    get:
+      description: Get the authenticated user's position on the session waitlist
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Waitlist position
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get waitlist position
+      tags:
+      - scheduling
   /settings:
     get:
       consumes:
@@ -4640,16 +6823,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: User settings
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4672,20 +6855,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Updated settings
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4698,21 +6881,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve stats about active users who have logged workouts this
-        month
+      description: Retrieve stats about active users who have logged workouts this month
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Active users stats
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4729,16 +6911,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Subscription status
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4764,12 +6946,12 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of standard templates
           schema:
             additionalProperties: true
             type: object
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4792,20 +6974,20 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created template
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4828,17 +7010,17 @@ paths:
       produces:
       - application/json
       responses:
-        "204":
+        '204':
           description: Template deleted
-        "400":
+        '400':
           description: Invalid template ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
+        '403':
           description: Not the template owner
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4860,16 +7042,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Template details
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid template ID
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: Template not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4897,20 +7079,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Updated template
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid request
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4927,15 +7109,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Avatar deleted successfully
           schema:
             $ref: '#/definitions/internal_handler.ProfileResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to delete avatar
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4957,19 +7139,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Avatar uploaded successfully
           schema:
             $ref: '#/definitions/internal_handler.ProfileResponse'
-        "400":
+        '400':
           description: No file provided, file too large, or invalid file type
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to save avatar
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -4993,19 +7175,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Password changed successfully
           schema:
             $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
+        '400':
           description: Invalid request or weak password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized or incorrect current password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Failed to change password
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5031,16 +7213,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: User's audit logs with total count
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5049,6 +7231,74 @@ paths:
       summary: Get my audit logs
       tags:
       - audit
+  /users/me/documents:
+    get:
+      description: Get the authenticated user's documents across all gyms
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of user documents
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's documents
+      tags:
+      - scheduling
+  /users/me/notifications:
+    get:
+      description: Get the authenticated user's phase 4 notifications
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of notifications
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's class notifications
+      tags:
+      - scheduling
+  /users/me/reservations/upcoming:
+    get:
+      description: Get the authenticated user's upcoming reservations across all gyms
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of upcoming reservations
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get upcoming reservations
+      tags:
+      - scheduling
+  /users/me/waitlist:
+    get:
+      description: Get the authenticated user's waitlist entries across all gyms
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of waitlist entries
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+      security:
+      - BearerAuth: []
+      summary: Get user's waitlist entries
+      tags:
+      - scheduling
   /users/profile:
     get:
       consumes:
@@ -5057,19 +7307,19 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: User profile
           schema:
             $ref: '#/definitions/internal_handler.ProfileResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5092,27 +7342,27 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Profile updated successfully
           schema:
             $ref: '#/definitions/internal_handler.ProfileResponse'
-        "400":
+        '400':
           description: Invalid request body or birthday format
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
+        '404':
           description: User not found
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "409":
+        '409':
           description: Email already in use
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5142,11 +7392,11 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of WODs
           schema:
             $ref: '#/definitions/internal_handler.WODListResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5169,137 +7419,25 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Created WOD
           schema:
             $ref: '#/definitions/internal_handler.WODResponse'
-        "400":
+        '400':
           description: Invalid request body or missing name
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a custom WOD
-      tags:
-      - wods
-  /wods/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a custom WOD (cannot delete standard WODs)
-      parameters:
-      - description: WOD ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: WOD deleted successfully
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid WOD ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden - cannot delete this WOD
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a WOD
-      tags:
-      - wods
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a single WOD by its ID
-      parameters:
-      - description: WOD ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: WOD details
-          schema:
-            $ref: '#/definitions/internal_handler.WODResponse'
-        "400":
-          description: Invalid WOD ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      summary: Get WOD by ID
-      tags:
-      - wods
-    put:
-      consumes:
-      - application/json
-      description: Update an existing WOD (admin can update any, users only their
-        own custom WODs)
-      parameters:
-      - description: WOD ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated WOD details
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_handler.UpdateWODRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated WOD
-          schema:
-            $ref: '#/definitions/internal_handler.WODResponse'
-        "400":
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden - not your WOD
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update a WOD
       tags:
       - wods
   /wods/mine:
@@ -5319,15 +7457,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of user's custom WODs
           schema:
             $ref: '#/definitions/internal_handler.WODListResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5350,15 +7488,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Matching WODs
           schema:
             $ref: '#/definitions/internal_handler.WODListResponse'
-        "400":
+        '400':
           description: Missing search query
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5382,23 +7520,133 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of standard WODs
           schema:
             $ref: '#/definitions/internal_handler.WODListResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       summary: List standard WODs
       tags:
       - wods
+  /wods/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a custom WOD (cannot delete standard WODs)
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: WOD deleted successfully
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid WOD ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '403':
+          description: Forbidden - cannot delete this WOD
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a WOD
+      tags:
+      - wods
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single WOD by its ID
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: WOD details
+          schema:
+            $ref: '#/definitions/internal_handler.WODResponse'
+        '400':
+          description: Invalid WOD ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Get WOD by ID
+      tags:
+      - wods
+    put:
+      consumes:
+      - application/json
+      description: Update an existing WOD (admin can update any, users only their own custom WODs)
+      parameters:
+      - description: WOD ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated WOD details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.UpdateWODRequest'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Updated WOD
+          schema:
+            $ref: '#/definitions/internal_handler.WODResponse'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '403':
+          description: Forbidden - not your WOD
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a WOD
+      tags:
+      - wods
   /workouts:
     get:
       consumes:
       - application/json
-      description: Retrieve all logged workouts for the user with pagination and optional
-        date filtering
+      description: Retrieve all logged workouts for the user with pagination and optional date filtering
       parameters:
       - description: Max results (default 20)
         in: query
@@ -5419,20 +7667,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of workouts with pagination
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid date format
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5444,8 +7692,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Record a workout with performance data. Can be based on a template
-        or ad-hoc.
+      description: Record a workout with performance data. Can be based on a template or ad-hoc.
       parameters:
       - description: Workout data with optional performance
         in: body
@@ -5456,146 +7703,25 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        '201':
           description: Workout logged successfully
           schema:
             $ref: '#/definitions/internal_handler.UserWorkoutResponse'
-        "400":
+        '400':
           description: Invalid request body or missing required fields
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Log a workout
-      tags:
-      - workouts
-  /workouts/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a specific logged workout and all its performance data
-      parameters:
-      - description: Logged workout ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Workout deleted successfully
-          schema:
-            $ref: '#/definitions/internal_handler.MessageResponse'
-        "400":
-          description: Invalid workout ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden - not your workout
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a logged workout
-      tags:
-      - workouts
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a specific logged workout by ID with all performance data
-      parameters:
-      - description: Logged workout ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Logged workout details
-          schema:
-            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
-        "400":
-          description: Invalid workout ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get a logged workout
-      tags:
-      - workouts
-    put:
-      consumes:
-      - application/json
-      description: Update an existing logged workout's details and performance data
-      parameters:
-      - description: Logged workout ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated workout data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_handler.UpdateLoggedWorkoutRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Updated workout details
-          schema:
-            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden - not your workout
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
-          description: Workout not found
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update a logged workout
       tags:
       - workouts
   /workouts/my-templates:
@@ -5615,16 +7741,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: List of user's templates
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5646,16 +7772,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: PR movements and PR WODs
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5668,21 +7794,20 @@ paths:
     post:
       consumes:
       - application/json
-      description: Analyze all existing workouts and flag personal records based on
-        historical data
+      description: Analyze all existing workouts and flag personal records based on historical data
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Count of flagged PRs
           schema:
             additionalProperties: true
             type: object
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5710,20 +7835,20 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        '200':
           description: Monthly stats with workout count
           schema:
             additionalProperties: true
             type: object
-        "400":
+        '400':
           description: Invalid year or month
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
+        '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
+        '500':
           description: Internal server error
           schema:
             $ref: '#/definitions/internal_handler.ErrorResponse'
@@ -5732,10 +7857,144 @@ paths:
       summary: Get monthly workout stats
       tags:
       - workouts
+  /workouts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific logged workout and all its performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Workout deleted successfully
+          schema:
+            $ref: '#/definitions/internal_handler.MessageResponse'
+        '400':
+          description: Invalid workout ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '403':
+          description: Forbidden - not your workout
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a logged workout
+      tags:
+      - workouts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific logged workout by ID with all performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Logged workout details
+          schema:
+            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
+        '400':
+          description: Invalid workout ID
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a logged workout
+      tags:
+      - workouts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing logged workout's details and performance data
+      parameters:
+      - description: Logged workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated workout data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.UpdateLoggedWorkoutRequest'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Updated workout details
+          schema:
+            $ref: '#/definitions/internal_handler.UserWorkoutResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '403':
+          description: Forbidden - not your workout
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '404':
+          description: Workout not found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a logged workout
+      tags:
+      - workouts
 securityDefinitions:
   BearerAuth:
     description: 'JWT Bearer token. Format: "Bearer {token}"'
     in: header
     name: Authorization
     type: apiKey
-swagger: "2.0"
+swagger: '2.0'
+tags:
+- description: Coach portal - session roster and check-in
+  name: coaches
+- description: Class scheduling - sessions, reservations, waitlist
+  name: scheduling
+- description: Admin class scheduling management
+  name: admin-scheduling
+- description: Admin email configuration and logs
+  name: admin-email
+- description: Admin data quality and duplicate detection
+  name: admin-data-quality
+- description: Admin user import/export and batch operations
+  name: admin-user-management

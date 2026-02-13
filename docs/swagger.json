@@ -13,7 +13,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "0.22.0"
+        "version": "1.1.0-beta"
     },
     "host": "localhost:8080",
     "basePath": "/api",
@@ -7450,6 +7450,3597 @@
                     }
                 }
             }
+        },
+        "/coaches/me/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get upcoming sessions for the authenticated coach. Admins see all sessions across all gyms; coaches see only their assigned sessions.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coaches"
+                ],
+                "summary": "Get coach's upcoming sessions",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Max sessions to return (default 20)",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of upcoming sessions with count"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/coaches/sessions/{session_id}/roster": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the roster of reservations for a session. Coach must be assigned to the session's organization.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coaches"
+                ],
+                "summary": "Get session roster",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session roster with reservations"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/coaches/sessions/{session_id}/check-in/{reservation_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check in an athlete's reservation. Coach must be assigned to the session's organization.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coaches"
+                ],
+                "summary": "Check in reservation",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    },
+                    {
+                        "name": "reservation_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Reservation ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservation checked in"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/coaches/sessions/{session_id}/no-show/{reservation_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a reservation as no-show. Coach must be assigned to the session's organization.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coaches"
+                ],
+                "summary": "Mark reservation as no-show",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    },
+                    {
+                        "name": "reservation_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Reservation ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservation marked as no-show"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/coaches/sessions/{session_id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a session as completed. Coach must be assigned to the session's organization.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "coaches"
+                ],
+                "summary": "Complete session",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session marked as completed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List upcoming class sessions for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "List gym sessions",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of sessions"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/sessions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get session details",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/locations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List locations for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "List gym locations",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of locations"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/locations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific gym location",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get location details",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Location ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List class templates for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "List class templates",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of class templates"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List required documents for a gym (waivers, liability forms, etc.)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "List gym documents",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of documents"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/documents/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific document",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get document details",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Document ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/packages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List class packages available at a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "List class packages",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of class packages"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/packages/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific class package",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get class package details",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Package ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Package details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/users/me/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's document completion status for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's gym documents",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of user document statuses"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/users/me/documents/pending": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's pending (incomplete) documents for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's pending documents",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of pending documents"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/users/me/credits": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's class credits for a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's credits",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User credit records"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/gyms/{gym_id}/users/me/credits/available": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get available (non-expired) credit count for the authenticated user at a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's available credits",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Available credit count"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/me/reservations/upcoming": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's upcoming reservations across all gyms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get upcoming reservations",
+                "responses": {
+                    "200": {
+                        "description": "List of upcoming reservations"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/me/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's documents across all gyms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's documents",
+                "responses": {
+                    "200": {
+                        "description": "List of user documents"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/me/waitlist": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's waitlist entries across all gyms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's waitlist entries",
+                "responses": {
+                    "200": {
+                        "description": "List of waitlist entries"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/me/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's phase 4 notifications",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get user's class notifications",
+                "responses": {
+                    "200": {
+                        "description": "List of notifications"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/reserve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reserve a spot in a class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Reserve session spot",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Reservation created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "402": {
+                        "description": "Payment required"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel a reservation for a class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Cancel reservation",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservation cancelled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/waitlist": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the waitlist for a class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get session waitlist",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of waitlist entries"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Join the waitlist for a full class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Join session waitlist",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Added to waitlist"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "402": {
+                        "description": "Payment required"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Leave the waitlist for a class session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Leave session waitlist",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Removed from waitlist"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/waitlist/position": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's position on the session waitlist",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scheduling"
+                ],
+                "summary": "Get waitlist position",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Waitlist position"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/locations": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new gym location",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create gym location",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Location created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/locations/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a gym location",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update gym location",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Location ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a gym location",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Delete gym location",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Location ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/templates": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new class template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create class template",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Template created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a class template by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Get class template",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Template details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a class template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update class template",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Template updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a class template. Supports mode parameter: template_only, with_future_sessions, with_all_sessions",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Delete class template",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    },
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Delete mode: template_only, with_future_sessions, with_all_sessions",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Template deleted with cascade results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}/preview-schedule": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Preview the schedule that would be generated for a template",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Preview template schedule",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview of scheduled sessions"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}/slots/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List schedule slots for a template",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "List schedule slots",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of schedule slots"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a schedule slot for a template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create schedule slot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Slot created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}/slots/{slot_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a schedule slot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update schedule slot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    },
+                    {
+                        "name": "slot_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Slot ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Slot updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a schedule slot",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Delete schedule slot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    },
+                    {
+                        "name": "slot_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Slot ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Slot deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}/coaches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get default coaches assigned to a template",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Get template coaches",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of template coaches"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a default coach to a template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Add template coach",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Coach added"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/scheduling/templates/{id}/coaches/{user_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a default coach from a template",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Remove template coach",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Template ID",
+                        "required": true
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Coach user ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coach removed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/sessions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a class session manually",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create session",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Session created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/sessions/batch-workout": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Batch update workout assignment for multiple sessions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Batch update session workout",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sessions updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/sessions/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a class session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update session",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/sessions/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel a class session with optional reason",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Cancel session",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session cancelled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/coaches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List coaches assigned to a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "List gym coaches",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of coaches"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assign a coach to a gym",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Assign coach to gym",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Coach assigned"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/coaches/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unassign a coach from a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Unassign coach from gym",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Coach assignment ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coach unassigned"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/documents": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a document type for a gym",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create document",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Document created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/documents/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a document type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update document",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Document ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a document type",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Delete document",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Document ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/packages": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a class package for a gym",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Create class package",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Package created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/packages/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a class package",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Update class package",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Package ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Package updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a class package",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Delete class package",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Package ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Package deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/user-documents/{id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a user document as completed",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Mark document completed",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "User document ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document marked as completed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/users/{user_id}/documents/init": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Initialize document records for a user at a gym",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Initialize user documents",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "User ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documents initialized"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{gym_id}/users/{user_id}/credits": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Purchase or add credits for a user at a gym",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Add credits for user",
+                "parameters": [
+                    {
+                        "name": "gym_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Organization/Gym ID",
+                        "required": true
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "User ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Credits added"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/roster": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the roster of reservations for a session (admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Get session roster (admin)",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session roster"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/check-in/{reservation_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check in a reservation (admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Check in reservation (admin)",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    },
+                    {
+                        "name": "reservation_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Reservation ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Checked in"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/no-show/{reservation_id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a reservation as no-show (admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Mark no-show (admin)",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    },
+                    {
+                        "name": "reservation_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Reservation ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marked as no-show"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a session as completed (admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Complete session (admin)",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session completed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/coaches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get coaches assigned to a session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Get session coaches",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of session coaches"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a coach to a session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Add session coach",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Coach added to session"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/sessions/{session_id}/coaches/{user_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a coach from a session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-scheduling"
+                ],
+                "summary": "Remove session coach",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Session ID",
+                        "required": true
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Coach user ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coach removed from session"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/user-management/import/preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Preview user import from CSV file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-user-management"
+                ],
+                "summary": "Preview user import",
+                "responses": {
+                    "200": {
+                        "description": "Import preview with validation results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/user-management/import/confirm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirm and execute user import",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-user-management"
+                ],
+                "summary": "Confirm user import",
+                "responses": {
+                    "200": {
+                        "description": "Import results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/user-management/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Export all users to CSV format",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "admin-user-management"
+                ],
+                "summary": "Export users to CSV",
+                "responses": {
+                    "200": {
+                        "description": "CSV file download"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/user-management/filter": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List users with search and date filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-user-management"
+                ],
+                "summary": "Filter users",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Search by name or email",
+                        "required": false
+                    },
+                    {
+                        "name": "created_after",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Filter by creation date (ISO 8601)",
+                        "required": false
+                    },
+                    {
+                        "name": "created_before",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Filter by creation date (ISO 8601)",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Filtered user list"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/user-management/batch-password-reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Send password reset emails to selected users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-user-management"
+                ],
+                "summary": "Batch password reset",
+                "responses": {
+                    "200": {
+                        "description": "Reset emails sent"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/email/config": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current email/SMTP configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Get email configuration",
+                "responses": {
+                    "200": {
+                        "description": "Email configuration details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/email/test": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Send a test email to verify SMTP configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Send test email",
+                "responses": {
+                    "200": {
+                        "description": "Test email sent"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/email-logs/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List email delivery logs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "List email logs",
+                "responses": {
+                    "200": {
+                        "description": "List of email logs"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/email-logs/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get email delivery statistics (success/failure rates)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Get email statistics",
+                "responses": {
+                    "200": {
+                        "description": "Email statistics"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/email-logs/failures": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get recent email delivery failures",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Get recent email failures",
+                "responses": {
+                    "200": {
+                        "description": "List of failed emails"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/email-logs/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete old email logs based on retention period",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Cleanup email logs",
+                "responses": {
+                    "200": {
+                        "description": "Cleanup results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/email-logs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific email log entry",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-email"
+                ],
+                "summary": "Get email log details",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "type": "integer",
+                        "description": "Email log ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email log details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/full-scan": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Run a comprehensive data quality scan including duplicates and data issues",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Full data quality scan",
+                "responses": {
+                    "200": {
+                        "description": "Complete scan results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/duplicates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Scan all entity types for duplicate records",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Scan for duplicates",
+                "responses": {
+                    "200": {
+                        "description": "Duplicate scan results for all entities"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/duplicates/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a quick summary of duplicate counts by entity type",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Get duplicate summary",
+                "responses": {
+                    "200": {
+                        "description": "Summary of duplicates per entity type"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/duplicates/{entity}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Scan a specific entity type for duplicates (movements, wods, user_workouts, users, workouts)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Scan duplicates by entity",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "type": "string",
+                        "description": "Entity type: movements, wods, user_workouts, users, workouts",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Duplicate groups for entity"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/duplicates/merge/preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Preview a duplicate merge operation showing FK reference impact",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Preview duplicate merge",
+                "responses": {
+                    "200": {
+                        "description": "Merge preview with FK impact"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/duplicates/merge/confirm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Execute a duplicate merge operation. Updates FK references and deletes duplicate records.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Confirm duplicate merge",
+                "responses": {
+                    "200": {
+                        "description": "Merge results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/admin/data-quality/issues": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Scan for data quality issues: orphaned FKs, empty required fields, future dates, invalid emails",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-data-quality"
+                ],
+                "summary": "Scan data quality issues",
+                "responses": {
+                    "200": {
+                        "description": "List of data quality issues"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/admin/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get admin dashboard metrics: user counts, workout stats, system health",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get admin metrics",
+                "responses": {
+                    "200": {
+                        "description": "Admin dashboard metrics"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -8769,5 +12360,31 @@
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "coaches",
+            "description": "Coach portal - session roster and check-in"
+        },
+        {
+            "name": "scheduling",
+            "description": "Class scheduling - sessions, reservations, waitlist"
+        },
+        {
+            "name": "admin-scheduling",
+            "description": "Admin class scheduling management"
+        },
+        {
+            "name": "admin-email",
+            "description": "Admin email configuration and logs"
+        },
+        {
+            "name": "admin-data-quality",
+            "description": "Admin data quality and duplicate detection"
+        },
+        {
+            "name": "admin-user-management",
+            "description": "Admin user import/export and batch operations"
+        }
+    ]
 }
