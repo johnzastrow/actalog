@@ -42,7 +42,8 @@ vi.mock('@/utils/timezone', () => ({
     if (!date) return ''
     return 'Mon, Jan 15, 2024'
   }),
-  getTodayInTimezone: vi.fn(() => '2024-01-16')
+  getTodayInTimezone: vi.fn(() => '2024-01-16'),
+  getYesterdayInTimezone: vi.fn(() => '2024-01-15')
 }))
 
 // Mock MarkdownRenderer

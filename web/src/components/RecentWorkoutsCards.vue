@@ -101,7 +101,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
-import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
+import { formatDateInTimezone, getTodayInTimezone, getYesterdayInTimezone } from '@/utils/timezone'
 
 const settingsStore = useSettingsStore()
 
@@ -149,10 +149,7 @@ function formatRelativeDate(dateString) {
   const todayStr = getTodayInTimezone(tz)
 
   // Calculate yesterday
-  const todayDate = new Date(todayStr)
-  const yesterdayDate = new Date(todayDate)
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
+  const yesterdayStr = getYesterdayInTimezone(tz)
 
   if (datePart === todayStr) return 'Today'
   if (datePart === yesterdayStr) return 'Yesterday'

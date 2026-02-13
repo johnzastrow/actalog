@@ -355,10 +355,13 @@ import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
+import { getTodayInTimezone } from '@/utils/timezone'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 
 // Computed: can current user edit this WOD?
 const canEdit = computed(() => {
@@ -432,8 +435,7 @@ function editWOD() {
 
 // Helper functions for Quick Log
 function getTodayDate() {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+  return getTodayInTimezone(settingsStore.timezone)
 }
 
 function formatQuickLogName(date) {

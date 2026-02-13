@@ -74,7 +74,12 @@ vi.mock('@/utils/timezone', () => ({
     const d = new Date(date)
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   },
-  getTodayInTimezone: () => new Date().toISOString().split('T')[0]
+  getTodayInTimezone: () => new Date().toISOString().split('T')[0],
+  getYesterdayInTimezone: () => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return d.toISOString().split('T')[0]
+  }
 }))
 
 // Mock RPE utils

@@ -150,8 +150,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+import { useSettingsStore } from '@/stores/settings'
+import { formatDateInTimezone, getTodayInTimezone, getYesterdayInTimezone } from '@/utils/timezone'
 
 const router = useRouter()
+const settingsStore = useSettingsStore()
 const loading = ref(true)
 const workouts = ref([])
 const filterType = ref(null)
@@ -189,7 +192,7 @@ const filteredWorkouts = computed(() => {
 const groupedWorkouts = computed(() => {
   const groups = {}
   filteredWorkouts.value.forEach(workout => {
-    const date = new Date(workout.workout_date).toISOString().split('T')[0]
+    const date = workout.workout_date.split('T')[0]
     if (!groups[date]) {
       groups[date] = []
     }
@@ -199,24 +202,15 @@ const groupedWorkouts = computed(() => {
 })
 
 function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  const dateOnly = date.toISOString().split('T')[0]
-  const todayStr = today.toISOString().split('T')[0]
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  const tz = settingsStore.timezone
+  const dateOnly = dateStr.split('T')[0]
+  const todayStr = getTodayInTimezone(tz)
+  const yesterdayStr = getYesterdayInTimezone(tz)
 
   if (dateOnly === todayStr) return 'Today'
   if (dateOnly === yesterdayStr) return 'Yesterday'
 
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  return formatDateInTimezone(dateStr, tz, 'EEE, MMM d, yyyy')
 }
 
 function formatTime(seconds) {

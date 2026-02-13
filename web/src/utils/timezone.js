@@ -109,6 +109,24 @@ export function getTodayInTimezone(timezone) {
 }
 
 /**
+ * Get yesterday's date in a specific timezone as YYYY-MM-DD
+ * @param {string} timezone - IANA timezone identifier
+ * @returns {string} Date string in YYYY-MM-DD format
+ */
+export function getYesterdayInTimezone(timezone) {
+  try {
+    const now = new Date()
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    return formatInTimeZone(yesterday, timezone, 'yyyy-MM-dd')
+  } catch (e) {
+    console.warn('Error getting yesterday in timezone:', e)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    return formatDate(yesterday, 'yyyy-MM-dd')
+  }
+}
+
+/**
  * Convert a date to a specific timezone
  * @param {Date|string} date - Date to convert
  * @param {string} timezone - IANA timezone identifier

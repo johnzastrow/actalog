@@ -348,10 +348,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { useWodsStore } from '@/stores/wods'
 import axios from '@/utils/axios'
 import DetailViewDialog from '@/components/DetailViewDialog.vue'
+import { useSettingsStore } from '@/stores/settings'
+import { getTodayInTimezone } from '@/utils/timezone'
 
 const router = useRouter()
 const route = useRoute()
 const wodsStore = useWodsStore()
+const settingsStore = useSettingsStore()
 
 // State
 const searchQuery = ref('')
@@ -453,8 +456,7 @@ function handleDetailQuickLog({ data }) {
 
 // Helper functions for Quick Log
 function getTodayDate() {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+  return getTodayInTimezone(settingsStore.timezone)
 }
 
 function formatQuickLogName(date) {

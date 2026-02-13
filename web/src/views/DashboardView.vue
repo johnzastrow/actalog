@@ -732,7 +732,7 @@ import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
-import { formatDateInTimezone, getTodayInTimezone } from '@/utils/timezone'
+import { formatDateInTimezone, getTodayInTimezone, getYesterdayInTimezone } from '@/utils/timezone'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import PullToRefresh from '@/components/PullToRefresh.vue'
 import DateWorkoutDetailDialog from '@/components/DateWorkoutDetailDialog.vue'
@@ -1053,10 +1053,7 @@ function formatDate(dateString) {
 
   // Get today and yesterday in user's timezone
   const todayStr = getTodayInTimezone(tz)
-  const todayDate = new Date(todayStr)
-  const yesterdayDate = new Date(todayDate)
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-  const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
+  const yesterdayStr = getYesterdayInTimezone(tz)
 
   if (datePart === todayStr) {
     return 'Today'

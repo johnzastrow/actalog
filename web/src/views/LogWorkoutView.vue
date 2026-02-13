@@ -469,9 +469,12 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { RPE_OPTIONS } from '@/utils/rpe'
+import { useSettingsStore } from '@/stores/settings'
+import { getTodayInTimezone } from '@/utils/timezone'
 
 const router = useRouter()
 const route = useRoute()
+const settingsStore = useSettingsStore()
 
 // Edit mode state
 const isEditMode = ref(false)
@@ -525,13 +528,9 @@ watch(selectedTemplate, (newTemplate) => {
   }
 })
 
-// Get today's date in YYYY-MM-DD format
+// Get today's date in YYYY-MM-DD format using user's timezone
 function getTodayDate() {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
-  const day = String(today.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return getTodayInTimezone(settingsStore.timezone)
 }
 
 // Initialize performance arrays based on template

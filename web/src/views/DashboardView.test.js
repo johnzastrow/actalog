@@ -38,6 +38,11 @@ vi.mock('@/utils/timezone', () => ({
   getTodayInTimezone: vi.fn(() => {
     const today = new Date()
     return today.toISOString().split('T')[0]
+  }),
+  getYesterdayInTimezone: vi.fn(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return d.toISOString().split('T')[0]
   })
 }))
 
