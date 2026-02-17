@@ -1,6 +1,6 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-02-12
+> **Last Updated:** 2026-02-16
 > **Current Version:** 1.1.0-beta (Build 36)
 
 ---
@@ -447,13 +447,13 @@ These features can be added after the core frontend is complete:
 - [x] `[LOW]` **Add wodify_import_service tests** - 100% coverage achieved
 
 #### Features
-- [ ] `[MEDIUM]` **Admin Screen Consolidation** - Consolidate admin screens into more complex screens with tabs and related content areas to reduce having to always go back to the main Profile screen when performing administration. Currently each admin function is a separate screen requiring navigation back to Profile to access another. Group related admin functionality into tabbed views (e.g., Users tab with Import/Export, Subscriptions, and Audit Logs sub-tabs; Content tab with WODs, Movements, and Templates; System tab with Backups, Metrics, and Email Settings). Also create logical groups of screens in the Profile screen listing instead of the current flat running list (e.g., "User Management", "Content", "System", "Scheduling" groups).
+- [x] `[MEDIUM]` **Admin Screen Consolidation (Partial)** - Grouped Profile screen's 16 admin links into 5 labeled categories (Users & Access, Scheduling, Communication, Data & System, Organizations) using `v-list-subheader` dividers. Removed disabled "System Reports" placeholder. Full tab consolidation of admin screens into complex tabbed views remains for future work.
 - [ ] `[MEDIUM]` **Consistency Achievement Notifications** - Automatically notify users when they hit attendance milestones (e.g., 4x/week, 15 classes in a month, 4 day streak, 50, 100, 200 300 workouts. Alerts when 7 workout days in a row, missed one week, and then each week after until a workout is recorded). Track gym visit frequency from user workouts logged and/or reservations/check-ins and trigger congratulatory notifications at configurable thresholds
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
 - [ ] `[LOW]` **Data Visualization** - Charts for PR progression
 - [ ] `[LOW]` **Social Features** - Share workouts (opt-in)
-- [ ] `[MEDIUM]` **UI Styling Consistency Review** - Review all screens to ensure consistent styling and UI conventions are applied throughout the app. Check colors, spacing, typography, component styling, button placement, dialog patterns, form layouts, error/success feedback, and loading states. Present proposed changes to the user for approval before applying any modifications.
-- [ ] `[MEDIUM]` **Admin Breadcrumbs & Navigation Consistency** - Review all admin screens to ensure they have appropriate breadcrumbs and consistent navigation approaches. Audit current admin views for missing or inconsistent breadcrumb trails, back buttons, and navigation patterns. Standardize how users navigate between admin sections. Present proposed changes to the user for approval before applying any modifications.
+- [x] `[MEDIUM]` **UI Styling Consistency Review (Partial)** - Replaced hardcoded `#2c3e50` inline color styles with Vuetify theme classes (`text-h6`, `text-subtitle-1`) in AdminDataQualityView (4 occurrences), AdminDataCleanupView (3), and AdminView (1) for dark mode compatibility. Remaining screens (WorkoutCalendarView, WorkoutTimelineView fixed headers; PerformanceView Chart.js config) flagged for future review.
+- [x] `[MEDIUM]` **Admin Breadcrumbs & Navigation Consistency (Partial)** - Fixed AdminSchedulingView to use shared AdminHeader component instead of custom gradient header, adding breadcrumb navigation (Admin > Scheduling) consistent with all other 17 admin views. Full audit of remaining admin views for navigation consistency remains for future work.
 
 #### Technical Debt
 - [ ] `[LOW]` **Multiple Save Issue** - TemplateEditDialog save() is being called 3x instead of 1x; investigate root cause (possibly related to Vue reactivity with Schedule tab slots)
