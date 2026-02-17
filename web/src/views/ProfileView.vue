@@ -376,56 +376,11 @@
           </span>
         </div>
         <v-list bg-color="transparent" density="compact">
-          <v-list-item
-            prepend-icon="mdi-chart-bar"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/metrics')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              System Metrics
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Real-time statistics and health
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-
-          <v-list-item
-            prepend-icon="mdi-database-refresh"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/data-cleanup')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Data Cleanup
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Fix WOD score_type mismatches
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-
-          <v-list-item
-            prepend-icon="mdi-database-check"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/data-quality')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Data Quality
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Scan duplicates and data issues
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
+          <!-- Users & Access -->
+          <v-list-subheader>
+            <v-icon size="small" class="mr-1">mdi-account-group</v-icon>
+            Users &amp; Access
+          </v-list-subheader>
 
           <v-list-item
             prepend-icon="mdi-account-multiple"
@@ -433,12 +388,8 @@
             style="cursor: pointer"
             @click="$router.push('/admin/users')"
           >
-            <v-list-item-title class="font-weight-medium" >
-              User Management
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Manage accounts and permissions
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">User Management</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage accounts and permissions</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
@@ -450,16 +401,33 @@
             style="cursor: pointer"
             @click="$router.push('/admin/user-content')"
           >
-            <v-list-item-title class="font-weight-medium" >
-              User Content
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Manage user-created WODs, movements, workouts
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">User Content</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage user-created WODs, movements, workouts</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-credit-card"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/subscriptions')"
+          >
+            <v-list-item-title class="font-weight-medium">Subscription Management</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage user and org subscriptions</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-divider class="my-1" />
+
+          <!-- Scheduling -->
+          <v-list-subheader>
+            <v-icon size="small" class="mr-1">mdi-calendar-clock</v-icon>
+            Scheduling
+          </v-list-subheader>
 
           <v-list-item
             prepend-icon="mdi-calendar-edit"
@@ -487,56 +455,13 @@
             </template>
           </v-list-item>
 
-          <v-list-item
-            prepend-icon="mdi-history"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/audit-logs')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Audit Logs
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              View security events and activity
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
+          <v-divider class="my-1" />
 
-          <v-list-item
-            prepend-icon="mdi-database-export"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/backups')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Database Backups
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Create and restore backups
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-
-          <v-list-item
-            prepend-icon="mdi-file-document-edit"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/data-change-logs')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Data Change Logs
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Track edits and deletions
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
+          <!-- Communication -->
+          <v-list-subheader>
+            <v-icon size="small" class="mr-1">mdi-bullhorn</v-icon>
+            Communication
+          </v-list-subheader>
 
           <v-list-item
             prepend-icon="mdi-bullhorn"
@@ -544,46 +469,8 @@
             style="cursor: pointer"
             @click="$router.push('/admin/announcements')"
           >
-            <v-list-item-title class="font-weight-medium" >
-              Announcements
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Send notifications to users
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-
-          <v-list-item
-            prepend-icon="mdi-domain"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/organizations')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Gym Management
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Manage gyms and members
-            </v-list-item-subtitle>
-            <template #append>
-              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-
-          <v-list-item
-            prepend-icon="mdi-credit-card"
-            rounded
-            style="cursor: pointer"
-            @click="$router.push('/admin/subscriptions')"
-          >
-            <v-list-item-title class="font-weight-medium" >
-              Subscription Management
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Manage user and org subscriptions
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">Announcements</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Send notifications to users</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
@@ -595,12 +482,8 @@
             style="cursor: pointer"
             @click="$router.push('/admin/email-settings')"
           >
-            <v-list-item-title class="font-weight-medium" >
-              Email Settings
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Configure SMTP and email options
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">Email Settings</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Configure SMTP and email options</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
@@ -612,28 +495,118 @@
             style="cursor: pointer"
             @click="$router.push('/admin/email-logs')"
           >
-            <v-list-item-title class="font-weight-medium" >
-              Email Logs
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              View sent email history
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">Email Logs</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">View sent email history</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-divider class="my-1" />
+
+          <!-- Data & System -->
+          <v-list-subheader>
+            <v-icon size="small" class="mr-1">mdi-database-cog</v-icon>
+            Data &amp; System
+          </v-list-subheader>
+
+          <v-list-item
+            prepend-icon="mdi-chart-bar"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/metrics')"
+          >
+            <v-list-item-title class="font-weight-medium">System Metrics</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Real-time statistics and health</v-list-item-subtitle>
             <template #append>
               <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
 
           <v-list-item
-            prepend-icon="mdi-chart-bar"
-            disabled
+            prepend-icon="mdi-database-check"
             rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/data-quality')"
           >
-            <v-list-item-title class="font-weight-medium text-disabled">
-              System Reports
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-disabled">
-              Coming soon
-            </v-list-item-subtitle>
+            <v-list-item-title class="font-weight-medium">Data Quality</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Scan duplicates and data issues</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-database-refresh"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/data-cleanup')"
+          >
+            <v-list-item-title class="font-weight-medium">Data Cleanup</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Fix WOD score_type mismatches</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-file-document-edit"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/data-change-logs')"
+          >
+            <v-list-item-title class="font-weight-medium">Data Change Logs</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Track edits and deletions</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-database-export"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/backups')"
+          >
+            <v-list-item-title class="font-weight-medium">Database Backups</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Create and restore backups</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-history"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/audit-logs')"
+          >
+            <v-list-item-title class="font-weight-medium">Audit Logs</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">View security events and activity</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+
+          <v-divider class="my-1" />
+
+          <!-- Organizations -->
+          <v-list-subheader>
+            <v-icon size="small" class="mr-1">mdi-domain</v-icon>
+            Organizations
+          </v-list-subheader>
+
+          <v-list-item
+            prepend-icon="mdi-domain"
+            rounded
+            style="cursor: pointer"
+            @click="$router.push('/admin/organizations')"
+          >
+            <v-list-item-title class="font-weight-medium">Gym Management</v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-disabled">Manage gyms and members</v-list-item-subtitle>
+            <template #append>
+              <v-icon color="surface-variant" size="small">mdi-chevron-right</v-icon>
+            </template>
           </v-list-item>
         </v-list>
       </v-card>

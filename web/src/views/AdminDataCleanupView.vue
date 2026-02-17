@@ -9,7 +9,7 @@
 
         <!-- Scan Section -->
         <v-card elevation="0" rounded="lg" class="pa-4 mb-4">
-          <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 12px">
+          <h3 class="text-h6 font-weight-bold mb-3">
             Step 1: Scan for Mismatches
           </h3>
           <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin-bottom: 16px">
@@ -30,7 +30,7 @@
 
         <!-- Results Section -->
         <v-card v-if="scanned" elevation="0" rounded="lg" class="pa-4 mb-4">
-          <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 12px">
+          <h3 class="text-h6 font-weight-bold mb-3">
             Scan Results
           </h3>
 
@@ -89,7 +89,7 @@
 
             <!-- Fix Action -->
             <v-divider class="my-4"></v-divider>
-            <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 12px">
+            <h3 class="text-h6 font-weight-bold mb-3">
               Step 2: Fix Mismatches
             </h3>
             <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin-bottom: 16px">

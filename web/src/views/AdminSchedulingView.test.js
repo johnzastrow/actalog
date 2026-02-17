@@ -97,6 +97,10 @@ describe('AdminSchedulingView', () => {
         stubs: {
           RouterLink: {
             template: '<a><slot /></a>'
+          },
+          AdminHeader: {
+            template: '<div class="admin-header"><h1>{{ title }}</h1><p>{{ subtitle }}</p></div>',
+            props: ['title', 'subtitle', 'breadcrumbs']
           }
         }
       }

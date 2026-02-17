@@ -1,18 +1,11 @@
 <template>
-  <div class="scheduling-view">
-    <!-- Page Header -->
-    <div class="page-header pa-4 d-flex align-center">
-      <v-btn icon variant="text" color="white" class="mr-2" @click="$router.back()">
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
-      <div class="flex-grow-1">
-        <div class="text-h6 font-weight-bold text-white">Class Scheduling</div>
-        <div class="text-caption text-white" style="opacity: 0.8;">Manage templates, sessions, and coaches</div>
-      </div>
-      <v-icon color="white" size="large">mdi-calendar-clock</v-icon>
-    </div>
-
-    <v-container fluid class="pa-4 bg-grey-lighten-4">
+  <div class="mobile-view-wrapper">
+    <v-container fluid class="pa-4">
+      <AdminHeader
+        title="Class Scheduling"
+        subtitle="Manage templates, sessions, and coaches"
+        :breadcrumbs="[{ title: 'Scheduling', to: '/admin/scheduling' }]"
+      />
       <!-- Organization Selector -->
       <div class="form-section mb-4">
         <v-select
@@ -516,6 +509,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from '@/utils/axios'
+import AdminHeader from '@/components/AdminHeader.vue'
 import TemplateEditDialog from '@/components/scheduling/TemplateEditDialog.vue'
 import SessionsGrid from '@/components/scheduling/SessionsGrid.vue'
 import WorkoutAssignmentTab from '@/components/scheduling/WorkoutAssignmentTab.vue'
@@ -1129,18 +1123,6 @@ function getInitials(name) {
 </script>
 
 <style scoped>
-.scheduling-view {
-  min-height: 100vh;
-  padding-bottom: 70px;
-  background-color: #f5f5f5;
-}
-
-/* Page Header - matches dialog header */
-.page-header {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  color: white;
-}
-
 /* Form Sections - white cards with subtle shadow */
 .form-section {
   background-color: white;

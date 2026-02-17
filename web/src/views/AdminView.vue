@@ -16,7 +16,7 @@
               <div class="d-flex align-center mb-3">
                 <v-icon color="primary" size="32" class="mr-3">mdi-database-refresh</v-icon>
                 <div>
-                  <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600">Data Cleanup</h3>
+                  <h3 class="text-h6 font-weight-bold">Data Cleanup</h3>
                   <p style="color: rgb(var(--v-theme-on-surface), 0.6); font-size: 14px; margin: 0">Fix WOD score_type mismatches</p>
                 </div>
               </div>

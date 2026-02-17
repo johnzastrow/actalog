@@ -28,7 +28,7 @@
         <v-window-item value="overview">
           <v-card elevation="0" rounded="lg" class="pa-4 mb-4">
             <div class="d-flex align-center mb-4">
-              <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600">Full Database Scan</h3>
+              <h3 class="text-h6 font-weight-bold">Full Database Scan</h3>
               <v-spacer></v-spacer>
               <v-btn
                 color="primary"
@@ -77,7 +77,7 @@
 
             <!-- Duplicate Summary by Entity -->
             <div v-if="scanned && duplicateSummary" class="mt-4">
-              <h4 style="color: #2c3e50; font-size: 16px; font-weight: 600; margin-bottom: 12px">
+              <h4 class="text-subtitle-1 font-weight-bold mb-3">
                 Duplicates by Entity Type
               </h4>
               <v-row dense>
@@ -112,7 +112,7 @@
 
             <!-- Issue Summary by Type -->
             <div v-if="scanned" class="mt-4">
-              <h4 style="color: #2c3e50; font-size: 16px; font-weight: 600; margin-bottom: 12px">
+              <h4 class="text-subtitle-1 font-weight-bold mb-3">
                 Data Quality Checks
               </h4>
               <v-row dense>
@@ -272,7 +272,7 @@
         <v-window-item value="issues">
           <v-card elevation="0" rounded="lg" class="pa-4 mb-4">
             <div class="d-flex align-center mb-4">
-              <h3 style="color: #2c3e50; font-size: 18px; font-weight: 600">Data Quality Issues</h3>
+              <h3 class="text-h6 font-weight-bold">Data Quality Issues</h3>
               <v-spacer></v-spacer>
               <v-btn
                 color="primary"
