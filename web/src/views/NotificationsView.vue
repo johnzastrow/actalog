@@ -294,6 +294,10 @@ const getNotificationIcon = (type) => {
       return 'mdi-fire'
     case 'wod_milestone':
       return 'mdi-star'
+    case 'consistency_milestone':
+      return 'mdi-medal'
+    case 'consistency_inactivity':
+      return 'mdi-clock-alert-outline'
     default:
       return 'mdi-bell'
   }
@@ -307,6 +311,10 @@ const getNotificationColor = (type) => {
       return 'error' // orange/red
     case 'wod_milestone':
       return 'primary' // theme primary
+    case 'consistency_milestone':
+      return 'success'
+    case 'consistency_inactivity':
+      return 'warning'
     default:
       return 'grey'
   }

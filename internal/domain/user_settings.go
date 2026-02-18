@@ -14,6 +14,7 @@ type UserSettings struct {
 	DistanceUnit                string    `json:"distance_unit"`                  // miles, km
 	Timezone                    string    `json:"timezone"`                       // IANA timezone identifier
 	AdminUserEventNotifications bool      `json:"admin_user_event_notifications"` // Admins: receive user event emails
+	LeaderboardOptIn            bool      `json:"leaderboard_opt_in"`             // Show on community leaderboards
 	CreatedAt                   time.Time `json:"created_at"`
 	UpdatedAt                   time.Time `json:"updated_at"`
 }

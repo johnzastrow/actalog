@@ -467,6 +467,12 @@ func main() {
 	settingsHandler := handler.NewSettingsHandler(userSettingsService, appLogger)
 	prHandler := handler.NewPRHandler(db, appLogger)
 	performanceHandler := handler.NewPerformanceHandler(movementRepo, wodRepo, userWorkoutMovementRepo, userWorkoutWODRepo, appLogger)
+	leaderboardRepo := repository.NewLeaderboardRepository(db)
+	leaderboardService := service.NewLeaderboardService(leaderboardRepo, orgRepo, movementRepo, wodRepo, userSettingsRepo)
+	leaderboardHandler := handler.NewLeaderboardHandler(leaderboardService, appLogger)
+	consistencyRepo := repository.NewConsistencyRepository(db)
+	consistencyService := service.NewConsistencyService(consistencyRepo, notificationRepo, userRepo, orgRepo)
+	consistencyHandler := handler.NewConsistencyHandler(consistencyService, appLogger)
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, movementRepo, workoutRepo, userRepo, wodService, movementService, workoutTemplateService, appLogger)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
 	dataChangeLogHandler := handler.NewDataChangeLogHandler(dataChangeLogService, appLogger)
@@ -521,6 +527,13 @@ func main() {
 	if cfg.Scheduler.Enabled {
 		appScheduler = scheduler.NewScheduler(appLogger)
 		appScheduler.AddJob(materializer.CreateMaterializerJob(cfg.Scheduler.Interval))
+		appScheduler.AddJob(&scheduler.Job{
+			Name:     "consistency-checker",
+			Interval: 24 * time.Hour,
+			RunFunc: func(ctx context.Context) error {
+				return consistencyService.CheckAllUsers(ctx)
+			},
+		})
 
 		// Run immediately on startup if configured
 		if cfg.Scheduler.RunOnStartup {
@@ -744,6 +757,13 @@ func main() {
 				r.Get("/performance/search", performanceHandler.UnifiedSearch)
 				r.Get("/performance/movements/{id}", performanceHandler.GetMovementPerformance)
 				r.Get("/performance/wods/{id}", performanceHandler.GetWODPerformance)
+
+				// Leaderboard routes
+				r.Get("/leaderboards/movements/{id}", leaderboardHandler.GetMovementLeaderboard)
+				r.Get("/leaderboards/wods/{id}", leaderboardHandler.GetWODLeaderboard)
+
+				// Consistency stats route
+				r.Get("/consistency/stats", consistencyHandler.GetConsistencyStats)
 
 				// Statistics routes
 				r.Get("/stats/active-users-this-month", userWorkoutHandler.GetActiveUsersStats)

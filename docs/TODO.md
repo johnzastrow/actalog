@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-02-16
-> **Current Version:** 1.1.0-beta (Build 36)
+> **Last Updated:** 2026-02-18
+> **Current Version:** 1.1.0-beta (Build 38)
 
 ---
 
@@ -393,8 +393,8 @@ These features can be added after the core frontend is complete:
 - [x] `[MEDIUM]` **Timeline View** - WorkoutTimelineView.vue with chronological history
 - [x] `[MEDIUM]` **Progress Charts** - WeightProgressChart.vue and WorkoutFrequencyChart.vue components (not yet integrated into views)
 - [x] `[MEDIUM]` **Admin Metrics Dashboard** - User stats, workout counts, system health (v0.22.0)
-- [ ] `[MEDIUM]` **1RM Percentage Display** - Performance page 1RM percentage tops out at 95%; needs to also show 100% of the maximum weight lifted
-- [ ] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards
+- [x] `[MEDIUM]` **1RM Percentage Display** - Performance page 1RM percentage tops out at 95%; needs to also show 100% of the maximum weight lifted
+- [x] `[MEDIUM]` **PR Leaderboards** - Opt-in community leaderboards (migration 0.33.0, leaderboard_opt_in setting, movement/WOD leaderboard API endpoints, LeaderboardView.vue)
 
 #### Testing
 - [x] `[MEDIUM]` **Add backup_service tests** - backup_service_test.go with 10 test functions covering create/restore/export
@@ -448,7 +448,7 @@ These features can be added after the core frontend is complete:
 
 #### Features
 - [x] `[MEDIUM]` **Admin Screen Consolidation (Partial)** - Grouped Profile screen's 16 admin links into 5 labeled categories (Users & Access, Scheduling, Communication, Data & System, Organizations) using `v-list-subheader` dividers. Removed disabled "System Reports" placeholder. Full tab consolidation of admin screens into complex tabbed views remains for future work.
-- [ ] `[MEDIUM]` **Consistency Achievement Notifications** - Automatically notify users when they hit attendance milestones (e.g., 4x/week, 15 classes in a month, 4 day streak, 50, 100, 200 300 workouts. Alerts when 7 workout days in a row, missed one week, and then each week after until a workout is recorded). Track gym visit frequency from user workouts logged and/or reservations/check-ins and trigger congratulatory notifications at configurable thresholds
+- [x] `[MEDIUM]` **Consistency Achievement Notifications** - Daily scheduler checks all users for milestones (50/100/200/300 workouts, 4+/week, day streaks 4/7/14/21/30, inactivity warnings). Migration 0.34.0 consistency_achievements table, dedup via UNIQUE constraint, notification icons in NotificationsView.
 - [ ] `[LOW]` **Push Notifications** - Workout reminders
 - [ ] `[LOW]` **Data Visualization** - Charts for PR progression
 - [ ] `[LOW]` **Social Features** - Share workouts (opt-in)

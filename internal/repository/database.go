@@ -441,6 +441,7 @@ func getSQLiteSchema() string {
 		distance_unit TEXT DEFAULT 'meters',
 		timezone TEXT DEFAULT 'America/New_York',
 		admin_user_event_notifications INTEGER NOT NULL DEFAULT 1,
+		leaderboard_opt_in INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -681,6 +682,7 @@ func getPostgreSQLSchema() string {
 		distance_unit VARCHAR(20) DEFAULT 'meters',
 		timezone VARCHAR(50) DEFAULT 'America/New_York',
 		admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+		leaderboard_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -919,6 +921,7 @@ func getMySQLSchema() string {
 		distance_unit VARCHAR(20) DEFAULT 'meters',
 		timezone VARCHAR(50) DEFAULT 'America/New_York',
 		admin_user_event_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+		leaderboard_opt_in TINYINT(1) NOT NULL DEFAULT 0,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		INDEX idx_user_settings_user_id (user_id),

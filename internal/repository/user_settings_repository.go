@@ -22,7 +22,7 @@ func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSe
 	query := rebindQuery(`
 		SELECT id, user_id, notification_preferences, data_export_format, theme,
 		       font_family, weight_unit, distance_unit, timezone, admin_user_event_notifications,
-		       created_at, updated_at
+		       leaderboard_opt_in, created_at, updated_at
 		FROM user_settings
 		WHERE user_id = ?
 	`)
@@ -39,6 +39,7 @@ func (r *SQLiteUserSettingsRepository) GetByUserID(userID int64) (*domain.UserSe
 		&settings.DistanceUnit,
 		&settings.Timezone,
 		&settings.AdminUserEventNotifications,
+		&settings.LeaderboardOptIn,
 		&settings.CreatedAt,
 		&settings.UpdatedAt,
 	)
@@ -59,8 +60,8 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 		INSERT INTO user_settings (
 			user_id, notification_preferences, data_export_format, theme,
 			font_family, weight_unit, distance_unit, timezone, admin_user_event_notifications,
-			created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			leaderboard_opt_in, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 
 	now := time.Now()
@@ -80,6 +81,7 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 			settings.DistanceUnit,
 			settings.Timezone,
 			settings.AdminUserEventNotifications,
+			settings.LeaderboardOptIn,
 			settings.CreatedAt,
 			settings.UpdatedAt,
 		).Scan(&settings.ID)
@@ -97,6 +99,7 @@ func (r *SQLiteUserSettingsRepository) Create(settings *domain.UserSettings) err
 		settings.DistanceUnit,
 		settings.Timezone,
 		settings.AdminUserEventNotifications,
+		settings.LeaderboardOptIn,
 		settings.CreatedAt,
 		settings.UpdatedAt,
 	)
@@ -119,7 +122,7 @@ func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) err
 		UPDATE user_settings
 		SET notification_preferences = ?, data_export_format = ?, theme = ?,
 		    font_family = ?, weight_unit = ?, distance_unit = ?, timezone = ?,
-		    admin_user_event_notifications = ?, updated_at = ?
+		    admin_user_event_notifications = ?, leaderboard_opt_in = ?, updated_at = ?
 		WHERE user_id = ?
 	`)
 
@@ -135,6 +138,7 @@ func (r *SQLiteUserSettingsRepository) Update(settings *domain.UserSettings) err
 		settings.DistanceUnit,
 		settings.Timezone,
 		settings.AdminUserEventNotifications,
+		settings.LeaderboardOptIn,
 		settings.UpdatedAt,
 		settings.UserID,
 	)

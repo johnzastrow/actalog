@@ -3303,6 +3303,111 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.33.0",
+		Description: "Add leaderboard opt-in to user settings",
+		Up: func(db *sql.DB, driver string) error {
+			exists, err := columnExists(db, driver, "user_settings", "leaderboard_opt_in")
+			if err != nil {
+				return fmt.Errorf("failed to check leaderboard_opt_in column: %w", err)
+			}
+			if exists {
+				fmt.Println("✓ leaderboard_opt_in column already exists")
+				return nil
+			}
+
+			var query string
+			switch driver {
+			case "sqlite3":
+				query = `ALTER TABLE user_settings ADD COLUMN leaderboard_opt_in INTEGER NOT NULL DEFAULT 0`
+			case "postgres":
+				query = `ALTER TABLE user_settings ADD COLUMN leaderboard_opt_in BOOLEAN NOT NULL DEFAULT FALSE`
+			case "mysql":
+				query = `ALTER TABLE user_settings ADD COLUMN leaderboard_opt_in TINYINT(1) NOT NULL DEFAULT 0`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+
+			if _, err := db.Exec(query); err != nil {
+				return fmt.Errorf("failed to add leaderboard_opt_in column: %w", err)
+			}
+
+			fmt.Println("✓ Added leaderboard_opt_in column to user_settings")
+			return nil
+		},
+	},
+	{
+		Version:     "0.34.0",
+		Description: "Create consistency achievements table",
+		Up: func(db *sql.DB, driver string) error {
+			var createQuery string
+			switch driver {
+			case "sqlite3":
+				createQuery = `
+					CREATE TABLE IF NOT EXISTS consistency_achievements (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						achievement_type VARCHAR(50) NOT NULL,
+						achievement_value INTEGER NOT NULL,
+						notified_at DATETIME NOT NULL,
+						created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE(user_id, achievement_type, achievement_value)
+					)`
+			case "postgres":
+				createQuery = `
+					CREATE TABLE IF NOT EXISTS consistency_achievements (
+						id BIGSERIAL PRIMARY KEY,
+						user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						achievement_type VARCHAR(50) NOT NULL,
+						achievement_value INTEGER NOT NULL,
+						notified_at TIMESTAMP WITH TIME ZONE NOT NULL,
+						created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE(user_id, achievement_type, achievement_value)
+					)`
+			case "mysql":
+				createQuery = `
+					CREATE TABLE IF NOT EXISTS consistency_achievements (
+						id BIGINT AUTO_INCREMENT PRIMARY KEY,
+						user_id BIGINT NOT NULL,
+						achievement_type VARCHAR(50) NOT NULL,
+						achievement_value INTEGER NOT NULL,
+						notified_at TIMESTAMP NOT NULL,
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						UNIQUE KEY unique_user_achievement (user_id, achievement_type, achievement_value),
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+					)`
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+
+			if _, err := db.Exec(createQuery); err != nil {
+				return fmt.Errorf("failed to create consistency_achievements table: %w", err)
+			}
+
+			// Add indexes
+			indexQueries := []string{
+				`CREATE INDEX IF NOT EXISTS idx_consistency_achievements_user_id ON consistency_achievements(user_id)`,
+				`CREATE INDEX IF NOT EXISTS idx_consistency_achievements_type ON consistency_achievements(achievement_type)`,
+			}
+			if driver == "mysql" {
+				indexQueries = []string{
+					`CREATE INDEX idx_consistency_achievements_user_id ON consistency_achievements(user_id)`,
+					`CREATE INDEX idx_consistency_achievements_type ON consistency_achievements(achievement_type)`,
+				}
+			}
+			for _, q := range indexQueries {
+				if _, err := db.Exec(q); err != nil {
+					errStr := strings.ToLower(err.Error())
+					if !strings.Contains(errStr, "already exists") && !strings.Contains(errStr, "duplicate") {
+						return fmt.Errorf("failed to create index: %w", err)
+					}
+				}
+			}
+
+			fmt.Println("✓ Created consistency_achievements table")
+			return nil
+		},
+	},
 }
 
 // RunMigrations runs all pending migrations

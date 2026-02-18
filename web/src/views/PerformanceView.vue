@@ -851,7 +851,7 @@ const showPercentOfBest = computed(() => {
 const percentages = computed(() => {
   if (!heaviestWeight.value) return []
   // Standard percentages for strength training
-  const percents = [95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 25]
+  const percents = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 25]
   return percents.map(pct => ({
     percent: pct,
     weight: Math.round(heaviestWeight.value * (pct / 100))

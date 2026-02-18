@@ -387,6 +387,34 @@
         </v-list>
       </v-card>
 
+      <!-- Leaderboard Settings Card -->
+      <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
+        <h2 class="text-body-1 font-weight-bold mb-3">Community</h2>
+        <v-list bg-color="transparent" density="compact">
+          <v-list-item>
+            <template #prepend>
+              <v-icon color="primary">mdi-podium</v-icon>
+            </template>
+            <v-list-item-title class="font-weight-medium">
+              Show on Community Leaderboard
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Let org members see your scores on leaderboards
+            </v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="leaderboardOptIn"
+                color="primary"
+                hide-details
+                density="compact"
+                :loading="leaderboardLoading"
+                @update:model-value="saveLeaderboardOptIn"
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-card>
+
       <!-- Data Management Card -->
       <v-card elevation="0" rounded="lg" class="pa-3 mb-3" bg-color="surface">
         <h2 class="text-body-1 font-weight-bold mb-2" >Data Management</h2>
@@ -669,6 +697,8 @@ const timezoneOptions = ref(getTimezoneOptions())
 const timezoneLoading = ref(false)
 const adminUserEventNotifications = ref(true)
 const adminNotifLoading = ref(false)
+const leaderboardOptIn = ref(false)
+const leaderboardLoading = ref(false)
 
 const profileForm = ref({
   name: '',
@@ -724,6 +754,7 @@ onMounted(async () => {
     timezone.value = settingsStore.timezone
     weightUnit.value = settingsStore.weightUnit
     adminUserEventNotifications.value = settingsStore.adminUserEventNotifications
+    leaderboardOptIn.value = settingsStore.leaderboardOptIn
   } catch (err) {
     console.error('Failed to fetch user settings:', err)
   }
@@ -896,6 +927,22 @@ const saveAdminUserEventNotifications = async (enabled) => {
     adminUserEventNotifications.value = !enabled
   } finally {
     adminNotifLoading.value = false
+  }
+}
+
+// Leaderboard opt-in
+const saveLeaderboardOptIn = async (enabled) => {
+  leaderboardLoading.value = true
+  try {
+    await settingsStore.updateLeaderboardOptIn(enabled)
+    successMessage.value = enabled
+      ? 'You will appear on community leaderboards'
+      : 'Removed from community leaderboards'
+  } catch {
+    errors.value.general = 'Failed to save leaderboard preference. Please try again.'
+    leaderboardOptIn.value = !enabled
+  } finally {
+    leaderboardLoading.value = false
   }
 }
 

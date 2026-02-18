@@ -150,6 +150,10 @@ func (s *NotificationService) shouldNotifyUser(settings *domain.UserSettings, no
 			prefKey = "weekly_streak"
 		case domain.NotificationTypeWODMilestone:
 			prefKey = "wod_milestones"
+		case domain.NotificationTypeConsistencyMilestone:
+			prefKey = "consistency_milestones"
+		case domain.NotificationTypeConsistencyInactivity:
+			prefKey = "consistency_inactivity"
 		default:
 			return true
 		}
@@ -162,6 +166,10 @@ func (s *NotificationService) shouldNotifyUser(settings *domain.UserSettings, no
 			prefKey = "gym_mate_streaks"
 		case domain.NotificationTypeWODMilestone:
 			prefKey = "gym_mate_milestones"
+		case domain.NotificationTypeConsistencyMilestone:
+			prefKey = "gym_mate_milestones"
+		case domain.NotificationTypeConsistencyInactivity:
+			return false // Don't notify others about inactivity
 		default:
 			return true
 		}

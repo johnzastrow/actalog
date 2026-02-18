@@ -39,6 +39,10 @@ export const useSettingsStore = defineStore('settings', () => {
     return settings.value?.admin_user_event_notifications ?? true
   })
 
+  const leaderboardOptIn = computed(() => {
+    return settings.value?.leaderboard_opt_in ?? false
+  })
+
   // Actions
   async function fetchSettings() {
     loading.value = true
@@ -143,6 +147,13 @@ export const useSettingsStore = defineStore('settings', () => {
     })
   }
 
+  async function updateLeaderboardOptIn(enabled) {
+    return updateSettings({
+      ...settings.value,
+      leaderboard_opt_in: enabled
+    })
+  }
+
   function detectBrowserTimezone() {
     return getBrowserTimezone()
   }
@@ -168,6 +179,7 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     fontFamily,
     adminUserEventNotifications,
+    leaderboardOptIn,
     // Actions
     fetchSettings,
     updateSettings,
@@ -176,6 +188,7 @@ export const useSettingsStore = defineStore('settings', () => {
     updateDistanceUnit,
     updateFontFamily,
     updateAdminUserEventNotifications,
+    updateLeaderboardOptIn,
     detectBrowserTimezone
   }
 })
