@@ -47,6 +47,11 @@
         <!-- Theme Switcher -->
         <theme-switcher class="mr-1" />
 
+        <!-- Leaderboard icon -->
+        <v-btn icon color="white" variant="text" size="small" to="/leaderboard">
+          <v-icon>mdi-podium</v-icon>
+        </v-btn>
+
         <!-- Notifications icon with badge -->
         <v-btn icon color="white" variant="text" size="small" to="/notifications">
           <v-badge

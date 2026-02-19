@@ -167,7 +167,8 @@ const handleSearch = (query) => {
         ? `/api/movements/search?q=${encodeURIComponent(query)}&limit=20`
         : `/api/wods/search?q=${encodeURIComponent(query)}&limit=20`
       const response = await axios.get(endpoint)
-      searchResults.value = response.data || []
+      const key = activeTab.value === 'movements' ? 'movements' : 'wods'
+      searchResults.value = response.data?.[key] || response.data || []
     } catch {
       searchResults.value = []
     } finally {
