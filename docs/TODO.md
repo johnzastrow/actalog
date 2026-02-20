@@ -257,6 +257,12 @@ The following lint issues need to be resolved to re-enable strict linting:
 - [x] `[HIGH]` **Comprehensive API Documentation** - OpenAPI/Swagger documentation at `/docs/swagger.json` (v0.22.0)
 - [x] `[HIGH]` **Implement Rate Limiting** - pkg/middleware/rate_limit.go with sliding window algorithm
 
+5. **Documentation Website**
+   - Build a dedicated user and admin guide website from Markdown documents
+   - Use a static site generator (e.g., MkDocs, Docusaurus, VitePress, Hugo) to convert existing Markdown docs into an attractive HTML site with navigation, search, and theming
+   - Separate user guide (workout logging, schedules, PRs, leaderboards) and admin guide (user management, scheduling config, backups, subscriptions)
+   - Host alongside the app or as a standalone site
+
 ## Future Enhancements (Post-MVP)
 
 These features can be added after the core frontend is complete:

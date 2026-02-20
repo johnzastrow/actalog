@@ -865,23 +865,14 @@ const handleLogout = () => {
 
 // Avatar Upload Functions
 function openFileDialog() {
-  console.log('[Avatar] openFileDialog called, fileInput ref:', !!fileInput.value)
   if (fileInput.value) {
     fileInput.value.click()
-  } else {
-    console.error('[Avatar] fileInput ref is null - cannot open file dialog')
   }
 }
 
 async function handleFileSelect(event) {
-  console.log('[Avatar] handleFileSelect triggered')
   const file = event.target.files?.[0]
-  if (!file) {
-    console.log('[Avatar] No file selected (user cancelled)')
-    return
-  }
-
-  console.log('[Avatar] File selected:', file.name, 'type:', file.type, 'size:', file.size)
+  if (!file) return
 
   // Validate file type
   if (!file.type.startsWith('image/')) {
@@ -902,15 +893,11 @@ async function handleFileSelect(event) {
     const formData = new FormData()
     formData.append('avatar', file)
 
-    console.log('[Avatar] Uploading to /api/users/avatar...')
-    // Upload to backend
     const response = await axios.post('/api/users/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
-    console.log('[Avatar] Upload successful:', response.status)
-
     // Update user in auth store - need to update the ref value property
     const updatedUser = response.data.user
     // Ensure profile_image has full URL for display
@@ -925,8 +912,6 @@ async function handleFileSelect(event) {
       fileInput.value.value = ''
     }
   } catch (err) {
-    console.error('[Avatar] Upload failed:', err)
-    console.error('[Avatar] Response:', err.response?.status, err.response?.data)
     alert(err.response?.data?.message || 'Failed to upload avatar')
   } finally {
     uploadingAvatar.value = false
