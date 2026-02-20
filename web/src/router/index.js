@@ -201,6 +201,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/admin/data-cleanup',
       name: 'admin-data-cleanup',
       component: () => import('@/views/AdminDataCleanupView.vue'),
