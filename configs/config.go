@@ -68,7 +68,8 @@ type AppConfig struct {
 	Environment       string // development, staging, production
 	LogLevel          string // debug, info, warn, error
 	CORSOrigins       []string
-	AllowRegistration bool // Allow new user registration after first user
+	AllowRegistration bool   // Allow new user registration after first user
+	LogoVariant       string // Logo variant: "logo" (default) or "betalogo"
 }
 
 // LoggingConfig holds logging configuration
@@ -141,6 +142,7 @@ func Load() (*Config, error) {
 			LogLevel:          getEnv("LOG_LEVEL", "info"),
 			CORSOrigins:       getEnvSlice("CORS_ORIGINS", []string{"http://localhost:8080", "http://localhost:3000"}),
 			AllowRegistration: getEnvBool("ALLOW_REGISTRATION", true), // Allow by default in development
+			LogoVariant:       getEnv("LOGO_VARIANT", "logo"),
 		},
 		Logging: LoggingConfig{
 			Level:      getEnv("LOG_LEVEL", "info"),

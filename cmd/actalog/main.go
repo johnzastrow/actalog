@@ -609,8 +609,8 @@ func main() {
 		r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s","scheduling_enabled":%t}`,
-				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name, cfg.Scheduler.Enabled)
+			fmt.Fprintf(w, `{"version":"%s","build":%d,"fullVersion":"%s","app":"%s","scheduling_enabled":%t,"logo_variant":"%s"}`,
+				version.Version(), version.BuildNumber(), version.FullVersion(), cfg.App.Name, cfg.Scheduler.Enabled, cfg.App.LogoVariant)
 		})
 
 		// Swagger documentation UI (public)

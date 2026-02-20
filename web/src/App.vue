@@ -11,7 +11,7 @@
       <v-app-bar-title class="d-flex align-center">
         <!-- Logo -->
         <router-link to="/dashboard" class="d-flex align-center text-decoration-none">
-          <img src="/logo.svg" alt="ActaLog Logo" style="height: 32px; width: 32px; margin-right: 8px;" />
+          <img :src="authStore.logoPath" alt="ActaLog Logo" style="height: 32px; width: 32px; margin-right: 8px;" />
           <span class="text-white font-weight-bold">ActaLog</span>
         </router-link>
       </v-app-bar-title>

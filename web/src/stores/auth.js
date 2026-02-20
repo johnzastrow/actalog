@@ -11,7 +11,9 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref(null)
   const isCoach = ref(false)
   const schedulingEnabled = ref(false)
+  const logoVariant = ref('logo')
 
+  const logoPath = computed(() => logoVariant.value === 'betalogo' ? '/beta/logo.svg' : '/logo.svg')
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isCoachRole = computed(() => user.value?.role === 'coach')
   const isAdmin = computed(() => user.value?.role === 'admin')
@@ -199,11 +201,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Fetch scheduling_enabled from version endpoint
+  // Fetch scheduling_enabled and logo_variant from version endpoint
   async function fetchSchedulingEnabled() {
     try {
       const response = await axios.get('/api/version')
       schedulingEnabled.value = response.data.scheduling_enabled || false
+      logoVariant.value = response.data.logo_variant || 'logo'
+
+      // Dynamically update favicon and apple-touch-icon if using beta variant
+      if (logoVariant.value !== 'logo') {
+        const prefix = '/beta'
+        const favicon = document.querySelector('link[rel="icon"]')
+        if (favicon) favicon.href = `${prefix}/favicon.ico`
+        const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]')
+        if (appleTouchIcon) appleTouchIcon.href = `${prefix}/apple-touch-icon.png`
+      }
     } catch (e) {
       console.error('Failed to fetch version info:', e)
       schedulingEnabled.value = false
@@ -223,6 +235,8 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isCoach,
     schedulingEnabled,
+    logoVariant,
+    logoPath,
     isAuthenticated,
     isCoachRole,
     isAdmin,
