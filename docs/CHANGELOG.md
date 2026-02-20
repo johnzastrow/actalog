@@ -5,7 +5,23 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0-beta] - 2026-02-19
+
+### Added - Configurable Beta Logo
+
+- **Environment-Variable-Driven Logo Switching**
+  - New `LOGO_VARIANT` environment variable (`"logo"` default, `"betalogo"` for red beta logo)
+  - Backend: `LogoVariant` field in `AppConfig`, exposed via `/api/version` response
+  - Frontend: Auth store fetches variant, computes `logoPath`, dynamically updates favicon and apple-touch-icon
+  - All three logo locations updated (App.vue header, LoginView, RegisterView)
+  - Full beta icon asset set generated from `betalogo.svg` (SVG, 12 PNGs, favicon.ico, 6 apple-touch-icons)
+  - Example `.env` files updated with `LOGO_VARIANT` documentation
+
+### Added - PR Leaderboards & Consistency Achievements
+
+- **Leaderboard search API response parsing fix and header nav icon**
+
+## [1.1.0-beta]
 
 ### Added - Coach Role & Role Rename
 
