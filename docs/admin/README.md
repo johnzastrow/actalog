@@ -1,7 +1,7 @@
 # ActaLog - Administrator Documentation
 
-**Version:** 0.22.0-beta
-**Last Updated:** 2026-01-13
+**Version:** 1.2.0-beta
+**Last Updated:** 2026-02-28
 
 This guide provides comprehensive instructions for ActaLog system administrators. It covers user management, system configuration, backup/restore operations, security best practices, and troubleshooting.
 
@@ -11,15 +11,17 @@ This guide provides comprehensive instructions for ActaLog system administrators
 2. [System Metrics Dashboard](#system-metrics-dashboard)
 3. [User Account Management](#user-account-management)
 4. [User Import/Export](#user-importexport)
-5. [Database Backup and Restore](#database-backup-and-restore)
-6. [Audit Log Monitoring](#audit-log-monitoring)
-7. [Data Change Logs](#data-change-logs)
-8. [System Configuration](#system-configuration)
-9. [Security Best Practices](#security-best-practices)
-10. [Database Management](#database-management)
-11. [Troubleshooting](#troubleshooting)
-12. [API Reference](#api-reference)
-13. [Admin FAQ](#admin-faq)
+5. [Subscription Management](#subscription-management)
+6. [Class Scheduling Administration](#class-scheduling-administration)
+7. [Database Backup and Restore](#database-backup-and-restore)
+8. [Audit Log Monitoring](#audit-log-monitoring)
+9. [Data Change Logs](#data-change-logs)
+10. [System Configuration](#system-configuration)
+11. [Security Best Practices](#security-best-practices)
+12. [Database Management](#database-management)
+13. [Troubleshooting](#troubleshooting)
+14. [API Reference](#api-reference)
+15. [Admin FAQ](#admin-faq)
 
 ---
 
@@ -28,7 +30,7 @@ This guide provides comprehensive instructions for ActaLog system administrators
 ### What is an Administrator?
 
 Administrators have elevated privileges in ActaLog, including:
-- Full user account management (view, unlock, disable, delete, role changes)
+- Full user account management (view, unlock, disable, delete, role changes to athlete/coach/admin)
 - System metrics dashboard (user stats, workout counts, system health)
 - Database backup creation and restore capabilities
 - Audit log access and cleanup
@@ -41,7 +43,7 @@ Administrators have elevated privileges in ActaLog, including:
 
 - The **first user** to register in a new ActaLog installation automatically becomes an administrator
 - Additional administrators can be promoted by existing administrators via the Admin Users panel
-- Admin status is controlled by the `role` field in the users table (`admin` vs `user`)
+- Admin status is controlled by the `role` field in the users table. ActaLog has three roles: `athlete` (default), `coach`, and `admin`
 
 ### Accessing Admin Features
 
@@ -510,6 +512,141 @@ Content-Type: application/json
   "errors": ["User ID 3: email service disabled"]
 }
 ```
+
+---
+
+---
+
+## Subscription Management
+
+ActaLog includes a built-in subscription billing system. Admins control all subscription operations manually; there is no automated payment processor by default.
+
+### Access
+
+Navigate to **Profile** → **Admin** → **Subscriptions**.
+
+### Subscription Types
+
+| Type | Description |
+|------|-------------|
+| **User Subscription** | Applies to a single athlete account |
+| **Organization Subscription** | Applies to all members of a gym organization |
+| **Permanent Free** | Never expires; used for special accounts |
+
+### Subscription States
+
+- **Active** — Athlete has full read/write access to all features
+- **Expired / None** — Athlete enters read-only mode (HTTP 402 on write operations). They can still view all their historical data.
+
+Coaches and Admins are **never** subject to subscription enforcement regardless of subscription state.
+
+### Common Admin Tasks
+
+**Create a subscription:**
+1. Go to **Subscriptions** tab
+2. Click **Create Subscription**
+3. Select user or organization, set expiration date, choose type
+4. Click **Save**
+
+**Mark a subscription as paid:**
+1. Find the subscription in the list
+2. Click the **Mark as Paid** button
+3. Confirm the action
+
+**Cancel a subscription:**
+1. Find the subscription
+2. Click **Cancel**
+3. Enter a cancellation reason (for audit trail)
+
+**View expiring subscriptions:**
+- The **Expiring Soon** tab shows subscriptions expiring within 30 days
+
+**View expired subscriptions:**
+- The **Expired** tab lists all lapsed subscriptions
+
+### Subscription Enforcement
+
+When an athlete's subscription expires:
+- All `POST`, `PUT`, `PATCH`, `DELETE` requests to feature routes return **HTTP 402 Payment Required**
+- `GET` requests continue to succeed — athletes never lose access to their data
+- A banner appears in the UI prompting renewal
+- Routes exempt from enforcement: profile, settings, password change, notifications, subscription status, login/logout
+
+---
+
+## Class Scheduling Administration
+
+The class scheduling system allows gyms to manage locations, class templates, session schedules, coach assignments, reservations, waitlists, credit packages, and required documents.
+
+Access scheduling administration via **Profile** → **Admin** → **Scheduling**.
+
+### Gym Locations
+
+Locations represent physical gym facilities. Each organization can have multiple locations.
+
+- **Create:** Click **Add Location**, enter name and address
+- **Edit:** Click location row → edit form
+- **Delete:** Available if no active sessions are attached
+
+### Class Templates
+
+Templates define the blueprint for a recurring class type (e.g., "6am CrossFit", "Open Gym").
+
+Fields:
+- **Name** — Display name for the class
+- **Location** — Which gym location
+- **Capacity** — Maximum athletes per session
+- **Duration** — Minutes
+- **Description** — Optional notes shown to athletes
+
+**Delete modes:** When deleting a template, choose:
+- `Template only` — Sessions become orphaned (still visible in history)
+- `With future sessions` — Deletes template and all future sessions; past sessions preserved
+- `With all sessions` — Deletes template and every associated session (use with caution)
+
+Credit refunds are issued automatically for unconfirmed reservations on deleted sessions.
+
+### Schedule Slots
+
+Slots attach a template to a recurring time (e.g., every Monday/Wednesday/Friday at 6:00am). The system generates individual class sessions from slots.
+
+### Class Sessions
+
+Individual occurrences of a class. Each session has:
+- Date/time, capacity, coach assignment(s)
+- Reservation list, waitlist, attendance records
+
+**Session actions:**
+- View roster and check-in status
+- Add/remove coaches
+- Cancel individual sessions
+
+### Coach Assignments
+
+Coaches must be assigned to an organization before they can manage its sessions. Assign coaches via **Admin** → **Users** → select user → change role to **Coach**, then assign to organization(s) via the scheduling panel.
+
+A coach must have:
+1. The `coach` role (set in Admin > Users)
+2. An assignment to the specific organization (set in Scheduling admin)
+
+### Credit Packages
+
+Packages define how athletes purchase class access (e.g., "10-Class Pack at $100", "Monthly Unlimited").
+
+- **Create:** Click **Add Package**, set name, credit count, price, expiration days
+- **Issue credits to user:** Admin > Users > select user > issue credits from package
+
+### User Documents
+
+Documents are gym-defined forms that athletes must complete before attending classes (waivers, liability forms, health questionnaires).
+
+- **Create document type:** Set name, whether required, expiration period
+- **Mark as completed:** Admin can mark a user's document as completed on their behalf
+- Athletes view their document status in **My Credits**
+
+### Waitlist Management
+
+When a class is at capacity, athletes can join the waitlist. If a reservation is cancelled, the first waitlisted athlete is automatically promoted and notified.
 
 ---
 
