@@ -1,24 +1,33 @@
 # ActaLog - User Help Documentation
 
-**Version:** 0.12.2-beta
-**Last Updated:** 2025-11-28
+**Version:** 1.2.0-beta
+**Last Updated:** 2026-02-28
 
 Welcome to ActaLog, your mobile-first CrossFit workout tracker! This guide will help you get the most out of the application.
 
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
-2. [Logging Your First Workout](#logging-your-first-workout)
-3. [Tracking Personal Records (PRs)](#tracking-personal-records-prs)
-4. [Using Quick Log](#using-quick-log)
-5. [Creating and Using Workout Templates](#creating-and-using-workout-templates)
-6. [Viewing Performance Trends](#viewing-performance-trends)
-7. [Importing Data from Wodify](#importing-data-from-wodify)
-8. [Exporting and Backing Up Your Data](#exporting-and-backing-up-your-data)
-9. [Installing the Progressive Web App (PWA)](#installing-the-progressive-web-app-pwa)
-10. [FAQ](#frequently-asked-questions)
-11. [Troubleshooting](#troubleshooting)
-12. [Glossary](#glossary)
+2. [Understanding Your Role](#understanding-your-role)
+3. [Subscription Status](#subscription-status)
+4. [Logging Your First Workout](#logging-your-first-workout)
+5. [Tracking Personal Records (PRs)](#tracking-personal-records-prs)
+6. [Using Quick Log](#using-quick-log)
+7. [Creating and Using Workout Templates](#creating-and-using-workout-templates)
+8. [Viewing Performance Trends](#viewing-performance-trends)
+9. [Leaderboards](#leaderboards)
+10. [Class Schedule](#class-schedule)
+11. [My Reservations](#my-reservations)
+12. [My Credits and Documents](#my-credits-and-documents)
+13. [Coach Dashboard](#coach-dashboard)
+14. [Notifications and Likes](#notifications-and-likes)
+15. [Importing Data from Wodify](#importing-data-from-wodify)
+16. [Exporting and Backing Up Your Data](#exporting-and-backing-up-your-data)
+17. [Profile and Settings](#profile-and-settings)
+18. [Installing the Progressive Web App (PWA)](#installing-the-progressive-web-app-pwa)
+19. [FAQ](#frequently-asked-questions)
+20. [Troubleshooting](#troubleshooting)
+21. [Glossary](#glossary)
 
 ---
 
@@ -43,6 +52,46 @@ After logging in, you'll see the Dashboard which displays:
 - **This Month:** Workouts completed in the current month
 - **Recent Workouts:** Your 5 most recent workout sessions with dates and movements
 - **Quick Log Button:** Floating action button (+ icon) to log a new workout
+
+---
+
+## Understanding Your Role
+
+ActaLog has three user roles. Your role is shown in your profile.
+
+| Role | Who It's For | What You Can Do |
+|------|-------------|-----------------|
+| **Athlete** | All regular members | Log workouts, track PRs, browse classes, make reservations, view leaderboards |
+| **Coach** | Gym coaches | Everything an athlete can do, plus manage class rosters, check in athletes, mark no-shows |
+| **Admin** | Gym administrators | Everything a coach can do, plus full system management (users, scheduling, subscriptions, backups) |
+
+The first account created on a new ActaLog installation is automatically assigned the Admin role. All subsequent registrations are Athletes by default. An Admin can change any user's role via Admin → Users.
+
+---
+
+## Subscription Status
+
+Access to ActaLog features requires an active subscription (configured by your gym admin).
+
+### Active Subscription
+
+You have full read and write access to all features.
+
+### Expired or No Subscription
+
+You enter **read-only mode**:
+- You can still view all your historical workout data, PRs, and performance charts
+- You cannot log new workouts, create templates, or make reservations
+- A banner at the top of the screen will prompt you to contact your admin to renew
+
+### Always Available (regardless of subscription)
+
+- Viewing and editing your profile
+- Changing your password and settings
+- Viewing notifications
+- Logging in and out
+
+**Note:** Coaches and Admins are never subject to subscription restrictions.
 
 ---
 
@@ -294,6 +343,162 @@ Your Dashboard shows key metrics:
 
 ---
 
+## Leaderboards
+
+The Leaderboards page lets you compare your personal records against other athletes in your gym.
+
+### Accessing Leaderboards
+
+Navigate to the **Leaderboards** icon in the bottom navigation bar (trophy icon).
+
+### PR Leaderboard
+
+- Shows the top performances for a selected movement across all athletes
+- Filter by movement using the search bar
+- Your own entry is highlighted
+
+### Consistency Achievements
+
+Consistency achievements reward showing up regularly:
+- Achievements are awarded based on workout frequency milestones
+- View your achievements and compare with the community on the leaderboard
+
+---
+
+## Class Schedule
+
+If your gym has class scheduling enabled, you can browse upcoming sessions and reserve your spot.
+
+### Accessing the Schedule
+
+Navigate to **Schedule** in the bottom navigation (calendar icon).
+
+### Browsing Sessions
+
+- Sessions are shown by date with class name, time, location, coach, and available spots
+- Tap a session to see full details
+
+### Making a Reservation
+
+1. Tap the session you want to attend
+2. Click **Reserve**
+3. Your spot is confirmed — you'll receive a notification
+
+Requirements: You must have an active subscription and available credits (if your gym uses the credit system).
+
+### Joining the Waitlist
+
+If a class is full:
+1. Tap the session
+2. Click **Join Waitlist**
+3. You'll be automatically promoted and notified if a spot opens
+
+### Cancelling a Reservation
+
+1. Go to **My Reservations** (or tap the session)
+2. Click **Cancel Reservation**
+
+Cancelling may refund your credit depending on your gym's policy.
+
+---
+
+## My Reservations
+
+View all your upcoming class reservations in one place.
+
+### Accessing My Reservations
+
+Navigate to **Profile** → **My Reservations**, or tap the reservations shortcut if shown on your dashboard.
+
+### What You'll See
+
+- Upcoming session date, time, class name, location
+- Reservation status (confirmed, waitlisted, checked in)
+- Cancel button for reservations you no longer need
+
+---
+
+## My Credits and Documents
+
+If your gym uses the credit system, this section shows your class credit balance and required document status.
+
+### Accessing My Credits
+
+Navigate to **Profile** → **My Credits**.
+
+### Credits
+
+- **Balance:** How many class credits you have remaining
+- **Expiration:** Credits may have an expiration date set by your gym
+- Credits are deducted when you make a reservation
+- Credits may be refunded when you cancel (depending on gym policy)
+
+### Documents
+
+Your gym may require you to complete forms before attending classes (liability waivers, health forms, etc.):
+- **Pending** — Document needs to be completed; contact your gym admin
+- **Completed** — Document is on file
+- **Expired** — Document needs to be renewed (e.g., annual waiver)
+
+### Waitlist
+
+Any classes you're currently waitlisted for are also shown here.
+
+---
+
+## Coach Dashboard
+
+*This section applies to users with the Coach or Admin role.*
+
+The Coach Dashboard gives coaches visibility into their assigned sessions and tools to manage class check-ins.
+
+### Accessing the Coach Dashboard
+
+Navigate to the **Coach** icon in the bottom navigation (visible only to coaches and admins).
+
+### Viewing Your Sessions
+
+- Coaches see their upcoming assigned sessions
+- Admins see ALL upcoming sessions across all gyms
+
+### Managing a Session
+
+Tap a session to open the roster view:
+
+| Action | How |
+|--------|-----|
+| **Check in athlete** | Tap the athlete's name → Check In |
+| **Mark no-show** | Tap athlete → No Show |
+| **Complete session** | Tap **Complete Session** after class ends |
+
+Completing a session locks the roster and finalizes attendance records.
+
+---
+
+## Notifications and Likes
+
+### Notifications
+
+ActaLog sends notifications for:
+- New personal records (PR achievements)
+- Class reservation confirmations and reminders
+- Waitlist promotions (when a spot opens for you)
+- Gym-wide announcements from your admin
+
+Access notifications via the **bell icon** in the navigation bar. Unread notifications are highlighted. Tap any notification to mark it as read.
+
+### Liking Notifications
+
+You can react to any notification (yours or visible community notifications) with a thumbs-up like:
+
+1. Open the **Notifications** page
+2. Tap the 👍 icon on any notification
+3. The like count updates immediately
+
+Liking a notification marks it as unread for the recipient so they see your reaction.
+
+---
+
 ## Importing Data from Wodify
 
 ActaLog supports importing your workout history from Wodify Performance exports!
@@ -411,6 +616,33 @@ Backups include:
 - All movements and WODs (standard and custom)
 - Profile pictures and uploaded files
 - Complete database in SQLite format
+
+---
+
+## Profile and Settings
+
+### Profile
+
+Access your profile via the **Profile** icon in the bottom navigation.
+
+**Avatar:** Tap your avatar image to upload a new photo. Supported formats: JPG, PNG, WebP. Tap anywhere on the avatar area to open the file picker.
+
+**Account details:** View your email, role, and subscription status.
+
+### Settings
+
+Navigate to **Profile** → **Settings** to customize your experience:
+
+**Font:** Choose from 10 font options including accessibility-optimized fonts:
+- System Default, Inter, Roboto, Lato, Fira Sans, Lexend
+- OpenDyslexic *(accessibility)*, Atkinson Hyperlegible *(accessibility)*
+- Source Serif Pro, JetBrains Mono
+
+Your font preference is synced to your account and applies across all devices.
+
+**Theme:** Choose a color theme (including Sunrise and other options).
+
+**Password:** Change your password from the Settings page.
 
 ---
 
@@ -656,6 +888,14 @@ A: Yes, once installed as a PWA, you can log workouts offline. They'll automatic
 
 ### ActaLog-Specific Terms
 
+- **Athlete** — The default role for all ActaLog users. Previously called "User" in older versions.
+- **Coach** — A role with access to class roster management and check-in capabilities for assigned gyms.
+- **Credit** — A unit of class access purchased via a credit package. One credit is typically consumed per class reservation.
+- **Waitlist** — A queue for a full class session. Athletes are automatically promoted when a spot opens.
+- **Leaderboard** — A gym-wide comparison of personal records across all athletes.
+- **Session** — A specific scheduled occurrence of a class (e.g., Monday 6am CrossFit on March 3rd).
+- **Template** — A class blueprint (name, capacity, location, duration) used to generate sessions.
+- **Subscription** — A time-limited access grant. Expired subscriptions put athletes in read-only mode.
 - **Movement:** An individual exercise (e.g., Back Squat, Pull-ups, Running)
 - **Standard Movement:** Pre-loaded movements that come with ActaLog (31 total)
 - **Custom Movement:** User-created movements specific to your training
