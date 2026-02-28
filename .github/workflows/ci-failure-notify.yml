@@ -47,7 +47,7 @@ jobs:
           EOF
 
       - name: Create issue for failed CI run
-        uses: peter-evans/create-issue-from-file@v4
+        uses: peter-evans/create-issue-from-file@v6
         with:
           title: "[CI] Workflow failure: ${{ github.event.workflow_run.name }} on ${{ github.event.workflow_run.head_branch }}"
           content-filepath: /tmp/ci_issue.md
