@@ -190,7 +190,8 @@ The Admin Users view displays:
 - 🔒 **Lock (Red):** Account is temporarily locked due to failed login attempts
 - ✅ **Verified (Green):** Email is verified
 - ❌ **Not Verified (Red):** Email not verified
-- 👤 **User (Blue):** Regular user role
+- 👤 **Athlete (Blue):** Regular athlete role
+- 🎓 **Coach (Teal):** Coach role (class management access)
 - 🛡️ **Admin (Purple):** Administrator role
 - ✅ **Enabled (Green):** Account is active
 - ❌ **Disabled (Red):** Account is permanently disabled
@@ -277,7 +278,7 @@ Permanent account suspension (e.g., for policy violations, terminated employees,
 - User may need to log out and back in to see updated permissions
 
 **Technical Details:**
-- `role` field in users table: `"admin"` or `"user"`
+- `role` field in users table: `"admin"`, `"coach"`, or `"athlete"`
 - Audit log entries: `user_role_changed` event
 
 ### How Do I Verify User Emails Manually?
@@ -388,7 +389,7 @@ jane.smith@example.com,Jane Smith,Password456
 #### What Gets Created
 
 For each valid user imported:
-- User account with role `user`
+- User account with role `athlete`
 - Password hashed with bcrypt (cost 12)
 - Email marked as verified
 - Permanent free subscription created
@@ -1495,7 +1496,7 @@ Authorization: Bearer <admin-jwt-token>
   {
     "id": 1,
     "email": "user@example.com",
-    "role": "user",
+    "role": "athlete",
     "email_verified": true,
     "email_verified_at": "2025-01-15T10:30:00Z",
     "failed_login_attempts": 0,
@@ -1538,7 +1539,7 @@ Authorization: Bearer <admin-jwt-token>
 Content-Type: application/json
 
 {
-  "role": "admin"  // or "user"
+  "role": "admin"  // or "coach" or "athlete"
 }
 ```
 
@@ -1741,6 +1742,6 @@ A: Monitor:
 
 ---
 
-**Document Version:** 0.22.0-beta
-**Last Updated:** 2026-01-13
+**Document Version:** 1.2.0-beta
+**Last Updated:** 2026-02-28
 **Applicable Versions:** ActaLog 0.10.0-beta and later

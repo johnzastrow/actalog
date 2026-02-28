@@ -931,6 +931,6 @@ If you need additional assistance:
 
 ---
 
-**Document Version:** 0.11.0-beta
-**Last Updated:** 2025-11-26
-**Applicable Versions:** ActaLog 0.10.0-beta and later
+**Document Version:** 1.2.0-beta
+**Last Updated:** 2026-02-28
+**Applicable Versions:** ActaLog 1.0.0-beta and later
