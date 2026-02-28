@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Update all existing user-facing documentation to accurately reflect ActaLog v1.2.0-beta, adding all features introduced since v0.12.2-beta.
+**Goal:** Update all existing user-facing documentation and marketing site to accurately reflect ActaLog v1.2.0-beta, adding all features introduced since v0.12.2-beta.
 
 **Architecture:** Content-only update — no new tooling, no site generator. Five files edited in order of increasing effort: USER_PERMISSIONS.md (stamp only), index.html (landing page), ROADMAP.md (restructure), admin/README.md (new sections), help/README.md (largest, most new content).
 
@@ -932,4 +932,163 @@ Expected: all three files listed
 ```bash
 git add -p  # review any remaining changes
 git commit -m "docs: final cleanup pass on v1.2.0-beta documentation update"
+```
+
+---
+
+## Task 7: Update `site/` — static marketing website
+
+**Files:**
+- Modify: `site/index.html`
+- Modify: `site/features.html`
+- Modify: `site/faq.html`
+- Modify: `site/content/harvested_features.md`
+
+The `site/` directory is a separate marketing website (distinct from `docs/index.html`). It has its own multi-page structure with an index, features page, FAQ, deploy guide, and tech page. The structured data in `site/index.html` shows `softwareVersion: "0.24.0-beta"` and the features page describes only two roles ("Admin" and "member"), missing Coach entirely, and makes no mention of class scheduling, leaderboards, or the credit system.
+
+### Step 1: Fix structured data version in `site/index.html`
+
+Find:
+```json
+"softwareVersion": "0.24.0-beta",
+```
+Replace with:
+```json
+"softwareVersion": "1.2.0-beta",
+```
+
+### Step 2: Update role description in `site/features.html`
+
+Find:
+```html
+<h3 class="feature-title">ROLE-BASED ACCESS</h3>
+<p class="feature-description">Admin, and member roles. To manage different parts of the system.</p>
+```
+Replace with:
+```html
+<h3 class="feature-title">ROLE-BASED ACCESS</h3>
+<p class="feature-description">Three roles: Athlete (default), Coach (roster & check-in access), and Admin (full system control). Coaches bypass subscription checks and manage sessions at their assigned gyms.</p>
+```
+
+### Step 3: Add class scheduling feature card to `site/features.html`
+
+Locate the member management features grid section. After the last existing feature card in that section (before the closing `</div>` of the grid), add:
+
+```html
+<div class="feature-card">
+    <h3 class="feature-title">CLASS SCHEDULING</h3>
+    <p class="feature-description">Full gym scheduling: locations, class templates, recurring schedule slots, and individual sessions with capacity management. Athletes reserve spots, join waitlists, and get automatic notifications when a spot opens.</p>
+</div>
+
+<div class="feature-card">
+    <h3 class="feature-title">CREDIT PACKAGES</h3>
+    <p class="feature-description">Sell class packages (e.g., "10-Class Pack", "Monthly Unlimited"). Credits deduct automatically on reservation. Refunds issued when sessions are cancelled. Expiration tracking built in.</p>
+</div>
+
+<div class="feature-card">
+    <h3 class="feature-title">LEADERBOARDS</h3>
+    <p class="feature-description">Gym-wide PR leaderboards for any movement. Consistency achievement tracking. Athletes see how their lifts stack up against the community — motivation built in.</p>
+</div>
+```
+
+### Step 4: Fix stale role references in `site/features.html`
+
+Find:
+```html
+With role-based access control, you decide who sees what. Admins have full control. Members see only their own data.
+```
+Replace with:
+```html
+With three-tier role-based access control, you decide who sees what. Admins have full control. Coaches manage class rosters and check-ins. Athletes see only their own data.
+```
+
+### Step 5: Add scheduling FAQ entry to `site/faq.html`
+
+Find the first `<div class="faq-item">` in the file and insert a new FAQ item before it:
+
+```html
+<div class="faq-item">
+    <div class="faq-question">Does ActaLog support class scheduling and reservations?</div>
+    <div class="faq-answer">
+        <p>Yes. ActaLog includes a full class scheduling system: gym locations, class templates, recurring schedule slots, and individual sessions with capacity management. Athletes can reserve spots, join waitlists, and receive automatic notifications when a spot opens. Admins sell credit packages (e.g., "10-Class Pack") and track document requirements (waivers, liability forms). Coaches can check in athletes and mark attendance from the Coach Dashboard.</p>
+    </div>
+</div>
+
+<div class="faq-item">
+    <div class="faq-question">What are the user roles in ActaLog?</div>
+    <div class="faq-answer">
+        <p>ActaLog has three roles:</p>
+        <ul>
+            <li><strong>Athlete</strong> — Default role. Full workout tracking, class reservations, and leaderboard access.</li>
+            <li><strong>Coach</strong> — Everything an athlete can do, plus class roster management and check-in capabilities for assigned gyms. Coaches are never subject to subscription restrictions.</li>
+            <li><strong>Admin</strong> — Full system access including user management, class scheduling configuration, subscription billing, backups, and audit logs.</li>
+        </ul>
+    </div>
+</div>
+```
+
+### Step 6: Update `site/content/harvested_features.md`
+
+Replace the "Recent Notable Releases" section with:
+
+```markdown
+## Recent Notable Releases
+
+### v1.2.0-beta (Released 2026-02-19)
+- Class packages (credit system) and waitlist management
+- User documents / waivers per gym organization
+- Delete class templates with cascade modes
+- PR Leaderboards — gym-wide personal record comparison
+- Consistency achievements
+- Configurable beta logo via `LOGO_VARIANT` environment variable
+
+### v1.1.0-beta
+- Renamed "user" role to "athlete"; added "coach" as middle tier
+- Three-tier role system: Athlete < Coach < Admin
+- Dedicated coach API routes and Coach Dashboard
+- Class Scheduling Phase 1-3: gym locations, templates, sessions, coach assignments, reservations
+
+### v0.16.0-beta — Notification Likes
+- Users can like any notification (PR achievements, announcements)
+- Social engagement: thumbs-up icon with liker count
+
+### v0.14.0-beta — Subscription Billing System
+- Dual-level subscriptions: user and organization
+- Read-only mode enforcement when subscriptions expire (HTTP 402)
+- Admin subscription management UI
+```
+
+Also update the "High-priority Backlog" section — mark subscription frontend as completed:
+
+```markdown
+## Current Status
+
+All core features are implemented and production-ready as of v1.2.0-beta:
+- ✅ Subscription management UI (frontend complete)
+- ✅ Class scheduling (Phase 1-4 complete)
+- ✅ Three-tier role system (Athlete/Coach/Admin)
+- ✅ PR Leaderboards and consistency achievements
+- ⏳ Stripe integration (future)
+- ⏳ Documentation website / static site generator (future)
+```
+
+### Step 7: Verify version and role fixes
+
+```bash
+grep -n "softwareVersion\|0\.24\|member role\|Admin.*member" \
+  site/index.html site/features.html site/faq.html
+```
+Expected: no matches (all stale references replaced)
+
+```bash
+grep -n "1\.2\.0-beta\|Athlete\|Coach.*Admin\|class scheduling" \
+  site/index.html site/features.html site/faq.html -i | head -20
+```
+Expected: matches in all three files confirming updates landed.
+
+### Step 8: Commit
+
+```bash
+git add site/index.html site/features.html site/faq.html site/content/harvested_features.md
+git commit -m "docs: update site/ marketing pages to v1.2.0-beta — add scheduling, coach role, leaderboards"
 ```
