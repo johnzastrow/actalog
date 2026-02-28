@@ -1,14 +1,49 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 0.17.0-beta (in development)
-**Last Updated:** 2025-12-23
-**Overall Completion:** ~98% of core requirements
+**Current Version:** 1.2.0-beta (Released)
+**Last Updated:** 2026-02-28
+**Overall Completion:** ~99% of core requirements
 
 ---
 
 ## Executive Summary
 
-ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **functional for personal and production use** with core features implemented including user authentication, workout logging, performance tracking, import/export capabilities, **production-ready multi-database support**, **subscription billing system**, **social engagement features**, and **advanced backup/restore with merge capabilities**. The current development version (v0.17.0-beta) adds **merge/upsert modes for database restore** with three restore modes (replace, merge, skip), natural key matching, and comprehensive import duplicate handling. The latest stable release (v0.16.0-beta) added **notification likes** allowing users to celebrate each other's achievements. The application supports single-command deployment across all platforms with automatic population of 182 movements and 314 benchmark WODs, and includes database version management for migration testing across SQLite, PostgreSQL, and MariaDB.
+ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout tracking. The application is **production-ready** with all core features implemented: user authentication with email verification, three-tier role system (Athlete/Coach/Admin), workout logging, performance tracking and PR detection, import/export (Wodify CSV, JSON backup/restore), subscription billing, social features (notification likes), **full class scheduling** (gym locations, templates, sessions, coach assignments, reservations, waitlist, credit packages, and document management), PR leaderboards, and consistency achievements. The application deploys as a single Docker container with automatic database migrations and seed data across SQLite, PostgreSQL, and MariaDB.
+
+---
+
+## Released Versions
+
+### v1.2.0-beta (Released 2026-02-19)
+**Status:** Class scheduling Phase 4, PR leaderboards, configurable beta logo
+
+**Highlights:**
+- ✅ Class packages (credit system), waitlist management, class notifications
+- ✅ User documents / waivers per gym
+- ✅ Delete class templates with cascade modes (template only / future sessions / all sessions)
+- ✅ PR Leaderboards — gym-wide personal record comparison
+- ✅ Consistency achievements
+- ✅ Configurable beta logo via `LOGO_VARIANT` environment variable
+- ✅ Leaderboard search and header nav icon
+
+---
+
+### v1.1.0-beta (Released 2026-01-xx)
+**Status:** Three-tier roles, class scheduling Phase 1-3, coach dashboard
+
+**Highlights:**
+- ✅ Renamed "user" role to "athlete"; added "coach" as middle tier
+- ✅ `CoachOrAdmin` middleware; coaches bypass subscription checks
+- ✅ Dedicated `/api/coaches/` routes (sessions, roster, check-in, no-show, complete)
+- ✅ Gym locations, class templates, schedule slots, class sessions with capacity
+- ✅ Coach assignments per gym; reservations with check-in flow
+- ✅ Coach Dashboard frontend; Admin all-sessions visibility
+
+---
+
+## Early Development History (v0.12 – v0.16)
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release history prior to v1.0.
 
 ---
 
