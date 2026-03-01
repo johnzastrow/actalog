@@ -180,7 +180,7 @@
       </v-btn>
 
       <v-btn value="performance" to="/performance" size="x-small">
-        <v-icon size="20">mdi-trending-up</v-icon>
+        <v-icon size="20">mdi-chart-bar</v-icon>
         <span class="nav-label">Stats</span>
       </v-btn>
 
@@ -205,7 +205,7 @@
         class="fab-button"
       >
         <v-avatar color="primary" size="40">
-          <v-icon color="white" size="24">mdi-plus</v-icon>
+          <v-icon color="white" size="24">mdi-plus-thick</v-icon>
         </v-avatar>
       </v-btn>
 
