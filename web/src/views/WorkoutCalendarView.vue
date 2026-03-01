@@ -42,7 +42,7 @@ const showDateDialog = ref(false)
 
 async function fetchWorkouts() {
   try {
-    const response = await axios.get('/api/workouts')
+    const response = await axios.get('/api/workouts?limit=10000')
     const workoutsData = Array.isArray(response.data) ? response.data : (response.data.workouts || [])
     workouts.value = workoutsData
     workoutDates.value = workoutsData.map(w => w.workout_date)
