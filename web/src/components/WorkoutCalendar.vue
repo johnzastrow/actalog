@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 
 const theme = useTheme()
@@ -80,7 +80,11 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['daySelected'])
+const emit = defineEmits(['daySelected', 'monthChanged'])
+
+onMounted(() => {
+  emit('monthChanged', new Date(currentDate.value))
+})
 
 const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -186,6 +190,7 @@ function previousMonth() {
   const newDate = new Date(currentDate.value)
   newDate.setMonth(newDate.getMonth() - 1)
   currentDate.value = newDate
+  emit('monthChanged', new Date(newDate))
 }
 
 function nextMonth() {
@@ -193,6 +198,7 @@ function nextMonth() {
     const newDate = new Date(currentDate.value)
     newDate.setMonth(newDate.getMonth() + 1)
     currentDate.value = newDate
+    emit('monthChanged', new Date(newDate))
   }
 }
 

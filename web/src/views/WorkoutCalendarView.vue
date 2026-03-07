@@ -2,13 +2,16 @@
   <div class="mobile-view-wrapper">
     <!-- Header -->
     <div style="background: #2c3e50; padding: 16px; position: fixed; top: 56px; left: 0; right: 0; z-index: 5">
-      <h2 style="color: white; margin: 0; font-size: 1.25rem">Workout Calendar</h2>
+      <h2 style="color: white; margin: 0; font-size: 1.25rem">
+        Workout Calendar
+        <span v-if="monthWorkoutCount > 0" style="font-size: 1rem; font-weight: normal; opacity: 0.8">({{ monthWorkoutCount }})</span>
+      </h2>
     </div>
 
     <!-- Content (with padding for fixed header) -->
     <div style="padding: 72px 16px 16px 16px; overflow-y: auto">
       <!-- Calendar Component -->
-      <workout-calendar :workout-dates="workoutDates" @day-selected="handleDaySelected" />
+      <workout-calendar :workout-dates="workoutDates" @day-selected="handleDaySelected" @month-changed="handleMonthChanged" />
 
       <!-- Instructions -->
       <v-card elevation="0" rounded="lg" class="mt-4 pa-4 text-center" bg-color="surface">
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import WorkoutCalendar from '@/components/WorkoutCalendar.vue'
 import DateWorkoutDetailDialog from '@/components/DateWorkoutDetailDialog.vue'
@@ -39,6 +42,16 @@ const workouts = ref([])
 const workoutDates = ref([])
 const selectedDate = ref(null)
 const showDateDialog = ref(false)
+const currentCalendarDate = ref(new Date())
+
+const monthWorkoutCount = computed(() => {
+  const y = currentCalendarDate.value.getFullYear()
+  const m = currentCalendarDate.value.getMonth()
+  return workouts.value.filter(w => {
+    const d = new Date(w.workout_date.split('T')[0] + 'T00:00:00')
+    return d.getFullYear() === y && d.getMonth() === m
+  }).length
+})
 
 async function fetchWorkouts() {
   try {
@@ -49,6 +62,10 @@ async function fetchWorkouts() {
   } catch (error) {
     console.error('Failed to fetch workouts:', error)
   }
+}
+
+function handleMonthChanged(date) {
+  currentCalendarDate.value = date
 }
 
 function handleDaySelected(date) {
