@@ -1004,13 +1004,16 @@ func TestUserWorkoutRepository_GetActiveUsersThisMonth(t *testing.T) {
 		t.Fatalf("Failed to add user4 to org B: %v", err)
 	}
 
-	// Create workouts for this month
+	// Create workouts for this month — all dated to the current month's start
+	// to avoid "beginning of month" failures (e.g. day 1: going back N days crosses into prior month).
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
 	// user1: 5 workouts
 	for i := 0; i < 5; i++ {
 		uw := &domain.UserWorkout{
 			UserID:      user1.ID,
 			WorkoutName: ptrString("Workout"),
-			WorkoutDate: now.AddDate(0, 0, -i),
+			WorkoutDate: monthStart.Add(time.Duration(i) * time.Hour),
 		}
 		if err := userWorkoutRepo.Create(uw); err != nil {
 			t.Fatalf("Failed to create user1 workout: %v", err)
@@ -1022,7 +1025,7 @@ func TestUserWorkoutRepository_GetActiveUsersThisMonth(t *testing.T) {
 		uw := &domain.UserWorkout{
 			UserID:      user2.ID,
 			WorkoutName: ptrString("Workout"),
-			WorkoutDate: now.AddDate(0, 0, -i),
+			WorkoutDate: monthStart.Add(time.Duration(i) * time.Hour),
 		}
 		if err := userWorkoutRepo.Create(uw); err != nil {
 			t.Fatalf("Failed to create user2 workout: %v", err)
@@ -1033,7 +1036,7 @@ func TestUserWorkoutRepository_GetActiveUsersThisMonth(t *testing.T) {
 	uw := &domain.UserWorkout{
 		UserID:      user3.ID,
 		WorkoutName: ptrString("Workout"),
-		WorkoutDate: now,
+		WorkoutDate: monthStart,
 	}
 	if err := userWorkoutRepo.Create(uw); err != nil {
 		t.Fatalf("Failed to create user3 workout: %v", err)
@@ -1044,7 +1047,7 @@ func TestUserWorkoutRepository_GetActiveUsersThisMonth(t *testing.T) {
 		uw := &domain.UserWorkout{
 			UserID:      user4.ID,
 			WorkoutName: ptrString("Workout"),
-			WorkoutDate: now.AddDate(0, 0, -i),
+			WorkoutDate: monthStart.Add(time.Duration(i) * time.Hour),
 		}
 		if err := userWorkoutRepo.Create(uw); err != nil {
 			t.Fatalf("Failed to create user4 workout: %v", err)
