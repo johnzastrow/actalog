@@ -2,9 +2,9 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
-[![Version](https://img.shields.io/badge/version-1.1.0--beta-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
 [![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fjohnzastrow%2Factalog-2496ED?style=flat&logo=docker)](https://github.com/johnzastrow/actalog/pkgs/container/actalog)
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/johnzastrow/actalog/actions/workflows/ci.yml/badge.svg)](https://github.com/johnzastrow/actalog/actions/workflows/ci.yml)
@@ -44,7 +44,7 @@ docker pull ghcr.io/johnzastrow/actalog:latest
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable build |
-| `1.1.0-beta` | Current versioned release |
+| `v1.2.1` | Current versioned release |
 | `dev` | Development build |
 
 **Run with SQLite (simplest):**
@@ -82,7 +82,7 @@ See [docker/DOCKER.md](docker/DOCKER.md) for Docker Compose examples and full de
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.25 or higher
 - Node.js 18+ and npm
 - Docker and Docker Compose (optional)
 
