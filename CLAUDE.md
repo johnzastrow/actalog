@@ -9,7 +9,7 @@ ActaLog is a mobile-first CrossFit workout tracker built with:
 - **Frontend:** Vue.js 3, Vuetify 3, Pinia
 - **Architecture:** Clean Architecture with strict layer separation
 
-**Version:** 1.2.0-beta
+**Version:** 1.2.1
 
 ## Quick Reference
 
