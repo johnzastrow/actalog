@@ -9,11 +9,11 @@ const (
 	// Minor version number
 	Minor = 2
 	// Patch version number
-	Patch = 0
+	Patch = 1
 	// PreRelease identifier (e.g., "alpha", "beta", "rc1")
-	PreRelease = "beta"
+	PreRelease = ""
 	// Build number - increment this with each code change
-	Build = 43
+	Build = 44
 )
 
 // Version returns the full semantic version string

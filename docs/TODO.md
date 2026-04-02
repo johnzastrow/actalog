@@ -500,6 +500,55 @@ These features can be added after the core frontend is complete:
 
 ## Completed Releases
 
+### v1.2.1 (2026-04-01)
+
+**Status:** Patch release — security fixes, dependency maintenance, CI hardening.
+
+**Completed:**
+- [x] **Security** — Pinned axios to 1.13.5 (supply chain attack mitigation, 2026-03-31 incident)
+- [x] **Security** — `npm audit fix`: patched brace-expansion, picomatch, undici, yaml
+- [x] **Fix** — Calendar view now fetches all workouts (was capped at 20, causing missing entries)
+- [x] **Fix** — Admin breadcrumb returning 404
+- [x] **Fix** — Avatar upload click target; removed stale debug logging
+- [x] **Feature** — Calendar header shows workout count for viewed month
+- [x] **UI** — Nav bar icons switched to heavier filled MDI variants
+- [x] **CI** — `setup-go` uses `go-version-file: go.mod` (auto-tracks toolchain version)
+- [x] **CI** — Pinned `golangci-lint-action` to v6 (v9 dropped v1.x support)
+- [x] **CI** — Fixed date-sensitive test failure on first day of each month
+- [x] **Deps** — Go: x/crypto 0.48→0.49, pgx/v5 5.8→5.9, go-sqlite3 1.14.34→1.14.38, lib/pq 1.11→1.12
+- [x] **Deps** — Frontend: Vue 3.5.28→3.5.31, vue-router 5.0.3→5.0.4, vitest 4.0→4.1, sass 1.97→1.98
+- [x] **Deps** — GH Actions: docker/login-action 3→4, docker/metadata-action 5→6, docker/build-push-action 6→7, actions/checkout 4→6, super-linter 4→7
+
+**Known issues:**
+- `vite-plugin-pwa` dependency chain (serialize-javascript CVE) — fix requires major downgrade to 0.19.8; deferred to next release
+
+---
+
+### v1.2.0-beta (2026-02-19)
+
+**Status:** PR Leaderboards, configurable beta logo, nav and UI polish.
+
+**Completed:**
+- [x] PR leaderboards and consistency achievement notifications
+- [x] Configurable beta logo via `LOGO_VARIANT` env variable
+- [x] Leaderboard search API response parsing fix and header nav icon
+- [x] Improved avatar upload UX
+
+---
+
+### v1.1.0-beta (2026-01-22)
+
+**Status:** Coach role, three-tier permissions, class deletion modes, scheduling UX.
+
+**Completed:**
+- [x] Three-tier role system: athlete < coach < admin (migration 0.32.0)
+- [x] `CoachOrAdmin` middleware; dedicated `/api/coaches/` routes
+- [x] Delete class template with configurable cascade (template only / future sessions / all sessions)
+- [x] Credit refunds and notifications on session cancellation
+- [x] Coach Dashboard — admins see all sessions across all gyms
+
+---
+
 ### v0.24.0-beta (2026-01-14)
 
 **Status:** Data Quality & Duplicate Detection system with merge functionality.
@@ -589,219 +638,7 @@ These features can be added after the core frontend is complete:
 
 ---
 
-### v0.16.0-beta (2025-12-20)
-
-**Status:** Notification likes, profile stats fixes, time filters, and CI pipeline fixes.
-
-**Completed:**
-- [x] **Notification Likes Feature**
-  - [x] Domain layer (NotificationLike entity and repository interface)
-  - [x] Repository layer with JOIN queries for user details
-  - [x] Service layer with LikeNotification marking notifications as unread
-  - [x] Handler layer with like/unlike/get likes endpoints
-  - [x] Frontend NotificationLikes.vue component
-  - [x] Integration into NotificationsView.vue
-  - [x] Database migration 0.16.0 with CASCADE DELETE
-  - [x] Multi-database support (SQLite, PostgreSQL, MariaDB)
-
-- [x] **Social Engagement Features**
-  - [x] Users can like any notification (PR achievements, announcements, streaks, milestones)
-  - [x] Only original recipient sees like count and list of likers
-  - [x] Liking marks notification as unread for recipient
-  - [x] Users CAN like their own notifications
-  - [x] Display: Thumbs up icon with count, comma-separated liker names
-  - [x] "Liked by: " prefix for liker names
-  - [x] CASCADE DELETE when notification is deleted
-
-- [x] **Profile View Workout Summary Fixes**
-  - [x] Fixed Personal Records count (was looking for wrong field)
-  - [x] Fixed streak calculation algorithm (consecutive days logic error)
-  - [x] Added null safety for API responses
-  - [x] Time period filters: This Week, This Month, This Year, All Time
-  - [x] Default period: This Month
-  - [x] Reactive updates with Vue watch
-
-- [x] **CI Pipeline Fixes**
-  - [x] Fixed mockEmailService missing SendHTMLEmail method
-  - [x] Fixed NewUserWorkoutService calls missing 4 parameters in tests
-  - [x] Added mockMovementRepo with 13 methods
-  - [x] Added GetAllPerformancesForMovement to mockUserWorkoutMovementRepo
-  - [x] All service tests now compile successfully
-  - [x] Integration tests compile successfully
-
-**Files Created:** `internal/domain/notification_like.go`, `internal/repository/notification_like_repository.go`, `internal/service/notification_like_service.go`, `internal/handler/notification_like_handler.go`, `web/src/components/NotificationLikes.vue`
-
-**Files Modified:**
-- Notification likes: `internal/repository/migrations.go`, `internal/domain/notification.go`, `internal/repository/notification_repository.go`, `cmd/actalog/main.go`, `web/src/views/NotificationsView.vue`, `pkg/version/version.go`
-- Profile stats: `web/src/views/ProfileView.vue`
-- CI fixes: `internal/service/user_service_test.go`, `internal/service/user_workout_service_test.go`, `internal/service/test_helpers.go`
-- Documentation: `docs/CHANGELOG.md`, `docs/TODO.md`, `docs/ROADMAP.md`, `docs/DATABASE_SCHEMA.md`, `CLAUDE.md`, `web/package.json`
-
-**API Endpoints:**
-- `POST /api/notifications/{id}/like` - Like a notification
-- `DELETE /api/notifications/{id}/like` - Unlike a notification
-- `GET /api/notifications/{id}/likes` - Get all likes with user details
-
----
-
-### v0.15.0-beta (2025-12-19)
-
-**Status:** Admin announcement system for gym-wide notifications.
-
-**Completed:**
-- [x] **Admin Announcement Feature**
-  - [x] Admin-only endpoint for creating announcements
-  - [x] Sends notification to all users in the system
-  - [x] Flexible notification system (PR achievements, announcements, etc.)
-  - [x] Audit trail for all announcement creation
-
-**Files Created:** Admin announcement handler endpoint
-
-**Files Modified:** `internal/handler/notification_handler.go` (admin announcement endpoint), `cmd/actalog/main.go` (route wiring)
-
-**API Endpoints:**
-- `POST /api/admin/notifications/announce` - Create announcement for all users (admin only)
-
----
-
-### v0.14.0-beta (2024-12-16)
-
-**Status:** Subscription billing system implementation with dual-level (user + organization) billing.
-
-**Completed:**
-- [x] **Subscription Billing System Backend**
-  - [x] Domain entities (UserSubscription, OrganizationSubscription, SubscriptionAccessResult)
-  - [x] Repository layer (3 repositories: UserSubscription, OrganizationSubscription, SubscriptionAccess)
-  - [x] Service layer (SubscriptionService with admin operations)
-  - [x] Middleware layer (RequireActiveSubscription - read-only enforcement)
-  - [x] Handler layer (10 API endpoints: 8 admin, 2 user)
-  - [x] Route configuration (wired into main.go)
-
-- [x] **Migration 0.14.0**
-  - [x] Create user_subscriptions table (15 columns, 4 indexes)
-  - [x] Create organization_subscriptions table (15 columns, 4 indexes)
-  - [x] Seed existing users with permanent free subscriptions
-  - [x] Multi-database support (SQLite, PostgreSQL, MariaDB)
-
-- [x] **Database Version Management System**
-  - [x] SQLite snapshot: `db_versions/actalog_0.14.0.db` (564 KB)
-  - [x] PostgreSQL schema: `actalog_0_14_0` on 192.168.1.143
-  - [x] MariaDB database: `actalog_0_14_0` on 192.168.1.234
-  - [x] Automation scripts: `create-db-snapshot.sh`, `verify-version-databases.sh`
-  - [x] Documentation: `VERSION_DATABASES.md`, `MIGRATION_TEST_0.14.0.md`
-
-- [x] **Subscription Features**
-  - [x] Three subscription types: Free, Monthly, Annual
-  - [x] Permanent Free option (never expires, for founders/staff)
-  - [x] Dual-level billing (user-level AND organization-level)
-  - [x] Flexible access (access if EITHER personal OR org subscription active)
-  - [x] Manual admin payment control (mark as paid/unpaid)
-  - [x] Immediate read-only mode when expired (no grace period)
-  - [x] HTTP 402 Payment Required for blocked operations
-  - [x] Complete audit trail for all subscription operations
-
-- [x] **Backward Compatibility**
-  - [x] All existing users seeded with permanent free subscriptions
-  - [x] Zero downtime deployment verified
-  - [x] Migration tested on all 3 database engines
-
-**Files Created:** `internal/domain/subscription.go`, `internal/repository/user_subscription_repository.go`, `internal/repository/organization_subscription_repository.go`, `internal/repository/subscription_access_repository.go`, `internal/service/subscription_service.go`, `pkg/middleware/subscription.go`, `internal/handler/subscription_handler.go`, `db_versions/README.md`, `db_versions/VERSION_DATABASES.md`, `db_versions/MIGRATION_TEST_0.14.0.md`, `scripts/create-db-snapshot.sh`, `scripts/verify-version-databases.sh`
-
-**Files Modified:** `internal/repository/migrations.go` (migration 0.14.0), `pkg/version/version.go` (v0.14.0), `cmd/actalog/main.go` (wiring), `internal/domain/audit_log.go` (subscription events), `CLAUDE.md` (version management)
-
-**API Endpoints:**
-- User: `GET /api/subscriptions/status`
-- Admin: `POST /api/admin/subscriptions/user`, `GET /api/admin/subscriptions/user/{user_id}`, `POST /api/admin/subscriptions/user/{id}/mark-paid`, `POST /api/admin/subscriptions/user/{id}/cancel`
-- Admin Org: `POST /api/admin/subscriptions/organization`, `GET /api/admin/subscriptions/organization/{org_id}`, `POST /api/admin/subscriptions/organization/{id}/mark-paid`, `POST /api/admin/subscriptions/organization/{id}/cancel`
-
----
-
-### v0.12.2-beta (2025-11-28)
-
-**Status:** PWA offline functionality fix and user-controlled updates.
-
-**Completed:**
-- [x] **PWA Offline Workout Recording**
-  - [x] Fixed service worker API caching pattern
-  - [x] Added robust offline detection (Network Error, ERR_NETWORK, navigator.onLine, timeout)
-  - [x] Extended offline handling to support PUT requests
-  - [x] Added 24-hour cache for API responses when offline
-
-- [x] **User-Controlled PWA Updates**
-  - [x] Replaced silent auto-reload with user prompt
-  - [x] New `UpdatePrompt.vue` component with "Later" and "Update Now" buttons
-  - [x] New `pwa.js` Pinia store for PWA state management
-
-- [x] **Offline Save Notification**
-  - [x] Added "Saved Offline" snackbar notification
-  - [x] Custom `offline-save` event for UI notification
-
-- [x] **Unit Test Fixes**
-  - [x] Fixed `mockWODRepo.GetByName()` return value
-  - [x] Updated WOD tests with correct error types
-  - [x] Added required fields to Update tests
-
-**Files:** `web/src/components/UpdatePrompt.vue`, `web/src/stores/pwa.js`, `web/vite.config.js`, `web/src/utils/axios.js`, `web/src/App.vue`, `web/src/main.js`, `internal/service/test_helpers.go`, `internal/service/wod_service_test.go`
-
----
-
-### v0.12.1-beta (2025-11-28)
-
-**Status:** MySQL/MariaDB compatibility fix and Docker troubleshooting.
-
-**Completed:**
-- [x] Fixed database-agnostic timestamp functions for MySQL/MariaDB
-- [x] Fixed hardcoded SQLite `datetime('now')` in refresh token repository
-- [x] Added `getTimestampFunc()` helper for cross-database timestamp support
-- [x] Enhanced Docker host database troubleshooting documentation
-
-**Files:** `internal/repository/database.go`, `internal/repository/refresh_token_repository.go`, `docker/DOCKER.md`, `docker/DATABASE_DEPLOYMENT.md`
-
----
-
-### v0.12.0-beta (2025-11-26)
-
-**Status:** Mobile PWA stability and Docker metadata improvements.
-
-**Completed:**
-- [x] Mobile PWA overflow fix across 27 view files
-- [x] `.mobile-view-wrapper` CSS pattern for consistent mobile layouts
-- [x] OCI-compliant labels added to Docker build scripts
-- [x] Admin User Content view Actions column moved to first position
-- [x] iOS PWA safe-area handling enhanced
-
----
-
-### v0.11.0-beta (2025-11-26)
-
-**Status:** Data Change Audit Logging system.
-
-**Completed:**
-- [x] Complete audit trail for data modifications (WOD, Movement)
-- [x] Before/after values stored as JSON
-- [x] Admin UI for viewing and filtering data change logs
-- [x] Multi-database support (SQLite, PostgreSQL, MariaDB)
-
-**Files:** `internal/domain/data_change_log.go`, `internal/repository/data_change_log_repository.go`, `internal/service/data_change_log_service.go`, `internal/handler/data_change_log_handler.go`, `web/src/views/AdminDataChangeLogsView.vue`
-
----
-
-### v0.10.0-beta (2025-11-24)
-
-**Status:** Docker deployment infrastructure with automatic seed import.
-
-**Completed:**
-- [x] Multi-stage Dockerfile with optimized build
-- [x] Three docker-compose configurations (SQLite, PostgreSQL, MariaDB)
-- [x] GitHub Actions CI/CD for automated image building
-- [x] Automatic seed data import (182 movements, 314 WODs)
-- [x] GitHub Container Registry integration (ghcr.io)
-
----
-
-*For releases prior to v0.10.0, see [CHANGELOG.md](./CHANGELOG.md)*
-
----
+*For releases prior to v0.24.0, see [CHANGELOG.md](./CHANGELOG.md)*
 
 ## Future Considerations
 

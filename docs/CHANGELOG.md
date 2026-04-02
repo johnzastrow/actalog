@@ -5,6 +5,33 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-04-01
+
+### Added
+- Calendar header now displays workout count for the viewed month
+
+### Fixed
+- Calendar view now fetches all workouts instead of defaulting to 20 (fixes missing entries for active users)
+- Admin breadcrumb link returning 404
+- Avatar upload click target too small; removed stale debug logging
+
+### Changed
+- Nav bar icons switched to heavier filled MDI variants for improved visual weight
+
+### Security
+- Pinned axios to `1.13.5` across frontend to prevent auto-upgrade into compromised versions 1.14.1 / 0.30.4 (supply chain attack via hijacked npm account, 2026-03-31)
+- `npm audit fix`: patched brace-expansion (ReDoS), picomatch (method injection / ReDoS), undici (WebSocket memory/smuggling), yaml (stack overflow)
+- Updated Go deps: `x/crypto` 0.48→0.49, `pgx/v5` 5.8→5.9, `go-sqlite3` 1.14.34→1.14.38, `lib/pq` 1.11→1.12
+
+### Maintenance
+- CI: `setup-go` now uses `go-version-file: go.mod` so toolchain tracks the module automatically
+- CI: pinned `golangci-lint-action` to v6 (v9 dropped golangci-lint v1.x support)
+- Fixed date-sensitive test `TestUserWorkoutRepository_GetActiveUsersThisMonth` (failed on first day of each month)
+- Updated GitHub Actions: `docker/login-action` 3→4, `docker/metadata-action` 5→6, `docker/build-push-action` 6→7, `docker/setup-buildx-action` 3→4, `actions/checkout` 4→6, `github/super-linter` 4→7
+- Updated frontend deps: Vue 3.5.28→3.5.31, vue-router 5.0.3→5.0.4, vitest 4.0.18→4.1.0, sass 1.97→1.98, marked 17.0.1→17.0.3
+
+---
+
 ## [1.2.0-beta] - 2026-02-19
 
 ### Added - Configurable Beta Logo
@@ -2646,6 +2673,6 @@ Security-related changes or fixes.
 
 ---
 
-**Current Version:** 0.12.0-beta
-**Schema Version:** v0.11.0 (Data Change Audit Logs)
-**Last Updated:** 2025-11-26
+**Current Version:** 1.2.1
+**Schema Version:** v0.32.0 (Coach Role & Role Rename)
+**Last Updated:** 2026-04-01
