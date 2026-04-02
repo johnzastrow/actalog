@@ -1,7 +1,7 @@
 # ActaLog TODO
 
-> **Last Updated:** 2026-02-19
-> **Current Version:** 1.2.0-beta (Build 40)
+> **Last Updated:** 2026-04-02
+> **Current Version:** 1.2.1 (Build 44)
 
 ---
 

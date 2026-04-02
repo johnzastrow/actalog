@@ -1,7 +1,7 @@
 # User Permissions Matrix
 
 **Last Updated:** 2026-02-28
-**Version:** 1.2.0-beta
+**Version:** 1.2.1
 
 This document details all user actions and their permission requirements in ActaLog.
 
