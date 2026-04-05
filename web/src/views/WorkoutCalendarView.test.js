@@ -83,7 +83,7 @@ describe('WorkoutCalendarView', () => {
       createWrapper()
       await flushPromises()
 
-      expect(axios.get).toHaveBeenCalledWith('/api/workouts')
+      expect(axios.get).toHaveBeenCalledWith('/api/workouts?limit=10000')
     })
 
     it('stores fetched workouts', async () => {

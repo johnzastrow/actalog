@@ -134,8 +134,8 @@ describe('RegisterView', () => {
 
       vm.name = ''
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -151,8 +151,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = ''
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -168,13 +168,13 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = '1234567' // Only 7 characters
+      vm.password = '1234567' // Only 7 characters (below 12-char minimum)
       vm.confirmPassword = '1234567'
 
       await vm.handleRegister()
       await flushPromises()
 
-      expect(vm.errors.password).toBe('Password must be at least 8 characters')
+      expect(vm.errors.password).toBe('Password must be at least 12 characters')
       expect(mockAuthStore.register).not.toHaveBeenCalled()
     })
 
@@ -185,7 +185,7 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
+      vm.password = 'Password1234'
       vm.confirmPassword = 'differentpassword'
 
       await vm.handleRegister()
@@ -202,8 +202,8 @@ describe('RegisterView', () => {
 
       vm.name = '   '
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -218,8 +218,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = '   '
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -236,8 +236,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -283,8 +283,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -301,8 +301,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -328,8 +328,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'weakpass'
-      vm.confirmPassword = 'weakpass'
+      vm.password = 'Weakpass1234'
+      vm.confirmPassword = 'Weakpass1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -347,8 +347,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'existing@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -366,8 +366,8 @@ describe('RegisterView', () => {
 
       vm.name = 'A'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -385,8 +385,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -404,8 +404,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -433,8 +433,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       const registerPromise = vm.handleRegister()
 
@@ -459,8 +459,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -573,8 +573,8 @@ describe('RegisterView', () => {
 
       vm.name = 'John Doe'
       vm.email = 'existing@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -598,8 +598,8 @@ describe('RegisterView', () => {
 
       vm.name = "John O'Brien-Smith"
       vm.email = 'john@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -620,8 +620,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test+signup@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -664,8 +664,8 @@ describe('RegisterView', () => {
 
       vm.name = '田中太郎'
       vm.email = 'tanaka@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()
@@ -692,8 +692,8 @@ describe('RegisterView', () => {
 
       vm.name = 'Test User'
       vm.email = 'test@example.com'
-      vm.password = 'password123'
-      vm.confirmPassword = 'password123'
+      vm.password = 'Password1234'
+      vm.confirmPassword = 'Password1234'
 
       await vm.handleRegister()
       await flushPromises()

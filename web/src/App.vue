@@ -238,7 +238,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, provide } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
@@ -290,13 +290,22 @@ const showBottomNav = computed(() => {
   return authStore.isAuthenticated && !publicRoutes.includes(route.name)
 })
 
-// Computed style for v-main to handle safe areas and bottom nav
+// Computed style for v-main to handle safe areas and fixed chrome.
+// NOTE: Vuetify 4 wraps all its CSS in @layer, which has lower cascade priority
+// than any unlayered CSS (including our * { padding: 0 } reset in main.css).
+// Inline styles always win regardless of layers, so we must set both paddings
+// here rather than relying on Vuetify's CSS class to apply them.
 const mainStyle = computed(() => {
-  // Bottom nav height (56px) + safe area for devices with home indicator
+  // Read top offset from Vuetify's layout system (set by v-app-bar registration)
+  const topPadding = showAppBar.value
+    ? 'var(--v-layout-top, 56px)'
+    : '0'
+  // Bottom nav height + safe area for devices with home indicator
   const bottomPadding = showBottomNav.value
-    ? 'calc(56px + env(safe-area-inset-bottom, 0px))'
+    ? 'calc(var(--v-layout-bottom, 56px) + env(safe-area-inset-bottom, 0px))'
     : '0'
   return {
+    paddingTop: topPadding,
     paddingBottom: bottomPadding,
     minHeight: '100%',
     maxWidth: '100vw',
@@ -316,6 +325,16 @@ watch(() => settingsStore.timezone, () => {
   updateCurrentDate()
 })
 
+// Watch for auth state changes — start/stop polling as the user logs in or out
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  if (isAuth) {
+    startNotificationPolling()
+  } else {
+    stopNotificationPolling()
+    unreadNotificationCount.value = 0
+  }
+})
+
 // Fetch unread notification count
 async function fetchUnreadNotificationCount() {
   if (!authStore.isAuthenticated) return
@@ -328,6 +347,9 @@ async function fetchUnreadNotificationCount() {
     console.error('Failed to fetch notification count:', error)
   }
 }
+
+// Expose so child views (e.g. NotificationsView) can trigger an immediate refresh
+provide('refreshNotificationCount', fetchUnreadNotificationCount)
 
 // Start polling for notifications
 function startNotificationPolling() {

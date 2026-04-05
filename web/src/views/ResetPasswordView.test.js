@@ -123,7 +123,7 @@ describe('ResetPasswordView', () => {
       await vm.handleSubmit()
       await flushPromises()
 
-      expect(vm.errors.password).toBe('Password must be at least 8 characters long')
+      expect(vm.errors.password).toBe('Password must be at least 12 characters long')
       expect(axios.post).not.toHaveBeenCalled()
     })
 
@@ -131,8 +131,8 @@ describe('ResetPasswordView', () => {
       createWrapper()
 
       const vm = wrapper.vm
-      vm.newPassword = 'password123'
-      vm.confirmPassword = 'different123'
+      vm.newPassword = 'Password1234'
+      vm.confirmPassword = 'different1234'
 
       await vm.handleSubmit()
       await flushPromises()

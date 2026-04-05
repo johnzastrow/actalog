@@ -5,6 +5,22 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — Security hardening branch (2026-04-03)
+
+### Security
+- **Password policy** — raised minimum from 8 to 12 characters; now requires at least one uppercase letter, one lowercase letter, and one digit. Enforced in registration, password reset, and password change flows (`internal/service/user_service.go`). UI hints and client-side length checks updated in RegisterView, SettingsView, ResetPasswordView, and AdminUserImportExportView
+- **Error sanitisation** — `WriteError()` no longer forwards raw internal error strings to HTTP responses; unknown errors return a generic message (`internal/handler/errors.go`)
+- **XSS prevention** — DOMPurify 3.3.3 added to `MarkdownRenderer.vue`; all `v-html` output is sanitized before DOM insertion
+- **serialize-javascript** — pinned to 7.0.5 via `package.json` overrides, fixing RCE (GHSA-5c6j-r48x-rmvq) and CPU exhaustion DoS (GHSA-qj8w-gfj5-8c6v) in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain
+- **Rate limiter IP extraction** — `X-Forwarded-For` header now correctly takes the leftmost (original client) IP from comma-separated lists; `RemoteAddr` port suffix stripped to prevent per-reconnect bucket bypass
+- **Audit logging** — `rate_limit_exceeded` events now emitted via `OnExceeded` callback on both auth and password-reset rate limiters
+
+### Maintenance
+- golangci-lint upgraded from v1.64.8 to v2.11.4; config migrated to v2 format (`version: "2"`)
+- Frontend unit tests added to CI pipeline (`web-test` job in `.github/workflows/ci.yml`)
+
+---
+
 ## [1.2.1] - 2026-04-01
 
 ### Added
@@ -336,7 +352,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Two-phase import: preview with validation → confirm to create users
   - CSV format: `email,name,password` columns required
   - Duplicate email detection with skip option
-  - Password validation (minimum 8 characters)
+  - Password validation (minimum 12 characters with complexity requirements)
   - All imported users get role `user` and permanent free subscription
   - Passwords hashed with bcrypt (cost 12)
 

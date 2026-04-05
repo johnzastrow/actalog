@@ -166,12 +166,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, inject } from 'vue'
 import axios from '@/utils/axios'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import NotificationLikes from '@/components/NotificationLikes.vue'
 
 // State
+const refreshNotificationCount = inject('refreshNotificationCount', () => {})
+
 const currentTab = ref('all')
 const notifications = ref([])
 const unreadCount = ref(0)
@@ -239,6 +241,7 @@ const markAsRead = async (notification) => {
     await axios.put(`/api/notifications/${notification.id}/read`)
     notification.read_at = new Date().toISOString()
     unreadCount.value = Math.max(0, unreadCount.value - 1)
+    refreshNotificationCount()
     successMessage.value = 'Notification marked as read'
   } catch (error) {
     errorMessage.value = 'Failed to mark notification as read'
@@ -257,6 +260,7 @@ const markAllAsRead = async () => {
     })
 
     unreadCount.value = 0
+    refreshNotificationCount()
     successMessage.value = 'All notifications marked as read'
   } catch (error) {
     errorMessage.value = 'Failed to mark all notifications as read'

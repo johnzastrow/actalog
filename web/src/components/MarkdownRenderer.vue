@@ -5,6 +5,7 @@
 <script setup>
 import { computed } from 'vue'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const props = defineProps({
   content: {
@@ -26,10 +27,10 @@ const renderedHtml = computed(() => {
   if (!props.content) return ''
 
   try {
-    return marked.parse(props.content)
+    return DOMPurify.sanitize(marked.parse(props.content))
   } catch (error) {
     console.error('Failed to parse markdown:', error)
-    return props.content // Fallback to plain text
+    return DOMPurify.sanitize(props.content)
   }
 })
 </script>

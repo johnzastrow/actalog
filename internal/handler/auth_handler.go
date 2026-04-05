@@ -275,13 +275,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate password strength (minimum 8 characters)
-	if len(req.NewPassword) < 8 {
-		respondError(w, http.StatusBadRequest, "Password must be at least 8 characters long")
-		return
-	}
-
-	// Reset password
+	// Reset password (policy enforced in service layer)
 	err := h.userService.ResetPassword(req.Token, req.NewPassword)
 	if err != nil {
 		switch err {

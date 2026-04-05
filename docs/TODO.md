@@ -500,6 +500,27 @@ These features can be added after the core frontend is complete:
 
 ## Completed Releases
 
+### Security Hardening Branch (2026-04-03)
+
+**Status:** In progress on `security/hardening-2026-04-03`. Targeting v1.2.2.
+
+**Completed:**
+- [x] **Security** — Password policy raised to 12-char min + uppercase/lowercase/digit (`internal/service/user_service.go`); UI hints and client-side validation updated in RegisterView, SettingsView, ResetPasswordView, AdminUserImportExportView
+- [x] **Security** — `WriteError()` no longer leaks raw internal error strings to HTTP responses
+- [x] **Security** — DOMPurify 3.3.3 added to `MarkdownRenderer.vue`; all `v-html` output sanitized
+- [x] **Security** — `serialize-javascript` pinned to 7.0.5 via `package.json` overrides (RCE + DoS CVEs)
+- [x] **Security** — Rate limiter IP extraction fixed: leftmost XFF IP taken, RemoteAddr port stripped
+- [x] **Security** — `rate_limit_exceeded` audit events now emitted from auth and password-reset limiters
+- [x] **CI** — golangci-lint upgraded to v2.11.4; config migrated to v2 format
+- [x] **CI** — Frontend unit tests added to CI pipeline
+
+**Deferred:**
+- [ ] Step 1: Fix CORS `else` branch (allowlist currently inert)
+- [ ] Step 2: Add security response headers middleware (CSP, HSTS, X-Frame-Options, etc.)
+- [ ] Step 5: Avatar upload magic bytes validation (currently checks Content-Type header only)
+
+---
+
 ### v1.2.1 (2026-04-01)
 
 **Status:** Patch release — security fixes, dependency maintenance, CI hardening.
@@ -661,6 +682,35 @@ Items to address when time permits:
 - [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
 - [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
 - [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
+
+---
+
+## Dependency Upgrade Watch
+
+### Vuetify 4 Migration — Watch & Wait
+
+**Current:** Vuetify `^3.12.1` (pinned after accidental bump to 4.0.0 in Dependabot commit `039084d`)
+
+**Trigger conditions** — upgrade when ANY of these are true:
+- Vuetify 4.1.x or later is released (indicates post-launch stabilization)
+- Vuetify 3.x enters security-only or end-of-life maintenance
+- A feature we need is only available in Vuetify 4
+
+**Watch:**
+- Vuetify GitHub releases: `https://github.com/vuetifyjs/vuetify/releases`
+- Vuetify 3 EOL announcement (none as of 2026-04-03)
+
+**Known breaking changes for this app** (catalogued 2026-04-03):
+
+| Area | Change | Fix Required |
+|------|--------|-------------|
+| CSS cascade | All Vuetify 4 CSS is in `@layer vuetify-components` — unlayered app CSS wins | Wrap `main.css` reset in `@layer reset { }` and remove `p, span, div { font-size: 14px }` from App.vue |
+| `v-main` padding | CSS reset `* { padding: 0 }` kills layout top/bottom padding | Keep existing `paddingTop`/`paddingBottom` in `mainStyle` (already fixed) |
+| `fill-height` | No longer sets `display: flex` or `align-items: center` — only `height: 100%` | Add `d-flex align-center` to 47 views using `v-container class="fill-height"` |
+| `app` prop | Removed from `v-app-bar`, `v-bottom-navigation` — layout registration is now automatic | Remove `app` prop from both (harmless but dead code) |
+| `v-bottom-navigation` | `v-model` controls selected tab only; `active` prop controls visibility separately | Audit any code that passed `v-model` expecting visibility control |
+
+**Full plan:** See memory file `vuetify4-upgrade-plan.md`
 
 ---
 

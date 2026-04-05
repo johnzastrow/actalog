@@ -115,7 +115,7 @@
             density="compact"
             rounded="lg"
             :error-messages="passwordErrors.newPassword"
-            hint="At least 8 characters"
+            hint="At least 12 characters with uppercase, lowercase, and a number"
             persistent-hint
             class="mb-2"
           >
@@ -829,8 +829,8 @@ const changePassword = async () => {
     return
   }
 
-  if (passwordForm.value.newPassword.length < 8) {
-    passwordErrors.value.newPassword = 'Password must be at least 8 characters'
+  if (passwordForm.value.newPassword.length < 12) {
+    passwordErrors.value.newPassword = 'Password must be at least 12 characters'
     return
   }
 

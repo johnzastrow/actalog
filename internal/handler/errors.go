@@ -116,17 +116,25 @@ func MapServiceError(err error) (int, bool) {
 // It automatically maps known service errors to HTTP status codes
 func WriteError(w http.ResponseWriter, err error) {
 	status, known := MapServiceError(err)
-	if !known {
-		// Check if it's an HTTPError
+	var message string
+	if known {
+		// Known service error — sentinel message is safe to expose
+		message = err.Error()
+	} else {
 		var httpErr *HTTPError
 		if errors.As(err, &httpErr) {
+			// HTTPError.Message is a human-written safe string
 			status = httpErr.Status
+			message = httpErr.Message
+		} else {
+			// Unknown internal error — do not expose raw Go error detail
+			message = "an internal error occurred"
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(ErrorResponse{Message: err.Error()})
+	json.NewEncoder(w).Encode(ErrorResponse{Message: message})
 }
 
 // WriteErrorWithStatus writes an error response with a specific status code

@@ -95,7 +95,7 @@
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                 required
                 :error-messages="errors.password"
-                hint="Must be at least 8 characters"
+                hint="Must be at least 12 characters with uppercase, lowercase, and a number"
                 class="mt-4"
                 @click:append-inner="showPassword = !showPassword"
               />
@@ -170,8 +170,8 @@ const handleRegister = async () => {
     return
   }
 
-  if (password.value.length < 8) {
-    errors.value.password = 'Password must be at least 8 characters'
+  if (password.value.length < 12) {
+    errors.value.password = 'Password must be at least 12 characters'
     return
   }
 
