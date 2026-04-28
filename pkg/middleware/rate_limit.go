@@ -11,11 +11,11 @@ import (
 
 // RateLimiter implements in-memory rate limiting with sliding window
 type RateLimiter struct {
-	requests    map[string][]time.Time // IP -> request timestamps
-	mu          sync.RWMutex
-	limit       int           // Max requests allowed
-	window      time.Duration // Time window for rate limiting
-	onExceeded  func(ip string) // Optional hook called when a limit is exceeded
+	requests   map[string][]time.Time // IP -> request timestamps
+	mu         sync.RWMutex
+	limit      int             // Max requests allowed
+	window     time.Duration   // Time window for rate limiting
+	onExceeded func(ip string) // Optional hook called when a limit is exceeded
 }
 
 // NewRateLimiter creates a new rate limiter
