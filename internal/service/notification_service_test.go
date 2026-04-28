@@ -415,16 +415,16 @@ func TestNotificationService_CreateNotification_NoOrganization(t *testing.T) {
 	notifRepo := newTestNotificationRepo()
 	service := NewNotificationService(notifRepo, nil, nil, nil, nil)
 
-	// Creating notification with nil organization should return nil (no error)
+	// Creating notification with nil organization should still notify the achieving user
 	err := service.CreateNotification(1, nil, domain.NotificationTypePRAchievement, "Test", "Message", nil)
 	if err != nil {
 		t.Errorf("CreateNotification() with nil org error = %v, want nil", err)
 	}
 
-	// No notifications should be created
+	// Notification should be created for the achieving user (solo user case)
 	notifications, _ := notifRepo.GetByUserID(1, 10, 0)
-	if len(notifications) != 0 {
-		t.Errorf("CreateNotification() with nil org created %d notifications, want 0", len(notifications))
+	if len(notifications) != 1 {
+		t.Errorf("CreateNotification() with nil org created %d notifications, want 1", len(notifications))
 	}
 }
 

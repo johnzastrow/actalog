@@ -59,6 +59,13 @@
             </div>
           </template>
 
+          <!-- Members Column -->
+          <template #item.member_count="{ item }">
+            <v-chip size="small" :color="item.member_count > 0 ? 'primary' : 'default'" variant="tonal">
+              {{ item.member_count }}
+            </v-chip>
+          </template>
+
           <!-- Created Date Column -->
           <template #item.created_at="{ item }">
             <span class="text-body-2">{{ formatDate(item.created_at) }}</span>
@@ -68,6 +75,9 @@
           <template #item.actions="{ item }">
             <v-btn icon size="small" variant="text" title="View Details & Locations" @click="$router.push(`/admin/organizations/${item.id}`)">
               <v-icon color="primary">mdi-cog</v-icon>
+            </v-btn>
+            <v-btn icon size="small" variant="text" title="Edit Gym" @click="openEditDialog(item)">
+              <v-icon color="warning">mdi-pencil</v-icon>
             </v-btn>
             <v-btn icon size="small" variant="text" title="Manage Users" @click="manageUsers(item)">
               <v-icon color="info">mdi-account-multiple</v-icon>
@@ -88,10 +98,10 @@
       </v-card>
     </v-container>
 
-    <!-- Create Dialog -->
+    <!-- Create / Edit Dialog -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
-        <v-card-title>Add New Gym</v-card-title>
+        <v-card-title>{{ editMode ? 'Edit Gym' : 'Add New Gym' }}</v-card-title>
         <v-card-text>
           <v-form ref="form">
             <v-text-field
@@ -113,7 +123,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn @click="closeDialog">Cancel</v-btn>
-          <v-btn color="primary" @click="saveOrganization">Create</v-btn>
+          <v-btn color="primary" @click="saveOrganization">{{ editMode ? 'Save' : 'Create' }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -157,6 +167,8 @@ const limit = ref(50)
 const offset = ref(0)
 
 const dialog = ref(false)
+const editMode = ref(false)
+const editingId = ref(null)
 const formData = ref({
   name: '',
   description: null
@@ -170,6 +182,7 @@ const selectedOrganization = ref(null)
 
 const headers = [
   { title: 'Name', key: 'name', sortable: true },
+  { title: 'Members', key: 'member_count', sortable: true, align: 'center' },
   { title: 'Created', key: 'created_at', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
 ]
@@ -191,19 +204,24 @@ async function fetchOrganizations() {
 }
 
 function openCreateDialog() {
-  formData.value = {
-    name: '',
-    description: null
-  }
+  editMode.value = false
+  editingId.value = null
+  formData.value = { name: '', description: null }
+  dialog.value = true
+}
+
+function openEditDialog(org) {
+  editMode.value = true
+  editingId.value = org.id
+  formData.value = { name: org.name, description: org.description || null }
   dialog.value = true
 }
 
 function closeDialog() {
   dialog.value = false
-  formData.value = {
-    name: '',
-    description: null
-  }
+  editMode.value = false
+  editingId.value = null
+  formData.value = { name: '', description: null }
 }
 
 async function saveOrganization() {
@@ -216,11 +234,17 @@ async function saveOrganization() {
   error.value = null
 
   try {
-    await axios.post('/api/admin/organizations', {
+    const payload = {
       name: formData.value.name,
       description: formData.value.description || null
-    })
-    successMessage.value = 'Gym created successfully'
+    }
+    if (editMode.value) {
+      await axios.put(`/api/admin/organizations/${editingId.value}`, payload)
+      successMessage.value = 'Gym updated successfully'
+    } else {
+      await axios.post('/api/admin/organizations', payload)
+      successMessage.value = 'Gym created successfully'
+    }
     closeDialog()
     await fetchOrganizations()
   } catch (err) {

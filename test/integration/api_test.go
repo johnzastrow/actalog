@@ -261,7 +261,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 		body := map[string]string{
 			"name":     "Test User",
 			"email":    testEmail,
-			"password": "Password123",
+			"password": "Password123456!",
 		}
 		jsonBody, _ := json.Marshal(body)
 
@@ -292,7 +292,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 	t.Run("Login User", func(t *testing.T) {
 		body := map[string]string{
 			"email":    testEmail,
-			"password": "Password123",
+			"password": "Password123456!",
 		}
 		jsonBody, _ := json.Marshal(body)
 
@@ -351,7 +351,7 @@ func TestWorkoutAndPRFlow(t *testing.T) {
 		regBody := map[string]string{
 			"name":     "PR Test User",
 			"email":    testEmail,
-			"password": "Password123",
+			"password": "Password123456!",
 		}
 		jsonBody, _ := json.Marshal(regBody)
 		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(jsonBody))

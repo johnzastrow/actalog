@@ -372,8 +372,8 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = ''
-      vm.passwordForm.newPassword = 'newpassword123'
-      vm.passwordForm.confirmPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
+      vm.passwordForm.confirmPassword = 'NewPassword1234'
 
       await vm.changePassword()
       await flushPromises()
@@ -407,7 +407,7 @@ describe('SettingsView', () => {
       await vm.changePassword()
       await flushPromises()
 
-      expect(vm.passwordErrors.newPassword).toBe('Password must be at least 8 characters')
+      expect(vm.passwordErrors.newPassword).toBe('Password must be at least 12 characters')
     })
 
     it('validates passwords must match', async () => {
@@ -415,7 +415,7 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = 'oldpassword'
-      vm.passwordForm.newPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
       vm.passwordForm.confirmPassword = 'different123'
 
       await vm.changePassword()
@@ -434,15 +434,15 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = 'oldpassword'
-      vm.passwordForm.newPassword = 'newpassword123'
-      vm.passwordForm.confirmPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
+      vm.passwordForm.confirmPassword = 'NewPassword1234'
 
       await vm.changePassword()
       await flushPromises()
 
       expect(axios.put).toHaveBeenCalledWith('/api/users/password', {
         old_password: 'oldpassword',
-        new_password: 'newpassword123'
+        new_password: 'NewPassword1234'
       })
     })
 
@@ -456,8 +456,8 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = 'oldpassword'
-      vm.passwordForm.newPassword = 'newpassword123'
-      vm.passwordForm.confirmPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
+      vm.passwordForm.confirmPassword = 'NewPassword1234'
 
       await vm.changePassword()
       await flushPromises()
@@ -479,8 +479,8 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = 'wrongpassword'
-      vm.passwordForm.newPassword = 'newpassword123'
-      vm.passwordForm.confirmPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
+      vm.passwordForm.confirmPassword = 'NewPassword1234'
 
       await vm.changePassword()
       await flushPromises()
@@ -500,8 +500,8 @@ describe('SettingsView', () => {
 
       const vm = wrapper.vm
       vm.passwordForm.currentPassword = 'old'
-      vm.passwordForm.newPassword = 'newpassword123'
-      vm.passwordForm.confirmPassword = 'newpassword123'
+      vm.passwordForm.newPassword = 'NewPassword1234'
+      vm.passwordForm.confirmPassword = 'NewPassword1234'
 
       const changePromise = vm.changePassword()
 

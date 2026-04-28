@@ -115,9 +115,12 @@ func (r *OrganizationRepository) GetByName(name string) (*domain.Organization, e
 // List retrieves organizations with pagination
 func (r *OrganizationRepository) List(limit, offset int) ([]*domain.Organization, int64, error) {
 	query := rebindQuery(`
-		SELECT id, name, description, created_at, updated_at
-		FROM organizations
-		ORDER BY name ASC
+		SELECT o.id, o.name, o.description, o.created_at, o.updated_at,
+		       COUNT(uo.user_id) AS member_count
+		FROM organizations o
+		LEFT JOIN user_organizations uo ON uo.organization_id = o.id
+		GROUP BY o.id, o.name, o.description, o.created_at, o.updated_at
+		ORDER BY o.name ASC
 		LIMIT ? OFFSET ?
 	`)
 
@@ -132,7 +135,7 @@ func (r *OrganizationRepository) List(limit, offset int) ([]*domain.Organization
 		org := &domain.Organization{}
 		var description sql.NullString
 
-		err := rows.Scan(&org.ID, &org.Name, &description, &org.CreatedAt, &org.UpdatedAt)
+		err := rows.Scan(&org.ID, &org.Name, &description, &org.CreatedAt, &org.UpdatedAt, &org.MemberCount)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan organization: %w", err)
 		}

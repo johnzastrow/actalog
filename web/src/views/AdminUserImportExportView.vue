@@ -46,7 +46,7 @@
             </v-alert>
             <p class="text-caption text-medium-emphasis mt-3">
               All imported users will be created with role "athlete" and a permanent free subscription.
-              Passwords must be at least 8 characters.
+              Passwords must be at least 12 characters with uppercase, lowercase, and a number.
             </p>
           </v-card>
 

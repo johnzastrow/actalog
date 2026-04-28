@@ -465,12 +465,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 import { RPE_OPTIONS } from '@/utils/rpe'
 import { useSettingsStore } from '@/stores/settings'
 import { getTodayInTimezone } from '@/utils/timezone'
+
+const refreshNotificationCount = inject('refreshNotificationCount', () => {})
 
 const router = useRouter()
 const route = useRoute()
@@ -906,6 +908,13 @@ async function logWorkout() {
       const response = await axios.post('/api/workouts', payload)
 
       console.log('Workout logged:', response.data)
+
+      // If any movement or WOD was flagged as a PR, refresh the badge immediately
+      const hasPR = response.data.performance_movements?.some(m => m.is_pr) ||
+                    response.data.performance_wods?.some(w => w.is_pr)
+      if (hasPR) {
+        refreshNotificationCount()
+      }
 
       success.value = 'Workout logged successfully!'
     }

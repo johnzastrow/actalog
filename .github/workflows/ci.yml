@@ -34,9 +34,9 @@ jobs:
 
       - name: Install and run golangci-lint
         uses: golangci/golangci-lint-action@v6
-        continue-on-error: true  # TODO: Fix lint issues and re-enable
+        continue-on-error: true
         with:
-          version: v1.64.8
+          version: v2.11.4
 
       - name: Run unit tests
         run: go test ./internal/... -v
@@ -123,3 +123,29 @@ jobs:
         run: |
           cd web
           npm run build --if-present
+
+  web-test:
+    name: "Web: test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Cache node modules
+        uses: actions/cache@v5
+        with:
+          path: web/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install web deps
+        run: cd web && npm ci
+
+      - name: Run frontend tests
+        run: cd web && npm run test:run

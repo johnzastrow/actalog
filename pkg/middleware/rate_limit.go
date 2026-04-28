@@ -1,18 +1,21 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 // RateLimiter implements in-memory rate limiting with sliding window
 type RateLimiter struct {
-	requests map[string][]time.Time // IP -> request timestamps
-	mu       sync.RWMutex
-	limit    int           // Max requests allowed
-	window   time.Duration // Time window for rate limiting
+	requests   map[string][]time.Time // IP -> request timestamps
+	mu         sync.RWMutex
+	limit      int             // Max requests allowed
+	window     time.Duration   // Time window for rate limiting
+	onExceeded func(ip string) // Optional hook called when a limit is exceeded
 }
 
 // NewRateLimiter creates a new rate limiter
@@ -27,6 +30,14 @@ func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
 	go rl.cleanup()
 
 	return rl
+}
+
+// OnExceeded registers a callback that is called whenever a request is denied
+// due to rate limiting. The callback receives the client IP address.
+func (rl *RateLimiter) OnExceeded(fn func(ip string)) {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	rl.onExceeded = fn
 }
 
 // Allow checks if a request from the given IP should be allowed
@@ -126,6 +137,14 @@ func RateLimit(limiter *RateLimiter) func(http.Handler) http.Handler {
 
 			// Check if request is allowed
 			if !limiter.Allow(ip) {
+				// Fire the exceeded callback if registered (used for audit logging)
+				limiter.mu.RLock()
+				hook := limiter.onExceeded
+				limiter.mu.RUnlock()
+				if hook != nil {
+					go hook(ip)
+				}
+
 				// Get retry-after duration
 				retryAfter := limiter.GetRetryAfter(ip)
 
@@ -144,20 +163,27 @@ func RateLimit(limiter *RateLimiter) func(http.Handler) http.Handler {
 	}
 }
 
-// getIP extracts the client IP address from the request
+// getIP extracts the client IP address from the request.
+// X-Forwarded-For may contain a comma-separated list; the leftmost entry is
+// the original client. RemoteAddr includes a port that is stripped.
 func getIP(r *http.Request) string {
-	// Try X-Forwarded-For header first (for requests behind proxies)
+	// X-Forwarded-For: client, proxy1, proxy2 — take the leftmost (original client)
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// X-Forwarded-For can contain multiple IPs, take the first one
-		return xff
+		if i := strings.IndexByte(xff, ','); i != -1 {
+			return strings.TrimSpace(xff[:i])
+		}
+		return strings.TrimSpace(xff)
 	}
 
-	// Try X-Real-IP header (used by some proxies)
+	// X-Real-IP set by nginx and similar proxies
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
+		return strings.TrimSpace(xri)
 	}
 
-	// Fall back to RemoteAddr
+	// RemoteAddr is "host:port" — strip the port
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		return host
+	}
 	return r.RemoteAddr
 }
 

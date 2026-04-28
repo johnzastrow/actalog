@@ -107,3 +107,7 @@ logs/
 
 Caddyfile
 *.pid
+
+# Local screenshots and browser-automation artifacts (root only — keeps docs/ and screenshots/ tracked)
+/*.png
+.playwright-mcp/

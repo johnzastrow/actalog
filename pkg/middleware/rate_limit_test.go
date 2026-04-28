@@ -167,7 +167,7 @@ func TestGetIP(t *testing.T) {
 		{
 			name:       "use RemoteAddr when no headers",
 			remoteAddr: "192.168.1.1:12345",
-			expectedIP: "192.168.1.1:12345",
+			expectedIP: "192.168.1.1",
 		},
 		{
 			name:          "prefer X-Forwarded-For",
@@ -186,7 +186,7 @@ func TestGetIP(t *testing.T) {
 			name:          "X-Forwarded-For with multiple IPs",
 			xForwardedFor: "10.0.0.1, 10.0.0.2, 10.0.0.3",
 			remoteAddr:    "192.168.1.1:12345",
-			expectedIP:    "10.0.0.1, 10.0.0.2, 10.0.0.3", // Returns full header
+			expectedIP:    "10.0.0.1",
 		},
 	}
 

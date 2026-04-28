@@ -204,7 +204,7 @@ func TestRegister(t *testing.T) {
 			email:       "john@example.com",
 			password:    "short",
 			expectError: true,
-			errorMsg:    "password must be at least 8 characters",
+			errorMsg:    "password must be at least 12 characters",
 		},
 	}
 
@@ -254,7 +254,7 @@ func TestFirstUserBecomesAdmin(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register first user
-	user1, _, err := service.Register("Admin User", "admin@example.com", "Password123")
+	user1, _, err := service.Register("Admin User", "admin@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register first user: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestFirstUserBecomesAdmin(t *testing.T) {
 	}
 
 	// Register second user
-	user2, _, err := service.Register("Regular User", "user@example.com", "Password123")
+	user2, _, err := service.Register("Regular User", "user@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register second user: %v", err)
 	}
@@ -279,13 +279,13 @@ func TestDuplicateEmailRegistration(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register first user
-	_, _, err := service.Register("User One", "test@example.com", "Password123")
+	_, _, err := service.Register("User One", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register first user: %v", err)
 	}
 
 	// Try to register with same email
-	_, _, err = service.Register("User Two", "test@example.com", "Password123")
+	_, _, err = service.Register("User Two", "test@example.com", "Password1234")
 	if err != ErrEmailAlreadyExists {
 		t.Errorf("Expected ErrEmailAlreadyExists, got: %v", err)
 	}
@@ -296,7 +296,7 @@ func TestRegistrationClosed(t *testing.T) {
 	// First user (admin) can register
 	service := newTestUserService(false)
 
-	user1, _, err := service.Register("Admin", "admin@example.com", "Password123")
+	user1, _, err := service.Register("Admin", "admin@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("First user should be able to register: %v", err)
 	}
@@ -306,7 +306,7 @@ func TestRegistrationClosed(t *testing.T) {
 	}
 
 	// Second user cannot register when registration is closed
-	_, _, err = service.Register("User", "user@example.com", "Password123")
+	_, _, err = service.Register("User", "user@example.com", "Password1234")
 	if err != ErrRegistrationClosed {
 		t.Errorf("Expected ErrRegistrationClosed, got: %v", err)
 	}
@@ -318,7 +318,7 @@ func TestLogin(t *testing.T) {
 
 	// Register a user
 	email := "test@example.com"
-	password := "Password123"
+	password := "Password1234"
 	_, _, err := service.Register("Test User", email, password)
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
@@ -416,7 +416,7 @@ func TestGeneratePasswordResetToken(t *testing.T) {
 
 	// Register a user
 	email := "test@example.com"
-	_, _, err := service.Register("Test User", email, "Password123")
+	_, _, err := service.Register("Test User", email, "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -516,7 +516,7 @@ func TestExpiredResetToken(t *testing.T) {
 
 	// Register a user
 	email := "test@example.com"
-	_, _, err := service.Register("Test User", email, "Password123")
+	_, _, err := service.Register("Test User", email, "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -541,7 +541,7 @@ func TestJWTTokenGeneration(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, token, err := service.Register("Test User", "test@example.com", "Password123")
+	user, token, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -582,7 +582,7 @@ func TestGetByID(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -614,7 +614,7 @@ func TestValidateToken(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user and get token
-	user, token, err := service.Register("Test User", "test@example.com", "Password123")
+	user, token, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -641,7 +641,7 @@ func TestVerifyEmail(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -740,7 +740,7 @@ func TestResendVerificationEmail(t *testing.T) {
 	emailService := service.emailService.(*mockEmailService)
 
 	// Register a user
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -783,7 +783,7 @@ func TestCreateRefreshToken(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -814,7 +814,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -851,7 +851,7 @@ func TestRevokeRefreshToken(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -886,7 +886,7 @@ func TestRevokeAllRefreshTokens(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -918,7 +918,7 @@ func TestGetUserRefreshTokens(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -943,7 +943,7 @@ func TestUpdateProfile(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -991,7 +991,7 @@ func TestUpdateProfile(t *testing.T) {
 	}
 
 	// Duplicate email
-	service.Register("Other User", "other@example.com", "Password123")
+	service.Register("Other User", "other@example.com", "Password1234")
 	_, err = service.UpdateProfile(user.ID, "", "other@example.com", nil)
 	if err != ErrEmailAlreadyExists {
 		t.Errorf("Expected ErrEmailAlreadyExists, got: %v", err)
@@ -1003,7 +1003,7 @@ func TestUpdateAvatar(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, err := service.Register("Test User", "test@example.com", "Password123")
+	user, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
@@ -1043,9 +1043,9 @@ func TestListUsers(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register multiple users
-	service.Register("User 1", "user1@example.com", "Password123")
-	service.Register("User 2", "user2@example.com", "Password123")
-	service.Register("User 3", "user3@example.com", "Password123")
+	service.Register("User 1", "user1@example.com", "Password1234")
+	service.Register("User 2", "user2@example.com", "Password1234")
+	service.Register("User 3", "user3@example.com", "Password1234")
 
 	// List users
 	users, count, err := service.ListUsers(10, 0)
@@ -1086,8 +1086,8 @@ func TestUnlockAccount(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Lock the user account manually
 	userFromRepo, _ := service.userRepo.GetByEmail("user@example.com")
@@ -1117,8 +1117,8 @@ func TestDisableAccount(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Disable user account
 	err := service.DisableAccount(admin.ID, user.ID, "Test reason")
@@ -1133,7 +1133,7 @@ func TestDisableAccount(t *testing.T) {
 	}
 
 	// Try to login - should fail
-	_, _, err = service.Login("user@example.com", "Password123")
+	_, _, err = service.Login("user@example.com", "Password1234")
 	if err != ErrAccountDisabled {
 		t.Errorf("Expected ErrAccountDisabled, got: %v", err)
 	}
@@ -1150,8 +1150,8 @@ func TestEnableAccount(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Disable then enable
 	service.DisableAccount(admin.ID, user.ID, "Test")
@@ -1167,7 +1167,7 @@ func TestEnableAccount(t *testing.T) {
 	}
 
 	// Can login again
-	_, _, err = service.Login("user@example.com", "Password123")
+	_, _, err = service.Login("user@example.com", "Password1234")
 	if err != nil {
 		t.Error("Should be able to login after enabling")
 	}
@@ -1178,8 +1178,8 @@ func TestChangeUserRole(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Change user to admin
 	err := service.ChangeUserRole(admin.ID, user.ID, "admin")
@@ -1222,8 +1222,8 @@ func TestSetEmailVerification(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Set as unverified
 	userFromRepo, _ := service.userRepo.GetByEmail("user@example.com")
@@ -1264,7 +1264,7 @@ func TestGetUserByIDWithAdminDetails(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Get with admin details
 	retrieved, err := service.GetUserByIDWithAdminDetails(user.ID)
@@ -1293,8 +1293,8 @@ func TestDeleteUser(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register admin and regular user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Delete user
 	err := service.DeleteUser(admin.ID, user.ID)
@@ -1315,8 +1315,8 @@ func TestDeleteUser(t *testing.T) {
 	}
 
 	// Non-admin cannot delete
-	regularUser, _, _ := service.Register("Regular", "regular@example.com", "Password123")
-	anotherUser, _, _ := service.Register("Another", "another@example.com", "Password123")
+	regularUser, _, _ := service.Register("Regular", "regular@example.com", "Password1234")
+	anotherUser, _, _ := service.Register("Another", "another@example.com", "Password1234")
 	err = service.DeleteUser(regularUser.ID, anotherUser.ID)
 	if err == nil {
 		t.Error("Non-admin should not be able to delete users")
@@ -1334,7 +1334,7 @@ func TestGetActiveSessions(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Create some sessions
 	service.CreateRefreshToken(user.ID, "Device 1", false)
@@ -1362,7 +1362,7 @@ func TestRevokeSession(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Create a session
 	service.CreateRefreshToken(user.ID, "Device 1", false)
@@ -1404,7 +1404,7 @@ func TestRevokeAllSessions(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Create multiple sessions
 	service.CreateRefreshToken(user.ID, "Device 1", false)
@@ -1454,14 +1454,14 @@ func TestLoginAccountLocked(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	_, _, _ = service.Register("Test User", "test@example.com", "Password123")
+	_, _, _ = service.Register("Test User", "test@example.com", "Password1234")
 
 	// Lock the account
 	user, _ := service.userRepo.GetByEmail("test@example.com")
 	service.userRepo.LockAccount(user.ID, 15*time.Minute)
 
 	// Try to login
-	_, _, err := service.Login("test@example.com", "Password123")
+	_, _, err := service.Login("test@example.com", "Password1234")
 	if err != ErrAccountLocked {
 		t.Errorf("Expected ErrAccountLocked, got: %v", err)
 	}
@@ -1486,7 +1486,7 @@ func TestRegisterGetByEmailError(t *testing.T) {
 	repo.getByEmailError = errors.New("database connection lost")
 	service := newTestUserServiceWithRepo(repo, true)
 
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when GetByEmail fails")
 	}
@@ -1501,7 +1501,7 @@ func TestRegisterCountError(t *testing.T) {
 	repo.countError = errors.New("count query failed")
 	service := newTestUserServiceWithRepo(repo, true)
 
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when Count fails")
 	}
@@ -1516,7 +1516,7 @@ func TestRegisterCreateError(t *testing.T) {
 	repo.createError = errors.New("insert failed")
 	service := newTestUserServiceWithRepo(repo, true)
 
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when Create fails")
 	}
@@ -1531,14 +1531,14 @@ func TestRegisterAutoVerifyUpdateError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// First register succeeds (to set up the first user)
-	_, _, err := service.Register("Admin", "admin@example.com", "Password123")
+	_, _, err := service.Register("Admin", "admin@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("First register should succeed: %v", err)
 	}
 
 	// Now set update error - the second register will fail during auto-verify update
 	repo.updateError = errors.New("update failed")
-	_, _, err = service.Register("User", "user@example.com", "Password123")
+	_, _, err = service.Register("User", "user@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when Update fails during auto-verification")
 	}
@@ -1553,14 +1553,14 @@ func TestLoginGetByEmailError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register a user first
-	_, _, err := service.Register("Test User", "test@example.com", "Password123")
+	_, _, err := service.Register("Test User", "test@example.com", "Password1234")
 	if err != nil {
 		t.Fatalf("Register failed: %v", err)
 	}
 
 	// Now set the error for subsequent GetByEmail calls
 	repo.getByEmailError = errors.New("database timeout")
-	_, _, err = service.Login("test@example.com", "Password123")
+	_, _, err = service.Login("test@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when GetByEmail fails")
 	}
@@ -1575,11 +1575,11 @@ func TestLoginIsLockedError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register a user
-	_, _, _ = service.Register("Test User", "test@example.com", "Password123")
+	_, _, _ = service.Register("Test User", "test@example.com", "Password1234")
 
 	// Set IsAccountLocked to return error
 	repo.isLockedError = errors.New("lock check failed")
-	_, _, err := service.Login("test@example.com", "Password123")
+	_, _, err := service.Login("test@example.com", "Password1234")
 	if err == nil {
 		t.Fatal("Expected error when IsAccountLocked fails")
 	}
@@ -1593,7 +1593,7 @@ func TestLoginAccountLockoutAfterMaxAttempts(t *testing.T) {
 	service := newTestUserService(true)
 
 	// Register a user
-	_, _, _ = service.Register("Test User", "test@example.com", "Password123")
+	_, _, _ = service.Register("Test User", "test@example.com", "Password1234")
 
 	// Attempt wrong password 5 times (maxLoginAttempts = 5)
 	for i := 0; i < 5; i++ {
@@ -1604,7 +1604,7 @@ func TestLoginAccountLockoutAfterMaxAttempts(t *testing.T) {
 	}
 
 	// Next attempt should show account locked
-	_, _, err := service.Login("test@example.com", "Password123")
+	_, _, err := service.Login("test@example.com", "Password1234")
 	if err != ErrAccountLocked {
 		t.Errorf("Expected ErrAccountLocked after max attempts, got: %v", err)
 	}
@@ -1631,7 +1631,7 @@ func TestUpdateProfileEmailCheckError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Now set GetByEmail to return error
 	repo.getByEmailError = errors.New("email check failed")
@@ -1651,7 +1651,7 @@ func TestUpdateProfileUpdateError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register a user
-	user, _, _ := service.Register("Test User", "test@example.com", "Password123")
+	user, _, _ := service.Register("Test User", "test@example.com", "Password1234")
 
 	// Now set update to fail
 	repo.updateError = errors.New("update failed")
@@ -1704,8 +1704,8 @@ func TestUnlockAccountRepoError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register admin and user
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	// Lock user
 	service.userRepo.LockAccount(user.ID, 15*time.Minute)
@@ -1727,7 +1727,7 @@ func TestDisableAccountTargetGetByIDError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register admin
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
 
 	// Set getByIDError - will affect GetByID for non-existing target
 	repo.getByIDError = errors.New("db error")
@@ -1745,8 +1745,8 @@ func TestDisableAccountRepoError(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	repo.disableError = errors.New("disable query failed")
 	err := service.DisableAccount(admin.ID, user.ID, "test reason")
@@ -1778,8 +1778,8 @@ func TestEnableAccountRepoError(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	repo.enableError = errors.New("enable query failed")
 	err := service.EnableAccount(admin.ID, user.ID)
@@ -1811,7 +1811,7 @@ func TestSetEmailVerificationTargetNotFound(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
 
 	// Target doesn't exist - getByIDError not set so it returns nil, nil
 	// But the service doesn't check for nil on these Get calls - it just continues
@@ -1831,8 +1831,8 @@ func TestSetEmailVerificationUpdateError(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	repo.updateError = errors.New("update failed")
 	err := service.SetEmailVerification(admin.ID, user.ID, true)
@@ -1864,8 +1864,8 @@ func TestDeleteUserRepoDeleteError(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	repo.deleteError = errors.New("delete constraint violation")
 	err := service.DeleteUser(admin.ID, user.ID)
@@ -1897,8 +1897,8 @@ func TestChangeUserRoleUpdateError(t *testing.T) {
 	repo := &mockUserRepo{users: make(map[int64]*domain.User), nextID: 0}
 	service := newTestUserServiceWithRepo(repo, true)
 
-	admin, _, _ := service.Register("Admin", "admin@example.com", "Password123")
-	user, _, _ := service.Register("User", "user@example.com", "Password123")
+	admin, _, _ := service.Register("Admin", "admin@example.com", "Password1234")
+	user, _, _ := service.Register("User", "user@example.com", "Password1234")
 
 	repo.updateError = errors.New("update role failed")
 	err := service.ChangeUserRole(admin.ID, user.ID, "admin")
@@ -1976,7 +1976,7 @@ func TestListUsersCountError(t *testing.T) {
 	service := newTestUserServiceWithRepo(repo, true)
 
 	// Register a user to populate the repo
-	service.Register("Test", "test@example.com", "Password123")
+	service.Register("Test", "test@example.com", "Password1234")
 
 	// Set count error
 	repo.countError = errors.New("count query failed")

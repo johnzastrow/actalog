@@ -1,6 +1,6 @@
 {
   "name": "actalog-web",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "ActaLog - CrossFit Workout Tracker",
   "private": true,
   "type": "module",
@@ -23,12 +23,16 @@
     "chart.js": "^4.4.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dompurify": "^3.3.3",
     "marked": "^17.0.3",
     "pinia": "^3.0.4",
     "vue": "^3.5.31",
     "vue-chartjs": "^5.3.0",
     "vue-router": "^5.0.4",
-    "vuetify": "^4.0.0"
+    "vuetify": "^3.12.1"
+  },
+  "overrides": {
+    "serialize-javascript": "7.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

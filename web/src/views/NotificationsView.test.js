@@ -81,13 +81,14 @@ describe('NotificationsView', () => {
     })
   }
 
-  const createWrapper = () => {
+  const createWrapper = ({ provide = {} } = {}) => {
     const pinia = createPinia()
     setActivePinia(pinia)
 
     wrapper = shallowMount(NotificationsView, {
       global: {
         plugins: [pinia],
+        provide,
         stubs: {
           'markdown-renderer': { template: '<div></div>', props: ['content'] },
           'notification-likes': { template: '<div></div>', props: ['notificationId'] },
@@ -766,6 +767,94 @@ describe('NotificationsView', () => {
       vm.errorMessage = ''
 
       expect(vm.errorMessage).toBe('')
+    })
+  })
+
+  // ==========================================================================
+  // NOTIFICATION BADGE SYNC (provide/inject regression tests)
+  // Verifies that the App.vue header badge clears immediately when the user
+  // marks notifications as read, instead of waiting for the 30s poll.
+  // ==========================================================================
+
+  describe('Notification Badge Sync', () => {
+    it('calls refreshNotificationCount after markAllAsRead succeeds', async () => {
+      const refreshSpy = vi.fn()
+      setupDefaultMocks()
+      axios.put.mockResolvedValue({})
+
+      createWrapper({ provide: { refreshNotificationCount: refreshSpy } })
+      await flushPromises()
+
+      const vm = wrapper.vm
+      vm.notifications = [{ id: 1, title: 'Test', read_at: null }]
+
+      await vm.markAllAsRead()
+      await flushPromises()
+
+      expect(refreshSpy).toHaveBeenCalledOnce()
+    })
+
+    it('does not call refreshNotificationCount when markAllAsRead fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const refreshSpy = vi.fn()
+      setupDefaultMocks()
+      axios.put.mockRejectedValue(new Error('Network error'))
+
+      createWrapper({ provide: { refreshNotificationCount: refreshSpy } })
+      await flushPromises()
+
+      await wrapper.vm.markAllAsRead()
+      await flushPromises()
+
+      expect(refreshSpy).not.toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('calls refreshNotificationCount after markAsRead succeeds', async () => {
+      const refreshSpy = vi.fn()
+      setupDefaultMocks()
+      axios.put.mockResolvedValue({})
+
+      createWrapper({ provide: { refreshNotificationCount: refreshSpy } })
+      await flushPromises()
+
+      const notification = { id: 42, title: 'Test', read_at: null }
+      await wrapper.vm.markAsRead(notification)
+      await flushPromises()
+
+      expect(refreshSpy).toHaveBeenCalledOnce()
+    })
+
+    it('does not call refreshNotificationCount when markAsRead fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const refreshSpy = vi.fn()
+      setupDefaultMocks()
+      axios.put.mockRejectedValue(new Error('Network error'))
+
+      createWrapper({ provide: { refreshNotificationCount: refreshSpy } })
+      await flushPromises()
+
+      const notification = { id: 42, title: 'Test', read_at: null }
+      await wrapper.vm.markAsRead(notification)
+      await flushPromises()
+
+      expect(refreshSpy).not.toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('works with the default noop when no provider exists', async () => {
+      setupDefaultMocks()
+      axios.put.mockResolvedValue({})
+
+      // No provide — inject uses default () => {}
+      createWrapper()
+      await flushPromises()
+
+      const vm = wrapper.vm
+      vm.notifications = [{ id: 1, title: 'Test', read_at: null }]
+
+      // Should not throw even without a provider
+      await expect(vm.markAllAsRead()).resolves.not.toThrow()
     })
   })
 

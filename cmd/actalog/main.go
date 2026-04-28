@@ -564,6 +564,13 @@ func main() {
 	// Password reset: 3 attempts per hour per IP
 	passwordResetLimiter := middleware.NewRateLimiter(3, 1*time.Hour)
 
+	// Wire audit logging for rate limit events
+	rateLimitAuditHook := func(ip string) {
+		auditLogService.LogEvent("rate_limit_exceeded", nil, nil, &ip, nil, nil)
+	}
+	authRateLimiter.OnExceeded(rateLimitAuditHook)
+	passwordResetLimiter.OnExceeded(rateLimitAuditHook)
+
 	// Middleware
 	r.Use(middleware.LoggingMiddleware(appLogger))
 	r.Use(middleware.CORS(cfg.App.CORSOrigins))

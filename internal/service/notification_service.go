@@ -49,7 +49,8 @@ func (s *NotificationService) isNilEmailService() bool {
 }
 
 // CreateNotification creates a notification for all users in an organization
-// based on their preferences
+// based on their preferences. If no organization is specified, the notification
+// is created only for the achieving user (solo user case).
 func (s *NotificationService) CreateNotification(
 	achievingUserID int64,
 	organizationID *int64,
@@ -58,9 +59,9 @@ func (s *NotificationService) CreateNotification(
 	message string,
 	data *domain.NotificationData,
 ) error {
-	// If no organization specified, skip notification creation
+	// If no organization specified, create notification only for the achieving user
 	if organizationID == nil {
-		return nil
+		return s.createNotificationForUser(achievingUserID, achievingUserID, organizationID, notificationType, title, message, data)
 	}
 
 	// Get all users in the organization
@@ -69,7 +70,38 @@ func (s *NotificationService) CreateNotification(
 		return fmt.Errorf("failed to get organization users: %w", err)
 	}
 
-	// Marshal notification data to JSON
+	// Create notifications for each user based on their preferences
+	for _, user := range orgUsers {
+		if err := s.createNotificationForUser(achievingUserID, user.ID, organizationID, notificationType, title, message, data); err != nil {
+			fmt.Printf("Failed to create notification for user %d: %v\n", user.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// createNotificationForUser creates a single notification for one user, respecting their preferences.
+// achievingUserID is used to determine whether this recipient is the one who achieved the PR (vs. a gym mate).
+func (s *NotificationService) createNotificationForUser(
+	achievingUserID int64,
+	recipientUserID int64,
+	organizationID *int64,
+	notificationType string,
+	title string,
+	message string,
+	data *domain.NotificationData,
+) error {
+	var settings *domain.UserSettings
+	if s.settingsRepo != nil {
+		if s, err := s.settingsRepo.GetByUserID(recipientUserID); err == nil {
+			settings = s
+		}
+	}
+
+	if !s.shouldNotifyUser(settings, notificationType, recipientUserID == achievingUserID) {
+		return nil
+	}
+
 	var dataJSON string
 	if data != nil {
 		dataBytes, err := json.Marshal(data)
@@ -80,50 +112,18 @@ func (s *NotificationService) CreateNotification(
 	}
 
 	now := time.Now()
-
-	// Create notifications for each user based on their preferences
-	for _, user := range orgUsers {
-		// Get user's notification preferences
-		settings, err := s.settingsRepo.GetByUserID(user.ID)
-		if err != nil {
-			// If settings don't exist, use nil (will default to all enabled)
-			settings = nil
-		}
-
-		// Check if user wants this type of notification
-		if !s.shouldNotifyUser(settings, notificationType, user.ID == achievingUserID) {
-			continue
-		}
-
-		// Create the notification
-		notification := &domain.Notification{
-			UserID:         user.ID,
-			OrganizationID: organizationID,
-			Type:           notificationType,
-			Title:          title,
-			Message:        message,
-			Data:           dataJSON,
-			CreatedAt:      now,
-			UpdatedAt:      now,
-		}
-
-		if err := s.notificationRepo.Create(notification); err != nil {
-			// Log error but continue with other users
-			fmt.Printf("Failed to create notification for user %d: %v\n", user.ID, err)
-			continue
-		}
-
-		// TODO: Email notifications disabled for now - implement in Phase 2
-		// Send email if user has email notifications enabled
-		// if s.shouldEmailUser(settings, notificationType, user.ID == achievingUserID) && s.emailService != nil {
-		// 	if err := s.sendNotificationEmail(user.Email, title, message); err != nil {
-		// 		// Log error but don't fail the whole operation
-		// 		fmt.Printf("Failed to send notification email to %s: %v\n", user.Email, err)
-		// 	}
-		// }
+	notification := &domain.Notification{
+		UserID:         recipientUserID,
+		OrganizationID: organizationID,
+		Type:           notificationType,
+		Title:          title,
+		Message:        message,
+		Data:           dataJSON,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 
-	return nil
+	return s.notificationRepo.Create(notification)
 }
 
 // shouldNotifyUser checks if a user should receive a notification based on their preferences

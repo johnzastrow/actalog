@@ -235,6 +235,10 @@ The following lint issues need to be resolved to re-enable strict linting:
   - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
+#### Security (carried over from v1.2.3 hardening branch)
+- [ ] `[HIGH]` **Security Response Headers Middleware** — Add `pkg/middleware/security_headers.go` setting `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, and a starting CSP (`default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; ...`). Wire after CORS in `cmd/actalog/main.go`. Add `security_headers_test.go`. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 2 (~2 hr).
+- [ ] `[HIGH]` **Avatar Upload Magic-Byte Validation** — Replace the `Content-Type` header check at `internal/handler/user_handler.go:220-223` with `http.DetectContentType()` against the first 512 bytes, plus an extension allowlist (`.jpg/.jpeg/.png/.gif/.webp`). Required because the current check trusts a header the client controls. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 5 (~1 hr).
+
 #### Backend Improvements
 - [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB).
   - [x] Added schema metadata to backup format for type-aware restoration
@@ -317,6 +321,26 @@ These features can be added after the core frontend is complete:
 - [ ] `[LOW]` **Add repository unit tests** - All repository implementations
 
 #### Admin Features
+- [ ] `[HIGH]` **Comprehensive User Edit Screen** (Admin only)
+  - **Goal:** One admin screen to view and edit *every* attribute associated with a single user. Current `AdminUsersView.vue` only supports disable/enable, role change, and account unlock — there is no path to edit the user's profile fields or manage their cross-domain affiliations.
+  - **Suggested layout:** Tabbed detail view (`AdminUserEditView.vue`), one tab per data domain so each tab maps cleanly to an existing service/repository:
+    1. **Profile** — name, email, birthday, profile image, role; force email-verified flag; trigger password reset email; reset failed login attempts; rotate refresh tokens (`internal/domain/user.go`, `internal/domain/user.go:RefreshTokenRepository`)
+    2. **Gym Affiliations** *(primary motivating example)* — list `UserOrganization` rows; add/remove org membership; manage `CoachAssignment` per `GymLocation` (assign/revoke coach role per gym); view `TemplateCoach` and `SessionCoach` rows that reference this user (`internal/domain/organization.go`, `internal/domain/scheduling.go`)
+    3. **Subscriptions** — view current `UserSubscription` + any `OrganizationSubscription` they benefit from; deep-link to existing `AdminSubscriptionsView` actions (mark paid, cancel, extend) (`internal/domain/subscription.go`)
+    4. **Class Credits & Documents** — list `UserClassCredits` balances per package with expiry; grant/revoke credits; view `UserDocument` completion status; mark documents complete on user's behalf (`internal/domain/phase4.go`)
+    5. **Preferences** — view/edit `UserSettings` (theme, font_family, leaderboard_opt_in, notification preferences) (`internal/domain/user_settings.go`)
+    6. **Activity & Audit** — read-only summary: workout count, last login, recent `audit_logs` entries scoped to this user_id, recent `data_change_logs` entries
+  - **Backend work:**
+    - Add `PATCH /api/admin/users/{id}` for partial profile updates (name/birthday/email_verified)
+    - Add `POST /api/admin/users/{id}/force-password-reset` (sends reset email + revokes refresh tokens)
+    - Wire admin-scoped wrappers around existing org/coach/credits/documents services so admin can act on any user (most services currently scope to authenticated user_id)
+    - Audit-log every admin-initiated mutation on another user's data with `acting_admin_id` field
+  - **Frontend work:**
+    - Create `web/src/views/AdminUserEditView.vue` with `v-tabs` per domain
+    - Add row action "Edit" in `AdminUsersView.vue` → routes to `/admin/users/:id/edit`
+    - Reuse existing dialogs from `AdminSubscriptionsView`, `AdminPackagesView`, `AdminSchedulingView` where possible
+  - **Protected users:** Per `CLAUDE.md`, the screen MUST refuse all mutations targeting `br8kwall@gmail.com` (return 403 from backend; hide edit controls in UI)
+
 - [x] `[HIGH]` **User Import/Export System** (Admin only) *(Completed v0.23.0)*
   - [x] Export users to CSV format (email, name)
   - [x] Import users from CSV (email, name, password) with preview/confirm workflow
@@ -500,6 +524,25 @@ These features can be added after the core frontend is complete:
 
 ## Completed Releases
 
+### v1.2.3 (2026-04-03 — Security Hardening)
+
+**Status:** Released from `security/hardening-2026-04-03`.
+
+**Completed:**
+- [x] **Security** — Password policy raised to 12-char min + uppercase/lowercase/digit (`internal/service/user_service.go`); UI hints and client-side validation updated in RegisterView, SettingsView, ResetPasswordView, AdminUserImportExportView
+- [x] **Security** — `WriteError()` no longer leaks raw internal error strings to HTTP responses
+- [x] **Security** — DOMPurify 3.3.3 added to `MarkdownRenderer.vue`; all `v-html` output sanitized
+- [x] **Security** — `serialize-javascript` pinned to 7.0.5 via `package.json` overrides (RCE + DoS CVEs)
+- [x] **Security** — Rate limiter IP extraction fixed: leftmost XFF IP taken, RemoteAddr port stripped
+- [x] **Security** — `rate_limit_exceeded` audit events now emitted from auth and password-reset limiters
+- [x] **Security** — CORS allowlist now actually enforced — `pkg/middleware/cors.go` no longer echoes disallowed origins back as `Access-Control-Allow-Origin`; test asserts header absence for disallowed origins
+- [x] **Feature** — Admin organizations list shows member count and supports edit-from-list
+- [x] **CI** — golangci-lint upgraded to v2.11.4; config migrated to v2 format
+- [x] **CI** — Frontend unit tests added to CI pipeline; 11 new Vitest suites covering App shell, auth store, axios interceptor, and admin views
+- [x] **Docs** — `docs/OWASP_AUDIT_2026-04-03.md`, `docs/MATURITY_ASSESSMENT.md`, `docs/plans/SECURITY_HARDENING_PLAN.md` capture the audit and remediation plan
+
+---
+
 ### v1.2.1 (2026-04-01)
 
 **Status:** Patch release — security fixes, dependency maintenance, CI hardening.
@@ -661,6 +704,35 @@ Items to address when time permits:
 - [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
 - [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
 - [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
+
+---
+
+## Dependency Upgrade Watch
+
+### Vuetify 4 Migration — Watch & Wait
+
+**Current:** Vuetify `^3.12.1` (pinned after accidental bump to 4.0.0 in Dependabot commit `039084d`)
+
+**Trigger conditions** — upgrade when ANY of these are true:
+- Vuetify 4.1.x or later is released (indicates post-launch stabilization)
+- Vuetify 3.x enters security-only or end-of-life maintenance
+- A feature we need is only available in Vuetify 4
+
+**Watch:**
+- Vuetify GitHub releases: `https://github.com/vuetifyjs/vuetify/releases`
+- Vuetify 3 EOL announcement (none as of 2026-04-03)
+
+**Known breaking changes for this app** (catalogued 2026-04-03):
+
+| Area | Change | Fix Required |
+|------|--------|-------------|
+| CSS cascade | All Vuetify 4 CSS is in `@layer vuetify-components` — unlayered app CSS wins | Wrap `main.css` reset in `@layer reset { }` and remove `p, span, div { font-size: 14px }` from App.vue |
+| `v-main` padding | CSS reset `* { padding: 0 }` kills layout top/bottom padding | Keep existing `paddingTop`/`paddingBottom` in `mainStyle` (already fixed) |
+| `fill-height` | No longer sets `display: flex` or `align-items: center` — only `height: 100%` | Add `d-flex align-center` to 47 views using `v-container class="fill-height"` |
+| `app` prop | Removed from `v-app-bar`, `v-bottom-navigation` — layout registration is now automatic | Remove `app` prop from both (harmless but dead code) |
+| `v-bottom-navigation` | `v-model` controls selected tab only; `active` prop controls visibility separately | Audit any code that passed `v-model` expecting visibility control |
+
+**Full plan:** See memory file `vuetify4-upgrade-plan.md`
 
 ---
 

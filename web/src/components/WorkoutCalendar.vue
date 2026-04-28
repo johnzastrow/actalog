@@ -188,6 +188,7 @@ function getDayTextColor(day) {
 
 function previousMonth() {
   const newDate = new Date(currentDate.value)
+  newDate.setDate(1)
   newDate.setMonth(newDate.getMonth() - 1)
   currentDate.value = newDate
   emit('monthChanged', new Date(newDate))
@@ -196,6 +197,7 @@ function previousMonth() {
 function nextMonth() {
   if (!isCurrentMonth.value) {
     const newDate = new Date(currentDate.value)
+    newDate.setDate(1)
     newDate.setMonth(newDate.getMonth() + 1)
     currentDate.value = newDate
     emit('monthChanged', new Date(newDate))

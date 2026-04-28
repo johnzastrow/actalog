@@ -199,12 +199,6 @@ func TestAuthHandler_ResetPassword_InvalidInput(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			wantError:  "Token and new password are required",
 		},
-		{
-			name:       "password too short",
-			body:       `{"token": "abc123", "new_password": "short"}`,
-			wantStatus: http.StatusBadRequest,
-			wantError:  "Password must be at least 8 characters",
-		},
 	}
 
 	for _, tt := range tests {
@@ -454,7 +448,7 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	userService := createTestUserService()
 	handler := NewAuthHandler(userService, createTestLogger())
 
-	body := `{"name": "Test User", "email": "newuser@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "newuser@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 
@@ -468,7 +462,7 @@ func TestAuthHandler_Register_DuplicateEmail(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// Register first user
-	body := `{"name": "Test User", "email": "duplicate@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "duplicate@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 	handler.Register(rr, req)
@@ -500,14 +494,14 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Test User", "email": "logintest@example.com", "password": "password123"}`
+	registerBody := `{"name": "Test User", "email": "logintest@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
 	assertStatusCode(t, regRR, http.StatusCreated)
 
 	// Now try to login
-	loginBody := `{"email": "logintest@example.com", "password": "password123"}`
+	loginBody := `{"email": "logintest@example.com", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -521,7 +515,7 @@ func TestAuthHandler_ForgotPassword_Success(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Forgot User", "email": "forgot@example.com", "password": "password123"}`
+	registerBody := `{"name": "Forgot User", "email": "forgot@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
@@ -583,7 +577,7 @@ func TestAuthHandler_ResendVerification_Success(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Verify User", "email": "verify@example.com", "password": "password123"}`
+	registerBody := `{"name": "Verify User", "email": "verify@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
@@ -638,7 +632,7 @@ func TestAuthHandler_Login_WrongPassword(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Wrong Password User", "email": "wrongpass@example.com", "password": "password123"}`
+	registerBody := `{"name": "Wrong Password User", "email": "wrongpass@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
@@ -658,7 +652,7 @@ func TestAuthHandler_Login_NonexistentUser(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// Try login with non-existent user
-	loginBody := `{"email": "nonexistent@example.com", "password": "password123"}`
+	loginBody := `{"email": "nonexistent@example.com", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -682,7 +676,7 @@ func TestAuthHandler_Login_EmptyEmail(t *testing.T) {
 	userService := createTestUserService()
 	handler := NewAuthHandler(userService, createTestLogger())
 
-	loginBody := `{"email": "", "password": "password123"}`
+	loginBody := `{"email": "", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -695,13 +689,13 @@ func TestAuthHandler_Login_WithRememberMeFalse(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Remember User", "email": "remember@example.com", "password": "password123"}`
+	registerBody := `{"name": "Remember User", "email": "remember@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
 
 	// Login with remember_me false
-	loginBody := `{"email": "remember@example.com", "password": "password123", "remember_me": false}`
+	loginBody := `{"email": "remember@example.com", "password": "Password1234", "remember_me": false}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -715,13 +709,13 @@ func TestAuthHandler_Login_WithRememberMeTrue(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// First register a user
-	registerBody := `{"name": "Remember True User", "email": "rememberTrue@example.com", "password": "password123"}`
+	registerBody := `{"name": "Remember True User", "email": "rememberTrue@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
 
 	// Login with remember_me true
-	loginBody := `{"email": "rememberTrue@example.com", "password": "password123", "remember_me": true}`
+	loginBody := `{"email": "rememberTrue@example.com", "password": "Password1234", "remember_me": true}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -735,7 +729,7 @@ func TestAuthHandler_Login_NonExistentUserReturnsUnauthorized(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// Login with non-existent user
-	loginBody := `{"email": "nonexistent@example.com", "password": "password123"}`
+	loginBody := `{"email": "nonexistent@example.com", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -774,7 +768,7 @@ func TestAuthHandler_Register_RegistrationClosed(t *testing.T) {
 	userService := createTestUserServiceWithRegistrationClosed()
 	handler := NewAuthHandler(userService, createTestLogger())
 
-	body := `{"name": "Test User", "email": "newuser@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "newuser@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 
@@ -788,7 +782,7 @@ func TestAuthHandler_Register_RegistrationClosedNoLogger(t *testing.T) {
 	userService := createTestUserServiceWithRegistrationClosed()
 	handler := &AuthHandler{userService: userService}
 
-	body := `{"name": "Test User", "email": "newuser@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "newuser@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 
@@ -803,7 +797,7 @@ func TestAuthHandler_Register_DuplicateEmailNoLogger(t *testing.T) {
 	handler := &AuthHandler{userService: userService}
 
 	// Register first user
-	body := `{"name": "Test User", "email": "dupnolog@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "dupnolog@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 	handler.Register(rr, req)
@@ -821,7 +815,7 @@ func TestAuthHandler_Register_SuccessNoLogger(t *testing.T) {
 	userService := createTestUserService()
 	handler := &AuthHandler{userService: userService}
 
-	body := `{"name": "Test User", "email": "nologuser@example.com", "password": "password123"}`
+	body := `{"name": "Test User", "email": "nologuser@example.com", "password": "Password1234"}`
 	req := createTestRequest(http.MethodPost, "/api/auth/register", body)
 	rr := httptest.NewRecorder()
 
@@ -835,7 +829,7 @@ func TestAuthHandler_VerifyEmail_ExpiredToken(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// Register a user first
-	registerBody := `{"name": "Verify User", "email": "verifyexpired@example.com", "password": "password123"}`
+	registerBody := `{"name": "Verify User", "email": "verifyexpired@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
@@ -857,7 +851,7 @@ func TestAuthHandler_Login_DisabledAccount(t *testing.T) {
 	handler := NewAuthHandler(userService, createTestLogger())
 
 	// Register a user first
-	registerBody := `{"name": "Disabled User", "email": "disabled@example.com", "password": "password123"}`
+	registerBody := `{"name": "Disabled User", "email": "disabled@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
@@ -866,7 +860,7 @@ func TestAuthHandler_Login_DisabledAccount(t *testing.T) {
 	// Since we're using mocks, this just tests the login path
 
 	// Try to login
-	loginBody := `{"email": "disabled@example.com", "password": "password123"}`
+	loginBody := `{"email": "disabled@example.com", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)
@@ -880,13 +874,13 @@ func TestAuthHandler_Login_NoLogger(t *testing.T) {
 	handler := &AuthHandler{userService: userService}
 
 	// Register a user first
-	registerBody := `{"name": "NoLog User", "email": "nolog@example.com", "password": "password123"}`
+	registerBody := `{"name": "NoLog User", "email": "nolog@example.com", "password": "Password1234"}`
 	regReq := createTestRequest(http.MethodPost, "/api/auth/register", registerBody)
 	regRR := httptest.NewRecorder()
 	handler.Register(regRR, regReq)
 
 	// Login without logger
-	loginBody := `{"email": "nolog@example.com", "password": "password123"}`
+	loginBody := `{"email": "nolog@example.com", "password": "Password1234"}`
 	loginReq := createTestRequest(http.MethodPost, "/api/auth/login", loginBody)
 	loginRR := httptest.NewRecorder()
 	handler.Login(loginRR, loginReq)

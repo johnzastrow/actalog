@@ -39,7 +39,7 @@
                 prepend-inner-icon="mdi-lock"
                 required
                 :error-messages="errors.password"
-                hint="Minimum 8 characters"
+                hint="Minimum 12 characters with uppercase, lowercase, and a number"
                 persistent-hint
               />
 
@@ -127,8 +127,8 @@ const handleSubmit = async () => {
   }
 
   // Validate password length
-  if (newPassword.value.length < 8) {
-    errors.value.password = 'Password must be at least 8 characters long'
+  if (newPassword.value.length < 12) {
+    errors.value.password = 'Password must be at least 12 characters long'
     return
   }
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"unicode"
 
 	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/pkg/auth"
@@ -97,6 +98,29 @@ func (s *UserService) SetNotificationService(svc *NotificationService) {
 // Register creates a new user account
 // First user automatically becomes admin
 // After that, registration requires allowRegistration to be true
+// validatePassword enforces the password policy: minimum 12 characters,
+// at least one uppercase letter, one lowercase letter, and one digit.
+func validatePassword(password string) error {
+	if len(password) < 12 {
+		return fmt.Errorf("password must be at least 12 characters")
+	}
+	var hasUpper, hasLower, hasDigit bool
+	for _, c := range password {
+		switch {
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsDigit(c):
+			hasDigit = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit {
+		return fmt.Errorf("password must contain at least one uppercase letter, one lowercase letter, and one number")
+	}
+	return nil
+}
+
 func (s *UserService) Register(name, email, password string) (*domain.User, string, error) {
 	// Basic input validation
 	if name == "" {
@@ -108,8 +132,8 @@ func (s *UserService) Register(name, email, password string) (*domain.User, stri
 	if password == "" {
 		return nil, "", fmt.Errorf("password is required")
 	}
-	if len(password) < 8 {
-		return nil, "", fmt.Errorf("password must be at least 8 characters")
+	if err := validatePassword(password); err != nil {
+		return nil, "", err
 	}
 	// Check if user already exists
 	existingUser, err := s.userRepo.GetByEmail(email)
@@ -435,6 +459,11 @@ func (s *UserService) ResetPassword(token, newPassword string) error {
 		return ErrResetTokenExpired
 	}
 
+	// Validate new password against policy
+	if err := validatePassword(newPassword); err != nil {
+		return err
+	}
+
 	// Hash new password
 	hashedPassword, err := auth.HashPassword(newPassword)
 	if err != nil {
@@ -530,6 +559,11 @@ func (s *UserService) ChangePassword(userID int64, oldPassword, newPassword stri
 	// Validate old password
 	if err := auth.CheckPassword(user.PasswordHash, oldPassword); err != nil {
 		return ErrInvalidCredentials
+	}
+
+	// Validate new password against policy
+	if err := validatePassword(newPassword); err != nil {
+		return err
 	}
 
 	// Hash new password
