@@ -264,6 +264,42 @@ func TestUserHandler_UploadAvatar_ApplicationPDF(t *testing.T) {
 	assertBodyContains(t, rr, "File must be an image")
 }
 
+func TestUserHandler_UploadAvatar_SpoofedContentType(t *testing.T) {
+	handler := &UserHandler{
+		logger: createTestLogger(),
+	}
+
+	// Filename and Content-Type both claim image/png, but bytes are HTML.
+	// Magic-byte sniffing must override the client-supplied header.
+	fileContent := []byte("<script>alert('xss')</script>")
+	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "evil.png", "image/png", fileContent, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UploadAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "File must be an image")
+}
+
+func TestUserHandler_UploadAvatar_DisallowedExtensionWithImageBytes(t *testing.T) {
+	handler := &UserHandler{
+		logger: createTestLogger(),
+	}
+
+	// Valid PNG magic bytes but a .html filename. Magic-byte sniffing alone
+	// would let this through; the extension allowlist is what stops the
+	// stored-XSS attack vector via a later /uploads/... navigation.
+	pngMagic := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
+	pngBody := append(pngMagic, []byte("rest of png data ...")...)
+	req := createMultipartRequest(http.MethodPost, "/api/profile/avatar", "avatar", "evil.html", "image/png", pngBody, 1, "test@example.com", "user")
+	rr := httptest.NewRecorder()
+
+	handler.UploadAvatar(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "Only jpg, png, gif, and webp images are allowed")
+}
+
 func TestUserHandler_UploadAvatar_WrongFieldName(t *testing.T) {
 	handler := &UserHandler{
 		logger: createTestLogger(),

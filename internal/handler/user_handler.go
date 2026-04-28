@@ -216,10 +216,33 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Validate file type
-	contentType := header.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") {
+	// Validate file type by sniffing the actual bytes — never trust the
+	// client-supplied Content-Type header. http.DetectContentType implements
+	// the WHATWG MIME Sniffing algorithm and reads up to 512 bytes.
+	sniff := make([]byte, 512)
+	n, err := file.Read(sniff)
+	if err != nil && err != io.EOF {
+		respondError(w, http.StatusBadRequest, "Failed to read uploaded file")
+		return
+	}
+	detectedType := http.DetectContentType(sniff[:n])
+	if !strings.HasPrefix(detectedType, "image/") {
 		respondError(w, http.StatusBadRequest, "File must be an image")
+		return
+	}
+	// Rewind so the subsequent io.Copy writes the whole file, not just the
+	// bytes after the sniff buffer.
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to process file")
+		return
+	}
+
+	// Validate extension against an allowlist. Magic-byte sniffing alone does
+	// not stop a JPEG payload uploaded under a .html filename, which the
+	// static file server would later serve with a text/html content-type.
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+	if !allowedExts[strings.ToLower(filepath.Ext(header.Filename))] {
+		respondError(w, http.StatusBadRequest, "Only jpg, png, gif, and webp images are allowed")
 		return
 	}
 
