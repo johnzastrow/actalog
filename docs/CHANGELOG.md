@@ -5,6 +5,24 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-04-28 — Security hardening, part two
+
+Closes the two items deferred from v1.2.3 (`docs/plans/SECURITY_HARDENING_PLAN.md` Steps 2 and 5).
+
+### Security
+- **Security response headers middleware** — new `pkg/middleware/SecurityHeaders` sets `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, and a project-tuned `Content-Security-Policy` on every response. Wired in `cmd/actalog/main.go` after the CORS middleware so it applies to API, static assets, and `/health`. CSP allows `'unsafe-inline'` for *styles* (Vuetify dynamic theme injection requires it) but keeps scripts strict (`script-src 'self'` only)
+- **Avatar upload magic-byte validation** — `internal/handler/user_handler.go` no longer trusts the client-supplied `Content-Type` header. The first 512 bytes of the uploaded file are read and passed to `http.DetectContentType` (WHATWG MIME Sniffing); the file pointer is then rewound for the subsequent copy. A filename-extension allowlist (`.jpg/.jpeg/.png/.gif/.webp`) closes the residual stored-XSS path where image magic bytes could be uploaded under a `.html` filename and later served with a `text/html` content-type by the static file handler
+- New negative tests cover the spoofed-Content-Type and disallowed-extension cases
+
+### CI
+- **CI Failure Notify workflow now deduplicates and auto-closes.** Previously every CI failure (including each Dependabot rebase) opened a fresh `[CI] Workflow failure: ...` issue; old issues never closed. The workflow now (a) re-uses an existing tracking issue with the same `(workflow, branch)` title instead of spawning duplicates, and (b) on the next *successful* CI run for the same branch, closes the tracking issue with a comment linking the green run. Switched from `peter-evans/create-issue-from-file` to `actions/github-script` to access the issue list/update REST endpoints
+
+### Maintenance
+- Eight Dependabot bumps merged: actions/deploy-pages 4→5, docker/setup-buildx-action 3→4, lib/pq 1.12.1→1.12.3, x/crypto 0.49.0→0.50.0, pgx 5.9.1→5.9.2, vue-ecosystem group, go-sqlite3 1.14.38→1.14.42, dev-dependencies group (8 npm updates)
+- Two Dependabot PRs closed with policy comments: Vuetify 4.0.5 (held by watch-and-wait policy until 4.1.x), axios 1.14.0 (post supply-chain compromise; close-and-wait until npm reissues clean 1.14.x or 1.15.x ships)
+
+---
+
 ## [1.2.3] - 2026-04-03 — Security hardening release
 
 ### Security
