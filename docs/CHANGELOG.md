@@ -5,19 +5,33 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — Security hardening branch (2026-04-03)
+## [1.2.3] - 2026-04-03 — Security hardening release
 
 ### Security
 - **Password policy** — raised minimum from 8 to 12 characters; now requires at least one uppercase letter, one lowercase letter, and one digit. Enforced in registration, password reset, and password change flows (`internal/service/user_service.go`). UI hints and client-side length checks updated in RegisterView, SettingsView, ResetPasswordView, and AdminUserImportExportView
+- **CORS allowlist enforcement** — `pkg/middleware/cors.go` previously echoed the request's `Origin` back as `Access-Control-Allow-Origin` for both allowed and disallowed origins, making the `CORS_ORIGINS` allowlist inert. Disallowed origins now receive no `Access-Control-Allow-Origin` header (browser default-deny). Test in `cors_test.go` strengthened to assert header absence
 - **Error sanitisation** — `WriteError()` no longer forwards raw internal error strings to HTTP responses; unknown errors return a generic message (`internal/handler/errors.go`)
 - **XSS prevention** — DOMPurify 3.3.3 added to `MarkdownRenderer.vue`; all `v-html` output is sanitized before DOM insertion
 - **serialize-javascript** — pinned to 7.0.5 via `package.json` overrides, fixing RCE (GHSA-5c6j-r48x-rmvq) and CPU exhaustion DoS (GHSA-qj8w-gfj5-8c6v) in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain
 - **Rate limiter IP extraction** — `X-Forwarded-For` header now correctly takes the leftmost (original client) IP from comma-separated lists; `RemoteAddr` port suffix stripped to prevent per-reconnect bucket bypass
 - **Audit logging** — `rate_limit_exceeded` events now emitted via `OnExceeded` callback on both auth and password-reset rate limiters
 
+### Added
+- Admin organizations list shows a member count column (`LEFT JOIN user_organizations` in `OrganizationRepository.List`)
+- Edit-from-list action in admin organizations view (reuses existing `PUT /api/admin/organizations/{id}`)
+
+### Documentation
+- `docs/OWASP_AUDIT_2026-04-03.md` — OWASP Top-10 audit findings
+- `docs/MATURITY_ASSESSMENT.md` — Trail of Bits 9-category scorecard
+- `docs/plans/SECURITY_HARDENING_PLAN.md` — phased remediation plan (Steps 2 and 5 carried into backlog)
+
 ### Maintenance
 - golangci-lint upgraded from v1.64.8 to v2.11.4; config migrated to v2 format (`version: "2"`)
-- Frontend unit tests added to CI pipeline (`web-test` job in `.github/workflows/ci.yml`)
+- Frontend unit tests added to CI pipeline (`web-test` job in `.github/workflows/ci.yml`); 11 new Vitest suites covering App shell, auth store, axios interceptor, and 8 admin views
+
+### Known gaps (deferred to a future release — tracked in TODO.md)
+- Security response headers middleware (CSP, HSTS, X-Frame-Options)
+- Avatar upload still trusts client `Content-Type` header rather than detecting magic bytes
 
 ---
 

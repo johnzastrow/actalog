@@ -235,6 +235,10 @@ The following lint issues need to be resolved to re-enable strict linting:
   - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
+#### Security (carried over from v1.2.3 hardening branch)
+- [ ] `[HIGH]` **Security Response Headers Middleware** — Add `pkg/middleware/security_headers.go` setting `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, and a starting CSP (`default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; ...`). Wire after CORS in `cmd/actalog/main.go`. Add `security_headers_test.go`. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 2 (~2 hr).
+- [ ] `[HIGH]` **Avatar Upload Magic-Byte Validation** — Replace the `Content-Type` header check at `internal/handler/user_handler.go:220-223` with `http.DetectContentType()` against the first 512 bytes, plus an extension allowlist (`.jpg/.jpeg/.png/.gif/.webp`). Required because the current check trusts a header the client controls. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 5 (~1 hr).
+
 #### Backend Improvements
 - [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB).
   - [x] Added schema metadata to backup format for type-aware restoration
@@ -520,9 +524,9 @@ These features can be added after the core frontend is complete:
 
 ## Completed Releases
 
-### Security Hardening Branch (2026-04-03)
+### v1.2.3 (2026-04-03 — Security Hardening)
 
-**Status:** In progress on `security/hardening-2026-04-03`. Targeting v1.2.2.
+**Status:** Released from `security/hardening-2026-04-03`.
 
 **Completed:**
 - [x] **Security** — Password policy raised to 12-char min + uppercase/lowercase/digit (`internal/service/user_service.go`); UI hints and client-side validation updated in RegisterView, SettingsView, ResetPasswordView, AdminUserImportExportView
@@ -531,13 +535,11 @@ These features can be added after the core frontend is complete:
 - [x] **Security** — `serialize-javascript` pinned to 7.0.5 via `package.json` overrides (RCE + DoS CVEs)
 - [x] **Security** — Rate limiter IP extraction fixed: leftmost XFF IP taken, RemoteAddr port stripped
 - [x] **Security** — `rate_limit_exceeded` audit events now emitted from auth and password-reset limiters
+- [x] **Security** — CORS allowlist now actually enforced — `pkg/middleware/cors.go` no longer echoes disallowed origins back as `Access-Control-Allow-Origin`; test asserts header absence for disallowed origins
+- [x] **Feature** — Admin organizations list shows member count and supports edit-from-list
 - [x] **CI** — golangci-lint upgraded to v2.11.4; config migrated to v2 format
-- [x] **CI** — Frontend unit tests added to CI pipeline
-
-**Deferred:**
-- [ ] Step 1: Fix CORS `else` branch (allowlist currently inert)
-- [ ] Step 2: Add security response headers middleware (CSP, HSTS, X-Frame-Options, etc.)
-- [ ] Step 5: Avatar upload magic bytes validation (currently checks Content-Type header only)
+- [x] **CI** — Frontend unit tests added to CI pipeline; 11 new Vitest suites covering App shell, auth store, axios interceptor, and admin views
+- [x] **Docs** — `docs/OWASP_AUDIT_2026-04-03.md`, `docs/MATURITY_ASSESSMENT.md`, `docs/plans/SECURITY_HARDENING_PLAN.md` capture the audit and remediation plan
 
 ---
 
