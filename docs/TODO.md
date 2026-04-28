@@ -235,9 +235,9 @@ The following lint issues need to be resolved to re-enable strict linting:
   - **Performance:** `font-display: swap`, service worker caching, only selected font loads 
 
 
-#### Security (carried over from v1.2.3 hardening branch)
-- [ ] `[HIGH]` **Security Response Headers Middleware** — Add `pkg/middleware/security_headers.go` setting `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, and a starting CSP (`default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; ...`). Wire after CORS in `cmd/actalog/main.go`. Add `security_headers_test.go`. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 2 (~2 hr).
-- [ ] `[HIGH]` **Avatar Upload Magic-Byte Validation** — Replace the `Content-Type` header check at `internal/handler/user_handler.go:220-223` with `http.DetectContentType()` against the first 512 bytes, plus an extension allowlist (`.jpg/.jpeg/.png/.gif/.webp`). Required because the current check trusts a header the client controls. Plan: `docs/plans/SECURITY_HARDENING_PLAN.md` Step 5 (~1 hr).
+#### Security (closed in v1.2.4 hardening branch)
+- [x] `[HIGH]` **Security Response Headers Middleware** *(Completed v1.2.4)* — Added `pkg/middleware/security_headers.go` setting X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS, and a project-tuned CSP. Wired after CORS in `cmd/actalog/main.go`. Tests in `security_headers_test.go` assert per-header values and that script-src stays free of `'unsafe-inline'`/`'unsafe-eval'`.
+- [x] `[HIGH]` **Avatar Upload Magic-Byte Validation** *(Completed v1.2.4)* — Replaced trust-the-header check with `http.DetectContentType()` over the first 512 bytes plus a `.jpg/.jpeg/.png/.gif/.webp` extension allowlist. Negative tests cover spoofed-Content-Type and disallowed-extension cases.
 
 #### Backend Improvements
 - [x] `[HIGH]` **Backup and Restore** make sure the backup functions keep up with the database schema changes (tested backup and restore round trips on SQLite, PostgreSQL, and MariaDB).
@@ -523,6 +523,18 @@ These features can be added after the core frontend is complete:
 ---
 
 ## Completed Releases
+
+### v1.2.4 (2026-04-28 — Security Hardening, part two)
+
+**Status:** Released from `security/headers-and-uploads-2026-04-28`. Closes the two items deferred from v1.2.3.
+
+**Completed:**
+- [x] **Security** — Security response headers middleware (`pkg/middleware/security_headers.go`) sets X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS, and a project-tuned CSP on every response; wired after CORS in `cmd/actalog/main.go`
+- [x] **Security** — Avatar upload no longer trusts client `Content-Type`; uses `http.DetectContentType` over first 512 bytes plus extension allowlist (`internal/handler/user_handler.go`)
+- [x] **CI** — CI Failure Notify workflow now deduplicates issues per (workflow, branch) and auto-closes when a subsequent run on the same branch succeeds (`.github/workflows/ci-failure-notify.yml`)
+- [x] **Maintenance** — 8 Dependabot bumps merged (deploy-pages, setup-buildx, lib/pq, x/crypto, pgx, vue-ecosystem, go-sqlite3, dev-dependencies group); 2 closed with policy comments (Vuetify 4.0.5 watch-and-wait, axios 1.14.0 supply-chain)
+
+---
 
 ### v1.2.3 (2026-04-03 — Security Hardening)
 
