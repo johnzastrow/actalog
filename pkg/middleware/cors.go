@@ -22,15 +22,11 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 				}
 			}
 
-			// Always set CORS headers (for debugging - will improve later)
-			if origin != "" {
-				if allowed {
-					w.Header().Set("Access-Control-Allow-Origin", origin)
-				} else {
-					// Log rejected origins for debugging
-					// For now, allow all origins in development
-					w.Header().Set("Access-Control-Allow-Origin", origin)
-				}
+			// Only echo the origin back when it is on the allowlist. When the origin
+			// is not allowed, leave Access-Control-Allow-Origin unset so the browser
+			// rejects the response (default-deny).
+			if origin != "" && allowed {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
 			}
 
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")

@@ -134,9 +134,14 @@ func TestCORS_NonAllowedOrigin(t *testing.T) {
 
 	handler.ServeHTTP(rec, req)
 
-	// Note: Current implementation allows all origins for development
-	// This test documents current behavior
 	if rec.Code != http.StatusOK {
 		t.Errorf("Status = %d, want %d", rec.Code, http.StatusOK)
+	}
+
+	// A disallowed origin must not receive Access-Control-Allow-Origin.
+	// The downstream handler still runs (CORS is a browser-side enforcement),
+	// but the missing header causes the browser to discard the response.
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("Access-Control-Allow-Origin = %q for disallowed origin, want empty", got)
 	}
 }
