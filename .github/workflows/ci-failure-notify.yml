@@ -46,10 +46,91 @@ jobs:
           *This issue was created automatically by the CI Failure Notify workflow.*
           EOF
 
-      - name: Create issue for failed CI run
-        uses: peter-evans/create-issue-from-file@v6
+      - name: Create or update issue for failed CI run
+        uses: actions/github-script@v8
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         with:
-          title: "[CI] Workflow failure: ${{ github.event.workflow_run.name }} on ${{ github.event.workflow_run.head_branch }}"
-          content-filepath: /tmp/ci_issue.md
-          labels: ci,failure,auto
-          assignees: ""
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/ci_issue.md', 'utf8');
+            const title = `[CI] Workflow failure: ${process.env.WORKFLOW_NAME} on ${process.env.HEAD_BRANCH}`;
+
+            // Re-use the existing tracking issue for the same workflow+branch
+            // pair instead of spawning a duplicate on every rebase. Filtered
+            // to the auto-failure label set so only bot-managed issues match.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci,failure,auto',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another CI run failed on this branch. Latest details:\n\n${body}`,
+              });
+              core.info(`Updated existing issue #${match.number} instead of creating a duplicate.`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['ci', 'failure', 'auto'],
+              });
+              core.info(`Created issue #${created.data.number}.`);
+            }
+
+  close-issue-on-success:
+    # When a previously-failing branch's next CI run succeeds, close the
+    # tracking issue so it doesn't linger after the underlying problem
+    # has been resolved (Dependabot rebase, manual fix pushed, etc.).
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Close tracking issue if it exists
+        uses: actions/github-script@v8
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        with:
+          script: |
+            const title = `[CI] Workflow failure: ${process.env.WORKFLOW_NAME} on ${process.env.HEAD_BRANCH}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci,failure,auto',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (!match) {
+              core.info(`No open tracking issue to close.`);
+              return;
+            }
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.RUN_ID}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              body: `Auto-closing: a subsequent CI run on this branch succeeded. Run: ${runUrl}`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+            core.info(`Closed issue #${match.number}.`);
