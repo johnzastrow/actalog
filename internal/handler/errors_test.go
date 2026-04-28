@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
 )
 
@@ -211,6 +212,66 @@ func TestHandleServiceError(t *testing.T) {
 			t.Error("Should not expose internal error details")
 		}
 	})
+}
+
+// TestWriteError_MapsErrProtectedUserTo403 verifies that domain.ErrProtectedUser
+// is mapped to HTTP 403 with a structured body containing the machine-readable
+// error code "protected_user" and a non-empty documentation_url.
+func TestWriteError_MapsErrProtectedUserTo403(t *testing.T) {
+	w := httptest.NewRecorder()
+	WriteError(w, domain.ErrProtectedUser)
+
+	if w.Code != http.StatusForbidden {
+		t.Errorf("Status = %d, want %d", w.Code, http.StatusForbidden)
+	}
+
+	var resp ErrorResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	if resp.Error != "protected_user" {
+		t.Errorf("Error = %q, want %q", resp.Error, "protected_user")
+	}
+	if resp.DocumentationURL == "" {
+		t.Error("DocumentationURL must not be empty for ErrProtectedUser")
+	}
+	if resp.Message == "" {
+		t.Error("Message must not be empty for ErrProtectedUser")
+	}
+}
+
+// TestWriteError_MapsErrProtectedUserWrappedTo403 verifies that a wrapped
+// domain.ErrProtectedUser is still correctly mapped via errors.Is semantics.
+func TestWriteError_MapsErrProtectedUserWrappedTo403(t *testing.T) {
+	wrapped := errors.Join(errors.New("outer context"), domain.ErrProtectedUser)
+	w := httptest.NewRecorder()
+	WriteError(w, wrapped)
+
+	if w.Code != http.StatusForbidden {
+		t.Errorf("Status = %d, want %d (wrapped ErrProtectedUser)", w.Code, http.StatusForbidden)
+	}
+}
+
+// TestWriteError_MapsErrConflictTo409 verifies that domain.ErrConflict is
+// mapped to HTTP 409 with a structured body containing error code "conflict".
+func TestWriteError_MapsErrConflictTo409(t *testing.T) {
+	w := httptest.NewRecorder()
+	WriteError(w, domain.ErrConflict)
+
+	if w.Code != http.StatusConflict {
+		t.Errorf("Status = %d, want %d", w.Code, http.StatusConflict)
+	}
+
+	var resp ErrorResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	if resp.Error != "conflict" {
+		t.Errorf("Error = %q, want %q", resp.Error, "conflict")
+	}
+	if resp.Message == "" {
+		t.Error("Message must not be empty for ErrConflict")
+	}
 }
 
 func TestCommonHTTPErrors(t *testing.T) {

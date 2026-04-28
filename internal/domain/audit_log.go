@@ -155,9 +155,27 @@ const (
 	EventCreditsAdded = "credits_added"
 
 	// Phase 4 Events - Waitlist
-	EventWaitlistJoined   = "waitlist_joined"
+	EventWaitlistJoined    = "waitlist_joined"
 	EventWaitlistCancelled = "waitlist_cancelled"
-	EventWaitlistPromoted = "waitlist_promoted"
+	EventWaitlistPromoted  = "waitlist_promoted"
+
+	// Protected User Security Events
+	// EventProtectedUserAttackHTTP is logged when an HTTP handler blocks a request
+	// targeting a protected user account (L1 — blocked at handler layer).
+	EventProtectedUserAttackHTTP = "protected_user_attack_http"
+
+	// EventProtectedUserAttackService is logged when the service layer blocks a
+	// modification to a protected user account (L2 — blocked at service layer).
+	EventProtectedUserAttackService = "protected_user_attack_service"
+
+	// EventProtectedUserAttackDB is logged when the service layer detects that a
+	// repository call was rejected because it targeted a protected user account
+	// (L3 — caught via service-layer error pattern matching on domain.ErrProtectedUser).
+	EventProtectedUserAttackDB = "protected_user_attack_db"
+
+	// EventPasswordResetForcedByAdmin is logged when an admin forces a password
+	// reset on behalf of another user.
+	EventPasswordResetForcedByAdmin = "password_reset_forced_by_admin"
 )
 
 // AuditLogRepository defines the interface for audit log data access
