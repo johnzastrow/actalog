@@ -253,3 +253,14 @@ configured SMTP server (no user-controlled URL). No webhook or proxy features de
 | 5 | Fix avatar upload — validate magic bytes not client Content-Type | `internal/handler/user_handler.go:220` | 1 hr |
 | 6 | Sanitize `WriteError()` — don't expose `err.Error()` for unknown errors | `internal/handler/errors.go:129` | 30 min |
 | 7 | Strengthen password policy — minimum 12 chars + complexity | `internal/service/user_service.go:111` | 1 hr |
+
+---
+
+## Resolution status (added 2026-04-28)
+
+This audit captured the state of `main` on 2026-04-03. The remediation work it kicked off is now complete:
+
+- **v1.2.3** (2026-04-03) — closed CORS allowlist, error sanitization, DOMPurify, serialize-javascript, X-Forwarded-For IP, password policy, rate-limit audit event
+- **v1.2.4** (2026-04-28) — closed security response headers middleware and avatar upload magic-byte validation
+
+See `docs/plans/SECURITY_HARDENING_PLAN.md` for the per-step status table, and `docs/CHANGELOG.md` for the per-release Security sections. The audit body above is intentionally preserved as the dated point-in-time snapshot.

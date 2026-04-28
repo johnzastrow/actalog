@@ -1,7 +1,7 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 1.2.1 (Released)
-**Last Updated:** 2026-02-28
+**Current Version:** 1.2.4 (Released)
+**Last Updated:** 2026-04-28
 **Overall Completion:** ~99% of core requirements
 
 ---
@@ -13,6 +13,32 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 ---
 
 ## Released Versions
+
+### v1.2.4 (Released 2026-04-28)
+**Status:** Security hardening, part two — closes items deferred from v1.2.3.
+
+**Highlights:**
+- ✅ Security response headers middleware (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS, project-tuned CSP)
+- ✅ Avatar upload validates by magic bytes (`http.DetectContentType`) instead of trusting client `Content-Type`; extension allowlist closes stored-XSS path
+- ✅ CI Failure Notify workflow dedupes and auto-closes (no more duplicate "[CI] Workflow failure" issues per Dependabot rebase)
+
+### v1.2.3 (Released 2026-04-03)
+**Status:** Security hardening release — OWASP audit remediation.
+
+**Highlights:**
+- ✅ Password policy raised to 12-char min + uppercase/lowercase/digit
+- ✅ CORS allowlist actually enforced (was inert prior to this release)
+- ✅ DOMPurify added to MarkdownRenderer; `serialize-javascript` pinned (RCE/DoS CVEs)
+- ✅ Rate limiter IP extraction fixed (leftmost XFF, RemoteAddr port stripped); `rate_limit_exceeded` audit events
+- ✅ Admin organizations list shows member count + edit-from-list
+
+### v1.2.1 (Released 2026-04-01)
+**Status:** Patch release — security fixes, dependency maintenance, CI hardening.
+
+**Highlights:**
+- ✅ Pinned axios to 1.13.5 (supply-chain attack mitigation)
+- ✅ Calendar view fixes; admin breadcrumb fixes
+- ✅ CI: setup-go uses go-version-file; date-sensitive test fix
 
 ### v1.2.0-beta (Released 2026-02-19)
 **Status:** Class scheduling Phase 4, PR leaderboards, configurable beta logo

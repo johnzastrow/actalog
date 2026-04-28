@@ -292,3 +292,9 @@ Ratings follow the Trail of Bits scale:
 - **Moderate (2)**: Adequate, can be improved
 - **Satisfactory (3)**: Above average, minor improvements possible
 - **Strong (4)**: Exceptional
+
+---
+
+## Resolution status (added 2026-04-28)
+
+This scorecard reflects `main` on 2026-04-03. The "Auth Lifecycle" Moderate (2) rating was driven primarily by password policy and CORS issues; both shipped fixes in v1.2.3, and the response-header coverage gap closed in v1.2.4. The body above is preserved as a dated snapshot — re-run the assessment after the next major batch of changes for an updated rating rather than editing this document in place.

@@ -1,7 +1,7 @@
 # Testing Documentation
 
-**Last Updated:** 2026-04-03
-**Version:** 1.2.2
+**Last Updated:** 2026-04-28
+**Version:** 1.2.4
 
 ## Overview
 

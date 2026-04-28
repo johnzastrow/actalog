@@ -14,6 +14,24 @@ so that each step is independently testable and does not block the next.
 
 ---
 
+## Status (as of 2026-04-28)
+
+| Step | Title | Shipped in |
+|------|-------|-----------|
+| 1 | Fix CORS enforcement | **v1.2.3** |
+| 2 | Security response headers middleware | **v1.2.4** |
+| 3 | Fix npm vulnerabilities (serialize-javascript) | **v1.2.3** |
+| 4 | Add DOMPurify to MarkdownRenderer | **v1.2.3** |
+| 5 | Avatar upload file type validation | **v1.2.4** |
+| 6 | WriteError internal detail exposure | **v1.2.3** |
+| 7 | X-Forwarded-For IP parsing | **v1.2.3** |
+| 8 | Strengthen password policy | **v1.2.3** |
+| 9 | Wire `rate_limit_exceeded` audit event | **v1.2.3** |
+
+All steps complete. Plan retained as a reference for the audit→remediation pattern; future security work should produce its own dated plan.
+
+---
+
 ## Step 1 — Fix CORS enforcement
 
 **Source**: OWASP A05, Maturity C1

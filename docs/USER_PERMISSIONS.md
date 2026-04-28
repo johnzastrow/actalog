@@ -1,7 +1,7 @@
 # User Permissions Matrix
 
-**Last Updated:** 2026-02-28
-**Version:** 1.2.1
+**Last Updated:** 2026-04-28
+**Version:** 1.2.4
 
 This document details all user actions and their permission requirements in ActaLog.
 
@@ -90,7 +90,7 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 | Revoke refresh token | Y | Y | `POST /api/auth/revoke` | Public |
 | View own profile | Y | Y | `GET /api/users/profile` | |
 | Edit own profile (name, email, birthday) | Y | Y | `PUT /api/users/profile` | |
-| Upload own avatar | Y | Y | `POST /api/users/avatar` | |
+| Upload own avatar | Y | Y | `POST /api/users/avatar` | Image-only (magic-byte sniffed); allowed extensions: `.jpg`/`.jpeg`/`.png`/`.gif`/`.webp`; max 5MB |
 | Delete own avatar | Y | Y | `DELETE /api/users/avatar` | |
 | Change own password | Y | Y | `PUT /api/users/password` | |
 | View own settings | Y | Y | `GET /api/users/settings` | |
