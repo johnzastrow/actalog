@@ -1,4 +1,4 @@
-.PHONY: help build run test clean lint fmt docker-build docker-up docker-down migrate-up migrate-down
+.PHONY: help build run test clean lint fmt docker-build docker-up docker-down migrate-up migrate-down gen-protected-emails
 
 # Variables
 APP_NAME=actalog
@@ -134,6 +134,10 @@ migrate-create: ## Create a new migration (usage: make migrate-create name=creat
 	echo "Created migration files:"; \
 	echo "  migrations/$${timestamp}_$(name).up.sql"; \
 	echo "  migrations/$${timestamp}_$(name).down.sql"
+
+gen-protected-emails: ## Generate web/src/utils/protectedUsers.js from pkg/security/protected_users.go
+	@mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) $(CACHE_DIR)/tmp
+	@go run ./cmd/gen-protected-emails/
 
 version: ## Show application version
 	@go run $(MAIN_PATH) -version 2>/dev/null || echo "Build the app first with 'make build'"
