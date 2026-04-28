@@ -574,6 +574,7 @@ func main() {
 	// Middleware
 	r.Use(middleware.LoggingMiddleware(appLogger))
 	r.Use(middleware.CORS(cfg.App.CORSOrigins))
+	r.Use(middleware.SecurityHeaders)
 
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
