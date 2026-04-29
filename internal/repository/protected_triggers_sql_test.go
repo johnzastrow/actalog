@@ -6,12 +6,12 @@ import (
 )
 
 // TestSplitProtectedTriggerSQL_SQLite verifies the sqlite3 constant splits into exactly
-// 2 statements (one trigger each) and contains no LOCKSTEP markers.
+// 4 statements (2 DROP TRIGGER IF EXISTS + 2 CREATE TRIGGER) and contains no LOCKSTEP markers.
 func TestSplitProtectedTriggerSQL_SQLite(t *testing.T) {
 	stmts := SplitProtectedTriggerSQL(SQLiteProtectedTriggers)
 
-	if len(stmts) != 2 {
-		t.Errorf("sqlite3: expected 2 statements, got %d: %v", len(stmts), stmts)
+	if len(stmts) != 4 {
+		t.Errorf("sqlite3: expected 4 statements, got %d: %v", len(stmts), stmts)
 	}
 
 	for _, s := range stmts {
@@ -23,12 +23,12 @@ func TestSplitProtectedTriggerSQL_SQLite(t *testing.T) {
 		}
 	}
 
-	// Verify the two expected trigger names appear.
-	if len(stmts) >= 1 && !strings.Contains(stmts[0], "protected_users_no_update") {
-		t.Errorf("sqlite3: statement[0] missing protected_users_no_update: %q", stmts[0])
+	// Statements: [0] DROP update, [1] CREATE update, [2] DROP delete, [3] CREATE delete.
+	if len(stmts) >= 2 && !strings.Contains(stmts[1], "protected_users_no_update") {
+		t.Errorf("sqlite3: statement[1] missing protected_users_no_update: %q", stmts[1])
 	}
-	if len(stmts) >= 2 && !strings.Contains(stmts[1], "protected_users_no_delete") {
-		t.Errorf("sqlite3: statement[1] missing protected_users_no_delete: %q", stmts[1])
+	if len(stmts) >= 4 && !strings.Contains(stmts[3], "protected_users_no_delete") {
+		t.Errorf("sqlite3: statement[3] missing protected_users_no_delete: %q", stmts[3])
 	}
 }
 
@@ -42,17 +42,21 @@ func TestSplitProtectedTriggerSQL_SQLite_NoIfNotExists(t *testing.T) {
 }
 
 // TestSplitProtectedTriggerSQL_SQLite_BeginEndNotSplit ensures the BEGIN...END block
-// inside the sqlite3 trigger is not treated as multiple statements.
+// inside the sqlite3 CREATE TRIGGER statements is not treated as multiple statements.
+// Statements at indices 1 and 3 are the CREATE TRIGGERs; 0 and 2 are DROP statements.
 func TestSplitProtectedTriggerSQL_SQLite_BeginEndNotSplit(t *testing.T) {
 	stmts := SplitProtectedTriggerSQL(SQLiteProtectedTriggers)
-	// Each trigger statement should contain BEGIN and END.
-	for i, s := range stmts {
-		upper := strings.ToUpper(s)
+	// Only the CREATE TRIGGER statements (indices 1 and 3) contain BEGIN/END blocks.
+	for _, idx := range []int{1, 3} {
+		if idx >= len(stmts) {
+			break
+		}
+		upper := strings.ToUpper(stmts[idx])
 		if !strings.Contains(upper, "BEGIN") {
-			t.Errorf("sqlite3: statement[%d] missing BEGIN: %q", i, s)
+			t.Errorf("sqlite3: statement[%d] missing BEGIN: %q", idx, stmts[idx])
 		}
 		if !strings.Contains(upper, "END") {
-			t.Errorf("sqlite3: statement[%d] missing END: %q", i, s)
+			t.Errorf("sqlite3: statement[%d] missing END: %q", idx, stmts[idx])
 		}
 	}
 }

@@ -135,6 +135,7 @@ func isWordBoundary(s string, pos, kwLen int) bool {
 // SQLite uses RAISE(ABORT, ...) which rolls back the current statement.
 const SQLiteProtectedTriggers = `
 -- LOCKSTEP-START sqlite
+DROP TRIGGER IF EXISTS protected_users_no_update;
 CREATE TRIGGER protected_users_no_update
 BEFORE UPDATE ON users
 FOR EACH ROW
@@ -143,6 +144,7 @@ BEGIN
     SELECT RAISE(ABORT, 'protected user: writes blocked at db layer');
 END;
 
+DROP TRIGGER IF EXISTS protected_users_no_delete;
 CREATE TRIGGER protected_users_no_delete
 BEFORE DELETE ON users
 FOR EACH ROW

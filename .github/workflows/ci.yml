@@ -41,6 +41,9 @@ jobs:
       - name: Run unit tests
         run: go test ./internal/... -v
 
+      - name: Lockstep check (recovery scripts ↔ migration SQL)
+        run: go test -count=1 ./scripts/recover/...
+
   integration:
     name: Integration tests (DB matrix)
     runs-on: ubuntu-latest
