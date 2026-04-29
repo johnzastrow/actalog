@@ -52,3 +52,15 @@ func IsProtectedEmail(email string) bool {
 	_, ok := protectedEmails[strings.ToLower(strings.TrimSpace(email))]
 	return ok
 }
+
+// TriggerErrorContract is the error message text raised by the L3 database
+// triggers when a write against a protected user is rejected. The L4 service
+// layer pattern-matches this substring to tag DB-rejected writes as
+// protected_user_attack_db audit events. Any change to this string is a
+// breaking change to the contract — update the migration SQL, the service
+// pattern matcher, and the boot invariant in lockstep.
+//
+// Postgres rejects "?" literally — must be "$1". This constant is also used by
+// the boot invariant (cmd/actalog/boot_invariant.go) which cannot be imported
+// from internal/service/ because it lives in package main.
+const TriggerErrorContract = "protected user: writes blocked at db layer"
