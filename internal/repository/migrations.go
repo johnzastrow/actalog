@@ -3408,6 +3408,83 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     "0.35.0",
+		Description: "Add protected user triggers (L3 defense layer)",
+		Up: func(db *sql.DB, driver string) error {
+			// SQL is read from the per-dialect constants in protected_triggers_sql.go —
+			// that file is the single source of truth for trigger DDL. The constants are
+			// also used by Task 7's CI lockstep check against the recovery scripts under
+			// docs/security/, preventing drift between the migration and the recovery path.
+			//
+			// The error message text "protected user: writes blocked at db layer" is the
+			// L4 contract — the service-layer error wrapper (Task 11) pattern-matches this
+			// exact substring. DO NOT change that string without updating the L4 matcher.
+			var constant string
+			switch driver {
+			case "sqlite3":
+				constant = SQLiteProtectedTriggers
+			case "postgres":
+				constant = PostgresProtectedTriggers
+			case "mysql":
+				constant = MySQLProtectedTriggers
+			default:
+				return fmt.Errorf("unknown driver %q for protected-user migration", driver)
+			}
+
+			for _, stmt := range SplitProtectedTriggerSQL(constant) {
+				if _, err := db.Exec(stmt); err != nil {
+					return fmt.Errorf("apply protected-trigger SQL %q: %w", truncateMigrationStmt(stmt, 80), err)
+				}
+			}
+
+			fmt.Println("✓ Installed protected-user triggers (protected_users_no_update, protected_users_no_delete)")
+			return nil
+		},
+		Down: func(db *sql.DB, driver string) error {
+			// WARNING: Running Down in production removes the DB-level protection for
+			// protected user accounts. This is a security regression. This function
+			// exists solely to support test fresh-install cycling and CI teardown.
+			var stmts []string
+			switch driver {
+			case "sqlite3":
+				stmts = []string{
+					`DROP TRIGGER IF EXISTS protected_users_no_update`,
+					`DROP TRIGGER IF EXISTS protected_users_no_delete`,
+				}
+			case "postgres":
+				stmts = []string{
+					`DROP TRIGGER IF EXISTS protected_users_no_update ON users`,
+					`DROP TRIGGER IF EXISTS protected_users_no_delete ON users`,
+					`DROP FUNCTION IF EXISTS block_protected_users()`,
+				}
+			case "mysql":
+				stmts = []string{
+					`DROP TRIGGER IF EXISTS protected_users_no_update`,
+					`DROP TRIGGER IF EXISTS protected_users_no_delete`,
+				}
+			default:
+				return fmt.Errorf("unsupported driver: %s", driver)
+			}
+
+			for _, stmt := range stmts {
+				if _, err := db.Exec(stmt); err != nil {
+					return fmt.Errorf("failed to drop protected-user trigger: %w", err)
+				}
+			}
+
+			fmt.Println("⚠️  WARNING: Dropped protected-user triggers — this is a security regression in production")
+			return nil
+		},
+	},
+}
+
+// truncateMigrationStmt returns the first n bytes of s (UTF-8 safe) for error messages.
+func truncateMigrationStmt(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "…"
 }
 
 // RunMigrations runs all pending migrations
@@ -3454,11 +3531,11 @@ func RunMigrations(db *sql.DB, driver string) error {
 
 // expectedColumn defines a column that must exist in a table
 type expectedColumn struct {
-	Table      string
-	Column     string
-	SQLite     string // ALTER statement for SQLite
-	Postgres   string // ALTER statement for PostgreSQL
-	MySQL      string // ALTER statement for MySQL
+	Table    string
+	Column   string
+	SQLite   string // ALTER statement for SQLite
+	Postgres string // ALTER statement for PostgreSQL
+	MySQL    string // ALTER statement for MySQL
 }
 
 // expectedColumns lists columns that must exist, regardless of migration history.
