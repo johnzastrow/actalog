@@ -202,6 +202,42 @@ func main() {
 	defer db.Close()
 	appLogger.Info("Database initialized successfully")
 
+	// Admin subcommand dispatch — early-exit before the boot invariant check and
+	// HTTP server bring-up. This intentionally runs before the boot invariant so
+	// that 'verify-protected-users' and 'reapply-protected-migrations' work even
+	// when the invariant would otherwise refuse to start the server.
+	if len(os.Args) >= 2 && os.Args[1] == "admin" {
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "usage: actalog admin <verify-protected-users|reapply-protected-migrations> [flags]")
+			os.Exit(2)
+		}
+		switch os.Args[2] {
+		case "verify-protected-users":
+			verbose := hasFlag(os.Args[3:], "--verbose")
+			os.Exit(AdminVerifyProtectedUsers(db, cfg.Database.Driver, verbose, os.Stdout))
+		case "reapply-protected-migrations":
+			confirm := hasFlag(os.Args[3:], "--confirm")
+			if err := AdminReapplyProtectedMigrations(db, cfg.Database.Driver, confirm, os.Stdout); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			// Write audit event. Build the minimal audit service inline — we are
+			// in an early-exit path so the full service graph hasn't been wired.
+			cliAuditRepo := repository.NewAuditLogRepository(db, cfg.Database.Driver)
+			cliAuditSvc := service.NewAuditLogService(cliAuditRepo)
+			if auditErr := cliAuditSvc.LogEvent(
+				"protected_users_reapplied", nil, nil, nil, nil,
+				map[string]interface{}{"source": "cli", "driver": cfg.Database.Driver},
+			); auditErr != nil {
+				fmt.Fprintf(os.Stderr, "warn: failed to write audit event: %v\n", auditErr)
+			}
+			os.Exit(0)
+		default:
+			fmt.Fprintf(os.Stderr, "unknown admin subcommand: %s\n", os.Args[2])
+			os.Exit(2)
+		}
+	}
+
 	// Protected-user boot invariant. Fail-closed unless explicitly skipped
 	// (which puts the binary into degraded mode — admin user-write endpoints
 	// return 503, /health reports degraded, ERROR log every 60s).
@@ -1186,4 +1222,17 @@ func startDegradedHeartbeat(l *logger.Logger, cause error) {
 	for range ticker.C {
 		l.Error("protected_invariant_degraded heartbeat: %v", cause)
 	}
+}
+
+// hasFlag returns true if the given flag name appears in args as an exact
+// match (e.g., "--confirm"). Does NOT support value-assignment forms
+// like "--confirm=true". Sufficient for the two presence-only flags used
+// by the admin subcommands; adopt a real flag library if more are added.
+func hasFlag(args []string, name string) bool {
+	for _, a := range args {
+		if a == name {
+			return true
+		}
+	}
+	return false
 }
