@@ -202,6 +202,34 @@ func main() {
 	defer db.Close()
 	appLogger.Info("Database initialized successfully")
 
+	// Protected-user boot invariant. Fail-closed unless explicitly skipped
+	// (which puts the binary into degraded mode — admin user-write endpoints
+	// return 503, /health reports degraded, ERROR log every 60s).
+	skipInvariant := os.Getenv("ACTALOG_SKIP_PROTECTED_INVARIANT") == "true"
+	invariantReport, invariantErr := VerifyProtectedUserInvariant(db, cfg.Database.Driver)
+	degraded := false
+	if invariantErr != nil {
+		if !skipInvariant {
+			appLogger.Error("protected-user invariant failed: %v", invariantErr)
+			appLogger.Fatal(`Refusing to start. To recover (most → least disruptive):
+  1) ./bin/actalog admin reapply-protected-migrations --confirm
+  2) ./bin/actalog admin verify-protected-users --verbose
+  3) scripts/recover/restore-protected-triggers.sh
+
+Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
+		}
+		appLogger.Error("protected-user invariant FAILED but ACTALOG_SKIP_PROTECTED_INVARIANT=true; entering degraded mode: %v", invariantErr)
+		// Audit event is written after auditLogService is initialized below.
+		degraded = true
+		go startDegradedHeartbeat(appLogger, invariantErr)
+	} else {
+		checksPassed := boolToInt(invariantReport.Check1TriggersExist) + boolToInt(invariantReport.Check2TriggersFire) + boolToInt(invariantReport.Check3ProtectedRowsExist)
+		appLogger.Info("protected-user invariant: %d/3 hard checks passed (warnings: %d)", checksPassed, len(invariantReport.SoftWarnings))
+		for _, w := range invariantReport.SoftWarnings {
+			appLogger.Warn("protected-user invariant: %s", w)
+		}
+	}
+
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
 	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
@@ -280,6 +308,16 @@ func main() {
 	auditLogService := service.NewAuditLogService(auditLogRepo)
 	dataChangeLogService := service.NewDataChangeLogService(dataChangeLogRepo)
 	emailLogService := service.NewEmailLogService(emailLogRepo)
+
+	// Write degraded-boot audit event now that auditLogService is ready.
+	if degraded {
+		details := map[string]interface{}{
+			"reason": invariantErr.Error(),
+		}
+		if err := auditLogService.LogEvent("protected_invariant_degraded", nil, nil, nil, nil, details); err != nil {
+			appLogger.Error("failed to write degraded-boot audit event: %v", err)
+		}
+	}
 
 	userService := service.NewUserService(
 		userRepo,
@@ -578,9 +616,15 @@ func main() {
 
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		status := "healthy"
+		httpCode := http.StatusOK
+		if degraded {
+			status = "degraded"
+			httpCode = http.StatusServiceUnavailable
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"healthy","version":"%s"}`, version.Version())
+		w.WriteHeader(httpCode)
+		fmt.Fprintf(w, `{"status":"%s","version":"%s"}`, status, version.Version())
 	})
 
 	// Get frontend directory from environment or use default
@@ -831,6 +875,7 @@ func main() {
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+				r.Use(degradedAdminWriteGuard(&degraded))
 
 				// Admin metrics dashboard
 				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
@@ -1123,4 +1168,22 @@ func mustGetCwd() string {
 		return "unknown"
 	}
 	return cwd
+}
+
+// boolToInt converts a bool to 0 or 1 for summing invariant check results.
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// startDegradedHeartbeat logs an ERROR every 60 seconds while the binary runs
+// in protected-invariant-degraded mode, so alerting pipelines catch the state.
+func startDegradedHeartbeat(l *logger.Logger, cause error) {
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		l.Error("protected_invariant_degraded heartbeat: %v", cause)
+	}
 }

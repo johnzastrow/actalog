@@ -3,7 +3,7 @@
 # Variables
 APP_NAME=actalog
 BINARY=bin/$(APP_NAME)
-MAIN_PATH=cmd/$(APP_NAME)/main.go
+MAIN_PATH=./cmd/$(APP_NAME)/
 DOCKER_COMPOSE=docker-compose
 
 # Go build cache directories (Windows-friendly, keeps everything in project)
