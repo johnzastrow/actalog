@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -212,6 +213,19 @@ func TestHandleServiceError(t *testing.T) {
 			t.Error("Should not expose internal error details")
 		}
 	})
+}
+
+// TestWriteError_MapsWrappedErrUserNotFoundTo404 verifies that a wrapped
+// service.ErrUserNotFound (as produced by AdminUserService) is still correctly
+// resolved to HTTP 404 via errors.Is semantics in MapServiceError.
+func TestWriteError_MapsWrappedErrUserNotFoundTo404(t *testing.T) {
+	wrapped := fmt.Errorf("ensureNotProtected: user 999: %w", service.ErrUserNotFound)
+	w := httptest.NewRecorder()
+	WriteError(w, wrapped)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Status = %d, want %d (wrapped ErrUserNotFound)", w.Code, http.StatusNotFound)
+	}
 }
 
 // TestWriteError_MapsErrProtectedUserTo403 verifies that domain.ErrProtectedUser

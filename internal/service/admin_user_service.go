@@ -99,7 +99,7 @@ func (s *AdminUserService) ensureNotProtected(actorID, targetID int64) error {
 		return fmt.Errorf("ensureNotProtected: GetByID(%d): %w", targetID, err)
 	}
 	if user == nil {
-		return fmt.Errorf("user %d not found", targetID)
+		return fmt.Errorf("ensureNotProtected: user %d: %w", targetID, ErrUserNotFound)
 	}
 	if security.IsProtectedEmail(user.Email) {
 		if auditErr := s.auditLogService.LogEvent(
@@ -146,7 +146,7 @@ func (s *AdminUserService) UpdateProfile(
 		return nil, fmt.Errorf("UpdateProfile: GetByID(%d): %w", targetID, err)
 	}
 	if user == nil {
-		return nil, fmt.Errorf("user %d not found", targetID)
+		return nil, fmt.Errorf("UpdateProfile: user %d: %w", targetID, ErrUserNotFound)
 	}
 
 	// Optimistic concurrency check.
@@ -279,7 +279,7 @@ func (s *AdminUserService) ForcePasswordReset(actorID, targetID int64) error {
 		return fmt.Errorf("ForcePasswordReset: GetByID(%d): %w", targetID, err)
 	}
 	if user == nil {
-		return fmt.Errorf("user %d not found", targetID)
+		return fmt.Errorf("ForcePasswordReset: user %d: %w", targetID, ErrUserNotFound)
 	}
 
 	// Generate and persist the reset token.

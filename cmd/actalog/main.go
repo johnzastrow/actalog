@@ -550,7 +550,15 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, movementRepo, workoutRepo, userRepo, wodService, movementService, workoutTemplateService, appLogger)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
 	dataChangeLogHandler := handler.NewDataChangeLogHandler(dataChangeLogService, appLogger)
-	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
+	adminUserService := service.NewAdminUserService(
+		userRepo,
+		refreshTokenRepo,
+		emailService,
+		auditLogService,
+		appLogger,
+		appURL,
+	)
+	adminUserHandler := handler.NewAdminUserHandler(userService, adminUserService, appLogger)
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 	exportHandler := handler.NewExportHandler(exportService)
 	importHandler := handler.NewImportHandler(importService)

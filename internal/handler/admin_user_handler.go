@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/johnzastrow/actalog/internal/service"
@@ -13,15 +14,17 @@ import (
 
 // AdminUserHandler handles admin user management operations
 type AdminUserHandler struct {
-	userService *service.UserService
-	logger      *logger.Logger
+	userService      *service.UserService
+	adminUserService *service.AdminUserService
+	logger           *logger.Logger
 }
 
 // NewAdminUserHandler creates a new admin user handler
-func NewAdminUserHandler(userService *service.UserService, logger *logger.Logger) *AdminUserHandler {
+func NewAdminUserHandler(userService *service.UserService, adminUserService *service.AdminUserService, logger *logger.Logger) *AdminUserHandler {
 	return &AdminUserHandler{
-		userService: userService,
-		logger:      logger,
+		userService:      userService,
+		adminUserService: adminUserService,
+		logger:           logger,
 	}
 }
 
@@ -396,4 +399,80 @@ func (h *AdminUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "User deleted successfully",
 	})
+}
+
+// updateProfileRequest is the PATCH /api/admin/users/{id} request body.
+// UpdatedAt is required; it is compared against the stored row timestamp for
+// optimistic concurrency control. Only present fields are applied.
+type updateProfileRequest struct {
+	Name          *string    `json:"name,omitempty"`
+	Email         *string    `json:"email,omitempty"`
+	Birthday      *time.Time `json:"birthday,omitempty"`
+	EmailVerified *bool      `json:"email_verified,omitempty"`
+	UpdatedAt     time.Time  `json:"updated_at"` // required (precondition)
+}
+
+// UpdateProfile handles PATCH /api/admin/users/{id}.
+//
+//   - Optimistic concurrency: client must send updated_at matching current row.
+//   - Partial: only fields present in body are updated.
+//   - L2 enforcement: service returns ErrProtectedUser → 403 via WriteError.
+//   - On success: 200 with the updated User JSON.
+func (h *AdminUserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	actorID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	targetID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "Not found")
+		return
+	}
+	var req updateProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if req.UpdatedAt.IsZero() {
+		respondError(w, http.StatusBadRequest, "updated_at must be a valid non-zero timestamp")
+		return
+	}
+	user, err := h.adminUserService.UpdateProfile(actorID, targetID,
+		service.ProfileUpdateFields{
+			Name:          req.Name,
+			Email:         req.Email,
+			Birthday:      req.Birthday,
+			EmailVerified: req.EmailVerified,
+		},
+		req.UpdatedAt,
+	)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, user)
+}
+
+// ForcePasswordReset handles POST /api/admin/users/{id}/force-password-reset.
+//
+//   - Calls service.ForcePasswordReset (sends email + revokes refresh tokens).
+//   - L2 enforcement: protected target → 403.
+//   - On success: 204 No Content.
+func (h *AdminUserHandler) ForcePasswordReset(w http.ResponseWriter, r *http.Request) {
+	actorID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	targetID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "Not found")
+		return
+	}
+	if err := h.adminUserService.ForcePasswordReset(actorID, targetID); err != nil {
+		WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
