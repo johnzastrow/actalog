@@ -991,14 +991,39 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 				r.Post("/data-change-logs/cleanup", dataChangeLogHandler.CleanupOldLogs)
 
 				// User management routes (admin only)
+				// List endpoint has no {id} — lives outside the sub-router.
 				r.Get("/users", adminUserHandler.ListUsers)
-				r.Post("/users/{id}/unlock", adminUserHandler.UnlockUser)
-				r.Get("/users/{id}", adminUserHandler.GetUserDetails)
-				r.Post("/users/{id}/disable", adminUserHandler.DisableUser)
-				r.Post("/users/{id}/enable", adminUserHandler.EnableUser)
-				r.Put("/users/{id}/role", adminUserHandler.ChangeUserRole)
-				r.Post("/users/{id}/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
-				r.Delete("/users/{id}", adminUserHandler.DeleteUser)
+
+				// /users/{id}/* — sub-router with L1 protected-user guard.
+				// degradedAdminWriteGuard is already applied on the parent /admin
+				// route group (line ~922) and is inherited here automatically.
+				r.Route("/users/{id}", func(r chi.Router) {
+					// Middleware stack for every /users/{id} endpoint (outermost → innermost):
+					//   1. LoggingMiddleware       — outermost router (line 657)
+					//   2. CORS                    — outermost router (line 658)
+					//   3. Auth                    — /api group (line 744)
+					//   4. AdminOnly               — /admin group (line 921)
+					//   5. degradedAdminWriteGuard — /admin group (line 922), inherited
+					//   6. ProtectedUserGuard      — this sub-router (below)
+					//
+					// When adding a new middleware, decide which layer it belongs to:
+					//   - request-scoped, no auth needed → outermost router
+					//   - authenticated user context → /api group
+					//   - admin-only enforcement → /admin group
+					//   - applies only to user-by-id mutations → this sub-router
+					// L1: refuse non-GET/HEAD writes against protected users.
+					r.Use(middleware.ProtectedUserGuard(userRepo, auditLogService, appLogger))
+
+					r.Get("/", adminUserHandler.GetUserDetails)
+					r.Patch("/", adminUserHandler.UpdateProfile) // Task 12
+					r.Delete("/", adminUserHandler.DeleteUser)
+					r.Post("/unlock", adminUserHandler.UnlockUser)
+					r.Post("/disable", adminUserHandler.DisableUser)
+					r.Post("/enable", adminUserHandler.EnableUser)
+					r.Put("/role", adminUserHandler.ChangeUserRole)
+					r.Post("/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
+					r.Post("/force-password-reset", adminUserHandler.ForcePasswordReset) // Task 12
+				})
 
 				// User-created content management routes (admin only)
 				r.Get("/user-created/wods", adminHandler.ListUserCreatedWODs)
