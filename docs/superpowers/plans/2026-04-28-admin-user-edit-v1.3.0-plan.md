@@ -653,8 +653,8 @@ feat(frontend): useProtectedUserStatus composable
 - [ ] **Step 2:** Run — expect FAIL.
 
 - [ ] **Step 3: Implementation.** In the existing response-error interceptor in `web/src/utils/axios.js`, add two new branches BEFORE the existing 402 branch:
-  - `if (status === 403 && code === 'protected_user') { dispatch event with { type: 'warning', text: data.message, helpUrl: data.documentation_url } }`
-  - `if (status === 503 && code === 'protected_invariant_degraded') { dispatch event with { type: 'error', text: 'Admin user actions are temporarily unavailable. Operator: see logs.' } }`
+  - `if (status === 403 && code === 'protected_user') { dispatch event with { type: 'warning', message: data.message, ...(data.documentation_url ? { documentationUrl: data.documentation_url } : {}) } }`
+  - `if (status === 503 && code === 'protected_invariant_degraded') { dispatch event with { type: 'error', message: 'Admin user actions are temporarily unavailable. Operator: see logs.' } }`
 
   Use the project's existing snackbar dispatch mechanism (a Pinia store, an event bus, or `window.dispatchEvent(new CustomEvent('actalog-snackbar', { detail }))` — pick the one already in use).
 

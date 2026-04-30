@@ -129,6 +129,126 @@ describe('axios utility', () => {
   })
 
   // =========================================================================
+  // RESPONSE INTERCEPTOR — 403 protected_user
+  // =========================================================================
+
+  describe('Response interceptor — 403 protected_user', () => {
+    it('dispatches protected-user-write custom event on 403 protected_user', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 403,
+        data: {
+          error: 'protected_user',
+          message: 'This account is protected and cannot be modified.',
+          documentation_url: '/docs/protected-users',
+        },
+      })
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+      await instance.put('/api/admin/users/1').catch(() => {})
+
+      const dispatched = dispatchSpy.mock.calls.find(
+        ([event]) => event instanceof CustomEvent && event.type === 'protected-user-write'
+      )
+      expect(dispatched).toBeDefined()
+      expect(dispatched[0].detail.message).toBe('This account is protected and cannot be modified.')
+      expect(dispatched[0].detail.documentationUrl).toBe('/docs/protected-users')
+      expect(dispatched[0].detail.type).toBe('warning')
+
+      dispatchSpy.mockRestore()
+    })
+
+    it('still rejects the promise on 403 protected_user after dispatching event', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 403,
+        data: { error: 'protected_user', message: 'Protected.' },
+      })
+
+      await expect(instance.put('/api/admin/users/1')).rejects.toMatchObject({
+        response: { status: 403 },
+      })
+    })
+
+    it('does NOT dispatch protected-user-write for a generic 403 (no error code)', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 403,
+        data: { message: 'Forbidden' },
+      })
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+      await instance.put('/api/admin/users/1').catch(() => {})
+
+      const dispatched = dispatchSpy.mock.calls.find(
+        ([event]) => event instanceof CustomEvent && event.type === 'protected-user-write'
+      )
+      expect(dispatched).toBeUndefined()
+
+      dispatchSpy.mockRestore()
+    })
+  })
+
+  // =========================================================================
+  // RESPONSE INTERCEPTOR — 503 protected_invariant_degraded
+  // =========================================================================
+
+  describe('Response interceptor — 503 protected_invariant_degraded', () => {
+    it('dispatches admin-degraded custom event on 503 protected_invariant_degraded', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 503,
+        data: {
+          error: 'protected_invariant_degraded',
+          message: 'Admin operations temporarily unavailable.',
+        },
+      })
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+      await instance.put('/api/admin/users/1').catch(() => {})
+
+      const dispatched = dispatchSpy.mock.calls.find(
+        ([event]) => event instanceof CustomEvent && event.type === 'admin-degraded'
+      )
+      expect(dispatched).toBeDefined()
+      expect(dispatched[0].detail.message).toBe(
+        'Admin user actions are temporarily unavailable. Operator: see logs.'
+      )
+      expect(dispatched[0].detail.type).toBe('error')
+
+      dispatchSpy.mockRestore()
+    })
+
+    it('still rejects the promise on 503 protected_invariant_degraded after dispatching event', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 503,
+        data: { error: 'protected_invariant_degraded', message: 'Degraded.' },
+      })
+
+      await expect(instance.put('/api/admin/users/1')).rejects.toMatchObject({
+        response: { status: 503 },
+      })
+    })
+
+    it('does NOT dispatch admin-degraded for a generic 503 (no error code)', async () => {
+      instance.defaults.adapter = makeSequentialAdapter({
+        status: 503,
+        data: { message: 'Service Unavailable' },
+      })
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+      await instance.put('/api/admin/users/1').catch(() => {})
+
+      const dispatched = dispatchSpy.mock.calls.find(
+        ([event]) => event instanceof CustomEvent && event.type === 'admin-degraded'
+      )
+      expect(dispatched).toBeUndefined()
+
+      dispatchSpy.mockRestore()
+    })
+  })
+
+  // =========================================================================
   // RESPONSE INTERCEPTOR — network errors / offline
   // =========================================================================
 
