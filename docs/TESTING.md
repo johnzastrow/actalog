@@ -368,6 +368,17 @@ CI configuration: `.github/workflows/ci.yml`
 2. E2E tests (Playwright/Cypress)
 3. Performance/load testing
 
+## Security Tests
+
+The protected-user system (v1.3.0) introduced a layered-defense testing pattern worth following for future security-critical features:
+
+- **Per-layer unit tests:** Each layer is unit-tested in isolation (`pkg/middleware/protected_user_test.go`, `internal/service/admin_user_service_test.go`).
+- **Integration tests for L3 (database):** Run on the per-DB matrix (`test/integration/protected_users_test.go`).
+- **Recovery test matrix:** One test per failure mode, proving every recovery path actually recovers (`test/integration/protected_users_recovery_test.go`).
+- **Adversarial bypass tests:** Each test deliberately bypasses outer layers and asserts the inner layer catches independently (`test/integration/protected_users_layered_defense_test.go`).
+
+The adversarial pattern is particularly valuable: it proves that defense layers are not just present but *independently sufficient*. Use this pattern when adding new security-critical features.
+
 ---
 
 *This file is maintained alongside test improvements. Update coverage stats after significant test additions.*

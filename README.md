@@ -201,6 +201,10 @@ Most endpoints require JWT authentication. To use protected endpoints in Swagger
 | `backups` | System backup/restore |
 | `audit` | Audit logs |
 
+## Security
+
+- v1.3.0 introduces the admin user-edit screen with a four-layer defense for system-protected accounts. See `docs/security/PROTECTED_USERS.md`.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

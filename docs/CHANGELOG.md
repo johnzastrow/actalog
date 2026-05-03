@@ -5,6 +5,12 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v1.3.0 admin user-edit + protected-user defense-in-depth
+
+(Release notes pending — see `docs/security/PROTECTED_USERS.md` and `docs/superpowers/plans/2026-04-28-admin-user-edit-v1.3.0-plan.md`)
+
+---
+
 ## [1.2.4] - 2026-04-28 — Security hardening, part two
 
 Closes the two items deferred from v1.2.3 (`docs/plans/SECURITY_HARDENING_PLAN.md` Steps 2 and 5).

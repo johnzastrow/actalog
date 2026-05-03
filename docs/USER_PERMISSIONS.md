@@ -306,6 +306,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 
 ## User Management (Admin Only)
 
+> **Note:** All `/api/admin/users/{id}/*` write endpoints are blocked for system-protected user accounts. See `docs/security/PROTECTED_USERS.md` for details.
+
 | Action | Athlete | Admin | API Endpoint | Notes |
 |--------|---------|-------|-------------|-------|
 | List all users | N | Y | `GET /api/admin/users` | |
@@ -315,6 +317,8 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 | Enable user account | N | Y | `POST /api/admin/users/{id}/enable` | Restores access |
 | Change user role | N | Y | `PUT /api/admin/users/{id}/role` | Promote/demote |
 | Toggle email verification status | N | Y | `POST /api/admin/users/{id}/toggle-email-verification` | Manual verification |
+| Update user profile (admin) | N | Y | `PATCH /api/admin/users/{id}` | Updates name/email/birthday/email_verified; requires `updated_at` for optimistic concurrency; blocked for protected users |
+| Force password reset (admin) | N | Y | `POST /api/admin/users/{id}/force-password-reset` | Sends reset email + revokes all refresh tokens; blocked for protected users |
 | Delete user account | N | Y | `DELETE /api/admin/users/{id}` | Permanent deletion |
 | Preview user import | N | Y | `POST /api/admin/user-management/import/preview` | Bulk user creation |
 | Confirm user import | N | Y | `POST /api/admin/user-management/import/confirm` | |

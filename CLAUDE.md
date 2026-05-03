@@ -220,8 +220,7 @@ pkill -9 -f actalog 2>/dev/null; docker stop $(docker ps -q --filter "publish=80
 
 ### Protected Users (DO NOT MODIFY)
 
-**NEVER change any data for the following user accounts:**
-- `br8kwall@gmail.com` - Do not modify password, email, role, or any other user data
+The `br8kwall@gmail.com` account is system-protected and cannot be modified by any code path. See `docs/security/PROTECTED_USERS.md` for the four-layer defense system, recovery procedures, and audit forensics.
 
 ### Claude Testing Account
 
