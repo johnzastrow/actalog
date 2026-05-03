@@ -1,0 +1,6 @@
+# Security-critical files require an extra reviewer
+pkg/security/                            @johnzastrow
+internal/repository/protected_*          @johnzastrow
+docs/security/                           @johnzastrow
+scripts/recover/                         @johnzastrow
+.github/workflows/ci-failure-notify.yml  @johnzastrow

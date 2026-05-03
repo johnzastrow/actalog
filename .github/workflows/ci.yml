@@ -44,6 +44,15 @@ jobs:
       - name: Lockstep check (recovery scripts ↔ migration SQL)
         run: go test -count=1 ./scripts/recover/...
 
+      - name: Generator drift check (protectedUsers.js)
+        run: |
+          go run ./cmd/gen-protected-emails/
+          if ! git diff --exit-code -- web/src/utils/protectedUsers.js; then
+            echo '::error::web/src/utils/protectedUsers.js is out of sync with pkg/security/protected_users.go.'
+            echo '::error::Run `make gen-protected-emails` and commit the result.'
+            exit 1
+          fi
+
   integration:
     name: Integration tests (DB matrix)
     runs-on: ubuntu-latest
