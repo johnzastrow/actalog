@@ -113,7 +113,9 @@ HTTP request
 ┌────────────────────────────────────────────────────────┐
 │ L3: Database triggers (migration 0.35.0)               │
 │     protected_users_no_update / protected_users_no_delete        │
-│     BEFORE UPDATE / BEFORE DELETE on users             │
+│     BEFORE UPDATE: blocks identity-field changes only  │
+│         (email, name, role, account_disabled)          │
+│     BEFORE DELETE: blocks unconditionally              │
 │     → DB error containing TriggerErrorContract string  │
 │     → service layer catches, fires EventProtectedUserAttackDB    │
 └────────────────────────────────────────────────────────┘
@@ -182,7 +184,42 @@ by `make gen-protected-emails`:
 CI enforces that all three are consistent on every PR (`make gen-protected-emails &&
 git diff --exit-code`). Any drift fails the build.
 
-### 3.4 Rollback property — security stays on
+### 3.4 What L3 actually blocks (the narrowed contract)
+
+Database triggers cannot see who initiated a write or which code path is calling.
+The trigger sees rows and columns. That means a maximally strict trigger ("block all
+writes to protected rows") would also block the protected user's own self-service
+flows: registration writes a verification token, login writes `last_login_at`,
+ChangePassword writes `password_hash`, VerifyEmail writes `email_verified`. These
+are legitimate writes that the protected user issues against their own account.
+
+L3 is therefore narrowed to **identity fields only**:
+
+| Field | Why it is on the list |
+|-------|------------------------|
+| `email` | Changing the email is the canonical lockout attack — switch the address, claim password reset, take the account |
+| `name` | Identity drift; surfaces as the displayed user name across the app |
+| `role` | A demotion from `admin` would lock the owner out of admin-only screens |
+| `account_disabled` | The kill switch — hides the user from login |
+
+Lifecycle fields — `password_hash`, `last_login_at`, `email_verified`,
+`email_verified_at`, `verification_token`, `failed_login_attempts`, `disabled_at`,
+`disabled_by_user_id`, `disable_reason`, `updated_at`, `profile_image` — are
+allowed at L3 so the self-service flows work. **L1 (HTTP middleware) and L2
+(service guard) remain the primary defenses against admin-screen tampering** —
+the admin-edit screen never reaches L3 because L1 or L2 rejects the request first.
+Mixed UPDATEs that touch any identity field plus any number of lifecycle fields
+are blocked: an attacker cannot tunnel an identity change through a
+password-reset-shaped statement.
+
+DELETE is unconditional at L3.
+
+This contract narrowed in v1.3.0. Earlier drafts blocked all writes; that broke
+self-registration of the protected user and was incompatible with the rest of the
+app's lifecycle behavior. The trade is intentional: L3 stops identity tampering,
+L1+L2 stop everything the admin-edit surface could reach.
+
+### 3.5 Rollback property — security stays on
 
 Rolling back the binary from v1.3.0 to v1.2.4 leaves the L3 triggers in place.
 v1.2.4 does not know about them, but they keep rejecting writes at the database layer.

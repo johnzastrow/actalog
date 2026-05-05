@@ -1,10 +1,19 @@
 CREATE OR REPLACE FUNCTION block_protected_users() RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.email = ANY(ARRAY['br8kwall@gmail.com']) THEN
+    IF NOT (OLD.email = ANY(ARRAY['br8kwall@gmail.com'])) THEN
+        IF TG_OP = 'UPDATE' THEN RETURN NEW; END IF;
+        RETURN OLD;
+    END IF;
+    IF TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'protected user: writes blocked at db layer';
     END IF;
-    IF TG_OP = 'UPDATE' THEN RETURN NEW; END IF;
-    RETURN OLD;
+    IF NEW.email IS DISTINCT FROM OLD.email
+       OR NEW.name IS DISTINCT FROM OLD.name
+       OR NEW.role IS DISTINCT FROM OLD.role
+       OR NEW.account_disabled IS DISTINCT FROM OLD.account_disabled THEN
+        RAISE EXCEPTION 'protected user: writes blocked at db layer';
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 

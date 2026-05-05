@@ -3,7 +3,11 @@ CREATE TRIGGER protected_users_no_update
 BEFORE UPDATE ON users
 FOR EACH ROW
 BEGIN
-    IF OLD.email = 'br8kwall@gmail.com' THEN
+    IF OLD.email = 'br8kwall@gmail.com'
+       AND (NOT (NEW.email <=> OLD.email)
+         OR NOT (NEW.name <=> OLD.name)
+         OR NOT (NEW.role <=> OLD.role)
+         OR NOT (NEW.account_disabled <=> OLD.account_disabled)) THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'protected user: writes blocked at db layer';
     END IF;

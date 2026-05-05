@@ -133,6 +133,15 @@ func isWordBoundary(s string, pos, kwLen int) bool {
 
 // SQLiteProtectedTriggers is the SQL for SQLite that installs both protected-user triggers.
 // SQLite uses RAISE(ABORT, ...) which rolls back the current statement.
+//
+// L3 scope (Approach A): UPDATE is blocked only when an identity field changes
+// (email, name, role, account_disabled). Lifecycle writes — password_hash,
+// last_login_at, email_verified, verification_token, failed_login_attempts,
+// updated_at — pass through so legitimate self-service flows (registration,
+// login, password change, email verification) work for protected users.
+// L1 (HTTP middleware) and L2 (service guard) remain the primary defenses
+// against admin-screen tampering. DELETE is blocked unconditionally.
+// `IS NOT` is SQLite's null-safe inequality.
 const SQLiteProtectedTriggers = `
 -- LOCKSTEP-START sqlite
 DROP TRIGGER IF EXISTS protected_users_no_update;
@@ -140,6 +149,10 @@ CREATE TRIGGER protected_users_no_update
 BEFORE UPDATE ON users
 FOR EACH ROW
 WHEN OLD.email IN ('br8kwall@gmail.com')
+ AND (NEW.email IS NOT OLD.email
+   OR NEW.name IS NOT OLD.name
+   OR NEW.role IS NOT OLD.role
+   OR NEW.account_disabled IS NOT OLD.account_disabled)
 BEGIN
     SELECT RAISE(ABORT, 'protected user: writes blocked at db layer');
 END;
@@ -157,15 +170,29 @@ END;
 
 // PostgresProtectedTriggers is the SQL for PostgreSQL that installs both protected-user triggers.
 // PostgreSQL requires a trigger function; DROP TRIGGER IF EXISTS is idempotent across re-runs.
+//
+// L3 scope (Approach A): the shared trigger function blocks DELETE unconditionally
+// for protected rows but only blocks UPDATE when an identity field changes
+// (email, name, role, account_disabled). `IS DISTINCT FROM` is the null-safe
+// inequality operator. See SQLiteProtectedTriggers for the rationale.
 const PostgresProtectedTriggers = `
 -- LOCKSTEP-START postgres
 CREATE OR REPLACE FUNCTION block_protected_users() RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.email = ANY(ARRAY['br8kwall@gmail.com']) THEN
+    IF NOT (OLD.email = ANY(ARRAY['br8kwall@gmail.com'])) THEN
+        IF TG_OP = 'UPDATE' THEN RETURN NEW; END IF;
+        RETURN OLD;
+    END IF;
+    IF TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'protected user: writes blocked at db layer';
     END IF;
-    IF TG_OP = 'UPDATE' THEN RETURN NEW; END IF;
-    RETURN OLD;
+    IF NEW.email IS DISTINCT FROM OLD.email
+       OR NEW.name IS DISTINCT FROM OLD.name
+       OR NEW.role IS DISTINCT FROM OLD.role
+       OR NEW.account_disabled IS DISTINCT FROM OLD.account_disabled THEN
+        RAISE EXCEPTION 'protected user: writes blocked at db layer';
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -184,6 +211,11 @@ FOR EACH ROW EXECUTE FUNCTION block_protected_users();
 // MySQLProtectedTriggers is the SQL for MySQL/MariaDB that installs both protected-user triggers.
 // MySQL uses SIGNAL SQLSTATE '45000' with MESSAGE_TEXT to raise application errors.
 // DROP TRIGGER IF EXISTS is used for idempotency.
+//
+// L3 scope (Approach A): UPDATE only fires when an identity field changes
+// (email, name, role, account_disabled). `<=>` is MySQL's null-safe equal
+// operator, so `NOT (A <=> B)` is the null-safe inequality. DELETE remains
+// unconditional. See SQLiteProtectedTriggers for the rationale.
 const MySQLProtectedTriggers = `
 -- LOCKSTEP-START mysql
 DROP TRIGGER IF EXISTS protected_users_no_update;
@@ -191,7 +223,11 @@ CREATE TRIGGER protected_users_no_update
 BEFORE UPDATE ON users
 FOR EACH ROW
 BEGIN
-    IF OLD.email = 'br8kwall@gmail.com' THEN
+    IF OLD.email = 'br8kwall@gmail.com'
+       AND (NOT (NEW.email <=> OLD.email)
+         OR NOT (NEW.name <=> OLD.name)
+         OR NOT (NEW.role <=> OLD.role)
+         OR NOT (NEW.account_disabled <=> OLD.account_disabled)) THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'protected user: writes blocked at db layer';
     END IF;

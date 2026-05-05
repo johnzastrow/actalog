@@ -468,7 +468,7 @@ defeated for an attack to succeed:
 |-------|----------|-----------|
 | **L1** — HTTP middleware | `pkg/middleware/protected_user.go` | HTTP 403 before the request reaches any handler |
 | **L2** — Service guard | `internal/service/admin_user_service.go` | `ensureNotProtected()` check before any write |
-| **L3** — Database trigger | `internal/repository/protected_triggers_sql.go` | `BEFORE UPDATE / BEFORE DELETE` trigger; survives binary rollback |
+| **L3** — Database trigger | `internal/repository/protected_triggers_sql.go` | `BEFORE UPDATE` blocks identity-field changes (email/name/role/account_disabled); `BEFORE DELETE` is unconditional. Survives binary rollback. See PROTECTED_USERS.md §3.4 for the narrowed contract. |
 | **L4** — Audit log | `internal/domain/audit_log.go` | One event per block, tagged by the catching layer |
 
 The protected email registry lives in `pkg/security/protected_users.go`. The frontend

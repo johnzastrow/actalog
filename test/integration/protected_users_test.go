@@ -225,3 +225,134 @@ func TestL3_TriggerSurvivesRollback(t *testing.T) {
 		t.Error("alice's name was committed despite rollback — transaction did not roll back correctly")
 	}
 }
+
+// L3 narrowed-contract tests (Approach A).
+//
+// The trigger blocks UPDATE only when an identity field changes:
+// email, name, role, account_disabled. Lifecycle fields — password_hash,
+// last_login_at, email_verified, verification_token, failed_login_attempts —
+// must pass through so self-service flows (Register, Login, ChangePassword,
+// VerifyEmail, ResetPassword) work for the protected user. L1 (HTTP middleware)
+// and L2 (service guard) remain the primary defenses against admin-screen
+// tampering.
+
+// TestL3_LifecycleUpdate_PasswordHash confirms password_hash writes pass through.
+func TestL3_LifecycleUpdate_PasswordHash(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	res, err := db.Exec(`UPDATE users SET password_hash='new-hash' WHERE email='br8kwall@gmail.com'`)
+	if err != nil {
+		t.Fatalf("password_hash update on protected user must succeed (lifecycle write); got error: %v", err)
+	}
+	n, _ := res.RowsAffected()
+	if n != 1 {
+		t.Errorf("expected 1 row affected, got %d", n)
+	}
+}
+
+// TestL3_LifecycleUpdate_LastLoginAt confirms last_login_at writes pass through.
+func TestL3_LifecycleUpdate_LastLoginAt(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	var q string
+	switch driver {
+	case "sqlite3":
+		q = `UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE email='br8kwall@gmail.com'`
+	case "postgres", "mysql":
+		q = `UPDATE users SET last_login_at = NOW() WHERE email='br8kwall@gmail.com'`
+	default:
+		t.Fatalf("unsupported driver %q", driver)
+	}
+	if _, err := db.Exec(q); err != nil {
+		t.Fatalf("last_login_at update on protected user must succeed (lifecycle write); got error: %v", err)
+	}
+}
+
+// TestL3_LifecycleUpdate_EmailVerified confirms email_verified writes pass through.
+func TestL3_LifecycleUpdate_EmailVerified(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	var q string
+	switch driver {
+	case "sqlite3":
+		q = `UPDATE users SET email_verified = 1 WHERE email='br8kwall@gmail.com'`
+	case "postgres", "mysql":
+		q = `UPDATE users SET email_verified = TRUE WHERE email='br8kwall@gmail.com'`
+	default:
+		t.Fatalf("unsupported driver %q", driver)
+	}
+	if _, err := db.Exec(q); err != nil {
+		t.Fatalf("email_verified update on protected user must succeed (lifecycle write); got error: %v", err)
+	}
+}
+
+// TestL3_IdentityUpdate_RoleBlocked confirms role changes are still blocked.
+func TestL3_IdentityUpdate_RoleBlocked(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	_, err := db.Exec(`UPDATE users SET role='athlete' WHERE email='br8kwall@gmail.com'`)
+	if err == nil {
+		t.Fatal("role change on protected user must be blocked, but UPDATE succeeded")
+	}
+	if !strings.Contains(err.Error(), "protected user: writes blocked at db layer") {
+		t.Errorf("expected L4 contract message, got: %v", err)
+	}
+}
+
+// TestL3_IdentityUpdate_EmailBlocked confirms email changes are still blocked.
+func TestL3_IdentityUpdate_EmailBlocked(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	_, err := db.Exec(`UPDATE users SET email='attacker@evil.com' WHERE email='br8kwall@gmail.com'`)
+	if err == nil {
+		t.Fatal("email change on protected user must be blocked, but UPDATE succeeded")
+	}
+	if !strings.Contains(err.Error(), "protected user: writes blocked at db layer") {
+		t.Errorf("expected L4 contract message, got: %v", err)
+	}
+}
+
+// TestL3_IdentityUpdate_AccountDisabledBlocked confirms account_disabled toggling is still blocked.
+func TestL3_IdentityUpdate_AccountDisabledBlocked(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	var q string
+	switch driver {
+	case "sqlite3":
+		q = `UPDATE users SET account_disabled = 1 WHERE email='br8kwall@gmail.com'`
+	case "postgres", "mysql":
+		q = `UPDATE users SET account_disabled = TRUE WHERE email='br8kwall@gmail.com'`
+	default:
+		t.Fatalf("unsupported driver %q", driver)
+	}
+	_, err := db.Exec(q)
+	if err == nil {
+		t.Fatal("account_disabled toggle on protected user must be blocked, but UPDATE succeeded")
+	}
+	if !strings.Contains(err.Error(), "protected user: writes blocked at db layer") {
+		t.Errorf("expected L4 contract message, got: %v", err)
+	}
+}
+
+// TestL3_MixedUpdate_IdentityWithLifecycleBlocked confirms a single UPDATE that
+// changes both an identity field (name) and a lifecycle field (password_hash)
+// is still blocked — protecting against an attacker tunnelling identity drift
+// through a lifecycle-shaped statement.
+func TestL3_MixedUpdate_IdentityWithLifecycleBlocked(t *testing.T) {
+	db, driver := mustOpenTestDB(t)
+	insertProtectedUser(t, db, driver)
+
+	_, err := db.Exec(`UPDATE users SET name='hacked', password_hash='x' WHERE email='br8kwall@gmail.com'`)
+	if err == nil {
+		t.Fatal("mixed identity+lifecycle UPDATE must be blocked, but it succeeded")
+	}
+	if !strings.Contains(err.Error(), "protected user: writes blocked at db layer") {
+		t.Errorf("expected L4 contract message, got: %v", err)
+	}
+}
