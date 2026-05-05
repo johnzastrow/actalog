@@ -325,6 +325,7 @@ These features can be added after the core frontend is complete:
   - Shipped: Profile tab, four-layer defense-in-depth, recovery tooling, full documentation
   - Plan: `docs/superpowers/plans/2026-04-28-admin-user-edit-v1.3.0-plan.md`
 
+- [ ] `[HIGH]` **Admin: Create User flow on User Management screen (v1.3.1)** — `POST /api/admin/users` + "Create User" dialog. Decisions to make: initial password (admin-set vs invite-email vs reset-link), email verification policy, role picker scope, optional affiliation. Tracked: [#217](https://github.com/johnzastrow/actalog/issues/217)
 - [ ] `[HIGH]` **User Edit Screen — Affiliations tab (v1.3.1)** — gym memberships, coach assignments per gym; add/remove org membership; manage `CoachAssignment` per `GymLocation` (assign/revoke coach role per gym); view `TemplateCoach` and `SessionCoach` rows that reference this user
 - [ ] `[HIGH]` **User Edit Screen — Subscriptions / Credits / Preferences / Activity tabs (v1.3.2)** — complete the remaining tabs deferred from v1.3.0: Subscriptions, Class Credits & Documents, Preferences (UserSettings), and read-only Activity & Audit summary
 
