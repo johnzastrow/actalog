@@ -46,28 +46,18 @@ func dropProtectedTrigger(db *sql.DB, driver, name string) error {
 	return err
 }
 
-// resetUsersForFreshInstall ensures the users table is empty and the protected-user
-// triggers are present, so a test can rely on the "fresh install" premise even on
-// shared-DB drivers (Postgres/MySQL) where previous tests have inserted rows.
-//
-// It drops both protected triggers, DELETEs every row from users (the L3 triggers
-// would otherwise block DELETE on the protected row), and re-installs the triggers
-// via the recovery CLI helper.
-func resetUsersForFreshInstall(t *testing.T, db *sql.DB, driver string) {
+// withTriggerCleanup registers a cleanup that always restores the protected-user
+// triggers when the test exits, even if it failed mid-way through. Without this,
+// a failed DROP/DELETE/reapply sequence can leave the shared Postgres/MySQL test
+// DB without triggers, cascading failures into every subsequent L3 test.
+func withTriggerCleanup(t *testing.T, db *sql.DB, driver string) {
 	t.Helper()
-	if err := dropProtectedTrigger(db, driver, "protected_users_no_update"); err != nil {
-		t.Fatalf("resetUsersForFreshInstall: drop update trigger: %v", err)
-	}
-	if err := dropProtectedTrigger(db, driver, "protected_users_no_delete"); err != nil {
-		t.Fatalf("resetUsersForFreshInstall: drop delete trigger: %v", err)
-	}
-	if _, err := db.Exec(`DELETE FROM users`); err != nil {
-		t.Fatalf("resetUsersForFreshInstall: delete users: %v", err)
-	}
-	var sink strings.Builder
-	if err := protectedusers.AdminReapplyProtectedMigrations(db, driver, true, &sink); err != nil {
-		t.Fatalf("resetUsersForFreshInstall: reapply triggers: %v\n%s", err, sink.String())
-	}
+	t.Cleanup(func() {
+		var sink strings.Builder
+		if err := protectedusers.AdminReapplyProtectedMigrations(db, driver, true, &sink); err != nil {
+			t.Logf("withTriggerCleanup: failed to restore triggers (subsequent tests may fail): %v\n%s", err, sink.String())
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -78,12 +68,20 @@ func resetUsersForFreshInstall(t *testing.T, db *sql.DB, driver string) {
 // succeeds on a fresh DB with no users (Check 1 + Check 2 pass, Check 3 is soft).
 // This is the baseline: the boot path must NOT hard-fail on first install.
 //
-// On SQLite each integration test gets a fresh `:memory:` DB. On Postgres and
-// MySQL the DB is shared across tests in the same matrix run, so this test must
-// reset users explicitly to honour its "fresh install" premise.
+// Only runs on sqlite3 — that driver gives every integration test a fresh
+// `:memory:` DB, satisfying the "no users" premise without destructive cleanup.
+// Postgres and MySQL share a single DB across all matrix tests, so prior tests
+// have already inserted rows by the time this one runs. Resetting that state
+// would mean dropping the protected triggers + DELETE FROM users + restoring
+// triggers, which fails on shared DBs due to foreign-key cascades from
+// workout/session data created by earlier tests. The Go-level branching this
+// test exercises (totalUsers == 0 → soft warning) is driver-agnostic and
+// fully covered by the sqlite3 run.
 func TestRecovery_FreshInstall_NoUsersYet(t *testing.T) {
 	db, driver := mustOpenTestDB(t)
-	resetUsersForFreshInstall(t, db, driver)
+	if driver != "sqlite3" {
+		t.Skipf("skipping fresh-install test on shared DB %q — see comment", driver)
+	}
 
 	report, err := protectedusers.VerifyProtectedUserInvariant(db, driver)
 	if err != nil {
@@ -127,6 +125,7 @@ func TestRecovery_FreshInstall_NoUsersYet(t *testing.T) {
 // returns a non-nil error that names the missing trigger.
 func TestRecovery_TriggerDroppedBetweenBoots(t *testing.T) {
 	db, driver := mustOpenTestDB(t)
+	withTriggerCleanup(t, db, driver)
 
 	// Simulate trigger loss (e.g., dropped manually or by a bad migration rollback).
 	if err := dropProtectedTrigger(db, driver, "protected_users_no_update"); err != nil {
@@ -153,6 +152,7 @@ func TestRecovery_TriggerDroppedBetweenBoots(t *testing.T) {
 //  4. A real UPDATE on the protected row must be rejected by the restored trigger.
 func TestRecovery_ReapplyCLIRestoresTriggers(t *testing.T) {
 	db, driver := mustOpenTestDB(t)
+	withTriggerCleanup(t, db, driver)
 
 	// Insert the protected user row so Check 3 doesn't interfere.
 	insertProtectedUser(t, db, driver)
@@ -217,6 +217,7 @@ func TestRecovery_VerifyCLIDetectsAllFailureModes(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			db, driver := mustOpenTestDB(t)
+			withTriggerCleanup(t, db, driver)
 
 			switch tc.name {
 			case "missing_update_trigger":
@@ -283,6 +284,7 @@ func TestRecovery_VerifyCLIDetectsAllFailureModes(t *testing.T) {
 // sufficient at this layer.
 func TestRecovery_DegradedMode_BootsWithBadTrigger(t *testing.T) {
 	db, driver := mustOpenTestDB(t)
+	withTriggerCleanup(t, db, driver)
 
 	// Simulate a corrupted trigger state.
 	if err := dropProtectedTrigger(db, driver, "protected_users_no_delete"); err != nil {
