@@ -1029,6 +1029,19 @@ sequenceDiagram
 7. **CORS**: Configurable allowed origins
 8. **Input Validation**: Strict validation at all entry points
 
+## Defense-in-Depth Pattern
+
+The protected-user system (v1.3.0) introduced a four-layer defense pattern that's worth using as a reference for future security-critical features:
+
+- **L1 — HTTP middleware:** Request-level rejection. Catches every HTTP-level write attempt.
+- **L2 — Service-layer guard:** Catches in-process callers (cron, jobs, internal APIs) that bypass the HTTP path.
+- **L3 — Database trigger:** Catches direct DB access (raw SQL, connection-pool bypass, rogue migrations).
+- **L4 — Audit logging:** Tagged at the rejecting layer (not the layer traversed). Single event per attempt.
+
+Plus a **boot-time invariant** that fails closed if any layer is broken.
+
+Each layer is independently sufficient. See `docs/security/PROTECTED_USERS.md` for the complete reference implementation; see `docs/security/THREAT_MODEL.md` for the broader threat coverage map.
+
 ## Observability
 
 ### Three Pillars

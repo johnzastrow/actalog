@@ -1,9 +1,15 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/internal/service"
 )
 
 func TestAdminUserHandler_UnlockUser_Unauthorized(t *testing.T) {
@@ -191,7 +197,7 @@ func TestAdminUserHandler_DeleteUser_InvalidID(t *testing.T) {
 }
 
 func TestNewAdminUserHandler(t *testing.T) {
-	handler := NewAdminUserHandler(nil, nil)
+	handler := NewAdminUserHandler(nil, nil, nil)
 	if handler == nil {
 		t.Error("NewAdminUserHandler should return a non-nil handler")
 	}
@@ -252,7 +258,7 @@ func TestAdminUserHandler_ToggleEmailVerification_ValidIDInvalidJSON(t *testing.
 
 func TestAdminUserHandler_ListUsers_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createTestRequest(http.MethodGet, "/api/admin/users", "")
 	rr := httptest.NewRecorder()
@@ -266,7 +272,7 @@ func TestAdminUserHandler_ListUsers_Success(t *testing.T) {
 
 func TestAdminUserHandler_ListUsers_WithPagination(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	tests := []struct {
 		name     string
@@ -297,7 +303,7 @@ func TestAdminUserHandler_ListUsers_WithPagination(t *testing.T) {
 
 func TestAdminUserHandler_UnlockUser_UserNotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/999/unlock", "", 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "999")
@@ -311,7 +317,7 @@ func TestAdminUserHandler_UnlockUser_UserNotFound(t *testing.T) {
 
 func TestAdminUserHandler_UnlockUser_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/unlock", "", 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
@@ -325,7 +331,7 @@ func TestAdminUserHandler_UnlockUser_Success(t *testing.T) {
 
 func TestAdminUserHandler_DisableUser_InvalidJSON(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	// Handler treats invalid JSON as no reason (reason is optional)
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/2/disable", "{bad json", 1, "admin@example.com", "admin")
@@ -340,7 +346,7 @@ func TestAdminUserHandler_DisableUser_InvalidJSON(t *testing.T) {
 
 func TestAdminUserHandler_DisableUser_EmptyReason(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	// Reason is optional, so empty body succeeds
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/2/disable", `{}`, 1, "admin@example.com", "admin")
@@ -354,7 +360,7 @@ func TestAdminUserHandler_DisableUser_EmptyReason(t *testing.T) {
 
 func TestAdminUserHandler_DisableUser_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/2/disable", `{"reason": "Policy violation"}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "2")
@@ -367,7 +373,7 @@ func TestAdminUserHandler_DisableUser_Success(t *testing.T) {
 
 func TestAdminUserHandler_DisableUser_CannotDisableSelf(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/disable", `{"reason": "Self disable"}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
@@ -381,7 +387,7 @@ func TestAdminUserHandler_DisableUser_CannotDisableSelf(t *testing.T) {
 
 func TestAdminUserHandler_EnableUser_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/enable", "", 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
@@ -394,7 +400,7 @@ func TestAdminUserHandler_EnableUser_Success(t *testing.T) {
 
 func TestAdminUserHandler_ChangeUserRole_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/2/role", `{"role": "admin"}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "2")
@@ -407,7 +413,7 @@ func TestAdminUserHandler_ChangeUserRole_Success(t *testing.T) {
 
 func TestAdminUserHandler_ChangeUserRole_CannotChangeOwnRole(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPut, "/api/admin/users/1/role", `{"role": "athlete"}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
@@ -421,7 +427,7 @@ func TestAdminUserHandler_ChangeUserRole_CannotChangeOwnRole(t *testing.T) {
 
 func TestAdminUserHandler_ToggleEmailVerification_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/1/toggle-email-verification", `{"verified": true}`, 1, "admin@example.com", "admin")
 	req = addChiURLParam(req, "id", "1")
@@ -434,7 +440,7 @@ func TestAdminUserHandler_ToggleEmailVerification_Success(t *testing.T) {
 
 func TestAdminUserHandler_GetUserDetails_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createTestRequest(http.MethodGet, "/api/admin/users/1", "")
 	req = addChiURLParam(req, "id", "1")
@@ -447,7 +453,7 @@ func TestAdminUserHandler_GetUserDetails_Success(t *testing.T) {
 
 func TestAdminUserHandler_GetUserDetails_NotFound(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	req := createTestRequest(http.MethodGet, "/api/admin/users/999", "")
 	req = addChiURLParam(req, "id", "999")
@@ -460,7 +466,7 @@ func TestAdminUserHandler_GetUserDetails_NotFound(t *testing.T) {
 
 func TestAdminUserHandler_DeleteUser_CannotDeleteSelf(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	// User 1 trying to delete themselves
 	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/users/1", "", 1, "admin@example.com", "admin")
@@ -475,7 +481,7 @@ func TestAdminUserHandler_DeleteUser_CannotDeleteSelf(t *testing.T) {
 
 func TestAdminUserHandler_DeleteUser_Success(t *testing.T) {
 	userService := createTestUserService()
-	handler := NewAdminUserHandler(userService, createTestLogger())
+	handler := NewAdminUserHandler(userService, nil, createTestLogger())
 
 	// Admin (user 1) deleting user 2
 	req := createAuthenticatedRequest(http.MethodDelete, "/api/admin/users/2", "", 1, "admin@example.com", "admin")
@@ -485,4 +491,185 @@ func TestAdminUserHandler_DeleteUser_Success(t *testing.T) {
 	handler.DeleteUser(rr, req)
 
 	assertStatusCode(t, rr, http.StatusOK)
+}
+
+// knownUpdatedAt is a fixed non-zero timestamp used by the AdminUserService test helpers.
+var knownUpdatedAt = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+// mockUserRepoNilOnMiss wraps MockUserRepository and returns (nil, nil) from
+// GetByID when the user is not found — matching the real repository contract.
+// The standard MockUserRepository incorrectly returns (nil, ErrMockNotFound).
+type mockUserRepoNilOnMiss struct {
+	*MockUserRepository
+}
+
+func (m *mockUserRepoNilOnMiss) GetByID(id int64) (*domain.User, error) {
+	if m.shouldError {
+		return nil, m.errorToReturn
+	}
+	for _, u := range m.users {
+		if u.ID == id {
+			return u, nil
+		}
+	}
+	return nil, nil // real-repo contract: missing row → (nil, nil)
+}
+
+// createTestAdminUserService creates an AdminUserService backed by mocks.
+// User 2 ("test@example.com") has UpdatedAt = knownUpdatedAt so that
+// optimistic-concurrency tests can supply a matching timestamp.
+func createTestAdminUserService() *service.AdminUserService {
+	mockUserRepo := &mockUserRepoNilOnMiss{NewMockUserRepository()}
+	// Set a known non-zero UpdatedAt on user 2 so the optimistic-concurrency
+	// check in UpdateProfile can be exercised.
+	for _, u := range mockUserRepo.users {
+		if u.ID == 2 {
+			u.UpdatedAt = knownUpdatedAt
+		}
+	}
+	mockRefreshTokenRepo := NewMockRefreshTokenRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	mockEmailService := NewMockEmailService()
+	auditLogService := service.NewAuditLogService(mockAuditLogRepo)
+	return service.NewAdminUserService(
+		mockUserRepo,
+		mockRefreshTokenRepo,
+		mockEmailService,
+		auditLogService,
+		createTestLogger(),
+		"http://localhost:3000",
+	)
+}
+
+// createTestAdminUserServiceWithProtectedUser returns an AdminUserService whose
+// user store includes a protected user (br8kwall@gmail.com) with ID 99, so that
+// handler tests can exercise the ErrProtectedUser → 403 path.
+func createTestAdminUserServiceWithProtectedUser() *service.AdminUserService {
+	inner := NewMockUserRepository()
+	inner.users = append(inner.users, &domain.User{
+		ID:    99,
+		Email: "br8kwall@gmail.com",
+		Name:  "Protected User",
+		Role:  "admin",
+	})
+	mockUserRepo := &mockUserRepoNilOnMiss{inner}
+	mockRefreshTokenRepo := NewMockRefreshTokenRepository()
+	mockAuditLogRepo := NewMockAuditLogRepository()
+	mockEmailService := NewMockEmailService()
+	auditLogService := service.NewAuditLogService(mockAuditLogRepo)
+	return service.NewAdminUserService(
+		mockUserRepo,
+		mockRefreshTokenRepo,
+		mockEmailService,
+		auditLogService,
+		createTestLogger(),
+		"http://localhost:3000",
+	)
+}
+
+// TestAdminUserHandler_UpdateProfile_HappyPath — PATCH with correct updated_at → 200.
+func TestAdminUserHandler_UpdateProfile_HappyPath(t *testing.T) {
+	adminUserService := createTestAdminUserService()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	body := fmt.Sprintf(`{"name":"New Name","updated_at":"%s"}`, knownUpdatedAt.Format(time.RFC3339Nano))
+	req := createAuthenticatedRequest(http.MethodPatch, "/api/admin/users/2", body, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusOK)
+	assertBodyContains(t, rr, "New Name")
+}
+
+// TestAdminUserHandler_UpdateProfile_StaleUpdatedAtReturns409 — PATCH with old updated_at → 409.
+func TestAdminUserHandler_UpdateProfile_StaleUpdatedAtReturns409(t *testing.T) {
+	adminUserService := createTestAdminUserService()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	// Provide a timestamp that does NOT match the stored UpdatedAt.
+	stale := knownUpdatedAt.Add(-time.Hour)
+	body := fmt.Sprintf(`{"name":"Stale Name","updated_at":"%s"}`, stale.Format(time.RFC3339Nano))
+	req := createAuthenticatedRequest(http.MethodPatch, "/api/admin/users/2", body, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusConflict)
+}
+
+// TestAdminUserHandler_UpdateProfile_MissingUpdatedAtReturns400 — PATCH without updated_at → 400.
+func TestAdminUserHandler_UpdateProfile_MissingUpdatedAtReturns400(t *testing.T) {
+	adminUserService := createTestAdminUserService()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	body := `{"name":"No Timestamp"}`
+	req := createAuthenticatedRequest(http.MethodPatch, "/api/admin/users/2", body, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusBadRequest)
+	assertBodyContains(t, rr, "updated_at must be a valid non-zero timestamp")
+}
+
+// TestAdminUserHandler_ForcePasswordReset_Returns204 — POST force-password-reset → 204.
+func TestAdminUserHandler_ForcePasswordReset_Returns204(t *testing.T) {
+	adminUserService := createTestAdminUserService()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/2/force-password-reset", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "2")
+	rr := httptest.NewRecorder()
+
+	handler.ForcePasswordReset(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNoContent)
+}
+
+// TestAdminUserHandler_UpdateProfile_UnknownUserReturns404 verifies that
+// UpdateProfile returns HTTP 404 when the service returns ErrUserNotFound
+// (user ID does not exist in the repository).
+func TestAdminUserHandler_UpdateProfile_UnknownUserReturns404(t *testing.T) {
+	adminUserService := createTestAdminUserService()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	// User 999 does not exist — mock GetByID returns (nil, nil), triggering the
+	// ErrUserNotFound sentinel path in AdminUserService.ensureNotProtected.
+	body := fmt.Sprintf(`{"name":"Ghost","updated_at":"%s"}`, knownUpdatedAt.Format(time.RFC3339Nano))
+	req := createAuthenticatedRequest(http.MethodPatch, "/api/admin/users/999", body, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "999")
+	rr := httptest.NewRecorder()
+
+	handler.UpdateProfile(rr, req)
+
+	assertStatusCode(t, rr, http.StatusNotFound)
+}
+
+// TestAdminUserHandler_ForcePasswordReset_OnProtectedUserReturns403 verifies
+// that ForcePasswordReset returns HTTP 403 with error code "protected_user" when
+// the target user is in the protected-user registry.
+func TestAdminUserHandler_ForcePasswordReset_OnProtectedUserReturns403(t *testing.T) {
+	adminUserService := createTestAdminUserServiceWithProtectedUser()
+	handler := NewAdminUserHandler(nil, adminUserService, createTestLogger())
+
+	// User 99 has email br8kwall@gmail.com — a protected account.
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/99/force-password-reset", "", 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "99")
+	rr := httptest.NewRecorder()
+
+	handler.ForcePasswordReset(rr, req)
+
+	assertStatusCode(t, rr, http.StatusForbidden)
+
+	var resp ErrorResponse
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+	if resp.Error != "protected_user" {
+		t.Errorf("Error = %q, want %q", resp.Error, "protected_user")
+	}
 }

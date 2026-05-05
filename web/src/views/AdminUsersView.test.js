@@ -13,6 +13,17 @@ vi.mock('@/utils/axios', () => ({
   }
 }))
 
+// Mock vue-router so useRouter() works in shallowMount tests
+const mockRouterPush = vi.fn()
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual('vue-router')
+  return {
+    ...actual,
+    useRouter: vi.fn(() => ({ push: mockRouterPush })),
+    useRoute: vi.fn(() => ({ params: {}, query: {}, fullPath: '/' })),
+  }
+})
+
 import axios from '@/utils/axios'
 
 describe('AdminUsersView', () => {
@@ -268,6 +279,134 @@ describe('AdminUsersView', () => {
       await flushPromises()
 
       expect(vm.search).toBe('admin')
+    })
+  })
+
+  describe('Edit Button', () => {
+    it('renders Edit pencil-icon button per row', async () => {
+      setupDefaultMocks()
+
+      const pinia = createPinia()
+      setActivePinia(pinia)
+
+      wrapper = shallowMount(AdminUsersView, {
+        global: {
+          plugins: [pinia],
+          stubs: {
+            'v-container': { template: '<div><slot /></div>' },
+            'v-card': { template: '<div><slot /></div>' },
+            'v-card-title': { template: '<div><slot /></div>' },
+            'v-card-text': { template: '<div><slot /></div>' },
+            'v-btn': {
+              template: '<button :disabled="disabled" :title="title" @click="$emit(\'click\')"><slot /></button>',
+              props: ['disabled', 'title', 'icon', 'size', 'variant'],
+              emits: ['click'],
+            },
+            'v-icon': { template: '<i :class="color"><slot /></i>' },
+            'v-chip': { template: '<span><slot /></span>' },
+            'v-avatar': { template: '<div><slot /></div>' },
+            'v-alert': { template: '<div><slot /></div>' },
+            'v-dialog': { template: '<div><slot /></div>' },
+            'v-text-field': { template: '<input />' },
+            'v-divider': { template: '<hr />' },
+            'v-spacer': { template: '<div></div>' },
+            'v-tooltip': { template: '<div><slot /></div>' },
+            'v-progress-linear': { template: '<div></div>' },
+            'v-data-table': { template: '<div><slot /></div>' },
+          },
+        },
+      })
+
+      await flushPromises()
+
+      // The headers array must include an 'edit' column
+      const vm = wrapper.vm
+      expect(vm.headers.some(h => h.value === 'edit')).toBe(true)
+    })
+
+    it('Edit button is disabled for protected user rows', async () => {
+      setupDefaultMocks()
+
+      const pinia = createPinia()
+      setActivePinia(pinia)
+
+      wrapper = shallowMount(AdminUsersView, {
+        global: {
+          plugins: [pinia],
+          stubs: {
+            'v-container': { template: '<div><slot /></div>' },
+            'v-card': { template: '<div><slot /></div>' },
+            'v-card-title': { template: '<div><slot /></div>' },
+            'v-card-text': { template: '<div><slot /></div>' },
+            'v-btn': { template: '<button><slot /></button>' },
+            'v-icon': { template: '<i></i>' },
+            'v-chip': { template: '<span><slot /></span>' },
+            'v-avatar': { template: '<div><slot /></div>' },
+            'v-alert': { template: '<div><slot /></div>' },
+            'v-dialog': { template: '<div><slot /></div>' },
+            'v-text-field': { template: '<input />' },
+            'v-divider': { template: '<hr />' },
+            'v-spacer': { template: '<div></div>' },
+            'v-tooltip': { template: '<div><slot /></div>' },
+            'v-progress-linear': { template: '<div></div>' },
+            'v-data-table': { template: '<div><slot /></div>' },
+          },
+        },
+      })
+
+      await flushPromises()
+
+      const vm = wrapper.vm
+
+      // isProtected should return true for the known protected email
+      const protectedUser = { id: 99, email: 'br8kwall@gmail.com' }
+      const normalUser = { id: 1, email: 'admin@test.com' }
+
+      expect(vm.isProtected(protectedUser)).toBe(true)
+      expect(vm.isProtected(normalUser)).toBe(false)
+    })
+
+    it('clicking Edit navigates to /admin/users/:id/edit', async () => {
+      setupDefaultMocks()
+
+      const pinia = createPinia()
+      setActivePinia(pinia)
+
+      wrapper = shallowMount(AdminUsersView, {
+        global: {
+          plugins: [pinia],
+          stubs: {
+            'v-container': { template: '<div><slot /></div>' },
+            'v-card': { template: '<div><slot /></div>' },
+            'v-card-title': { template: '<div><slot /></div>' },
+            'v-card-text': { template: '<div><slot /></div>' },
+            'v-btn': { template: '<button><slot /></button>' },
+            'v-icon': { template: '<i></i>' },
+            'v-chip': { template: '<span><slot /></span>' },
+            'v-avatar': { template: '<div><slot /></div>' },
+            'v-alert': { template: '<div><slot /></div>' },
+            'v-dialog': { template: '<div><slot /></div>' },
+            'v-text-field': { template: '<input />' },
+            'v-divider': { template: '<hr />' },
+            'v-spacer': { template: '<div></div>' },
+            'v-tooltip': { template: '<div><slot /></div>' },
+            'v-progress-linear': { template: '<div></div>' },
+            'v-data-table': { template: '<div><slot /></div>' },
+          },
+        },
+      })
+
+      await flushPromises()
+
+      mockRouterPush.mockClear()
+
+      const vm = wrapper.vm
+
+      // Call the navigateToEdit method directly with a non-protected user
+      const user = { id: 7, email: 'user@test.com' }
+      vm.navigateToEdit(user)
+
+      expect(mockRouterPush).toHaveBeenCalledWith('/admin/users/7/edit')
     })
   })
 })

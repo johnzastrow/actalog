@@ -46,13 +46,6 @@ type AuthResponse struct {
 	User         interface{} `json:"user"`
 }
 
-// ErrorResponse represents an error response
-// @Description Error response returned when a request fails
-type ErrorResponse struct {
-	Message string `json:"message" example:"Invalid credentials"`
-	Error   string `json:"error,omitempty" example:"additional error details"`
-}
-
 // Register handles user registration
 // @Summary      Register a new user
 // @Description  Create a new user account with name, email, and password

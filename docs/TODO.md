@@ -321,25 +321,13 @@ These features can be added after the core frontend is complete:
 - [ ] `[LOW]` **Add repository unit tests** - All repository implementations
 
 #### Admin Features
-- [ ] `[HIGH]` **Comprehensive User Edit Screen** (Admin only)
-  - **Goal:** One admin screen to view and edit *every* attribute associated with a single user. Current `AdminUsersView.vue` only supports disable/enable, role change, and account unlock — there is no path to edit the user's profile fields or manage their cross-domain affiliations.
-  - **Suggested layout:** Tabbed detail view (`AdminUserEditView.vue`), one tab per data domain so each tab maps cleanly to an existing service/repository:
-    1. **Profile** — name, email, birthday, profile image, role; force email-verified flag; trigger password reset email; reset failed login attempts; rotate refresh tokens (`internal/domain/user.go`, `internal/domain/user.go:RefreshTokenRepository`)
-    2. **Gym Affiliations** *(primary motivating example)* — list `UserOrganization` rows; add/remove org membership; manage `CoachAssignment` per `GymLocation` (assign/revoke coach role per gym); view `TemplateCoach` and `SessionCoach` rows that reference this user (`internal/domain/organization.go`, `internal/domain/scheduling.go`)
-    3. **Subscriptions** — view current `UserSubscription` + any `OrganizationSubscription` they benefit from; deep-link to existing `AdminSubscriptionsView` actions (mark paid, cancel, extend) (`internal/domain/subscription.go`)
-    4. **Class Credits & Documents** — list `UserClassCredits` balances per package with expiry; grant/revoke credits; view `UserDocument` completion status; mark documents complete on user's behalf (`internal/domain/phase4.go`)
-    5. **Preferences** — view/edit `UserSettings` (theme, font_family, leaderboard_opt_in, notification preferences) (`internal/domain/user_settings.go`)
-    6. **Activity & Audit** — read-only summary: workout count, last login, recent `audit_logs` entries scoped to this user_id, recent `data_change_logs` entries
-  - **Backend work:**
-    - Add `PATCH /api/admin/users/{id}` for partial profile updates (name/birthday/email_verified)
-    - Add `POST /api/admin/users/{id}/force-password-reset` (sends reset email + revokes refresh tokens)
-    - Wire admin-scoped wrappers around existing org/coach/credits/documents services so admin can act on any user (most services currently scope to authenticated user_id)
-    - Audit-log every admin-initiated mutation on another user's data with `acting_admin_id` field
-  - **Frontend work:**
-    - Create `web/src/views/AdminUserEditView.vue` with `v-tabs` per domain
-    - Add row action "Edit" in `AdminUsersView.vue` → routes to `/admin/users/:id/edit`
-    - Reuse existing dialogs from `AdminSubscriptionsView`, `AdminPackagesView`, `AdminSchedulingView` where possible
-  - **Protected users:** Per `CLAUDE.md`, the screen MUST refuse all mutations targeting `br8kwall@gmail.com` (return 403 from backend; hide edit controls in UI)
+- [x] **Comprehensive User Edit Screen — Profile tab + framework (v1.3.0)**
+  - Shipped: Profile tab, four-layer defense-in-depth, recovery tooling, full documentation
+  - Plan: `docs/superpowers/plans/2026-04-28-admin-user-edit-v1.3.0-plan.md`
+
+- [ ] `[HIGH]` **Admin: Create User flow on User Management screen (v1.3.1)** — `POST /api/admin/users` + "Create User" dialog. Decisions to make: initial password (admin-set vs invite-email vs reset-link), email verification policy, role picker scope, optional affiliation. Tracked: [#217](https://github.com/johnzastrow/actalog/issues/217)
+- [ ] `[HIGH]` **User Edit Screen — Affiliations tab (v1.3.1)** — gym memberships, coach assignments per gym; add/remove org membership; manage `CoachAssignment` per `GymLocation` (assign/revoke coach role per gym); view `TemplateCoach` and `SessionCoach` rows that reference this user
+- [ ] `[HIGH]` **User Edit Screen — Subscriptions / Credits / Preferences / Activity tabs (v1.3.2)** — complete the remaining tabs deferred from v1.3.0: Subscriptions, Class Credits & Documents, Preferences (UserSettings), and read-only Activity & Audit summary
 
 - [x] `[HIGH]` **User Import/Export System** (Admin only) *(Completed v0.23.0)*
   - [x] Export users to CSV format (email, name)

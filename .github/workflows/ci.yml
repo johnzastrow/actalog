@@ -41,6 +41,39 @@ jobs:
       - name: Run unit tests
         run: go test ./internal/... -v
 
+      - name: Lockstep check (recovery scripts ↔ migration SQL)
+        run: go test -count=1 ./scripts/recover/...
+
+      - name: Generator drift check (protectedUsers.js)
+        run: |
+          go run ./cmd/gen-protected-emails/
+          if ! git diff --exit-code -- web/src/utils/protectedUsers.js; then
+            echo '::error::web/src/utils/protectedUsers.js is out of sync with pkg/security/protected_users.go.'
+            echo '::error::Run `make gen-protected-emails` and commit the result.'
+            exit 1
+          fi
+
+      - name: Doc code-block syntax check
+        run: |
+          set -e
+          for f in docs/security/PROTECTED_USERS.md docs/security/PROTECTED_USERS_RECOVERY.md docs/security/THREAT_MODEL.md; do
+            echo "Checking $f..."
+            # Extract bash blocks; run bash -n on each (strict — syntax errors fail the build)
+            awk '/^```bash$/,/^```$/' "$f" | sed '/^```/d' > /tmp/check.sh
+            if [ -s /tmp/check.sh ]; then
+              bash -n /tmp/check.sh || { echo "::error::syntax error in bash blocks of $f"; exit 1; }
+            fi
+            # Extract SQL blocks; parse via sqlite3 in-memory (informational only)
+            # NOTE: sqlite3 is the most permissive dialect; this catches typos but will
+            # produce parse notes for postgres-specific (e.g. NOW() - INTERVAL, ::json)
+            # and mysql-specific syntax. Per-dialect linting is out of scope — actual SQL
+            # is tested by the migration integration tests.
+            awk '/^```sql$/,/^```$/' "$f" | sed '/^```/d' > /tmp/check.sql
+            if [ -s /tmp/check.sql ]; then
+              sqlite3 :memory: ".read /tmp/check.sql" 2>/dev/null || echo "::warning::SQL parse note for $f (may contain postgres/mysql-specific syntax — informational only)"
+            fi
+          done
+
   integration:
     name: Integration tests (DB matrix)
     runs-on: ubuntu-latest

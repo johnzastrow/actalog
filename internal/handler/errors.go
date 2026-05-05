@@ -6,10 +6,17 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
 )
 
-// Note: ErrorResponse is defined in auth_handler.go
+// ErrorResponse represents an error response
+// @Description Error response returned when a request fails
+type ErrorResponse struct {
+	Message          string `json:"message" example:"Invalid credentials"`
+	Error            string `json:"error,omitempty" example:"additional error details"`
+	DocumentationURL string `json:"documentation_url,omitempty" example:"/docs/protected-users"`
+}
 
 // HTTPError represents an error with an associated HTTP status code
 type HTTPError struct {
@@ -113,8 +120,32 @@ func MapServiceError(err error) (int, bool) {
 }
 
 // WriteError writes an error response with the appropriate status code
-// It automatically maps known service errors to HTTP status codes
+// It automatically maps known service errors to HTTP status codes.
+// Domain sentinels (ErrProtectedUser, ErrConflict) are checked first and
+// produce structured responses with machine-readable error codes.
 func WriteError(w http.ResponseWriter, err error) {
+	// Check domain sentinels before the generic service error map so that
+	// these well-known errors always produce the correct structured body.
+	if errors.Is(err, domain.ErrProtectedUser) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error:            "protected_user",
+			Message:          "This account is system-reserved and cannot be modified.",
+			DocumentationURL: "/docs/protected-users",
+		})
+		return
+	}
+	if errors.Is(err, domain.ErrConflict) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error:   "conflict",
+			Message: "The resource was modified concurrently. Please reload and retry.",
+		})
+		return
+	}
+
 	status, known := MapServiceError(err)
 	var message string
 	if known {

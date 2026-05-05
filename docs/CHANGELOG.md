@@ -5,6 +5,47 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-05-03 — Admin user-edit screen + protected-user defense-in-depth
+
+### Added
+- **Admin User Edit Screen** at `/admin/users/:id/edit` — tabbed view for editing per-user attributes. v1.3.0 ships the **Profile** tab with name/email/birthday/email-verified field editing, optimistic-concurrency via `updated_at`, and a force-password-reset action that sends a reset email and revokes refresh tokens. Future tabs (Affiliations, Subscriptions, Credits, Preferences, Activity) shown as disabled with version chips.
+- `PATCH /api/admin/users/{id}` — partial profile update with `updated_at` precondition; returns 409 on stale `updated_at`
+- `POST /api/admin/users/{id}/force-password-reset` — sends password-reset email + revokes all refresh tokens
+- Edit pencil-icon button in `AdminUsersView` (disabled for protected users)
+
+### Security — Protected User System (defense-in-depth)
+A four-layer defense for system-reserved accounts (currently `br8kwall@gmail.com`):
+- **L1 — HTTP middleware** (`pkg/middleware/protected_user.go`): refuses non-GET writes under `/api/admin/users/{id}` with structured 403 + `protected_user_attack_http` audit event
+- **L2 — Service guard** (`internal/service/admin_user_service.go`): catches in-process callers (cron, internal APIs) that bypass HTTP. Fires `protected_user_attack_service` audit event
+- **L3 — Database trigger** (migration 0.35.0, per-dialect SQL for sqlite3/postgres/mysql): `BEFORE UPDATE` blocks identity-field changes only (`email`, `name`, `role`, `account_disabled`); `BEFORE DELETE` blocks unconditionally. Lifecycle writes (password_hash, last_login_at, email_verified, verification_token, ...) pass through so the protected user can register, log in, and rotate their own password — L1 and L2 remain the primary defenses against admin-screen tampering. Mixed identity+lifecycle UPDATEs are still blocked. See `docs/security/PROTECTED_USERS.md` §3.4 for the full contract
+- **L4 — Audit log tagging** (`internal/domain/audit_log.go`): single event per attempt, tagged at the rejecting layer
+- **Boot-time invariant**: three sub-checks (triggers exist, triggers fire, protected rows present). Fails closed on hard failure; soft-warn on fresh installs
+- **`ACTALOG_SKIP_PROTECTED_INVARIANT=true`** env var: degraded-mode escape hatch. `/health` returns 503; admin user-write endpoints return 503; ERROR-level heartbeat every 60s for alerting
+- **Admin CLI**: `actalog admin verify-protected-users [--verbose]` (read-only diagnostic) and `actalog admin reapply-protected-migrations --confirm` (idempotent recovery)
+- **Recovery scripts**: `scripts/recover/restore-protected-triggers.sh` + per-dialect SQL files for last-resort recovery when the binary itself is unrunnable
+
+### Documentation
+- `docs/security/PROTECTED_USERS.md` — master runbook: purpose, threat model, architecture, list management, verification, recovery, audit forensics, degraded mode
+- `docs/security/PROTECTED_USERS_RECOVERY.md` — focused 3-AM-incident playbook
+- `docs/security/THREAT_MODEL.md` — app-wide threat model linking each section to its implementation
+- `docs/superpowers/specs/2026-04-28-admin-user-edit-design.md` and `docs/superpowers/plans/2026-04-28-admin-user-edit-v1.3.0-plan.md` capture the design and implementation history
+
+### CI
+- Generator drift check: `go run ./cmd/gen-protected-emails/` + `git diff --exit-code` keeps Go source ↔ frontend JS in sync
+- Lockstep check: migration SQL ↔ standalone recovery scripts can't drift
+- Doc code-block lint: `bash -n` validates every shell command in security runbooks
+- CODEOWNERS: security-critical paths (`pkg/security/`, migrations, security docs, recovery scripts) require explicit review
+
+### Maintenance
+- Migration 0.35.0 is additive (no schema changes, just triggers); existing v1.2.x deployments upgrade by applying the migration
+- v1.2.x rollback is safe: triggers stay in the database, security stays on even if the binary rolls back
+
+### Carried into next releases
+- v1.3.1: Affiliations tab (gym memberships, coach assignments per gym)
+- v1.3.2: Subscriptions, Credits & Documents, Preferences, Activity & Audit tabs
+
+---
+
 ## [1.2.4] - 2026-04-28 — Security hardening, part two
 
 Closes the two items deferred from v1.2.3 (`docs/plans/SECURITY_HARDENING_PLAN.md` Steps 2 and 5).

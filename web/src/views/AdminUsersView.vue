@@ -191,6 +191,28 @@
           </v-btn>
         </template>
 
+        <!-- Edit Column -->
+        <template #item.edit="{ item }">
+          <v-tooltip
+            :text="isProtected(item) ? 'Protected user — cannot edit' : 'Edit user'"
+            location="top"
+          >
+            <template #activator="{ props }">
+              <span v-bind="props">
+                <v-btn
+                  icon
+                  size="small"
+                  variant="text"
+                  :disabled="isProtected(item)"
+                  @click="navigateToEdit(item)"
+                >
+                  <v-icon color="warning">mdi-pencil</v-icon>
+                </v-btn>
+              </span>
+            </template>
+          </v-tooltip>
+        </template>
+
         <!-- Delete Column -->
         <template #item.delete="{ item }">
           <v-btn
@@ -467,9 +489,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import AdminHeader from '@/components/AdminHeader.vue'
 import ManageUserOrganizationsDialog from '@/components/admin/ManageUserOrganizationsDialog.vue'
+import { isProtectedEmail } from '@/utils/protectedUsers'
+
+const router = useRouter()
 
 const loading = ref(false)
 const actionLoading = ref(false)
@@ -502,6 +528,7 @@ const headers = [
   { title: 'Enable', value: 'enable', sortable: false, align: 'center', width: '80px' },
   { title: 'Email', value: 'email_verify', sortable: false, align: 'center', width: '80px' },
   { title: 'Change Role', value: 'change_role', sortable: false, align: 'center', width: '100px' },
+  { title: 'Edit', value: 'edit', sortable: false, align: 'center', width: '80px' },
   { title: 'Delete', value: 'delete', sortable: false, align: 'center', width: '80px' }
 ]
 
@@ -509,6 +536,14 @@ function isLocked(user) {
   if (!user.locked_until) return false
   const lockedUntil = new Date(user.locked_until)
   return lockedUntil > new Date()
+}
+
+function isProtected(user) {
+  return user && isProtectedEmail(user.email)
+}
+
+function navigateToEdit(user) {
+  router.push(`/admin/users/${user.id}/edit`)
 }
 
 function formatDate(dateString) {

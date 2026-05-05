@@ -224,6 +224,28 @@ instance.interceptors.response.use(
       }
     }
 
+    // Handle 403 protected_user — protected account write attempt
+    if (error.response?.status === 403 && error.response?.data?.error === 'protected_user') {
+      const data = error.response.data
+      window.dispatchEvent(new CustomEvent('protected-user-write', {
+        detail: {
+          type: 'warning',
+          message: data.message || 'Protected account — no changes saved.',
+          ...(data.documentation_url ? { documentationUrl: data.documentation_url } : {}),
+        }
+      }))
+    }
+
+    // Handle 503 protected_invariant_degraded — admin operations degraded
+    if (error.response?.status === 503 && error.response?.data?.error === 'protected_invariant_degraded') {
+      window.dispatchEvent(new CustomEvent('admin-degraded', {
+        detail: {
+          type: 'error',
+          message: 'Admin user actions are temporarily unavailable. Operator: see logs.',
+        }
+      }))
+    }
+
     // Handle 402 Payment Required (subscription expired)
     if (error.response?.status === 402) {
       console.log('Subscription expired (HTTP 402), updating subscription store...')

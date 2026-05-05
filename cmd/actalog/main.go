@@ -202,6 +202,70 @@ func main() {
 	defer db.Close()
 	appLogger.Info("Database initialized successfully")
 
+	// Admin subcommand dispatch — early-exit before the boot invariant check and
+	// HTTP server bring-up. This intentionally runs before the boot invariant so
+	// that 'verify-protected-users' and 'reapply-protected-migrations' work even
+	// when the invariant would otherwise refuse to start the server.
+	if len(os.Args) >= 2 && os.Args[1] == "admin" {
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "usage: actalog admin <verify-protected-users|reapply-protected-migrations> [flags]")
+			os.Exit(2)
+		}
+		switch os.Args[2] {
+		case "verify-protected-users":
+			verbose := hasFlag(os.Args[3:], "--verbose")
+			os.Exit(AdminVerifyProtectedUsers(db, cfg.Database.Driver, verbose, os.Stdout))
+		case "reapply-protected-migrations":
+			confirm := hasFlag(os.Args[3:], "--confirm")
+			if err := AdminReapplyProtectedMigrations(db, cfg.Database.Driver, confirm, os.Stdout); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			// Write audit event. Build the minimal audit service inline — we are
+			// in an early-exit path so the full service graph hasn't been wired.
+			cliAuditRepo := repository.NewAuditLogRepository(db, cfg.Database.Driver)
+			cliAuditSvc := service.NewAuditLogService(cliAuditRepo)
+			if auditErr := cliAuditSvc.LogEvent(
+				"protected_users_reapplied", nil, nil, nil, nil,
+				map[string]interface{}{"source": "cli", "driver": cfg.Database.Driver},
+			); auditErr != nil {
+				fmt.Fprintf(os.Stderr, "warn: failed to write audit event: %v\n", auditErr)
+			}
+			os.Exit(0)
+		default:
+			fmt.Fprintf(os.Stderr, "unknown admin subcommand: %s\n", os.Args[2])
+			os.Exit(2)
+		}
+	}
+
+	// Protected-user boot invariant. Fail-closed unless explicitly skipped
+	// (which puts the binary into degraded mode — admin user-write endpoints
+	// return 503, /health reports degraded, ERROR log every 60s).
+	skipInvariant := os.Getenv("ACTALOG_SKIP_PROTECTED_INVARIANT") == "true"
+	invariantReport, invariantErr := VerifyProtectedUserInvariant(db, cfg.Database.Driver)
+	degraded := false
+	if invariantErr != nil {
+		if !skipInvariant {
+			appLogger.Error("protected-user invariant failed: %v", invariantErr)
+			appLogger.Fatal(`Refusing to start. To recover (most → least disruptive):
+  1) ./bin/actalog admin reapply-protected-migrations --confirm
+  2) ./bin/actalog admin verify-protected-users --verbose
+  3) scripts/recover/restore-protected-triggers.sh
+
+Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
+		}
+		appLogger.Error("protected-user invariant FAILED but ACTALOG_SKIP_PROTECTED_INVARIANT=true; entering degraded mode: %v", invariantErr)
+		// Audit event is written after auditLogService is initialized below.
+		degraded = true
+		go startDegradedHeartbeat(appLogger, invariantErr)
+	} else {
+		checksPassed := boolToInt(invariantReport.Check1TriggersExist) + boolToInt(invariantReport.Check2TriggersFire) + boolToInt(invariantReport.Check3ProtectedRowsExist)
+		appLogger.Info("protected-user invariant: %d/3 hard checks passed (warnings: %d)", checksPassed, len(invariantReport.SoftWarnings))
+		for _, w := range invariantReport.SoftWarnings {
+			appLogger.Warn("protected-user invariant: %s", w)
+		}
+	}
+
 	// Initialize repositories
 	userRepo := repository.NewSQLiteUserRepository(db)
 	refreshTokenRepo := repository.NewSQLiteRefreshTokenRepository(db)
@@ -280,6 +344,16 @@ func main() {
 	auditLogService := service.NewAuditLogService(auditLogRepo)
 	dataChangeLogService := service.NewDataChangeLogService(dataChangeLogRepo)
 	emailLogService := service.NewEmailLogService(emailLogRepo)
+
+	// Write degraded-boot audit event now that auditLogService is ready.
+	if degraded {
+		details := map[string]interface{}{
+			"reason": invariantErr.Error(),
+		}
+		if err := auditLogService.LogEvent("protected_invariant_degraded", nil, nil, nil, nil, details); err != nil {
+			appLogger.Error("failed to write degraded-boot audit event: %v", err)
+		}
+	}
 
 	userService := service.NewUserService(
 		userRepo,
@@ -476,7 +550,15 @@ func main() {
 	adminHandler := handler.NewAdminHandler(db, userWorkoutWODRepo, wodRepo, movementRepo, workoutRepo, userRepo, wodService, movementService, workoutTemplateService, appLogger)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService, appLogger)
 	dataChangeLogHandler := handler.NewDataChangeLogHandler(dataChangeLogService, appLogger)
-	adminUserHandler := handler.NewAdminUserHandler(userService, appLogger)
+	adminUserService := service.NewAdminUserService(
+		userRepo,
+		refreshTokenRepo,
+		emailService,
+		auditLogService,
+		appLogger,
+		appURL,
+	)
+	adminUserHandler := handler.NewAdminUserHandler(userService, adminUserService, appLogger)
 	sessionHandler := handler.NewSessionHandler(userService, appLogger)
 	exportHandler := handler.NewExportHandler(exportService)
 	importHandler := handler.NewImportHandler(importService)
@@ -578,9 +660,15 @@ func main() {
 
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		status := "healthy"
+		httpCode := http.StatusOK
+		if degraded {
+			status = "degraded"
+			httpCode = http.StatusServiceUnavailable
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"healthy","version":"%s"}`, version.Version())
+		w.WriteHeader(httpCode)
+		fmt.Fprintf(w, `{"status":"%s","version":"%s"}`, status, version.Version())
 	})
 
 	// Get frontend directory from environment or use default
@@ -831,6 +919,7 @@ func main() {
 			// Admin routes (authenticated + admin role check)
 			r.Route("/admin", func(r chi.Router) {
 				r.Use(middleware.AdminOnly)
+				r.Use(degradedAdminWriteGuard(&degraded))
 
 				// Admin metrics dashboard
 				r.Get("/metrics", adminMetricsHandler.GetAdminMetrics)
@@ -902,14 +991,39 @@ func main() {
 				r.Post("/data-change-logs/cleanup", dataChangeLogHandler.CleanupOldLogs)
 
 				// User management routes (admin only)
+				// List endpoint has no {id} — lives outside the sub-router.
 				r.Get("/users", adminUserHandler.ListUsers)
-				r.Post("/users/{id}/unlock", adminUserHandler.UnlockUser)
-				r.Get("/users/{id}", adminUserHandler.GetUserDetails)
-				r.Post("/users/{id}/disable", adminUserHandler.DisableUser)
-				r.Post("/users/{id}/enable", adminUserHandler.EnableUser)
-				r.Put("/users/{id}/role", adminUserHandler.ChangeUserRole)
-				r.Post("/users/{id}/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
-				r.Delete("/users/{id}", adminUserHandler.DeleteUser)
+
+				// /users/{id}/* — sub-router with L1 protected-user guard.
+				// degradedAdminWriteGuard is already applied on the parent /admin
+				// route group (line ~922) and is inherited here automatically.
+				r.Route("/users/{id}", func(r chi.Router) {
+					// Middleware stack for every /users/{id} endpoint (outermost → innermost):
+					//   1. LoggingMiddleware       — outermost router (line 657)
+					//   2. CORS                    — outermost router (line 658)
+					//   3. Auth                    — /api group (line 744)
+					//   4. AdminOnly               — /admin group (line 921)
+					//   5. degradedAdminWriteGuard — /admin group (line 922), inherited
+					//   6. ProtectedUserGuard      — this sub-router (below)
+					//
+					// When adding a new middleware, decide which layer it belongs to:
+					//   - request-scoped, no auth needed → outermost router
+					//   - authenticated user context → /api group
+					//   - admin-only enforcement → /admin group
+					//   - applies only to user-by-id mutations → this sub-router
+					// L1: refuse non-GET/HEAD writes against protected users.
+					r.Use(middleware.ProtectedUserGuard(userRepo, auditLogService, appLogger))
+
+					r.Get("/", adminUserHandler.GetUserDetails)
+					r.Patch("/", adminUserHandler.UpdateProfile) // Task 12
+					r.Delete("/", adminUserHandler.DeleteUser)
+					r.Post("/unlock", adminUserHandler.UnlockUser)
+					r.Post("/disable", adminUserHandler.DisableUser)
+					r.Post("/enable", adminUserHandler.EnableUser)
+					r.Put("/role", adminUserHandler.ChangeUserRole)
+					r.Post("/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
+					r.Post("/force-password-reset", adminUserHandler.ForcePasswordReset) // Task 12
+				})
 
 				// User-created content management routes (admin only)
 				r.Get("/user-created/wods", adminHandler.ListUserCreatedWODs)
@@ -1123,4 +1237,35 @@ func mustGetCwd() string {
 		return "unknown"
 	}
 	return cwd
+}
+
+// boolToInt converts a bool to 0 or 1 for summing invariant check results.
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// startDegradedHeartbeat logs an ERROR every 60 seconds while the binary runs
+// in protected-invariant-degraded mode, so alerting pipelines catch the state.
+func startDegradedHeartbeat(l *logger.Logger, cause error) {
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		l.Error("protected_invariant_degraded heartbeat: %v", cause)
+	}
+}
+
+// hasFlag returns true if the given flag name appears in args as an exact
+// match (e.g., "--confirm"). Does NOT support value-assignment forms
+// like "--confirm=true". Sufficient for the two presence-only flags used
+// by the admin subcommands; adopt a real flag library if more are added.
+func hasFlag(args []string, name string) bool {
+	for _, a := range args {
+		if a == name {
+			return true
+		}
+	}
+	return false
 }

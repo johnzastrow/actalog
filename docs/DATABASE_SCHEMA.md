@@ -13,9 +13,9 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 1.2.4
+**Current Version:** 1.3.0 (migration head: 0.35.0)
 
-> No schema changes since v0.34.0 (consistency_achievements table). v1.2.1 / v1.2.3 / v1.2.4 are security and documentation releases that did not modify the database. Migration head is unchanged.
+> v0.35.0 adds per-dialect BEFORE UPDATE / BEFORE DELETE triggers on the `users` table that block writes to protected accounts at the database layer (L3 security). See `docs/security/PROTECTED_USERS.md` for the full protected-user policy and recovery procedures.
 
 ## Recent Changes (v0.27.0-beta)
 
@@ -1999,8 +1999,21 @@ Potential future schema additions (not yet implemented):
 - **workout_comments** for notes and reflections over time
 - **scheduled_backups** table for remote backup scheduling
 
+## Triggers
+
+### Protected-user triggers (migration 0.35.0)
+
+`protected_users_no_update` and `protected_users_no_delete` are BEFORE-UPDATE/DELETE triggers on the `users` table that raise an error when the target row's email is in the protected list. Per-dialect implementations:
+
+- **SQLite:** `RAISE(ABORT, ...)`
+- **PostgreSQL:** PL/pgSQL function with `RAISE EXCEPTION`
+- **MySQL/MariaDB:** `SIGNAL SQLSTATE '45000'`
+
+Error message text is contract-locked: `protected user: writes blocked at db layer`. The L4 service-layer wrapper pattern-matches this string. See `docs/security/PROTECTED_USERS.md` and `internal/repository/protected_triggers_sql.go` for the canonical SQL.
+
 ## Version History
 
+- **v0.35.0**: Protected-user BEFORE UPDATE / BEFORE DELETE triggers on `users` table (L3 security, all three dialects)
 - **v0.27.0-beta** (Current Schema): Class scheduling Phase 4 - documents, packages, credits, waitlist, notifications
 - **v0.26.0-beta**: Class scheduling Phases 1-3 - locations, templates, sessions, coaches, reservations
 - **v0.16.0-beta**: Notification likes feature
