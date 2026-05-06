@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -671,5 +672,144 @@ func TestAdminUserHandler_ForcePasswordReset_OnProtectedUserReturns403(t *testin
 	}
 	if resp.Error != "protected_user" {
 		t.Errorf("Error = %q, want %q", resp.Error, "protected_user")
+	}
+}
+
+// stubAdminUserService is a hand-rolled test double that satisfies the handler's
+// adminUserServiceIface. It records the most recent call's arguments and returns
+// caller-controlled results, so each test can wire in the exact behaviour it
+// needs without standing up the full service + repo + audit-log graph.
+type stubAdminUserService struct {
+	// CreateUser tracking
+	createUserCalled  bool
+	createUserActorID int64
+	createUserFields  service.CreateUserFields
+	createUserResult  *domain.User
+	createUserErr     error
+
+	// UpdateProfile tracking (unused in current tests but required by the
+	// adminUserServiceIface contract).
+	updateProfileCalled bool
+	updateProfileResult *domain.User
+	updateProfileErr    error
+
+	// ForcePasswordReset tracking (unused in current tests but required by
+	// the adminUserServiceIface contract).
+	forcePasswordResetCalled bool
+	forcePasswordResetErr    error
+}
+
+func (s *stubAdminUserService) CreateUser(actorID int64, fields service.CreateUserFields) (*domain.User, error) {
+	s.createUserCalled = true
+	s.createUserActorID = actorID
+	s.createUserFields = fields
+	return s.createUserResult, s.createUserErr
+}
+
+func (s *stubAdminUserService) UpdateProfile(actorID, targetID int64, fields service.ProfileUpdateFields, ifMatchUpdatedAt time.Time) (*domain.User, error) {
+	s.updateProfileCalled = true
+	return s.updateProfileResult, s.updateProfileErr
+}
+
+func (s *stubAdminUserService) ForcePasswordReset(actorID, targetID int64) error {
+	s.forcePasswordResetCalled = true
+	return s.forcePasswordResetErr
+}
+
+// TestAdminUserHandler_CreateUser_201Success exercises the happy path: valid
+// JSON in, 201 + user JSON out, service.CreateUser called with the decoded fields.
+func TestAdminUserHandler_CreateUser_201Success(t *testing.T) {
+	stub := &stubAdminUserService{
+		createUserResult: &domain.User{
+			ID:    42,
+			Email: "newathlete@example.com",
+			Name:  "New",
+			Role:  "athlete",
+		},
+	}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	body := `{"email":"newathlete@example.com","password":"ValidPass123Long","name":"New","role":"athlete","email_verified":true}`
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users", body, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	h.CreateUser(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Errorf("Code = %d, want 201; body=%s", rr.Code, rr.Body.String())
+	}
+	if !stub.createUserCalled {
+		t.Error("service.CreateUser not invoked")
+	}
+	if stub.createUserActorID != 1 {
+		t.Errorf("actorID = %d, want 1", stub.createUserActorID)
+	}
+	if stub.createUserFields.Email != "newathlete@example.com" {
+		t.Errorf("Email = %q", stub.createUserFields.Email)
+	}
+	if !stub.createUserFields.EmailVerified {
+		t.Error("EmailVerified should be true (decoded from request)")
+	}
+}
+
+// TestAdminUserHandler_CreateUser_400OnInvalidJSON returns a clear bad-request
+// status without invoking the service.
+func TestAdminUserHandler_CreateUser_400OnInvalidJSON(t *testing.T) {
+	stub := &stubAdminUserService{}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users", `{not json`, 1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	h.CreateUser(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Code = %d, want 400", rr.Code)
+	}
+	if stub.createUserCalled {
+		t.Error("service should not be called on JSON decode failure")
+	}
+}
+
+// TestAdminUserHandler_CreateUser_400OnValidationError surfaces InvalidInputError as 400.
+func TestAdminUserHandler_CreateUser_400OnValidationError(t *testing.T) {
+	stub := &stubAdminUserService{
+		createUserErr: &domain.InvalidInputError{Field: "password", Message: "must be at least 12 characters"},
+	}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users",
+		`{"email":"a@b.com","password":"x","name":"X","role":"athlete"}`,
+		1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	h.CreateUser(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Code = %d, want 400", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "password") {
+		t.Errorf("body should include the field name; got %s", rr.Body.String())
+	}
+}
+
+// TestAdminUserHandler_CreateUser_409OnDuplicateEmail maps the service sentinel
+// to a 409 with the structured error code "duplicate_email".
+func TestAdminUserHandler_CreateUser_409OnDuplicateEmail(t *testing.T) {
+	stub := &stubAdminUserService{createUserErr: service.ErrEmailAlreadyExists}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users",
+		`{"email":"a@b.com","password":"ValidPass123Long","name":"X","role":"athlete"}`,
+		1, "admin@example.com", "admin")
+	rr := httptest.NewRecorder()
+
+	h.CreateUser(rr, req)
+
+	if rr.Code != http.StatusConflict {
+		t.Errorf("Code = %d, want 409; body=%s", rr.Code, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "duplicate_email") {
+		t.Errorf("body should include error code 'duplicate_email'; got %s", rr.Body.String())
 	}
 }

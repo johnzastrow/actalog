@@ -7,20 +7,30 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/johnzastrow/actalog/internal/domain"
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/logger"
 	"github.com/johnzastrow/actalog/pkg/middleware"
 )
 
+// adminUserServiceIface is the package-private surface AdminUserHandler depends
+// on. The concrete *service.AdminUserService satisfies it; tests use a stub.
+// Keep this list narrow: only methods this handler actually invokes.
+type adminUserServiceIface interface {
+	CreateUser(actorID int64, fields service.CreateUserFields) (*domain.User, error)
+	UpdateProfile(actorID, targetID int64, fields service.ProfileUpdateFields, ifMatchUpdatedAt time.Time) (*domain.User, error)
+	ForcePasswordReset(actorID, targetID int64) error
+}
+
 // AdminUserHandler handles admin user management operations
 type AdminUserHandler struct {
 	userService      *service.UserService
-	adminUserService *service.AdminUserService
+	adminUserService adminUserServiceIface
 	logger           *logger.Logger
 }
 
 // NewAdminUserHandler creates a new admin user handler
-func NewAdminUserHandler(userService *service.UserService, adminUserService *service.AdminUserService, logger *logger.Logger) *AdminUserHandler {
+func NewAdminUserHandler(userService *service.UserService, adminUserService adminUserServiceIface, logger *logger.Logger) *AdminUserHandler {
 	return &AdminUserHandler{
 		userService:      userService,
 		adminUserService: adminUserService,
@@ -475,4 +485,49 @@ func (h *AdminUserHandler) ForcePasswordReset(w http.ResponseWriter, r *http.Req
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// createUserRequest is the POST /api/admin/users request body.
+type createUserRequest struct {
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	Name          string `json:"name"`
+	Role          string `json:"role"`
+	EmailVerified *bool  `json:"email_verified,omitempty"` // nil → default true
+}
+
+// CreateUser handles POST /api/admin/users — admin creates a new user account.
+//
+//   - 201 with the created user JSON on success
+//   - 400 invalid_input on validation failure
+//   - 409 duplicate_email if email already exists
+//   - 401/403 from auth middleware
+func (h *AdminUserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	actorID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	var req createUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	// Default EmailVerified=true when the caller omits the field.
+	emailVerified := true
+	if req.EmailVerified != nil {
+		emailVerified = *req.EmailVerified
+	}
+	user, err := h.adminUserService.CreateUser(actorID, service.CreateUserFields{
+		Email:         req.Email,
+		Password:      req.Password,
+		Name:          req.Name,
+		Role:          req.Role,
+		EmailVerified: emailVerified,
+	})
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusCreated, user)
 }
