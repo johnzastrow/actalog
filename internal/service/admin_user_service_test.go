@@ -1130,6 +1130,42 @@ func TestAdminUserService_CreateUser_AuditOnSuccess(t *testing.T) {
 // SetPassword tests
 // ---------------------------------------------------------------------------
 
+// TestAdminUserService_SetPassword_RejectsProtectedUser verifies the L2
+// defensive guard fires when admin attempts to set password on a protected
+// account. L1 should catch this first at the HTTP layer (Task 7), but L2
+// is the defense-in-depth requirement that matches UpdateProfile /
+// ForcePasswordReset.
+func TestAdminUserService_SetPassword_RejectsProtectedUser(t *testing.T) {
+	protectedEmail := security.ProtectedEmailsList()[0]
+
+	repo := newStubUserRepo()
+	target := makeNormalUser(7, protectedEmail, "Protected")
+	repo.addUser(target)
+
+	audit := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, audit)
+
+	err := svc.SetPassword(1, 7, "ValidPass123Long")
+	if err == nil {
+		t.Fatal("expected ErrProtectedUser, got nil")
+	}
+	if !errors.Is(err, domain.ErrProtectedUser) {
+		t.Errorf("expected ErrProtectedUser, got: %v", err)
+	}
+	if !audit.hasEvent(domain.EventProtectedUserAttackService) {
+		t.Errorf("expected %s audit event to be fired", domain.EventProtectedUserAttackService)
+	}
+	// Actor and target IDs must be populated in the audit event.
+	if e := audit.lastEvent(); e != nil {
+		if e.userID == nil || *e.userID != 1 {
+			t.Errorf("expected actorID=1, got %v", e.userID)
+		}
+		if e.targetUserID == nil || *e.targetUserID != 7 {
+			t.Errorf("expected targetUserID=7, got %v", e.targetUserID)
+		}
+	}
+}
+
 // TestAdminUserService_SetPassword_HappyPath verifies password is hashed +
 // stored, lockout state cleared, refresh tokens revoked, and audit fired.
 func TestAdminUserService_SetPassword_HappyPath(t *testing.T) {

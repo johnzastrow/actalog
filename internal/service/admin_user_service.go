@@ -478,7 +478,15 @@ func (s *AdminUserService) SetPassword(actorID, targetID int64, newPassword stri
 		return &domain.InvalidInputError{Field: "new_password", Message: err.Error(), Cause: err}
 	}
 
-	// 2. Load target to capture prior state for audit.
+	// 2. L2 defensive check — L1 ProtectedUserGuard at the HTTP layer should
+	// catch this first, but service-layer enforcement matches the pattern
+	// used by UpdateProfile/ForcePasswordReset and protects internal
+	// callers that bypass HTTP.
+	if err := s.ensureNotProtected(actorID, targetID); err != nil {
+		return err
+	}
+
+	// 3. Load target to capture prior state for audit.
 	target, err := s.userRepo.GetByID(targetID)
 	if err != nil {
 		return fmt.Errorf("SetPassword: GetByID(%d): %w", targetID, err)
@@ -489,7 +497,7 @@ func (s *AdminUserService) SetPassword(actorID, targetID int64, newPassword stri
 	priorAttempts := target.FailedLoginAttempts
 	priorLocked := target.LockedUntil != nil
 
-	// 3. Hash + persist new password.
+	// 4. Hash + persist new password.
 	hash, hashErr := auth.HashPassword(newPassword)
 	if hashErr != nil {
 		return fmt.Errorf("SetPassword: hash: %w", hashErr)
@@ -498,13 +506,13 @@ func (s *AdminUserService) SetPassword(actorID, targetID int64, newPassword stri
 		return fmt.Errorf("SetPassword: UpdatePassword: %w", updErr)
 	}
 
-	// 4. Clear lockout state. UnlockAccount sets failed_login_attempts=0,
+	// 5. Clear lockout state. UnlockAccount sets failed_login_attempts=0,
 	//    locked_at=NULL, locked_until=NULL atomically.
 	if unlockErr := s.userRepo.UnlockAccount(targetID); unlockErr != nil {
 		return fmt.Errorf("SetPassword: UnlockAccount: %w", unlockErr)
 	}
 
-	// 5. Revoke refresh tokens. A failure here is partial-state — the password
+	// 6. Revoke refresh tokens. A failure here is partial-state — the password
 	//    was set, but existing sessions weren't invalidated. Log + record in
 	//    audit detail; the operation is still considered successful.
 	revokeOK := true
@@ -513,7 +521,7 @@ func (s *AdminUserService) SetPassword(actorID, targetID int64, newPassword stri
 		revokeOK = false
 	}
 
-	// 6. Audit. Never include the password / hash / plaintext in details.
+	// 7. Audit. Never include the password / hash / plaintext in details.
 	if auditErr := s.auditLogService.LogEvent(
 		domain.EventAdminPasswordSet,
 		&actorID,
