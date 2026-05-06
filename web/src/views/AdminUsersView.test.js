@@ -97,7 +97,9 @@ describe('AdminUsersView', () => {
           'v-spacer': { template: '<div></div>' },
           'v-tooltip': { template: '<div><slot /></div>' },
           'v-progress-linear': { template: '<div></div>' },
-          'v-data-table': { template: '<div><slot /></div>' }
+          'v-data-table': { template: '<div><slot /></div>' },
+          'AdminUserCreateDialog': { template: '<div></div>' },
+          'ManageUserOrganizationsDialog': { template: '<div></div>' }
         }
       }
     })
@@ -407,6 +409,27 @@ describe('AdminUsersView', () => {
       vm.navigateToEdit(user)
 
       expect(mockRouterPush).toHaveBeenCalledWith('/admin/users/7/edit')
+    })
+  })
+
+  describe('AdminUsersView Create User button', () => {
+    it('renders a Create User button', async () => {
+      setupDefaultMocks()
+      const wrapper = createWrapper()
+      await flushPromises()
+      const createBtn = wrapper.find('[data-test="create-user-button"]')
+      expect(createBtn.exists()).toBe(true)
+      expect(createBtn.text()).toContain('Create User')
+    })
+
+    it('opens the create dialog when clicked', async () => {
+      setupDefaultMocks()
+      const wrapper = createWrapper()
+      await flushPromises()
+      const createBtn = wrapper.find('[data-test="create-user-button"]')
+      await createBtn.trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.vm.showCreateDialog).toBe(true)
     })
   })
 })

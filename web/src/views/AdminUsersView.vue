@@ -22,16 +22,25 @@
 
     <!-- Users Table -->
     <v-card elevation="0" rounded="lg">
-      <v-card-title class="d-flex align-center">
+      <v-card-title class="d-flex align-center gap-2">
         <v-icon class="mr-2">mdi-account-multiple</v-icon>
         Users ({{ total }})
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-account-plus"
+          data-test="create-user-button"
+          size="small"
+          @click="showCreateDialog = true"
+        >
+          Create User
+        </v-btn>
         <v-spacer />
         <v-text-field
           v-model="search"
           density="compact"
           label="Search users..."
           prepend-inner-icon="mdi-magnify"
-          
+
           hide-details
           single-line
           clearable
@@ -483,6 +492,12 @@
       :user="selectedUser"
       @updated="loadUsers"
     />
+
+    <!-- Create User Dialog -->
+    <AdminUserCreateDialog
+      v-model="showCreateDialog"
+      @created="handleUserCreated"
+    />
     </v-container>
   </div>
 </template>
@@ -493,6 +508,7 @@ import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import AdminHeader from '@/components/AdminHeader.vue'
 import ManageUserOrganizationsDialog from '@/components/admin/ManageUserOrganizationsDialog.vue'
+import AdminUserCreateDialog from '@/components/admin/AdminUserCreateDialog.vue'
 import { isProtectedEmail } from '@/utils/protectedUsers'
 
 const router = useRouter()
@@ -516,6 +532,7 @@ const userDetails = ref(null)
 const disableReason = ref('')
 const newRole = ref('athlete')
 const manageOrganizationsDialog = ref(false)
+const showCreateDialog = ref(false)
 
 const headers = [
   { title: 'User', value: 'email', sortable: false },
@@ -576,6 +593,10 @@ async function loadUsers() {
   } finally {
     loading.value = false
   }
+}
+
+function handleUserCreated() {
+  loadUsers()
 }
 
 async function unlockUser(user) {
