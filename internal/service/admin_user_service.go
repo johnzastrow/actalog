@@ -458,3 +458,75 @@ func (s *AdminUserService) ForcePasswordReset(actorID, targetID int64) error {
 
 	return nil
 }
+
+// SetPassword sets a specific password on a target user account from admin
+// context. Bundles the credential-recovery flow that admins typically need:
+//
+//   - Hash + store the new password
+//   - Clear failed_login_attempts and any active lockout
+//   - Revoke all refresh tokens (force re-auth on existing devices)
+//   - Audit the operation with prior counter/lockout state for forensics
+//
+// Does NOT touch account_disabled, email_verified, or any role/identity
+// field — those are separate admin concerns and have their own endpoints.
+//
+// Returns *domain.InvalidInputError if the password fails the complexity
+// policy, ErrUserNotFound if the target doesn't exist.
+func (s *AdminUserService) SetPassword(actorID, targetID int64, newPassword string) error {
+	// 1. Validate complexity FIRST so we don't load the user when input is bad.
+	if err := validatePassword(newPassword); err != nil {
+		return &domain.InvalidInputError{Field: "new_password", Message: err.Error(), Cause: err}
+	}
+
+	// 2. Load target to capture prior state for audit.
+	target, err := s.userRepo.GetByID(targetID)
+	if err != nil {
+		return fmt.Errorf("SetPassword: GetByID(%d): %w", targetID, err)
+	}
+	if target == nil {
+		return fmt.Errorf("SetPassword: user %d: %w", targetID, ErrUserNotFound)
+	}
+	priorAttempts := target.FailedLoginAttempts
+	priorLocked := target.LockedUntil != nil
+
+	// 3. Hash + persist new password.
+	hash, hashErr := auth.HashPassword(newPassword)
+	if hashErr != nil {
+		return fmt.Errorf("SetPassword: hash: %w", hashErr)
+	}
+	if updErr := s.userRepo.UpdatePassword(targetID, hash); updErr != nil {
+		return fmt.Errorf("SetPassword: UpdatePassword: %w", updErr)
+	}
+
+	// 4. Clear lockout state. UnlockAccount sets failed_login_attempts=0,
+	//    locked_at=NULL, locked_until=NULL atomically.
+	if unlockErr := s.userRepo.UnlockAccount(targetID); unlockErr != nil {
+		return fmt.Errorf("SetPassword: UnlockAccount: %w", unlockErr)
+	}
+
+	// 5. Revoke refresh tokens. A failure here is partial-state — the password
+	//    was set, but existing sessions weren't invalidated. Log + record in
+	//    audit detail; the operation is still considered successful.
+	revokeOK := true
+	if revokeErr := s.refreshTokenRepo.RevokeAllForUser(targetID); revokeErr != nil {
+		s.log.Error("[WARN] SetPassword: RevokeAllForUser(%d) failed: %v", targetID, revokeErr)
+		revokeOK = false
+	}
+
+	// 6. Audit. Never include the password / hash / plaintext in details.
+	if auditErr := s.auditLogService.LogEvent(
+		domain.EventAdminPasswordSet,
+		&actorID,
+		&targetID,
+		nil, nil,
+		map[string]interface{}{
+			"cleared_failed_login_attempts": priorAttempts,
+			"cleared_lockout":               priorLocked,
+			"revoked_refresh_tokens":        revokeOK,
+		},
+	); auditErr != nil {
+		s.log.Error("AdminUserService.SetPassword: audit: %v", auditErr)
+	}
+
+	return nil
+}
