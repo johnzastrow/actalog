@@ -20,6 +20,7 @@ type adminUserServiceIface interface {
 	CreateUser(actorID int64, fields service.CreateUserFields) (*domain.User, error)
 	UpdateProfile(actorID, targetID int64, fields service.ProfileUpdateFields, ifMatchUpdatedAt time.Time) (*domain.User, error)
 	ForcePasswordReset(actorID, targetID int64) error
+	SetPassword(actorID, targetID int64, newPassword string) error
 }
 
 // AdminUserHandler handles admin user management operations
@@ -530,4 +531,39 @@ func (h *AdminUserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusCreated, user)
+}
+
+// setPasswordRequest is the POST /api/admin/users/{id}/password request body.
+type setPasswordRequest struct {
+	NewPassword string `json:"new_password"`
+}
+
+// SetPassword handles POST /api/admin/users/{id}/password — admin sets a
+// specific password on a user account.
+//
+//   - 204 on success (empty body)
+//   - 400 on invalid JSON or password-policy failure
+//   - 403 from L1 ProtectedUserGuard if target is protected
+//   - 404 if {id} is not a valid integer
+func (h *AdminUserHandler) SetPassword(w http.ResponseWriter, r *http.Request) {
+	actorID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	targetID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "Not found")
+		return
+	}
+	var req setPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if err := h.adminUserService.SetPassword(actorID, targetID, req.NewPassword); err != nil {
+		WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

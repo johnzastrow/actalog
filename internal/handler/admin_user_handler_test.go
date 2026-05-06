@@ -697,6 +697,13 @@ type stubAdminUserService struct {
 	// the adminUserServiceIface contract).
 	forcePasswordResetCalled bool
 	forcePasswordResetErr    error
+
+	// SetPassword tracking
+	setPasswordCalled   bool
+	setPasswordActorID  int64
+	setPasswordTargetID int64
+	setPasswordPassword string
+	setPasswordErr      error
 }
 
 func (s *stubAdminUserService) CreateUser(actorID int64, fields service.CreateUserFields) (*domain.User, error) {
@@ -714,6 +721,14 @@ func (s *stubAdminUserService) UpdateProfile(actorID, targetID int64, fields ser
 func (s *stubAdminUserService) ForcePasswordReset(actorID, targetID int64) error {
 	s.forcePasswordResetCalled = true
 	return s.forcePasswordResetErr
+}
+
+func (s *stubAdminUserService) SetPassword(actorID, targetID int64, newPassword string) error {
+	s.setPasswordCalled = true
+	s.setPasswordActorID = actorID
+	s.setPasswordTargetID = targetID
+	s.setPasswordPassword = newPassword
+	return s.setPasswordErr
 }
 
 // TestAdminUserHandler_CreateUser_201Success exercises the happy path: valid
@@ -811,5 +826,102 @@ func TestAdminUserHandler_CreateUser_409OnDuplicateEmail(t *testing.T) {
 	}
 	if !strings.Contains(rr.Body.String(), "duplicate_email") {
 		t.Errorf("body should include error code 'duplicate_email'; got %s", rr.Body.String())
+	}
+}
+
+// TestAdminUserHandler_SetPassword_204Success returns no body on success.
+func TestAdminUserHandler_SetPassword_204Success(t *testing.T) {
+	stub := &stubAdminUserService{}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/42/password",
+		`{"new_password":"ValidPass123Long"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "42")
+	rr := httptest.NewRecorder()
+
+	h.SetPassword(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("Code = %d, want 204; body=%s", rr.Code, rr.Body.String())
+	}
+	if rr.Body.Len() != 0 {
+		t.Errorf("body should be empty for 204; got %s", rr.Body.String())
+	}
+	if !stub.setPasswordCalled {
+		t.Error("service.SetPassword not invoked")
+	}
+	if stub.setPasswordTargetID != 42 {
+		t.Errorf("targetID = %d, want 42", stub.setPasswordTargetID)
+	}
+	if stub.setPasswordActorID != 1 {
+		t.Errorf("actorID = %d, want 1", stub.setPasswordActorID)
+	}
+	if stub.setPasswordPassword != "ValidPass123Long" {
+		t.Errorf("password = %q, want %q", stub.setPasswordPassword, "ValidPass123Long")
+	}
+}
+
+// TestAdminUserHandler_SetPassword_400OnInvalidJSON rejects malformed JSON
+// before invoking the service.
+func TestAdminUserHandler_SetPassword_400OnInvalidJSON(t *testing.T) {
+	stub := &stubAdminUserService{}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/42/password",
+		`{not json`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "42")
+	rr := httptest.NewRecorder()
+
+	h.SetPassword(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Code = %d, want 400", rr.Code)
+	}
+	if stub.setPasswordCalled {
+		t.Error("service should not be called on JSON decode failure")
+	}
+}
+
+// TestAdminUserHandler_SetPassword_404OnInvalidID returns 404 when the URL
+// {id} is not a valid integer.
+func TestAdminUserHandler_SetPassword_404OnInvalidID(t *testing.T) {
+	stub := &stubAdminUserService{}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/notanint/password",
+		`{"new_password":"ValidPass123Long"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "notanint")
+	rr := httptest.NewRecorder()
+
+	h.SetPassword(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("Code = %d, want 404", rr.Code)
+	}
+	if stub.setPasswordCalled {
+		t.Error("service should not be called when ID parsing fails")
+	}
+}
+
+// TestAdminUserHandler_SetPassword_400OnWeakPassword surfaces an
+// InvalidInputError from the service as 400 with the field name in the body.
+func TestAdminUserHandler_SetPassword_400OnWeakPassword(t *testing.T) {
+	stub := &stubAdminUserService{
+		setPasswordErr: &domain.InvalidInputError{Field: "new_password", Message: "too short"},
+	}
+	h := NewAdminUserHandler(nil, stub, nil)
+
+	req := createAuthenticatedRequest(http.MethodPost, "/api/admin/users/42/password",
+		`{"new_password":"x"}`, 1, "admin@example.com", "admin")
+	req = addChiURLParam(req, "id", "42")
+	rr := httptest.NewRecorder()
+
+	h.SetPassword(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Code = %d, want 400", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "new_password") {
+		t.Errorf("body should include field name; got %s", rr.Body.String())
 	}
 }
