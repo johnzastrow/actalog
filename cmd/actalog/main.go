@@ -1024,6 +1024,7 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 					r.Put("/role", adminUserHandler.ChangeUserRole)
 					r.Post("/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
 					r.Post("/force-password-reset", adminUserHandler.ForcePasswordReset) // Task 12
+					r.Post("/password", adminUserHandler.SetPassword) // v1.3.1: admin sets password directly
 				})
 
 				// User-created content management routes (admin only)
