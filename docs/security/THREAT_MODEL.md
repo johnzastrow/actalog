@@ -507,6 +507,7 @@ full list of what the system does NOT protect against. Key accepted residuals:
 - Root access on the database server (DDL can drop triggers directly)
 - Physical disk access / volume snapshot restoration of a pre-trigger backup
 - Supply-chain compromise that replaces `IsProtectedEmail` with a no-op
+- **Admin compromise → mass user creation / password reset** — Audit log review (`admin_user_created` and `admin_password_set` events per actor over a window). Not blocked at the system level — accepted residual risk for a small-team deployment with admin trust.
 
 ---
 

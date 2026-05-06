@@ -5,6 +5,28 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-05-06 — Admin user lifecycle
+
+### Added
+- **`POST /api/admin/users`** — admins can create user accounts with email + password + role; new user can sign in immediately
+- **`POST /api/admin/users/{id}/password`** — admin sets a specific password directly; bundles lockout-clear + refresh-token revocation in one operation; protected accounts blocked at L1 + L2
+- **AdminUserCreateDialog** on the User Management screen — modal with email/password/name/role/email-verified inputs
+- **AdminSetPasswordDialog** on the Profile tab Password Management card — sits alongside the existing Force Password Reset button with explanatory copy distinguishing the two
+- **`usePasswordInputs`** composable — shared password+confirm state with show/hide toggle, complexity hint, matching validation; used by both new dialogs
+- **Three new audit events**: `admin_user_created`, `admin_password_set` (with prior failed-attempts/lockout state captured for forensics), `admin_user_create_rejected_protected`
+
+### Security
+- Protected emails are rejected at create with their own audit event — distinct from the `protected_user_attack_*` family which targets modifications of existing protected rows
+- L1 `ProtectedUserGuard` covers the new set-password endpoint automatically (inside the `/users/{id}` sub-router)
+- L2 service-layer `ensureNotProtected` defensive check on `SetPassword` matches the pattern used by `UpdateProfile` / `ForcePasswordReset`
+- Password complexity policy unchanged (12+ chars, upper, lower, digit) — single source of truth in `validatePassword`
+
+### Documentation
+- `docs/security/THREAT_MODEL.md` — admin-compromise residual-risk row added
+- `docs/USER_PERMISSIONS.md` — new endpoints + UI surfaces
+
+---
+
 ## [1.3.0] - 2026-05-03 — Admin user-edit screen + protected-user defense-in-depth
 
 ### Added

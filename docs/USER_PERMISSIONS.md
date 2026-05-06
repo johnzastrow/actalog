@@ -312,6 +312,7 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 |--------|---------|-------|-------------|-------|
 | List all users | N | Y | `GET /api/admin/users` | |
 | View any user's details | N | Y | `GET /api/admin/users/{id}` | |
+| Create user (admin) | N | Y | `POST /api/admin/users` | Admin creates a user (admin-only; rejects protected emails) |
 | Unlock locked user account | N | Y | `POST /api/admin/users/{id}/unlock` | After failed login attempts |
 | Disable user account | N | Y | `POST /api/admin/users/{id}/disable` | Prevents login |
 | Enable user account | N | Y | `POST /api/admin/users/{id}/enable` | Restores access |
@@ -319,6 +320,7 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 | Toggle email verification status | N | Y | `POST /api/admin/users/{id}/toggle-email-verification` | Manual verification |
 | Update user profile (admin) | N | Y | `PATCH /api/admin/users/{id}` | Updates name/email/birthday/email_verified; requires `updated_at` for optimistic concurrency; blocked for protected users |
 | Force password reset (admin) | N | Y | `POST /api/admin/users/{id}/force-password-reset` | Sends reset email + revokes all refresh tokens; blocked for protected users |
+| Set password directly (admin) | N | Y | `POST /api/admin/users/{id}/password` | Admin sets a specific password (admin-only; protected accounts return 403 via L1 + L2) |
 | Delete user account | N | Y | `DELETE /api/admin/users/{id}` | Permanent deletion |
 | Preview user import | N | Y | `POST /api/admin/user-management/import/preview` | Bulk user creation |
 | Confirm user import | N | Y | `POST /api/admin/user-management/import/confirm` | |
@@ -603,6 +605,13 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 | Admin Announcements | `/admin/announcements` | System announcements |
 | Admin Email Settings | `/admin/email-settings` | Email configuration |
 | Admin Email Logs | `/admin/email-logs` | Email delivery logs |
+
+### Admin UI Features
+
+| Feature | Screen | Purpose |
+|---------|--------|---------|
+| Create User dialog | Admin Users | **AdminUserCreateDialog** — modal with email/password/name/role/email-verified inputs; admin-only; opens via "Create User" button |
+| Set Password directly | Profile tab | **AdminSetPasswordDialog** — on Profile tab Password Management card; sits alongside Force Password Reset with explanatory copy; admin-only |
 
 ---
 
