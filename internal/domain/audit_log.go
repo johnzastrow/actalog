@@ -49,6 +49,11 @@ const (
 	EventProfileUpdated     = "profile_updated"
 	EventUserSettingsUpdate = "user_settings_updated"
 
+	// Admin user lifecycle events (v1.3.1)
+	EventAdminUserCreated                  = "admin_user_created"                    // POST /api/admin/users 201
+	EventAdminPasswordSet                  = "admin_password_set"                    // POST /api/admin/users/{id}/password 204
+	EventAdminUserCreateRejectedProtected  = "admin_user_create_rejected_protected"  // create attempted with a protected email
+
 	// Organization Events
 	EventOrganizationCreated = "organization_created"
 	EventOrganizationUpdated = "organization_updated"
