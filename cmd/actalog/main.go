@@ -993,6 +993,7 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 				// User management routes (admin only)
 				// List endpoint has no {id} — lives outside the sub-router.
 				r.Get("/users", adminUserHandler.ListUsers)
+				r.Post("/users", adminUserHandler.CreateUser)
 
 				// /users/{id}/* — sub-router with L1 protected-user guard.
 				// degradedAdminWriteGuard is already applied on the parent /admin
