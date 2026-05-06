@@ -145,6 +145,22 @@ func WriteError(w http.ResponseWriter, err error) {
 		})
 		return
 	}
+	// Validation errors: services return *domain.InvalidInputError when user
+	// input fails a domain rule (empty name, future birthday, malformed email).
+	// These are safe to surface verbatim — services construct them with
+	// human-readable, field-scoped wording. Without this branch, validation
+	// errors fall through to the generic 500 path and the user gets
+	// "an internal error occurred" instead of "birthday: must be in the past".
+	var invErr *domain.InvalidInputError
+	if errors.As(err, &invErr) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error:   "invalid_input",
+			Message: invErr.Error(),
+		})
+		return
+	}
 
 	status, known := MapServiceError(err)
 	var message string

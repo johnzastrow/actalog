@@ -2,6 +2,7 @@ package email
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -61,6 +62,13 @@ const (
 	SendTimeout       = 30 * time.Second
 	OverallTimeout    = 60 * time.Second
 )
+
+// errEmailDisabled is the error returned by debug/test send methods when the
+// email Service is nil (EMAIL_ENABLED=false at startup). Production Send*
+// methods that return error use the nil-receiver guard to return nil silently;
+// the debug/test path needs an explicit error so admins running diagnostics
+// see why the operation was a no-op.
+var errEmailDisabled = errors.New("email service is disabled (set EMAIL_ENABLED=true and configure SMTP_HOST to enable)")
 
 // SMTPDebugInfo captures detailed SMTP conversation info for debugging
 type SMTPDebugInfo struct {
@@ -125,8 +133,20 @@ func extractEmailAddress(addr string) string {
 	return strings.TrimSpace(addr)
 }
 
-// Send sends an email message
+// Send sends an email message.
+//
+// Nil-receiver behavior: if email is disabled at startup
+// (cmd/actalog/main.go:316 sets emailService = nil when EMAIL_ENABLED is
+// false or SMTP_HOST is empty), every Send* method on this type would
+// otherwise panic on the first s.logger.Printf because s.logger is unreachable
+// through a nil pointer. We guard with `s == nil` at the top of each Send*
+// method and return nil silently — the disabled state is intentional and
+// already announced at startup. Callers see "send succeeded with no-op" which
+// matches the documented "emails will not be sent" behavior.
 func (s *Service) Send(msg Message) error {
+	if s == nil {
+		return nil
+	}
 	s.logger.Printf("[INFO] Attempting to send email to %v, subject: %s", msg.To, msg.Subject)
 
 	// Extract the actual email address from FromAddress (removes display name if present)
@@ -267,6 +287,9 @@ func (s *Service) sendWithTLS(addr string, auth smtp.Auth, fromEmail string, to 
 
 // SendPasswordResetEmail sends a password reset email
 func (s *Service) SendPasswordResetEmail(to, resetURL string) error {
+	if s == nil {
+		return nil
+	}
 	s.logger.Printf("[INFO] Preparing password reset email for %s with URL: %s", to, resetURL)
 	subject := "ActaLog - Password Reset Request"
 
@@ -318,6 +341,9 @@ func (s *Service) SendPasswordResetEmail(to, resetURL string) error {
 
 // SendVerificationEmail sends an email verification email
 func (s *Service) SendVerificationEmail(to, verifyURL string) error {
+	if s == nil {
+		return nil
+	}
 	s.logger.Printf("[INFO] Preparing verification email for %s with URL: %s", to, verifyURL)
 	subject := "ActaLog - Verify Your Email Address"
 
@@ -369,6 +395,9 @@ func (s *Service) SendVerificationEmail(to, verifyURL string) error {
 
 // SendHTMLEmail sends a generic HTML email
 func (s *Service) SendHTMLEmail(to, subject, htmlBody string) error {
+	if s == nil {
+		return nil
+	}
 	s.logger.Printf("[INFO] Preparing HTML email for %s with subject: %s", to, subject)
 
 	return s.Send(Message{
@@ -381,6 +410,9 @@ func (s *Service) SendHTMLEmail(to, subject, htmlBody string) error {
 
 // SendWelcomeEmail sends a welcome email to a new user
 func (s *Service) SendWelcomeEmail(to, userName, appURL string) error {
+	if s == nil {
+		return nil
+	}
 	s.logger.Printf("[INFO] Preparing welcome email for %s", to)
 	subject := "Welcome to ActaLog - Let's Get Started!"
 
@@ -477,6 +509,9 @@ func (s *Service) GetConfig() EmailConfigInfo {
 
 // SendWithDebug sends an email message and captures detailed debug information
 func (s *Service) SendWithDebug(msg Message) SendResult {
+	if s == nil {
+		return SendResult{Success: false, Error: errEmailDisabled}
+	}
 	debug := &SMTPDebugInfo{
 		StartTime:      time.Now(),
 		ConnectionHost: s.config.SMTPHost,
@@ -779,6 +814,9 @@ func (s *Service) sendWithSTARTTLSDebug(addr string, fromEmail string, to []stri
 
 // SendTestEmail sends a test email with system information
 func (s *Service) SendTestEmail(to string) SendResult {
+	if s == nil {
+		return SendResult{Success: false, Error: errEmailDisabled}
+	}
 	s.logger.Printf("[INFO] Preparing test email for %s", to)
 
 	tlsMode := "STARTTLS"

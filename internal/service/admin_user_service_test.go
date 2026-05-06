@@ -885,3 +885,50 @@ func (r *getByIDErrorOnSecondCallRepo) CountWithFilter(filter domain.UserListFil
 // ---------------------------------------------------------------------------
 
 func strPtr(s string) *string { return &s }
+
+// TestAdminUserService_UpdateProfile_ValidationErrorsAreTyped guards the
+// contract that validation failures return *domain.InvalidInputError so the
+// HTTP layer can surface them as 400 with a helpful message rather than the
+// generic 500 path. Test 12 in the v1.3.0 manual-test plan caught this — a
+// future-dated birthday returned a plain `errors.New(...)` that fell through
+// to `WriteError`'s "an internal error occurred" branch.
+func TestAdminUserService_UpdateProfile_ValidationErrorsAreTyped(t *testing.T) {
+	user := makeNormalUser(20, "validator@example.com", "Vera")
+	emptyName := ""
+	tooLong := strings.Repeat("x", 101)
+	badEmail := "not-an-email"
+	future := time.Now().Add(24 * time.Hour)
+
+	cases := []struct {
+		name      string
+		fields    ProfileUpdateFields
+		wantField string
+	}{
+		{"empty name", ProfileUpdateFields{Name: &emptyName}, "name"},
+		{"name over 100 chars", ProfileUpdateFields{Name: &tooLong}, "name"},
+		{"unparseable email", ProfileUpdateFields{Email: &badEmail}, "email"},
+		{"future birthday", ProfileUpdateFields{Birthday: &future}, "birthday"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := newStubUserRepo()
+			repo.addUser(user)
+			svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+			_, err := svc.UpdateProfile(1, 20, tc.fields, user.UpdatedAt)
+			if err == nil {
+				t.Fatal("expected validation error, got nil")
+			}
+			var invErr *domain.InvalidInputError
+			if !errors.As(err, &invErr) {
+				t.Fatalf("expected *domain.InvalidInputError, got %T: %v", err, err)
+			}
+			if invErr.Field != tc.wantField {
+				t.Errorf("Field = %q, want %q", invErr.Field, tc.wantField)
+			}
+			if invErr.Message == "" {
+				t.Error("Message must be non-empty so the user knows what went wrong")
+			}
+		})
+	}
+}
