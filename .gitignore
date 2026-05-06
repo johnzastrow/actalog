@@ -111,3 +111,6 @@ Caddyfile
 # Local screenshots and browser-automation artifacts (root only — keeps docs/ and screenshots/ tracked)
 /*.png
 .playwright-mcp/
+
+# Git worktrees for isolated feature/fix development
+.worktrees/

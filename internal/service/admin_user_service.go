@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"net/mail"
 	"strings"
@@ -161,7 +160,7 @@ func (s *AdminUserService) UpdateProfile(
 	if fields.Name != nil {
 		name := strings.TrimSpace(*fields.Name)
 		if name == "" || len(name) > 100 {
-			return nil, errors.New("name length must be 1–100 characters")
+			return nil, &domain.InvalidInputError{Field: "name", Message: "must be 1–100 characters"}
 		}
 		user.Name = name
 	}
@@ -169,7 +168,7 @@ func (s *AdminUserService) UpdateProfile(
 	if fields.Email != nil {
 		addr, parseErr := mail.ParseAddress(*fields.Email)
 		if parseErr != nil {
-			return nil, fmt.Errorf("invalid email: %w", parseErr)
+			return nil, &domain.InvalidInputError{Field: "email", Message: "is not a valid address", Cause: parseErr}
 		}
 		if addr.Address != user.Email {
 			user.Email = addr.Address
@@ -181,7 +180,7 @@ func (s *AdminUserService) UpdateProfile(
 
 	if fields.Birthday != nil {
 		if fields.Birthday.After(time.Now()) {
-			return nil, errors.New("birthday must be in the past")
+			return nil, &domain.InvalidInputError{Field: "birthday", Message: "must be in the past"}
 		}
 		user.Birthday = fields.Birthday
 	}

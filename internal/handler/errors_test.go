@@ -311,3 +311,55 @@ func TestCommonHTTPErrors(t *testing.T) {
 		})
 	}
 }
+
+// TestWriteError_MapsInvalidInputErrorTo400 verifies the new validation
+// branch added for v1.3.0 manual-test-plan bug B: a *domain.InvalidInputError
+// from a service must surface as HTTP 400 with the message + "invalid_input"
+// code, not as the generic "an internal error occurred" 500 the user saw.
+func TestWriteError_MapsInvalidInputErrorTo400(t *testing.T) {
+	w := httptest.NewRecorder()
+	WriteError(w, &domain.InvalidInputError{Field: "birthday", Message: "must be in the past"})
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Status = %d, want %d", w.Code, http.StatusBadRequest)
+	}
+	var resp ErrorResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if resp.Error != "invalid_input" {
+		t.Errorf("Error = %q, want %q", resp.Error, "invalid_input")
+	}
+	if resp.Message != "birthday: must be in the past" {
+		t.Errorf("Message = %q, want %q", resp.Message, "birthday: must be in the past")
+	}
+}
+
+// TestWriteError_MapsInvalidInputError_WithoutField verifies that an
+// InvalidInputError with no Field set surfaces just the Message.
+func TestWriteError_MapsInvalidInputError_WithoutField(t *testing.T) {
+	w := httptest.NewRecorder()
+	WriteError(w, &domain.InvalidInputError{Message: "input is malformed"})
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Status = %d, want %d", w.Code, http.StatusBadRequest)
+	}
+	var resp ErrorResponse
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	if resp.Message != "input is malformed" {
+		t.Errorf("Message = %q, want %q", resp.Message, "input is malformed")
+	}
+}
+
+// TestWriteError_MapsWrappedInvalidInputErrorTo400 confirms errors.As reaches
+// the typed value through fmt.Errorf wrapping.
+func TestWriteError_MapsWrappedInvalidInputErrorTo400(t *testing.T) {
+	inner := &domain.InvalidInputError{Field: "email", Message: "not parseable"}
+	wrapped := errors.Join(errors.New("controller context"), inner)
+	w := httptest.NewRecorder()
+	WriteError(w, wrapped)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Status = %d, want %d (wrapped InvalidInputError)", w.Code, http.StatusBadRequest)
+	}
+}

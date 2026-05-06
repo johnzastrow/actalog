@@ -1584,3 +1584,76 @@ func TestService_SendHTMLEmail_ComplexHTML(t *testing.T) {
 		t.Error("Should log HTML email preparation")
 	}
 }
+
+// TestNilReceiver_NoPanic_ProductionSendMethods verifies that every production
+// Send* method that returns error is safe to call on a nil *Service. This
+// matches the runtime situation when EMAIL_ENABLED=false at startup (see
+// cmd/actalog/main.go:316 — emailService is nil in that case). Before the
+// nil-guard fix, a nil receiver caused panics on `s.logger.Printf(...)` at
+// the top of each method, crashing /api/auth/forgot-password and the admin
+// email-change flow with HTTP 500.
+func TestNilReceiver_NoPanic_ProductionSendMethods(t *testing.T) {
+	var s *Service // nil — exactly what main.go passes when email is disabled
+
+	cases := []struct {
+		name string
+		call func() error
+	}{
+		{"Send", func() error { return s.Send(Message{To: []string{"a@b"}, Subject: "x", Body: "y"}) }},
+		{"SendPasswordResetEmail", func() error { return s.SendPasswordResetEmail("a@b", "https://x") }},
+		{"SendVerificationEmail", func() error { return s.SendVerificationEmail("a@b", "https://x") }},
+		{"SendHTMLEmail", func() error { return s.SendHTMLEmail("a@b", "subj", "<p>body</p>") }},
+		{"SendWelcomeEmail", func() error { return s.SendWelcomeEmail("a@b", "User", "https://x") }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("nil-receiver call panicked: %v", r)
+				}
+			}()
+			if err := tc.call(); err != nil {
+				t.Errorf("nil-receiver call returned error %v; expected nil (silent no-op)", err)
+			}
+		})
+	}
+}
+
+// TestNilReceiver_DebugMethods_ReturnDisabledError verifies that debug/test
+// send methods return SendResult{Success:false, Error:errEmailDisabled} when
+// invoked on a nil receiver. These methods are admin-only diagnostics — silent
+// no-op would mask the disabled state, so they explicitly surface it.
+func TestNilReceiver_DebugMethods_ReturnDisabledError(t *testing.T) {
+	var s *Service
+
+	t.Run("SendWithDebug", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("SendWithDebug panicked on nil receiver: %v", r)
+			}
+		}()
+		res := s.SendWithDebug(Message{To: []string{"a@b"}, Subject: "x", Body: "y"})
+		if res.Success {
+			t.Error("expected Success=false on nil receiver")
+		}
+		if res.Error == nil {
+			t.Error("expected non-nil Error on nil receiver")
+		}
+	})
+
+	t.Run("SendTestEmail", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("SendTestEmail panicked on nil receiver: %v", r)
+			}
+		}()
+		res := s.SendTestEmail("a@b")
+		if res.Success {
+			t.Error("expected Success=false on nil receiver")
+		}
+		if res.Error == nil {
+			t.Error("expected non-nil Error on nil receiver")
+		}
+	})
+}
