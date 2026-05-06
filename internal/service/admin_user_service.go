@@ -7,8 +7,12 @@ import (
 	"time"
 
 	"github.com/johnzastrow/actalog/internal/domain"
+	"github.com/johnzastrow/actalog/pkg/auth"
 	"github.com/johnzastrow/actalog/pkg/security"
 )
+
+// CreateUser uses the package-level ErrEmailAlreadyExists sentinel declared in
+// user_service.go. Handlers should map it to HTTP 409.
 
 // ProfileUpdateFields is a partial-update descriptor for admin profile edits.
 // Only non-nil fields are written; absent fields are left unchanged.
@@ -17,6 +21,17 @@ type ProfileUpdateFields struct {
 	Email         *string
 	Birthday      *time.Time
 	EmailVerified *bool
+}
+
+// CreateUserFields is the input to AdminUserService.CreateUser. Defaults
+// (role="athlete", EmailVerified=true) are applied inside CreateUser, not
+// at decode time, so the wire format stays explicit.
+type CreateUserFields struct {
+	Email         string
+	Password      string
+	Name          string
+	Role          string
+	EmailVerified bool
 }
 
 // AdminEmailSender is the minimal email-service surface AdminUserService depends on.
@@ -112,6 +127,130 @@ func (s *AdminUserService) ensureNotProtected(actorID, targetID int64) error {
 		return domain.ErrProtectedUser
 	}
 	return nil
+}
+
+// CreateUser creates a new user account from admin context.
+//
+// Validates input strictly. On protected-email attempt, fires
+// EventAdminUserCreateRejectedProtected and returns *domain.InvalidInputError.
+// On success, persists the user and fires EventAdminUserCreated.
+//
+// actorID is the admin's user ID (used for audit attribution).
+func (s *AdminUserService) CreateUser(actorID int64, fields CreateUserFields) (*domain.User, error) {
+	// 1. Email syntax + protected check (before duplicate check, so the audit
+	//    event is fired for protected-email attempts even if the email also
+	//    happens to be a duplicate).
+	addr, parseErr := mail.ParseAddress(fields.Email)
+	if parseErr != nil {
+		return nil, &domain.InvalidInputError{Field: "email", Message: "is not a valid address", Cause: parseErr}
+	}
+	emailLower := strings.ToLower(addr.Address)
+	if security.IsProtectedEmail(emailLower) {
+		if auditErr := s.auditLogService.LogEvent(
+			domain.EventAdminUserCreateRejectedProtected,
+			&actorID,
+			nil,
+			nil, nil,
+			map[string]interface{}{"attempted_email": emailLower},
+		); auditErr != nil {
+			s.log.Error("AdminUserService.CreateUser: protected-email audit error: %v", auditErr)
+		}
+		return nil, &domain.InvalidInputError{Field: "email", Message: "is reserved"}
+	}
+
+	// 2. Name length.
+	name := strings.TrimSpace(fields.Name)
+	if name == "" || len(name) > 100 {
+		return nil, &domain.InvalidInputError{Field: "name", Message: "must be 1–100 characters"}
+	}
+
+	// 3. Password complexity (reuses validatePassword in the same package).
+	if err := validatePassword(fields.Password); err != nil {
+		return nil, &domain.InvalidInputError{Field: "password", Message: err.Error(), Cause: err}
+	}
+
+	// 4. Role allowlist. Default to athlete if empty.
+	role := fields.Role
+	if role == "" {
+		role = "athlete"
+	}
+	if role != "athlete" && role != "coach" && role != "admin" {
+		return nil, &domain.InvalidInputError{Field: "role", Message: "must be athlete, coach, or admin"}
+	}
+
+	// 5. Duplicate email check via repo.
+	existing, lookupErr := s.userRepo.GetByEmail(emailLower)
+	if lookupErr != nil {
+		return nil, fmt.Errorf("CreateUser: lookup existing: %w", lookupErr)
+	}
+	if existing != nil {
+		return nil, ErrEmailAlreadyExists
+	}
+
+	// 6. Hash password and persist.
+	hash, hashErr := auth.HashPassword(fields.Password)
+	if hashErr != nil {
+		return nil, fmt.Errorf("CreateUser: hash password: %w", hashErr)
+	}
+
+	now := time.Now().UTC()
+	user := &domain.User{
+		Email:        emailLower,
+		PasswordHash: hash,
+		Name:         name,
+		Role:         role,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if createErr := s.userRepo.Create(user); createErr != nil {
+		if isUniqueViolation(createErr) {
+			return nil, ErrEmailAlreadyExists
+		}
+		return nil, fmt.Errorf("CreateUser: persist: %w", createErr)
+	}
+
+	// 7. If admin set EmailVerified=true, set it via Update.
+	if fields.EmailVerified {
+		user.EmailVerified = true
+		verifiedAt := time.Now().UTC()
+		user.EmailVerifiedAt = &verifiedAt
+		if updateErr := s.userRepo.Update(user); updateErr != nil {
+			s.log.Error("AdminUserService.CreateUser: post-create email_verified set: %v", updateErr)
+		}
+	}
+
+	// 8. Audit success.
+	emailDomain := emailLower
+	if at := strings.LastIndex(emailLower, "@"); at >= 0 {
+		emailDomain = emailLower[at+1:]
+	}
+	if auditErr := s.auditLogService.LogEvent(
+		domain.EventAdminUserCreated,
+		&actorID,
+		&user.ID,
+		nil, nil,
+		map[string]interface{}{
+			"role":           role,
+			"email_verified": user.EmailVerified,
+			"email_domain":   emailDomain,
+		},
+	); auditErr != nil {
+		s.log.Error("AdminUserService.CreateUser: audit: %v", auditErr)
+	}
+
+	return user, nil
+}
+
+// isUniqueViolation returns true if err is a database UNIQUE constraint violation.
+func isUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "unique constraint") ||
+		(strings.Contains(s, "unique") && strings.Contains(s, "constraint")) ||
+		strings.Contains(s, "duplicate entry") ||
+		strings.Contains(s, "duplicate key")
 }
 
 // UpdateProfile applies a partial PATCH to the target user's profile fields.

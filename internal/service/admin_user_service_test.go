@@ -78,8 +78,22 @@ func (r *stubUserRepo) Update(user *domain.User) error {
 	return nil
 }
 
-// Remaining methods — not used by AdminUserService, provided to satisfy interface.
-func (r *stubUserRepo) Create(user *domain.User) error                            { return nil }
+// Create assigns an ID and stores the user. Used by CreateUser tests; older
+// tests that never call Create are unaffected.
+func (r *stubUserRepo) Create(user *domain.User) error {
+	if user.ID == 0 {
+		var maxID int64
+		for id := range r.users {
+			if id > maxID {
+				maxID = id
+			}
+		}
+		user.ID = maxID + 1
+	}
+	cp := *user
+	r.users[user.ID] = &cp
+	return nil
+}
 func (r *stubUserRepo) GetByResetToken(token string) (*domain.User, error)        { return nil, nil }
 func (r *stubUserRepo) GetByVerificationToken(token string) (*domain.User, error) { return nil, nil }
 func (r *stubUserRepo) UpdatePassword(userID int64, hash string) error            { return nil }
@@ -158,6 +172,7 @@ type auditEvent struct {
 	eventType    string
 	userID       *int64
 	targetUserID *int64
+	details      map[string]interface{}
 }
 
 func (s *stubAuditLogger) LogEvent(
@@ -168,7 +183,7 @@ func (s *stubAuditLogger) LogEvent(
 	userAgent *string,
 	details map[string]interface{},
 ) error {
-	s.events = append(s.events, auditEvent{eventType, userID, targetUserID})
+	s.events = append(s.events, auditEvent{eventType, userID, targetUserID, details})
 	return s.logErr
 }
 
@@ -930,5 +945,165 @@ func TestAdminUserService_UpdateProfile_ValidationErrorsAreTyped(t *testing.T) {
 				t.Error("Message must be non-empty so the user knows what went wrong")
 			}
 		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// CreateUser tests
+// ---------------------------------------------------------------------------
+
+// TestAdminUserService_CreateUser_HappyPath verifies the admin can create a
+// user account that the new user can immediately authenticate with.
+func TestAdminUserService_CreateUser_HappyPath(t *testing.T) {
+	repo := newStubUserRepo()
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	created, err := svc.CreateUser(1, CreateUserFields{
+		Email:         "newathlete@example.com",
+		Password:      "SetByAdminAtCreate1",
+		Name:          "New Athlete",
+		Role:          "athlete",
+		EmailVerified: true,
+	})
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+	if created.ID == 0 {
+		t.Error("expected user to have an assigned ID after Create")
+	}
+	if created.Email != "newathlete@example.com" {
+		t.Errorf("Email = %q", created.Email)
+	}
+	if !created.EmailVerified {
+		t.Error("EmailVerified should be true (admin-vouched)")
+	}
+	if created.PasswordHash == "" {
+		t.Error("PasswordHash must be set")
+	}
+	if created.PasswordHash == "SetByAdminAtCreate1" {
+		t.Error("PasswordHash must be hashed, not the raw password")
+	}
+}
+
+// TestAdminUserService_CreateUser_ValidationRejections covers every input
+// rule with a single table-driven test. Each case must return a typed
+// *domain.InvalidInputError so the handler surfaces 400.
+func TestAdminUserService_CreateUser_ValidationRejections(t *testing.T) {
+	cases := []struct {
+		name      string
+		fields    CreateUserFields
+		wantField string
+	}{
+		{"empty name", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: "", Role: "athlete"}, "name"},
+		{"name over 100 chars", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: strings.Repeat("x", 101), Role: "athlete"}, "name"},
+		{"malformed email", CreateUserFields{Email: "not-an-email", Password: "ValidPass123Long", Name: "X", Role: "athlete"}, "email"},
+		{"password too short", CreateUserFields{Email: "a@b.com", Password: "Short1", Name: "X", Role: "athlete"}, "password"},
+		{"password missing digit", CreateUserFields{Email: "a@b.com", Password: "NoDigitsHereXYZ", Name: "X", Role: "athlete"}, "password"},
+		{"password missing upper", CreateUserFields{Email: "a@b.com", Password: "alllower123long", Name: "X", Role: "athlete"}, "password"},
+		{"password missing lower", CreateUserFields{Email: "a@b.com", Password: "ALLUPPER123LONG", Name: "X", Role: "athlete"}, "password"},
+		{"invalid role", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: "X", Role: "wizard"}, "role"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := newStubUserRepo()
+			svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+			_, err := svc.CreateUser(1, tc.fields)
+			if err == nil {
+				t.Fatal("expected validation error, got nil")
+			}
+			var invErr *domain.InvalidInputError
+			if !errors.As(err, &invErr) {
+				t.Fatalf("expected *domain.InvalidInputError, got %T: %v", err, err)
+			}
+			if invErr.Field != tc.wantField {
+				t.Errorf("Field = %q, want %q", invErr.Field, tc.wantField)
+			}
+		})
+	}
+}
+
+// TestAdminUserService_CreateUser_DuplicateEmail verifies the service rejects
+// a second create with an email that already exists. Returns a sentinel the
+// handler can map to HTTP 409.
+func TestAdminUserService_CreateUser_DuplicateEmail(t *testing.T) {
+	repo := newStubUserRepo()
+	repo.addUser(makeNormalUser(7, "taken@example.com", "Existing"))
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: "taken@example.com", Password: "ValidPass123Long", Name: "Dup", Role: "athlete",
+	})
+	if err == nil {
+		t.Fatal("expected duplicate-email error, got nil")
+	}
+	if !errors.Is(err, ErrEmailAlreadyExists) {
+		t.Errorf("expected ErrEmailAlreadyExists, got: %v", err)
+	}
+}
+
+// TestAdminUserService_CreateUser_ProtectedEmailRejected verifies that an
+// admin cannot create a new user using an email on the protected-users list.
+// This must fire EventAdminUserCreateRejectedProtected, NOT the
+// protected_user_attack_* family.
+func TestAdminUserService_CreateUser_ProtectedEmailRejected(t *testing.T) {
+	protectedEmail := security.ProtectedEmailsList()[0]
+
+	repo := newStubUserRepo()
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, auditLog)
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: protectedEmail, Password: "ValidPass123Long", Name: "Imposter", Role: "admin",
+	})
+	if err == nil {
+		t.Fatal("expected protected-email rejection, got nil")
+	}
+	var invErr *domain.InvalidInputError
+	if !errors.As(err, &invErr) {
+		t.Fatalf("expected *domain.InvalidInputError, got %T", err)
+	}
+	if invErr.Field != "email" {
+		t.Errorf("Field = %q, want %q", invErr.Field, "email")
+	}
+	if !strings.Contains(invErr.Message, "reserved") {
+		t.Errorf("Message should mention 'reserved'; got %q", invErr.Message)
+	}
+	if len(auditLog.events) != 1 {
+		t.Fatalf("expected exactly 1 audit event, got %d: %v", len(auditLog.events), auditLog.events)
+	}
+	if auditLog.events[0].eventType != domain.EventAdminUserCreateRejectedProtected {
+		t.Errorf("event = %q, want %q", auditLog.events[0].eventType, domain.EventAdminUserCreateRejectedProtected)
+	}
+}
+
+// TestAdminUserService_CreateUser_AuditOnSuccess verifies the success path
+// fires EventAdminUserCreated with the role and email_verified in the details.
+func TestAdminUserService_CreateUser_AuditOnSuccess(t *testing.T) {
+	repo := newStubUserRepo()
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, auditLog)
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: "auditme@example.com", Password: "ValidPass123Long", Name: "Audit", Role: "coach", EmailVerified: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected: %v", err)
+	}
+	if len(auditLog.events) != 1 {
+		t.Fatalf("expected 1 audit event, got %d", len(auditLog.events))
+	}
+	ev := auditLog.events[0]
+	if ev.eventType != domain.EventAdminUserCreated {
+		t.Errorf("eventType = %q, want %q", ev.eventType, domain.EventAdminUserCreated)
+	}
+	if ev.details["role"] != "coach" {
+		t.Errorf("details.role = %v, want %q", ev.details["role"], "coach")
+	}
+	if ev.details["email_verified"] != true {
+		t.Errorf("details.email_verified = %v, want true", ev.details["email_verified"])
+	}
+	if ev.details["email_domain"] != "example.com" {
+		t.Errorf("details.email_domain = %v, want %q", ev.details["email_domain"], "example.com")
 	}
 }
