@@ -5,25 +5,34 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.1] - 2026-05-06 — Admin user lifecycle
+## [1.3.2] - 2026-05-07 — Admin user lifecycle + protected-user break-glass CLI
 
-### Added
+### Added — Operator break-glass CLI
+- **`actalog admin force-edit-protected`** — operator escape hatch for editing protected accounts when admin paths are unavailable. Five fields: `password | email | name | role | account_disabled`. Per-field audit events with operator metadata (USER, hostname, tty, cwd) for forensics
+- Identity-field changes (`email | name | role | account_disabled`) briefly drop both L3 protected-user triggers, perform the UPDATE, then unconditionally reinstall + re-run the boot invariant. Reinstall failure panics with a recovery message — partial trigger state is worse than a hard exit
+- Password reads from stdin (no shell-history exposure); identity changes additionally require typing `BREAK-GLASS` to proceed
+- **Five new audit events**: `protected_user_break_glass_password`, `protected_user_break_glass_email`, `protected_user_break_glass_name`, `protected_user_break_glass_role`, `protected_user_break_glass_account_disabled` — per-field rather than one event with a discriminator, so alert routing keys off the event type alone
+
+### Added — Admin user lifecycle (originally targeted v1.3.1)
 - **`POST /api/admin/users`** — admins can create user accounts with email + password + role; new user can sign in immediately
 - **`POST /api/admin/users/{id}/password`** — admin sets a specific password directly; bundles lockout-clear + refresh-token revocation in one operation; protected accounts blocked at L1 + L2
 - **AdminUserCreateDialog** on the User Management screen — modal with email/password/name/role/email-verified inputs
 - **AdminSetPasswordDialog** on the Profile tab Password Management card — sits alongside the existing Force Password Reset button with explanatory copy distinguishing the two
 - **`usePasswordInputs`** composable — shared password+confirm state with show/hide toggle, complexity hint, matching validation; used by both new dialogs
-- **Three new audit events**: `admin_user_created`, `admin_password_set` (with prior failed-attempts/lockout state captured for forensics), `admin_user_create_rejected_protected`
+- **Three additional audit events**: `admin_user_created`, `admin_password_set` (with prior failed-attempts/lockout state captured for forensics), `admin_user_create_rejected_protected`
 
 ### Security
+- Break-glass CLI bypass is documented as accepted residual risk in `docs/security/THREAT_MODEL.md`: shell access on the application host already implies DB-credential access; the CLI is the audited pathway for that existing capability
 - Protected emails are rejected at create with their own audit event — distinct from the `protected_user_attack_*` family which targets modifications of existing protected rows
 - L1 `ProtectedUserGuard` covers the new set-password endpoint automatically (inside the `/users/{id}` sub-router)
 - L2 service-layer `ensureNotProtected` defensive check on `SetPassword` matches the pattern used by `UpdateProfile` / `ForcePasswordReset`
-- Password complexity policy unchanged (12+ chars, upper, lower, digit) — single source of truth in `validatePassword`
+- Password complexity policy unchanged (12+ chars, upper, lower, digit) — single source of truth across self-service, admin-set, and break-glass paths
 
 ### Documentation
-- `docs/security/THREAT_MODEL.md` — admin-compromise residual-risk row added
-- `docs/USER_PERMISSIONS.md` — new endpoints + UI surfaces
+- `docs/security/PROTECTED_USERS.md` — new "Break-glass CLI" subsection covering when to use, what it does, and audit forensics
+- `docs/security/PROTECTED_USERS_RECOVERY.md` — points the 3-AM playbook at the CLI as the primary recovery path
+- `docs/security/THREAT_MODEL.md` — admin-compromise + shell-access residual-risk rows
+- `docs/USER_PERMISSIONS.md` — new endpoints + UI surfaces + operator CLI
 
 ---
 

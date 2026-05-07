@@ -613,6 +613,14 @@ Admins also have exclusive access to bulk operations: importing and exporting us
 | Create User dialog | Admin Users | **AdminUserCreateDialog** — modal with email/password/name/role/email-verified inputs; admin-only; opens via "Create User" button |
 | Set Password directly | Profile tab | **AdminSetPasswordDialog** — on Profile tab Password Management card; sits alongside Force Password Reset with explanatory copy; admin-only |
 
+### Operator-Only CLI
+
+| Command | Purpose |
+|---------|---------|
+| `actalog admin verify-protected-users --verbose` | Read-only: confirm protected-user defense layers (L3 triggers + invariant) are healthy. Run from shell on the application host |
+| `actalog admin reapply-protected-migrations --confirm` | Reinstall L3 protected-user triggers when missing/broken. Idempotent; writes audit event |
+| `actalog admin force-edit-protected --email <addr> --field <password\|email\|name\|role\|account_disabled> [--value <v>] --confirm` | **Break-glass** operator escape hatch (v1.3.2). Edits a protected account when admin paths can't help. Per-field audit events; identity changes drop+UPDATE+reinstall L3 triggers and re-run boot invariant. See `docs/security/PROTECTED_USERS.md` §9 |
+
 ---
 
 ## API Endpoint Summary

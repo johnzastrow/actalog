@@ -508,6 +508,7 @@ full list of what the system does NOT protect against. Key accepted residuals:
 - Physical disk access / volume snapshot restoration of a pre-trigger backup
 - Supply-chain compromise that replaces `IsProtectedEmail` with a no-op
 - **Admin compromise → mass user creation / password reset** — Audit log review (`admin_user_created` and `admin_password_set` events per actor over a window). Not blocked at the system level — accepted residual risk for a small-team deployment with admin trust.
+- **Shell access on the application host (v1.3.2 break-glass CLI)** — the operator running `actalog admin force-edit-protected` can bypass the entire L1+L2+L3 stack for protected users with a single command. **Accepted** for small-team deployments where shell access already implies DB-credential access via `secrets/local-test-credentials.env` or equivalent. Mitigation: every break-glass operation writes a per-field audit event (`protected_user_break_glass_*`) with operator metadata (`USER`/`hostname`/`tty`/`cwd`) so post-incident review can answer who-when-where.
 
 ---
 
