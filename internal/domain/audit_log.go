@@ -181,6 +181,18 @@ const (
 	// EventPasswordResetForcedByAdmin is logged when an admin forces a password
 	// reset on behalf of another user.
 	EventPasswordResetForcedByAdmin = "password_reset_forced_by_admin"
+
+	// Break-glass operator CLI events (v1.3.2)
+	//
+	// Per-field events (rather than one event with a `field` discriminator)
+	// to enable clean alert routing and per-field log queries — e.g.
+	//   SELECT ... WHERE event_type = 'protected_user_break_glass_email'
+	// is a single index lookup, no JSON-path filter on details.
+	EventProtectedUserBreakGlassPassword        = "protected_user_break_glass_password"
+	EventProtectedUserBreakGlassEmail           = "protected_user_break_glass_email"
+	EventProtectedUserBreakGlassName            = "protected_user_break_glass_name"
+	EventProtectedUserBreakGlassRole            = "protected_user_break_glass_role"
+	EventProtectedUserBreakGlassAccountDisabled = "protected_user_break_glass_account_disabled"
 )
 
 // AuditLogRepository defines the interface for audit log data access
