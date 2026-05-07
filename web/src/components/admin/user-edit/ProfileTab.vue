@@ -5,6 +5,7 @@ import { useUserDraft } from './composables/useUserDraft'
 import { useProtectedUserStatus } from './composables/useProtectedUserStatus'
 import ProtectedUserBanner from './ProtectedUserBanner.vue'
 import TabFooterActions from './TabFooterActions.vue'
+import AdminSetPasswordDialog from '@/components/admin/AdminSetPasswordDialog.vue'
 
 const props = defineProps({
   userId: { type: Number, required: true },
@@ -53,6 +54,12 @@ const birthdayDisplay = computed({
 const sendingReset = ref(false)
 const resetError = ref(null)
 const showResetConfirm = ref(false)
+const showSetPasswordDialog = ref(false)
+
+function onPasswordSet() {
+  // Dialog already shows its own success toast/confirmation; no list refresh needed
+  // (Profile tab is already showing the user we just set the password for).
+}
 
 function forcePasswordReset() {
   resetError.value = null
@@ -189,16 +196,35 @@ async function executeSave() {
       />
 
       <v-divider class="my-4" />
-      <h3 class="text-subtitle-1 mb-2">Account actions</h3>
-      <v-btn
-        variant="tonal"
-        color="warning"
-        prepend-icon="mdi-key-alert"
-        :loading="sendingReset"
-        @click="forcePasswordReset"
-      >
-        Force password reset
-      </v-btn>
+      <v-card class="mb-4" variant="outlined">
+        <v-card-title class="text-subtitle-1">Password management</v-card-title>
+        <v-card-text>
+          <p class="text-caption mb-3">
+            Force Reset sends an email link; the user picks their own password.
+            Set Directly lets you type the password yourself — both will sign the
+            user out of all current sessions and clear any account lockout.
+          </p>
+          <div class="d-flex ga-2">
+            <v-btn
+              variant="tonal"
+              color="warning"
+              prepend-icon="mdi-key-alert"
+              :loading="sendingReset"
+              @click="forcePasswordReset"
+            >
+              Force password reset
+            </v-btn>
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-key-change"
+              data-test="set-password-directly-button"
+              @click="showSetPasswordDialog = true"
+            >
+              Set password directly
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
 
       <TabFooterActions :draft="draft" @click:save="attemptSave" />
     </v-form>
@@ -237,4 +263,11 @@ async function executeSave() {
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Admin set-password-directly dialog -->
+  <AdminSetPasswordDialog
+    v-model="showSetPasswordDialog"
+    :target-user="draft.original.value || { id: userId, email: '' }"
+    @password-set="onPasswordSet"
+  />
 </template>

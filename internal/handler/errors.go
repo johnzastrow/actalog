@@ -161,6 +161,19 @@ func WriteError(w http.ResponseWriter, err error) {
 		})
 		return
 	}
+	// Service-layer duplicate-email sentinel: map to 409 with a stable error
+	// code the frontend can act on (e.g., highlight the email input). Placed
+	// before MapServiceError so the structured body wins over the generic
+	// {message: "..."} mapping that errorStatusMap would otherwise produce.
+	if errors.Is(err, service.ErrEmailAlreadyExists) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error:   "duplicate_email",
+			Message: "A user with that email already exists.",
+		})
+		return
+	}
 
 	status, known := MapServiceError(err)
 	var message string

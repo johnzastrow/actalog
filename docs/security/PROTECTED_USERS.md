@@ -16,8 +16,9 @@
 6. [How to remove a protected user](#6-how-to-remove-a-protected-user)
 7. [How to verify the system is healthy](#7-how-to-verify-the-system-is-healthy)
 8. [Recovery playbook](#8-recovery-playbook)
-9. [Audit-log forensics](#9-audit-log-forensics)
-10. [Degraded mode](#10-degraded-mode)
+9. [Break-glass CLI](#9-break-glass-cli)
+10. [Audit-log forensics](#10-audit-log-forensics)
+11. [Degraded mode](#11-degraded-mode)
 
 ---
 
@@ -719,7 +720,86 @@ git diff --exit-code
 
 ---
 
-## 9. Audit-log forensics
+## 9. Break-glass CLI
+
+> **When to use:** the protected user has lost access (forgotten password + email gateway down) and the admin UI / API can't help because L1+L2 block protected-user writes by design. The break-glass CLI is the **only** documented and audited path. It bypasses L1 and L2 entirely and temporarily lifts L3 for identity-field changes.
+
+### 9.1 Command shape
+
+```
+actalog admin force-edit-protected \
+  --email <target> \
+  --field <password|email|name|role|account_disabled> \
+  [--value <new-value> | reads stdin for password] \
+  --confirm
+```
+
+`--confirm` is the guard flag against fat-fingering. For identity-field changes (`email|name|role|account_disabled`), the CLI ALSO prompts `Type 'BREAK-GLASS' to proceed:` interactively. Password reads from stdin twice (no shell-history exposure, no `ps` leak).
+
+### 9.2 Per-field behaviour
+
+| Field | What happens | L3 trigger interaction |
+|-------|--------------|-------------------------|
+| `password` | hash (bcrypt cost 12), write `password_hash`, clear `failed_login_attempts` + `locked_at` + `locked_until`, revoke all refresh tokens | **No fiddle** — `password_hash` is a lifecycle field; L3 already lets it through |
+| `email` | RFC 5322 + uniqueness + protected-list check, then UPDATE `users.email` | Drop both protected triggers → UPDATE → reinstall via `AdminReapplyProtectedMigrations` → re-run boot invariant |
+| `name` | trim + length 1-100, UPDATE `users.name` | same drop+UPDATE+reinstall |
+| `role` | one of `athlete\|coach\|admin`, UPDATE `users.role` | same drop+UPDATE+reinstall |
+| `account_disabled` | parse bool, UPDATE column + `disabled_at` (now or NULL) + `disabled_by_user_id = NULL` + `disable_reason` (`"break-glass: <op-name>"`) | same drop+UPDATE+reinstall |
+
+If trigger reinstall fails after an identity-field UPDATE, the CLI **panics** with a recovery message pointing at `actalog admin reapply-protected-migrations --confirm`. The system never silently lands in a half-protected state.
+
+### 9.3 Operator metadata captured in audit details
+
+```
+operator_user      = $USER (or $LOGNAME)
+operator_hostname  = os.Hostname()
+operator_tty       = $SSH_TTY (best-effort)
+operator_cwd       = working directory at invocation time
+old_value, new_value  (identity fields only; never for password)
+trigger_dropped    = true for identity fields, false for password
+```
+
+`actor_id` in the audit row is `NULL` (no logged-in user — break-glass runs from a shell). The operator metadata replaces it for forensic attribution.
+
+### 9.4 Per-field audit events
+
+| Constant | String value |
+|----------|--------------|
+| `EventProtectedUserBreakGlassPassword` | `protected_user_break_glass_password` |
+| `EventProtectedUserBreakGlassEmail` | `protected_user_break_glass_email` |
+| `EventProtectedUserBreakGlassName` | `protected_user_break_glass_name` |
+| `EventProtectedUserBreakGlassRole` | `protected_user_break_glass_role` |
+| `EventProtectedUserBreakGlassAccountDisabled` | `protected_user_break_glass_account_disabled` |
+
+Per-field rather than one event with a `field` discriminator: alert routing keys directly off the event type, no JSON-path filter on `details`.
+
+### 9.5 Example sessions
+
+**Forgotten password:**
+
+```
+$ printf 'NewPassword1A\nNewPassword1A\n' | \
+  ./bin/actalog admin force-edit-protected --email br8kwall@gmail.com --field password --confirm
+New password: Confirm:
+Done. Audit event written: protected_user_break_glass_password
+```
+
+**Role change:**
+
+```
+$ printf 'BREAK-GLASS\n' | \
+  ./bin/actalog admin force-edit-protected --email br8kwall@gmail.com --field role --value athlete --confirm
+Type 'BREAK-GLASS' to proceed:
+Done. Audit event written: protected_user_break_glass_role
+```
+
+### 9.6 Threat-model note
+
+The CLI accepts that anyone with shell access on the application host can bypass the entire protected-user defense with a single command. This is **accepted residual risk** for small-team deployments where shell access already implies DB-credential access via env files. Mitigation is the audit log: every break-glass operation writes an event with operator metadata, so post-incident review can answer who-when-where.
+
+---
+
+## 10. Audit-log forensics
 
 ### 9.1 Event types
 
@@ -970,7 +1050,7 @@ warrants investigation.
 
 ---
 
-## 10. Degraded mode
+## 11. Degraded mode
 
 ### 10.1 What it is
 

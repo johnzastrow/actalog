@@ -78,19 +78,47 @@ func (r *stubUserRepo) Update(user *domain.User) error {
 	return nil
 }
 
-// Remaining methods — not used by AdminUserService, provided to satisfy interface.
-func (r *stubUserRepo) Create(user *domain.User) error                            { return nil }
+// Create assigns an ID and stores the user. Used by CreateUser tests; older
+// tests that never call Create are unaffected.
+func (r *stubUserRepo) Create(user *domain.User) error {
+	if user.ID == 0 {
+		var maxID int64
+		for id := range r.users {
+			if id > maxID {
+				maxID = id
+			}
+		}
+		user.ID = maxID + 1
+	}
+	cp := *user
+	r.users[user.ID] = &cp
+	return nil
+}
 func (r *stubUserRepo) GetByResetToken(token string) (*domain.User, error)        { return nil, nil }
 func (r *stubUserRepo) GetByVerificationToken(token string) (*domain.User, error) { return nil, nil }
-func (r *stubUserRepo) UpdatePassword(userID int64, hash string) error            { return nil }
-func (r *stubUserRepo) Delete(id int64) error                                     { return nil }
-func (r *stubUserRepo) List(limit, offset int) ([]*domain.User, error)            { return nil, nil }
-func (r *stubUserRepo) Count() (int64, error)                                     { return 0, nil }
-func (r *stubUserRepo) ListAdmins() ([]*domain.User, error)                       { return nil, nil }
-func (r *stubUserRepo) IncrementFailedAttempts(userID int64) error                { return nil }
-func (r *stubUserRepo) ResetFailedAttempts(userID int64) error                    { return nil }
-func (r *stubUserRepo) LockAccount(userID int64, d time.Duration) error           { return nil }
-func (r *stubUserRepo) UnlockAccount(userID int64) error                          { return nil }
+func (r *stubUserRepo) UpdatePassword(userID int64, hash string) error {
+	if u, ok := r.users[userID]; ok {
+		u.PasswordHash = hash
+	}
+	return nil
+}
+func (r *stubUserRepo) Delete(id int64) error                          { return nil }
+func (r *stubUserRepo) List(limit, offset int) ([]*domain.User, error) { return nil, nil }
+func (r *stubUserRepo) Count() (int64, error)                          { return 0, nil }
+func (r *stubUserRepo) ListAdmins() ([]*domain.User, error)            { return nil, nil }
+func (r *stubUserRepo) IncrementFailedAttempts(userID int64) error     { return nil }
+func (r *stubUserRepo) ResetFailedAttempts(userID int64) error         { return nil }
+func (r *stubUserRepo) LockAccount(userID int64, d time.Duration) error {
+	return nil
+}
+func (r *stubUserRepo) UnlockAccount(userID int64) error {
+	if u, ok := r.users[userID]; ok {
+		u.FailedLoginAttempts = 0
+		u.LockedAt = nil
+		u.LockedUntil = nil
+	}
+	return nil
+}
 func (r *stubUserRepo) IsAccountLocked(userID int64) (bool, *time.Time, error) {
 	return false, nil, nil
 }
@@ -107,8 +135,10 @@ func (r *stubUserRepo) CountWithFilter(filter domain.UserListFilter) (int64, err
 
 // stubRefreshTokenRepo implements domain.RefreshTokenRepository.
 type stubRefreshTokenRepo struct {
-	revokeAllErr       error
-	revokeAllCallCount int
+	revokeAllErr           error
+	revokeAllCallCount     int
+	revokeAllForUserCalled bool
+	revokeAllForUserID     int64
 }
 
 func (r *stubRefreshTokenRepo) Create(token *domain.RefreshToken) error { return nil }
@@ -121,6 +151,8 @@ func (r *stubRefreshTokenRepo) GetByUserID(userID int64) ([]*domain.RefreshToken
 func (r *stubRefreshTokenRepo) Revoke(tokenID int64) error { return nil }
 func (r *stubRefreshTokenRepo) RevokeAllForUser(userID int64) error {
 	r.revokeAllCallCount++
+	r.revokeAllForUserCalled = true
+	r.revokeAllForUserID = userID
 	return r.revokeAllErr
 }
 func (r *stubRefreshTokenRepo) DeleteExpired() error       { return nil }
@@ -158,6 +190,7 @@ type auditEvent struct {
 	eventType    string
 	userID       *int64
 	targetUserID *int64
+	details      map[string]interface{}
 }
 
 func (s *stubAuditLogger) LogEvent(
@@ -168,7 +201,7 @@ func (s *stubAuditLogger) LogEvent(
 	userAgent *string,
 	details map[string]interface{},
 ) error {
-	s.events = append(s.events, auditEvent{eventType, userID, targetUserID})
+	s.events = append(s.events, auditEvent{eventType, userID, targetUserID, details})
 	return s.logErr
 }
 
@@ -930,5 +963,318 @@ func TestAdminUserService_UpdateProfile_ValidationErrorsAreTyped(t *testing.T) {
 				t.Error("Message must be non-empty so the user knows what went wrong")
 			}
 		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// CreateUser tests
+// ---------------------------------------------------------------------------
+
+// TestAdminUserService_CreateUser_HappyPath verifies the admin can create a
+// user account that the new user can immediately authenticate with.
+func TestAdminUserService_CreateUser_HappyPath(t *testing.T) {
+	repo := newStubUserRepo()
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	created, err := svc.CreateUser(1, CreateUserFields{
+		Email:         "newathlete@example.com",
+		Password:      "SetByAdminAtCreate1",
+		Name:          "New Athlete",
+		Role:          "athlete",
+		EmailVerified: true,
+	})
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+	if created.ID == 0 {
+		t.Error("expected user to have an assigned ID after Create")
+	}
+	if created.Email != "newathlete@example.com" {
+		t.Errorf("Email = %q", created.Email)
+	}
+	if !created.EmailVerified {
+		t.Error("EmailVerified should be true (admin-vouched)")
+	}
+	if created.PasswordHash == "" {
+		t.Error("PasswordHash must be set")
+	}
+	if created.PasswordHash == "SetByAdminAtCreate1" {
+		t.Error("PasswordHash must be hashed, not the raw password")
+	}
+}
+
+// TestAdminUserService_CreateUser_ValidationRejections covers every input
+// rule with a single table-driven test. Each case must return a typed
+// *domain.InvalidInputError so the handler surfaces 400.
+func TestAdminUserService_CreateUser_ValidationRejections(t *testing.T) {
+	cases := []struct {
+		name      string
+		fields    CreateUserFields
+		wantField string
+	}{
+		{"empty name", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: "", Role: "athlete"}, "name"},
+		{"name over 100 chars", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: strings.Repeat("x", 101), Role: "athlete"}, "name"},
+		{"malformed email", CreateUserFields{Email: "not-an-email", Password: "ValidPass123Long", Name: "X", Role: "athlete"}, "email"},
+		{"password too short", CreateUserFields{Email: "a@b.com", Password: "Short1", Name: "X", Role: "athlete"}, "password"},
+		{"password missing digit", CreateUserFields{Email: "a@b.com", Password: "NoDigitsHereXYZ", Name: "X", Role: "athlete"}, "password"},
+		{"password missing upper", CreateUserFields{Email: "a@b.com", Password: "alllower123long", Name: "X", Role: "athlete"}, "password"},
+		{"password missing lower", CreateUserFields{Email: "a@b.com", Password: "ALLUPPER123LONG", Name: "X", Role: "athlete"}, "password"},
+		{"invalid role", CreateUserFields{Email: "a@b.com", Password: "ValidPass123Long", Name: "X", Role: "wizard"}, "role"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := newStubUserRepo()
+			svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+			_, err := svc.CreateUser(1, tc.fields)
+			if err == nil {
+				t.Fatal("expected validation error, got nil")
+			}
+			var invErr *domain.InvalidInputError
+			if !errors.As(err, &invErr) {
+				t.Fatalf("expected *domain.InvalidInputError, got %T: %v", err, err)
+			}
+			if invErr.Field != tc.wantField {
+				t.Errorf("Field = %q, want %q", invErr.Field, tc.wantField)
+			}
+		})
+	}
+}
+
+// TestAdminUserService_CreateUser_DuplicateEmail verifies the service rejects
+// a second create with an email that already exists. Returns a sentinel the
+// handler can map to HTTP 409.
+func TestAdminUserService_CreateUser_DuplicateEmail(t *testing.T) {
+	repo := newStubUserRepo()
+	repo.addUser(makeNormalUser(7, "taken@example.com", "Existing"))
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: "taken@example.com", Password: "ValidPass123Long", Name: "Dup", Role: "athlete",
+	})
+	if err == nil {
+		t.Fatal("expected duplicate-email error, got nil")
+	}
+	if !errors.Is(err, ErrEmailAlreadyExists) {
+		t.Errorf("expected ErrEmailAlreadyExists, got: %v", err)
+	}
+}
+
+// TestAdminUserService_CreateUser_ProtectedEmailRejected verifies that an
+// admin cannot create a new user using an email on the protected-users list.
+// This must fire EventAdminUserCreateRejectedProtected, NOT the
+// protected_user_attack_* family.
+func TestAdminUserService_CreateUser_ProtectedEmailRejected(t *testing.T) {
+	protectedEmail := security.ProtectedEmailsList()[0]
+
+	repo := newStubUserRepo()
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, auditLog)
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: protectedEmail, Password: "ValidPass123Long", Name: "Imposter", Role: "admin",
+	})
+	if err == nil {
+		t.Fatal("expected protected-email rejection, got nil")
+	}
+	var invErr *domain.InvalidInputError
+	if !errors.As(err, &invErr) {
+		t.Fatalf("expected *domain.InvalidInputError, got %T", err)
+	}
+	if invErr.Field != "email" {
+		t.Errorf("Field = %q, want %q", invErr.Field, "email")
+	}
+	if !strings.Contains(invErr.Message, "reserved") {
+		t.Errorf("Message should mention 'reserved'; got %q", invErr.Message)
+	}
+	if len(auditLog.events) != 1 {
+		t.Fatalf("expected exactly 1 audit event, got %d: %v", len(auditLog.events), auditLog.events)
+	}
+	if auditLog.events[0].eventType != domain.EventAdminUserCreateRejectedProtected {
+		t.Errorf("event = %q, want %q", auditLog.events[0].eventType, domain.EventAdminUserCreateRejectedProtected)
+	}
+}
+
+// TestAdminUserService_CreateUser_AuditOnSuccess verifies the success path
+// fires EventAdminUserCreated with the role and email_verified in the details.
+func TestAdminUserService_CreateUser_AuditOnSuccess(t *testing.T) {
+	repo := newStubUserRepo()
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, auditLog)
+
+	_, err := svc.CreateUser(1, CreateUserFields{
+		Email: "auditme@example.com", Password: "ValidPass123Long", Name: "Audit", Role: "coach", EmailVerified: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected: %v", err)
+	}
+	if len(auditLog.events) != 1 {
+		t.Fatalf("expected 1 audit event, got %d", len(auditLog.events))
+	}
+	ev := auditLog.events[0]
+	if ev.eventType != domain.EventAdminUserCreated {
+		t.Errorf("eventType = %q, want %q", ev.eventType, domain.EventAdminUserCreated)
+	}
+	if ev.details["role"] != "coach" {
+		t.Errorf("details.role = %v, want %q", ev.details["role"], "coach")
+	}
+	if ev.details["email_verified"] != true {
+		t.Errorf("details.email_verified = %v, want true", ev.details["email_verified"])
+	}
+	if ev.details["email_domain"] != "example.com" {
+		t.Errorf("details.email_domain = %v, want %q", ev.details["email_domain"], "example.com")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// SetPassword tests
+// ---------------------------------------------------------------------------
+
+// TestAdminUserService_SetPassword_RejectsProtectedUser verifies the L2
+// defensive guard fires when admin attempts to set password on a protected
+// account. L1 should catch this first at the HTTP layer (Task 7), but L2
+// is the defense-in-depth requirement that matches UpdateProfile /
+// ForcePasswordReset.
+func TestAdminUserService_SetPassword_RejectsProtectedUser(t *testing.T) {
+	protectedEmail := security.ProtectedEmailsList()[0]
+
+	repo := newStubUserRepo()
+	target := makeNormalUser(7, protectedEmail, "Protected")
+	repo.addUser(target)
+
+	audit := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, audit)
+
+	err := svc.SetPassword(1, 7, "ValidPass123Long")
+	if err == nil {
+		t.Fatal("expected ErrProtectedUser, got nil")
+	}
+	if !errors.Is(err, domain.ErrProtectedUser) {
+		t.Errorf("expected ErrProtectedUser, got: %v", err)
+	}
+	if !audit.hasEvent(domain.EventProtectedUserAttackService) {
+		t.Errorf("expected %s audit event to be fired", domain.EventProtectedUserAttackService)
+	}
+	// Actor and target IDs must be populated in the audit event.
+	if e := audit.lastEvent(); e != nil {
+		if e.userID == nil || *e.userID != 1 {
+			t.Errorf("expected actorID=1, got %v", e.userID)
+		}
+		if e.targetUserID == nil || *e.targetUserID != 7 {
+			t.Errorf("expected targetUserID=7, got %v", e.targetUserID)
+		}
+	}
+}
+
+// TestAdminUserService_SetPassword_HappyPath verifies password is hashed +
+// stored, lockout state cleared, refresh tokens revoked, and audit fired.
+func TestAdminUserService_SetPassword_HappyPath(t *testing.T) {
+	repo := newStubUserRepo()
+	target := makeNormalUser(5, "lockedout@example.com", "Locked")
+	target.FailedLoginAttempts = 3
+	lockUntil := time.Now().Add(15 * time.Minute)
+	target.LockedUntil = &lockUntil
+	repo.addUser(target)
+
+	tokenRepo := &stubRefreshTokenRepo{}
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, tokenRepo, &stubEmailSvc{}, auditLog)
+
+	if err := svc.SetPassword(1, 5, "NewValidPass123A"); err != nil {
+		t.Fatalf("SetPassword: %v", err)
+	}
+
+	stored := repo.users[5]
+	if stored.PasswordHash == "" {
+		t.Error("PasswordHash empty after SetPassword")
+	}
+	if stored.PasswordHash == "NewValidPass123A" {
+		t.Error("PasswordHash equals plaintext — not hashed")
+	}
+	if stored.FailedLoginAttempts != 0 {
+		t.Errorf("FailedLoginAttempts = %d, want 0", stored.FailedLoginAttempts)
+	}
+	if stored.LockedUntil != nil {
+		t.Error("LockedUntil should be nil after SetPassword")
+	}
+	if !tokenRepo.revokeAllForUserCalled {
+		t.Error("RevokeAllForUser not called")
+	}
+	if tokenRepo.revokeAllForUserID != 5 {
+		t.Errorf("revoke for userID = %d, want 5", tokenRepo.revokeAllForUserID)
+	}
+
+	if len(auditLog.events) != 1 {
+		t.Fatalf("expected 1 audit event, got %d", len(auditLog.events))
+	}
+	ev := auditLog.events[0]
+	if ev.eventType != domain.EventAdminPasswordSet {
+		t.Errorf("eventType = %q, want %q", ev.eventType, domain.EventAdminPasswordSet)
+	}
+	if ev.details["cleared_failed_login_attempts"] != 3 {
+		t.Errorf("details.cleared_failed_login_attempts = %v, want 3", ev.details["cleared_failed_login_attempts"])
+	}
+	if ev.details["cleared_lockout"] != true {
+		t.Errorf("details.cleared_lockout = %v, want true", ev.details["cleared_lockout"])
+	}
+}
+
+// TestAdminUserService_SetPassword_404OnUnknownUser verifies a non-existent
+// target returns ErrUserNotFound (handler maps to HTTP 404).
+func TestAdminUserService_SetPassword_404OnUnknownUser(t *testing.T) {
+	repo := newStubUserRepo()
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	err := svc.SetPassword(1, 99, "NewValidPass123A")
+	if err == nil {
+		t.Fatal("expected ErrUserNotFound, got nil")
+	}
+	if !errors.Is(err, ErrUserNotFound) {
+		t.Errorf("expected ErrUserNotFound, got: %v", err)
+	}
+}
+
+// TestAdminUserService_SetPassword_RejectsWeakPassword verifies validation
+// runs BEFORE any DB lookup and returns a typed *domain.InvalidInputError
+// keyed on "new_password".
+func TestAdminUserService_SetPassword_RejectsWeakPassword(t *testing.T) {
+	repo := newStubUserRepo()
+	target := makeNormalUser(5, "u@example.com", "U")
+	repo.addUser(target)
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, &stubAuditLogger{})
+
+	err := svc.SetPassword(1, 5, "tooshort")
+	if err == nil {
+		t.Fatal("expected validation error, got nil")
+	}
+	var invErr *domain.InvalidInputError
+	if !errors.As(err, &invErr) {
+		t.Fatalf("expected *domain.InvalidInputError, got %T", err)
+	}
+	if invErr.Field != "new_password" {
+		t.Errorf("Field = %q, want %q", invErr.Field, "new_password")
+	}
+}
+
+// TestAdminUserService_SetPassword_NoLockoutPriorState verifies the audit
+// records cleared_lockout=false when the user wasn't locked to begin with.
+func TestAdminUserService_SetPassword_NoLockoutPriorState(t *testing.T) {
+	repo := newStubUserRepo()
+	target := makeNormalUser(5, "calm@example.com", "Calm")
+	target.FailedLoginAttempts = 0
+	target.LockedUntil = nil
+	repo.addUser(target)
+
+	auditLog := &stubAuditLogger{}
+	svc := newService(repo, &stubRefreshTokenRepo{}, &stubEmailSvc{}, auditLog)
+
+	if err := svc.SetPassword(1, 5, "NewValidPass123A"); err != nil {
+		t.Fatalf("SetPassword: %v", err)
+	}
+	if auditLog.events[0].details["cleared_lockout"] != false {
+		t.Errorf("cleared_lockout should be false; got %v", auditLog.events[0].details["cleared_lockout"])
+	}
+	if auditLog.events[0].details["cleared_failed_login_attempts"] != 0 {
+		t.Errorf("cleared_failed_login_attempts should be 0; got %v", auditLog.events[0].details["cleared_failed_login_attempts"])
 	}
 }

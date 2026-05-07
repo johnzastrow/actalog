@@ -9,7 +9,7 @@ ActaLog is a mobile-first CrossFit workout tracker built with:
 - **Frontend:** Vue.js 3, Vuetify 3, Pinia
 - **Architecture:** Clean Architecture with strict layer separation
 
-**Version:** 1.3.0
+**Version:** 1.3.2
 
 ## Quick Reference
 
@@ -135,10 +135,10 @@ When testing new features, cycle through all supported databases to ensure compa
 
 # Tag and push to registry (always push to dev, latest, and version tags)
 docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:latest
-docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:1.3.0  # Use current version
+docker tag ghcr.io/johnzastrow/actalog:dev ghcr.io/johnzastrow/actalog:1.3.2  # Use current version
 ./docker/scripts/push.sh dev
 ./docker/scripts/push.sh latest
-./docker/scripts/push.sh 1.3.0  # Use current version
+./docker/scripts/push.sh 1.3.2  # Use current version
 
 # Test with SQLite (mount local data directory)
 docker run -p 8080:8080 -v $(pwd)/data:/app/data \

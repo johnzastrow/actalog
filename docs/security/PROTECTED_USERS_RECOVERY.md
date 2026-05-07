@@ -17,6 +17,8 @@ For design rationale, architecture details, and the full recovery reference, see
 | `/health returns 503` + `degraded` in logs | See [Degraded Mode](#degraded-mode) below |
 | `binary won't even start the CLI` | `./scripts/recover/restore-protected-triggers.sh --driver=... --conn=...` |
 | `protected user "br8kwall@gmail.com" missing while N other users exist` | Restore from backup — see [Backup Restoration](#backup-restoration) |
+| Protected user has forgotten their password and can't log in (email gateway broken) | `./bin/actalog admin force-edit-protected --email <addr> --field password --confirm` (v1.3.2 break-glass CLI; reads new password from stdin twice, then writes hash directly). See `docs/security/PROTECTED_USERS.md` §9 |
+| Protected user account compromised, role/disable change needed urgently | `./bin/actalog admin force-edit-protected --email <addr> --field <role\|account_disabled> --value <new> --confirm` (operator types `BREAK-GLASS` to confirm; CLI drops L3 triggers, UPDATE, reinstalls, re-runs invariant) |
 
 ---
 

@@ -90,6 +90,7 @@ import (
 	"github.com/johnzastrow/actalog/configs"
 	_ "github.com/johnzastrow/actalog/docs" // Swagger docs
 	"github.com/johnzastrow/actalog/internal/handler"
+	"github.com/johnzastrow/actalog/internal/protectedusers"
 	"github.com/johnzastrow/actalog/internal/repository"
 	"github.com/johnzastrow/actalog/internal/service"
 	"github.com/johnzastrow/actalog/pkg/email"
@@ -208,7 +209,7 @@ func main() {
 	// when the invariant would otherwise refuse to start the server.
 	if len(os.Args) >= 2 && os.Args[1] == "admin" {
 		if len(os.Args) < 3 {
-			fmt.Fprintln(os.Stderr, "usage: actalog admin <verify-protected-users|reapply-protected-migrations> [flags]")
+			fmt.Fprintln(os.Stderr, "usage: actalog admin <verify-protected-users|reapply-protected-migrations|force-edit-protected> [flags]")
 			os.Exit(2)
 		}
 		switch os.Args[2] {
@@ -230,6 +231,26 @@ func main() {
 				map[string]interface{}{"source": "cli", "driver": cfg.Database.Driver},
 			); auditErr != nil {
 				fmt.Fprintf(os.Stderr, "warn: failed to write audit event: %v\n", auditErr)
+			}
+			os.Exit(0)
+		case "force-edit-protected":
+			// v1.3.2 break-glass CLI — operator escape hatch for editing
+			// protected users. See docs/security/PROTECTED_USERS.md.
+			opts := protectedusers.BreakGlassOptions{
+				Stdin:   os.Stdin,
+				Stdout:  os.Stderr,
+				Confirm: hasFlag(os.Args[3:], "--confirm"),
+				Email:   flagValue(os.Args[3:], "--email"),
+				Field:   flagValue(os.Args[3:], "--field"),
+				Value:   flagValue(os.Args[3:], "--value"),
+			}
+			if opts.Email == "" || opts.Field == "" {
+				fmt.Fprintln(os.Stderr, "usage: actalog admin force-edit-protected --email <target> --field <password|email|name|role|account_disabled> [--value <v>] --confirm")
+				os.Exit(2)
+			}
+			if err := protectedusers.AdminForceEditProtected(db, cfg.Database.Driver, opts); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
 			}
 			os.Exit(0)
 		default:
@@ -993,6 +1014,7 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 				// User management routes (admin only)
 				// List endpoint has no {id} — lives outside the sub-router.
 				r.Get("/users", adminUserHandler.ListUsers)
+				r.Post("/users", adminUserHandler.CreateUser)
 
 				// /users/{id}/* — sub-router with L1 protected-user guard.
 				// degradedAdminWriteGuard is already applied on the parent /admin
@@ -1023,6 +1045,7 @@ Full runbook: docs/security/PROTECTED_USERS.md#recovery`)
 					r.Put("/role", adminUserHandler.ChangeUserRole)
 					r.Post("/toggle-email-verification", adminUserHandler.ToggleEmailVerification)
 					r.Post("/force-password-reset", adminUserHandler.ForcePasswordReset) // Task 12
+					r.Post("/password", adminUserHandler.SetPassword) // v1.3.1: admin sets password directly
 				})
 
 				// User-created content management routes (admin only)
@@ -1268,4 +1291,18 @@ func hasFlag(args []string, name string) bool {
 		}
 	}
 	return false
+}
+
+// flagValue returns the value of --name in args, or "" if absent.
+// Supports both "--name=value" and "--name value" forms.
+func flagValue(args []string, name string) string {
+	for i, a := range args {
+		if a == name && i+1 < len(args) {
+			return args[i+1]
+		}
+		if strings.HasPrefix(a, name+"=") {
+			return strings.TrimPrefix(a, name+"=")
+		}
+	}
+	return ""
 }

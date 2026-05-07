@@ -9,7 +9,7 @@ const (
 	// Minor version number
 	Minor = 3
 	// Patch version number
-	Patch = 0
+	Patch = 2
 	// PreRelease identifier (e.g., "alpha", "beta", "rc1")
 	PreRelease = ""
 	// Build number - increment this with each code change

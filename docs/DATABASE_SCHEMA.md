@@ -13,7 +13,7 @@ ActaLog uses a relational database to store user data, workouts, movements, and 
 
 ## Schema Version
 
-**Current Version:** 1.3.0 (migration head: 0.35.0)
+**Current Version:** 1.3.2 (migration head: 0.35.0 — no schema changes in v1.3.1 / v1.3.2)
 
 > v0.35.0 adds per-dialect BEFORE UPDATE / BEFORE DELETE triggers on the `users` table that block writes to protected accounts at the database layer (L3 security). See `docs/security/PROTECTED_USERS.md` for the full protected-user policy and recovery procedures.
 
