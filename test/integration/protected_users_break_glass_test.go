@@ -73,7 +73,10 @@ func TestBreakGlass_Role_DropsAndReinstallsTriggers(t *testing.T) {
 	}
 
 	// L3 must still block identity-field changes after the break-glass operation.
-	_, attemptErr := db.Exec(`UPDATE users SET name = 'attack' WHERE email = ?`, security.ProtectedEmailsList()[0])
+	// Use per-driver placeholder syntax — sqlite3/mysql accept '?', postgres
+	// requires '$1'. Inline literal email instead is even simpler.
+	protectedEmail := security.ProtectedEmailsList()[0]
+	_, attemptErr := db.Exec(`UPDATE users SET name = 'attack' WHERE email = '` + protectedEmail + `'`)
 	if attemptErr == nil {
 		t.Error("L3 trigger should still block identity-field changes after break-glass")
 	}
