@@ -350,12 +350,14 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching
-        manualChunks: {
-          // Vendor chunks
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'vuetify': ['vuetify'],
-          'chart': ['chart.js', 'vue-chartjs'],
+        // Manual chunk splitting for better caching.
+        // Function form (not the object form): vite 8's rolldown bundler only
+        // accepts a function here, and it works under rollup (vite 7) too.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (/[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/.test(id)) return 'vue-vendor'
+          if (/[\\/]node_modules[\\/]vuetify[\\/]/.test(id)) return 'vuetify'
+          if (/[\\/]node_modules[\\/](chart\.js|vue-chartjs)[\\/]/.test(id)) return 'chart'
         }
       }
     }
