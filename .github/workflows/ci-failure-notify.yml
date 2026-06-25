@@ -47,7 +47,7 @@ jobs:
           EOF
 
       - name: Create or update issue for failed CI run
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
@@ -99,7 +99,7 @@ jobs:
       contents: read
     steps:
       - name: Close tracking issue if it exists
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
