@@ -26,7 +26,7 @@ been closed; this section tracks the delta so the scorecard is not read as curre
 - ⬜ **Repository-layer `context.Context`** — 0 of 373 repo functions accept a context, so DB calls have no timeout/cancellation (`noctx` lint disabled with 851 violations noted). Needs a dedicated refactor branch.
 - ⬜ **Single JWT signing secret** — no key rotation (`kid` + multi-key) path.
 - ⬜ **Large files** — `backup_service.go` (2.2k), `scheduling_handler.go` (1.8k), `data_quality_service.go` (1.5k) remain decomposition candidates.
-- ⬜ **Accumulated lint debt** — 1,803 golangci-lint findings (errcheck 1045, revive 445, gosec 142, …) grandfathered; blocked from growing via `only-new-issues`.
+- ⬜ **Accumulated lint debt** — ~605 golangci-lint findings (errcheck 265, gosec 187, revive 58, staticcheck 51, gocyclo 27, …) grandfathered; blocked from growing via `only-new-issues`. (Note: `.golangci.yml` was a broken half-v1/v2 config that silently failed `config verify` in CI — fixed to valid v2 this release, which is why exclusions now apply and the count dropped from ~1,800.)
 
 ---
 

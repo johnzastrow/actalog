@@ -21,7 +21,7 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 **Status:** Build/CI hardening; no application behavior changes.
 
 **Highlights:**
-- 🔶 Go lint regressions blocked on PRs via `only-new-issues` (1,803 pre-existing findings grandfathered)
+- 🔶 Fixed a silently-broken `.golangci.yml` (v1 keys under `version: 2`) and made lint enforcing via `only-new-issues` (~605 pre-existing findings grandfathered)
 - 🔶 New blocking CI gates: `govulncheck` (Go), `npm audit` (web), Trivy image scan (fixable HIGH/CRITICAL)
 - 🔶 GitHub Actions pinned to commit SHAs; Docker base images pinned to digests (supply-chain integrity)
 

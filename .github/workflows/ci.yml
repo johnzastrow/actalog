@@ -36,7 +36,7 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.11.4
-          # Block only NEW lint findings. The tree carries ~1800 grandfathered
+          # Block only NEW lint findings. The tree carries ~600 grandfathered
           # issues (see docs/MATURITY_ASSESSMENT.md); only-new-issues fails the
           # build on regressions introduced by a change without requiring the
           # full backlog to be fixed first. Was previously advisory

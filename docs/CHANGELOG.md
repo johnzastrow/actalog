@@ -15,8 +15,11 @@ touched.
 - **`npm audit --audit-level=high`** on the web build **fails** on high/critical advisories in frontend dependencies.
 - **Trivy image scan** (pinned by digest) in `docker-build.yml`: builds a single-arch image, scans it, and **blocks the push** on fixable HIGH/CRITICAL CVEs (`--ignore-unfixed`) before anything reaches ghcr.io.
 
+### Fixed — golangci-lint config was silently broken
+- `.golangci.yml` declared `version: "2"` but still used v1 keys (`linters-settings`, `issues.exclude-rules`), so `golangci-lint config verify` failed — and the failure was hidden by `continue-on-error`. Migrated to valid v2 schema (`linters.settings`, `linters.exclusions.rules`); the exclusion rules now actually apply (findings dropped from ~1,800 to ~605).
+
 ### Changed — Lint is now enforcing
-- `golangci-lint` is no longer advisory (`continue-on-error` removed). It runs with **`only-new-issues: true`**, so it fails on lint regressions introduced by a change while grandfathering the ~1,800 pre-existing findings (tracked in `docs/MATURITY_ASSESSMENT.md`).
+- `golangci-lint` is no longer advisory (`continue-on-error` removed). It runs with **`only-new-issues: true`**, so it fails on lint regressions introduced by a change while grandfathering the ~605 pre-existing findings (tracked in `docs/MATURITY_ASSESSMENT.md`).
 
 ### Security — Supply-chain pinning
 - **All GitHub Actions pinned to commit SHAs** (with a version comment) across every workflow, so a moved/compromised tag can't silently change CI behavior. Dependabot continues to update them.
