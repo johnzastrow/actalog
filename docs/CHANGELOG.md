@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Build/CI hardening release. No application behavior changes — no runtime code was
 touched.
 
+### Security — Go stdlib patch (caught by the new gate)
+- Bumped the Go directive `1.25.0 → 1.25.11` to pick up the fix for **GO-2026-5039** (unescaped input in `net/textproto` error strings), which the new `govulncheck` gate flagged as reachable from the SMTP, import, and admin-user code paths. This finding was previously invisible because there was no vulnerability scanning in CI.
+
 ### Added — CI security gates
 - **`govulncheck`** (Go, pinned `v1.1.4`) runs on every push/PR and **fails** the build on known vulnerabilities in Go dependencies or reachable code.
 - **`npm audit --audit-level=high`** on the web build **fails** on high/critical advisories in frontend dependencies.
