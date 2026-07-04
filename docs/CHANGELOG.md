@@ -5,6 +5,36 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-07-04 — Maintenance: dependency & toolchain updates
+
+Maintenance release. No application behavior changes — dependency, toolchain, and
+CI hardening only. All 23 changes since v1.3.2 are dependency or build-tooling
+bumps.
+
+### Changed — Backend (Go) dependencies
+- `golang.org/x/crypto` 0.50.0 → 0.53.0
+- `github.com/mattn/go-sqlite3` 1.14.42 → 1.14.47
+- `github.com/jackc/pgx/v5` 5.9.2 → 5.10.0
+- `github.com/go-chi/chi/v5` 5.2.5 → 5.3.0
+- `github.com/go-sql-driver/mysql` 1.9.3 → 1.10.0
+
+### Changed — Frontend (web) dependencies
+- `vite` 7.3.1 → 8.0.11
+- `vuetify` (bump)
+- `axios` 1.13.5 → 1.18.1
+- `marked` 17.0.6 → 18.0.5
+- `jsdom` 28.1.0 → 29.1.1
+- `dompurify` 3.3.3 → 3.4.2
+- `sharp` (bump)
+- `eslint` 9.39.2 → 10.6.0, `prettier` 3.8.3 → 3.9.3 (dev)
+
+### Changed — Toolchain & CI
+- Upgraded the web build to **Node 24** and pinned the npm toolchain (`packageManager: npm@11.16.0`)
+- Bumped GitHub Actions: `actions/checkout` 6→7, `actions/cache` 5→6, `actions/upload-pages-artifact` 4→5, `actions/github-script` 8→9, `docker/build-push-action` 6→7, `golangci/golangci-lint-action` 6→9
+
+### Fixed — CI lockfile stability
+- Pinned npm to **11.16.0** in CI (`ci.yml`) and the Docker frontend build stage so it matches the version that generates `web/package-lock.json`. `setup-node`'s bundled npm floats with the Node 24.x patch line, and a newer npm reshapes the rolldown wasm-fallback `@emnapi` optional deps, which was breaking `npm ci` on dependency-update PRs.
+
 ## [1.3.2] - 2026-05-07 — Admin user lifecycle + protected-user break-glass CLI
 
 ### Added — Operator break-glass CLI
