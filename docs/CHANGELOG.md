@@ -5,6 +5,33 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2026-07-04 — CI & supply-chain hardening
+
+Build/CI hardening release. No application behavior changes — no runtime code was
+touched.
+
+### Security — Go stdlib patch (caught by the new gate)
+- Bumped the Go directive `1.25.0 → 1.25.11` to pick up the fix for **GO-2026-5039** (unescaped input in `net/textproto` error strings), which the new `govulncheck` gate flagged as reachable from the SMTP, import, and admin-user code paths. This finding was previously invisible because there was no vulnerability scanning in CI.
+
+### Added — CI security gates
+- **`govulncheck`** (Go, pinned `v1.1.4`) runs on every push/PR and **fails** the build on known vulnerabilities in Go dependencies or reachable code.
+- **`npm audit --audit-level=high`** on the web build **fails** on high/critical advisories in frontend dependencies.
+- **Trivy image scan** (pinned by digest) in `docker-build.yml`: builds a single-arch image, scans it, and **blocks the push** on fixable HIGH/CRITICAL CVEs (`--ignore-unfixed`) before anything reaches ghcr.io.
+
+### Fixed — golangci-lint config was silently broken
+- `.golangci.yml` declared `version: "2"` but still used v1 keys (`linters-settings`, `issues.exclude-rules`), so `golangci-lint config verify` failed — and the failure was hidden by `continue-on-error`. Migrated to valid v2 schema (`linters.settings`, `linters.exclusions.rules`); the exclusion rules now actually apply (findings dropped from ~1,800 to ~605).
+
+### Changed — Lint is now enforcing
+- `golangci-lint` is no longer advisory (`continue-on-error` removed). It runs with **`only-new-issues: true`**, so it fails on lint regressions introduced by a change while grandfathering the ~605 pre-existing findings (tracked in `docs/MATURITY_ASSESSMENT.md`).
+
+### Security — Supply-chain pinning
+- **All GitHub Actions pinned to commit SHAs** (with a version comment) across every workflow, so a moved/compromised tag can't silently change CI behavior. Dependabot continues to update them.
+- **Docker base images pinned by digest** — `node:24-alpine`, `golang:1.25-alpine`, and the `alpine` runtime now reference immutable `@sha256:…` digests instead of floating tags.
+
+### Docs
+- Refreshed `docs/MATURITY_ASSESSMENT.md` with a v1.3.3 remediation-status section (base assessment was v1.2.1).
+- Updated `docs/ROADMAP.md` current version and recent-release summaries.
+
 ## [1.3.3] - 2026-07-04 — Maintenance: dependency & toolchain updates
 
 Maintenance release. No application behavior changes — dependency, toolchain, and

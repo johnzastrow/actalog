@@ -1,6 +1,7 @@
 # golangci-lint v2 configuration for ActaLog
 # https://golangci-lint.run/usage/configuration/
-# Migrated from v1 config to v2 format (2026-04-03)
+# v2 schema (linters.settings / linters.exclusions.rules). Verified with
+# `golangci-lint config verify` (v2.11.4) — the same preflight CI runs.
 
 version: "2"
 
@@ -28,89 +29,90 @@ linters:
     # Address in a dedicated refactor branch
     - unconvert     # Remove unnecessary type conversions
 
-linters-settings:
-  gocyclo:
-    min-complexity: 20  # Increased from 15 to allow for complex query builders
+  settings:
+    gocyclo:
+      min-complexity: 20  # Increased from 15 to allow for complex query builders
 
-  goconst:
-    min-len: 3
-    min-occurrences: 50  # Increased threshold - db driver names are intentionally repeated
+    goconst:
+      min-len: 3
+      min-occurrences: 50  # Increased threshold - db driver names are intentionally repeated
 
-  gosec:
-    excludes:
-      - G404  # Allow math/rand for non-crypto use cases
+    gosec:
+      excludes:
+        - G404  # Allow math/rand for non-crypto use cases
 
-  revive:
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+          disabled: false
+        - name: unexported-return
+          severity: warning
+          disabled: false
+
+  exclusions:
     rules:
-      - name: exported
-        severity: warning
-        disabled: false
-      - name: unexported-return
-        severity: warning
-        disabled: false
+      # Exclude some linters from running on tests
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - errcheck
+          - gosec
+
+      # Exclude some staticcheck messages
+      - linters:
+          - staticcheck
+        text: "SA1019:"  # Ignore deprecation warnings for now
+
+      # Exclude unchecked error for defer tx.Rollback() - common Go pattern
+      - linters:
+          - errcheck
+        text: "Error return value of `tx.Rollback` is not checked"
+
+      # Exclude unchecked error for json.Encode in HTTP handlers
+      # Response has started, so error checking has limited value
+      - linters:
+          - errcheck
+        text: "Error return value of `\\(\\*encoding/json.Encoder\\).Encode` is not checked"
+
+      # Exclude unchecked error for audit log calls - fire-and-forget logging
+      - linters:
+          - errcheck
+        text: "Error return value of `s.auditLogService"
+
+      # Exclude gosec G402 for TLS config - we allow flexible TLS settings
+      - linters:
+          - gosec
+        text: "G402"
+
+      # Exclude gosec G201 for database.go - table name interpolation is safe (no user input)
+      - linters:
+          - gosec
+        text: "G201"
+        path: internal/repository/database\.go
+
+      # Exclude high complexity for specific repository functions (complex query builders)
+      - linters:
+          - gocyclo
+        path: internal/repository/user_workout_repository\.go
+        text: "ListByUserWithDetails|GetByIDWithDetails"
+
+      - linters:
+          - gocyclo
+        path: internal/repository/database\.go
+        text: "seedWorkoutTemplates"
+
+      # Exclude revive stuttering for EmailService - keeping for clarity
+      - linters:
+          - revive
+        text: "type name will be used as email.EmailService"
+
+      # Exclude goconst for SQL query parts - not worth making constants
+      - linters:
+          - goconst
+        text: "LIMIT|OFFSET|ORDER BY|CURRENT_TIMESTAMP|RETURNING|datetime\\('now'\\)|postgres|AND created_at|AND user_id|ALTER TABLE"
 
 issues:
-  exclude-rules:
-    # Exclude some linters from running on tests
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - gosec
-
-    # Exclude some staticcheck messages
-    - linters:
-        - staticcheck
-      text: "SA1019:"  # Ignore deprecation warnings for now
-
-    # Exclude unchecked error for defer tx.Rollback() - common Go pattern
-    - linters:
-        - errcheck
-      text: "Error return value of `tx.Rollback` is not checked"
-
-    # Exclude unchecked error for json.Encode in HTTP handlers
-    # Response has started, so error checking has limited value
-    - linters:
-        - errcheck
-      text: "Error return value of `\\(\\*encoding/json.Encoder\\).Encode` is not checked"
-
-    # Exclude unchecked error for audit log calls - fire-and-forget logging
-    - linters:
-        - errcheck
-      text: "Error return value of `s.auditLogService"
-
-    # Exclude gosec G402 for TLS config - we allow flexible TLS settings
-    - linters:
-        - gosec
-      text: "G402"
-
-    # Exclude gosec G201 for database.go - table name interpolation is safe (no user input)
-    - linters:
-        - gosec
-      text: "G201"
-      path: internal/repository/database\.go
-
-    # Exclude high complexity for specific repository functions (complex query builders)
-    - linters:
-        - gocyclo
-      path: internal/repository/user_workout_repository\.go
-      text: "ListByUserWithDetails|GetByIDWithDetails"
-
-    - linters:
-        - gocyclo
-      path: internal/repository/database\.go
-      text: "seedWorkoutTemplates"
-
-    # Exclude revive stuttering for EmailService - keeping for clarity
-    - linters:
-        - revive
-      text: "type name will be used as email.EmailService"
-
-    # Exclude goconst for SQL query parts - not worth making constants
-    - linters:
-        - goconst
-      text: "LIMIT|OFFSET|ORDER BY|CURRENT_TIMESTAMP|RETURNING|datetime\\('now'\\)|postgres|AND created_at|AND user_id|ALTER TABLE"
-
   max-issues-per-linter: 0
   max-same-issues: 0
 

@@ -4,7 +4,7 @@
 # ============================================================================
 # Stage 1: Build Frontend (Vue.js)
 # ============================================================================
-FROM node:24-alpine AS frontend-builder
+FROM node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS frontend-builder
 
 WORKDIR /app/web
 
@@ -29,7 +29,7 @@ RUN npm run build
 # ============================================================================
 # Stage 2: Build Backend (Go)
 # ============================================================================
-FROM golang:1.25-alpine AS backend-builder
+FROM golang:1.25-alpine@sha256:523c3effe300580ed375e43f43b1c9b091b68e935a7c3a92bfcc4e7ed55b18c2 AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
@@ -62,7 +62,7 @@ RUN CGO_ENABLED=1 GOOS=linux GOTOOLCHAIN=auto go build -a -installsuffix cgo \
 # ============================================================================
 # Stage 3: Runtime Image
 # ============================================================================
-FROM alpine:latest
+FROM alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 # Install runtime dependencies
 RUN apk add --no-cache \

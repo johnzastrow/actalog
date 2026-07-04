@@ -1,9 +1,32 @@
 # ActaLog — Code Maturity Assessment
 
 **Framework**: Trail of Bits Code Maturity Evaluation v0.1.0 (adapted for web application)
-**Date**: 2026-04-03
-**Version Assessed**: 1.2.1
+**Date**: 2026-04-03 (base assessment) · **Last reviewed**: 2026-07-04 (v1.3.3)
+**Version Assessed**: 1.2.1 (base) — see "Remediation status" below for changes through 1.3.3
 **Deployment Context**: Single-instance, ~3 users
+
+---
+
+## Remediation status — updated 2026-07-04 (v1.3.3)
+
+The base assessment below reflects v1.2.1 (2026-04-03). Several of its top gaps have since
+been closed; this section tracks the delta so the scorecard is not read as current state.
+
+**Resolved since the base assessment:**
+- ✅ **CORS enforcement** — allowlist now actually enforced (v1.2.3).
+- ✅ **Security response headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy middleware added (v1.2.4).
+- ✅ **Password policy** — 12-char minimum + complexity (v1.2.3).
+- ✅ **File upload hardening** — avatar uploads validated by magic bytes, not client `Content-Type` (v1.2.4).
+- ✅ **CI toolchain drift** — Node 24 + npm pinned to 11.16.0 in CI and Docker so `npm ci` stays in lockstep with the lockfile (v1.3.3).
+
+**In progress (this release — CI/supply-chain hardening):**
+- 🔶 Go lint regressions now blocking on PRs (`only-new-issues`); `govulncheck`, `npm audit`, and a Trivy image scan added as blocking CI gates; GitHub Actions pinned to commit SHAs and Docker base images pinned to digests.
+
+**Still open (tracked, not yet addressed):**
+- ⬜ **Repository-layer `context.Context`** — 0 of 373 repo functions accept a context, so DB calls have no timeout/cancellation (`noctx` lint disabled with 851 violations noted). Needs a dedicated refactor branch.
+- ⬜ **Single JWT signing secret** — no key rotation (`kid` + multi-key) path.
+- ⬜ **Large files** — `backup_service.go` (2.2k), `scheduling_handler.go` (1.8k), `data_quality_service.go` (1.5k) remain decomposition candidates.
+- ⬜ **Accumulated lint debt** — ~605 golangci-lint findings (errcheck 265, gosec 187, revive 58, staticcheck 51, gocyclo 27, …) grandfathered; blocked from growing via `only-new-issues`. (Note: `.golangci.yml` was a broken half-v1/v2 config that silently failed `config verify` in CI — fixed to valid v2 this release, which is why exclusions now apply and the count dropped from ~1,800.)
 
 ---
 
