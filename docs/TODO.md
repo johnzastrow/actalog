@@ -703,6 +703,13 @@ Items to address when time permits:
 
 - [ ] Refactor large view components (DashboardView, PerformanceView) into smaller sub-components
 - [ ] Add comprehensive API documentation (OpenAPI/Swagger)
+- [ ] `[HIGH]` **Thread `context.Context` through the repository layer** — currently **0 of 373** repository functions accept a `context.Context`, so no DB call has a timeout, deadline, or cancellation path. A slow/stuck database (or a client that disconnects) can hang a request/goroutine indefinitely. This is why `noctx` is disabled in `.golangci.yml` (~851 violations). Phased plan:
+  1. **Plumb context inbound** — pass `r.Context()` from each handler into the service call it makes (services already run per-request; mostly signature changes).
+  2. **Add context to service method signatures** — thread the handler's context down to the repository calls (mechanical, compiles incrementally per service).
+  3. **Add `ctx` as the first parameter to repository methods** and switch `db.Query/Exec/QueryRow` → `db.QueryContext/ExecContext/QueryRowContext`. Do it repository-by-repository (start with the hottest: `user_workout_repository`, `database.go`) so each PR is reviewable.
+  4. **Enforce** — re-enable the `noctx` linter in `.golangci.yml` once the count hits zero; `only-new-issues` then prevents regressions.
+  5. **Optional** — set a sensible default request timeout (e.g. chi `middleware.Timeout`) once cancellation actually propagates, so timeouts return 503 instead of hanging.
+  *Rationale: biggest remaining reliability gap (per `docs/MATURITY_ASSESSMENT.md`). Large but mechanical; safe to land in small per-layer PRs.*
 - [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
 - [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
 - [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
