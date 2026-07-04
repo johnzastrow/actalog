@@ -139,6 +139,14 @@ jobs:
         with:
           node-version: '24'
 
+      # Pin npm to the version that generated web/package-lock.json.
+      # setup-node's bundled npm floats with the node 24.x patch release, and a
+      # newer npm resolves the rolldown wasm-fallback @emnapi optional deps into
+      # a different lockfile shape, breaking `npm ci`. Keep this in lockstep with
+      # the "packageManager" field in web/package.json.
+      - name: Pin npm to lockfile version
+        run: npm i -g npm@11.16.0
+
       - name: Cache node modules
         uses: actions/cache@v6
         with:
@@ -168,6 +176,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+
+      # Pin npm to the version that generated web/package-lock.json.
+      # setup-node's bundled npm floats with the node 24.x patch release, and a
+      # newer npm resolves the rolldown wasm-fallback @emnapi optional deps into
+      # a different lockfile shape, breaking `npm ci`. Keep this in lockstep with
+      # the "packageManager" field in web/package.json.
+      - name: Pin npm to lockfile version
+        run: npm i -g npm@11.16.0
 
       - name: Cache node modules
         uses: actions/cache@v6

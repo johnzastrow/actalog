@@ -11,6 +11,12 @@ WORKDIR /app/web
 # Copy package files
 COPY web/package.json web/package-lock.json ./
 
+# Pin npm to the version that generated package-lock.json. The node:24-alpine
+# base image's bundled npm floats across rebuilds; a newer npm reshapes the
+# rolldown wasm-fallback @emnapi optional deps and breaks `npm ci`. Keep this in
+# lockstep with the "packageManager" field in web/package.json.
+RUN npm i -g npm@11.16.0
+
 # Install dependencies (including dev dependencies needed for build)
 RUN npm ci
 

@@ -2,7 +2,7 @@
 
 > A mobile-first fitness tracker for CrossFit enthusiasts to log workouts, track progress, and analyze performance.
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue)](https://github.com/johnzastrow/actalog/blob/main/docs/CHANGELOG.md)
 [![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fjohnzastrow%2Factalog-2496ED?style=flat&logo=docker)](https://github.com/johnzastrow/actalog/pkgs/container/actalog)
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
@@ -44,7 +44,7 @@ docker pull ghcr.io/johnzastrow/actalog:latest
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable build |
-| `v1.3.2` | Current versioned release |
+| `v1.3.3` | Current versioned release |
 | `dev` | Development build |
 
 **Run with SQLite (simplest):**
@@ -205,6 +205,7 @@ Most endpoints require JWT authentication. To use protected endpoints in Swagger
 
 - v1.3.0 introduces the admin user-edit screen with a four-layer defense for system-protected accounts. See `docs/security/PROTECTED_USERS.md`.
 - v1.3.2 adds admin-side user creation, admin-set-password, and an operator break-glass CLI (`actalog admin force-edit-protected`) for protected-user recovery. See `docs/security/PROTECTED_USERS.md` §9.
+- v1.3.3 is a maintenance release refreshing security-relevant dependencies (`golang.org/x/crypto`, `dompurify`) and hardening the CI toolchain. See `docs/CHANGELOG.md`.
 
 ## License
 
