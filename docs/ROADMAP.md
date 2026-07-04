@@ -1,8 +1,11 @@
 # ActaLog Development Roadmap
 
-**Current Version:** 1.2.4 (Released)
-**Last Updated:** 2026-04-28
+**Current Version:** 1.3.3 (Released) · 1.3.4 in progress (CI/supply-chain hardening)
+**Last Updated:** 2026-07-04
 **Overall Completion:** ~99% of core requirements
+
+> Full per-release detail lives in [`docs/CHANGELOG.md`](CHANGELOG.md). Entries below summarize
+> recent releases; the changelog is the source of truth.
 
 ---
 
@@ -13,6 +16,24 @@ ActaLog is a mobile-first Progressive Web App (PWA) for CrossFit workout trackin
 ---
 
 ## Released Versions
+
+### v1.3.4 (In progress) — CI & supply-chain hardening
+**Status:** Build/CI hardening; no application behavior changes.
+
+**Highlights:**
+- 🔶 Go lint regressions blocked on PRs via `only-new-issues` (1,803 pre-existing findings grandfathered)
+- 🔶 New blocking CI gates: `govulncheck` (Go), `npm audit` (web), Trivy image scan (fixable HIGH/CRITICAL)
+- 🔶 GitHub Actions pinned to commit SHAs; Docker base images pinned to digests (supply-chain integrity)
+
+### v1.3.3 (Released 2026-07-04) — Maintenance
+**Status:** Dependency & toolchain maintenance; no application behavior changes.
+
+**Highlights:**
+- ✅ 23 dependency/toolchain updates since v1.3.2 (Node 24, Go & web deps, GitHub Actions)
+- ✅ Pinned npm to 11.16.0 in CI + Docker so `npm ci` stays in lockstep with `web/package-lock.json`
+
+### v1.3.2 (Released 2026-05-07) — Admin user lifecycle + protected-user break-glass CLI
+See [`docs/CHANGELOG.md`](CHANGELOG.md) for v1.3.0–v1.3.2 detail.
 
 ### v1.2.4 (Released 2026-04-28)
 **Status:** Security hardening, part two — closes items deferred from v1.2.3.
