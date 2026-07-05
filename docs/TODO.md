@@ -710,6 +710,17 @@ Items to address when time permits:
   4. **Enforce** — re-enable the `noctx` linter in `.golangci.yml` once the count hits zero; `only-new-issues` then prevents regressions.
   5. **Optional** — set a sensible default request timeout (e.g. chi `middleware.Timeout`) once cancellation actually propagates, so timeouts return 503 instead of hanging.
   *Rationale: biggest remaining reliability gap (per `docs/MATURITY_ASSESSMENT.md`). Large but mechanical; safe to land in small per-layer PRs.*
+- [ ] `[MEDIUM]` **Report test coverage in CI** — coverage is measured ad hoc (`web` has `npm run test:coverage`; Go has `-cover`) but never collected in CI, so there's no per-PR number, trend, or floor. Recommended rollout:
+  1. **Report-only first** — add `go test -coverprofile=coverage.out ./internal/... && go tool cover -func=coverage.out | tail -1` and `vitest run --coverage` (v8 provider already in dev-deps), writing the totals to `$GITHUB_STEP_SUMMARY`. Zero friction, no new deps.
+  2. **Then ratchet** — store the current % as a baseline and fail if a PR drops below it (prevents backsliding without demanding a big jump); or use *diff coverage* (only require new/changed lines to be covered).
+  3. Avoid an external service (Codecov/Coveralls) unless the PR-comment UX is worth the added third-party token — it re-widens the supply-chain surface just tightened in v1.4.
+  *Effort: small. Risk: ~zero in report-only mode. Existing targets to chase live in the Backlog (user_service 61.9%→80%, import_service 60.8%).*
+- [ ] `[MEDIUM]` **Decompose oversized backend files** — split by responsibility (behavior-preserving; same package, so no import/route churn). Lean on the unit + 3-DB integration suites to prove no behavior change, and do **one file per PR** so review stays trivial and `only-new-issues` lint stays quiet. Candidates:
+  - `internal/service/backup_service.go` (~2.2k) — separate engine-specific serialization from restore/backup orchestration.
+  - `internal/handler/scheduling_handler.go` (~1.8k, also a `gocyclo` offender) — split into `scheduling_sessions_handler.go` / `scheduling_reservations_handler.go` / `scheduling_templates_handler.go`.
+  - `internal/service/data_quality_service.go` (~1.5k) — one file per check family, or a small check-interface + registry so each rule is independently testable.
+  - *Note: `internal/repository/migrations.go` (~3.8k) is intentionally append-only/sequential — low value to split; leave it.*
+  *Effort: medium, naturally incremental. Risk: low as mechanical extractions with tests green.*
 - [x] Improve error handling consistency across handlers (centralized in internal/handler/errors.go)
 - [x] Add structured logging throughout the codebase (JSON format support in pkg/logger)
 - [x] Review and optimize database queries with EXPLAIN (audit_logs indexes, N+1 fixes)
