@@ -1,0 +1,17 @@
+{
+  "name": "actalog-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reusable Playwright end-to-end / visual-regression tests for ActaLog. Target any deployment via BASE_URL.",
+  "type": "module",
+  "scripts": {
+    "install-browsers": "playwright install chromium",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  }
+}
