@@ -1,0 +1,100 @@
+/*
+ * ActaLog redesign "plus" — PREVIEW ONLY, a slightly more aggressive pass on
+ * top of redesign.css. Not imported in the shipped build unless approved.
+ *
+ * Typography note: the app has a user font picker (src/stores/font.js) that
+ * includes accessibility faces (OpenDyslexic, Atkinson Hyperlegible). All
+ * typography here is family-agnostic — weight, tracking, and numeric alignment
+ * only — so it composes with whatever face the user selects.
+ */
+
+/* Ground: the off-white page lives in the theme system, not here — the `light`
+   theme's `background` token is #f4f6f9 (src/plugins/vuetify.js), so every
+   theme keeps its own ground (ocean/sunset/sunrise/myst are already tinted,
+   dark/brutalist stay dark). */
+
+/* Typography: tighter display tracking, aligned digits, firmer titles. */
+.v-card-title,
+.text-h4,
+.text-h5,
+.text-h6 {
+  letter-spacing: -0.01em;
+}
+.text-h4,
+.text-h5 {
+  font-variant-numeric: tabular-nums;
+}
+.v-card-title,
+.text-h6 {
+  font-weight: 600;
+}
+
+/* App bar: a touch of depth and a firmer wordmark. */
+.v-app-bar.v-toolbar {
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.25);
+}
+.v-app-bar .v-toolbar-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* FAB: brand-teal pop with a soft glow — the app's single loudest control. */
+.fab-button .v-avatar {
+  background: rgb(var(--v-theme-teal)) !important;
+  box-shadow: 0 4px 14px rgba(var(--v-theme-teal), 0.45);
+}
+
+/* Large / block CTAs: slightly rounder with a subtle vertical gradient. */
+.v-btn--size-large,
+.v-btn--block {
+  border-radius: 10px;
+}
+.v-btn--block.bg-primary,
+.v-btn--size-large.bg-primary {
+  /* Token-based so it follows every theme's primary (navy, cyan, ocean, ...). */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, rgb(var(--v-theme-primary)) 86%, white),
+    rgb(var(--v-theme-primary))
+  );
+}
+
+/* Interactive cards lift on hover. */
+.v-card--link {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.v-card--link:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 8px rgba(16, 24, 40, 0.08),
+    0 10px 22px rgba(16, 24, 40, 0.1);
+}
+
+/* Bottom-nav labels: from 9px whisper to a legible 10px. */
+.v-bottom-navigation .nav-label {
+  font-size: 10px !important;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Bolder icons, app-wide (approved from the bold preview). MDI glyphs are font
+   characters, so weight comes from a hairline text-stroke rather than
+   font-weight (which has no effect on icon fonts). */
+.v-icon {
+  -webkit-text-stroke: 0.5px currentColor;
+}
+
+/* Default card-text padding gets more air, but never overrides pa-* utilities
+   (zero-specificity :where loses to any utility class by design). */
+:where(.v-card-text) {
+  padding: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-card--link {
+    transition: none;
+  }
+  .v-card--link:hover {
+    transform: none;
+  }
+}

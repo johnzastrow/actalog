@@ -15,7 +15,7 @@ const actalogTheme = {
     warning: '#FFA726',
     info: '#29B6F6',
     success: '#66BB6A',
-    background: '#FFFFFF',
+    background: '#f4f6f9',   // off-white ground so white surfaces read as cards (redesign-plus)
     surface: '#FFFFFF',
     'on-primary': '#FFFFFF',
     'on-secondary': '#FFFFFF',
