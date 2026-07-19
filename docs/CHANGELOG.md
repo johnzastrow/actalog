@@ -5,6 +5,25 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2026-07-19 — Vuetify 4 UI polish (readability & spacing)
+
+Follow-up readability/spacing fixes on the v1.3.5 Vuetify 4 build, all found while
+testing on beta. All are global (theme-token based) so they apply everywhere.
+
+### Fixed
+- **Entry-field text was too small to read while typing.** Vuetify 4 renders the
+  actual `.v-field__input` at ~14px (smaller under `density="compact"`, of which
+  the app has 342 across 54 files); setting font-size on `.v-field` never reached
+  the input. Pinned `.v-field .v-field__input` to 16px (also avoids iOS tap-zoom).
+- **Low-emphasis text was too light to read.** `text-medium-emphasis` rendered at
+  0.6 alpha (~#6b6b6b); darkened to 0.82 app-wide.
+- **Card count chips were nearly invisible.** `<v-chip color="#e0e0e0">` sets the
+  *text* to near-white under v4's tonal variant; replaced with `variant="tonal"`
+  (readable on-surface text) in WorkoutsView, WODsView, WorkoutTimelineView.
+- **Text buttons had no horizontal padding.** Labels sat flush to the button
+  edges; restored Vuetify's per-size inline padding (icon buttons stay square).
+- **Tooltips were cramped;** bumped padding from 5px/16px to 8px/14px.
+
 ## [1.3.5] - 2026-07-19 — Vuetify 4 migration completed + UI refresh
 
 Completes the Vuetify 3 → 4 migration that v1.3.3's dependency sweep began but

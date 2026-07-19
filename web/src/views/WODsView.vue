@@ -99,11 +99,11 @@
 
             <!-- WOD Metadata Chips -->
             <div class="ml-7 d-flex flex-wrap gap-1">
-              <v-chip v-if="wod.score_type" size="x-small" color="#e0e0e0">
+              <v-chip v-if="wod.score_type" size="x-small" variant="tonal">
                 <v-icon start size="x-small">mdi-timer</v-icon>
                 {{ formatScoreType(wod.score_type) }}
               </v-chip>
-              <v-chip v-if="wod.source" size="x-small" color="#e0e0e0">
+              <v-chip v-if="wod.source" size="x-small" variant="tonal">
                 <v-icon start size="x-small">mdi-tag</v-icon>
                 {{ wod.source }}
               </v-chip>
@@ -261,11 +261,11 @@
 
           <!-- Score Type and Source -->
           <div v-if="selectedWOD.score_type || selectedWOD.source" class="mb-3">
-            <v-chip v-if="selectedWOD.score_type" size="small" color="#e0e0e0" class="mr-2">
+            <v-chip v-if="selectedWOD.score_type" size="small" variant="tonal" class="mr-2">
               <v-icon start size="x-small">mdi-timer</v-icon>
               {{ formatScoreType(selectedWOD.score_type) }}
             </v-chip>
-            <v-chip v-if="selectedWOD.source" size="small" color="#e0e0e0">
+            <v-chip v-if="selectedWOD.source" size="small" variant="tonal">
               <v-icon start size="x-small">mdi-tag</v-icon>
               {{ selectedWOD.source }}
             </v-chip>

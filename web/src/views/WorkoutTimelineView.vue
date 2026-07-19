@@ -103,7 +103,7 @@
                     <v-chip
                       v-if="workout.movements.length > 3"
                       size="small"
-                      color="#e0e0e0"
+                      variant="tonal"
                       text-color="medium-emphasis"
                     >
                       +{{ workout.movements.length - 3 }} more

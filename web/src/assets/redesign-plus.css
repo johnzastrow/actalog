@@ -84,6 +84,23 @@
   -webkit-text-stroke: 0.5px currentColor;
 }
 
+/* Low-emphasis text was too light to read: Vuetify renders `text-medium-emphasis`
+   at 0.6 alpha (~#6b6b6b on white) — borderline for captions/hints and the lowest
+   line on cards. The theme sets --v-medium-emphasis-opacity on a node we can't
+   easily out-cascade, so darken the color directly at higher specificity. Uses
+   theme tokens, so it holds across all seven themes. */
+.v-application {
+  --v-medium-emphasis-opacity: 0.82;
+}
+.v-application .text-medium-emphasis {
+  color: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 82%, transparent) !important;
+}
+
+/* Tooltips: a touch more breathing room than v4's tight 5px vertical default. */
+.v-tooltip > .v-overlay__content {
+  padding: 8px 14px;
+}
+
 /* Default card-text padding gets more air, but never overrides pa-* utilities
    (zero-specificity :where loses to any utility class by design). */
 :where(.v-card-text) {
