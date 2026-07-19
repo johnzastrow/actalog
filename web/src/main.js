@@ -10,6 +10,13 @@ import { usePwaStore } from '@/stores/pwa'
 import '@mdi/font/css/materialdesignicons.css'
 import './assets/main.css'
 import './assets/fonts.css'
+// Restore the Vuetify 3 (Material Design 2) look on Vuetify 4. Imported last so it wins.
+import './assets/vuetify3-spacing.css'
+import './assets/vuetify3-compat.css'
+// Approved 2026-07-19: modernized surfaces & interaction states on the v3 base,
+// plus the bolder pass (off-white ground via theme token, typography, teal FAB).
+import './assets/redesign.css'
+import './assets/redesign-plus.css'
 
 const app = createApp(App)
 const pinia = createPinia()

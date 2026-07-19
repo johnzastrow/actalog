@@ -1,0 +1,114 @@
+/*
+ * ActaLog refresh on Vuetify 4 — OPTIONAL layer, imported after the
+ * vuetify3-compat layer. Keeps the app's structure, spacing and brand palette
+ * (navy #2c3657 / teal #00bcd4) but modernizes surfaces and interaction states:
+ *
+ *  - cards: 12px radius, soft layered shadow + hairline border (clearer hierarchy)
+ *  - inputs: border + teal focus ring instead of the heavy MD2 drop shadow
+ *  - toggle chips: outlined pills with an unmistakable filled selected state
+ *  - bottom nav: brand-teal active indicator instead of a grey block
+ *  - lists: hover feedback; buttons: 8px radius
+ *  - visible keyboard focus
+ *
+ * Uses theme tokens (rgb(var(--v-theme-*))) so light and dark themes both work.
+ */
+
+/* Surfaces ---------------------------------------------------------- */
+.v-card {
+  border-radius: 12px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.05),
+    0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+/* Buttons ------------------------------------------------------------ */
+.v-btn {
+  border-radius: 8px;
+  letter-spacing: 0.01em;
+}
+.v-btn--size-large {
+  min-height: 46px;
+}
+
+/* Inputs: crisp border + focus ring, not a drop shadow ---------------- */
+.v-field--variant-solo,
+.v-field--variant-solo-filled {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.v-field--variant-solo.v-field--focused,
+.v-field--variant-solo-filled.v-field--focused {
+  border-color: rgb(var(--v-theme-teal));
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-teal), 0.2);
+}
+
+/* Toggle chips: outlined pill, filled when selected ------------------- */
+.v-chip-group .v-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.16);
+  background: transparent;
+}
+.v-chip-group .v-chip--selected,
+.v-chip-group .v-chip[aria-pressed='true'] {
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
+  border-color: rgb(var(--v-theme-primary));
+}
+.v-chip-group .v-chip--selected .v-chip__underlay {
+  opacity: 0;
+}
+
+/* Bottom navigation: brand active state.
+   Notes: (1) the center + button routes to /dashboard?open=quick-log, so on the
+   dashboard it ALSO matches as route-active alongside Home — exclude .fab-button
+   or two tabs light up at once. (2) tabs are `grow` flex items whose widths vary
+   with label text, so an inset-based overlay renders a different-sized pill per
+   tab; draw a fixed-size, centered pill behind the icon instead. */
+.v-bottom-navigation .v-btn--selected:not(.fab-button),
+.v-bottom-navigation .v-btn--active:not(.fab-button) {
+  color: rgb(var(--v-theme-teal));
+  background: transparent;
+}
+.v-bottom-navigation .v-btn--selected:not(.fab-button) .v-btn__overlay,
+.v-bottom-navigation .v-btn--active:not(.fab-button) .v-btn__overlay {
+  background: rgb(var(--v-theme-teal));
+  opacity: 0.12;
+  border-radius: 999px;
+  inset: unset;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 30px;
+}
+/* The + button's avatar is its own affordance — no overlay wash on it, ever. */
+.v-bottom-navigation .fab-button .v-btn__overlay {
+  opacity: 0 !important;
+}
+
+/* Lists: hover/press feedback ----------------------------------------- */
+.v-list-item {
+  transition: background-color 0.12s ease;
+}
+.v-list-item:hover {
+  background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+/* Keyboard focus visibility ------------------------------------------- */
+.v-btn:focus-visible,
+.v-chip:focus-visible,
+.v-list-item:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-teal));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-field--variant-solo,
+  .v-field--variant-solo-filled,
+  .v-list-item {
+    transition: none;
+  }
+}

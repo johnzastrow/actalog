@@ -1,0 +1,123 @@
+/*
+ * Vuetify 3 (Material Design 2) compatibility layer for Vuetify 4.
+ *
+ * Vuetify 4 adopts Material Design 3, which changes the type scale, elevation,
+ * and container widths/centering. This app's design targets the MD2 look, so we
+ * restore the v3 appearance here. These rules are intentionally unlayered so they
+ * win over Vuetify 4's @layer styles without needing !important.
+ *
+ * See docs/plans/vuetify-4-migration-plan.md (decision: keep the v3 look).
+ */
+
+/* ------------------------------------------------------------------ *
+ * 1. Inputs: restore the "solo" filled + elevated box (MD2 elevation-2).
+ *    MD3 flattens the solo variant to a 1px shadow; v3 used elevation-2.
+ * ------------------------------------------------------------------ */
+.v-field--variant-solo,
+.v-field--variant-solo-filled {
+  box-shadow:
+    0 3px 1px -2px rgba(0, 0, 0, 0.2),
+    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  background: rgb(var(--v-theme-surface));
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. Containers: MD3 shrank max-widths and dropped auto-centering
+ *    (margin 0), pinning content to the left. Restore v3 centering
+ *    and width. Fluid containers stay full-bleed.
+ * ------------------------------------------------------------------ */
+.v-container:not(.v-container--fluid) {
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+/* ------------------------------------------------------------------ *
+ * 3. Typography: restore the Material Design 2 type scale so headings,
+ *    stat numbers, and captions keep their v3 sizes/weights.
+ * ------------------------------------------------------------------ */
+.text-h1 { font-size: 6rem;      font-weight: 300; line-height: 6rem;      letter-spacing: -0.015625em; }
+.text-h2 { font-size: 3.75rem;   font-weight: 300; line-height: 3.75rem;   letter-spacing: -0.0083333333em; }
+.text-h3 { font-size: 3rem;      font-weight: 400; line-height: 3.125rem;  letter-spacing: normal; }
+.text-h4 { font-size: 2.125rem;  font-weight: 400; line-height: 2.5rem;    letter-spacing: 0.0073529412em; }
+.text-h5 { font-size: 1.5rem;    font-weight: 400; line-height: 2rem;      letter-spacing: normal; }
+.text-h6 { font-size: 1.25rem;   font-weight: 500; line-height: 2rem;      letter-spacing: 0.0125em; }
+/* body/subtitle font-size lives in the scoped block in section 8 (it must
+   out-rank an App.vue !important rule); only weight/line-height/tracking here. */
+.text-subtitle-1 { font-weight: 400; line-height: 1.75rem;  letter-spacing: 0.009375em; }
+.text-subtitle-2 { font-weight: 500; line-height: 1.375rem; letter-spacing: 0.0071428571em; }
+.text-body-1 { font-weight: 400; line-height: 1.5rem;  letter-spacing: 0.03125em; }
+.text-body-2 { font-weight: 400; line-height: 1.25rem; letter-spacing: 0.0178571429em; }
+.text-caption  { font-size: 0.75rem; font-weight: 400; line-height: 1.25rem; letter-spacing: 0.0333333333em; }
+.text-overline { font-size: 0.75rem; font-weight: 500; line-height: 2rem;    letter-spacing: 0.1666666667em; text-transform: uppercase; }
+
+/* ------------------------------------------------------------------ *
+ * 4. Chip groups: MD3 collapsed the inter-chip spacing to 0, running
+ *    toggle chips together ("This WeekThis Month..."). Restore v3 gaps.
+ * ------------------------------------------------------------------ */
+.v-chip-group .v-chip {
+  margin: 4px 8px 4px 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * 5. Input messages: restore v3 horizontal padding under fields.
+ * ------------------------------------------------------------------ */
+.v-input__details {
+  padding-inline: 16px;
+}
+
+/* ------------------------------------------------------------------ *
+ * 6. Font-weight utilities: Vuetify 4 layers these, so unlayered rules
+ *    (including our own typography above) override them and `font-weight-bold`
+ *    rendered as 400. Re-assert them with !important so bold/medium text is
+ *    weighted correctly everywhere. Placed after the type scale on purpose.
+ * ------------------------------------------------------------------ */
+.font-weight-thin    { font-weight: 100 !important; }
+.font-weight-light   { font-weight: 300 !important; }
+.font-weight-regular { font-weight: 400 !important; }
+.font-weight-medium  { font-weight: 500 !important; }
+.font-weight-bold    { font-weight: 700 !important; }
+.font-weight-black   { font-weight: 900 !important; }
+.font-italic         { font-style: italic !important; }
+
+/* ------------------------------------------------------------------ *
+ * 7. Component defaults MD3 changed: restore v3 list-item padding and the
+ *    list-title / chip / field sizing.
+ * ------------------------------------------------------------------ */
+.v-list-item {
+  padding-block: 4px;
+  padding-inline: 16px;
+}
+.v-list-item-title {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.009375em;
+}
+.v-chip {
+  font-size: 0.75rem;
+  padding-inline: 10px;
+}
+.v-field {
+  font-size: 1rem;
+  padding-inline-start: 12px;
+}
+
+/* ------------------------------------------------------------------ *
+ * 8. A global App.vue rule forces `.text-body-2 { font-size: 13px !important }`.
+ *    In v1.3.0 that style was scoped and never reached child components (so
+ *    Vuetify's 14px won); in the v4 build it applies globally and shrinks body
+ *    text by 1px. Out-specify it (higher specificity + !important) to keep v3's
+ *    14px, and pin the sibling body/subtitle sizes to the MD2 scale.
+ * ------------------------------------------------------------------ */
+.v-application .text-body-1     { font-size: 1rem !important; }
+.v-application .text-body-2     { font-size: 0.875rem !important; }
+.v-application .text-subtitle-1 { font-size: 1rem !important; }
+.v-application .text-subtitle-2 { font-size: 0.875rem !important; }
+
+/* ------------------------------------------------------------------ *
+ * 9. App bar: give the toolbar content comfortable inline padding so the
+ *    logo and action icons don't sit flush against the screen edges.
+ * ------------------------------------------------------------------ */
+.v-app-bar .v-toolbar__content {
+  padding-inline: 20px;
+}

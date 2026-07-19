@@ -5,6 +5,50 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2026-07-19 — Vuetify 4 migration completed + UI refresh
+
+Completes the Vuetify 3 → 4 migration that v1.3.3's dependency sweep began but
+never finished (the un-migrated framework bump silently broke component styling
+app-wide; production was interim-pinned to v1.3.0). The app now renders
+correctly on Vuetify 4 and ships an approved visual refresh.
+
+### Fixed — Vuetify 4 rendering (the v1.3.3/v1.3.4 regression)
+- **`web/src/assets/vuetify3-compat.css`** restores the Material Design 2 look on
+  Vuetify 4: solo-field elevation, MD2 type scale, container centering/width,
+  list-item/chip padding, font-weight utilities (`font-weight-bold` was rendering
+  at 400 app-wide), and app-bar edge padding. Computed styles match v1.3.0 to
+  sub-pixel across sampled components.
+- **`web/src/assets/vuetify3-spacing.css`** re-asserts the 4px-base spacing
+  utilities (`pa-6`, `mb-4`, …), which Vuetify 4 ships inside `@layer` where they
+  lost to unlayered rules and silently collapsed padding everywhere.
+
+### Added — approved UI refresh (design layers)
+- **`redesign.css`**: 12px card corners with hairline border + soft shadow,
+  bordered inputs with teal focus ring, outlined toggle chips with filled
+  selected state, brand-teal bottom-nav active pill (fixed-size, centered, FAB
+  excluded), list hover feedback, visible keyboard focus.
+- **`redesign-plus.css`**: firmer 600-weight titles with tighter tracking,
+  tabular stat numerals, legible bottom-nav labels, brand-teal FAB, token-based
+  gradient CTAs, hover lift on interactive cards, app-wide bolder icon strokes.
+- Light theme's `background` token is now `#f4f6f9` (off-white ground) so white
+  surfaces read as cards; all seven themes (light/dark/brutalist/ocean/sunset/
+  sunrise/myst) verified — every accent is theme-token based.
+- Typography changes are family-agnostic: the user font picker (incl.
+  OpenDyslexic / Atkinson Hyperlegible) is untouched.
+
+### Removed
+- Dead CSP-blocked jsdelivr `@mdi/font` CDN `<link>` (icons are bundled locally);
+  this also clears the console CSP error on every page.
+
+### Security — Go stdlib patch
+- Go `1.25.11 → 1.25.12` for **GO-2026-5856** (crypto/tls ECH privacy leak,
+  reachable) and **CVE-2026-39822** (os.Root symlink traversal) — both flagged by
+  the govulncheck/Trivy gates, which block releases until patched.
+
+### Docs
+- `docs/plans/vuetify-4-migration-plan.md`: scope, root-cause analysis, and the
+  executed fast path.
+
 ## [1.3.4] - 2026-07-04 — CI & supply-chain hardening
 
 Build/CI hardening release. No application behavior changes — no runtime code was
