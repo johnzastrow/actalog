@@ -156,7 +156,7 @@
 
             <!-- Display movements count -->
             <div v-if="template.movements && template.movements.length > 0" class="ml-7 mt-2">
-              <v-chip size="small" color="#e0e0e0" class="mr-1">
+              <v-chip size="small" variant="tonal" class="mr-1">
                 <v-icon start size="x-small">mdi-weight-lifter</v-icon>
                 {{ template.movements.length }} movement{{ template.movements.length > 1 ? 's' : '' }}
               </v-chip>
@@ -164,7 +164,7 @@
 
             <!-- Display WODs count -->
             <div v-if="template.wods && template.wods.length > 0" class="ml-7 mt-1">
-              <v-chip size="small" color="#e0e0e0" class="mr-1">
+              <v-chip size="small" variant="tonal" class="mr-1">
                 <v-icon start size="x-small">mdi-fire</v-icon>
                 {{ template.wods.length }} WOD{{ template.wods.length > 1 ? 's' : '' }}
               </v-chip>

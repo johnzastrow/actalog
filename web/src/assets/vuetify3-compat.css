@@ -121,3 +121,26 @@
 .v-app-bar .v-toolbar__content {
   padding-inline: 20px;
 }
+
+/* ------------------------------------------------------------------ *
+ * 10. Field text size. Vuetify 4 renders the actual input/textarea text
+ *     (.v-field__input) at ~14px — and smaller under density="compact" —
+ *     which is hard to read while typing. Setting font-size on .v-field
+ *     alone does NOT reach the input, so pin it here (16px also avoids iOS
+ *     tap-to-zoom). Applies to every field type app-wide.
+ * ------------------------------------------------------------------ */
+.v-field .v-field__input {
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * 11. Button horizontal padding. In the v4 build, text/elevated buttons
+ *     render with 0 inline padding — labels sit flush to the edges, saved
+ *     only by min-width. Restore Vuetify's per-size padding; icon buttons
+ *     stay square (excluded).
+ * ------------------------------------------------------------------ */
+.v-btn--size-x-small:not(.v-btn--icon) { padding-inline: 8px; }
+.v-btn--size-small:not(.v-btn--icon)   { padding-inline: 12px; }
+.v-btn--size-default:not(.v-btn--icon) { padding-inline: 16px; }
+.v-btn--size-large:not(.v-btn--icon)   { padding-inline: 20px; }
+.v-btn--size-x-large:not(.v-btn--icon) { padding-inline: 24px; }
