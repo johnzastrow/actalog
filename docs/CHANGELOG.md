@@ -5,6 +5,19 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2026-07-19 — Notes field fix + faster CI
+
+### Fixed
+- **Log Workout "Notes" fields: the field label overlapped the placeholder hint.**
+  The per-movement and per-WOD Notes textareas set both a floating `label="Notes"`
+  and a `placeholder`; in the compact solo textarea (Vuetify 4) the floated label
+  rendered on top of the placeholder text. Dropped the redundant label; the field
+  now shows a single "Notes — how did this feel?" placeholder.
+
+### CI
+- Build the release image for **linux/amd64 only** (dropped the arm64 QEMU leg,
+  which pushed builds to ~20min); no arm64 deploy target exists.
+
 ## [1.3.6] - 2026-07-19 — Vuetify 4 UI polish (readability & spacing)
 
 Follow-up readability/spacing fixes on the v1.3.5 Vuetify 4 build, all found while
