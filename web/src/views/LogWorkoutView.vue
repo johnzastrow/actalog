@@ -214,13 +214,11 @@
             </v-row>
             <v-textarea
               v-model="movement.notes"
-              label="Notes"
-
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
-              placeholder="How did this feel?"
+              placeholder="Notes — how did this feel?"
             />
             <v-select
               v-model="movement.rpe"
@@ -361,13 +359,11 @@
 
             <v-textarea
               v-model="wod.notes"
-              label="Notes"
-
               density="compact"
               hide-details
               rows="2"
               class="mt-2"
-              placeholder="How did this feel?"
+              placeholder="Notes — how did this feel?"
             />
             <v-select
               v-model="wod.rpe"
