@@ -38,6 +38,7 @@ vi.mock('@/utils/rpe', () => ({
 }))
 
 import axios from '@/utils/axios'
+import { getTodayInTimezone } from '@/utils/timezone'
 
 describe('LogWorkoutView', () => {
   let wrapper
@@ -205,9 +206,9 @@ describe('LogWorkoutView', () => {
       await flushPromises()
 
       const vm = wrapper.vm
-      // Use local date format to match component's getTodayDate()
-      const now = new Date()
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      // The component uses the settings store's default timezone when no
+      // persisted user settings have been loaded yet.
+      const today = getTodayInTimezone('America/New_York')
 
       expect(vm.workoutDate).toBe(today)
     })
