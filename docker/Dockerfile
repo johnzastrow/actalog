@@ -102,8 +102,11 @@ USER actalog
 EXPOSE 8080
 
 # Health check
+# Probe 127.0.0.1 rather than "localhost": where localhost resolves to ::1 first,
+# wget targets [::1] while the server binds IPv4 only, so the check never passes.
+# Shell form (not exec form) so ${SERVER_PORT} is expanded at runtime.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider "http://127.0.0.1:${SERVER_PORT:-8080}/health" || exit 1
 
 # Set default environment variables
 ENV DB_DRIVER=sqlite3 \
