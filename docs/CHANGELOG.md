@@ -5,7 +5,7 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.8] - 2026-07-29 — Fix container health probe that crash-looped prod
+## [1.3.8] - 2026-10-02 — Health probe fix; Go 1.26 and security updates
 
 ### Fixed
 - **The container readiness probe could never succeed, and it killed the healthy
@@ -38,6 +38,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`docker exec <c> wget -q -O- http://127.0.0.1:$SERVER_PORT/health`), not with
   `curl` from the host. Host-side `curl` resolves `localhost` to `127.0.0.1` and
   reported healthy throughout, which is why this stayed hidden for 9 days.
+
+### Security
+- **Go 1.26.8** (was 1.25.12, now out of support), in `go.mod` and the Docker
+  builder image. `govulncheck` was failing CI on reachable standard-library
+  vulnerabilities (`crypto/tls`, `html/template`, `encoding/asn1`) and on
+  `golang.org/x/text`; it now reports none.
+- Web dependencies: `npm audit` went from 14 vulnerabilities (9 high) to 0.
+  sharp 0.35.4 (libvips CVEs), vitest 4.1.11 (GHSA-82fw-gwwq-j7x9), and the
+  exact axios pin moved from 1.18.1 to 1.20.0 (prototype-pollution advisory).
+
+### Dependencies
+- All open Dependabot updates, with `go.sum` and `package-lock.json` regenerated
+  once: pgx 5.11.0, golang.org/x/crypto 0.57.0, go-sqlite3 1.14.52, mysql driver
+  1.10.1, chi 5.3.2; the web dev-dependencies group, the Vue ecosystem group
+  (including pinia 4), dompurify 3.4.12, marked 18.0.6, vuetify 4.1.5; and the
+  actions/checkout, actions/setup-python and lychee-action updates.
 
 ## [1.3.7] - 2026-07-19 — Notes field fix + faster CI
 
