@@ -29,7 +29,7 @@ RUN npm run build
 # ============================================================================
 # Stage 2: Build Backend (Go)
 # ============================================================================
-FROM golang:1.25-alpine@sha256:56961d79ea8129efddcc0b8643fd8a5416b4e6228cfd477e3fd61deb2672c587 AS backend-builder
+FROM golang:1.26-alpine@sha256:8ac98ca534ac3f51e1f420a1dd2c15e74c75cfa0f23f3ad27eb5d7236c349a0c AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
