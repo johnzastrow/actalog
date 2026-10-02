@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web dependencies: `npm audit` went from 14 vulnerabilities (9 high) to 0.
   sharp 0.35.4 (libvips CVEs), vitest 4.1.11 (GHSA-82fw-gwwq-j7x9), and the
   exact axios pin moved from 1.18.1 to 1.20.0 (prototype-pollution advisory).
+- Runtime base image moved to the current Alpine 3.24.2 digest: OpenSSL 3.5.8
+  (CVE-2026-14456, high, denial of service). Trivy image scan: 0 high/critical.
 
 ### Dependencies
 - All open Dependabot updates, with `go.sum` and `package-lock.json` regenerated
