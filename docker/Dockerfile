@@ -29,7 +29,7 @@ RUN npm run build
 # ============================================================================
 # Stage 2: Build Backend (Go)
 # ============================================================================
-FROM golang:1.25-alpine@sha256:56961d79ea8129efddcc0b8643fd8a5416b4e6228cfd477e3fd61deb2672c587 AS backend-builder
+FROM golang:1.26-alpine@sha256:8ac98ca534ac3f51e1f420a1dd2c15e74c75cfa0f23f3ad27eb5d7236c349a0c AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
@@ -62,7 +62,7 @@ RUN CGO_ENABLED=1 GOOS=linux GOTOOLCHAIN=auto go build -a -installsuffix cgo \
 # ============================================================================
 # Stage 3: Runtime Image
 # ============================================================================
-FROM alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+FROM alpine:latest@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
 
 # Install runtime dependencies
 RUN apk add --no-cache \
@@ -102,8 +102,11 @@ USER actalog
 EXPOSE 8080
 
 # Health check
+# Probe 127.0.0.1 rather than "localhost": where localhost resolves to ::1 first,
+# wget targets [::1] while the server binds IPv4 only, so the check never passes.
+# Shell form (not exec form) so ${SERVER_PORT} is expanded at runtime.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider "http://127.0.0.1:${SERVER_PORT:-8080}/health" || exit 1
 
 # Set default environment variables
 ENV DB_DRIVER=sqlite3 \

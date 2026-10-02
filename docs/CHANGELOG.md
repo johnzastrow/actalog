@@ -5,6 +5,58 @@ All notable changes to ActaLog will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2026-10-02 — Health probe fix; Go 1.26 and security updates
+
+### Fixed
+- **The container readiness probe could never succeed, and it killed the healthy
+  app when it failed — crash-looping both deployments for 9 days.**
+  `docker/scripts/entrypoint.sh` polled `http://localhost:8080/health`. Two defects:
+  - **`localhost` vs IPv4.** On hosts where `localhost` resolves to `::1` first,
+    wget connects to `[::1]` while the server binds IPv4 only (`SERVER_HOST`
+    defaults to `0.0.0.0` and is commonly set to `127.0.0.1`), so the probe was
+    refused every time. Verified against a live, working instance:
+    `localhost:8081` → `Connection refused`, `127.0.0.1:8081` → `{"status":"healthy"}`.
+  - **Hardcoded port 8080.** `SERVER_PORT` was ignored, so a beta instance on 8081
+    probed the *production* instance on 8080 instead of itself.
+
+  Both now use `http://127.0.0.1:${SERVER_PORT:-8080}/health`. The same two fixes
+  are applied to the Dockerfile `HEALTHCHECK` (kept in shell form so `${SERVER_PORT}`
+  expands at runtime).
+
+- **The readiness probe no longer kills the application.** On timeout the entrypoint
+  now logs a warning, skips the seed import (which drives the HTTP API and cannot
+  work while the app is unreachable), and hands off to `wait $APP_PID`. Previously
+  it ran `kill $APP_PID; exit 1`, which combined with `restart: unless-stopped` turned
+  any probe defect into a permanent crash-loop — 25,946 restarts on prod and 26,413
+  on beta, with zero successful readiness checks, starting at the 2026-07-20 deploy.
+  This poll only ever gated the optional seed import; it was never a liveness
+  supervisor. A genuinely dead process is still caught by the in-loop `kill -0`
+  check (exit 1), and Docker's `HEALTHCHECK` remains the health signal.
+
+### Operations
+- Deploy-time verification should probe from **inside** the container
+  (`docker exec <c> wget -q -O- http://127.0.0.1:$SERVER_PORT/health`), not with
+  `curl` from the host. Host-side `curl` resolves `localhost` to `127.0.0.1` and
+  reported healthy throughout, which is why this stayed hidden for 9 days.
+
+### Security
+- **Go 1.26.8** (was 1.25.12, now out of support), in `go.mod` and the Docker
+  builder image. `govulncheck` was failing CI on reachable standard-library
+  vulnerabilities (`crypto/tls`, `html/template`, `encoding/asn1`) and on
+  `golang.org/x/text`; it now reports none.
+- Web dependencies: `npm audit` went from 14 vulnerabilities (9 high) to 0.
+  sharp 0.35.4 (libvips CVEs), vitest 4.1.11 (GHSA-82fw-gwwq-j7x9), and the
+  exact axios pin moved from 1.18.1 to 1.20.0 (prototype-pollution advisory).
+- Runtime base image moved to the current Alpine 3.24.2 digest: OpenSSL 3.5.8
+  (CVE-2026-14456, high, denial of service). Trivy image scan: 0 high/critical.
+
+### Dependencies
+- All open Dependabot updates, with `go.sum` and `package-lock.json` regenerated
+  once: pgx 5.11.0, golang.org/x/crypto 0.57.0, go-sqlite3 1.14.52, mysql driver
+  1.10.1, chi 5.3.2; the web dev-dependencies group, the Vue ecosystem group
+  (including pinia 4), dompurify 3.4.12, marked 18.0.6, vuetify 4.1.5; and the
+  actions/checkout, actions/setup-python and lychee-action updates.
+
 ## [1.3.7] - 2026-07-19 — Notes field fix + faster CI
 
 ### Fixed
